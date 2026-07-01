@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:51:09 CST
- 更新内容: 恢复福小客头顶提示气泡测试，回到上一版自动提示效果。
+ 更新时间: 2026-07-01 12:01:07 CST
+ 更新内容: 约束福小客头顶提示气泡不再渲染名称标题，仅显示提示正文。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -56,6 +56,7 @@ test('shows random Fu Xiaoke bubble prompts while the dialog is closed', () => {
   assert.match(componentSource, /idlePromptIndexRef\.current \+= 1;/);
   assert.match(componentSource, /showCompanionCue\(getIdleCompanionCue\(idlePromptIndexRef\.current\), \{ openDialog: false \}\);/);
   assert.match(componentSource, /className="ai-bubble"/);
+  assert.doesNotMatch(componentSource, /ai-bubble-name/);
   assert.match(companionSource, /您好，我是福小客，有什么可以帮助您的吗？/);
 });
 
@@ -121,6 +122,7 @@ test('styles the launcher as a transparent 3D mascot and speech bubble', () => {
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*width:\s*min\(186px, calc\(100vw - 32px\)\);/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*transform:\s*translateX\(-50%\);/s);
   assert.match(componentCss, /\.ai-bubble::after\s*\{[^}]*left:\s*50%;/s);
+  assert.doesNotMatch(componentCss, /\.ai-bubble-name/);
   assert.match(componentCss, /@keyframes ai-bubble-in/);
   assert.match(componentCss, /\.ai-card-wrap\s*\{[^}]*z-index:\s*1000;/s);
   assert.match(componentCss, /\.ai-widget--speaking \.ai-bubble/);

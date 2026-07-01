@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:51:09 CST
- 更新内容: 恢复福小客头顶提示气泡样式，回到上一版提示效果。
+ 更新时间: 2026-07-01 12:01:07 CST
+ 更新内容: 去掉福小客头顶提示气泡名称标题样式，气泡只展示提示正文。
 */
 .ai-widget {
   position: relative;
@@ -93,13 +93,6 @@
   border-bottom: 1px solid rgba(255, 255, 255, .18);
   background: color-mix(in srgb, var(--ai-card-bg) 86%, transparent);
   transform: translateX(-50%) rotate(45deg);
-}
-
-.ai-bubble-name {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: .02em;
 }
 
 .ai-widget--speaking .ai-bubble {

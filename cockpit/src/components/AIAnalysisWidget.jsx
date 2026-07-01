@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:51:09 CST
- 更新内容: 恢复福小客头顶提示气泡与悬浮文案请求，回到上一版提示效果。
+ 更新时间: 2026-07-01 12:01:07 CST
+ 更新内容: 去掉福小客头顶提示气泡中的名称标题，仅保留提示正文。
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
@@ -484,7 +484,6 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
     <div className={`ai-widget${open ? ' ai-widget--open' : ''}${bubbleCue ? ' ai-widget--speaking' : ''}`} ref={widgetRef}>
       {bubbleCue && (
         <div className="ai-bubble" role="status" aria-live="polite">
-          <span className="ai-bubble-name">福小客</span>
           <span>{bubbleCue.text}</span>
         </div>
       )}
