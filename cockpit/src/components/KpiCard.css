@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 12:23:05  更新内容: 加深回款 KPI 半环悬浮提示卡片底色，提升亮色扇区上的文字可读性。 */
+/* 更新时间: 2026-07-01 12:26:40  更新内容: KPI 副文案支持换行显示，并保留半环悬浮提示深色可读底色。 */
 .kpi-card {
   position: relative;
   display: flex;
@@ -304,6 +304,7 @@
 .kpi-card__sub {
   font-size: 14px;
   color: var(--muted);
+  white-space: pre-line;
 }
 
 .kpi-card--with-side .kpi-card__sub,

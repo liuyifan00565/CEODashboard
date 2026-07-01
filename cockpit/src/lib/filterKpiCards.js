@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-06-29 10:45:53
- 更新内容: KPI 卡片特定销售维度副文案改用销售投入，并保留原筛选数据口径。
+ 更新时间: 2026-07-01 12:26:40
+ 更新内容: 回款 KPI 副文案目标标签与目标金额换到同一行，并移除日期后的分隔点。
 */
 import { CHANNEL_ROI, CHANNELS, KPI, KPI_CARDS, KPI_DERIVED, getRenewalModalData } from '../data/mock.js';
 
@@ -194,6 +194,10 @@ function createRenewalCard(baseCard, dim, factor, rangeLabel, channelKey) {
   };
 }
 
+function targetSub(rangeLabel, targetLabel, target) {
+  return `${rangeLabel}\n${targetLabel} ${target} 万`;
+}
+
 export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_RANGE, channel = 'all' } = {}) {
   const safeDim = DIM_CONFIG[dim] ? dim : 'month';
   const channelContext = getChannelContext(channel);
@@ -235,7 +239,7 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
       ...monthCard,
       title: safeDim === 'month' ? monthCard.title : `${config.label}回款`,
       value: recovered,
-      sub: `${rangeLabel} · ${config.label}目标 ${target} 万`,
+      sub: targetSub(rangeLabel, `${config.label}目标`, target),
       progress: completion(recovered, target),
       progressLabel: `${config.label}目标完成率`,
       gap: Math.max(target - recovered, 0),
@@ -246,7 +250,7 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
       ...yearCard,
       title: safeDim === 'month' ? yearCard.title : `${config.label}累计回款`,
       value: cumulativeRecovered,
-      sub: `${rangeLabel} · ${config.label}目标 ${cumulativeTarget} 万`,
+      sub: targetSub(rangeLabel, safeDim === 'month' ? '年度目标' : `${config.label}目标`, cumulativeTarget),
       progress: completion(cumulativeRecovered, cumulativeTarget),
       progressLabel: `${config.label}累计完成率`,
       gap: Math.max(cumulativeTarget - cumulativeRecovered, 0),

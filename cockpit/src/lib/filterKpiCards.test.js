@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-06-26 11:30:50
- 更新内容: 增加费比 KPI 卡片大字展示百分比、副文案保留投入金额的回归测试。
+ 更新时间: 2026-07-01 12:26:40
+ 更新内容: 增加回款 KPI 副文案目标标签与目标金额同行且移除日期分隔点的回归测试。
 */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -21,6 +21,17 @@ test('keeps the default June monthly filter aligned with the existing mock KPI v
   assert.equal(recovered.delta, 12.5);
   assert.match(recovered.sub, /2026-06-01 至 2026-06-30/);
   assert.equal(renewal.value, 75.4);
+});
+
+test('places monthly and annual target labels on the same subtitle line as their amounts', () => {
+  const cards = getFilteredKpiCards({ dim: 'month', dateRange: ['2026-06-01', '2026-06-30'] });
+  const recovered = byKey(cards, 'month');
+  const annual = byKey(cards, 'year');
+
+  assert.equal(recovered.sub, '2026-06-01 至 2026-06-30\n月度目标 580 万');
+  assert.equal(annual.sub, '2026-06-01 至 2026-06-30\n年度目标 5800 万');
+  assert.doesNotMatch(recovered.sub, / · /);
+  assert.doesNotMatch(annual.sub, / · /);
 });
 
 test('shows the cost ratio percentage as the main value on the cost card', () => {
