@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-06-24 22:42:00
- 更新内容: 新增生产服务入口，同时提供静态 dist 文件和 /api/ai/analyze 通义流式接口。
+ 更新时间: 2026-07-01 11:19:49 CST
+ 更新内容: 生产服务入口新增 /api/ai/hover-cue 千问悬浮气泡接口，并保留静态 dist 与 AI 分析接口。
 */
 import fs from 'node:fs';
 import http from 'node:http';
@@ -8,6 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { handleAiAnalyzeRequest } from './server/dashscope.js';
+import { handleAiHoverCueRequest } from './server/hoverCue.js';
 import { loadLocalEnv } from './server/env.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -73,6 +74,16 @@ const server = http.createServer((req, res) => {
         res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
       }
       res.end(`AI 分析接口异常：${err.message}`);
+    });
+    return;
+  }
+
+  if (url.pathname === '/api/ai/hover-cue') {
+    handleAiHoverCueRequest(req, res).catch((err) => {
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      }
+      res.end(JSON.stringify({ error: `AI 悬浮气泡接口异常：${err.message}` }));
     });
     return;
   }

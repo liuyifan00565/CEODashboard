@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 10:57:19
- 更新内容: AI 分析入口为福小客增加桌宠式鼠标跟随，并传递分析飞行状态。
+ 更新时间: 2026-07-01 11:19:49 CST
+ 更新内容: AI 分析入口增加页面文字悬浮千问短气泡，鼠标停留在经营文字上时福小客即时提示。
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
@@ -23,6 +23,12 @@ import {
   getIdleCompanionCue,
   getSpeechAction,
 } from '../lib/mascotCompanion';
+import {
+  buildHoverCueCacheKey,
+  getHoverCueTextFromElement,
+  normalizeHoverCueText,
+  shouldRequestHoverCue,
+} from '../lib/hoverCue';
 import './AIAnalysisWidget.css';
 
 const INITIAL_MESSAGE = {
@@ -36,6 +42,9 @@ const QUICK_PROMPTS = [
   '哪个销售维度拖后腿，应该怎么处理？',
   '从 ROI 和目标完成率看，下个月预算怎么调？',
 ];
+const HOVER_CUE_DELAY = 650;
+const HOVER_CUE_DURATION = 4200;
+const fallbackCue = '这处信息建议结合目标完成率、ROI 和续费一起看。';
 
 function makeId(prefix) {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -96,6 +105,10 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   const abortRef = useRef(null);
   const mascotTimerRef = useRef(null);
   const bubbleTimerRef = useRef(null);
+  const hoverCueTimerRef = useRef(null);
+  const hoverCueAbortRef = useRef(null);
+  const hoverCueCacheRef = useRef(new Map());
+  const hoverCueRequestIdRef = useRef(0);
   const idlePromptIndexRef = useRef(0);
 
   const snapshot = useMemo(() => buildDashboardSnapshot(activeMenu, dim, channelKey), [activeMenu, dim, channelKey]);
@@ -211,9 +224,79 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
 
   useEffect(() => () => {
     abortRef.current?.abort();
+    hoverCueAbortRef.current?.abort();
     clearTimeout(mascotTimerRef.current);
     clearTimeout(bubbleTimerRef.current);
+    clearTimeout(hoverCueTimerRef.current);
   }, []);
+
+  useEffect(() => {
+    async function requestHoverCue(text, cacheKey) {
+      const cachedCue = hoverCueCacheRef.current.get(cacheKey);
+      if (cachedCue) {
+        showCompanionCue({ text: cachedCue, action: MASCOT_ACTIONS.talk }, { openDialog: false, duration: HOVER_CUE_DURATION });
+        return;
+      }
+
+      hoverCueAbortRef.current?.abort();
+      const controller = new AbortController();
+      hoverCueAbortRef.current = controller;
+      const requestId = hoverCueRequestIdRef.current + 1;
+      hoverCueRequestIdRef.current = requestId;
+      setMascotAction(MASCOT_ACTIONS.think);
+
+      try {
+        const response = await fetch('/api/ai/hover-cue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, snapshot }),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`AI 悬浮气泡接口返回 ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const cue = normalizeHoverCueText(payload.cue);
+        if (!cue || hoverCueRequestIdRef.current !== requestId) return;
+
+        hoverCueCacheRef.current.set(cacheKey, cue);
+        showCompanionCue({ text: cue, action: MASCOT_ACTIONS.talk }, { openDialog: false, duration: HOVER_CUE_DURATION });
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+        showCompanionCue({ text: fallbackCue, action: MASCOT_ACTIONS.think }, { openDialog: false, duration: 3200 });
+      } finally {
+        if (hoverCueAbortRef.current === controller) {
+          hoverCueAbortRef.current = null;
+        }
+      }
+    }
+
+    function handleTextPointerOver(event) {
+      clearTimeout(hoverCueTimerRef.current);
+      const text = getHoverCueTextFromElement(event.target);
+      if (!shouldRequestHoverCue(text)) return;
+
+      const normalizedText = normalizeHoverCueText(text);
+      const cacheKey = buildHoverCueCacheKey({
+        activeMenu,
+        dim,
+        channelKey,
+        text: normalizedText,
+      });
+
+      hoverCueTimerRef.current = window.setTimeout(() => {
+        requestHoverCue(normalizedText, cacheKey);
+      }, HOVER_CUE_DELAY);
+    }
+
+    document.addEventListener('pointerover', handleTextPointerOver);
+    return () => {
+      document.removeEventListener('pointerover', handleTextPointerOver);
+      clearTimeout(hoverCueTimerRef.current);
+    };
+  }, [activeMenu, dim, channelKey, snapshot]);
 
   useEffect(() => {
     if (open) return undefined;

@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 10:57:19
- 更新内容: AI 小人测试补充桌宠鼠标跟随和分析飞行状态传递。
+ 更新时间: 2026-07-01 11:19:49 CST
+ 更新内容: AI 小人测试补充页面文字悬浮触发千问短气泡，以及桌宠鼠标跟随和分析飞行状态传递。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 const componentSource = readFileSync(new URL('./AIAnalysisWidget.jsx', import.meta.url), 'utf8');
 const componentCss = readFileSync(new URL('./AIAnalysisWidget.css', import.meta.url), 'utf8');
 const companionSource = readFileSync(new URL('../lib/mascotCompanion.js', import.meta.url), 'utf8');
+const hoverCueSource = readFileSync(new URL('../lib/hoverCue.js', import.meta.url), 'utf8');
 const indexCss = readFileSync(new URL('../index.css', import.meta.url), 'utf8');
 const mascotTransparentUrl = new URL('../../public/ai-mascot-transparent.png', import.meta.url);
 
@@ -62,6 +63,21 @@ test('responds to KPI card context with matching speech and motion', () => {
   assert.match(componentSource, /useEffect\(\(\) => \{\s*if \(!companionCue\) return;\s*showCompanionCue\(companionCue, \{ openDialog: false \}\);/s);
   assert.match(componentSource, /setMascotAction\(cue\.action \?\? getSpeechAction\(cue\.text\)\);/);
   assert.match(componentSource, /playMascotAction\(MASCOT_ACTIONS\.click, 860, nextOpen\);/);
+});
+
+test('requests Qwen hover bubble cues from readable page text', () => {
+  assert.match(componentSource, /normalizeHoverCueText/);
+  assert.match(componentSource, /shouldRequestHoverCue/);
+  assert.match(componentSource, /buildHoverCueCacheKey/);
+  assert.match(componentSource, /getHoverCueTextFromElement/);
+  assert.match(componentSource, /const hoverCueTimerRef = useRef\(null\);/);
+  assert.match(componentSource, /const hoverCueCacheRef = useRef\(new Map\(\)\);/);
+  assert.match(componentSource, /document\.addEventListener\('pointerover', handleTextPointerOver\);/);
+  assert.match(componentSource, /fetch\('\/api\/ai\/hover-cue'/);
+  assert.match(componentSource, /showCompanionCue\(\{ text: cue, action: MASCOT_ACTIONS\.talk \}/);
+  assert.match(componentSource, /showCompanionCue\(\{ text: fallbackCue, action: MASCOT_ACTIONS\.think \}/);
+  assert.match(hoverCueSource, /export function getHoverCueTextFromElement/);
+  assert.match(hoverCueSource, /\.closest\('\.ai-widget'\)/);
 });
 
 test('keeps the AI dialog content and behavior intact', () => {
