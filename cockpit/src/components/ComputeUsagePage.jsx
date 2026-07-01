@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 17:33:45 CST
- 更新内容: 移除算力页顶部四个 KPI 卡片的 BorderGlow 流光边框，改为静态深色玻璃卡片。
+ 更新时间: 2026-07-01 17:37:49 CST
+ 更新内容: 算力用量和总容量趋势滑动条支持 3 到 15 条缩放，放大到 15 条后拖动延续查看。
 */
 import { useMemo, useState } from 'react';
 
@@ -28,6 +28,7 @@ const DIM_TREND_LABELS = {
   month: '月度',
   year: '年度',
 };
+const MIN_VISIBLE_TREND_BARS = 3;
 const MAX_VISIBLE_TREND_BARS = 15;
 const CUSTOMER_FILTER_ALL = 'all';
 const CUSTOMER_SORT_OPTIONS = [
@@ -241,6 +242,15 @@ function buildTrendPoints(trend) {
   });
 }
 
+function getTrendZoomRange(pointCount) {
+  const sliderEndValue = Math.min(MAX_VISIBLE_TREND_BARS - 1, pointCount - 1);
+  return {
+    sliderEndValue,
+    minValueSpan: Math.min(MIN_VISIBLE_TREND_BARS - 1, sliderEndValue),
+    maxValueSpan: sliderEndValue,
+  };
+}
+
 function buildTrendOption({ trend, tokens }) {
   const buckets = buildTrendPoints(trend);
   const days = buckets.map((point) => point.label);
@@ -248,8 +258,7 @@ function buildTrendOption({ trend, tokens }) {
   const target = buckets.map((point) => point.target);
   const completion = buckets.map((point) => point.completion);
   const showSlider = days.length > MAX_VISIBLE_TREND_BARS;
-  const sliderEndValue = Math.min(MAX_VISIBLE_TREND_BARS - 1, days.length - 1);
-  const sliderWindowSpan = sliderEndValue;
+  const { sliderEndValue, minValueSpan, maxValueSpan } = getTrendZoomRange(days.length);
   const txt = tokens.chartText;
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
@@ -283,9 +292,9 @@ function buildTrendOption({ trend, tokens }) {
         xAxisIndex: 0,
         startValue: 0,
         endValue: sliderEndValue,
-        minValueSpan: sliderWindowSpan,
-        maxValueSpan: sliderWindowSpan,
-        zoomLock: true,
+        minValueSpan,
+        maxValueSpan,
+        zoomLock: false,
         realtime: true,
       },
       {
@@ -295,9 +304,9 @@ function buildTrendOption({ trend, tokens }) {
         bottom: 8,
         startValue: 0,
         endValue: sliderEndValue,
-        minValueSpan: sliderWindowSpan,
-        maxValueSpan: sliderWindowSpan,
-        zoomLock: true,
+        minValueSpan,
+        maxValueSpan,
+        zoomLock: false,
         realtime: true,
         borderColor: 'rgba(192,132,252,.32)',
         backgroundColor: 'rgba(255,255,255,.045)',
@@ -435,8 +444,7 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
   const capacityScale = totalCapacity / latestCapacityBase;
   const capacity = buckets.map((point) => Math.round(point.capacity * capacityScale));
   const showSlider = days.length > MAX_VISIBLE_TREND_BARS;
-  const sliderEndValue = Math.min(MAX_VISIBLE_TREND_BARS - 1, days.length - 1);
-  const sliderWindowSpan = sliderEndValue;
+  const { sliderEndValue, minValueSpan, maxValueSpan } = getTrendZoomRange(days.length);
   const txt = tokens.chartText;
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
@@ -468,9 +476,9 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
         xAxisIndex: 0,
         startValue: 0,
         endValue: sliderEndValue,
-        minValueSpan: sliderWindowSpan,
-        maxValueSpan: sliderWindowSpan,
-        zoomLock: true,
+        minValueSpan,
+        maxValueSpan,
+        zoomLock: false,
         realtime: true,
       },
       {
@@ -480,9 +488,9 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
         bottom: 8,
         startValue: 0,
         endValue: sliderEndValue,
-        minValueSpan: sliderWindowSpan,
-        maxValueSpan: sliderWindowSpan,
-        zoomLock: true,
+        minValueSpan,
+        maxValueSpan,
+        zoomLock: false,
         realtime: true,
         borderColor: 'rgba(56,245,255,.34)',
         backgroundColor: 'rgba(255,255,255,.045)',

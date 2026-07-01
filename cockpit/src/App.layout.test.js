@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 17:33:45 CST
- 更新内容: 增加算力页顶部 KPI 卡片静态边框约束，避免恢复 BorderGlow 流光效果。
+ 更新时间: 2026-07-01 17:37:49 CST
+ 更新内容: 增加算力趋势双滑动条 3 到 15 条可缩放窗口约束，保证最大窗口可拖动延续查看。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -102,17 +102,23 @@ test('uses the same year month day topbar controls for compute and links them to
   assert.match(computePageSource, /title=\{`\$\{periodLabel\}算力用量趋势`\}/);
 });
 
-test('uses a full-width compute trend card with draggable 15-bar window and descending period labels', () => {
+test('uses full-width compute trend sliders that resize from 3 to 15 bars', () => {
+  assert.match(computePageSource, /const MIN_VISIBLE_TREND_BARS = 3;/);
   assert.match(computePageSource, /const MAX_VISIBLE_TREND_BARS = 15;/);
   assert.match(computePageSource, /const showSlider = days\.length > MAX_VISIBLE_TREND_BARS;/);
-  assert.match(computePageSource, /const sliderEndValue = Math\.min\(MAX_VISIBLE_TREND_BARS - 1, days\.length - 1\);/);
-  assert.match(computePageSource, /const sliderWindowSpan = sliderEndValue;/);
+  assert.match(computePageSource, /function getTrendZoomRange\(pointCount\) \{/);
+  assert.match(computePageSource, /const sliderEndValue = Math\.min\(MAX_VISIBLE_TREND_BARS - 1, pointCount - 1\);/);
+  assert.match(computePageSource, /minValueSpan:\s*Math\.min\(MIN_VISIBLE_TREND_BARS - 1, sliderEndValue\)/);
+  assert.match(computePageSource, /maxValueSpan:\s*sliderEndValue/);
+  assert.match(computePageSource, /const \{ sliderEndValue, minValueSpan, maxValueSpan \} = getTrendZoomRange\(days\.length\);/);
+  assert.equal((computePageSource.match(/getTrendZoomRange\(days\.length\)/g) ?? []).length, 2);
+  assert.equal((computePageSource.match(/zoomLock:\s*false/g) ?? []).length, 4);
   assert.match(computePageSource, /dataZoom: showSlider \? \[/);
   assert.match(computePageSource, /startValue:\s*0/);
   assert.match(computePageSource, /endValue:\s*sliderEndValue/);
-  assert.match(computePageSource, /minValueSpan:\s*sliderWindowSpan/);
-  assert.match(computePageSource, /maxValueSpan:\s*sliderWindowSpan/);
-  assert.match(computePageSource, /zoomLock:\s*true/);
+  assert.match(computePageSource, /minValueSpan,\s*\n\s*maxValueSpan,\s*\n\s*zoomLock:\s*false/);
+  assert.doesNotMatch(computePageSource, /sliderWindowSpan/);
+  assert.doesNotMatch(computePageSource, /zoomLock:\s*true/);
   assert.match(computePageSource, /realtime:\s*true/);
   assert.match(computePageSource, /borderColor:\s*'rgba\(192,132,252,\.32\)'/);
   assert.match(computePageSource, /fillerColor:\s*'rgba\(244,114,182,\.26\)'/);
