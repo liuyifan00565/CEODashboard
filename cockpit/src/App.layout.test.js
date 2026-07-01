@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 14:46:59 CST
- 更新内容: 回归测试新增“算力用量分析”菜单渲染专属页面，并保留经营总览布局断言。
+ 更新时间: 2026-07-01 15:08:17 CST
+ 更新内容: 回归测试新增算力页面标题去说明文案、整体上移和趋势柱状图对齐经营趋势样式。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -12,6 +12,8 @@ const kpiModalSource = readFileSync(new URL('./components/KpiModal.jsx', import.
 const monthlyTrendSource = readFileSync(new URL('./components/MonthlyTrend.jsx', import.meta.url), 'utf8');
 const channelPanelSource = readFileSync(new URL('./components/ChannelPanel.jsx', import.meta.url), 'utf8');
 const channelPanelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
+const computePageSource = readFileSync(new URL('./components/ComputeUsagePage.jsx', import.meta.url), 'utf8');
+const computePageCss = readFileSync(new URL('./components/ComputeUsagePage.css', import.meta.url), 'utf8');
 
 test('keeps all dashboard data cards on fixed grid layouts', () => {
   assert.doesNotMatch(appSource, /DraggableKpiLayer/);
@@ -28,6 +30,25 @@ test('renders compute usage analysis as an independent dashboard page', () => {
   assert.match(appSource, /isComputePage \? \(/);
   assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} \/>/);
   assert.match(appSource, /: \(\s*<>\s*<div className="dash-kpis">/);
+});
+
+test('keeps compute usage page header compact without extra English or subtitle copy', () => {
+  assert.doesNotMatch(computePageSource, /cpu-eyebrow/);
+  assert.doesNotMatch(computePageSource, /Compute Usage/);
+  assert.doesNotMatch(computePageSource, /近30日消耗、容量与客户用量结构/);
+  assert.doesNotMatch(computePageSource, /<p>/);
+  assert.match(computePageCss, /\.cpu-page \{[\s\S]*?margin-top:\s*-10px;/);
+  assert.match(computePageCss, /\.cpu-head \{[\s\S]*?padding:\s*0 2px 0;/);
+});
+
+test('matches the compute trend chart to the overview target-bar and completion-line language', () => {
+  assert.match(computePageSource, /data:\s*\['算力用量', '目标用量', '完成率%'\]/);
+  assert.match(computePageSource, /name:\s*'目标用量'[\s\S]*?type:\s*'bar'[\s\S]*?color:\s*tokens\.chartBarFaint/);
+  assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'bar'[\s\S]*?barGap:\s*'-100%'/);
+  assert.match(computePageSource, /barCategoryGap:\s*'42%'/);
+  assert.match(computePageSource, /name:\s*'完成率%'[\s\S]*?type:\s*'line'[\s\S]*?yAxisIndex:\s*1/);
+  assert.doesNotMatch(computePageSource, /stack:\s*'usage'/);
+  assert.doesNotMatch(computePageSource, /name:\s*'总容量'[\s\S]*?type:\s*'line'/);
 });
 
 test('notifies Fu Xiaoke when a KPI card is opened', () => {

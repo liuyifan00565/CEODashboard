@@ -1,9 +1,10 @@
-/* 更新时间: 2026-07-01 14:46:59 CST  更新内容: 新增“算力用量分析”页面的玻璃卡片、图表、资源健康和客户明细响应式样式。 */
+/* 更新时间: 2026-07-01 15:08:17 CST  更新内容: 算力页标题区去除英文和副文案并上移，趋势图样式对齐经营趋势柱线组合。 */
 .cpu-page {
   display: flex;
   flex-direction: column;
   gap: 16px;
   min-width: 0;
+  margin-top: -10px;
   color: var(--txt);
 }
 
@@ -13,17 +14,7 @@
   justify-content: space-between;
   gap: 16px;
   min-width: 0;
-  padding: 2px 2px 0;
-}
-
-.cpu-eyebrow {
-  display: block;
-  margin-bottom: 5px;
-  color: var(--faint);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+  padding: 0 2px 0;
 }
 
 .cpu-head h2 {
@@ -32,12 +23,6 @@
   font-size: clamp(24px, 2.2vw, 34px);
   line-height: 1.1;
   font-weight: 760;
-}
-
-.cpu-head p {
-  margin: 7px 0 0;
-  color: var(--muted);
-  font-size: 14px;
 }
 
 .cpu-head__meta {

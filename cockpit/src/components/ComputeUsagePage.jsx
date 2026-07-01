@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 14:46:59 CST
- 更新内容: 新增“算力用量分析”完整页面，接入核心 KPI、趋势柱状图、圆角环图、资源健康和客户明细。
+ 更新时间: 2026-07-01 15:08:17 CST
+ 更新内容: 算力页面标题去除英文和说明文案并整体上移，趋势柱状图改为目标背景柱、实际前景柱和完成率曲线。
 */
 import { useMemo } from 'react';
 
@@ -70,17 +70,43 @@ function tooltipRow({ color, label, value }) {
   </div>`;
 }
 
+function average(values) {
+  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+}
+
+function buildTrendBuckets(trend) {
+  const bucketCount = 6;
+  const bucketSize = Math.ceil(trend.length / bucketCount);
+
+  return Array.from({ length: bucketCount }, (_, index) => {
+    const points = trend.slice(index * bucketSize, (index + 1) * bucketSize);
+    const usage = Math.round(average(points.map((point) => point.usage)));
+    const high = Math.max(...points.map((point) => point.usage));
+    const addOn = Math.round(average(points.map((point) => point.addOn)));
+    const target = Math.max(usage + 36, high + addOn + 34);
+
+    return {
+      label: points[0]?.day ?? '',
+      range: points.length > 1 ? `${points[0].day} - ${points.at(-1).day}` : points[0]?.day ?? '',
+      usage,
+      target,
+      completion: target ? +((usage / target) * 100).toFixed(1) : 0,
+    };
+  }).filter((bucket) => bucket.label);
+}
+
 function buildTrendOption({ trend, tokens }) {
-  const days = trend.map((point) => point.day);
-  const baseUsage = trend.map((point) => Math.max(point.usage - point.addOn, 0));
-  const addOn = trend.map((point) => point.addOn);
-  const capacity = trend.map((point) => point.capacity);
+  const buckets = buildTrendBuckets(trend);
+  const days = buckets.map((point) => point.label);
+  const usage = buckets.map((point) => point.usage);
+  const target = buckets.map((point) => point.target);
+  const completion = buckets.map((point) => point.completion);
   const txt = tokens.chartText;
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
-  const baseColor = tokens.chartBar;
-  const addOnColor = '#ff4fd8';
-  const capacityColor = '#5596e8';
+  const usageColor = tokens.chartBar;
+  const targetColor = tokens.chartBarFaint;
+  const completionColor = '#dfff00';
 
   return {
     backgroundColor: 'transparent',
@@ -93,7 +119,7 @@ function buildTrendOption({ trend, tokens }) {
       itemHeight: 8,
       itemGap: 18,
       textStyle: { color: faint, fontSize: 13 },
-      data: ['基础消耗', '高峰增量', '总容量'],
+      data: ['算力用量', '目标用量', '完成率%'],
     },
     grid: { top: 42, left: 10, right: 12, bottom: 8, containLabel: true },
     tooltip: {
@@ -107,13 +133,12 @@ function buildTrendOption({ trend, tokens }) {
       extraCssText: tooltipExtraCss(),
       textStyle: { color: txt, fontSize: 13 },
       formatter: (params) => {
-        const usage = (params.find((item) => item.seriesName === '基础消耗')?.value || 0)
-          + (params.find((item) => item.seriesName === '高峰增量')?.value || 0);
+        const bucket = buckets[params[0]?.dataIndex] ?? null;
         return [
-          tooltipHeader(`${params[0]?.axisValue || ''} 算力用量`),
-          tooltipRow({ color: baseColor, label: '当日总消耗', value: formatWan(usage) }),
-          tooltipRow({ color: addOnColor, label: '高峰增量', value: formatWan(params.find((item) => item.seriesName === '高峰增量')?.value || 0) }),
-          tooltipRow({ color: capacityColor, label: '总容量', value: formatWan(params.find((item) => item.seriesName === '总容量')?.value || 0) }),
+          tooltipHeader(`${bucket?.range || params[0]?.axisValue || ''} 算力用量`),
+          tooltipRow({ color: usageColor, label: '算力用量', value: formatWan(params.find((item) => item.seriesName === '算力用量')?.value || 0) }),
+          tooltipRow({ color: targetColor, label: '目标用量', value: formatWan(params.find((item) => item.seriesName === '目标用量')?.value || 0) }),
+          tooltipRow({ color: completionColor, label: '完成率', value: `${params.find((item) => item.seriesName === '完成率%')?.value || 0}%` }),
         ].join('');
       },
     },
@@ -135,51 +160,61 @@ function buildTrendOption({ trend, tokens }) {
       },
       {
         type: 'value',
-        name: '容量',
-        min: 2200,
-        max: 2700,
+        name: '%',
+        min: 0,
+        max: 100,
         nameTextStyle: { color: faint, fontSize: 12 },
-        axisLabel: { color: faint, fontSize: 12 },
+        axisLabel: { color: faint, fontSize: 12, formatter: '{value}%' },
         splitLine: { show: false },
         axisLine: { show: false },
       },
     ],
     series: [
       {
-        name: '基础消耗',
+        name: '目标用量',
         type: 'bar',
-        stack: 'usage',
-        barWidth: 12,
+        barWidth: 22,
+        barCategoryGap: '42%',
         itemStyle: {
-          color: baseColor,
-          borderRadius: [0, 0, 3, 3],
+          color: tokens.chartBarFaint,
+          borderColor: tokens.chartAxis,
+          borderWidth: 1,
+          borderRadius: [4, 4, 0, 0],
         },
-        emphasis: { itemStyle: { color: txt } },
-        data: baseUsage,
+        emphasis: { disabled: true },
+        data: target,
       },
       {
-        name: '高峰增量',
+        name: '算力用量',
         type: 'bar',
-        stack: 'usage',
-        barWidth: 12,
+        barWidth: 22,
+        barGap: '-100%',
+        barCategoryGap: '42%',
         itemStyle: {
-          color: addOnColor,
-          borderRadius: [3, 3, 0, 0],
+          color: tokens.chartBar,
+          borderRadius: [4, 4, 0, 0],
         },
         emphasis: { itemStyle: { color: '#ffffff' } },
-        data: addOn,
+        data: usage,
       },
       {
-        name: '总容量',
+        name: '完成率%',
         type: 'line',
         yAxisIndex: 1,
         smooth: true,
-        showSymbol: false,
         symbol: 'circle',
-        symbolSize: 5,
-        lineStyle: { color: capacityColor, width: 2 },
-        areaStyle: { color: 'rgba(85,150,232,.08)' },
-        data: capacity,
+        symbolSize: 6,
+        lineStyle: { color: completionColor, width: 2 },
+        itemStyle: { color: completionColor, borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
+        label: {
+          show: true,
+          position: 'top',
+          color: completionColor,
+          fontSize: 12,
+          fontWeight: 700,
+          formatter: '{c}%',
+        },
+        data: completion,
       },
     ],
     media: [
@@ -389,9 +424,7 @@ export default function ComputeUsagePage({ searchTerm = '' }) {
     <div className="cpu-page">
       <header className="cpu-head" data-anim>
         <div>
-          <span className="cpu-eyebrow">Compute Usage</span>
           <h2>算力用量分析</h2>
-          <p>近30日消耗、容量与客户用量结构</p>
         </div>
         <div className="cpu-head__meta">
           <span>近30日</span>
