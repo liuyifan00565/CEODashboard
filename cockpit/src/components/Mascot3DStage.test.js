@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:50:00 CST
- 更新内容: 增加福小客多动作形象测试，按引导、汇报、风险和达成场景切换合适形象。
+ 更新时间: 2026-07-01 12:22:42 CST
+ 更新内容: 增加默认闲置状态小尺寸测试，动作和分析状态保持原尺寸。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -152,5 +152,10 @@ test('renders with extra headroom so the helmet is not clipped', () => {
 
 test('keeps the 3D stage compact for the sidebar launcher', () => {
   assert.match(stageCss, /\.mascot-3d-stage\s*\{/);
+  assert.match(stageCss, /\.mascot-3d-stage\s*\{[^}]*width:\s*128px;/s);
+  assert.match(stageCss, /\.mascot-3d-stage--default\s*\{[^}]*width:\s*116px;/s);
+  assert.match(stageCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.mascot-3d-stage\s*\{[^}]*width:\s*112px;[\s\S]*?\.mascot-3d-stage--default\s*\{[^}]*width:\s*100px;/);
+  assert.match(stageSource, /const defaultIdle = action === MASCOT_ACTIONS\.idle && !analysisActive;/);
+  assert.match(stageSource, /className=\{`mascot-3d-stage\$\{defaultIdle \? ' mascot-3d-stage--default' : ''\}`\}/);
   assert.match(stageCss, /filter:\s*drop-shadow/);
 });

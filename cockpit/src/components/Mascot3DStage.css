@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:50:00 CST
- 更新内容: 福小客舞台新增可见图片层，按场景形象淡入切换并保留轻微动作。
+ 更新时间: 2026-07-01 12:22:42 CST
+ 更新内容: 默认闲置状态下缩小福小客尺寸，动作和分析状态继续使用原尺寸。
 */
 .mascot-3d-stage {
   position: relative;
@@ -10,6 +10,10 @@
   overflow: visible;
   pointer-events: none;
   filter: drop-shadow(0 18px 28px rgba(0, 0, 0, .4)) drop-shadow(0 0 18px rgba(114, 77, 255, .34));
+}
+
+.mascot-3d-stage--default {
+  width: 116px;
 }
 
 .mascot-3d-stage canvas {
@@ -96,5 +100,9 @@
 @media (max-width: 760px) {
   .mascot-3d-stage {
     width: 112px;
+  }
+
+  .mascot-3d-stage--default {
+    width: 100px;
   }
 }

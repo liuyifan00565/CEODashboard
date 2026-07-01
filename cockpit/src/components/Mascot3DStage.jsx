@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:50:00 CST
- 更新内容: 为福小客接入四张场景形象，按引导、汇报、风险和达成动作在原位置淡入切换。
+ 更新时间: 2026-07-01 12:22:42 CST
+ 更新内容: 默认闲置状态下缩小福小客舞台尺寸，动作和分析状态保持原尺寸。
 */
 import { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
@@ -258,8 +258,10 @@ export default function Mascot3DStage({
   analysisActive = false,
   label = '福小客 3D 经营助手',
 }) {
+  const defaultIdle = action === MASCOT_ACTIONS.idle && !analysisActive;
+
   return (
-    <span className="mascot-3d-stage" role="img" aria-label={label}>
+    <span className={`mascot-3d-stage${defaultIdle ? ' mascot-3d-stage--default' : ''}`} role="img" aria-label={label}>
       <Canvas
         orthographic
         camera={{ position: [0, 0, 5], zoom: 64 }}
