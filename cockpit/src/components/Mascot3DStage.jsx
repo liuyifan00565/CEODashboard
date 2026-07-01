@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:47:04
- 更新内容: 移除福小客动作缩放，仅保留位移与倾斜，确保所有动作不改变小人尺寸。
+ 更新时间: 2026-07-01 11:50:00 CST
+ 更新内容: 为福小客接入四张场景形象，按引导、汇报、风险和达成动作在原位置淡入切换。
 */
 import { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
@@ -12,12 +12,56 @@ import './Mascot3DStage.css';
 
 const MASCOT_IMAGE_WIDTH = 1084;
 const MASCOT_IMAGE_HEIGHT = 1451;
-const MASCOT_ANALYSIS_IMAGE_WIDTH = MASCOT_IMAGE_WIDTH;
-const MASCOT_ANALYSIS_IMAGE_HEIGHT = MASCOT_IMAGE_HEIGHT;
 const MASCOT_STAGE_HEIGHT = 2.04;
 const MASCOT_STAGE_WIDTH = MASCOT_STAGE_HEIGHT * (MASCOT_IMAGE_WIDTH / MASCOT_IMAGE_HEIGHT);
-const MASCOT_ANALYSIS_STAGE_WIDTH = MASCOT_STAGE_WIDTH;
 const DEFAULT_POINTER = { x: 0, y: 0, active: false };
+const MASCOT_BASE_POSE = {
+  source: '/ai-mascot-transparent.png',
+  width: MASCOT_IMAGE_WIDTH,
+  height: MASCOT_IMAGE_HEIGHT,
+};
+const MASCOT_ACTION_POSES = {
+  kpiGuide: {
+    source: '/assets/mascot/ceo-mascot-kpi-guide.png',
+    width: 1082,
+    height: 1454,
+  },
+  reportPresenter: {
+    source: '/assets/mascot/ceo-mascot-report-presenter.png',
+    width: 1071,
+    height: 1469,
+  },
+  riskAlert: {
+    source: '/assets/mascot/ceo-mascot-risk-alert.png',
+    width: 1060,
+    height: 1484,
+  },
+  targetAchieved: {
+    source: '/assets/mascot/ceo-mascot-target-achieved.png',
+    width: 1072,
+    height: 1467,
+  },
+};
+
+function getMascotPoseStageWidth(pose) {
+  return MASCOT_STAGE_HEIGHT * (pose.width / pose.height);
+}
+
+function getMascotPoseKey(action = MASCOT_ACTIONS.idle, analysisActive = false) {
+  if (action === MASCOT_ACTIONS.alert) return 'riskAlert';
+  if (action === MASCOT_ACTIONS.celebrate) return 'targetAchieved';
+  if (action === MASCOT_ACTIONS.wave) return 'kpiGuide';
+  if (analysisActive || action === MASCOT_ACTIONS.think || action === MASCOT_ACTIONS.talk || action === MASCOT_ACTIONS.click) return 'reportPresenter';
+  return '';
+}
+
+function getMascotImageStackTransform(pointer = DEFAULT_POINTER, activePoseKey = '') {
+  const pointerX = pointer.active ? pointer.x : 0;
+  const pointerY = pointer.active ? pointer.y : 0;
+  const poseLift = activePoseKey === 'reportPresenter' ? -7 : activePoseKey === 'targetAchieved' ? -9 : 0;
+
+  return `translate3d(${pointerX * 8}px, ${pointerY * -5 + poseLift}px, 0) rotate(${pointerX * -5}deg)`;
+}
 
 function getDesktopPetMotion(action = MASCOT_ACTIONS.idle, t = 0, pointer = DEFAULT_POINTER, analysisActive = false) {
   const pointerX = pointer.active ? pointer.x : Math.sin(t * 0.72) * 0.18;
@@ -32,7 +76,7 @@ function getDesktopPetMotion(action = MASCOT_ACTIONS.idle, t = 0, pointer = DEFA
     y: idleFloat - pointerY * 0.055 + flyLift,
     tilt: pointerX * -0.12 + Math.sin(t * 1.1) * 0.018,
     scale: 1,
-    analysisPoseOpacity: isAnalyzing ? 1 : 0,
+    actionPoseOpacity: getMascotPoseKey(action, analysisActive) ? 1 : 0,
   };
 
   if (action === MASCOT_ACTIONS.wave) {
@@ -106,19 +150,54 @@ function MascotImage({
   );
 }
 
+function MascotImageStack({ action, pointer, analysisActive }) {
+  const activePoseKey = getMascotPoseKey(action, analysisActive);
+  const activeImageKey = activePoseKey || 'idle';
+  const imagePoses = {
+    idle: MASCOT_BASE_POSE,
+    ...MASCOT_ACTION_POSES,
+  };
+
+  return (
+    <span
+      className={`mascot-image-stack mascot-image-stack--${activeImageKey}`}
+      style={{ transform: getMascotImageStackTransform(pointer, activePoseKey) }}
+      aria-hidden="true"
+    >
+      <span className="mascot-image-stack__motion">
+        {Object.entries(imagePoses).map(([poseKey, pose]) => {
+          const active = poseKey === activeImageKey;
+
+          return (
+            <img
+              className={`mascot-pose-image${active ? ' is-active' : ''}`}
+              src={pose.source}
+              alt=""
+              draggable="false"
+              aria-hidden="true"
+              key={poseKey}
+            />
+          );
+        })}
+      </span>
+    </span>
+  );
+}
+
 function MascotPuppet({ action, pointer, analysisActive }) {
   const group = useRef(null);
   const mascotRef = useRef(null);
-  const analysisRef = useRef(null);
   const mascotMaterialRef = useRef(null);
-  const analysisMaterialRef = useRef(null);
+  const actionPoseRefs = useRef({});
+  const actionPoseMaterialRefs = useRef({});
   const pointerTarget = useRef({ x: 0, y: 0 }).current;
-  const analysisOpacity = useRef(0);
+  const actionPoseOpacity = useRef(0);
 
   useFrame(({ clock }) => {
     if (!group.current) return;
     const t = clock.getElapsedTime();
     const motion = getDesktopPetMotion(action, t, pointer, analysisActive);
+    const selectedPoseKey = getMascotPoseKey(action, analysisActive);
 
     pointerTarget.x = THREE.MathUtils.lerp(pointerTarget.x, motion.x, 0.12);
     pointerTarget.y = THREE.MathUtils.lerp(pointerTarget.y, motion.y, 0.12);
@@ -127,37 +206,48 @@ function MascotPuppet({ action, pointer, analysisActive }) {
     group.current.rotation.z = motion.tilt;
     group.current.scale.set(motion.scale, motion.scale, 1);
 
-    analysisOpacity.current = THREE.MathUtils.lerp(analysisOpacity.current, motion.analysisPoseOpacity, 0.18);
-    const poseOpacity = analysisOpacity.current;
+    actionPoseOpacity.current = THREE.MathUtils.lerp(actionPoseOpacity.current, motion.actionPoseOpacity, 0.18);
+    const poseOpacity = actionPoseOpacity.current;
 
     if (mascotRef.current) {
       mascotRef.current.position.y = Math.sin(t * 2.1) * 0.012;
     }
-    if (analysisRef.current) {
-      analysisRef.current.visible = poseOpacity > 0.02;
-      analysisRef.current.position.y = Math.sin(t * 3.2) * 0.014;
-      analysisRef.current.rotation.z = Math.sin(t * 2.6) * 0.012;
-    }
     if (mascotMaterialRef.current) {
       mascotMaterialRef.current.opacity = 1 - poseOpacity;
     }
-    if (analysisMaterialRef.current) {
-      analysisMaterialRef.current.opacity = poseOpacity;
-    }
+    Object.entries(MASCOT_ACTION_POSES).forEach(([poseKey]) => {
+      const mesh = actionPoseRefs.current[poseKey];
+      const material = actionPoseMaterialRefs.current[poseKey];
+      if (mesh) {
+        mesh.visible = poseKey === selectedPoseKey && poseOpacity > 0.02;
+        mesh.position.y = Math.sin(t * 3.2) * 0.014;
+        mesh.rotation.z = Math.sin(t * 2.6) * 0.012;
+      }
+      if (material) {
+        material.opacity = poseKey === selectedPoseKey ? poseOpacity : 0;
+      }
+    });
   });
 
   return (
     <group ref={group}>
       <MascotImage meshRef={mascotRef} materialRef={mascotMaterialRef} />
-      <MascotImage
-        meshRef={analysisRef}
-        materialRef={analysisMaterialRef}
-        source="/ai-mascot-analysis-laptop.png"
-        width={MASCOT_ANALYSIS_STAGE_WIDTH}
-        height={MASCOT_STAGE_HEIGHT}
-        z={0.02}
-        initialOpacity={0}
-      />
+      {Object.entries(MASCOT_ACTION_POSES).map(([poseKey, pose]) => (
+        <MascotImage
+          key={poseKey}
+          meshRef={(node) => {
+            actionPoseRefs.current[poseKey] = node;
+          }}
+          materialRef={(node) => {
+            actionPoseMaterialRefs.current[poseKey] = node;
+          }}
+          source={pose.source}
+          width={getMascotPoseStageWidth(pose)}
+          height={MASCOT_STAGE_HEIGHT}
+          z={0.02}
+          initialOpacity={0}
+        />
+      ))}
     </group>
   );
 }
@@ -174,10 +264,11 @@ export default function Mascot3DStage({
         orthographic
         camera={{ position: [0, 0, 5], zoom: 64 }}
         dpr={[1, 1.7]}
-        gl={{ alpha: true, antialias: true }}
+        gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
       >
         <MascotPuppet action={action} pointer={pointer} analysisActive={analysisActive} />
       </Canvas>
+      <MascotImageStack action={action} pointer={pointer} analysisActive={analysisActive} />
     </span>
   );
 }

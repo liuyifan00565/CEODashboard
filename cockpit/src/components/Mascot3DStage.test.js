@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:47:04
- 更新内容: 增加福小客动作不缩放测试，确保所有动作只移动和倾斜、不改变小人尺寸。
+ 更新时间: 2026-07-01 11:50:00 CST
+ 更新内容: 增加福小客多动作形象测试，按引导、汇报、风险和达成场景切换合适形象。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -9,7 +9,10 @@ import assert from 'node:assert/strict';
 const stageSource = readFileSync(new URL('./Mascot3DStage.jsx', import.meta.url), 'utf8');
 const stageCss = readFileSync(new URL('./Mascot3DStage.css', import.meta.url), 'utf8');
 const mascotTransparentUrl = new URL('../../public/ai-mascot-transparent.png', import.meta.url);
-const mascotAnalysisUrl = new URL('../../public/ai-mascot-analysis-laptop.png', import.meta.url);
+const mascotKpiGuideUrl = new URL('../../public/assets/mascot/ceo-mascot-kpi-guide.png', import.meta.url);
+const mascotReportPresenterUrl = new URL('../../public/assets/mascot/ceo-mascot-report-presenter.png', import.meta.url);
+const mascotRiskAlertUrl = new URL('../../public/assets/mascot/ceo-mascot-risk-alert.png', import.meta.url);
+const mascotTargetAchievedUrl = new URL('../../public/assets/mascot/ceo-mascot-target-achieved.png', import.meta.url);
 
 function readPngSize(url) {
   const png = readFileSync(url);
@@ -19,11 +22,10 @@ function readPngSize(url) {
   };
 }
 
-test('uses the original Fu Xiaoke PNG and the generated laptop analysis pose as full-character textures', () => {
+test('uses the original Fu Xiaoke PNG and generated action poses as full-character textures', () => {
   assert.ok(existsSync(mascotTransparentUrl));
-  assert.ok(existsSync(mascotAnalysisUrl));
   assert.match(stageSource, /source = '\/ai-mascot-transparent\.png'/);
-  assert.match(stageSource, /source="\/ai-mascot-analysis-laptop\.png"/);
+  assert.match(stageSource, /MASCOT_ACTION_POSES/);
   assert.match(stageSource, /const texture = useTexture\(source\);/);
   assert.match(stageSource, /texture\.colorSpace = THREE\.SRGBColorSpace;/);
   assert.match(stageSource, /<meshBasicMaterial\s+ref=\{materialRef\}\s+map=\{texture\}\s+transparent\s+toneMapped=\{false\}/s);
@@ -32,11 +34,46 @@ test('uses the original Fu Xiaoke PNG and the generated laptop analysis pose as 
   assert.doesNotMatch(stageSource, /function HelmetHead/);
 });
 
-test('keeps the analysis laptop pose on the exact same canvas size as the original mascot', () => {
-  assert.deepEqual(readPngSize(mascotAnalysisUrl), readPngSize(mascotTransparentUrl));
-  assert.match(stageSource, /const MASCOT_ANALYSIS_IMAGE_WIDTH = MASCOT_IMAGE_WIDTH;/);
-  assert.match(stageSource, /const MASCOT_ANALYSIS_IMAGE_HEIGHT = MASCOT_IMAGE_HEIGHT;/);
-  assert.match(stageSource, /const MASCOT_ANALYSIS_STAGE_WIDTH = MASCOT_STAGE_WIDTH;/);
+test('keeps generated action pose canvases close to the original mascot proportions', () => {
+  const originalSize = readPngSize(mascotTransparentUrl);
+  const actionSizes = [
+    readPngSize(mascotKpiGuideUrl),
+    readPngSize(mascotReportPresenterUrl),
+    readPngSize(mascotRiskAlertUrl),
+    readPngSize(mascotTargetAchievedUrl),
+  ];
+
+  actionSizes.forEach((size) => {
+    assert.ok(Math.abs(size.height - originalSize.height) < 40);
+    assert.ok(Math.abs(size.width - originalSize.width) < 40);
+  });
+  assert.match(stageSource, /function getMascotPoseStageWidth\(pose\) \{/);
+});
+
+test('loads the generated mascot action images for their matching contexts', () => {
+  assert.ok(existsSync(mascotKpiGuideUrl));
+  assert.ok(existsSync(mascotReportPresenterUrl));
+  assert.ok(existsSync(mascotRiskAlertUrl));
+  assert.ok(existsSync(mascotTargetAchievedUrl));
+  assert.match(stageSource, /kpiGuide:\s*\{\s*source:\s*'\/assets\/mascot\/ceo-mascot-kpi-guide\.png'/s);
+  assert.match(stageSource, /reportPresenter:\s*\{\s*source:\s*'\/assets\/mascot\/ceo-mascot-report-presenter\.png'/s);
+  assert.match(stageSource, /riskAlert:\s*\{\s*source:\s*'\/assets\/mascot\/ceo-mascot-risk-alert\.png'/s);
+  assert.match(stageSource, /targetAchieved:\s*\{\s*source:\s*'\/assets\/mascot\/ceo-mascot-target-achieved\.png'/s);
+  assert.match(stageSource, /function getMascotPoseKey\(action = MASCOT_ACTIONS\.idle, analysisActive = false\)/);
+  assert.match(stageSource, /if \(action === MASCOT_ACTIONS\.alert\) return 'riskAlert';/);
+  assert.match(stageSource, /if \(action === MASCOT_ACTIONS\.celebrate\) return 'targetAchieved';/);
+  assert.match(stageSource, /if \(action === MASCOT_ACTIONS\.wave\) return 'kpiGuide';/);
+  assert.match(stageSource, /if \(analysisActive \|\| action === MASCOT_ACTIONS\.think \|\| action === MASCOT_ACTIONS\.talk \|\| action === MASCOT_ACTIONS\.click\) return 'reportPresenter';/);
+});
+
+test('renders a DOM image stack so generated mascot poses are visible in the sidebar', () => {
+  assert.match(stageSource, /function MascotImageStack\(\{ action, pointer, analysisActive \}\)/);
+  assert.match(stageSource, /const activePoseKey = getMascotPoseKey\(action, analysisActive\);/);
+  assert.match(stageSource, /<img\s+className=\{`mascot-pose-image\$\{active \? ' is-active' : ''\}`\}/s);
+  assert.match(stageSource, /src=\{pose\.source\}/);
+  assert.match(stageSource, /aria-hidden="true"/);
+  assert.match(stageCss, /\.mascot-image-stack\s*\{/);
+  assert.match(stageCss, /\.mascot-pose-image\.is-active\s*\{/);
 });
 
 test('keeps one complete original image plane and forbids soft-bone warping', () => {
@@ -87,31 +124,28 @@ test('gives each companion action a distinct desktop-pet motion while preserving
   assert.doesNotMatch(stageSource, /scale\.set\(motion\.scale,\s*motion\.scale \*/);
 });
 
-test('crossfades to the generated laptop pose and flies upward during analysis', () => {
-  assert.match(stageSource, /const MASCOT_ANALYSIS_IMAGE_WIDTH = MASCOT_IMAGE_WIDTH;/);
-  assert.match(stageSource, /const MASCOT_ANALYSIS_IMAGE_HEIGHT = MASCOT_IMAGE_HEIGHT;/);
-  assert.match(stageSource, /const MASCOT_ANALYSIS_STAGE_WIDTH = MASCOT_STAGE_WIDTH;/);
-  assert.doesNotMatch(stageSource, /MASCOT_STAGE_HEIGHT \* \(MASCOT_ANALYSIS_IMAGE_WIDTH \/ MASCOT_ANALYSIS_IMAGE_HEIGHT\)/);
-  assert.match(stageSource, /const analysisRef = useRef\(null\);/);
+test('crossfades to the selected generated action pose and flies upward during analysis', () => {
+  assert.match(stageSource, /function getMascotPoseStageWidth\(pose\) \{/);
   assert.match(stageSource, /const mascotMaterialRef = useRef\(null\);/);
-  assert.match(stageSource, /const analysisMaterialRef = useRef\(null\);/);
-  assert.match(stageSource, /const analysisOpacity = useRef\(0\);/);
+  assert.match(stageSource, /const actionPoseRefs = useRef\(\{\}\);/);
+  assert.match(stageSource, /const actionPoseMaterialRefs = useRef\(\{\}\);/);
+  assert.match(stageSource, /const actionPoseOpacity = useRef\(0\);/);
   assert.match(stageSource, /const isAnalyzing = analysisActive \|\| action === MASCOT_ACTIONS\.think \|\| action === MASCOT_ACTIONS\.talk \|\| action === MASCOT_ACTIONS\.click;/);
   assert.match(stageSource, /const flyLift = isAnalyzing \? 0\.18 \+ Math\.abs\(Math\.sin\(t \* 2\.4\)\) \* 0\.045 : 0;/);
-  assert.match(stageSource, /analysisPoseOpacity: isAnalyzing \? 1 : 0,/);
-  assert.match(stageSource, /analysisOpacity\.current = THREE\.MathUtils\.lerp\(analysisOpacity\.current, motion\.analysisPoseOpacity, 0\.18\);/);
+  assert.match(stageSource, /actionPoseOpacity:\s*getMascotPoseKey\(action, analysisActive\) \? 1 : 0,/);
+  assert.match(stageSource, /actionPoseOpacity\.current = THREE\.MathUtils\.lerp\(actionPoseOpacity\.current, motion\.actionPoseOpacity, 0\.18\);/);
   assert.match(stageSource, /mascotMaterialRef\.current\.opacity = 1 - poseOpacity;/);
-  assert.match(stageSource, /analysisMaterialRef\.current\.opacity = poseOpacity;/);
-  assert.match(stageSource, /analysisRef\.current\.visible = poseOpacity > 0\.02;/);
-  assert.match(stageSource, /analysisRef\.current\.position\.y = Math\.sin\(t \* 3\.2\) \* 0\.014;/);
-  assert.match(stageSource, /analysisRef\.current\.rotation\.z = Math\.sin\(t \* 2\.6\) \* 0\.012;/);
-  assert.match(stageSource, /source="\/ai-mascot-analysis-laptop\.png"/);
+  assert.match(stageSource, /Object\.entries\(MASCOT_ACTION_POSES\)\.forEach/);
+  assert.match(stageSource, /material\.opacity = poseKey === selectedPoseKey \? poseOpacity : 0;/);
+  assert.match(stageSource, /mesh\.visible = poseKey === selectedPoseKey && poseOpacity > 0\.02;/);
+  assert.doesNotMatch(stageSource, /source="\/ai-mascot-analysis-laptop\.png"/);
   assert.doesNotMatch(stageSource, /function AnalysisLaptop/);
   assert.doesNotMatch(stageSource, /function LaptopBoneArm/);
 });
 
 test('renders with extra headroom so the helmet is not clipped', () => {
   assert.match(stageSource, /camera=\{\{ position: \[0, 0, 5\], zoom: 64 \}\}/);
+  assert.match(stageSource, /gl=\{\{ alpha: true, antialias: true, preserveDrawingBuffer: true \}\}/);
   assert.match(stageCss, /aspect-ratio:\s*1\s*\/\s*1\.36;/);
   assert.match(stageCss, /overflow:\s*visible;/);
 });

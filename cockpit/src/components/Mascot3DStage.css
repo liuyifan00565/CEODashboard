@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 10:26:08
- 更新内容: 放大福小客固定朝向舞台的顶部留白，避免头盔在跳跃和说话动作中被裁切。
+ 更新时间: 2026-07-01 11:50:00 CST
+ 更新内容: 福小客舞台新增可见图片层，按场景形象淡入切换并保留轻微动作。
 */
 .mascot-3d-stage {
   position: relative;
@@ -16,6 +16,81 @@
   display: block;
   width: 100% !important;
   height: 100% !important;
+  opacity: 0;
+}
+
+.mascot-image-stack {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  transform-origin: 50% 72%;
+  transition: transform .18s ease;
+}
+
+.mascot-image-stack__motion {
+  position: absolute;
+  inset: 0;
+  animation: mascot-dom-idle 3.6s ease-in-out infinite;
+}
+
+.mascot-image-stack--kpiGuide .mascot-image-stack__motion {
+  animation: mascot-dom-guide 1.2s ease-in-out infinite;
+}
+
+.mascot-image-stack--reportPresenter .mascot-image-stack__motion {
+  animation: mascot-dom-report 2.4s ease-in-out infinite;
+}
+
+.mascot-image-stack--riskAlert .mascot-image-stack__motion {
+  animation: mascot-dom-alert .72s ease-in-out infinite;
+}
+
+.mascot-image-stack--targetAchieved .mascot-image-stack__motion {
+  animation: mascot-dom-celebrate .92s ease-in-out infinite;
+}
+
+.mascot-pose-image {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: auto;
+  height: 100%;
+  max-width: none;
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity .18s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.mascot-pose-image.is-active {
+  opacity: 1;
+}
+
+@keyframes mascot-dom-idle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(.8deg); }
+}
+
+@keyframes mascot-dom-guide {
+  0%, 100% { transform: translateY(-2px) rotate(-1deg); }
+  50% { transform: translateY(-7px) rotate(2deg); }
+}
+
+@keyframes mascot-dom-report {
+  0%, 100% { transform: translateY(-6px) rotate(-.7deg); }
+  50% { transform: translateY(-10px) rotate(.9deg); }
+}
+
+@keyframes mascot-dom-alert {
+  0%, 100% { transform: translate(0, 0) rotate(-2deg); }
+  50% { transform: translate(2px, -5px) rotate(2deg); }
+}
+
+@keyframes mascot-dom-celebrate {
+  0%, 100% { transform: translateY(-5px) rotate(-1deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
 }
 
 @media (max-width: 760px) {
