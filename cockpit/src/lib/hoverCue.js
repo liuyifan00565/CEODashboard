@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:35:33 CST
- 更新内容: 悬浮 AI 气泡新增本地即时提示，让小人先响应当前文字，再等待千问精修。
+ 更新时间: 2026-07-01 12:30:19 CST
+ 更新内容: 普通悬浮文字不再显示默认读字气泡话术，仅保留命中业务关键词的即时提示。
 */
 export const MAX_HOVER_CUE_TEXT_LENGTH = 160;
 export const MIN_HOVER_CUE_TEXT_LENGTH = 2;
@@ -57,7 +57,7 @@ export function buildInstantHoverCue(text = '') {
   const normalizedText = normalizeHoverCueText(text);
   const matchedRule = INSTANT_HOVER_CUES.find((rule) => rule.pattern.test(normalizedText));
 
-  return matchedRule?.cue || '我先看这处文字，正在结合当前经营数据判断。';
+  return matchedRule?.cue || '';
 }
 
 export function getHoverCueTextFromElement(target) {

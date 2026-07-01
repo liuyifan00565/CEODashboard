@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:35:33 CST
- 更新内容: 新增即时悬浮气泡测试，约束鼠标停留文字时先快速显示本地提示再等待千问精修。
+ 更新时间: 2026-07-01 12:30:19 CST
+ 更新内容: 约束普通悬浮文字不再显示默认读字气泡话术。
 */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -42,7 +42,7 @@ test('builds a stable cache key per page context and hovered text', () => {
   assert.equal(key, 'overview|month|all|目标完成率 83.8%');
 });
 
-test('builds an instant local cue so the mascot responds before Qwen returns', () => {
+test('builds an instant local cue for matched business text before Qwen returns', () => {
   assert.equal(
     buildInstantHoverCue('ROI 5.06 目标完成率 83.8%'),
     '先看 ROI 与目标完成率，判断这处投入是否值得加码。'
@@ -51,8 +51,11 @@ test('builds an instant local cue so the mascot responds before Qwen returns', (
     buildInstantHoverCue('续费率 70%'),
     '这处续费信号建议先看流失风险和可挽回金额。'
   );
-  assert.equal(
-    buildInstantHoverCue('随机说明文字'),
-    '我先看这处文字，正在结合当前经营数据判断。'
-  );
+});
+
+test('does not show the generic text-reading placeholder in hover bubbles', () => {
+  const cue = buildInstantHoverCue('随机说明文字');
+
+  assert.equal(cue, '');
+  assert.doesNotMatch(cue, /我先看这处文字|正在结合当前经营数据判断/);
 });
