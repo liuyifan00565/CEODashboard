@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 16:29:11 CST
- 更新内容: 算力趋势按年/月/日生成倒序时间轴，月/日维度提供超过 30 项供拖动窗口顺延展示。
+ 更新时间: 2026-07-01 18:23:22 CST
+ 更新内容: 首页新增本月开户数和今日开户数小卡片 mock 数据及涨幅趋势。
 */
 import { calculateRenewalOverview, getRenewalChannelBreakdown } from '../lib/renewal.js';
 
@@ -38,6 +38,12 @@ export const KPI_DERIVED = {
   channelRoi: +(KPI.monthRecovered / KPI.totalCost).toFixed(2),              // 3.12 销售投入 ROI
   roi: +(KPI.monthRecovered / KPI.adCost).toFixed(2),                        // 5.06 ROI
 };
+
+// ===== 开户数趋势（经营总览，单位：户）=====
+export const OPENING_ACCOUNT_METRICS = [
+  { key: 'month-openings', title: '本月开户数', value: 126, unit: '户', delta: 8.2, compareLabel: '较上月', keywords: ['开户', '本月开户数', '今日开户数'] },
+  { key: 'today-openings', title: '今日开户数', value: 9, unit: '户', delta: 12.5, compareLabel: '较昨日', keywords: ['开户', '今日开户数'] },
+];
 
 // ===== 销售明细（4 个，单位：万元）=====
 // 线下分华南/华东战区；城市仅作背景。

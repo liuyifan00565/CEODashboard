@@ -1,0 +1,155 @@
+/*
+ 更新时间: 2026-07-01 18:28:42 CST
+ 更新内容: 首页开户数小卡片增加底部展开提示和按钮态样式。
+*/
+.opening-metric-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  flex: none;
+}
+
+.opening-metric-card {
+  position: relative;
+  min-height: 118px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto 1fr auto;
+  align-items: center;
+  gap: 4px 16px;
+  padding: 12px 18px;
+  overflow: hidden;
+  text-align: left;
+  appearance: none;
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  background: transparent;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  cursor: pointer;
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+
+.opening-metric-card::before {
+  content: "";
+  position: absolute;
+  inset: -34px auto auto -18px;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--warn-rgb), .24), transparent 68%);
+  filter: blur(8px);
+  opacity: .74;
+  pointer-events: none;
+}
+
+.opening-metric-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.opening-metric-card:hover,
+.opening-metric-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--line-2);
+  box-shadow: 0 22px 58px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255, 255, 255, .24);
+  outline: none;
+}
+
+.opening-metric-card__title {
+  grid-column: 1;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.opening-metric-card__main {
+  grid-column: 1;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.opening-metric-card__value {
+  color: var(--txt);
+  font-size: clamp(28px, 2.4vw, 36px);
+  font-weight: 850;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.opening-metric-card__unit {
+  color: var(--faint);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.opening-metric-card__trend {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 78px;
+}
+
+.opening-metric-card__compare {
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.opening-metric-card__delta {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1.15;
+  text-shadow: 0 0 16px currentColor;
+  font-variant-numeric: tabular-nums;
+}
+
+.opening-metric-card__hint {
+  grid-column: 1 / -1;
+  align-self: end;
+  color: var(--faint);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.2;
+  opacity: .82;
+  transition: color .22s ease, opacity .22s ease;
+}
+
+.opening-metric-card:hover .opening-metric-card__hint,
+.opening-metric-card:focus-visible .opening-metric-card__hint {
+  color: var(--muted);
+  opacity: 1;
+}
+
+@media (max-width:760px) {
+  .opening-metric-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width:420px) {
+  .opening-metric-card {
+    grid-template-columns: 1fr;
+    min-height: 132px;
+  }
+
+  .opening-metric-card__trend {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+    align-items: flex-start;
+    flex-direction: row;
+  }
+}

@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 16:06:41 CST
- 更新内容: 算力页顶部工具栏与经营总览统一为日期范围和年/月/日筛选，并联动柱状图日期。
+ 更新时间: 2026-07-01 18:28:42 CST
+ 更新内容: 首页开户数小卡片支持点击展开，复用本月目标完成情况二级弹窗。
 */
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
@@ -22,6 +22,7 @@ import ChannelPanel from './components/ChannelPanel';
 import VersionFinancePanel from './components/VersionFinancePanel';
 import DeliveryPanel from './components/DeliveryPanel';
 import ComputeUsagePage from './components/ComputeUsagePage';
+import OpeningMetricCards from './components/OpeningMetricCards';
 
 import { META, MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
@@ -85,6 +86,7 @@ export default function App() {
   const gridRef = useRef(null);
   const pendingMenuScrollRef = useRef(false);
   const isComputePage = activeMenu === 'compute';
+  const showOpeningMetrics = activeMenu === 'overview';
   const activeChannelKey = getDashboardChannelKey(activeMenu);
   const activeMenuLabel = getDashboardMenuLabel(activeMenu);
   const gridClassName = activeMenu === 'overview'
@@ -95,6 +97,7 @@ export default function App() {
     [dim, dateRange, activeChannelKey]
   );
   const recoveryKpiCards = filteredKpiCards.filter((card) => ['month', 'year'].includes(card.key));
+  const monthRecoveryCard = recoveryKpiCards.find((card) => card.key === 'month');
   const financeKpiCards = filteredKpiCards.filter((card) => ['cost', 'renewal'].includes(card.key));
   const openCardData = useMemo(
     () => filteredKpiCards.find((card) => card.key === openCard?.key) ?? null,
@@ -235,6 +238,10 @@ export default function App() {
                     </div>
                   ))}
                 </div>
+
+                {showOpeningMetrics && (
+                  <OpeningMetricCards onOpenSecondary={() => monthRecoveryCard && handleOpenCard(monthRecoveryCard)} />
+                )}
 
                 <div className={gridClassName}>
                   <div className="dash-cell dash-cell--trend" data-anim>
