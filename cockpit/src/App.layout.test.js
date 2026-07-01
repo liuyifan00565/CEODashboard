@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 16:06:41 CST
- 更新内容: 回归测试补充算力页统一年月日筛选、移除资源利用率、进一步压缩饼图卡片并去掉底部说明标签。
+ 更新时间: 2026-07-01 16:44:24 CST
+ 更新内容: 回归测试保留算力趋势 15 根拖动窗口，并约束饼图按 ECharts 自然外拉标签方式继续放大。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -75,11 +75,20 @@ test('uses the same year month day topbar controls for compute and links them to
   assert.match(computePageSource, /title=\{`\$\{periodLabel\}算力用量趋势`\}/);
 });
 
-test('uses a full-width compute trend card with draggable month window and year month labels', () => {
-  assert.match(computePageSource, /const canSlide = dim === 'month' && days\.length > 10;/);
-  assert.match(computePageSource, /dataZoom: canSlide \? \[/);
-  assert.match(computePageSource, /endValue:\s*Math\.min\(9, days\.length - 1\)/);
+test('uses a full-width compute trend card with draggable 15-bar window and descending period labels', () => {
+  assert.match(computePageSource, /const MAX_VISIBLE_TREND_BARS = 15;/);
+  assert.match(computePageSource, /const showSlider = days\.length > MAX_VISIBLE_TREND_BARS;/);
+  assert.match(computePageSource, /const sliderEndValue = Math\.min\(MAX_VISIBLE_TREND_BARS - 1, days\.length - 1\);/);
+  assert.match(computePageSource, /const sliderWindowSpan = sliderEndValue;/);
+  assert.match(computePageSource, /dataZoom: showSlider \? \[/);
+  assert.match(computePageSource, /startValue:\s*0/);
+  assert.match(computePageSource, /endValue:\s*sliderEndValue/);
+  assert.match(computePageSource, /minValueSpan:\s*sliderWindowSpan/);
+  assert.match(computePageSource, /maxValueSpan:\s*sliderWindowSpan/);
+  assert.match(computePageSource, /zoomLock:\s*true/);
+  assert.match(computePageSource, /realtime:\s*true/);
   assert.match(computePageSource, /type:\s*'slider'[\s\S]*?showDetail:\s*false[\s\S]*?brushSelect:\s*false/);
+  assert.match(computePageSource, /grid:\s*\{ top: 42, left: 10, right: 12, bottom: showSlider \? 44 : 8, containLabel: true \}/);
   assert.match(computePageSource, /const trend = getComputeUsageTrend\(\{ dim, dateRange \}\);/);
   assert.match(computePageCss, /grid-template-areas:\s*"trend trend"\s*"version usage";/);
   assert.match(computePageCss, /\.cpu-panel--trend \{[\s\S]*?min-height:\s*560px;/);
@@ -90,13 +99,19 @@ test('places compute pie cards side by side without bottom legend explanations',
   assert.match(computePageCss, /\.cpu-grid \{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);[\s\S]*?grid-template-areas:\s*"trend trend"\s*"version usage";/);
   assert.match(computePageCss, /\.cpu-panel--pie \{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;/);
   assert.doesNotMatch(computePageCss, /\.cpu-panel--pie \{[^}]*grid-template-columns:/);
+  assert.doesNotMatch(computePageSource, /sub="圆角环图 · 外拉标签"/);
+  assert.doesNotMatch(computePageSource, /sub="客户用量区间 · 中心不堆数据"/);
   assert.doesNotMatch(computePageSource, /function PieSummary/);
   assert.doesNotMatch(computePageSource, /<PieSummary/);
   assert.doesNotMatch(computePageCss, /cpu-pie-summary/);
   assert.doesNotMatch(computePageCss, /cpu-pie-chip/);
-  assert.match(computePageCss, /\.cpu-panel--version-pie \{[\s\S]*?min-height:\s*430px;/);
-  assert.match(computePageCss, /\.cpu-panel--usage-pie \{[\s\S]*?min-height:\s*430px;/);
-  assert.match(computePageCss, /\.cpu-panel--pie \.cpu-pie-wrap \{[\s\S]*?min-height:\s*310px;/);
+  assert.match(computePageCss, /\.cpu-panel--version-pie \{[\s\S]*?min-height:\s*320px;/);
+  assert.match(computePageCss, /\.cpu-panel--usage-pie \{[\s\S]*?min-height:\s*320px;/);
+  assert.match(computePageCss, /\.cpu-panel--pie \.cpu-pie-wrap \{[\s\S]*?min-height:\s*218px;/);
+  assert.doesNotMatch(computePageSource, /cpu-pie-scroll/);
+  assert.doesNotMatch(computePageSource, /cpu-pie-stage/);
+  assert.doesNotMatch(computePageCss, /cpu-pie-scroll/);
+  assert.doesNotMatch(computePageCss, /cpu-pie-stage/);
   assert.doesNotMatch(computePageSource, /data\.slice\(0,\s*5\)\.map/);
 });
 
@@ -104,18 +119,53 @@ test('keeps compute pie labels and tooltip cards readable around donut charts', 
   assert.match(computePageSource, /'padding:12px 14px'/);
   assert.match(computePageSource, /position:\s*'outer'/);
   assert.match(computePageSource, /alignTo:\s*'labelLine'/);
-  assert.match(computePageSource, /center:\s*\['56%', '52%'\]/);
-  assert.match(computePageSource, /width:\s*152/);
+  assert.match(computePageSource, /radius:\s*\['58%', '92%'\]/);
+  assert.match(computePageSource, /center:\s*\['55%', '52%'\]/);
+  assert.doesNotMatch(computePageSource, /width:\s*126/);
+  assert.doesNotMatch(computePageSource, /overflow:\s*'truncate'/);
+  assert.doesNotMatch(computePageSource, /ellipsis:\s*'…'/);
   assert.match(computePageSource, /function formatPieLabelName/);
   assert.match(computePageSource, /formatPieLabelName\(params\.name\)/);
-  assert.match(computePageSource, /edgeDistance:\s*18/);
-  assert.match(computePageSource, /distanceToLabelLine:\s*8/);
+  assert.match(computePageSource, /edgeDistance:\s*12/);
+  assert.match(computePageSource, /distanceToLabelLine:\s*0/);
   assert.match(computePageSource, /bleedMargin:\s*12/);
-  assert.match(computePageSource, /labelLine:\s*\{[\s\S]*?length:\s*16,[\s\S]*?length2:\s*14/);
+  assert.match(computePageSource, /labelLine:\s*\{[\s\S]*?length:\s*18,[\s\S]*?length2:\s*18/);
   assert.match(computePageSource, /labelLayout:\s*\{[\s\S]*?moveOverlap:\s*'shiftY'/);
   assert.match(computePageSource, /moveOverlap:\s*'shiftY'/);
   assert.doesNotMatch(computePageSource, /labelLayout:\s*\(params\) =>/);
   assert.doesNotMatch(computePageSource, /formatter:\s*\(params\) => `\{name\|\$\{params\.name\}\}\\n/);
+});
+
+test('adds dropdown filters and pagination to compute customer ranking', () => {
+  assert.match(computePageSource, /CUSTOMER_SORT_OPTIONS = \[/);
+  assert.match(computePageSource, /value:\s*'usage-desc'[\s\S]*?label:\s*'算力用量 \/ 全部'/);
+  assert.match(computePageSource, /CUSTOMER_FILTER_ALL = 'all';/);
+  assert.match(computePageSource, /const \[customerSort,\s*setCustomerSort\] = useState\('usage-desc'\);/);
+  assert.match(computePageSource, /const \[customerVersionFilter,\s*setCustomerVersionFilter\] = useState\(CUSTOMER_FILTER_ALL\);/);
+  assert.match(computePageSource, /const \[customerSalesFilter,\s*setCustomerSalesFilter\] = useState\(CUSTOMER_FILTER_ALL\);/);
+  assert.match(computePageSource, /function buildCustomerFilterOptions\(rows,\s*field\)/);
+  assert.match(computePageSource, /function filterCustomerRows\(rows,\s*\{ versionFilter,\s*salesFilter \}\)/);
+  assert.match(computePageSource, /sort\(\(a,\s*b\) => b\.usage - a\.usage\)/);
+  assert.match(computePageSource, /const DEFAULT_CUSTOMER_PAGE_SIZE = 20;/);
+  assert.match(computePageSource, /const CUSTOMER_PAGE_SIZE_OPTIONS = \[10, 20, 50\];/);
+  assert.match(computePageSource, /const \[customerPage,\s*setCustomerPage\] = useState\(1\);/);
+  assert.match(computePageSource, /const \[customerPageSize,\s*setCustomerPageSize\] = useState\(DEFAULT_CUSTOMER_PAGE_SIZE\);/);
+  assert.match(computePageSource, /customerPageCount = Math\.max\(1, Math\.ceil\(customerTotal \/ customerPageSize\)\);/);
+  assert.match(computePageSource, /customerPageRows\.map\(\(customer\) => \(/);
+  assert.match(computePageSource, /className="cpu-customer-toolbar"/);
+  assert.match(computePageSource, /className="cpu-customer-filters"/);
+  assert.match(computePageSource, /className="cpu-select-field"/);
+  assert.match(computePageSource, /className="cpu-select-control"/);
+  assert.match(computePageSource, /使用版本/);
+  assert.match(computePageSource, /销售负责人/);
+  assert.match(computePageSource, /className="cpu-pagination"/);
+  assert.match(computePageSource, /共 \{formatInt\(customerTotal\)\} 条/);
+  assert.match(computePageSource, /\{customerPageSize\} 条\/页/);
+  assert.match(computePageCss, /\.cpu-customer-toolbar \{/);
+  assert.match(computePageCss, /\.cpu-customer-filters \{/);
+  assert.match(computePageCss, /\.cpu-select-control \{/);
+  assert.match(computePageCss, /\.cpu-pagination \{/);
+  assert.match(computePageCss, /\.cpu-page-button--active/);
 });
 
 test('removes compute resource utilization from the compute analysis page', () => {

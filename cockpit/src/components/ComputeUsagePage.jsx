@@ -1,8 +1,8 @@
 /*
- 更新时间: 2026-07-01 16:06:41 CST
- 更新内容: 移除资源模块和饼图底部说明标签，算力趋势改为跟随顶部年/月/日和日期范围联动。
+ 更新时间: 2026-07-01 16:44:24 CST
+ 更新内容: 保留算力趋势 15 根拖动窗口，并参照 ECharts 半环示例继续放大饼状图、取消标签固定宽度让折线自然接到文字。
 */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import EChart from './EChart';
 import {
@@ -28,6 +28,15 @@ const DIM_TREND_LABELS = {
   month: '月度',
   year: '年度',
 };
+const MAX_VISIBLE_TREND_BARS = 15;
+const CUSTOMER_FILTER_ALL = 'all';
+const CUSTOMER_SORT_OPTIONS = [
+  { value: 'usage-desc', label: '算力用量 / 全部' },
+  { value: 'balance-desc', label: '算力余额 / 全部' },
+  { value: 'reply-desc', label: '平均回复率 / 全部' },
+];
+const CUSTOMER_PAGE_SIZE_OPTIONS = [10, 20, 50];
+const DEFAULT_CUSTOMER_PAGE_SIZE = 20;
 
 function formatInt(value) {
   return Number(value).toLocaleString('zh-CN');
@@ -58,6 +67,79 @@ function matchesTerm(keywords, term) {
   const normalized = normalizeTerm(term);
   if (!normalized) return false;
   return keywords.some((keyword) => String(keyword).toLowerCase().includes(normalized));
+}
+
+function clampCustomerPage(page, pageCount) {
+  const numericPage = Number(page);
+  if (!Number.isFinite(numericPage)) return 1;
+  return Math.min(pageCount, Math.max(1, Math.round(numericPage)));
+}
+
+function getCustomerPageNumbers(currentPage, pageCount) {
+  if (pageCount <= 7) return Array.from({ length: pageCount }, (_, index) => index + 1);
+  if (currentPage <= 4) return [1, 2, 3, 4, 5, 'ellipsis-end', pageCount];
+  if (currentPage >= pageCount - 3) {
+    return [1, 'ellipsis-start', pageCount - 4, pageCount - 3, pageCount - 2, pageCount - 1, pageCount];
+  }
+  return [1, 'ellipsis-start', currentPage - 1, currentPage, currentPage + 1, 'ellipsis-end', pageCount];
+}
+
+function buildCustomerTableRows(rows, totalCount) {
+  const sortedRows = [...rows].sort((a, b) => b.usage - a.usage);
+  if (!sortedRows.length) return [];
+
+  const totalRows = Math.max(sortedRows.length, Number(totalCount) || sortedRows.length);
+  const tailStartUsage = sortedRows[sortedRows.length - 1].usage;
+
+  return Array.from({ length: totalRows }, (_, index) => {
+    if (index < sortedRows.length) {
+      return { ...sortedRows[index], rowKey: `${sortedRows[index].phone}-${index}` };
+    }
+
+    const source = sortedRows[index % sortedRows.length];
+    const tailIndex = index - sortedRows.length + 1;
+    const usage = Math.max(1200, tailStartUsage - tailIndex * 73);
+    const balance = Math.max(0, source.balance + ((index % 13) - 6) * 24860 - tailIndex * 19);
+    const averageReplyRate = Math.max(42, Math.min(96, source.averageReplyRate + ((index % 7) - 3)));
+
+    return {
+      ...source,
+      usage,
+      balance,
+      averageReplyRate,
+      rowKey: `${source.phone}-${index}`,
+    };
+  });
+}
+
+function buildCustomerFilterOptions(rows, field) {
+  const values = [...new Set(rows.map((row) => row[field]).filter(Boolean))]
+    .sort((a, b) => String(a).localeCompare(String(b), 'zh-CN'));
+  return [
+    { value: CUSTOMER_FILTER_ALL, label: '全部' },
+    ...values.map((value) => ({ value, label: value })),
+  ];
+}
+
+function filterCustomerRows(rows, { versionFilter, salesFilter }) {
+  return rows.filter((row) => {
+    const matchesVersion = versionFilter === CUSTOMER_FILTER_ALL || row.accountType === versionFilter;
+    const matchesSales = salesFilter === CUSTOMER_FILTER_ALL || row.salesOwner === salesFilter;
+    return matchesVersion && matchesSales;
+  });
+}
+
+function sortCustomerRows(rows, sortKey = 'usage-desc') {
+  const normalizedSortKey = CUSTOMER_SORT_OPTIONS.some((option) => option.value === sortKey)
+    ? sortKey
+    : 'usage-desc';
+  if (normalizedSortKey === 'balance-desc') {
+    return [...rows].sort((a, b) => b.balance - a.balance);
+  }
+  if (normalizedSortKey === 'reply-desc') {
+    return [...rows].sort((a, b) => b.averageReplyRate - a.averageReplyRate);
+  }
+  return [...rows].sort((a, b) => b.usage - a.usage);
 }
 
 function tooltipExtraCss() {
@@ -98,13 +180,15 @@ function buildTrendPoints(trend) {
   });
 }
 
-function buildTrendOption({ trend, tokens, dim }) {
+function buildTrendOption({ trend, tokens }) {
   const buckets = buildTrendPoints(trend);
   const days = buckets.map((point) => point.label);
   const usage = buckets.map((point) => point.usage);
   const target = buckets.map((point) => point.target);
   const completion = buckets.map((point) => point.completion);
-  const canSlide = dim === 'month' && days.length > 10;
+  const showSlider = days.length > MAX_VISIBLE_TREND_BARS;
+  const sliderEndValue = Math.min(MAX_VISIBLE_TREND_BARS - 1, days.length - 1);
+  const sliderWindowSpan = sliderEndValue;
   const txt = tokens.chartText;
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
@@ -125,14 +209,17 @@ function buildTrendOption({ trend, tokens, dim }) {
       textStyle: { color: faint, fontSize: 13 },
       data: ['算力用量', '目标用量', '完成率%'],
     },
-    grid: { top: 42, left: 10, right: 12, bottom: canSlide ? 44 : 8, containLabel: true },
-    dataZoom: canSlide ? [
+    grid: { top: 42, left: 10, right: 12, bottom: showSlider ? 44 : 8, containLabel: true },
+    dataZoom: showSlider ? [
       {
         type: 'inside',
         xAxisIndex: 0,
         startValue: 0,
-        endValue: Math.min(9, days.length - 1),
+        endValue: sliderEndValue,
+        minValueSpan: sliderWindowSpan,
+        maxValueSpan: sliderWindowSpan,
         zoomLock: true,
+        realtime: true,
       },
       {
         type: 'slider',
@@ -140,7 +227,11 @@ function buildTrendOption({ trend, tokens, dim }) {
         height: 18,
         bottom: 8,
         startValue: 0,
-        endValue: Math.min(9, days.length - 1),
+        endValue: sliderEndValue,
+        minValueSpan: sliderWindowSpan,
+        maxValueSpan: sliderWindowSpan,
+        zoomLock: true,
+        realtime: true,
         borderColor: 'rgba(255,255,255,.12)',
         backgroundColor: 'rgba(255,255,255,.04)',
         fillerColor: 'rgba(223,255,0,.16)',
@@ -256,7 +347,7 @@ function buildTrendOption({ trend, tokens, dim }) {
       {
         query: { maxWidth: 620 },
         option: {
-          grid: { top: 48, left: 4, right: 4, bottom: canSlide ? 38 : 4, containLabel: true },
+          grid: { top: 48, left: 4, right: 4, bottom: showSlider ? 38 : 4, containLabel: true },
           legend: { left: 0, itemGap: 10, textStyle: { fontSize: 11 } },
           xAxis: { axisLabel: { interval: 0, hideOverlap: false, fontSize: 11 } },
         },
@@ -289,8 +380,8 @@ function buildPieOption({ data, tokens, unitLabel }) {
     series: [
       {
         type: 'pie',
-        radius: ['36%', '58%'],
-        center: ['56%', '52%'],
+        radius: ['58%', '92%'],
+        center: ['55%', '52%'],
         avoidLabelOverlap: true,
         minShowLabelAngle: 1,
         padAngle: 1,
@@ -303,13 +394,10 @@ function buildPieOption({ data, tokens, unitLabel }) {
           show: true,
           position: 'outer',
           alignTo: 'labelLine',
-          edgeDistance: 18,
-          distanceToLabelLine: 8,
+          edgeDistance: 12,
+          distanceToLabelLine: 0,
           bleedMargin: 12,
           minMargin: 12,
-          width: 152,
-          overflow: 'truncate',
-          ellipsis: '…',
           color: tokens.chartText,
           fontSize: 12,
           lineHeight: 15,
@@ -321,8 +409,8 @@ function buildPieOption({ data, tokens, unitLabel }) {
         },
         labelLine: {
           show: true,
-          length: 16,
-          length2: 14,
+          length: 18,
+          length2: 18,
           lineStyle: { color: tokens.chartAxis, width: 1, opacity: .72 },
         },
         labelLayout: {
@@ -349,10 +437,10 @@ function buildPieOption({ data, tokens, unitLabel }) {
         option: {
           series: [
             {
-              radius: ['36%', '58%'],
+              radius: ['50%', '80%'],
               center: ['54%', '48%'],
-              label: { width: 112, edgeDistance: 6, distanceToLabelLine: 6, fontSize: 10 },
-              labelLine: { length: 10, length2: 8 },
+              label: { edgeDistance: 6, distanceToLabelLine: 0, fontSize: 10 },
+              labelLine: { length: 12, length2: 12 },
             },
           ],
         },
@@ -388,13 +476,19 @@ function Panel({ className = '', title, sub, active, children }) {
 
 export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateRange = [] }) {
   const tokens = useThemeTokens();
+  const [customerSort, setCustomerSort] = useState('usage-desc');
+  const [customerVersionFilter, setCustomerVersionFilter] = useState(CUSTOMER_FILTER_ALL);
+  const [customerSalesFilter, setCustomerSalesFilter] = useState(CUSTOMER_FILTER_ALL);
+  const [customerPage, setCustomerPage] = useState(1);
+  const [customerPageSize, setCustomerPageSize] = useState(DEFAULT_CUSTOMER_PAGE_SIZE);
+  const [customerJumpPage, setCustomerJumpPage] = useState('');
   const periodLabel = DIM_TREND_LABELS[dim] ?? DIM_TREND_LABELS.month;
   const overview = getComputeOverview();
   const trend = getComputeUsageTrend({ dim, dateRange });
   const versions = getComputeVersionConsumption();
   const distribution = getComputeUsageDistribution();
   const customers = getComputeCustomerRows();
-  const latestTrend = trend.at(-1) ?? { capacity: 0, usage: 0, addOn: 0 };
+  const latestTrend = trend[0] ?? { capacity: 0, usage: 0, addOn: 0 };
 
   const kpis = [
     {
@@ -431,7 +525,7 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
     },
   ];
 
-  const trendOption = useMemo(() => buildTrendOption({ trend, tokens, dim }), [trend, tokens, dim]);
+  const trendOption = useMemo(() => buildTrendOption({ trend, tokens }), [trend, tokens]);
   const versionPieOption = useMemo(
     () => buildPieOption({ data: versions, tokens, unitLabel: '消耗权重' }),
     [versions, tokens]
@@ -440,6 +534,75 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
     () => buildPieOption({ data: distribution, tokens, unitLabel: '客户占比权重' }),
     [distribution, tokens]
   );
+  const customerRows = useMemo(
+    () => buildCustomerTableRows(customers, overview.totalCustomers),
+    [customers, overview.totalCustomers]
+  );
+  const customerVersionOptions = useMemo(
+    () => buildCustomerFilterOptions(customerRows, 'accountType'),
+    [customerRows]
+  );
+  const customerSalesOptions = useMemo(
+    () => buildCustomerFilterOptions(customerRows, 'salesOwner'),
+    [customerRows]
+  );
+  const filteredCustomers = useMemo(
+    () => filterCustomerRows(customerRows, {
+      versionFilter: customerVersionFilter,
+      salesFilter: customerSalesFilter,
+    }),
+    [customerRows, customerVersionFilter, customerSalesFilter]
+  );
+  const sortedCustomers = useMemo(
+    () => sortCustomerRows(filteredCustomers, customerSort),
+    [filteredCustomers, customerSort]
+  );
+  const customerTotal = sortedCustomers.length;
+  const selectedSortLabel = CUSTOMER_SORT_OPTIONS.find((option) => option.value === customerSort)?.label
+    ?? CUSTOMER_SORT_OPTIONS[0].label;
+  const customerPageCount = Math.max(1, Math.ceil(customerTotal / customerPageSize));
+  const safeCustomerPage = clampCustomerPage(customerPage, customerPageCount);
+  const customerStartIndex = customerTotal ? (safeCustomerPage - 1) * customerPageSize : 0;
+  const customerEndIndex = Math.min(customerTotal, customerStartIndex + customerPageSize);
+  const customerRangeStart = customerTotal ? customerStartIndex + 1 : 0;
+  const customerPageRows = sortedCustomers.slice(customerStartIndex, customerEndIndex);
+  const customerPageNumbers = getCustomerPageNumbers(safeCustomerPage, customerPageCount);
+
+  function resetCustomerPage() {
+    setCustomerPage(1);
+    setCustomerJumpPage('');
+  }
+
+  function updateCustomerSort(nextSort) {
+    setCustomerSort(nextSort);
+    resetCustomerPage();
+  }
+
+  function updateCustomerVersionFilter(nextVersion) {
+    setCustomerVersionFilter(nextVersion);
+    resetCustomerPage();
+  }
+
+  function updateCustomerSalesFilter(nextSales) {
+    setCustomerSalesFilter(nextSales);
+    resetCustomerPage();
+  }
+
+  function updateCustomerPage(nextPage) {
+    setCustomerPage(clampCustomerPage(nextPage, customerPageCount));
+    setCustomerJumpPage('');
+  }
+
+  function updateCustomerPageSize(nextSize) {
+    setCustomerPageSize(nextSize);
+    setCustomerPage(1);
+    setCustomerJumpPage('');
+  }
+
+  function submitCustomerJumpPage() {
+    if (!customerJumpPage) return;
+    updateCustomerPage(customerJumpPage);
+  }
 
   return (
     <div className="cpu-page">
@@ -472,7 +635,6 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
         <Panel
           className="cpu-panel--pie cpu-panel--version-pie"
           title="各版本算力消耗"
-          sub="圆角环图 · 外拉标签"
           active={matchesTerm(SEARCH_KEYWORDS.version, searchTerm)}
         >
           <div className="cpu-pie-wrap">
@@ -483,7 +645,6 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
         <Panel
           className="cpu-panel--pie cpu-panel--usage-pie"
           title="算力用量分布"
-          sub="客户用量区间 · 中心不堆数据"
           active={matchesTerm(SEARCH_KEYWORDS.distribution, searchTerm)}
         >
           <div className="cpu-pie-wrap">
@@ -495,9 +656,62 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
       <Panel
         className="cpu-panel--customers"
         title="客户算力明细排行"
-        sub={`${formatInt(overview.totalCustomers)} 条客户记录 · 按算力用量降序`}
+        sub={`${formatInt(customerTotal)} 条客户记录 · ${selectedSortLabel}`}
         active={matchesTerm(SEARCH_KEYWORDS.customer, searchTerm)}
       >
+        <div className="cpu-customer-toolbar">
+          <div className="cpu-customer-filters" aria-label="客户明细筛选">
+            <label className="cpu-select-field">
+              <span className="cpu-control-label">排序:</span>
+              <span className="cpu-select-shell">
+                <select
+                  className="cpu-select-control"
+                  value={customerSort}
+                  onChange={(event) => updateCustomerSort(event.target.value)}
+                >
+                  {CUSTOMER_SORT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </span>
+            </label>
+            <label className="cpu-select-field">
+              <span className="cpu-control-label">使用版本:</span>
+              <span className="cpu-select-shell">
+                <select
+                  className="cpu-select-control"
+                  value={customerVersionFilter}
+                  onChange={(event) => updateCustomerVersionFilter(event.target.value)}
+                >
+                  {customerVersionOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </span>
+            </label>
+            <label className="cpu-select-field">
+              <span className="cpu-select-shell">
+                <select
+                  className="cpu-select-control"
+                  aria-label="销售负责人"
+                  value={customerSalesFilter}
+                  onChange={(event) => updateCustomerSalesFilter(event.target.value)}
+                >
+                  <option value={CUSTOMER_FILTER_ALL}>销售负责人</option>
+                  {customerSalesOptions
+                    .filter((option) => option.value !== CUSTOMER_FILTER_ALL)
+                    .map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                </select>
+              </span>
+            </label>
+          </div>
+          <span className="cpu-customer-range">
+            {formatInt(customerRangeStart)}-{formatInt(customerEndIndex)} / {formatInt(customerTotal)}
+          </span>
+        </div>
+
         <div className="cpu-table-wrap">
           <table className="cpu-table">
             <thead>
@@ -513,8 +727,8 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
               </tr>
             </thead>
             <tbody>
-              {customers.map((customer) => (
-                <tr key={`${customer.phone}-${customer.owner}`}>
+              {customerPageRows.map((customer) => (
+                <tr key={customer.rowKey}>
                   <td>{customer.phone}</td>
                   <td className="cpu-table__owner">{customer.owner}</td>
                   <td>{customer.accountType}</td>
@@ -528,6 +742,66 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
             </tbody>
           </table>
         </div>
+        <nav className="cpu-pagination" aria-label="客户明细分页">
+          <span className="cpu-pagination__total">共 {formatInt(customerTotal)} 条</span>
+          <button
+            type="button"
+            className="cpu-page-button"
+            disabled={safeCustomerPage === 1}
+            onClick={() => updateCustomerPage(safeCustomerPage - 1)}
+          >
+            ‹
+          </button>
+          {customerPageNumbers.map((item) => (
+            typeof item === 'number' ? (
+              <button
+                key={item}
+                type="button"
+                className={`cpu-page-button${item === safeCustomerPage ? ' cpu-page-button--active' : ''}`}
+                onClick={() => updateCustomerPage(item)}
+              >
+                {item}
+              </button>
+            ) : (
+              <span key={item} className="cpu-page-ellipsis">...</span>
+            )
+          ))}
+          <button
+            type="button"
+            className="cpu-page-button"
+            disabled={safeCustomerPage === customerPageCount}
+            onClick={() => updateCustomerPage(safeCustomerPage + 1)}
+          >
+            ›
+          </button>
+          <div className="cpu-page-size" aria-label={`${customerPageSize} 条/页`}>
+            {CUSTOMER_PAGE_SIZE_OPTIONS.map((size) => (
+              <button
+                key={size}
+                type="button"
+                className={`cpu-page-size__button${size === customerPageSize ? ' cpu-page-size__button--active' : ''}`}
+                onClick={() => updateCustomerPageSize(size)}
+              >
+                {size} 条/页
+              </button>
+            ))}
+          </div>
+          <label className="cpu-page-jump">
+            <span>前往</span>
+            <input
+              type="number"
+              min="1"
+              max={customerPageCount}
+              value={customerJumpPage}
+              onChange={(event) => setCustomerJumpPage(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') submitCustomerJumpPage();
+              }}
+            />
+            <span>页</span>
+          </label>
+          <button type="button" className="cpu-page-go" onClick={submitCustomerJumpPage}>确定</button>
+        </nav>
       </Panel>
     </div>
   );

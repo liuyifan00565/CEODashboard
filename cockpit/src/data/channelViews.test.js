@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 16:06:41 CST
- 更新内容: 回归测试补充算力趋势按顶部年/月/日和日期范围联动。
+ 更新时间: 2026-07-01 16:29:11 CST
+ 更新内容: 回归测试补充算力趋势按年/月/日倒序展示，月/日维度提供超过 30 项用于拖动窗口。
 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -112,12 +112,16 @@ test('links compute usage trend to year month day filters and selected date rang
   const dayRows = getComputeUsageTrend({ dim: 'day', dateRange: ['2026-06-01', '2026-06-30'] });
   const monthRows = getComputeUsageTrend({ dim: 'month', dateRange: ['2026-06-10', '2026-06-18'] });
   const yearRows = getComputeUsageTrend({ dim: 'year', dateRange: ['2026-06-01', '2026-06-30'] });
+  const crossYearDayRows = getComputeUsageTrend({ dim: 'day', dateRange: ['2025-12-29', '2026-01-03'] });
 
-  assert.equal(dayRows.length, 7);
-  assert.equal(dayRows[0].day, '06-24');
-  assert.equal(dayRows.at(-1).day, '06-30');
-  assert.deepEqual(monthRows.map((point) => point.day), ['06-10', '06-11', '06-12', '06-13', '06-14', '06-15', '06-16', '06-17', '06-18']);
-  assert.deepEqual(yearRows.map((point) => point.day), ['1月', '2月', '3月', '4月', '5月', '6月']);
+  assert.equal(dayRows.length, 30);
+  assert.equal(dayRows[0].day, '06-30');
+  assert.equal(dayRows.at(-1).day, '06-01');
+  assert.equal(dayRows[0].range, '2026-06-30');
+  assert.ok(monthRows.length > 30);
+  assert.deepEqual(monthRows.slice(0, 4).map((point) => point.day), ['2026.06', '2026.05', '2026.04', '2026.03']);
+  assert.deepEqual(yearRows.map((point) => point.day), ['2026年', '2025年', '2024年', '2023年', '2022年']);
+  assert.deepEqual(crossYearDayRows.map((point) => point.day), ['01-03', '01-02', '01-01', '2025-12-31', '2025-12-30', '2025-12-29']);
 });
 
 test('filters KPI cards to the selected channel while overview keeps all-channel totals', () => {

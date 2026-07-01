@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 16:06:41 CST
- 更新内容: 算力趋势支持顶部年/月/日与日期范围联动，并保留旧周期参数兼容。
+ 更新时间: 2026-07-01 16:29:11 CST
+ 更新内容: 算力趋势按年/月/日生成倒序时间轴，月/日维度提供超过 30 项供拖动窗口顺延展示。
 */
 import { calculateRenewalOverview, getRenewalChannelBreakdown } from '../lib/renewal.js';
 
@@ -272,6 +272,9 @@ const COMPUTE_ADD_ON = [16, 14, 13, 11, 10, 12, 11, 9, 14, 12, 10, 8, 12, 18, 16
 const COMPUTE_CAPACITY = [2360, 2380, 2376, 2382, 2392, 2388, 2394, 2401, 2410, 2408, 2417, 2440, 2438, 2434, 2441, 2480, 2501, 2512, 2510, 2515, 2512, 2522, 2534, 2540, 2552, 2570, 2582, 2578, 2600];
 const COMPUTE_DEFAULT_RANGE = ['2026-06-01', '2026-06-30'];
 const COMPUTE_YEAR = '2026';
+const COMPUTE_YEAR_NUMBER = Number(COMPUTE_YEAR);
+const COMPUTE_LOOKBACK_YEARS = 5;
+const COMPUTE_LOOKBACK_MONTHS = 36;
 
 export const COMPUTE_USAGE_TREND = COMPUTE_DAYS.map((day, index) => ({
   day,
@@ -279,6 +282,7 @@ export const COMPUTE_USAGE_TREND = COMPUTE_DAYS.map((day, index) => ({
   addOn: COMPUTE_ADD_ON[index],
   capacity: COMPUTE_CAPACITY[index],
 }));
+const COMPUTE_USAGE_TREND_BY_DATE = new Map(COMPUTE_USAGE_TREND.map((row) => [computeTrendDateKey(row.day), row]));
 export const COMPUTE_HALF_YEAR_TREND = [
   { day: '1月', usage: 2380, addOn: 82, capacity: 19860, target: 2860 },
   { day: '2月', usage: 2515, addOn: 88, capacity: 20940, target: 2920 },
@@ -338,6 +342,44 @@ function computeTrendDateKey(day) {
   return `${COMPUTE_YEAR}-${day}`;
 }
 
+function parseDateKey(key) {
+  const [year, month, day] = String(key).split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function formatDateKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function computeMonthIndex(dateKey) {
+  const [year, month] = String(dateKey).split('-').map(Number);
+  return year * 12 + month - 1;
+}
+
+function computeMonthFromIndex(index) {
+  return {
+    year: Math.floor(index / 12),
+    month: index % 12 + 1,
+  };
+}
+
+function formatComputeDayLabel(dateKey) {
+  return dateKey.startsWith(`${COMPUTE_YEAR}-`) ? dateKey.slice(5) : dateKey;
+}
+
+function formatComputeMonthLabel(year, month) {
+  return `${year}.${String(month).padStart(2, '0')}`;
+}
+
 function normalizeComputeDateKey(value) {
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
     const month = String(value.getMonth() + 1).padStart(2, '0');
@@ -364,27 +406,108 @@ function normalizeComputeDateRange(dateRange) {
   return [keys[0], keys.at(-1)];
 }
 
-function getComputeRowsInRange(dateRange) {
+function makeSyntheticDayPoint(dateKey) {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const yearLift = (year - 2023) * 38;
+  const monthLift = month * 5;
+  const wave = (year + month * 13 + day * 7) % 46;
+  const usage = Math.max(260, Math.round(340 + yearLift + monthLift + wave));
+  const addOn = 8 + ((month + day) % 11);
+  const capacity = Math.max(1800, Math.round(2100 + yearLift * 6 + month * 28 + day * 3));
+
+  return {
+    day: formatComputeDayLabel(dateKey),
+    range: dateKey,
+    usage,
+    addOn,
+    capacity,
+  };
+}
+
+function makeComputeDayPoint(dateKey) {
+  const existing = COMPUTE_USAGE_TREND_BY_DATE.get(dateKey);
+  if (existing) {
+    return {
+      ...existing,
+      day: formatComputeDayLabel(dateKey),
+      range: dateKey,
+    };
+  }
+
+  return makeSyntheticDayPoint(dateKey);
+}
+
+function makeComputeMonthPoint(index) {
+  const { year, month } = computeMonthFromIndex(index);
+  const label = formatComputeMonthLabel(year, month);
+  const base = year === COMPUTE_YEAR_NUMBER ? COMPUTE_HALF_YEAR_TREND[month - 1] : null;
+
+  if (base) {
+    return { ...base, day: label, range: label };
+  }
+
+  const offset = (COMPUTE_YEAR_NUMBER - year) * 12 + (6 - month);
+  const usage = Math.max(960, Math.round(2780 - offset * 42 + ((year + month * 31) % 96)));
+  const addOn = Math.max(32, Math.round(86 - offset * 1.4 + (month % 4) * 5));
+  const target = Math.max(usage + 260, Math.round(usage * 1.14));
+  const capacity = Math.max(13800, Math.round(24800 - offset * 410 + month * 32));
+
+  return { day: label, range: label, usage, addOn, capacity, target };
+}
+
+function makeComputeYearPoint(year) {
+  const offset = COMPUTE_YEAR_NUMBER - year;
+  const usage = Math.max(6400, Math.round(16320 - offset * 1720));
+  const addOn = Math.max(180, Math.round(610 - offset * 58));
+  const target = Math.max(usage + 1100, Math.round(usage * 1.15));
+  const capacity = Math.max(62000, Math.round(145000 - offset * 11800));
+
+  return { day: `${year}年`, range: `${year}年`, usage, addOn, capacity, target };
+}
+
+function getComputeDayRows(dateRange) {
   const [start, end] = normalizeComputeDateRange(dateRange);
-  const rows = COMPUTE_USAGE_TREND.filter((row) => {
-    const key = computeTrendDateKey(row.day);
-    return key >= start && key <= end;
-  });
+  const rows = [];
+  for (let current = parseDateKey(end); formatDateKey(current) >= start; current = addDays(current, -1)) {
+    rows.push(makeComputeDayPoint(formatDateKey(current)));
+  }
 
   return rows.length ? rows : COMPUTE_USAGE_TREND;
 }
 
-function getComputeDayWindow(dateRange) {
-  const [, end] = normalizeComputeDateRange(dateRange);
-  const rows = COMPUTE_USAGE_TREND.filter((row) => computeTrendDateKey(row.day) <= end);
-  return (rows.length ? rows : COMPUTE_USAGE_TREND).slice(-7);
+function getComputeMonthRows(dateRange) {
+  const [start, end] = normalizeComputeDateRange(dateRange);
+  const startIndex = computeMonthIndex(start);
+  const endIndex = computeMonthIndex(end);
+  const lowerIndex = Math.min(startIndex, endIndex - COMPUTE_LOOKBACK_MONTHS + 1);
+  const rows = [];
+
+  for (let index = endIndex; index >= lowerIndex; index -= 1) {
+    rows.push(makeComputeMonthPoint(index));
+  }
+
+  return rows;
+}
+
+function getComputeYearRows(dateRange) {
+  const [start, end] = normalizeComputeDateRange(dateRange);
+  const startYear = Number(start.slice(0, 4));
+  const endYear = Number(end.slice(0, 4));
+  const lowerYear = Math.min(startYear, endYear - COMPUTE_LOOKBACK_YEARS + 1);
+  const rows = [];
+
+  for (let year = endYear; year >= lowerYear; year -= 1) {
+    rows.push(makeComputeYearPoint(year));
+  }
+
+  return rows;
 }
 
 export function getComputeUsageTrend(request = '30d') {
   if (request && typeof request === 'object') {
-    if (request.dim === 'year') return COMPUTE_HALF_YEAR_TREND;
-    if (request.dim === 'day') return getComputeDayWindow(request.dateRange);
-    return getComputeRowsInRange(request.dateRange);
+    if (request.dim === 'year') return getComputeYearRows(request.dateRange);
+    if (request.dim === 'day') return getComputeDayRows(request.dateRange);
+    return getComputeMonthRows(request.dateRange);
   }
 
   if (request === '7d') return COMPUTE_USAGE_TREND.slice(-7);
