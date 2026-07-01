@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 12:02:55 CST
- 更新内容: 降低福小客头顶气泡弹出频率，并增加可见状态让气泡进出场更丝滑。
+ 更新时间: 2026-07-01 12:26:32 CST
+ 更新内容: 鼠标悬浮文字气泡绕过自动提示冷却，保证用户主动悬浮立即响应。
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
@@ -317,16 +317,15 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
       if (cachedCue) {
         showCompanionCue(
           { text: cachedCue, action: MASCOT_ACTIONS.talk },
-          { openDialog: false, duration: HOVER_CUE_DURATION, respectCooldown: true },
+          { openDialog: false, duration: HOVER_CUE_DURATION },
         );
         return;
       }
 
-      const cueShown = showCompanionCue({
+      showCompanionCue({
         text: buildInstantHoverCue(normalizedText),
         action: MASCOT_ACTIONS.think,
-      }, { openDialog: false, duration: HOVER_INSTANT_CUE_DURATION, respectCooldown: true });
-      if (!cueShown) return;
+      }, { openDialog: false, duration: HOVER_INSTANT_CUE_DURATION });
 
       hoverCueTimerRef.current = window.setTimeout(() => {
         requestHoverCue(normalizedText, cacheKey);

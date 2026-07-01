@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 12:06:57 CST
- 更新内容: 约束福小客头顶提示气泡上移，避免遮挡小人头部。
+ 更新时间: 2026-07-01 12:26:32 CST
+ 更新内容: 约束鼠标悬浮文字气泡绕过自动提示冷却，保证用户主动悬浮立即响应。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -63,7 +63,7 @@ test('shows random Fu Xiaoke bubble prompts while the dialog is closed', () => {
   assert.match(companionSource, /您好，我是福小客，有什么可以帮助您的吗？/);
 });
 
-test('throttles passive bubble prompts so they do not pop up too frequently', () => {
+test('throttles passive idle bubbles without delaying user text hover cues', () => {
   assert.match(componentSource, /const PASSIVE_BUBBLE_COOLDOWN = 9000;/);
   assert.match(componentSource, /const lastBubbleShownAtRef = useRef\(0\);/);
   assert.match(componentSource, /function showCompanionCue\(cue, \{ openDialog = false, duration = 5600, respectCooldown = false \} = \{\}\)/);
@@ -71,8 +71,9 @@ test('throttles passive bubble prompts so they do not pop up too frequently', ()
   assert.match(componentSource, /if \(respectCooldown && now - lastBubbleShownAtRef\.current < PASSIVE_BUBBLE_COOLDOWN\) \{\s*return false;\s*\}/s);
   assert.match(componentSource, /lastBubbleShownAtRef\.current = now;/);
   assert.match(componentSource, /return true;/);
-  assert.match(componentSource, /const cueShown = showCompanionCue\(\{\s*text: buildInstantHoverCue\(normalizedText\),\s*action: MASCOT_ACTIONS\.think,\s*\}, \{ openDialog: false, duration: HOVER_INSTANT_CUE_DURATION, respectCooldown: true \}\);/s);
-  assert.match(componentSource, /if \(!cueShown\) return;/);
+  assert.match(componentSource, /showCompanionCue\(getIdleCompanionCue\(idlePromptIndexRef\.current\), \{ openDialog: false, respectCooldown: true \}\);/);
+  assert.match(componentSource, /showCompanionCue\(\{\s*text: buildInstantHoverCue\(normalizedText\),\s*action: MASCOT_ACTIONS\.think,\s*\}, \{ openDialog: false, duration: HOVER_INSTANT_CUE_DURATION \}\);/s);
+  assert.doesNotMatch(componentSource, /buildInstantHoverCue\(normalizedText\),\s*action: MASCOT_ACTIONS\.think,\s*\}, \{ openDialog: false, duration: HOVER_INSTANT_CUE_DURATION, respectCooldown: true \}/s);
 });
 
 test('responds to KPI card context with matching speech and motion', () => {
