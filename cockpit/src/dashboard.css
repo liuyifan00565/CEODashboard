@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:18:00 CST
- 更新内容: 版本情况所在总览网格行收紧到回款大卡片规格，避免新版本大卡片被拉高。
+ 更新时间: 2026-07-01 17:29:45 CST
+ 更新内容: 首页月度经营趋势面板改为续费率卡片一致的深黑玻璃底，避免点阵背景透出影响读数。
 */
 
 /* ===== 外层 shell：左侧栏 + 右内容列 ===== */
@@ -108,7 +108,10 @@
 .dash-cell .mt-panel{
   display:flex;
   flex-direction:column;
-  background: transparent;
+  background:
+    radial-gradient(circle at 82% 10%, rgba(96,0,255,.16), rgba(96,0,255,0) 42%),
+    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.012)),
+    #101012;
   border:1px solid var(--line-2);
   backdrop-filter:var(--glass-blur);
   -webkit-backdrop-filter:var(--glass-blur);

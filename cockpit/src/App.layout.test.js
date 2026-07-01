@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 17:20:18 CST
- 更新内容: 增加算力总容量趋势字段保留约束，避免容量图因数据整理丢失 capacity 后空白。
+ 更新时间: 2026-07-01 17:29:45 CST
+ 更新内容: 增加首页月度经营趋势和交付看板深黑实体背景约束，避免大面板再次透明。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -10,10 +10,16 @@ const appSource = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
 const dashboardCss = readFileSync(new URL('./dashboard.css', import.meta.url), 'utf8');
 const kpiModalSource = readFileSync(new URL('./components/KpiModal.jsx', import.meta.url), 'utf8');
 const monthlyTrendSource = readFileSync(new URL('./components/MonthlyTrend.jsx', import.meta.url), 'utf8');
+const deliveryPanelCss = readFileSync(new URL('./components/DeliveryPanel.css', import.meta.url), 'utf8');
 const channelPanelSource = readFileSync(new URL('./components/ChannelPanel.jsx', import.meta.url), 'utf8');
 const channelPanelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
 const computePageSource = readFileSync(new URL('./components/ComputeUsagePage.jsx', import.meta.url), 'utf8');
 const computePageCss = readFileSync(new URL('./components/ComputeUsagePage.css', import.meta.url), 'utf8');
+
+function cssRuleBody(source, selector) {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return source.match(new RegExp(`${escapedSelector}\\s*\\{(?<body>[\\s\\S]*?)\\n\\}`))?.groups.body ?? '';
+}
 
 test('keeps all dashboard data cards on fixed grid layouts', () => {
   assert.doesNotMatch(appSource, /DraggableKpiLayer/);
@@ -343,6 +349,20 @@ test('uses channel completion wording and connects the delivery dashboard panel'
   assert.match(appSource, /sidePanel=\{<ChannelPanel channelKey=\{activeChannelKey\} title=\{recoveryChannelTitle\(card\)\} \/>\}/);
   assert.match(appSource, /className="dash-cell dash-cell--finance-kpis"/);
   assert.doesNotMatch(dashboardCss, /"version delivery"/);
+});
+
+test('uses solid dark glass backgrounds for overview trend and delivery panels', () => {
+  const trendPanelBlock = cssRuleBody(dashboardCss, '.dash-cell .mt-panel');
+  const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-panel');
+
+  assert.match(trendPanelBlock, /background:\s*[\s\S]*?#101012;/);
+  assert.match(trendPanelBlock, /border:1px solid var\(--line-2\);/);
+  assert.match(trendPanelBlock, /backdrop-filter:var\(--glass-blur\);/);
+  assert.doesNotMatch(trendPanelBlock, /background:\s*transparent;/);
+  assert.match(deliveryPanelBlock, /background:\s*[\s\S]*?#101012;/);
+  assert.match(deliveryPanelBlock, /border: 1px solid var\(--line-2\);/);
+  assert.match(deliveryPanelBlock, /backdrop-filter: var\(--glass-blur\);/);
+  assert.doesNotMatch(deliveryPanelBlock, /background:\s*transparent;/);
 });
 
 test('uses static trend legend and overlapping target versus recovered bars', () => {
