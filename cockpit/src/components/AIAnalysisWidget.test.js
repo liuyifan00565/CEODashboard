@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:35:33 CST
- 更新内容: AI 小人测试补充悬浮文字即时气泡与当前悬浮位置校验，减少千问返回前的等待感。
+ 更新时间: 2026-07-01 12:02:44 CST
+ 更新内容: 移除福小客头顶提示气泡测试，确保小人不再显示自动文案。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -8,8 +8,6 @@ import assert from 'node:assert/strict';
 
 const componentSource = readFileSync(new URL('./AIAnalysisWidget.jsx', import.meta.url), 'utf8');
 const componentCss = readFileSync(new URL('./AIAnalysisWidget.css', import.meta.url), 'utf8');
-const companionSource = readFileSync(new URL('../lib/mascotCompanion.js', import.meta.url), 'utf8');
-const hoverCueSource = readFileSync(new URL('../lib/hoverCue.js', import.meta.url), 'utf8');
 const indexCss = readFileSync(new URL('../index.css', import.meta.url), 'utf8');
 const mascotTransparentUrl = new URL('../../public/ai-mascot-transparent.png', import.meta.url);
 
@@ -22,7 +20,7 @@ function themeBlock(theme) {
 
 test('uses the 3D mascot stage for the AI launcher', () => {
   assert.match(componentSource, /import Mascot3DStage from '\.\/Mascot3DStage';/);
-  assert.match(componentSource, /import \{\s*MASCOT_ACTIONS,\s*getIdleCompanionCue,\s*getSpeechAction,\s*\} from '\.\.\/lib\/mascotCompanion';/s);
+  assert.match(componentSource, /import \{\s*MASCOT_ACTIONS,\s*getSpeechAction,\s*\} from '\.\.\/lib\/mascotCompanion';/s);
   assert.match(componentSource, /export default function AIAnalysisWidget\(\{ activeMenu, dim, channelKey = 'all', companionCue \}\)/);
   assert.match(componentSource, /const \[mascotAction,\s*setMascotAction\] = useState\(MASCOT_ACTIONS\.idle\);/);
   assert.match(componentSource, /const \[mascotPointer,\s*setMascotPointer\] = useState\(\{ x: 0, y: 0, active: false \}\);/);
@@ -49,14 +47,13 @@ test('tracks pointer position for Codex-like desktop pet movement', () => {
   assert.match(componentSource, /setMascotPointer\(\{ x: 0, y: 0, active: false \}\);/);
 });
 
-test('shows random Fu Xiaoke bubble prompts while the dialog is closed', () => {
-  assert.match(componentSource, /const \[bubbleCue,\s*setBubbleCue\] = useState\(\(\) => getIdleCompanionCue\(0\)\);/);
-  assert.match(componentSource, /const idlePromptIndexRef = useRef\(0\);/);
-  assert.match(componentSource, /window\.setInterval\(\(\) => \{/);
-  assert.match(componentSource, /idlePromptIndexRef\.current \+= 1;/);
-  assert.match(componentSource, /showCompanionCue\(getIdleCompanionCue\(idlePromptIndexRef\.current\), \{ openDialog: false \}\);/);
-  assert.match(componentSource, /className="ai-bubble"/);
-  assert.match(companionSource, /您好，我是福小客，有什么可以帮助您的吗？/);
+test('does not render Fu Xiaoke speech bubble text above the mascot', () => {
+  assert.doesNotMatch(componentSource, /const \[bubbleCue,/);
+  assert.doesNotMatch(componentSource, /setBubbleCue/);
+  assert.doesNotMatch(componentSource, /className="ai-bubble"/);
+  assert.doesNotMatch(componentSource, /ai-widget--speaking/);
+  assert.doesNotMatch(componentSource, /aria-live="polite"/);
+  assert.doesNotMatch(componentSource, /福小客<\/span>/);
 });
 
 test('responds to KPI card context with matching speech and motion', () => {
@@ -65,25 +62,14 @@ test('responds to KPI card context with matching speech and motion', () => {
   assert.match(componentSource, /playMascotAction\(MASCOT_ACTIONS\.click, 860, nextOpen\);/);
 });
 
-test('requests Qwen hover bubble cues from readable page text', () => {
-  assert.match(componentSource, /buildInstantHoverCue/);
-  assert.match(componentSource, /normalizeHoverCueText/);
-  assert.match(componentSource, /shouldRequestHoverCue/);
-  assert.match(componentSource, /buildHoverCueCacheKey/);
-  assert.match(componentSource, /getHoverCueTextFromElement/);
-  assert.match(componentSource, /const HOVER_CUE_DELAY = 120;/);
-  assert.match(componentSource, /const hoverCueTimerRef = useRef\(null\);/);
-  assert.match(componentSource, /const hoverCueCacheRef = useRef\(new Map\(\)\);/);
-  assert.match(componentSource, /const hoverCueActiveKeyRef = useRef\(''\);/);
-  assert.match(componentSource, /document\.addEventListener\('pointerover', handleTextPointerOver\);/);
-  assert.match(componentSource, /showCompanionCue\(\{\s*text: buildInstantHoverCue\(normalizedText\),\s*action: MASCOT_ACTIONS\.think,\s*\}/s);
-  assert.match(componentSource, /hoverCueActiveKeyRef\.current !== cacheKey/);
-  assert.match(componentSource, /fetch\('\/api\/ai\/hover-cue'/);
-  assert.match(componentSource, /showCompanionCue\(\{ text: cue, action: MASCOT_ACTIONS\.talk \}/);
-  assert.match(componentSource, /showCompanionCue\(\{ text: fallbackCue, action: MASCOT_ACTIONS\.think \}/);
-  assert.match(hoverCueSource, /export function buildInstantHoverCue/);
-  assert.match(hoverCueSource, /export function getHoverCueTextFromElement/);
-  assert.match(hoverCueSource, /\.closest\('\.ai-widget'\)/);
+test('does not request hover bubble copy for page text', () => {
+  assert.doesNotMatch(componentSource, /buildInstantHoverCue/);
+  assert.doesNotMatch(componentSource, /buildHoverCueCacheKey/);
+  assert.doesNotMatch(componentSource, /getHoverCueTextFromElement/);
+  assert.doesNotMatch(componentSource, /shouldRequestHoverCue/);
+  assert.doesNotMatch(componentSource, /hoverCueTimerRef/);
+  assert.doesNotMatch(componentSource, /document\.addEventListener\('pointerover'/);
+  assert.doesNotMatch(componentSource, /fetch\('\/api\/ai\/hover-cue'/);
 });
 
 test('keeps the AI dialog content and behavior intact', () => {
@@ -111,19 +97,13 @@ test('uses theme-specific AI dialog card backgrounds', () => {
   assert.doesNotMatch(lightBlock, /--ai-card-bg:\s*#120F17;/);
 });
 
-test('styles the launcher as a transparent 3D mascot and speech bubble', () => {
+test('styles the launcher as a transparent 3D mascot without a speech bubble', () => {
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*width:\s*132px;/s);
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*height:\s*184px;/s);
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*background:\s*transparent;/s);
-  assert.match(componentCss, /\.ai-bubble\s*\{/);
-  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*bottom:\s*204px;/s);
-  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*left:\s*50%;/s);
-  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*width:\s*min\(186px, calc\(100vw - 32px\)\);/s);
-  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*transform:\s*translateX\(-50%\);/s);
-  assert.match(componentCss, /\.ai-bubble::after\s*\{[^}]*left:\s*50%;/s);
-  assert.match(componentCss, /@keyframes ai-bubble-in/);
+  assert.doesNotMatch(componentCss, /\.ai-bubble/);
+  assert.doesNotMatch(componentCss, /@keyframes ai-bubble/);
   assert.match(componentCss, /\.ai-card-wrap\s*\{[^}]*z-index:\s*1000;/s);
-  assert.match(componentCss, /\.ai-widget--speaking \.ai-bubble/);
   assert.doesNotMatch(componentCss, /--mascot-frame-count/);
   assert.doesNotMatch(componentCss, /ai-mascot-frames/);
   assert.doesNotMatch(componentCss, /ai-mascot-sprite/);
