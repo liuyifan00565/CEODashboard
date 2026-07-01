@@ -1,0 +1,1937 @@
+<!--
+更新时间: 2026-06-23 19:15:07
+更新内容: 按清新浅色方向重新生成 CEO 月度销售驾驶舱演示页；页面不使用黑色底，数据报表统一采用 ECharts 默认调色盘，保留四张核心指标、二级悬浮数据卡片、目标维护联动、搜索高亮及 ECharts/GSAP 降级渲染。
+更新时间: 2026-06-23 21:37:05
+更新内容: 根据代码审查反馈优化页面：清理卡片冗余英文文案，将投放回收指标显示改为中文投产比，新增左侧经营导航与 CEO 判断区，取消主体面板强制一屏压缩，修复潜在横向溢出、遮挡和固定高度裁切风险，并强化浅色高级经营驾驶舱视觉层次。
+更新时间: 2026-06-23 22:18:32
+更新内容: 将左侧菜单升级为真实可切换的经营总览、渠道分析、财务分析、目标管理和 Token 中心内页；新增 Token 用量按日期、按月、按年度切换、环比、活跃客户和客户排行监控，并优化各内页信息架构、响应式布局与移动端图表图例避让。
+  更新时间: 2026-06-23 22:43:12
+  更新内容: 清理页面无效说明文字；新增全局年/月/日和自定义时间段筛选；统一 KPI、Token、趋势图和下钻弹窗的红涨绿跌箭头环比展示；点击下钻柱状图后联动上方指标，显示所选时间点及上一期对比；同步泛化本周期文案和动态财务摘要。
+-->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>成都福客人工智能 CEO AI客服销售驾驶舱</title>
+  <link rel="icon" href="logo.png" type="image/png">
+  <style>
+    :root {
+      --page: #eef5ff;
+      --page-soft: #f8fbff;
+      --surface: rgba(255, 255, 255, 0.94);
+      --surface-strong: #ffffff;
+      --line: #dce6f3;
+      --line-soft: rgba(145, 161, 181, 0.24);
+      --ink: #1d2735;
+      --ink-2: #415063;
+      --muted: #758398;
+      --blue: #5470c6;
+      --green: #91cc75;
+      --amber: #fac858;
+      --red: #ee6666;
+      --cyan: #73c0de;
+      --purple: #9a60b4;
+      --radius: 8px;
+      --shadow: 0 18px 46px rgba(66, 92, 134, 0.14);
+      --shadow-strong: 0 30px 80px rgba(62, 88, 130, 0.2);
+      --font-ui: "Avenir Next", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      --font-number: "DIN Alternate", "Avenir Next Condensed", "Bahnschrift", "Arial Narrow", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      color: var(--ink);
+      font-family: var(--font-ui);
+      letter-spacing: 0;
+      background:
+        linear-gradient(135deg, rgba(84, 112, 198, 0.08) 0%, rgba(115, 192, 222, 0.07) 45%, rgba(145, 204, 117, 0.08) 100%),
+        linear-gradient(180deg, #ffffff 0%, var(--page) 100%);
+    }
+
+    body { overflow-x: hidden; }
+    button, input { font: inherit; }
+    button { border: 0; cursor: pointer; }
+    button:focus-visible, input:focus-visible { outline: 2px solid rgba(84, 112, 198, 0.65); outline-offset: 2px; }
+
+    .page-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        linear-gradient(90deg, rgba(84, 112, 198, 0.045) 1px, transparent 1px) 0 0 / 88px 88px,
+        linear-gradient(0deg, rgba(115, 192, 222, 0.04) 1px, transparent 1px) 0 0 / 88px 88px;
+      mask-image: linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent 75%);
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      width: min(1480px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 168px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .side-rail {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 20px 12px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 22px;
+      border-right: 1px solid rgba(84, 112, 198, 0.13);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(238, 246, 255, 0.72));
+      backdrop-filter: blur(18px);
+    }
+
+    .rail-brand {
+      display: grid;
+      gap: 10px;
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    .rail-logo {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(84, 112, 198, 0.18);
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(84, 112, 198, 0.13), rgba(115, 192, 222, 0.1));
+    }
+
+    .rail-logo img { width: 32px; max-height: 32px; object-fit: contain; }
+    .rail-brand span { font-size: 14px; line-height: 1.25; }
+
+    .rail-nav {
+      display: grid;
+      align-content: start;
+      gap: 8px;
+    }
+
+    .rail-nav button {
+      min-height: 38px;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      border-radius: 8px;
+      color: var(--ink-2);
+      background: transparent;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 800;
+      text-align: left;
+    }
+
+    .rail-nav button:hover,
+    .rail-nav button.is-active {
+      color: var(--blue);
+      background: rgba(84, 112, 198, 0.1);
+    }
+
+    .rail-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: currentColor;
+      opacity: 0.76;
+      flex: 0 0 auto;
+    }
+
+    .rail-foot {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.78);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .rail-foot strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--blue);
+      font-family: var(--font-number);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .dashboard {
+      position: relative;
+      min-height: 100vh;
+      min-width: 0;
+      padding: 20px 22px 38px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto 1fr auto;
+      gap: 16px;
+    }
+
+    .topbar,
+    .kpi-card,
+    .panel,
+    .focus-card,
+    .modal-card,
+    .source-note {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .topbar::before,
+    .kpi-card::before,
+    .panel::before,
+    .focus-card::before,
+    .modal-card::before {
+      position: absolute;
+      inset: 0 0 auto;
+      height: 3px;
+      content: "";
+      background: linear-gradient(90deg, var(--blue), var(--cyan), var(--green), var(--amber), var(--red), var(--purple));
+    }
+
+    .topbar {
+      min-height: 88px;
+      padding: 16px 18px;
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) minmax(320px, 520px) 138px;
+      align-items: center;
+      gap: 14px;
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(84, 112, 198, 0.18);
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(84, 112, 198, 0.12), rgba(115, 192, 222, 0.08));
+      flex: 0 0 auto;
+    }
+
+    .brand-mark img {
+      width: 30px;
+      max-height: 30px;
+      object-fit: contain;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      margin-top: 2px;
+      font-size: 22px;
+      line-height: 1.18;
+      font-weight: 850;
+      color: var(--ink);
+    }
+
+    h2 { font-size: 17px; line-height: 1.15; font-weight: 850; }
+    h3 { font-size: 14px; line-height: 1.2; font-weight: 850; }
+
+    .label,
+    .meta,
+    .caption,
+    .mini-label {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .label { font-weight: 850; color: var(--blue); }
+
+    .top-actions {
+      display: grid;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .action-row-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 126px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .period-control {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+    }
+
+    .range-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(120px, 1fr));
+      gap: 8px;
+    }
+
+    .date-field {
+      height: 34px;
+      padding: 0 9px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 6px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fbff;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .date-field input {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      color: var(--ink-2);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .search-wrap { position: relative; }
+    .search-wrap input {
+      width: 100%;
+      height: 40px;
+      padding: 0 14px 0 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: #f8fbff;
+    }
+    .search-wrap input::placeholder { color: #92a0b3; }
+    .search-wrap svg {
+      position: absolute;
+      top: 11px;
+      left: 13px;
+      width: 17px;
+      height: 17px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .primary-btn,
+    .ghost-btn,
+    .icon-btn {
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(135deg, var(--blue), #6c8ef0);
+      box-shadow: 0 10px 22px rgba(84, 112, 198, 0.2);
+    }
+
+    .ghost-btn,
+    .icon-btn {
+      color: var(--ink-2);
+      border: 1px solid var(--line);
+      background: #fff;
+      box-shadow: none;
+    }
+
+    .icon-btn { width: 36px; height: 36px; padding: 0; }
+
+    .month-badge {
+      justify-self: end;
+      width: 132px;
+      padding: 7px 12px;
+      display: grid;
+      gap: 2px;
+      border: 1px solid rgba(84, 112, 198, 0.18);
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(84, 112, 198, 0.1), rgba(115, 192, 222, 0.09));
+      text-align: right;
+    }
+    .month-badge strong {
+      font-family: var(--font-number);
+      font-size: 22px;
+      line-height: 1;
+      color: var(--blue);
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .view-stack {
+      display: grid;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .view-pane {
+      display: none;
+      min-width: 0;
+      gap: 16px;
+    }
+
+    .view-pane.is-active { display: grid; }
+
+    .page-heading {
+      min-height: 92px;
+      padding: 18px 20px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(84, 112, 198, 0.12), rgba(115, 192, 222, 0.08)),
+        rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .page-heading h2 { margin-top: 4px; font-size: 24px; }
+    .page-heading p { margin-top: 6px; color: var(--ink-2); font-size: 13px; line-height: 1.55; }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .info-pill {
+      min-height: 30px;
+      padding: 6px 10px;
+      border: 1px solid rgba(84, 112, 198, 0.16);
+      border-radius: 8px;
+      color: var(--ink-2);
+      background: rgba(255, 255, 255, 0.72);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .kpi-card {
+      min-height: 148px;
+      padding: 16px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+      text-align: left;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(84, 112, 198, 0.34);
+      box-shadow: 0 24px 60px rgba(66, 92, 134, 0.18);
+    }
+
+    .kpi-head,
+    .panel-header,
+    .focus-head,
+    .modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .kpi-icon {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: var(--accent, var(--blue));
+      background: color-mix(in srgb, var(--accent, var(--blue)) 12%, white);
+      flex: 0 0 auto;
+    }
+
+    .kpi-value {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      font-family: var(--font-number);
+    }
+    .kpi-value strong {
+      font-size: clamp(30px, 2.8vw, 44px);
+      line-height: 0.96;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .unit { color: var(--muted); font-size: 14px; font-family: var(--font-ui); font-weight: 750; }
+    .kpi-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .delta { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 850; }
+    .delta.up { color: var(--red); }
+    .delta.down { color: #54a64a; }
+    .delta.flat { color: var(--muted); }
+    .delta.up::before { content: "▲"; font-size: 10px; line-height: 1; }
+    .delta.down::before { content: "▼"; font-size: 10px; line-height: 1; }
+    .delta.flat::before { content: "■"; font-size: 8px; line-height: 1; }
+
+    .signal-strip {
+      display: grid;
+      grid-template-columns: 1.15fr repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .signal-title,
+    .signal-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.84);
+      box-shadow: 0 14px 34px rgba(66, 92, 134, 0.09);
+    }
+
+    .signal-title {
+      padding: 14px 16px;
+      background:
+        linear-gradient(135deg, rgba(84, 112, 198, 0.12), rgba(115, 192, 222, 0.08)),
+        rgba(255, 255, 255, 0.9);
+    }
+
+    .signal-title h2 { font-size: 20px; }
+    .signal-title p { margin-top: 8px; color: var(--ink-2); font-size: 13px; line-height: 1.55; }
+
+    .signal-card {
+      padding: 13px 14px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .signal-card strong { font-size: 14px; color: var(--ink); }
+    .signal-card span { color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.32fr) minmax(320px, 0.78fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .dashboard[data-active-view="channels"] .main-grid,
+    .dashboard[data-active-view="finance"] .main-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .panel {
+      min-height: 420px;
+      padding: 16px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .trend-panel { min-height: 460px; }
+    .main-grid > article:nth-child(3) { grid-column: 1 / -1; min-height: 360px; }
+
+    .panel-title { display: grid; gap: 4px; }
+    .chart { width: 100%; height: 210px; min-height: 160px; }
+    .trend-panel .chart { height: 246px; }
+    .section-stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .mini-stat,
+    .soft-box,
+    .finance-cell,
+    .channel-row {
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      background: #f9fbff;
+    }
+    .mini-stat { padding: 8px 9px; }
+    .mini-stat strong {
+      display: block;
+      margin-top: 5px;
+      font-family: var(--font-number);
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .trend-body {
+      display: grid;
+      grid-template-rows: 246px auto;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .channel-list { display: grid; gap: 8px; align-content: start; }
+    .channel-row { padding: 10px; }
+    .row-main {
+      display: grid;
+      grid-template-columns: 82px 1fr 66px;
+      align-items: center;
+      gap: 9px;
+    }
+    .channel-name { display: flex; align-items: center; gap: 8px; font-weight: 850; }
+    .dot { width: 9px; height: 9px; border-radius: 999px; background: var(--accent, var(--blue)); }
+    .progress { height: 10px; overflow: hidden; border-radius: 999px; background: #edf2fa; }
+    .progress span { display: block; width: var(--pct); height: 100%; border-radius: inherit; background: var(--accent, var(--blue)); }
+    .completion {
+      justify-self: end;
+      font-family: var(--font-number);
+      font-size: 23px;
+      font-weight: 900;
+    }
+    .row-meta {
+      margin-top: 7px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .split-panel { display: grid; grid-template-rows: auto auto; gap: 10px; min-height: 0; }
+    .soft-box { padding: 10px; min-height: 0; }
+    .version-list { display: grid; gap: 8px; margin-top: 9px; }
+    .version-row {
+      display: grid;
+      grid-template-columns: 70px 1fr 80px;
+      align-items: center;
+      gap: 9px;
+    }
+    .version-label { font-weight: 850; }
+    .version-value {
+      text-align: right;
+      font-family: var(--font-number);
+      font-size: 20px;
+      font-weight: 900;
+    }
+    .finance-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 9px; }
+    .finance-cell { min-height: 70px; padding: 10px; }
+    .finance-cell strong {
+      display: block;
+      margin-top: 5px;
+      font-family: var(--font-number);
+      font-size: 22px;
+      line-height: 1;
+    }
+    #financeChart { height: 0; min-height: 0; display: none; }
+
+    .detail-grid,
+    .token-analysis-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .compact-grid,
+    .token-kpi-grid,
+    .goal-board,
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .compact-card,
+    .token-card,
+    .goal-card,
+    .action-row,
+    .leader-row {
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      background: #f9fbff;
+    }
+
+    .compact-card,
+    .token-card,
+    .goal-card { padding: 12px; }
+
+    .compact-card strong,
+    .token-card strong,
+    .goal-card strong {
+      display: block;
+      margin-top: 7px;
+      font-family: var(--font-number);
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    .action-list,
+    .token-leaderboard {
+      display: grid;
+      gap: 9px;
+      align-content: start;
+    }
+
+    .action-row {
+      padding: 11px 12px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .action-index {
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: #fff;
+      background: var(--blue);
+      font-family: var(--font-number);
+      font-weight: 900;
+    }
+
+    .token-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .segment-control {
+      display: inline-flex;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.82);
+      gap: 4px;
+    }
+
+    .segment-control button {
+      min-width: 70px;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 7px;
+      color: var(--ink-2);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .segment-control button.is-active {
+      color: #fff;
+      background: linear-gradient(135deg, var(--blue), #6c8ef0);
+      box-shadow: 0 8px 18px rgba(84, 112, 198, 0.2);
+    }
+
+    .period-control .segment-control button { min-width: 52px; }
+
+    .token-panel .chart { height: 280px; }
+
+    .leader-row {
+      padding: 11px 12px;
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr) auto auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .leader-rank {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: var(--blue);
+      background: rgba(84, 112, 198, 0.11);
+      font-family: var(--font-number);
+      font-weight: 900;
+    }
+
+    .leader-value {
+      text-align: right;
+      font-family: var(--font-number);
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .goal-card {
+      min-height: 132px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .goal-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .source-note {
+      padding: 7px 12px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.76);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .highlight {
+      border-color: rgba(238, 102, 102, 0.72) !important;
+      background: #fff7f7 !important;
+      box-shadow: 0 0 0 3px rgba(238, 102, 102, 0.13), var(--shadow);
+      transform: translateY(-1px);
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(29, 39, 53, 0.28);
+      backdrop-filter: blur(8px);
+    }
+    .overlay.is-open { display: flex; }
+    .focus-card {
+      width: min(980px, 94vw);
+      max-height: min(760px, 90vh);
+      padding: 18px;
+      display: grid;
+      grid-template-rows: auto auto minmax(270px, 1fr);
+      gap: 14px;
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 34px 90px rgba(45, 65, 100, 0.28);
+    }
+    .focus-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .focus-metric { padding: 11px 12px; border: 1px solid var(--line-soft); border-radius: 8px; background: #f8fbff; }
+    .focus-metric strong { display: block; margin-top: 5px; font-family: var(--font-number); font-size: 28px; line-height: 1; }
+    .focus-metric .metric-sub {
+      margin-top: 7px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+    #focusChart { height: 310px; }
+
+    .modal-card { width: min(560px, 94vw); padding: 18px; background: #fff; }
+    .target-form { margin-top: 16px; display: grid; gap: 10px; }
+    .target-row { display: grid; grid-template-columns: 112px 1fr 36px; align-items: center; gap: 10px; }
+    .target-row input { height: 40px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: #f8fbff; }
+    .modal-actions { margin-top: 16px; display: flex; justify-content: flex-end; gap: 10px; }
+
+    .fallback-bars {
+      width: 100%;
+      height: 100%;
+      min-height: 120px;
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      align-items: end;
+      gap: 8px;
+      padding: 14px 6px 12px;
+    }
+    .fallback-bar {
+      display: grid;
+      align-items: end;
+      justify-items: center;
+      gap: 6px;
+      height: 100%;
+      padding: 0;
+      border: 0;
+      color: var(--muted);
+      background: transparent;
+      font-size: 10px;
+    }
+    .fallback-bar span { width: 100%; min-height: 6px; border-radius: 6px 6px 2px 2px; background: linear-gradient(180deg, var(--blue), var(--cyan)); }
+    .fallback-bar.is-selected span { background: linear-gradient(180deg, var(--red), var(--amber)); }
+
+    @media (max-width: 1180px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .side-rail {
+        position: relative;
+        height: auto;
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-rows: auto;
+        align-items: center;
+      }
+      .rail-nav { display: flex; overflow-x: auto; }
+      .rail-nav button { flex: 0 0 auto; white-space: nowrap; }
+      .rail-foot { display: none; }
+      .topbar { grid-template-columns: 1fr; }
+      .period-control { grid-template-columns: 1fr; }
+      .month-badge { justify-self: start; text-align: left; }
+      .main-grid, .detail-grid, .token-analysis-grid { grid-template-columns: 1fr; }
+      .main-grid > article:nth-child(3) { grid-column: auto; }
+      .panel { min-height: 360px; }
+      .signal-strip { grid-template-columns: 1fr 1fr; }
+      .compact-grid, .token-kpi-grid, .goal-board, .insight-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 860px) {
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .focus-metrics, .finance-grid { grid-template-columns: 1fr 1fr; }
+      .signal-strip { grid-template-columns: 1fr; }
+      .page-heading { grid-template-columns: 1fr; }
+      .pill-row { justify-content: flex-start; }
+    }
+    @media (max-width: 560px) {
+      h1 { white-space: normal; font-size: 20px; }
+      .side-rail {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 14px 22px;
+      }
+      .rail-brand {
+        grid-template-columns: auto 1fr;
+        align-items: center;
+      }
+      .rail-nav {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        overflow: visible;
+      }
+      .rail-nav button {
+        min-height: 36px;
+        justify-content: center;
+        gap: 6px;
+        padding: 0 6px;
+        font-size: 12px;
+      }
+      .kpi-grid, .action-row-top, .range-fields, .focus-metrics, .finance-grid, .section-stat-row, .compact-grid, .token-kpi-grid, .goal-board, .insight-grid { grid-template-columns: 1fr; }
+      .row-main, .version-row, .target-row { grid-template-columns: 1fr; align-items: start; }
+      .completion, .version-value { justify-self: start; text-align: left; }
+      .action-row, .leader-row { grid-template-columns: auto minmax(0, 1fr); }
+      .leader-value { grid-column: 2; text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-grid" aria-hidden="true"></div>
+  <div class="app-shell">
+  <aside class="side-rail" aria-label="经营导航">
+    <div class="rail-brand">
+      <div class="rail-logo"><img src="logo.png" alt="成都福客人工智能"></div>
+      <span>经营<br>驾驶舱</span>
+    </div>
+    <nav class="rail-nav">
+      <button class="is-active" type="button" data-view-tab="overview" aria-controls="viewOverview"><span class="rail-dot"></span>经营总览</button>
+      <button type="button" data-view-tab="channels" aria-controls="viewChannels"><span class="rail-dot"></span>渠道分析</button>
+      <button type="button" data-view-tab="finance" aria-controls="viewFinance"><span class="rail-dot"></span>财务分析</button>
+      <button type="button" data-view-tab="goals" aria-controls="viewGoals"><span class="rail-dot"></span>目标管理</button>
+      <button type="button" data-view-tab="token" aria-controls="viewToken"><span class="rail-dot"></span>Token中心</button>
+    </nav>
+    <div class="rail-foot">当前周期<strong id="railPeriod">2026.06</strong></div>
+  </aside>
+
+  <main class="dashboard" data-active-view="overview">
+    <header class="topbar" data-search="总览 目标 周期">
+      <div class="brand">
+        <div class="brand-mark"><img src="logo.png" alt="成都福客人工智能"></div>
+        <div>
+          <div class="label">经营驾驶舱</div>
+          <h1>CEO AI客服销售经营驾驶舱</h1>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="action-row-top">
+          <label class="search-wrap" aria-label="搜索模块">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+            <input id="searchInput" type="search" placeholder="搜索：线上 / 华南 / 华东 / 代理 / 版本 / Token">
+          </label>
+          <button class="primary-btn" id="openTargetBtn" type="button">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2v20"></path><path d="M2 12h20"></path></svg>
+            目标维护
+          </button>
+        </div>
+        <div class="period-control" aria-label="时间筛选">
+          <div class="segment-control" aria-label="经营时间粒度">
+            <button type="button" data-range-mode="day">日</button>
+            <button class="is-active" type="button" data-range-mode="month">月</button>
+            <button type="button" data-range-mode="year">年</button>
+          </div>
+          <div class="range-fields">
+            <label class="date-field"><span>开始</span><input id="rangeStart" type="date"></label>
+            <label class="date-field"><span>结束</span><input id="rangeEnd" type="date"></label>
+          </div>
+        </div>
+      </div>
+      <div class="month-badge">
+        <span class="meta" id="periodBadgeLabel">当前周期</span>
+        <strong id="currentMonth">2026.06</strong>
+      </div>
+    </header>
+
+    <section class="kpi-grid" id="viewOverview" data-view-section="overview" aria-label="核心 KPI">
+      <button class="kpi-card" type="button" data-kpi="revenue" data-search="本周期回款 销售额 合同金额 订单 客单价" style="--accent: var(--blue);">
+        <div class="kpi-head"><div><div class="label">核心指标</div><h2>本周期回款</h2></div><span class="kpi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17h18"></path><path d="M7 17V7"></path><path d="M12 17V4"></path><path d="M17 17v-6"></path></svg></span></div>
+        <div class="kpi-value"><strong id="kpiRevenue">0</strong><span class="unit">万</span></div>
+        <div class="kpi-foot"><span class="delta up" id="kpiRevenueDelta">环比 +0%</span><span class="caption" id="kpiRevenueAux">合同 0 万</span></div>
+      </button>
+
+      <button class="kpi-card" type="button" data-kpi="target" data-search="目标 完成率 缺口 渠道目标" style="--accent: var(--green);">
+        <div class="kpi-head"><div><div class="label">目标达成</div><h2>目标完成</h2></div><span class="kpi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4"></path><path d="M22 12h-4"></path></svg></span></div>
+        <div class="kpi-value"><strong id="kpiCompletion">0</strong><span class="unit">%</span></div>
+        <div class="kpi-foot"><span class="delta up" id="kpiGap">缺口 0 万</span><span class="caption" id="kpiTarget">目标 0 万</span></div>
+      </button>
+
+      <button class="kpi-card" type="button" data-kpi="annual" data-search="年度累计 年度目标 年度剩余缺口 全年进度" style="--accent: var(--amber);">
+        <div class="kpi-head"><div><div class="label">年度进度</div><h2>年度累计回款</h2></div><span class="kpi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5"></path><path d="M4 19h16"></path><path d="m8 15 3-4 3 2 5-7"></path></svg></span></div>
+        <div class="kpi-value"><strong id="kpiAnnual">0</strong><span class="unit">万</span></div>
+        <div class="kpi-foot"><span class="delta up" id="kpiAnnualRate">全年 0%</span><span class="caption" id="kpiAnnualGap">剩余缺口 0 万</span></div>
+      </button>
+
+      <button class="kpi-card" type="button" data-kpi="finance" data-search="财务健康 应收 未回款 广告费 投产比 费比" style="--accent: var(--red);">
+        <div class="kpi-head"><div><div class="label">财务判断</div><h2>财务健康</h2></div><span class="kpi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-4 7-10V5l-7-3-7 3v6c0 6 7 10 7 10Z"></path><path d="m9 12 2 2 4-5"></path></svg></span></div>
+        <div class="kpi-value"><strong id="kpiHealth">0</strong><span class="unit">分</span></div>
+        <div class="kpi-foot"><span class="delta down" id="kpiReceivable">应收 0 万</span><span class="caption" id="kpiRoi">线上投产比 0</span></div>
+      </button>
+    </section>
+
+    <section class="signal-strip" data-view-section="overview" aria-label="CEO 快速判断">
+      <div class="signal-title">
+        <h2>经营信号</h2>
+      </div>
+      <div class="signal-card"><strong>整体结果</strong><span id="signalResult">回款节奏好于上期。</span></div>
+      <div class="signal-card"><strong>短板渠道</strong><span>华南线下完成率低于整体，需要确认目标和资源配置。</span></div>
+      <div class="signal-card"><strong>财务压力</strong><span>应收规模继续抬升，需和财务确认回款节奏。</span></div>
+    </section>
+
+    <section class="page-heading" id="viewChannels" data-view-section="channels" data-search="渠道分析 线上 华南 华东 代理" hidden>
+      <div>
+        <div class="label">渠道分析</div>
+        <h2>渠道完成与资源效率</h2>
+      </div>
+      <div class="pill-row">
+        <span class="info-pill">线上投产比最高</span>
+        <span class="info-pill">华南低于目标</span>
+        <span class="info-pill">代理超目标</span>
+      </div>
+    </section>
+
+    <section class="page-heading" id="viewFinance" data-view-section="finance" data-search="财务分析 版本 应收 广告费 投产比 费比" hidden>
+      <div>
+        <div class="label">财务分析</div>
+        <h2>版本结构、回款质量与费用效率</h2>
+      </div>
+      <div class="pill-row">
+        <span class="info-pill">至尊版贡献最高</span>
+        <span class="info-pill" id="financeReceivablePill">应收</span>
+        <span class="info-pill" id="financeRoiPill">投产比</span>
+      </div>
+    </section>
+
+    <section class="main-grid" data-view-frame="analysis">
+      <article class="panel trend-panel" data-view-section="overview" data-search="月度经营趋势 月目标 回款 完成率">
+        <div class="panel-header"><div class="panel-title"><div class="label">趋势研判</div><h2 id="trendTitle">经营趋势</h2><p class="caption" id="trendCaption">当前筛选周期</p></div><button class="ghost-btn" type="button" data-open-kpi="target">查看目标</button></div>
+        <div class="trend-body">
+          <div class="chart" id="trendChart"></div>
+          <div class="section-stat-row">
+            <div class="mini-stat"><span class="mini-label">合同金额</span><strong id="statContract">0</strong><span class="caption">万元</span></div>
+            <div class="mini-stat"><span class="mini-label">订单数</span><strong id="statOrders">0</strong><span class="caption">单</span></div>
+            <div class="mini-stat"><span class="mini-label">客单价</span><strong id="statAvg">0</strong><span class="caption">万元/单</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel" id="channels" data-view-section="overview channels" data-search="本周期渠道完成 线上 线下 华南 华东 代理">
+        <div class="panel-header"><div class="panel-title"><div class="label">渠道诊断</div><h2>渠道完成</h2></div><button class="ghost-btn" type="button" data-open-kpi="target">渠道对比</button></div>
+        <div class="channel-list" id="channelList"></div>
+      </article>
+
+      <article class="panel" id="finance" data-view-section="overview finance" data-search="版本与财务 启航 卓越 至尊 应收 广告费 投产比 年度缺口">
+        <div class="panel-header"><div class="panel-title"><div class="label">版本财务</div><h2>版本与财务</h2></div><button class="ghost-btn" type="button" data-open-kpi="finance">财务明细</button></div>
+        <div class="split-panel">
+          <div class="soft-box">
+            <div class="panel-header"><h3>产品版本结构</h3><span class="caption">启航 1.68万 · 卓越 3.98万 · 至尊 9.98万</span></div>
+            <div class="version-list" id="versionList"></div>
+          </div>
+          <div class="soft-box">
+            <div class="panel-header"><h3>财务健康摘要</h3><span class="caption">红涨绿跌</span></div>
+            <div class="finance-grid">
+              <div class="finance-cell"><span class="mini-label">应收</span><strong id="finReceivable">0</strong><span class="caption">万元</span></div>
+              <div class="finance-cell"><span class="mini-label">广告费</span><strong id="finAd">0</strong><span class="caption">万元</span></div>
+              <div class="finance-cell"><span class="mini-label">投产比</span><strong id="finRoi">0</strong><span class="caption">回款/广告费</span></div>
+              <div class="finance-cell"><span class="mini-label">年度缺口</span><strong id="finAnnualGap">0</strong><span class="caption">万元</span></div>
+            </div>
+            <div class="chart" id="financeChart" aria-hidden="true"></div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="view-pane" id="viewGoals" data-view-section="goals" data-search="目标管理 月度目标 渠道目标 年度目标 缺口" hidden>
+      <div class="page-heading">
+        <div>
+          <div class="label">目标管理</div>
+          <h2>目标、渠道缺口与年度节奏</h2>
+        </div>
+        <button class="primary-btn" type="button" data-open-target>调整目标</button>
+      </div>
+      <div class="goal-board" id="goalBoard"></div>
+      <div class="detail-grid">
+        <article class="panel" data-search="年度目标 年度完成 年度缺口">
+          <div class="panel-header"><div class="panel-title"><div class="label">年度进度</div><h2>年度目标拆解</h2></div></div>
+          <div class="compact-grid">
+            <div class="compact-card"><span class="mini-label">年度目标</span><strong>5,800</strong><span class="caption">万元</span></div>
+            <div class="compact-card"><span class="mini-label">年度累计</span><strong id="goalAnnualRevenue">0</strong><span class="caption">万元</span></div>
+            <div class="compact-card"><span class="mini-label">全年进度</span><strong id="goalAnnualRate">0%</strong><span class="caption">按回款统计</span></div>
+            <div class="compact-card"><span class="mini-label">剩余缺口</span><strong id="goalAnnualGap">0</strong><span class="caption">万元</span></div>
+          </div>
+        </article>
+        <article class="panel" data-search="目标动作 CEO追问">
+          <div class="panel-header"><div class="panel-title"><div class="label">动作建议</div><h2>目标追踪清单</h2></div></div>
+          <div class="action-list">
+            <div class="action-row"><span class="action-index">1</span><div><strong>华南线下复盘</strong><p class="caption">完成率低于整体，确认销售动作、客户质量和资源投放。</p></div><span class="caption">本周</span></div>
+            <div class="action-row"><span class="action-index">2</span><div><strong>代理渠道复制</strong><p class="caption">代理超目标但体量较小，拆解可复制来源。</p></div><span class="caption">下周</span></div>
+            <div class="action-row"><span class="action-index">3</span><div><strong>应收回款节奏</strong><p class="caption">同步财务回款计划，避免收入完成但现金承压。</p></div><span class="caption">持续</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="view-pane" id="viewToken" data-view-section="token" data-search="Token中心 Token 用量 活跃客户 日期 月 年度 环比" hidden>
+      <div class="page-heading">
+        <div>
+          <div class="label">Token 中心</div>
+          <h2>Token 用量、客户活跃与经营收入</h2>
+        </div>
+        <div class="token-toolbar">
+          <div class="segment-control" aria-label="Token 时间范围">
+            <button type="button" data-token-range="day">按日</button>
+            <button class="is-active" type="button" data-token-range="month">按月</button>
+            <button type="button" data-token-range="year">按年</button>
+          </div>
+        </div>
+      </div>
+      <div class="token-kpi-grid" id="tokenKpiGrid"></div>
+      <div class="token-analysis-grid">
+        <article class="panel token-panel" data-search="Token趋势 用量 活跃客户 环比">
+          <div class="panel-header"><div class="panel-title"><div class="label">用量趋势</div><h2 id="tokenTrendTitle">Token 用量趋势</h2><p class="caption" id="tokenTrendCaption">按日期查看最近 7 天用量和活跃客户。</p></div></div>
+          <div class="chart" id="tokenTrendChart"></div>
+        </article>
+        <article class="panel token-panel" data-search="Token客户排行 用量 客户活跃">
+          <div class="panel-header"><div class="panel-title"><div class="label">客户活跃</div><h2>客户 Token 消耗排行</h2></div></div>
+          <div class="token-leaderboard" id="tokenLeaderboard"></div>
+        </article>
+      </div>
+      <div class="insight-grid">
+        <div class="compact-card"><span class="mini-label">经营判断</span><strong>高活跃</strong><span class="caption">Token 消耗与活跃客户同步提升。</span></div>
+        <div class="compact-card"><span class="mini-label">扩容机会</span><strong>3 家</strong><span class="caption">Top 客户用量超过套餐 80%。</span></div>
+        <div class="compact-card"><span class="mini-label">续费风险</span><strong>2 家</strong><span class="caption">近周期用量环比下降，需要客户成功跟进。</span></div>
+        <div class="compact-card"><span class="mini-label">收入质量</span><strong>稳定</strong><span class="caption">Token 收入与回款口径分开观察。</span></div>
+      </div>
+    </section>
+
+  </main>
+  </div>
+
+  <div class="overlay" id="focusOverlay" aria-hidden="true">
+    <section class="focus-card" role="dialog" aria-modal="true" aria-labelledby="focusTitle">
+      <div class="focus-head"><div><div class="label" id="focusLabel">经营明细</div><h2 id="focusTitle">指标下钻</h2><p class="caption" id="focusCaption">点击柱子查看对应周期。</p></div><button class="icon-btn" type="button" id="closeFocusBtn" aria-label="关闭"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></div>
+      <div class="focus-metrics" id="focusMetrics"></div>
+      <div class="chart" id="focusChart"></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="targetOverlay" aria-hidden="true">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="targetTitle">
+      <div class="modal-head"><div><div class="label">目标维护</div><h2 id="targetTitle">目标维护</h2><p class="caption">维护四个渠道月目标后，自动刷新完成率、缺口和年度剩余缺口。</p></div><button class="icon-btn" type="button" id="closeTargetBtn" aria-label="关闭"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></div>
+      <form class="target-form" id="targetForm">
+        <label class="target-row"><span>线上月目标</span><input name="online" type="number" min="0" step="1"><span>万</span></label>
+        <label class="target-row"><span>华南月目标</span><input name="south" type="number" min="0" step="1"><span>万</span></label>
+        <label class="target-row"><span>华东月目标</span><input name="east" type="number" min="0" step="1"><span>万</span></label>
+        <label class="target-row"><span>代理月目标</span><input name="agent" type="number" min="0" step="1"><span>万</span></label>
+        <div class="modal-actions"><button class="ghost-btn" type="button" id="resetTargetBtn">恢复样例</button><button class="primary-btn" type="submit">保存目标</button></div>
+      </form>
+    </section>
+  </div>
+
+  <script>
+    const palette = ["#5470C6", "#91CC75", "#FAC858", "#EE6666", "#73C0DE", "#9A60B4"];
+    const defaultTargets = { online: 360, south: 280, east: 210, agent: 110 };
+    const state = {
+      yearTarget: 5800,
+      targets: { ...defaultTargets },
+      activeView: "overview",
+      timeMode: "month",
+      focus: { key: null, selectedIndex: null },
+      range: {
+        day: { start: "2026-06-17", end: "2026-06-23" },
+        month: { start: "2025-07-01", end: "2026-06-01" },
+        year: { start: "2023-01-01", end: "2026-01-01" }
+      },
+      periods: {
+        day: {
+          label: "按日",
+          deltaLabel: "日环比",
+          dates: ["2026-06-17", "2026-06-18", "2026-06-19", "2026-06-20", "2026-06-21", "2026-06-22", "2026-06-23"],
+          labels: ["06-17", "06-18", "06-19", "06-20", "06-21", "06-22", "06-23"],
+          target: [144, 146, 148, 150, 150, 154, 158],
+          revenue: [128, 136, 142, 151, 147, 168, 181],
+          contract: [136, 144, 153, 162, 158, 179, 196],
+          orders: [5, 5, 6, 6, 5, 7, 7],
+          receivable: [202, 205, 207, 210, 211, 215, 218],
+          roi: [5.7, 5.9, 6.1, 6.2, 6.0, 6.4, 6.6],
+          ad: [20, 21, 21, 22, 22, 23, 24]
+        },
+        month: {
+          label: "按月",
+          deltaLabel: "月环比",
+          dates: ["2025-07-01", "2025-08-01", "2025-09-01", "2025-10-01", "2025-11-01", "2025-12-01", "2026-01-01", "2026-02-01", "2026-03-01", "2026-04-01", "2026-05-01", "2026-06-01"],
+          labels: ["2025.07", "2025.08", "2025.09", "2025.10", "2025.11", "2025.12", "2026.01", "2026.02", "2026.03", "2026.04", "2026.05", "2026.06"],
+          target: [500, 520, 580, 600, 650, 700, 720, 760, 800, 850, 900, 960],
+          revenue: [420, 520, 610, 670, 720, 760, 695, 820, 880, 930, 875, 1026],
+          contract: [465, 562, 646, 704, 782, 812, 738, 872, 942, 986, 930, 1098],
+          orders: [18, 23, 25, 29, 31, 33, 28, 32, 34, 37, 34, 41],
+          receivable: [98, 106, 118, 132, 146, 152, 160, 176, 184, 196, 206, 218],
+          roi: [4.8, 5.0, 5.4, 5.8, 6.1, 6.0, 5.4, 5.7, 6.0, 6.2, 5.8, 6.3],
+          ad: [48, 51, 52, 55, 58, 61, 56, 59, 61, 63, 60, 62]
+        },
+        year: {
+          label: "按年",
+          deltaLabel: "年环比",
+          dates: ["2023-01-01", "2024-01-01", "2025-01-01", "2026-01-01"],
+          labels: ["2023", "2024", "2025", "2026"],
+          target: [3200, 4200, 5200, 5800],
+          revenue: [2860, 3980, 5120, 5226],
+          contract: [3090, 4310, 5580, 5664],
+          orders: [126, 184, 246, 206],
+          receivable: [86, 128, 176, 218],
+          roi: [4.2, 5.1, 5.8, 6.3],
+          ad: [520, 780, 940, 762]
+        }
+      },
+      channels: [
+        { id: "online", name: "线上", share: 0.38, targetShare: 0.375, costRate: 0.16, color: palette[0], search: "线上 广告 投产比" },
+        { id: "south", name: "华南线下", share: 0.253, targetShare: 0.292, costRate: 0.285, color: palette[1], search: "线下 华南 广州 普宁" },
+        { id: "east", name: "华东线下", share: 0.219, targetShare: 0.219, costRate: 0.271, color: palette[4], search: "线下 华东 杭州 武汉" },
+        { id: "agent", name: "代理", share: 0.148, targetShare: 0.114, costRate: 0.179, color: palette[2], search: "代理 渠道 返佣" }
+      ],
+      versions: [
+        { name: "启航版", share: 0.127, countShare: 0.333, price: 16800, color: palette[4], search: "启航" },
+        { name: "卓越版", share: 0.414, countShare: 0.463, price: 39800, color: palette[0], search: "卓越" },
+        { name: "至尊版", share: 0.459, countShare: 0.204, price: 99800, color: palette[3], search: "至尊" }
+      ],
+      token: {
+        day: {
+          label: "按日",
+          deltaLabel: "日环比",
+          dates: ["2026-06-17", "2026-06-18", "2026-06-19", "2026-06-20", "2026-06-21", "2026-06-22", "2026-06-23"],
+          labels: ["06-17", "06-18", "06-19", "06-20", "06-21", "06-22", "06-23"],
+          usage: [128, 136, 142, 151, 147, 168, 181],
+          activeCustomers: [92, 96, 101, 108, 106, 116, 123],
+          revenue: [18.6, 19.4, 20.1, 21.6, 20.9, 24.2, 26.8]
+        },
+        month: {
+          label: "按月",
+          deltaLabel: "月环比",
+          dates: ["2025-07-01", "2025-08-01", "2025-09-01", "2025-10-01", "2025-11-01", "2025-12-01", "2026-01-01", "2026-02-01", "2026-03-01", "2026-04-01", "2026-05-01", "2026-06-01"],
+          labels: ["2025.07", "2025.08", "2025.09", "2025.10", "2025.11", "2025.12", "2026.01", "2026.02", "2026.03", "2026.04", "2026.05", "2026.06"],
+          usage: [2380, 2640, 2790, 3060, 3350, 3520, 3260, 3740, 3980, 4210, 4380, 4720],
+          activeCustomers: [520, 548, 571, 604, 632, 658, 646, 702, 748, 781, 806, 842],
+          revenue: [302, 334, 356, 391, 425, 452, 418, 486, 512, 548, 574, 632]
+        },
+        year: {
+          label: "按年",
+          deltaLabel: "年环比",
+          dates: ["2023-01-01", "2024-01-01", "2025-01-01", "2026-01-01"],
+          labels: ["2023", "2024", "2025", "2026"],
+          usage: [18200, 31800, 45800, 28640],
+          activeCustomers: [1460, 2380, 3510, 4120],
+          revenue: [2210, 3960, 5860, 3610]
+        },
+        customers: [
+          { name: "成都某制造集团", usage: 612, mom: 18.4, activeDays: 26 },
+          { name: "华东连锁服务商", usage: 548, mom: 12.1, activeDays: 24 },
+          { name: "广州跨境团队", usage: 476, mom: -4.8, activeDays: 21 },
+          { name: "深圳品牌客户", usage: 432, mom: 9.6, activeDays: 20 },
+          { name: "代理渠道样板客户", usage: 386, mom: 21.3, activeDays: 18 }
+        ],
+        sold: 9200,
+        used: 6720
+      }
+    };
+
+    const charts = {};
+    let echartsReady = false;
+    let gsapReady = false;
+
+    const fmt = (n, digits = 0) => Number(n || 0).toLocaleString("zh-CN", { maximumFractionDigits: digits, minimumFractionDigits: digits });
+    const last = (arr) => arr[arr.length - 1];
+    const pct = (a, b) => b ? a / b * 100 : 0;
+    const sign = (value) => value > 0 ? "+" : "";
+    const deltaClass = (value) => value > 0 ? "up" : value < 0 ? "down" : "flat";
+    const dateNum = (value) => new Date(`${value}T00:00:00`).getTime();
+    const clampIndex = (index, length) => Math.max(0, Math.min(index, Math.max(length - 1, 0)));
+
+    function addClass(el, className) {
+      if (!el) return;
+      if (el.classList && typeof el.classList.add === "function") el.classList.add(className);
+      else if (!String(el.className).split(/\s+/).includes(className)) el.className = `${el.className} ${className}`.trim();
+    }
+
+    function removeClass(el, className) {
+      if (!el) return;
+      if (el.classList && typeof el.classList.remove === "function") el.classList.remove(className);
+      else el.className = String(el.className).split(/\s+/).filter((item) => item && item !== className).join(" ");
+    }
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.async = true;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function setDelta(id, value, label = modeDeltaLabel()) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = `delta ${deltaClass(value)}`;
+      el.textContent = `${label} ${sign(value)}${fmt(value, 1)}%`;
+    }
+
+    function modeDeltaLabel() {
+      return state.periods[state.timeMode].deltaLabel;
+    }
+
+    function syncTargets() {
+      const totalTarget = Object.values(state.targets).reduce((sum, v) => sum + Number(v || 0), 0);
+      state.periods.month.target[state.periods.month.target.length - 1] = totalTarget;
+      state.periods.year.target[state.periods.year.target.length - 1] = state.yearTarget;
+    }
+
+    function filterIndexes(source, range = {}) {
+      const start = range.start ? dateNum(range.start) : -Infinity;
+      const end = range.end ? dateNum(range.end) : Infinity;
+      const min = Math.min(start, end);
+      const max = Math.max(start, end);
+      const indexes = source.dates.map((date, index) => ({ date: dateNum(date), index }))
+        .filter((row) => row.date >= min && row.date <= max)
+        .map((row) => row.index);
+      return indexes.length ? indexes : source.dates.map((_, index) => index);
+    }
+
+    function sliceSource(source, indexes) {
+      const fields = ["dates", "labels", "target", "revenue", "contract", "orders", "receivable", "roi", "ad", "usage", "activeCustomers"];
+      const data = { source, sourceIndexes: indexes, label: source.label, deltaLabel: source.deltaLabel };
+      fields.forEach((field) => {
+        if (Array.isArray(source[field])) data[field] = indexes.map((index) => source[field][index]);
+      });
+      return data;
+    }
+
+    function activeData() {
+      syncTargets();
+      const source = state.periods[state.timeMode];
+      return sliceSource(source, filterIndexes(source, state.range[state.timeMode]));
+    }
+
+    function tokenDataset() {
+      const source = state.token[state.timeMode] || state.token.month;
+      return sliceSource(source, filterIndexes(source, state.range[state.timeMode]));
+    }
+
+    function sourceDelta(source, field, sourceIndex) {
+      if (!source || !Array.isArray(source[field]) || sourceIndex <= 0) return 0;
+      return pct(source[field][sourceIndex] - source[field][sourceIndex - 1], source[field][sourceIndex - 1]);
+    }
+
+    function valueAt(source, field, sourceIndex) {
+      return Array.isArray(source[field]) ? source[field][sourceIndex] : 0;
+    }
+
+    function periodSummary(data) {
+      if (!data.labels.length) return "";
+      return data.labels.length === 1 ? data.labels[0] : `${data.labels[0]} 至 ${last(data.labels)}`;
+    }
+
+    function formatLabelForChart(label) {
+      return String(label).replace("2026.", "26.").replace("2025.", "25.").replace("2024.", "24.").replace("2023.", "23.");
+    }
+
+    function annualRevenueFor(mode, sourceIndex) {
+      const source = state.periods[mode];
+      const date = source.dates[sourceIndex];
+      const current = new Date(`${date}T00:00:00`);
+      if (mode === "year") return source.revenue[sourceIndex];
+      const monthSource = state.periods.month;
+      const fullMonths = monthSource.dates
+        .map((item, index) => ({ date: new Date(`${item}T00:00:00`), index }))
+        .filter((row) => row.date.getFullYear() === current.getFullYear() && row.date < new Date(current.getFullYear(), current.getMonth(), 1))
+        .reduce((sum, row) => sum + monthSource.revenue[row.index], 0);
+      if (mode === "day") return fullMonths + source.revenue[sourceIndex];
+      return fullMonths + source.revenue[sourceIndex];
+    }
+
+    function derive() {
+      const data = activeData();
+      const index = data.sourceIndexes[data.sourceIndexes.length - 1] || 0;
+      const source = data.source;
+      const currentRevenue = last(data.revenue);
+      const currentTarget = last(data.target);
+      const currentContract = last(data.contract);
+      const currentOrders = last(data.orders);
+      const currentReceivable = last(data.receivable);
+      const currentAd = last(data.ad);
+      const currentRoi = last(data.roi);
+      const completion = pct(currentRevenue, currentTarget);
+      const gap = Math.max(currentTarget - currentRevenue, 0);
+      const annualRevenue = annualRevenueFor(state.timeMode, index);
+      const annualPrev = index > 0 ? annualRevenueFor(state.timeMode, index - 1) : annualRevenue;
+      const annualGap = Math.max(state.yearTarget - annualRevenue, 0);
+      const health = Math.max(60, Math.min(96, 100 - currentReceivable / currentRevenue * 42 + currentRoi * 2.2));
+      const prevHealth = index > 0 ? Math.max(60, Math.min(96, 100 - valueAt(source, "receivable", index - 1) / valueAt(source, "revenue", index - 1) * 42 + valueAt(source, "roi", index - 1) * 2.2)) : health;
+      const prevRevenue = index > 0 ? valueAt(source, "revenue", index - 1) : currentRevenue;
+      state.channels.forEach((channel) => {
+        channel.revenue = Math.round(currentRevenue * channel.share);
+        channel.prevRevenue = Math.round(prevRevenue * channel.share);
+        channel.target = state.timeMode === "month" && index === state.periods.month.target.length - 1 ? Number(state.targets[channel.id] || 0) : Math.round(currentTarget * channel.targetShare);
+        channel.cost = Math.round(channel.revenue * channel.costRate);
+        channel.completion = pct(channel.revenue, channel.target);
+        channel.delta = pct(channel.revenue - channel.prevRevenue, channel.prevRevenue);
+      });
+      state.versions.forEach((row) => {
+        row.amount = Math.round(currentRevenue * row.share);
+        row.count = Math.max(1, Math.round(currentOrders * row.countShare));
+      });
+      return {
+        data,
+        sourceIndex: index,
+        periodLabel: last(data.labels),
+        totalTarget: currentTarget,
+        currentRevenue,
+        currentContract,
+        currentOrders,
+        avgOrder: currentContract / Math.max(currentOrders, 1),
+        currentReceivable,
+        currentAd,
+        currentRoi,
+        completion,
+        gap,
+        annualRevenue,
+        annualGap,
+        annualRate: pct(annualRevenue, state.yearTarget),
+        health,
+        deltas: {
+          revenue: sourceDelta(source, "revenue", index),
+          contract: sourceDelta(source, "contract", index),
+          orders: sourceDelta(source, "orders", index),
+          target: sourceDelta(source, "target", index),
+          completion: index > 0 ? completion - pct(valueAt(source, "revenue", index - 1), valueAt(source, "target", index - 1)) : 0,
+          annual: pct(annualRevenue - annualPrev, annualPrev),
+          receivable: sourceDelta(source, "receivable", index),
+          ad: sourceDelta(source, "ad", index),
+          roi: sourceDelta(source, "roi", index),
+          health: pct(health - prevHealth, prevHealth)
+        }
+      };
+    }
+
+    function renderFallbackBar(el, labels, values, maxValue, selectedIndex = -1, onClick) {
+      if (!el) return;
+      const max = maxValue || Math.max(...values, 1);
+      el.innerHTML = '<div class="fallback-bars">' + values.map((value, index) => {
+        const h = Math.max(6, Math.round(value / max * 100));
+        const label = formatLabelForChart(labels[index]);
+        return `<button class="fallback-bar ${index === selectedIndex ? "is-selected" : ""}" type="button" data-bar-index="${index}"><span style="height:${h}%"></span><small>${label}</small></button>`;
+      }).join("") + "</div>";
+      if (typeof onClick === "function") {
+        el.querySelectorAll("[data-bar-index]").forEach((bar) => {
+          bar.addEventListener("click", () => onClick(Number(bar.dataset.barIndex)));
+        });
+      }
+    }
+
+    function renderNumbers() {
+      const d = derive();
+      setText("currentMonth", d.periodLabel);
+      setText("railPeriod", d.periodLabel);
+      setText("periodBadgeLabel", state.periods[state.timeMode].label);
+      setText("trendTitle", `${state.periods[state.timeMode].label}经营趋势`);
+      setText("trendCaption", periodSummary(d.data));
+      setText("kpiRevenue", fmt(d.currentRevenue));
+      setDelta("kpiRevenueDelta", d.deltas.revenue);
+      setText("kpiRevenueAux", `合同 ${fmt(d.currentContract)} 万`);
+      setText("kpiCompletion", fmt(d.completion, 1));
+      setDelta("kpiGap", d.deltas.completion, `${modeDeltaLabel()}完成率`);
+      setText("kpiTarget", d.gap > 0 ? `目标 ${fmt(d.totalTarget)} 万 · 缺口 ${fmt(d.gap)} 万` : `目标 ${fmt(d.totalTarget)} 万 · 已超目标`);
+      setText("kpiAnnual", fmt(d.annualRevenue));
+      setDelta("kpiAnnualRate", d.deltas.annual);
+      setText("kpiAnnualGap", `全年 ${fmt(d.annualRate, 1)}% · 缺口 ${fmt(d.annualGap)} 万`);
+      setText("kpiHealth", fmt(d.health, 1));
+      setDelta("kpiReceivable", d.deltas.receivable, `${modeDeltaLabel()}应收`);
+      setText("kpiRoi", `线上投产比 ${fmt(d.currentRoi, 1)}`);
+      setText("statContract", fmt(d.currentContract));
+      setText("statOrders", fmt(d.currentOrders));
+      setText("statAvg", fmt(d.avgOrder, 1));
+      setText("finReceivable", fmt(d.currentReceivable));
+      setText("finAd", fmt(d.currentAd));
+      setText("finRoi", fmt(d.currentRoi, 1));
+      setText("finAnnualGap", fmt(d.annualGap));
+      setText("financeReceivablePill", `应收 ${fmt(d.currentReceivable)} 万`);
+      setText("financeRoiPill", `投产比 ${fmt(d.currentRoi, 1)}`);
+      setText("signalResult", d.deltas.revenue >= 0 ? `回款${modeDeltaLabel()} +${fmt(d.deltas.revenue, 1)}%。` : `回款${modeDeltaLabel()} ${fmt(d.deltas.revenue, 1)}%。`);
+    }
+
+    function renderChannels() {
+      document.getElementById("channelList").innerHTML = state.channels.map((row) => {
+        const completion = Math.min(row.completion, 150);
+        return `<div class="channel-row" data-search="${row.search}" style="--accent:${row.color}"><div class="row-main"><div class="channel-name"><span class="dot"></span>${row.name}</div><div class="progress" aria-label="${row.name}完成率"><span style="--pct:${Math.min(completion, 100)}%"></span></div><div class="completion">${fmt(completion, 0)}%</div></div><div class="row-meta"><span>回款 ${fmt(row.revenue)} 万</span><span class="delta ${deltaClass(row.delta)}">${modeDeltaLabel()} ${sign(row.delta)}${fmt(row.delta, 1)}%</span><span>目标 ${fmt(row.target)} 万 · 成本 ${fmt(row.cost)} 万</span></div></div>`;
+      }).join("");
+    }
+
+    function renderVersions() {
+      const total = state.versions.reduce((sum, row) => sum + row.amount, 0);
+      document.getElementById("versionList").innerHTML = state.versions.map((row) => `<div class="version-row" data-search="${row.search}" style="--accent:${row.color}"><div class="version-label">${row.name}</div><div class="progress"><span style="--pct:${pct(row.amount, total)}%; background:${row.color}"></span></div><div class="version-value">${fmt(row.amount)}万</div><div class="caption" style="grid-column: 1 / -1;">${row.count} 套 · 标准价 ${fmt(row.price / 10000, 2)} 万</div></div>`).join("");
+    }
+
+    function renderGoalBoard() {
+      const d = derive();
+      setText("goalAnnualRevenue", fmt(d.annualRevenue));
+      setText("goalAnnualRate", `${fmt(d.annualRate, 1)}%`);
+      setText("goalAnnualGap", fmt(d.annualGap));
+      const board = document.getElementById("goalBoard");
+      if (!board) return;
+      board.innerHTML = state.channels.map((row) => {
+        const completion = row.completion || pct(row.revenue, row.target);
+        const gap = Math.max(row.target - row.revenue, 0);
+        return `<div class="goal-card" data-search="${row.name} 目标 完成 缺口" style="--accent:${row.color}"><div class="goal-top"><strong style="font-size:18px;margin:0;">${row.name}</strong><span class="delta ${deltaClass(row.delta)}">${modeDeltaLabel()} ${sign(row.delta)}${fmt(row.delta, 1)}%</span></div><div><span class="mini-label">完成率</span><strong>${fmt(completion, 0)}%</strong></div><div class="progress"><span style="--pct:${Math.min(completion, 100)}%; background:${row.color}"></span></div><span class="caption">${gap > 0 ? `缺口 ${fmt(gap)} 万` : "已超目标"} · 目标 ${fmt(row.target)} 万</span></div>`;
+      }).join("");
+    }
+
+    function tokenDelta(data, field) {
+      const index = data.sourceIndexes[data.sourceIndexes.length - 1] || 0;
+      return sourceDelta(data.source, field, index);
+    }
+
+    function renderTokenCenter() {
+      const data = tokenDataset();
+      const currentUsage = last(data.usage);
+      const currentActive = last(data.activeCustomers);
+      const currentRevenue = last(data.revenue);
+      const usageRate = pct(state.token.used, state.token.sold);
+      document.querySelectorAll("[data-token-range]").forEach((btn) => {
+        if (btn.dataset.tokenRange === state.timeMode) addClass(btn, "is-active");
+        else removeClass(btn, "is-active");
+      });
+      setText("tokenTrendTitle", `Token 用量趋势（${data.label}）`);
+      setText("tokenTrendCaption", periodSummary(data));
+      const kpiGrid = document.getElementById("tokenKpiGrid");
+      if (kpiGrid) {
+        const usageDelta = tokenDelta(data, "usage");
+        const activeDelta = tokenDelta(data, "activeCustomers");
+        const revenueDelta = tokenDelta(data, "revenue");
+        kpiGrid.innerHTML = [
+          ["Token 用量", `${fmt(currentUsage)} 万`, `${data.deltaLabel} ${sign(usageDelta)}${fmt(usageDelta, 1)}%`, usageDelta],
+          ["活跃客户", `${fmt(currentActive)} 家`, `${data.deltaLabel} ${sign(activeDelta)}${fmt(activeDelta, 1)}%`, activeDelta],
+          ["Token 收入", `${fmt(currentRevenue, 1)} 万`, `${data.deltaLabel} ${sign(revenueDelta)}${fmt(revenueDelta, 1)}%`, revenueDelta],
+          ["消耗率", `${fmt(usageRate, 1)}%`, `已用 ${fmt(state.token.used)} / 已售 ${fmt(state.token.sold)} 万`, usageRate - 70]
+        ].map(([label, value, note, delta]) => `<div class="token-card" data-search="${label} Token 环比"><span class="mini-label">${label}</span><strong>${value}</strong><span class="delta ${deltaClass(delta)}">${note}</span></div>`).join("");
+      }
+      const leaderboard = document.getElementById("tokenLeaderboard");
+      if (leaderboard) {
+        leaderboard.innerHTML = state.token.customers.map((row, index) => `<div class="leader-row" data-search="${row.name} Token 客户"><span class="leader-rank">${index + 1}</span><div><strong>${row.name}</strong><p class="caption">活跃 ${row.activeDays} 天</p></div><span class="delta ${deltaClass(row.mom)}">${modeDeltaLabel()} ${sign(row.mom)}${fmt(row.mom, 1)}%</span><div class="leader-value">${fmt(row.usage)}万</div></div>`).join("");
+      }
+      renderFallbackBar(document.getElementById("tokenTrendChart"), data.labels, data.usage, Math.max(...data.usage));
+      if (echartsReady) renderECharts();
+    }
+
+    function baseChartOption() {
+      return {
+        animation: false,
+        color: palette,
+        textStyle: { fontFamily: getComputedStyle(document.documentElement).getPropertyValue("--font-ui"), color: "#415063" },
+        grid: { top: 34, right: 28, bottom: 30, left: 42 },
+        tooltip: { trigger: "axis", backgroundColor: "rgba(255,255,255,.96)", borderColor: "#dbe5f2", textStyle: { color: "#1d2735" } },
+        legend: { top: 0, right: 0, itemWidth: 10, itemHeight: 10, textStyle: { color: "#758398" } },
+        xAxis: { type: "category", axisTick: { show: false }, axisLine: { lineStyle: { color: "#dbe5f2" } }, axisLabel: { color: "#758398" } },
+        yAxis: { type: "value", splitLine: { lineStyle: { color: "#edf2fa" } }, axisLabel: { color: "#758398" } }
+      };
+    }
+
+    function initChart(id, option) {
+      const el = document.getElementById(id);
+      if (!el || !window.echarts || el.offsetParent === null) return null;
+      if (charts[id]) charts[id].dispose();
+      el.innerHTML = "";
+      charts[id] = echarts.init(el, null, { renderer: "canvas" });
+      charts[id].setOption(option);
+      charts[id].resize();
+      return charts[id];
+    }
+
+    function renderECharts() {
+      const d = derive();
+      const data = d.data;
+      const token = tokenDataset();
+      initChart("trendChart", {
+        ...baseChartOption(),
+        xAxis: { ...baseChartOption().xAxis, data: data.labels.map(formatLabelForChart) },
+        yAxis: [
+          { type: "value", name: "万元", splitLine: { lineStyle: { color: "#edf2fa" } }, axisLabel: { color: "#758398" } },
+          { type: "value", name: "完成率", splitLine: { show: false }, axisLabel: { color: "#758398", formatter: "{value}%" } }
+        ],
+        series: [
+          { name: "目标", type: "bar", barWidth: data.labels.length > 8 ? 14 : 24, itemStyle: { borderRadius: [4, 4, 0, 0] }, data: data.target },
+          { name: "回款", type: "bar", barWidth: data.labels.length > 8 ? 14 : 24, itemStyle: { borderRadius: [4, 4, 0, 0] }, data: data.revenue },
+          { name: "完成率", type: "line", yAxisIndex: 1, smooth: data.labels.length > 4, symbolSize: 6, lineStyle: { width: 3 }, data: data.revenue.map((v, i) => Number(pct(v, data.target[i]).toFixed(1))) }
+        ]
+      });
+      const financeChartEl = document.getElementById("financeChart");
+      if (financeChartEl && getComputedStyle(financeChartEl).display !== "none") {
+        initChart("financeChart", {
+          ...baseChartOption(),
+          grid: { top: 14, right: 8, bottom: 22, left: 30 },
+          legend: { show: false },
+          xAxis: { type: "category", data: ["应收", "广告费", "投产比", "费比"], axisTick: { show: false }, axisLine: { lineStyle: { color: "#dbe5f2" } }, axisLabel: { color: "#758398" } },
+          yAxis: { type: "value", splitLine: { lineStyle: { color: "#edf2fa" } }, axisLabel: { color: "#758398" } },
+          series: [{ type: "bar", barWidth: 22, itemStyle: { borderRadius: [5, 5, 0, 0] }, data: [
+            { value: d.currentReceivable, itemStyle: { color: palette[3] } },
+            { value: d.currentAd, itemStyle: { color: palette[2] } },
+            { value: d.currentRoi * 30, itemStyle: { color: palette[1] } },
+            { value: 24, itemStyle: { color: palette[5] } }
+          ] }]
+        });
+      }
+      initChart("tokenTrendChart", {
+        ...baseChartOption(),
+        grid: { top: 44, right: 34, bottom: 32, left: 44 },
+        legend: { top: 2, left: "center", itemWidth: 10, itemHeight: 10, textStyle: { color: "#758398" } },
+        xAxis: { ...baseChartOption().xAxis, data: token.labels.map(formatLabelForChart) },
+        yAxis: [
+          { type: "value", splitLine: { lineStyle: { color: "#edf2fa" } }, axisLabel: { color: "#758398" } },
+          { type: "value", splitLine: { show: false }, axisLabel: { color: "#758398" } }
+        ],
+        series: [
+          { name: "Token用量", type: "bar", barWidth: token.labels.length > 8 ? 14 : 24, itemStyle: { borderRadius: [5, 5, 0, 0] }, data: token.usage },
+          { name: "活跃客户", type: "line", yAxisIndex: 1, smooth: token.labels.length > 4, symbolSize: 7, lineStyle: { width: 3 }, data: token.activeCustomers }
+        ]
+      });
+    }
+
+    function renderFallbackCharts() {
+      const data = activeData();
+      renderFallbackBar(document.getElementById("trendChart"), data.labels, data.revenue, Math.max(...data.target, ...data.revenue));
+      renderFallbackBar(document.getElementById("financeChart"), ["应收", "广告费", "投产比", "费比"], [last(data.receivable), last(data.ad), last(data.roi) * 30, 24], last(data.receivable));
+      const token = tokenDataset();
+      renderFallbackBar(document.getElementById("tokenTrendChart"), token.labels, token.usage, Math.max(...token.usage));
+    }
+
+    const focusConfig = {
+      revenue: { label: "回款明细", title: "回款下钻", valueField: "revenue", valueName: "回款" },
+      target: { label: "目标明细", title: "目标完成下钻", valueField: "completion", valueName: "完成率" },
+      annual: { label: "年度明细", title: "年度累计下钻", valueField: "annual", valueName: "累计回款" },
+      finance: { label: "财务明细", title: "财务健康下钻", valueField: "receivable", valueName: "应收" }
+    };
+
+    function focusValues(key, data) {
+      if (key === "target") return data.revenue.map((value, index) => Number(pct(value, data.target[index]).toFixed(1)));
+      if (key === "annual") return data.sourceIndexes.map((sourceIndex) => Math.round(annualRevenueFor(state.timeMode, sourceIndex)));
+      if (key === "finance") return data.receivable;
+      return data.revenue;
+    }
+
+    function metricCard(label, value, previous, delta, deltaLabel = modeDeltaLabel()) {
+      const previousText = previous === null || previous === undefined ? "上一期 --" : `上一期 ${previous}`;
+      return `<div class="focus-metric"><span class="mini-label">${label}</span><strong>${value}</strong><div class="metric-sub"><span>${previousText}</span><span class="delta ${deltaClass(delta)}">${deltaLabel} ${sign(delta)}${fmt(delta, 1)}%</span></div></div>`;
+    }
+
+    function focusRows(key, data, selectedIndex) {
+      const sourceIndex = data.sourceIndexes[selectedIndex];
+      const source = data.source;
+      const prevIndex = sourceIndex > 0 ? sourceIndex - 1 : null;
+      const periodCard = `<div class="focus-metric"><span class="mini-label">周期</span><strong>${data.labels[selectedIndex]}</strong><div class="metric-sub"><span>${state.periods[state.timeMode].label}</span><span>点击柱子切换</span></div></div>`;
+      if (key === "target") {
+        const completion = pct(valueAt(source, "revenue", sourceIndex), valueAt(source, "target", sourceIndex));
+        const prevCompletion = prevIndex === null ? completion : pct(valueAt(source, "revenue", prevIndex), valueAt(source, "target", prevIndex));
+        return [
+          periodCard,
+          metricCard("完成率", `${fmt(completion, 1)}%`, `${fmt(prevCompletion, 1)}%`, completion - prevCompletion, `${modeDeltaLabel()}完成率`),
+          metricCard("回款", `${fmt(valueAt(source, "revenue", sourceIndex))} 万`, `${fmt(prevIndex === null ? 0 : valueAt(source, "revenue", prevIndex))} 万`, sourceDelta(source, "revenue", sourceIndex)),
+          metricCard("目标", `${fmt(valueAt(source, "target", sourceIndex))} 万`, `${fmt(prevIndex === null ? 0 : valueAt(source, "target", prevIndex))} 万`, sourceDelta(source, "target", sourceIndex)),
+          metricCard("缺口", `${fmt(Math.max(valueAt(source, "target", sourceIndex) - valueAt(source, "revenue", sourceIndex), 0))} 万`, prevIndex === null ? "--" : `${fmt(Math.max(valueAt(source, "target", prevIndex) - valueAt(source, "revenue", prevIndex), 0))} 万`, 0)
+        ];
+      }
+      if (key === "annual") {
+        const currentAnnual = annualRevenueFor(state.timeMode, sourceIndex);
+        const prevAnnual = prevIndex === null ? currentAnnual : annualRevenueFor(state.timeMode, prevIndex);
+        return [
+          periodCard,
+          metricCard("年度累计", `${fmt(currentAnnual)} 万`, `${fmt(prevAnnual)} 万`, pct(currentAnnual - prevAnnual, prevAnnual)),
+          metricCard("全年进度", `${fmt(pct(currentAnnual, state.yearTarget), 1)}%`, `${fmt(pct(prevAnnual, state.yearTarget), 1)}%`, pct(currentAnnual - prevAnnual, prevAnnual)),
+          metricCard("剩余缺口", `${fmt(Math.max(state.yearTarget - currentAnnual, 0))} 万`, `${fmt(Math.max(state.yearTarget - prevAnnual, 0))} 万`, pct(currentAnnual - prevAnnual, prevAnnual)),
+          metricCard("回款", `${fmt(valueAt(source, "revenue", sourceIndex))} 万`, `${fmt(prevIndex === null ? 0 : valueAt(source, "revenue", prevIndex))} 万`, sourceDelta(source, "revenue", sourceIndex))
+        ];
+      }
+      if (key === "finance") {
+        const health = Math.max(60, Math.min(96, 100 - valueAt(source, "receivable", sourceIndex) / valueAt(source, "revenue", sourceIndex) * 42 + valueAt(source, "roi", sourceIndex) * 2.2));
+        const prevHealth = prevIndex === null ? health : Math.max(60, Math.min(96, 100 - valueAt(source, "receivable", prevIndex) / valueAt(source, "revenue", prevIndex) * 42 + valueAt(source, "roi", prevIndex) * 2.2));
+        return [
+          periodCard,
+          metricCard("应收", `${fmt(valueAt(source, "receivable", sourceIndex))} 万`, `${fmt(prevIndex === null ? 0 : valueAt(source, "receivable", prevIndex))} 万`, sourceDelta(source, "receivable", sourceIndex)),
+          metricCard("广告费", `${fmt(valueAt(source, "ad", sourceIndex))} 万`, `${fmt(prevIndex === null ? 0 : valueAt(source, "ad", prevIndex))} 万`, sourceDelta(source, "ad", sourceIndex)),
+          metricCard("投产比", fmt(valueAt(source, "roi", sourceIndex), 1), fmt(prevIndex === null ? 0 : valueAt(source, "roi", prevIndex), 1), sourceDelta(source, "roi", sourceIndex)),
+          metricCard("健康分", `${fmt(health, 1)} 分`, `${fmt(prevHealth, 1)} 分`, pct(health - prevHealth, prevHealth))
+        ];
+      }
+      return [
+        periodCard,
+        metricCard("回款", `${fmt(valueAt(source, "revenue", sourceIndex))} 万`, `${fmt(prevIndex === null ? 0 : valueAt(source, "revenue", prevIndex))} 万`, sourceDelta(source, "revenue", sourceIndex)),
+        metricCard("合同金额", `${fmt(valueAt(source, "contract", sourceIndex))} 万`, `${fmt(prevIndex === null ? 0 : valueAt(source, "contract", prevIndex))} 万`, sourceDelta(source, "contract", sourceIndex)),
+        metricCard("订单数", `${fmt(valueAt(source, "orders", sourceIndex))} 单`, `${fmt(prevIndex === null ? 0 : valueAt(source, "orders", prevIndex))} 单`, sourceDelta(source, "orders", sourceIndex)),
+        metricCard("客单价", `${fmt(valueAt(source, "contract", sourceIndex) / Math.max(valueAt(source, "orders", sourceIndex), 1), 1)} 万`, prevIndex === null ? "--" : `${fmt(valueAt(source, "contract", prevIndex) / Math.max(valueAt(source, "orders", prevIndex), 1), 1)} 万`, prevIndex === null ? 0 : pct(valueAt(source, "contract", sourceIndex) / Math.max(valueAt(source, "orders", sourceIndex), 1) - valueAt(source, "contract", prevIndex) / Math.max(valueAt(source, "orders", prevIndex), 1), valueAt(source, "contract", prevIndex) / Math.max(valueAt(source, "orders", prevIndex), 1)))
+      ];
+    }
+
+    function renderFocusPanel(animate = false) {
+      const cfg = focusConfig[state.focus.key];
+      const data = activeData();
+      if (!cfg || !data.labels.length) return;
+      state.focus.selectedIndex = clampIndex(state.focus.selectedIndex ?? data.labels.length - 1, data.labels.length);
+      const selected = state.focus.selectedIndex;
+      document.getElementById("focusLabel").textContent = cfg.label;
+      document.getElementById("focusTitle").textContent = cfg.title;
+      document.getElementById("focusCaption").textContent = `${periodSummary(data)} · ${data.labels[selected]}`;
+      document.getElementById("focusMetrics").innerHTML = focusRows(state.focus.key, data, selected).join("");
+      const values = focusValues(state.focus.key, data);
+      renderFallbackBar(document.getElementById("focusChart"), data.labels, values, Math.max(...values, 1), selected, (index) => {
+        state.focus.selectedIndex = index;
+        renderFocusPanel(false);
+      });
+      if (echartsReady) {
+        const option = {
+          ...baseChartOption(),
+          grid: { top: 30, right: 22, bottom: 32, left: 48 },
+          legend: { show: false },
+          xAxis: { ...baseChartOption().xAxis, data: data.labels.map(formatLabelForChart) },
+          yAxis: { type: "value", splitLine: { lineStyle: { color: "#edf2fa" } }, axisLabel: { color: "#758398" } },
+          series: [{ name: cfg.valueName, type: "bar", barWidth: data.labels.length > 8 ? 18 : 30, itemStyle: { borderRadius: [6, 6, 0, 0] }, data: values.map((value, index) => ({ value, itemStyle: { color: index === selected ? palette[3] : palette[0] } })) }]
+        };
+        const chart = initChart("focusChart", option);
+        if (chart) {
+          chart.off("click");
+          chart.on("click", (params) => {
+            if (typeof params.dataIndex === "number") {
+              state.focus.selectedIndex = params.dataIndex;
+              renderFocusPanel(false);
+            }
+          });
+        }
+      }
+      if (animate && gsapReady) gsap.fromTo(".focus-card", { y: 18, scale: 0.96, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.24, ease: "power2.out" });
+    }
+
+    function openFocus(key) {
+      if (!focusConfig[key]) return;
+      state.focus.key = key;
+      state.focus.selectedIndex = activeData().labels.length - 1;
+      const overlay = document.getElementById("focusOverlay");
+      addClass(overlay, "is-open");
+      overlay.setAttribute("aria-hidden", "false");
+      renderFocusPanel(true);
+    }
+
+    function closeOverlay(id) {
+      const overlay = document.getElementById(id);
+      removeClass(overlay, "is-open");
+      overlay.setAttribute("aria-hidden", "true");
+    }
+
+    function openTarget() {
+      const form = document.getElementById("targetForm");
+      Object.entries(state.targets).forEach(([key, value]) => { form.elements[key].value = value; });
+      const overlay = document.getElementById("targetOverlay");
+      addClass(overlay, "is-open");
+      overlay.setAttribute("aria-hidden", "false");
+      if (gsapReady) gsap.fromTo(".modal-card", { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: 0.22, ease: "power2.out" });
+    }
+
+    function saveTargets(form) {
+      Object.keys(state.targets).forEach((key) => { state.targets[key] = Number(form.elements[key].value || 0); });
+      renderAll();
+      closeOverlay("targetOverlay");
+    }
+
+    function resetTargets(form) {
+      state.targets = { ...defaultTargets };
+      Object.entries(state.targets).forEach(([key, value]) => { form.elements[key].value = value; });
+      renderAll();
+    }
+
+    function syncTimeControls() {
+      document.querySelectorAll("[data-range-mode]").forEach((btn) => {
+        if (btn.dataset.rangeMode === state.timeMode) addClass(btn, "is-active");
+        else removeClass(btn, "is-active");
+      });
+      document.querySelectorAll("[data-token-range]").forEach((btn) => {
+        if (btn.dataset.tokenRange === state.timeMode) addClass(btn, "is-active");
+        else removeClass(btn, "is-active");
+      });
+      const range = state.range[state.timeMode];
+      const start = document.getElementById("rangeStart");
+      const end = document.getElementById("rangeEnd");
+      if (start) start.value = range.start;
+      if (end) end.value = range.end;
+    }
+
+    function setTimeMode(mode) {
+      if (!state.periods[mode]) return;
+      state.timeMode = mode;
+      syncTimeControls();
+      renderAll();
+      if (state.focus.key && document.getElementById("focusOverlay").classList.contains("is-open")) {
+        state.focus.selectedIndex = activeData().labels.length - 1;
+        renderFocusPanel(false);
+      }
+    }
+
+    function updateRange(field, value) {
+      if (!value) return;
+      state.range[state.timeMode][field] = value;
+      renderAll();
+      if (state.focus.key && document.getElementById("focusOverlay").classList.contains("is-open")) {
+        state.focus.selectedIndex = activeData().labels.length - 1;
+        renderFocusPanel(false);
+      }
+    }
+
+    function setActiveView(view, shouldScroll = true) {
+      const validViews = ["overview", "channels", "finance", "goals", "token"];
+      const nextView = validViews.includes(view) ? view : "overview";
+      state.activeView = nextView;
+      const dashboard = document.querySelector(".dashboard");
+      if (dashboard) dashboard.dataset.activeView = nextView;
+      document.querySelectorAll("[data-view-tab]").forEach((btn) => {
+        const active = btn.dataset.viewTab === nextView;
+        if (active) addClass(btn, "is-active");
+        else removeClass(btn, "is-active");
+        btn.setAttribute("aria-current", active ? "page" : "false");
+      });
+      document.querySelectorAll("[data-view-section]").forEach((el) => {
+        const views = (el.dataset.viewSection || "").split(/\s+/);
+        const visible = views.includes(nextView);
+        el.hidden = !visible;
+        if (el.classList && el.classList.contains("view-pane")) {
+          if (visible) addClass(el, "is-active");
+          else removeClass(el, "is-active");
+        }
+      });
+      document.querySelectorAll("[data-view-frame]").forEach((el) => {
+        el.hidden = !["overview", "channels", "finance"].includes(nextView);
+      });
+      if (nextView === "goals") renderGoalBoard();
+      if (nextView === "token") renderTokenCenter();
+      if (echartsReady) window.setTimeout(renderECharts, 30);
+      if (shouldScroll && window.history) window.history.replaceState(null, "", `#${nextView}`);
+      if (shouldScroll && dashboard) dashboard.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function applySearch(query) {
+      const q = query.trim().toLowerCase();
+      document.querySelectorAll(".highlight").forEach((el) => removeClass(el, "highlight"));
+      if (!q) return;
+      document.querySelectorAll("[data-search]").forEach((el) => {
+        if ((el.dataset.search || "").toLowerCase().includes(q)) addClass(el, "highlight");
+      });
+      const first = document.querySelector(".highlight");
+      if (first) {
+        const section = first.closest("[data-view-section]");
+        if (section) {
+          const views = (section.dataset.viewSection || "").split(/\s+/);
+          const targetView = views.find((item) => item !== "overview") || views[0];
+          if (targetView && targetView !== state.activeView) setActiveView(targetView, false);
+        }
+        first.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+      }
+    }
+
+    function renderAll() {
+      syncTargets();
+      syncTimeControls();
+      renderNumbers();
+      renderChannels();
+      renderVersions();
+      renderGoalBoard();
+      renderTokenCenter();
+      renderFallbackCharts();
+      if (echartsReady) renderECharts();
+    }
+
+    function bindEvents() {
+      document.querySelectorAll("[data-view-tab]").forEach((btn) => btn.addEventListener("click", () => setActiveView(btn.dataset.viewTab)));
+      document.querySelectorAll("[data-range-mode]").forEach((btn) => btn.addEventListener("click", () => setTimeMode(btn.dataset.rangeMode)));
+      document.querySelectorAll("[data-token-range]").forEach((btn) => btn.addEventListener("click", () => setTimeMode(btn.dataset.tokenRange)));
+      document.getElementById("rangeStart").addEventListener("change", (event) => updateRange("start", event.target.value));
+      document.getElementById("rangeEnd").addEventListener("change", (event) => updateRange("end", event.target.value));
+      document.querySelectorAll("[data-kpi]").forEach((card) => card.addEventListener("click", () => openFocus(card.dataset.kpi)));
+      document.querySelectorAll("[data-open-kpi]").forEach((btn) => btn.addEventListener("click", () => openFocus(btn.dataset.openKpi)));
+      document.getElementById("closeFocusBtn").addEventListener("click", () => closeOverlay("focusOverlay"));
+      document.getElementById("focusOverlay").addEventListener("click", (event) => { if (event.target.id === "focusOverlay") closeOverlay("focusOverlay"); });
+      document.getElementById("openTargetBtn").addEventListener("click", openTarget);
+      document.querySelectorAll("[data-open-target]").forEach((btn) => btn.addEventListener("click", openTarget));
+      document.getElementById("closeTargetBtn").addEventListener("click", () => closeOverlay("targetOverlay"));
+      document.getElementById("targetOverlay").addEventListener("click", (event) => { if (event.target.id === "targetOverlay") closeOverlay("targetOverlay"); });
+      document.getElementById("targetForm").addEventListener("submit", (event) => { event.preventDefault(); saveTargets(event.currentTarget); });
+      document.getElementById("resetTargetBtn").addEventListener("click", () => resetTargets(document.getElementById("targetForm")));
+      document.getElementById("searchInput").addEventListener("input", (event) => applySearch(event.target.value));
+      window.addEventListener("resize", () => Object.values(charts).forEach((chart) => chart && chart.resize()));
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          closeOverlay("focusOverlay");
+          closeOverlay("targetOverlay");
+        }
+      });
+    }
+
+    renderAll();
+    bindEvents();
+    setActiveView(window.location.hash ? window.location.hash.replace("#", "") : "overview", false);
+    loadScript("https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js").then(() => {
+      echartsReady = Boolean(window.echarts);
+      if (echartsReady) renderECharts();
+    }).catch(() => {});
+    loadScript("https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js").then(() => {
+      gsapReady = Boolean(window.gsap);
+      if (gsapReady && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        gsap.fromTo(".topbar, .kpi-card, .signal-strip, .panel", { y: 6 }, { y: 0, duration: 0.22, stagger: 0.02, ease: "power2.out" });
+      }
+    }).catch(() => {});
+  </script>
+</body>
+</html>

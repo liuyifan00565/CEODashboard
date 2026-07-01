@@ -1,0 +1,35 @@
+/* 更新时间: 2026-06-24  更新内容: 新建“月度经营趋势”面板样式（玻璃质感容器，前缀 mt-） */
+.mt-panel {
+  background: rgba(20, 20, 22, 0.55);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+
+.mt-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.mt-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--txt);
+  letter-spacing: 0.02em;
+}
+
+.mt-sub {
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.mt-chart {
+  width: 100%;
+}

@@ -1,0 +1,90 @@
+/*
+ 更新时间: 2026-06-26 01:06:01
+ 更新内容: 将白天主题背景回归测试从 #D8F5D1 调整为更柔和的浅绿色 #E8FBE8。
+*/
+import { existsSync, readFileSync } from 'node:fs';
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+
+const themeToggleUrl = new URL('./ThemeToggle.jsx', import.meta.url);
+const appSource = readFileSync(new URL('../App.jsx', import.meta.url), 'utf8');
+const indexCss = readFileSync(new URL('../index.css', import.meta.url), 'utf8');
+const kpiCardSource = readFileSync(new URL('./KpiCard.jsx', import.meta.url), 'utf8');
+const kpiModalSource = readFileSync(new URL('./KpiModal.jsx', import.meta.url), 'utf8');
+const monthlyTrendSource = readFileSync(new URL('./MonthlyTrend.jsx', import.meta.url), 'utf8');
+const versionFinanceSource = readFileSync(new URL('./VersionFinancePanel.jsx', import.meta.url), 'utf8');
+
+function lightThemeBlock() {
+  const match = indexCss.match(/:root\[data-theme="light"\]\{(?<body>[\s\S]*?)\n\}/);
+  assert.ok(match?.groups?.body, 'light theme block should exist');
+  return match.groups.body;
+}
+
+test('defines a circular GlassSurface theme toggle with persistent theme state', () => {
+  assert.ok(existsSync(themeToggleUrl), 'ThemeToggle.jsx should exist');
+
+  const componentSource = readFileSync(themeToggleUrl, 'utf8');
+
+  assert.match(componentSource, /export default function ThemeToggle/);
+  assert.match(componentSource, /GlassSurface/);
+  assert.match(componentSource, /width=\{54\}/);
+  assert.match(componentSource, /height=\{54\}/);
+  assert.match(componentSource, /borderRadius=\{27\}/);
+  assert.match(componentSource, /localStorage/);
+  assert.match(componentSource, /document\.documentElement\.dataset\.theme/);
+  assert.match(componentSource, /aria-label=\{`切换到\$\{nextLabel\}主题`\}/);
+});
+
+test('places the theme toggle immediately before the expandable search', () => {
+  assert.match(appSource, /import ThemeToggle from '\.\/components\/ThemeToggle';/);
+  assert.match(appSource, /<ThemeToggle\s*\/>\s*<ExpandableSearch onChange=\{setSearchTerm\} \/>/);
+});
+
+test('provides dark and light theme variable contracts', () => {
+  assert.match(indexCss, /:root\[data-theme="dark"\]/);
+  assert.match(indexCss, /:root\[data-theme="light"\]/);
+  assert.match(indexCss, /--theme-toggle-icon:/);
+  assert.match(indexCss, /--theme-toggle-hover:/);
+  assert.match(indexCss, /--color-scheme-value:/);
+});
+
+test('uses a light green theme background with non-white text and chart variables', () => {
+  const block = lightThemeBlock();
+
+  assert.match(block, /--bg:#E8FBE8;/);
+  assert.match(block, /--bg-scrim:linear-gradient\(90deg,rgba\(232,251,232,/);
+  assert.match(block, /--chart-point-border:#E8FBE8;/);
+  assert.doesNotMatch(block, /--txt:\s*#(?:fff|ffffff)\b/i);
+  assert.doesNotMatch(block, /--muted:\s*#(?:fff|ffffff)\b/i);
+  assert.doesNotMatch(block, /--faint:\s*#(?:fff|ffffff)\b/i);
+  assert.match(block, /--chart-text:/);
+  assert.match(block, /--chart-muted:/);
+  assert.match(block, /--chart-grid:/);
+  assert.match(block, /--chart-bar:/);
+  assert.match(block, /--control-solid:/);
+  assert.doesNotMatch(block, /--chart-(?:text|muted|grid|bar|bar-muted):\s*(?:#fff|#ffffff|rgba\(255,\s*255,\s*255)/i);
+});
+
+test('keeps neon pink and neon green unchanged in light theme', () => {
+  const block = lightThemeBlock();
+
+  assert.match(block, /--up:#ff4fd8;/);
+  assert.match(block, /--down:#dfff00;/);
+  assert.match(block, /--good:#dfff00;/);
+  assert.match(block, /--warn:#ff4fd8;/);
+  assert.match(block, /--up-rgb:255,79,216;/);
+  assert.match(block, /--down-rgb:223,255,0;/);
+  assert.match(block, /--good-rgb:223,255,0;/);
+  assert.match(block, /--warn-rgb:255,79,216;/);
+});
+
+test('charts and KPI progress bars read theme tokens instead of hard-coded white colors', () => {
+  const chartSources = [kpiCardSource, kpiModalSource, monthlyTrendSource, versionFinanceSource].join('\n');
+
+  assert.match(chartSources, /useThemeTokens/);
+  assert.doesNotMatch(monthlyTrendSource, /const txt = '#ffffff'/);
+  assert.doesNotMatch(monthlyTrendSource, /rgba\(255,255,255,\.(?:88|06|32|6)\)/);
+  assert.doesNotMatch(versionFinanceSource, /textStyle:\s*\{\s*color:\s*'#fff'/);
+  assert.doesNotMatch(kpiModalSource, /axisLabel:\s*\{\s*color:\s*'#ffffff'/);
+  assert.doesNotMatch(kpiCardSource, /backgroundStyle:\s*\{\s*color:\s*'rgba\(255,255,255,.12\)'/);
+});

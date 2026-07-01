@@ -1,0 +1,9 @@
+/*
+ 更新时间: 2026-06-24
+ 更新内容: 官方 ReactBits DotField 容器样式，用作全屏点阵背景承载层。
+*/
+.dot-field-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}

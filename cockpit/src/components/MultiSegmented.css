@@ -1,0 +1,49 @@
+/* 更新时间: 2026-06-29 10:45:53  更新内容: 新增多选分段控件玻璃样式和多选态。 */
+.msgm-glass .glass-surface__content {
+  padding: 0;
+}
+
+.msgm-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.msgm-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px 14px;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--muted);
+  transition: background 0.22s ease, color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.msgm-btn:hover {
+  color: var(--txt);
+}
+
+.msgm-btn--active,
+.msgm-btn--active:hover {
+  color: var(--control-solid-text);
+  font-weight: 600;
+  background: var(--control-solid);
+  box-shadow: 0 0 18px color-mix(in srgb,var(--control-solid),transparent 78%), 0 1px 8px rgba(0, 0, 0, 0.24);
+}
+
+.msgm-btn:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 2px;
+}

@@ -1,0 +1,78 @@
+/*
+ 更新时间: 2026-06-25 16:22:24
+ 更新内容: 新增主体大面板拖拽层、避让重排动效和右下角缩放手柄样式。
+*/
+.draggable-panel-layer {
+  position: relative;
+  z-index: 18;
+  min-height: var(--panel-layer-height, 300px);
+  pointer-events: none;
+  overflow: visible;
+}
+
+.draggable-panel-card {
+  position: absolute;
+  z-index: 24;
+  min-width: 340px;
+  min-height: 260px;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+  will-change: left, top, width, height;
+  transition: left .24s cubic-bezier(.2, .72, .18, 1), top .24s cubic-bezier(.2, .72, .18, 1), width .2s ease, height .2s ease;
+}
+
+.draggable-panel-card--active {
+  z-index: 28;
+  cursor: grabbing;
+  transition: none;
+}
+
+.draggable-panel-card .hlb-wrap,
+.draggable-panel-card .hlb-content,
+.draggable-panel-card .mt-panel,
+.draggable-panel-card .roi-panel,
+.draggable-panel-card .ch-panel,
+.draggable-panel-card .vf-panel {
+  height: 100%;
+}
+
+.draggable-panel-card--active .mt-panel,
+.draggable-panel-card--active .roi-panel,
+.draggable-panel-card--active .ch-panel,
+.draggable-panel-card--active .vf-panel {
+  border-color: rgba(255, 255, 255, .36);
+  box-shadow: 0 26px 76px rgba(0, 0, 0, .48), inset 0 1px 0 rgba(255, 255, 255, .26);
+}
+
+.draggable-panel-card__resize {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  z-index: 5;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px 0 11px 0;
+  cursor: nwse-resize;
+  background:
+    linear-gradient(135deg, transparent 0 45%, rgba(255, 255, 255, .68) 45% 52%, transparent 52%),
+    linear-gradient(135deg, transparent 0 62%, rgba(255, 255, 255, .42) 62% 69%, transparent 69%);
+  opacity: .6;
+  transition: opacity .18s ease, background-color .18s ease;
+}
+
+.draggable-panel-card:hover .draggable-panel-card__resize,
+.draggable-panel-card--active .draggable-panel-card__resize {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, .08);
+}
+
+body.panel-dragging {
+  user-select: none;
+}
+
+@media (max-width: 760px) {
+  .draggable-panel-card {
+    min-width: min(340px, calc(100vw - 32px));
+  }
+}

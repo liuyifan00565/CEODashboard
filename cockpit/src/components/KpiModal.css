@@ -1,0 +1,248 @@
+/* 更新时间: 2026-06-29 11:34:00  更新内容: KPI 二级弹层订单类型控件只展示新签/续订切换，不显示 type 标签。 */
+
+.km-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.km-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.km-card {
+  position: relative;
+  width: min(720px, 92vw);
+  max-height: 88vh;
+  overflow: auto;
+  padding: 24px 26px 22px;
+  border-radius: 18px;
+  background: transparent;
+  border: 1px solid var(--line-2);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform-style: preserve-3d;
+}
+
+.km-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.km-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--txt);
+}
+
+.km-close {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--txt);
+  background: var(--ai-chip-bg);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.km-close:hover {
+  background: var(--ai-chip-hover);
+  border-color: var(--line-2);
+  color: var(--txt);
+}
+
+.km-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.km-type-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.km-headline {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 20px;
+  padding-bottom: 4px;
+}
+
+.km-hl-label {
+  font-size: 14px;
+  color: var(--txt);
+  letter-spacing: 0.4px;
+}
+
+.km-hl-value {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--txt);
+  font-variant-numeric: tabular-nums;
+}
+
+.km-hl-unit {
+  margin-left: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--txt);
+}
+
+.km-hl-mom {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.km-hl-mom-name {
+  font-size: 14px;
+  color: var(--txt);
+}
+
+.km-hl-mom-val {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.km-chart {
+  width: 100%;
+  height: 300px;
+  margin-top: 12px;
+}
+
+.km-chart--renewal {
+  height: 238px;
+}
+
+.km-sub {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--txt);
+  letter-spacing: 0.2px;
+}
+
+.km-renewal {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.km-renewal-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.km-renewal-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
+  padding: 10px 11px;
+  text-align: left;
+  color: var(--txt);
+  background: var(--glass-cell);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.km-renewal-row:hover,
+.km-renewal-row--active {
+  color: var(--txt);
+  background: var(--glass-cell-hover);
+  border-color: var(--line-2);
+}
+
+.km-renewal-row-name {
+  color: var(--txt);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.km-renewal-row b {
+  color: var(--txt);
+  font-size: 14px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.km-renewal-row span:not(.km-renewal-row-name) {
+  grid-column: span 2;
+  color: var(--txt);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.km-renewal-cell {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: var(--glass-cell);
+  border: 1px solid var(--line);
+}
+
+.km-renewal-cell span {
+  color: var(--txt);
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.km-renewal-cell b {
+  color: var(--txt);
+  font-size: 20px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.km-renewal-cell i {
+  margin-left: 2px;
+  color: var(--txt);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+@media (max-width: 720px) {
+  .km-renewal { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .km-renewal-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

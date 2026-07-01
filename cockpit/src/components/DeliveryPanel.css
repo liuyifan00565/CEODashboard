@@ -1,0 +1,195 @@
+/* 更新时间: 2026-06-29 10:45:53  更新内容: 新增交付看板玻璃面板、汇总指标和人员进度样式。 */
+.dlv-panel {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 24px 24px;
+  border-radius: 18px;
+  background: transparent;
+  border: 1px solid var(--line-2);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
+}
+
+.dlv-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.dlv-title {
+  margin: 0;
+  color: var(--txt);
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.dlv-sub {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.dlv-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dlv-summary-cell {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 11px;
+  border-radius: 11px;
+  background: var(--glass-cell);
+  border: 1px solid var(--line);
+}
+
+.dlv-summary-cell span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.dlv-summary-cell b {
+  color: var(--txt);
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dlv-summary-cell i {
+  margin-left: 3px;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.dlv-list {
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 2px;
+}
+
+.dlv-row {
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: var(--glass-cell);
+  border: 1px solid var(--line);
+}
+
+.dlv-row--warn {
+  background: rgba(var(--warn-rgb), 0.09);
+  border-color: rgba(var(--warn-rgb), 0.24);
+}
+
+.dlv-row-main,
+.dlv-metrics,
+.dlv-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dlv-row-main {
+  justify-content: space-between;
+}
+
+.dlv-row-main > div {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dlv-name {
+  color: var(--txt);
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.dlv-tag {
+  flex: none;
+  color: var(--warn);
+  font-size: 13px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: rgba(var(--warn-rgb), 0.14);
+  border: 1px solid rgba(var(--warn-rgb), 0.34);
+}
+
+.dlv-count {
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.dlv-metrics {
+  justify-content: space-between;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.dlv-metrics b {
+  color: var(--txt);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.dlv-progress {
+  margin-top: 8px;
+}
+
+.dlv-bar {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.dlv-bar span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 99px;
+}
+
+.dlv-progress b {
+  min-width: 52px;
+  text-align: right;
+  color: var(--txt);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 760px) {
+  .dlv-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .dlv-row-main,
+  .dlv-metrics {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dlv-count {
+    white-space: normal;
+  }
+}

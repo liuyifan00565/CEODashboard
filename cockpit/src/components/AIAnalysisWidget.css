@@ -1,0 +1,391 @@
+/*
+ 更新时间: 2026-07-01 10:57:19
+ 更新内容: 提升 AI 经营分析文字清晰度，并为福小客分析状态增加桌宠式工作光效。
+*/
+.ai-widget {
+  position: relative;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 232px;
+  margin-top: auto;
+  padding: 12px 0 6px;
+}
+
+.ai-orb {
+  position: relative;
+  width: 132px;
+  height: 184px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  overflow: visible;
+  perspective: 900px;
+  transform: translateZ(0);
+}
+
+.ai-orb:focus-visible {
+  outline: none;
+}
+
+.ai-orb:focus-visible .mascot-3d-stage {
+  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, .4)) drop-shadow(0 0 26px rgba(192, 132, 252, .62));
+}
+
+.ai-orb--wave .mascot-3d-stage {
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, .42)) drop-shadow(0 0 22px rgba(56, 189, 248, .5));
+}
+
+.ai-orb--think .mascot-3d-stage,
+.ai-orb--talk .mascot-3d-stage,
+.ai-orb--click .mascot-3d-stage {
+  filter: drop-shadow(0 22px 34px rgba(0, 0, 0, .42)) drop-shadow(0 0 24px rgba(56, 189, 248, .42)) drop-shadow(0 0 32px rgba(192, 132, 252, .3));
+}
+
+.ai-orb--alert .mascot-3d-stage {
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, .44)) drop-shadow(0 0 24px rgba(var(--warn-rgb), .55));
+}
+
+.ai-orb--celebrate .mascot-3d-stage {
+  filter: drop-shadow(0 22px 32px rgba(0, 0, 0, .44)) drop-shadow(0 0 28px rgba(244, 114, 182, .5));
+}
+
+.ai-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 204px;
+  z-index: 4;
+  display: grid;
+  gap: 4px;
+  width: min(186px, calc(100vw - 32px));
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ai-card-bg) 86%, transparent);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, .26), inset 0 1px 0 rgba(255, 255, 255, .12);
+  color: var(--txt);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: left;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transform-origin: center bottom;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  animation: ai-bubble-in .34s cubic-bezier(.2, .88, .2, 1.08) both;
+}
+
+.ai-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  border-right: 1px solid rgba(255, 255, 255, .18);
+  border-bottom: 1px solid rgba(255, 255, 255, .18);
+  background: color-mix(in srgb, var(--ai-card-bg) 86%, transparent);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.ai-bubble-name {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+.ai-widget--speaking .ai-bubble {
+  animation: ai-bubble-in .34s cubic-bezier(.2, .88, .2, 1.08) both, ai-bubble-breathe 2.4s ease-in-out infinite .34s;
+}
+
+@keyframes ai-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px) scale(.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@keyframes ai-bubble-breathe {
+  0%,
+  100% {
+    box-shadow: 0 18px 34px rgba(0, 0, 0, .26), inset 0 1px 0 rgba(255, 255, 255, .12);
+  }
+
+  50% {
+    box-shadow: 0 20px 38px rgba(0, 0, 0, .3), 0 0 24px rgba(114, 77, 255, .18), inset 0 1px 0 rgba(255, 255, 255, .16);
+  }
+}
+
+.ai-card-wrap {
+  position: fixed;
+  left: 256px;
+  bottom: 24px;
+  width: min(420px, calc(100vw - 284px));
+  z-index: 1000;
+  pointer-events: auto;
+  transform-origin: left bottom;
+  will-change: transform, opacity;
+}
+
+.ai-card {
+  width: 100%;
+}
+
+.ai-card .border-glow-inner {
+  max-height: min(640px, calc(100vh - 48px));
+  overflow: hidden;
+}
+
+.ai-card-inner {
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  color: var(--txt);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ai-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.ai-card-head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  text-shadow: 0 1px 8px rgba(255, 255, 255, .14);
+}
+
+.ai-card-head p {
+  margin: 5px 0 0;
+  color: color-mix(in srgb, var(--txt) 88%, transparent);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ai-close {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--ai-chip-bg);
+  color: var(--txt);
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.ai-close:hover {
+  background: var(--ai-chip-hover);
+}
+
+.ai-quick-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ai-quick-list button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ai-chip-bg) 72%, var(--txt) 8%);
+  color: color-mix(in srgb, var(--txt) 92%, transparent);
+  padding: 7px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.ai-quick-list button:hover:not(:disabled) {
+  border-color: var(--line-2);
+  background: var(--ai-chip-hover);
+}
+
+.ai-quick-list button:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}
+
+.ai-message-list {
+  flex: 1;
+  min-height: 220px;
+  max-height: 360px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 2px;
+}
+
+.ai-message {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.ai-message--user {
+  grid-template-columns: minmax(0, 1fr) 28px;
+}
+
+.ai-message--user .ai-message-role {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.ai-message--user .ai-message-body {
+  grid-column: 1;
+  grid-row: 1;
+  background: var(--chart-bar-faint);
+}
+
+.ai-message-role {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  color: color-mix(in srgb, var(--txt) 92%, transparent);
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--ai-chip-bg);
+}
+
+.ai-message-body {
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--ai-chip-bg) 68%, var(--txt) 10%);
+  color: color-mix(in srgb, var(--txt) 96%, transparent);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.ai-error {
+  border: 1px solid rgba(var(--warn-rgb), .36);
+  background: rgba(var(--warn-rgb), .1);
+  color: var(--txt);
+  border-radius: 12px;
+  padding: 9px 11px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.ai-compose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px;
+  gap: 10px;
+  align-items: end;
+}
+
+.ai-compose textarea {
+  width: 100%;
+  height: 42px;
+  min-height: 42px;
+  max-height: 128px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  outline: none;
+  background: color-mix(in srgb, var(--ai-chip-bg) 72%, var(--txt) 8%);
+  color: color-mix(in srgb, var(--txt) 96%, transparent);
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.ai-compose textarea:focus {
+  border-color: var(--line-2);
+  box-shadow: 0 0 0 3px var(--control-hover);
+}
+
+.ai-compose textarea::placeholder {
+  color: var(--faint);
+}
+
+.ai-send {
+  height: 42px;
+  border: 1px solid var(--line-2);
+  border-radius: 13px;
+  background: var(--control-solid);
+  color: var(--control-solid-text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ai-send:hover:not(:disabled) {
+  background: var(--chart-bar-muted);
+}
+
+.ai-send:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+@media (max-width: 760px) {
+  .ai-widget {
+    align-items: flex-end;
+    padding: 8px 14px 0;
+  }
+
+  .ai-orb {
+    width: 112px;
+    height: 154px;
+  }
+
+  .ai-bubble {
+    right: 10px;
+    left: auto;
+    bottom: 154px;
+    transform: none;
+  }
+
+  .ai-bubble::after {
+    left: auto;
+    right: 42px;
+    transform: rotate(45deg);
+  }
+
+  .ai-card-wrap {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    transform-origin: right bottom;
+  }
+
+  .ai-card-inner {
+    min-height: 480px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-bubble,
+  .ai-widget--speaking .ai-bubble {
+    animation: none;
+  }
+}

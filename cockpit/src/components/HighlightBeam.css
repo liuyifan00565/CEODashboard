@@ -1,0 +1,89 @@
+/* 更新时间: 2026-06-24  更新内容: HighlightBeam 流动描边样式, conic-gradient 旋转白光描边 + punch 内层 + 外发光, 平滑过渡 */
+
+/* 注册角度属性, 让 conic-gradient 角度可平滑动画(不旋转盒子, 避免非正方形描边扭曲) */
+@property --hlb-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.hlb-wrap {
+  position: relative;
+  /* 不裁剪子内容 */
+  overflow: visible;
+  border-radius: var(--hlb-radius, 16px);
+}
+
+/* 子内容正常显示, 置于光束之上 */
+.hlb-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* 旋转白色光束描边层 */
+.hlb-beam {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  pointer-events: none;
+
+  /* 透明为主, 一段白色 */
+  background: conic-gradient(
+    from var(--hlb-angle, 0deg),
+    transparent 0deg,
+    transparent 70deg,
+    rgba(255, 255, 255, .15) 95deg,
+    rgba(255, 255, 255, .95) 110deg,
+    rgba(255, 255, 255, .15) 125deg,
+    transparent 150deg,
+    transparent 360deg
+  );
+
+  /* 内层 punch: 只留描边 */
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+
+  /* 平滑淡入淡出 */
+  opacity: 0;
+  transition: opacity .45s ease;
+}
+
+.hlb-active .hlb-beam {
+  opacity: 1;
+  animation: hlb-spin 2.6s linear infinite;
+}
+
+@keyframes hlb-spin {
+  to { --hlb-angle: 360deg; }
+}
+
+/* 柔和外发光 */
+.hlb-active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    0 0 12px rgba(255, 255, 255, .18),
+    0 0 28px rgba(255, 255, 255, .10);
+  opacity: 0;
+  animation: hlb-glow-in .45s ease forwards;
+}
+
+@keyframes hlb-glow-in {
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hlb-active .hlb-beam { animation: none; }
+}

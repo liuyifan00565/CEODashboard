@@ -1,0 +1,19 @@
+# 更新时间: 2026-07-01 11:07:01 CST
+# 更新内容: 新增仓库根目录忽略规则，避免上传本地密钥、系统文件、依赖目录和构建产物。
+
+.DS_Store
+Thumbs.db
+
+.env
+.env.*
+!.env.example
+
+node_modules/
+dist/
+dist-ssr/
+logs/
+*.log
+
+coverage/
+.vite/
+.cache/

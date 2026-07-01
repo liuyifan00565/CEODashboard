@@ -1,0 +1,90 @@
+/* 更新时间: 2026-06-25 22:53:50  更新内容: Sidebar 激活和悬停颜色改为主题变量，白色主题下不再使用白色文字。 */
+.sb-glass {
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.sb-glass .glass-surface__content {
+  align-items: stretch;
+  justify-content: stretch;
+  height: auto;
+  padding: 0;
+}
+
+.sb-root {
+  width: 210px;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  border-radius: 16px;
+  padding: 14px 10px;
+}
+
+.sb-title {
+  color: var(--faint);
+  font-size: 14px;
+  letter-spacing: .14em;
+  padding: 4px 12px 10px;
+  text-transform: uppercase;
+}
+
+.sb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sb-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  position: relative;
+  padding: 11px 12px;
+  border-radius: 10px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  transition: background .2s ease, color .2s ease, transform .2s ease;
+}
+
+.sb-item:hover {
+  background: var(--control-hover);
+  color: var(--txt);
+}
+
+.sb-item--active {
+  background: transparent;
+  color: var(--txt);
+  box-shadow: none;
+}
+
+.sb-item--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  border-radius: 2px;
+  background: var(--txt);
+  box-shadow: var(--brand-dot-shadow);
+}
+
+.sb-icon {
+  flex: 0 0 auto;
+  width: 18px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1;
+  opacity: .9;
+}
+
+.sb-name {
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+}

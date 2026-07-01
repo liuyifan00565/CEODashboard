@@ -1,0 +1,178 @@
+/*
+ 更新时间: 2026-06-30 16:18:17
+ 更新内容: 顶部 KPI 区改为两张内嵌销售完成的回款大长卡。
+*/
+
+/* ===== 外层 shell：左侧栏 + 右内容列 ===== */
+.dash-shell{
+  position:relative;z-index:2;display:flex;align-items:stretch;
+  min-height:100vh;gap:0;
+}
+
+.dash-aside{
+  flex:none;width:242px;padding:18px 12px 18px 16px;
+  position:sticky;top:0;z-index:80;align-self:flex-start;height:100vh;
+  display:flex;flex-direction:column;gap:16px;
+}
+.dash-aside .sb-root{width:100%}
+
+.dash-main{
+  flex:1;min-width:0;display:flex;flex-direction:column;
+  padding:0 clamp(16px,3vw,40px) 24px;gap:16px;
+}
+
+/* ===== 顶栏 ===== */
+.dash-topbar{
+  position:sticky;top:0;z-index:70;
+  display:flex;align-items:center;gap:14px;row-gap:10px;flex-wrap:wrap;flex:none;min-width:0;
+  margin:0 calc(clamp(16px,3vw,40px) * -1);
+  padding:18px clamp(16px,3vw,40px) 14px;
+}
+.dash-topbar .brand-glass{flex:0 0 254px;min-width:254px}
+.dash-topbar .brand-glass .glass-surface__content{padding:0}
+.dash-topbar .brand{width:100%;height:100%;min-width:0;flex:none;padding:0 14px}
+.dash-topbar .brand-copy{min-width:0}
+.dash-topbar .brand b{font-size:16px}
+.dash-topbar .brand b,
+.dash-topbar .brand small{white-space:nowrap}
+.dash-tools{
+  margin-left:auto;display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0;flex:1 1 600px;
+}
+/* 顶栏内的搜索框无需再 auto 推开（外层已用 margin-left:auto） */
+.dash-tools .search-wrap{margin-left:0}
+.dash-tools .fp-glass{flex:0 0 244px;max-width:244px;min-width:244px}
+.dash-tools .sgm-btn{padding:6px 12px}
+
+/* ===== 内容区 ===== */
+.dash-content{
+  flex:1;min-height:0;display:flex;flex-direction:column;gap:16px;
+  scroll-margin-top:86px;
+}
+
+/* ===== KPI 区：两张回款 + 销售完成组合长卡 ===== */
+.dash-kpis{
+  display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(2,minmax(326px,auto));gap:14px;flex:none;
+}
+.dash-kpi-item{min-width:0}
+.dash-kpi-item[data-kpi-key="month"]{grid-column:1;grid-row:1}
+.dash-kpi-item[data-kpi-key="year"]{grid-column:1;grid-row:2}
+.dash-kpi-item .search-result-border,
+.dash-kpi-item .search-result-border .eb-content,
+.dash-kpi-item .kpi-card{height:100%}
+.search-result-border{width:100%}
+
+/* ===== 主体 grid ===== */
+.dash-grid{
+  flex:1;min-height:0;display:grid;gap:16px;
+}
+/* 总览：趋势与费比续费 KPI 在首行，版本情况横跨底部整行 */
+.dash-grid--overview{
+  grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);
+  grid-template-rows:1fr 1fr;
+  grid-template-areas:
+    "trend finance"
+    "version version";
+}
+.dash-grid--overview .dash-cell--trend{grid-area:trend}
+.dash-grid--overview .dash-cell--finance-kpis{grid-area:finance}
+.dash-grid--overview .dash-cell--version{grid-area:version}
+
+/* 销售分析：单面板铺满 */
+.dash-grid--channel,
+.dash-grid--finance{
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:1fr;
+}
+
+.dash-cell{min-width:0;min-height:0}
+/* 让玻璃面板撑满网格单元 */
+.dash-cell .search-result-border,
+.dash-cell .search-result-border .eb-content{height:100%}
+.dash-cell .mt-panel,
+.dash-cell .vf-panel{height:100%}
+
+.dash-finance-kpis{
+  height:100%;min-height:0;display:grid;grid-template-rows:repeat(2,minmax(0,1fr));gap:14px;
+}
+.dash-finance-kpi-item{min-width:0;min-height:0}
+.dash-finance-kpi-item .search-result-border,
+.dash-finance-kpi-item .search-result-border .eb-content,
+.dash-finance-kpi-item .kpi-card{height:100%}
+
+.dash-delivery-row{
+  flex:none;
+}
+.dash-delivery-row .search-result-border,
+.dash-delivery-row .search-result-border .eb-content{height:100%}
+
+.dash-cell .mt-panel{
+  display:flex;
+  flex-direction:column;
+  background: transparent;
+  border:1px solid var(--line-2);
+  backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  box-shadow:var(--glass-shadow);
+}
+.dash-cell .mt-title{font-size:16px;color:var(--txt)}
+.dash-cell .mt-sub{font-size:14px;color:var(--txt)}
+.dash-cell .mt-chart{flex:1;min-height:0}
+.dash-cell .mt-chart > div{height:100%!important;min-height:180px}
+
+/* 聚焦面板（单独视图时居中收窄，避免过宽失衡） */
+.dash-cell--focus{max-width:1080px;width:100%;margin:0 auto}
+
+/* ===== Token 简版面板 ===== */
+.dash-token{
+  flex:1;min-height:0;display:flex;flex-direction:column;gap:18px;
+  padding:22px 24px;border-radius:16px;
+  background: transparent;
+  border:1px solid var(--line-2);
+  backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+  box-shadow:var(--glass-shadow);
+}
+.dash-token-head{display:flex;align-items:baseline;gap:14px}
+.dash-token-head h3{margin:0;font-size:16px;letter-spacing:.5px}
+.dash-token-head span{color:var(--faint);font-size:14px}
+.dash-token-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+}
+.dash-token-cell{
+  display:flex;flex-direction:column;gap:8px;
+  padding:20px 22px;border-radius:14px;
+  background:var(--glass-cell);border:1px solid var(--line);
+}
+.dash-token-label{color:var(--muted);font-size:14px}
+.dash-token-value{font-size:30px;font-weight:600;letter-spacing:.5px}
+.dash-token-sub{color:var(--faint);font-size:14px}
+
+/* ===== 窄屏降级 ===== */
+@media (max-width:1180px){
+  .dash-grid--overview{
+    grid-template-columns:1fr;
+    grid-template-rows:auto auto auto;
+    grid-template-areas:"trend" "finance" "version";
+  }
+  .dash-kpis{grid-template-columns:1fr;grid-template-rows:auto auto}
+  .dash-kpi-item[data-kpi-key="month"],
+  .dash-kpi-item[data-kpi-key="year"]{grid-column:1 / -1;grid-row:auto}
+  .dash-finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto}
+}
+@media (max-width:760px){
+  .dash-shell{flex-direction:column}
+  .dash-aside{position:static;width:100%;height:auto;min-height:0}
+  .dash-kpis{grid-template-columns:1fr}
+  .dash-kpi-item[data-kpi-key]{grid-column:1;grid-row:auto}
+  .dash-finance-kpis{grid-template-columns:1fr;grid-template-rows:auto auto}
+  .dash-token-grid{grid-template-columns:1fr}
+}
+
+/* FluidGlass 玻璃指针开关 */
+.glass-toggle{
+  flex:none;font-size:14px;color:var(--muted);
+  border:1px solid var(--line-2);border-radius:10px;
+  padding:9px 14px;background:var(--ai-chip-bg);
+  cursor:pointer;transition:.2s;white-space:nowrap;
+}
+.glass-toggle:hover{color:var(--txt);border-color:var(--line-2)}
+.glass-toggle--on{color:var(--txt);border-color:var(--line-2);background:var(--ai-chip-hover)}

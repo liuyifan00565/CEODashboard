@@ -1,0 +1,7 @@
+/*
+ 更新时间: 2026-06-24 22:42:00
+ 更新内容: 新增 ReactBits ShinyText 基础样式。
+*/
+.shiny-text {
+  display: inline-block;
+}

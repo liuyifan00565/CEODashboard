@@ -1,0 +1,117 @@
+# CEO 经营驾驶舱 React Demo
+
+更新时间: 2026-06-30 14:32:00
+更新内容: 记录 AI 分析入口升级为 sprite sheet 逐帧小人交互，弹窗交互保持不变。
+
+## 技术栈
+
+- React + Vite
+- Three.js / @react-three/fiber / @react-three/drei / maath
+- ECharts
+- GSAP
+- flatpickr
+- ReactBits registry 组件
+
+## 本地运行
+
+先安装依赖：
+
+```bash
+npm install
+```
+
+开发模式会由 Vite 同时提供页面和 `/api/ai/analyze`：
+
+```bash
+npm run dev
+```
+
+生产构建：
+
+```bash
+npm run build
+```
+
+生产模式由 Node 服务同时提供 `dist` 静态文件和 AI 分析接口：
+
+```bash
+npm run serve
+```
+
+代码检查：
+
+```bash
+npm run lint
+```
+
+## 筛选联动演示口径
+
+顶部日历范围筛选器和年/月/日筛选器会联动经营总览里的 KPI 数据卡片。当前仍使用虚拟数据：默认 `2026-06-01 至 2026-06-30` + `月` 视角保持原首屏 mock 数值；选择其它日期范围时，会按日期跨度和日期位置生成一个演示用折算系数；切换 `年`、`月`、`日` 时，会切换到对应粒度的虚拟基准值。
+
+该口径只用于展示筛选后卡片数字滚动变化、完成率、缺口、环比和续费率联动效果，不代表真实生产统计口径。后续接入真实接口时，应以 BI/API 聚合结果替换 `src/lib/filterKpiCards.js` 中的虚拟折算逻辑。
+
+`总投入 · 费比` 卡片的大字展示费比百分比；总投入、广告和人力金额保留在副文案中，用于说明费比的投入构成。
+
+## 菜单与销售维度口径
+
+左侧菜单当前包含 `经营总览`、`线上销售分析`、`华南线下销售分析`、`华东线下销售分析`、`代理销售分析`。经营总览展示全局数据，供 CEO 查看整体经营状态；四个销售分析入口复用经营总览同一套 KPI、月度趋势、销售完成和版本情况布局，只把数据上下文切换到对应销售范围。
+
+当前页面仍使用 `src/data/mock.js` 中的虚拟演示数据。`本月销售完成` 面板按 `线上`、`线下华南`、`线下华东`、`代理` 四类汇总，点击后在屏幕正中间弹出人员明细卡片，人员按目标完成率降序排列。KPI 二级弹窗的销售维度筛选为多选，默认四个明细项全选；如果需要查看全量，保持四项点亮即可。
+
+KPI 二级弹窗提供 `新签` 和 `续订` 两个订单类型选项，用于切换金额序列和对应环比；界面不展示额外标签。该口径只用于 Demo 展示，后续接入真实接口时应由 BI/API 返回对应订单类型的聚合数据。
+
+## 交付看板演示口径
+
+一级看板新增 `交付看板`，用于展示 AI 客服交付配置的人效情况。当前 mock 数据按实施工程师展示客户均价、人均金额价值、交付单数，以及 15 单/月目标完成率；低于预警阈值的人员复用现有进度颜色逻辑突出显示。该面板目前不接交付工单系统，后续真实版本可由后台录入或接口聚合替换 mock 数据。
+
+## 版本情况演示口径
+
+首页版本情况卡片只展示版本明细，不再展示已回款、应收、广告费、年度缺口四个财务小结，也不再展示财务健康柱状图。当前版本范围为启航版、卓越版、至尊版、定制版、试用版、增购包 6 类。
+
+每个版本展示价格、套数、回款、环比、当期应续费金额、当期已续费金额和当期续费率。当期续费率按 `当期已续费金额 / 当期应续费金额` 计算；当前数据仍为 `src/data/mock.js` 内的演示数据，后续接入真实口径时应替换为 BI/API 返回的版本维度数据。
+
+## AI 分析工具
+
+左侧菜单下方有一个透明背景 AI 小人入口，入口使用 `public/ai-mascot-sprite.png` sprite sheet 逐帧动画；默认待机，鼠标悬停切换挥动帧，点击播放弹跳帧，打开对话框后切换说话/值守帧。点击后会打开原 AI 经营分析对话框，并把当前页面的 KPI、销售维度、ROI、产品版本、续费率和月度趋势数据快照发到服务端 `/api/ai/analyze`。服务端再调用阿里云百炼 OpenAI-compatible Chat Completions 接口，并把通义的流式文本结果转发给前端。
+
+本地创建 `cockpit/.env.local`，不要把真实 key 提交到 Git：
+
+```bash
+DASHSCOPE_API_KEY=sk-your-dashscope-api-key
+DASHSCOPE_MODEL=qwen3.7-max-2026-05-20
+DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+DASHSCOPE_ENABLE_THINKING=false
+```
+
+`DASHSCOPE_MODEL` 默认就是 `qwen3.7-max-2026-05-20`，如果后续要切到稳定别名或新快照，只需要改环境变量。驾驶舱交互默认关闭思考模式，避免等待过久；需要深度分析时把 `DASHSCOPE_ENABLE_THINKING=true`。
+
+## ReactBits 组件
+
+本 demo 使用的 ReactBits 组件源码已落到：
+
+- `src/components/DotField/`：页面点阵背景
+- `src/components/GlassSurface/`：展开式玻璃搜索框
+- `src/components/FluidGlass/`：官方 FluidGlass 原件
+- `src/components/GlassCursor.jsx`：基于 FluidGlass lens 模型做的玻璃球鼠标指针
+- `public/ai-mascot-transparent.png`：AI 分析入口透明小人素材
+- `public/ai-mascot-sprite.png`：AI 分析入口 4 行 × 12 帧 sprite sheet 动作素材
+- `src/components/BorderGlow/`：AI 对话卡片辉光边框
+- `src/components/ShinyText/`：AI 流式等待状态闪光文字
+
+`components.json` 已配置 `@react-bits` registry：
+
+```json
+"registries": {
+  "@react-bits": "https://reactbits.dev/r/{name}.json"
+}
+```
+
+当前 `npx shadcn@latest view @react-bits/<Component>` 可以正常读取 registry 内容。实测 `npx shadcn@latest add @react-bits/FluidGlass-JS-CSS --path src/components --dry-run --yes` 可以解析；`DotField-JS-CSS` 和 `GlassSurface-JS-CSS` 因 registry 内含 CSS 文件，在 `shadcn@latest` 的 `add` 阶段会报 `Unexpected token (1:0)`，所以这两个组件按 `view/curl` 返回的官方 registry 内容落地。
+
+本次新增的 `CircularText-JS-CSS`、`BorderGlow-JS-CSS`、`ShinyText-JS-CSS` 同样先执行了：
+
+```bash
+npx shadcn@latest add @react-bits/CircularText-JS-CSS @react-bits/BorderGlow-JS-CSS @react-bits/ShinyText-JS-CSS --yes
+```
+
+CLI 已安装 `motion` 依赖，但写入 CSS 文件时仍触发 `Unexpected token (1:0)`，因此组件源码按 registry 返回内容落地。

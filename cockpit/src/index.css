@@ -1,0 +1,182 @@
+/*
+ 更新时间: 2026-06-26 01:06:01
+ 更新内容: 白天主题背景从 #D8F5D1 调整为更柔和的浅绿色 #E8FBE8。
+*/
+:root,
+:root[data-theme="dark"]{
+  --color-scheme-value:dark;
+  --bg:#0c0c0d;
+  --panel:rgba(36,36,41,.74);
+  --panel-2:rgba(50,50,57,.76);
+  --line:rgba(255,255,255,.14);
+  --line-2:rgba(255,255,255,.24);
+  --glass-cell:transparent;
+  --glass-cell-hover:rgba(255,255,255,.15);
+  --glass-shadow:0 18px 52px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(255,255,255,.06);
+  --glass-blur:blur(22px) saturate(155%);
+  --txt:#ffffff;
+  --muted:#ffffff;
+  --faint:#ffffff;
+  --up:#ff4fd8;     /* 荧光粉：涨 / 预警 */
+  --down:#dfff00;   /* 荧光绿：跌 */
+  --good:#dfff00;   /* 荧光绿：目标完成优秀 */
+  --warn:#ff4fd8;   /* 预警语义：映射到荧光粉 */
+  --up-rgb:255,79,216;
+  --down-rgb:223,255,0;
+  --good-rgb:223,255,0;
+  --warn-rgb:255,79,216;
+  --bg-radial-a:rgba(255,255,255,.08);
+  --bg-radial-b:rgba(255,255,255,.06);
+  --bg-scrim:linear-gradient(90deg,rgba(12,12,13,.38),rgba(12,12,13,.04) 45%,rgba(12,12,13,.2));
+  --brand-dot-shadow:0 0 12px rgba(255,255,255,.5);
+  --control-hover:rgba(255,255,255,.08);
+  --theme-toggle-icon:#ffffff;
+  --theme-toggle-hover:rgba(255,255,255,.08);
+  --focus-outline:rgba(255,255,255,.24);
+  --control-solid:#ffffff;
+  --control-solid-text:#0c0c0d;
+  --chart-text:#ffffff;
+  --chart-muted:#ffffff;
+  --chart-grid:rgba(255,255,255,.08);
+  --chart-axis:rgba(255,255,255,.45);
+  --chart-bar:rgba(255,255,255,.88);
+  --chart-bar-muted:rgba(255,255,255,.38);
+  --chart-bar-faint:rgba(255,255,255,.12);
+  --chart-tooltip-bg:rgba(20,20,22,.92);
+  --chart-tooltip-border:rgba(255,255,255,.16);
+  --chart-pointer:rgba(255,255,255,.05);
+  --chart-point-border:#0c0c0d;
+  --progress-mid:#ffffff;
+  --ai-card-bg:#120F17;
+  --ai-orb-text:#ffffff;
+  --ai-ring-text:rgba(255,255,255,.9);
+  --ai-label-text:rgba(255,255,255,.94);
+  --ai-ring-shadow:0 0 8px rgba(0,0,0,.9),0 0 16px rgba(192,132,252,.35);
+  --ai-label-shadow:0 1px 3px rgba(0,0,0,.8),0 0 18px rgba(255,255,255,.32);
+  --ai-chip-bg:rgba(255,255,255,.055);
+  --ai-chip-hover:rgba(255,255,255,.1);
+  color-scheme:var(--color-scheme-value);
+}
+:root[data-theme="light"]{
+  --color-scheme-value:light;
+  --bg:#E8FBE8;
+  --panel:rgba(245,245,245,.58);
+  --panel-2:rgba(238,238,238,.66);
+  --line:rgba(10,15,24,.12);
+  --line-2:rgba(10,15,24,.22);
+  --glass-cell:rgba(255,255,255,.42);
+  --glass-cell-hover:rgba(10,15,24,.08);
+  --glass-shadow:0 18px 52px rgba(10,15,24,.12), inset 0 1px 0 rgba(255,255,255,.72), inset 0 -1px 0 rgba(10,15,24,.04);
+  --glass-blur:blur(22px) saturate(145%);
+  --txt:#111318;
+  --muted:#2c333d;
+  --faint:#626b77;
+  --up:#ff4fd8;
+  --down:#dfff00;
+  --good:#dfff00;
+  --warn:#ff4fd8;
+  --up-rgb:255,79,216;
+  --down-rgb:223,255,0;
+  --good-rgb:223,255,0;
+  --warn-rgb:255,79,216;
+  --bg-radial-a:rgba(0,0,0,.05);
+  --bg-radial-b:rgba(0,0,0,.035);
+  --bg-scrim:linear-gradient(90deg,rgba(232,251,232,.86),rgba(232,251,232,.24) 45%,rgba(232,251,232,.6));
+  --brand-dot-shadow:0 0 12px rgba(0,0,0,.22);
+  --control-hover:rgba(10,15,24,.08);
+  --theme-toggle-icon:#111318;
+  --theme-toggle-hover:rgba(10,15,24,.08);
+  --focus-outline:rgba(17,19,24,.28);
+  --control-solid:#b5b5b5;
+  --control-solid-text:#111318;
+  --chart-text:#111318;
+  --chart-muted:#2c333d;
+  --chart-grid:rgba(10,15,24,.18);
+  --chart-axis:rgba(10,15,24,.35);
+  --chart-bar:rgba(17,19,24,.82);
+  --chart-bar-muted:rgba(17,19,24,.34);
+  --chart-bar-faint:rgba(17,19,24,.16);
+  --chart-tooltip-bg:rgba(232,232,232,.96);
+  --chart-tooltip-border:rgba(10,15,24,.22);
+  --chart-pointer:rgba(10,15,24,.08);
+  --chart-point-border:#E8FBE8;
+  --progress-mid:#111318;
+  --ai-card-bg:#eeeeee;
+  --ai-orb-text:#111318;
+  --ai-ring-text:rgba(17,19,24,.76);
+  --ai-label-text:#111318;
+  --ai-ring-shadow:0 0 8px rgba(255,255,255,.55),0 0 16px rgba(0,0,0,.18);
+  --ai-label-shadow:0 1px 3px rgba(255,255,255,.7),0 0 16px rgba(0,0,0,.18);
+  --ai-chip-bg:rgba(10,15,24,.06);
+  --ai-chip-hover:rgba(10,15,24,.12);
+  color-scheme:var(--color-scheme-value);
+}
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--txt);
+  font-family:"PingFang SC","Microsoft YaHei",-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+
+.app{position:relative;min-height:100vh}
+.bg{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 72% 12%,var(--bg-radial-a),transparent 32%),
+    radial-gradient(circle at 22% 82%,var(--bg-radial-b),transparent 34%),
+    var(--bg);
+}
+.bg::after{
+  content:"";position:absolute;inset:0;
+  background:var(--bg-scrim);
+  pointer-events:none;
+}
+.bg .dot-field-container{position:absolute;inset:0;width:100%;height:100%;filter:contrast(1.18)}
+.fluid-glass-layer{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  opacity:.42;mix-blend-mode:screen;
+}
+.fluid-glass-layer canvas{
+  width:100%!important;height:100%!important;display:block;pointer-events:none!important;
+}
+
+/* 顶栏 */
+.topbar{position:relative;z-index:5;display:flex;align-items:center;gap:18px;
+  padding:18px clamp(16px,4vw,48px);}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-dot{width:9px;height:9px;border-radius:50%;background:var(--txt);box-shadow:var(--brand-dot-shadow)}
+.brand b{font-size:15px;letter-spacing:.5px}
+.brand small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+
+/* 展开式搜索框（包裹 ReactBits GlassSurface） */
+.search-wrap{
+  position:relative;margin-left:auto;display:inline-flex;border-radius:31px;isolation:isolate;
+}
+.search-wrap > .glass-surface{position:relative;z-index:1}
+.glass-surface{transition:width .38s cubic-bezier(.5,1.15,.45,1)!important}
+.search-inner{display:flex;align-items:center;gap:10px;width:100%;height:100%;
+  justify-content:center;padding:0;color:var(--txt)}
+.search-wrap--expanded .search-inner{justify-content:flex-start;padding:0 8px}
+.search-ico{flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;
+  border:none;background:transparent;color:var(--txt);cursor:pointer;transition:.2s}
+.search-ico:hover{background:var(--control-hover)}
+.search-wrap:not(.search-wrap--expanded) .search-input{display:none}
+.search-input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--txt);
+  font-size:14px;transition:opacity .25s}
+.search-input::placeholder{color:var(--muted)}
+
+/* 黑白主题切换（包裹 ReactBits GlassSurface） */
+.theme-toggle{
+  flex:none;display:inline-flex;width:54px;height:54px;border-radius:50%;isolation:isolate;
+}
+.theme-toggle > .glass-surface{position:relative;z-index:1}
+.theme-toggle__button{
+  display:grid;place-items:center;width:38px;height:38px;border-radius:50%;
+  border:none;background:transparent;color:var(--theme-toggle-icon);cursor:pointer;transition:.2s;
+}
+.theme-toggle__button:hover{background:var(--theme-toggle-hover)}
+.theme-toggle__button:focus-visible{outline:2px solid var(--txt);outline-offset:2px}
+.theme-toggle__icon{display:block;filter:drop-shadow(0 0 8px color-mix(in srgb,var(--theme-toggle-icon),transparent 72%))}
+
+.up{color:var(--up)}.down{color:var(--down)}.good{color:var(--good)}.warn{color:var(--warn)}

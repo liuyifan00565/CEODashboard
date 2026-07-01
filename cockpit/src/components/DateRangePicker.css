@@ -1,0 +1,177 @@
+/* 更新时间: 2026-06-25 22:53:50  更新内容: 日期选择器 hover、选中和日历弹层颜色改为主题变量，白色主题下不再使用白色文字。 */
+
+.fp-glass .glass-surface__content {
+  padding: 0;
+}
+
+.fp-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  max-width: 260px;
+  min-width: 0;
+}
+
+.fp-icon {
+  position: absolute;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--faint);
+  pointer-events: none;
+}
+
+.fp-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px 0 38px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--txt);
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  outline: none;
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+
+.fp-input::placeholder {
+  color: var(--faint);
+}
+
+.fp-input:hover,
+.fp-input:focus,
+.fp-input.active {
+  background: transparent;
+  color: var(--txt);
+}
+
+/* ===== flatpickr 弹出面板·黑白灰玻璃覆盖 ===== */
+.fp-wrap .flatpickr-calendar,
+.flatpickr-calendar {
+  background: rgba(18, 18, 20, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+  color: var(--txt);
+  font-size: 14px;
+}
+
+.flatpickr-calendar.arrowTop::before,
+.flatpickr-calendar.arrowTop::after,
+.flatpickr-calendar.arrowBottom::before,
+.flatpickr-calendar.arrowBottom::after {
+  border-bottom-color: rgba(18, 18, 20, 0.92);
+  border-top-color: rgba(18, 18, 20, 0.92);
+}
+
+.flatpickr-months,
+.flatpickr-month {
+  background: transparent;
+  color: var(--txt);
+  fill: var(--txt);
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year {
+  color: var(--txt);
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+  background: transparent;
+}
+
+.flatpickr-monthDropdown-month {
+  background: #141416;
+  color: var(--txt);
+}
+
+.flatpickr-prev-month,
+.flatpickr-next-month {
+  color: var(--muted);
+  fill: var(--muted);
+}
+
+.flatpickr-prev-month:hover svg,
+.flatpickr-next-month:hover svg {
+  fill: var(--txt);
+}
+
+.flatpickr-weekdays {
+  background: transparent;
+}
+
+span.flatpickr-weekday {
+  color: var(--faint);
+  background: transparent;
+  font-size: 14px;
+}
+
+.flatpickr-day {
+  color: var(--muted);
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+
+.flatpickr-day:hover,
+.flatpickr-day:focus {
+  background: var(--control-hover);
+  border-color: var(--line);
+  color: var(--txt);
+}
+
+.flatpickr-day.today {
+  background: transparent;
+  border-color: var(--line-2);
+  color: var(--txt);
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange,
+.flatpickr-day.selected:hover,
+.flatpickr-day.startRange:hover,
+.flatpickr-day.endRange:hover {
+  background: var(--control-solid);
+  border-color: var(--control-solid);
+  color: var(--control-solid-text);
+}
+
+.flatpickr-day.inRange {
+  background: var(--chart-bar-faint);
+  border-color: transparent;
+  color: var(--txt);
+  box-shadow: -5px 0 0 var(--chart-bar-faint), 5px 0 0 var(--chart-bar-faint);
+}
+
+.flatpickr-day.today.inRange {
+  background: var(--chart-bar-muted);
+  border-color: var(--line-2);
+  color: var(--txt);
+  box-shadow: -5px 0 0 var(--chart-bar-faint), 5px 0 0 var(--chart-bar-faint);
+}
+
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+  color: var(--faint);
+  opacity: 1;
+}
+
+.numInputWrapper:hover {
+  background: var(--control-hover);
+}
+
+.numInputWrapper span.arrowUp::after {
+  border-bottom-color: var(--muted);
+}
+
+.numInputWrapper span.arrowDown::after {
+  border-top-color: var(--muted);
+}

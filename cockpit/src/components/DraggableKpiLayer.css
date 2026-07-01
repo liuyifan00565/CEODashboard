@@ -1,0 +1,71 @@
+/*
+ 更新时间: 2026-06-25 16:10:03
+ 更新内容: KPI 数据卡片拖拽层新增避让重排动效、右下角缩放手柄和玻璃控件下穿层级样式。
+*/
+.draggable-kpi-layer {
+  position: relative;
+  min-height: var(--kpi-layer-height, 218px);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.draggable-kpi-card {
+  position: fixed;
+  z-index: 30;
+  min-width: 220px;
+  min-height: 180px;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+  will-change: left, top, width, height;
+  transition: left .22s cubic-bezier(.2, .72, .18, 1), top .22s cubic-bezier(.2, .72, .18, 1), width .18s ease, height .18s ease;
+}
+
+.draggable-kpi-card--active {
+  z-index: 34;
+  cursor: grabbing;
+  transition: none;
+}
+
+.draggable-kpi-card .hlb-wrap,
+.draggable-kpi-card .hlb-content,
+.draggable-kpi-card .kpi-card {
+  height: 100%;
+}
+
+.draggable-kpi-card .kpi-card {
+  cursor: grab;
+}
+
+.draggable-kpi-card--active .kpi-card {
+  cursor: grabbing;
+  transform: none;
+  border-color: rgba(255, 255, 255, .36);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .46), inset 0 1px 0 rgba(255, 255, 255, .28);
+}
+
+.draggable-kpi-card__resize {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  z-index: 5;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px 0 10px 0;
+  cursor: nwse-resize;
+  background:
+    linear-gradient(135deg, transparent 0 45%, rgba(255, 255, 255, .65) 45% 52%, transparent 52%),
+    linear-gradient(135deg, transparent 0 62%, rgba(255, 255, 255, .38) 62% 69%, transparent 69%);
+  opacity: .58;
+  transition: opacity .18s ease, background-color .18s ease;
+}
+
+.draggable-kpi-card:hover .draggable-kpi-card__resize,
+.draggable-kpi-card--active .draggable-kpi-card__resize {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, .08);
+}
+
+body.kpi-dragging {
+  user-select: none;
+}

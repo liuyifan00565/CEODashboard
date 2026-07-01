@@ -1,0 +1,269 @@
+/*
+ 更新时间: 2026-07-01 11:12:00
+ 更新内容: KPI 卡片点击联动福小客 3D 桌宠气泡，同时保留原二级弹窗。
+*/
+import { useMemo, useState, useRef, useLayoutEffect } from 'react';
+import gsap from 'gsap';
+
+import AIAnalysisWidget from './components/AIAnalysisWidget';
+import DotField from './components/DotField/DotField';
+import FluidGlass from './components/FluidGlass/FluidGlass';
+import GlassSurface from './components/GlassSurface/GlassSurface';
+import Sidebar from './components/Sidebar';
+import ThemeToggle from './components/ThemeToggle';
+import ExpandableSearch from './components/ExpandableSearch';
+import DateRangePicker from './components/DateRangePicker';
+import Segmented from './components/Segmented';
+import ElectricBorder from './components/ElectricBorder/ElectricBorder';
+import KpiCard from './components/KpiCard';
+import KpiModal from './components/KpiModal';
+import MonthlyTrend from './components/MonthlyTrend';
+import ChannelPanel from './components/ChannelPanel';
+import VersionFinancePanel from './components/VersionFinancePanel';
+import DeliveryPanel from './components/DeliveryPanel';
+
+import { META, MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
+import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
+import { buildCardCompanionCue } from './lib/mascotCompanion';
+import './dashboard.css';
+
+const DIM_OPTS = [
+  { value: 'year', label: '年' },
+  { value: 'month', label: '月' },
+  { value: 'day', label: '日' },
+];
+
+// 各主体面板的搜索关键字
+const PANEL_KEYWORDS = {
+  trend: ['趋势', '月度', '回款', '目标', '完成率'],
+  sales: ['销售', '线上', '线下', '代理', '战区', '华南', '华东'],
+  version: ['版本', '启航', '卓越', '至尊', '财务', '健康', '应收', '广告', '缺口', '续费'],
+  delivery: ['交付', '实施', '配置', '知识库', '人效'],
+};
+
+function hit(keywords, term) {
+  if (!term) return false;
+  const normalized = term.trim().toLowerCase();
+  if (!normalized) return false;
+  return keywords.some((keyword) => String(keyword).toLowerCase().includes(normalized));
+}
+
+function SearchResultBorder({ active, children }) {
+  if (!active) return children;
+  return (
+    <ElectricBorder
+      color="#6000FF"
+      speed={1}
+      chaos={0.12}
+      thickness={2}
+      borderRadius={16}
+      className="search-result-border"
+      style={{ borderRadius: 16 }}
+    >
+      {children}
+    </ElectricBorder>
+  );
+}
+
+function recoveryChannelTitle(card) {
+  return card.key === 'year' ? '本年渠道完成情况' : '本月渠道完成情况';
+}
+
+function makeCompanionCueId(card) {
+  return `${card?.key ?? 'card'}-${Date.now()}`;
+}
+
+export default function App() {
+  const [activeMenu, setActiveMenu] = useState('overview');
+  const [dim, setDim] = useState('month');
+  const [dateRange, setDateRange] = useState(DEFAULT_FILTER_RANGE);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [openCard, setOpenCard] = useState(null);
+  const [companionCue, setCompanionCue] = useState(null);
+
+  const gridRef = useRef(null);
+  const pendingMenuScrollRef = useRef(false);
+  const activeChannelKey = getDashboardChannelKey(activeMenu);
+  const activeMenuLabel = getDashboardMenuLabel(activeMenu);
+  const gridClassName = activeMenu === 'overview'
+    ? 'dash-grid dash-grid--overview'
+    : `dash-grid dash-grid--overview dash-grid--${activeMenu}`;
+  const filteredKpiCards = useMemo(
+    () => getFilteredKpiCards({ dim, dateRange, channel: activeChannelKey }),
+    [dim, dateRange, activeChannelKey]
+  );
+  const recoveryKpiCards = filteredKpiCards.filter((card) => ['month', 'year'].includes(card.key));
+  const financeKpiCards = filteredKpiCards.filter((card) => ['cost', 'renewal'].includes(card.key));
+  const openCardData = useMemo(
+    () => filteredKpiCards.find((card) => card.key === openCard?.key) ?? null,
+    [filteredKpiCards, openCard]
+  );
+
+  function scrollDashboardIntoView() {
+    pendingMenuScrollRef.current = false;
+    gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function handleMenuChange(nextMenu) {
+    pendingMenuScrollRef.current = true;
+    setActiveMenu(nextMenu);
+
+    if (nextMenu === activeMenu) {
+      requestAnimationFrame(scrollDashboardIntoView);
+    }
+  }
+
+  function handleOpenCard(card) {
+    setOpenCard(card);
+    setCompanionCue({
+      ...buildCardCompanionCue(card),
+      id: makeCompanionCueId(card),
+    });
+  }
+
+  // GSAP 入场：KPI 卡 + 面板 stagger fade-up（菜单切换时重放）
+  useLayoutEffect(() => {
+    const root = gridRef.current;
+    if (!root) return;
+    let scrollFrame = 0;
+    if (pendingMenuScrollRef.current) {
+      scrollFrame = requestAnimationFrame(scrollDashboardIntoView);
+    }
+    const targets = root.querySelectorAll('[data-anim]');
+    if (!targets.length) {
+      return () => {
+        if (scrollFrame) cancelAnimationFrame(scrollFrame);
+      };
+    }
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        targets,
+        { autoAlpha: 0, y: 24 },
+        { autoAlpha: 1, y: 0, duration: 0.55, ease: 'power3.out', stagger: 0.08, clearProps: 'transform' }
+      );
+    }, root);
+    return () => {
+      if (scrollFrame) cancelAnimationFrame(scrollFrame);
+      ctx.revert();
+    };
+  }, [activeMenu]);
+
+  return (
+    <div className="app">
+      <div className="bg">
+        <DotField
+          dotRadius={2.5}
+          dotSpacing={14}
+          bulgeStrength={150}
+          glowRadius={300}
+          sparkle={false}
+          waveAmplitude={3}
+          cursorRadius={300}
+          cursorForce={0.15}
+          bulgeOnly={false}
+          gradientFrom="#6000FF"
+          gradientTo="#ffffff"
+          glowColor="#6000FF"
+        />
+        <div className="fluid-glass-layer" aria-hidden="true">
+          <FluidGlass
+            mode="bar"
+            scale={0.15}
+            ior={1.15}
+            thickness={10}
+            transmission={1}
+            roughness={0}
+            chromaticAberration={0.05}
+            anisotropy={0.01}
+            navItems={[]}
+          />
+        </div>
+      </div>
+
+      <div className="dash-shell">
+        <aside className="dash-aside">
+          <Sidebar items={MENU} active={activeMenu} onChange={handleMenuChange} />
+          <AIAnalysisWidget activeMenu={activeMenu} dim={dim} channelKey={activeChannelKey} companionCue={companionCue} />
+        </aside>
+
+        <div className="dash-main">
+          <header className="dash-topbar">
+            <GlassSurface
+              width={230}
+              height={52}
+              borderRadius={16}
+              brightness={58}
+              blur={12}
+              displace={1}
+              backgroundOpacity={0.06}
+              distortionScale={-130}
+              className="brand-glass"
+            >
+              <div className="brand">
+                <span className="brand-dot" />
+                <div className="brand-copy">
+                  <b>福客 · CEO 经营驾驶舱</b>
+                  <small>{META.monthLabel} · {activeMenu === 'overview' ? '月度视角' : activeMenuLabel}</small>
+                </div>
+              </div>
+            </GlassSurface>
+            <div className="dash-tools">
+              <DateRangePicker value={dateRange} onChange={(dates) => setDateRange(dates?.length ? [...dates] : DEFAULT_FILTER_RANGE)} />
+              <Segmented options={DIM_OPTS} value={dim} onChange={setDim} />
+              <ThemeToggle />
+              <ExpandableSearch onChange={setSearchTerm} />
+            </div>
+          </header>
+
+          <div className="dash-content" ref={gridRef} key={activeMenu}>
+            <div className="dash-kpis">
+              {recoveryKpiCards.map((card) => (
+                <div className="dash-kpi-item" data-anim data-kpi-key={card.key} key={card.key}>
+                  <SearchResultBorder active={hit(card.keywords, searchTerm)}>
+                    <KpiCard
+                      card={card}
+                      onOpen={handleOpenCard}
+                      sidePanel={<ChannelPanel channelKey={activeChannelKey} title={recoveryChannelTitle(card)} />}
+                    />
+                  </SearchResultBorder>
+                </div>
+              ))}
+            </div>
+
+            <div className={gridClassName}>
+              <div className="dash-cell dash-cell--trend" data-anim>
+                <SearchResultBorder active={hit(PANEL_KEYWORDS.trend, searchTerm)}>
+                  <MonthlyTrend channelKey={activeChannelKey} />
+                </SearchResultBorder>
+              </div>
+              <div className="dash-cell dash-cell--finance-kpis" data-anim>
+                <div className="dash-finance-kpis">
+                  {financeKpiCards.map((card) => (
+                    <div className="dash-finance-kpi-item" data-kpi-key={card.key} key={card.key}>
+                      <SearchResultBorder active={hit(card.keywords, searchTerm)}>
+                        <KpiCard card={card} onOpen={handleOpenCard} />
+                      </SearchResultBorder>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="dash-cell dash-cell--version" data-anim>
+                <SearchResultBorder active={hit(PANEL_KEYWORDS.version, searchTerm)}>
+                  <VersionFinancePanel channelKey={activeChannelKey} />
+                </SearchResultBorder>
+              </div>
+            </div>
+
+            <div className="dash-delivery-row" data-anim>
+              <SearchResultBorder active={hit(PANEL_KEYWORDS.delivery, searchTerm)}>
+                <DeliveryPanel />
+              </SearchResultBorder>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {openCardData && <KpiModal card={openCardData} onClose={() => setOpenCard(null)} />}
+    </div>
+  );
+}

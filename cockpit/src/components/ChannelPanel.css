@@ -1,0 +1,342 @@
+/* 更新时间: 2026-06-29 12:02:00  更新内容: 销售完成行增加右下角展开箭头，并为格式化金额预留稳定布局。 */
+
+.ch-panel {
+  position: relative;
+  background: transparent;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--line-2);
+  border-radius: 18px;
+  padding: 22px 24px 24px;
+  overflow: hidden;
+  box-shadow: var(--glass-shadow);
+}
+
+.ch-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.ch-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--txt);
+  letter-spacing: .02em;
+}
+
+.ch-head-sub {
+  font-size: 14px;
+  color: var(--faint);
+}
+
+.ch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ch-row {
+  appearance: none;
+  position: relative;
+  width: 100%;
+  padding: 12px 34px 14px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+  transition: background .25s ease, border-color .25s ease;
+}
+
+.ch-row:hover,
+.ch-row:focus-visible {
+  background: var(--glass-cell-hover);
+  border-color: var(--line);
+  outline: none;
+}
+
+.ch-row--warn {
+  background: rgba(var(--warn-rgb), 0.09);
+  border-color: rgba(var(--warn-rgb), 0.26);
+}
+
+.ch-row-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+
+.ch-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ch-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--txt);
+  white-space: nowrap;
+}
+
+.ch-row--warn .ch-name {
+  color: var(--warn);
+}
+
+.ch-tag {
+  font-size: 14px;
+  line-height: 1;
+  padding: 3px 7px;
+  border-radius: 6px;
+  color: var(--warn);
+  background: rgba(var(--warn-rgb), 0.14);
+  border: 1px solid rgba(var(--warn-rgb), 0.36);
+  box-shadow: 0 0 14px rgba(var(--warn-rgb), 0.14);
+  white-space: nowrap;
+}
+
+.ch-amount {
+  font-size: 14px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ch-amount b {
+  color: var(--txt);
+  font-weight: 600;
+}
+
+.ch-amount .ch-sep {
+  color: var(--faint);
+  margin: 0 6px;
+}
+
+.ch-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ch-bar {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.ch-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: 99px;
+  background: var(--txt);
+  transition: width 1.1s cubic-bezier(.16, 1, .3, 1);
+}
+
+.ch-bar-fill--warn {
+  background: var(--warn);
+}
+
+.ch-pct {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  min-width: 48px;
+  text-align: right;
+}
+
+.ch-row--warn .ch-pct {
+  color: var(--txt);
+}
+
+.ch-row-arrow {
+  position: absolute;
+  right: 13px;
+  bottom: 12px;
+  width: 12px;
+  height: 12px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  color: var(--muted);
+  opacity: 0.72;
+  transform: rotate(45deg);
+  transition: color .2s ease, opacity .2s ease, transform .2s ease;
+  pointer-events: none;
+}
+
+.ch-row:hover .ch-row-arrow,
+.ch-row:focus-visible .ch-row-arrow {
+  color: var(--txt);
+  opacity: 1;
+  transform: translateX(2px) rotate(45deg);
+}
+
+.ch-zone {
+  margin-top: 7px;
+  font-size: 14px;
+  color: var(--faint);
+  letter-spacing: .02em;
+}
+
+.ch-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.ch-modal-mask {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  cursor: default;
+}
+
+.ch-modal-card {
+  position: relative;
+  width: min(720px, 92vw);
+  max-height: 86vh;
+  overflow: auto;
+  padding: 22px 24px 24px;
+  border-radius: 18px;
+  background: transparent;
+  border: 1px solid var(--line-2);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.ch-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.ch-modal-head h3 {
+  margin: 0;
+  color: var(--txt);
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.ch-modal-head span {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.ch-modal-close {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--txt);
+  background: var(--ai-chip-bg);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.ch-member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ch-member-row {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--glass-cell);
+  border: 1px solid var(--line);
+}
+
+.ch-member-row--warn {
+  background: rgba(var(--warn-rgb), 0.09);
+  border-color: rgba(var(--warn-rgb), 0.24);
+}
+
+.ch-member-main,
+.ch-member-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ch-member-main {
+  justify-content: space-between;
+  margin-bottom: 9px;
+}
+
+.ch-member-name {
+  color: var(--txt);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.ch-member-money {
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ch-member-bar {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.ch-member-bar span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 99px;
+}
+
+.ch-member-progress b {
+  flex: none;
+  min-width: 48px;
+  text-align: right;
+  color: var(--txt);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .ch-row-top,
+  .ch-member-main {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ch-member-money,
+  .ch-amount {
+    white-space: normal;
+  }
+}

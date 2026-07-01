@@ -1,0 +1,137 @@
+/* 更新时间: 2026-06-26 10:40:00  更新内容: 版本情况卡片改为 6 个版本卡片网格，删除财务小结与柱状图样式。 */
+.vf-panel {
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  padding: 14px 16px;
+  color: var(--txt);
+  box-shadow: var(--glass-shadow);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.vf-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.vf-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--txt);
+}
+.vf-head-sub {
+  font-size: 14px;
+  color: var(--faint);
+}
+
+.vf-versions {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.vf-version-card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--glass-cell);
+}
+
+.vf-version-card:hover {
+  background: var(--glass-cell-hover);
+}
+
+.vf-version-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.vf-version-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--txt);
+}
+
+.vf-version-price {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.vf-version-mom {
+  flex: none;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.vf-version-basic,
+.vf-renewal {
+  display: grid;
+  gap: 8px;
+}
+
+.vf-version-basic {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.vf-renewal {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.vf-metric {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.vf-metric-label {
+  font-size: 14px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vf-metric-value {
+  min-width: 0;
+  font-size: 15px;
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--txt);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.vf-metric--paid .vf-metric-value { color: var(--up); }
+.vf-metric--good .vf-metric-value { color: var(--good); }
+.vf-metric--warn .vf-metric-value { color: var(--warn); }
+
+@media (max-width: 1180px) {
+  .vf-versions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .vf-versions,
+  .vf-renewal { grid-template-columns: 1fr; }
+}

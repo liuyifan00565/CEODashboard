@@ -1,0 +1,25 @@
+/*
+ 更新时间: 2026-06-24
+ 更新内容: 玻璃球指针容器 —— 全屏透明覆盖层，玻璃球跟随鼠标，页面透过显示；显式禁止 Canvas 拦截页面点击。
+*/
+.glass-cursor-fixed {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none !important;
+}
+.glass-cursor-fixed * {
+  pointer-events: none !important;
+}
+.glass-cursor-fixed canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  pointer-events: none !important;
+}
+
+/* 开启玻璃球时隐藏系统光标 */
+body.glass-cursor-on,
+body.glass-cursor-on * {
+  cursor: none !important;
+}

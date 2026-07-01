@@ -1,0 +1,54 @@
+/*
+ 更新时间: 2026-06-25 11:38:51
+ 更新内容: CircularText 字符改为圆心绝对定位，配合 radiusPx 保持真实环绕半径。
+*/
+.circular-text {
+  margin: 0 auto;
+  border-radius: 50%;
+  width: 200px;
+  position: relative;
+  height: 200px;
+  font-weight: 900;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+  transform-origin: 50% 50%;
+  -webkit-transform-origin: 50% 50%;
+  animation: circular-text-spin var(--ct-spin-duration, 20s) linear infinite;
+  transition: scale 0.24s ease;
+}
+
+.circular-text span {
+  position: absolute;
+  display: inline-block;
+  left: 50%;
+  top: 50%;
+  width: max-content;
+  height: 1em;
+  line-height: 1;
+  font-size: 24px;
+  transform-origin: center;
+  -webkit-transform-origin: center;
+  transition: all 0.5s cubic-bezier(0, 0, 0, 1);
+}
+
+.circular-text--speedUp:hover {
+  animation-duration: calc(var(--ct-spin-duration, 20s) / 4);
+}
+
+.circular-text--slowDown:hover {
+  animation-duration: calc(var(--ct-spin-duration, 20s) * 2);
+}
+
+.circular-text--pause:hover {
+  animation-play-state: paused;
+}
+
+.circular-text--goBonkers:hover {
+  animation-duration: calc(var(--ct-spin-duration, 20s) / 20);
+  scale: 0.8;
+}
+
+@keyframes circular-text-spin {
+  to { transform: rotate(360deg); }
+}
