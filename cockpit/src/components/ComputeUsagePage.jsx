@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 16:58:56 CST
- 更新内容: 将算力趋势荧光动效限制到底部拖动条本身，保留顶部 KPI BorderGlow，并让算力圆环图外拉标签百分比换行显示。
+ 更新时间: 2026-07-01 17:05:37 CST
+ 更新内容: 将算力趋势完成率和静态拖动条统一为粉紫玻璃质感，并让版本算力圆环图使用 ECharts 默认自然外拉折线。
 */
 import { useMemo, useState } from 'react';
 
@@ -38,6 +38,24 @@ const CUSTOMER_SORT_OPTIONS = [
 ];
 const CUSTOMER_PAGE_SIZE_OPTIONS = [10, 20, 50];
 const DEFAULT_CUSTOMER_PAGE_SIZE = 20;
+const COMPUTE_RING_COLORS = [
+  '#e6fbff',
+  '#9eeeff',
+  '#6ea8ff',
+  '#b8ffd9',
+  'rgba(230, 251, 255, .42)',
+  '#ccf7ff',
+  '#89dfff',
+  '#d7ffe9',
+];
+const COMPUTE_VERSION_RIGHT_LABEL_SLOTS = {
+  '试用版': -82,
+  '企业版': -42,
+  '旗舰版': -2,
+  '免费版': 38,
+  '卓越版': 86,
+};
+const COMPUTE_STACKED_PIE_LABELS = new Set(['卓越版']);
 
 function formatInt(value) {
   return Number(value).toLocaleString('zh-CN');
@@ -158,12 +176,54 @@ function tooltipHeader(label) {
   return `<div style="color:rgba(239,251,255,.72);font-size:12px;font-weight:750;margin-bottom:8px">${label}</div>`;
 }
 
+function tooltipGlowColor(color) {
+  return String(color).startsWith('#') ? `${color}66` : 'rgba(230,251,255,.36)';
+}
+
 function tooltipRow({ color, label, value }) {
   return `<div style="display:flex;align-items:center;gap:8px;line-height:1.7;min-width:190px">
-    <span style="width:8px;height:8px;border-radius:2px;background:${color};box-shadow:0 0 10px ${color}66"></span>
+    <span style="width:8px;height:8px;border-radius:2px;background:${color};box-shadow:0 0 10px ${tooltipGlowColor(color)}"></span>
     <span style="color:rgba(239,251,255,.68);font-size:12px">${label}</span>
     <strong style="color:#fff;margin-left:auto;font-size:14px;font-variant-numeric:tabular-nums">${value}</strong>
   </div>`;
+}
+
+function applyComputeRingPalette(data) {
+  const rankMap = new Map(
+    [...data]
+      .sort((a, b) => b.value - a.value)
+      .map((item, index) => [item.name, index])
+  );
+
+  return data.map((item, index) => ({
+    ...item,
+    color: COMPUTE_RING_COLORS[(rankMap.get(item.name) ?? index) % COMPUTE_RING_COLORS.length],
+  }));
+}
+
+function computePieLabelLayout(params) {
+  if (!params.rect || !params.labelRect) return { moveOverlap: 'shiftY' };
+
+  const name = String(params.name ?? params.data?.name ?? '');
+  const yOffset = COMPUTE_VERSION_RIGHT_LABEL_SLOTS[name];
+  const isRightLabel = params.labelRect.x > params.rect.x + params.rect.width / 2;
+
+  if (yOffset == null || !isRightLabel) return { moveOverlap: 'shiftY' };
+
+  return {
+    y: params.rect.y + params.rect.height / 2 + yOffset,
+    align: 'left',
+    verticalAlign: 'middle',
+    hideOverlap: false,
+  };
+}
+
+function formatComputePieLabel(params) {
+  const name = formatPieLabelName(params.name);
+  if (COMPUTE_STACKED_PIE_LABELS.has(String(params.name))) {
+    return `{name|${name}}\n{value|${params.percent}%}`;
+  }
+  return `{name|${name}} {value|${params.percent}%}`;
 }
 
 function buildTrendPoints(trend) {
@@ -195,7 +255,7 @@ function buildTrendOption({ trend, tokens }) {
   const line = tokens.chartGrid;
   const usageColor = tokens.chartBar;
   const targetColor = tokens.chartBarFaint;
-  const completionColor = '#dfff00';
+  const completionColor = '#f472b6';
 
   return {
     backgroundColor: 'transparent',
@@ -204,10 +264,10 @@ function buildTrendOption({ trend, tokens }) {
       top: 0,
       left: 'center',
       selectedMode: false,
-      itemWidth: 12,
-      itemHeight: 8,
+      itemWidth: 16,
+      itemHeight: 11,
       itemGap: 18,
-      textStyle: { color: faint, fontSize: 13 },
+      textStyle: { color: txt, fontSize: 16, fontWeight: 800 },
       data: ['算力用量', '目标用量', '完成率%'],
     },
     grid: { top: 42, left: 10, right: 12, bottom: showSlider ? 44 : 8, containLabel: true },
@@ -233,17 +293,22 @@ function buildTrendOption({ trend, tokens }) {
         maxValueSpan: sliderWindowSpan,
         zoomLock: true,
         realtime: true,
-        borderColor: 'rgba(255,255,255,.12)',
-        backgroundColor: 'rgba(255,255,255,.04)',
-        fillerColor: 'rgba(223,255,0,.16)',
-        handleStyle: { color: 'rgba(239,251,255,.68)', borderColor: 'rgba(255,255,255,.34)' },
+        borderColor: 'rgba(192,132,252,.32)',
+        backgroundColor: 'rgba(255,255,255,.045)',
+        fillerColor: 'rgba(244,114,182,.26)',
+        handleStyle: {
+          color: 'rgba(252,231,243,.88)',
+          borderColor: 'rgba(244,114,182,.8)',
+          shadowBlur: 16,
+          shadowColor: 'rgba(192,132,252,.56)',
+        },
         dataBackground: {
           lineStyle: { color: 'rgba(255,255,255,.16)' },
           areaStyle: { color: 'rgba(255,255,255,.04)' },
         },
         selectedDataBackground: {
-          lineStyle: { color: 'rgba(223,255,0,.46)' },
-          areaStyle: { color: 'rgba(223,255,0,.08)' },
+          lineStyle: { color: 'rgba(244,114,182,.46)' },
+          areaStyle: { color: 'rgba(192,132,252,.1)' },
         },
         showDetail: false,
         brushSelect: false,
@@ -357,7 +422,7 @@ function buildTrendOption({ trend, tokens }) {
   };
 }
 
-function buildPieOption({ data, tokens, unitLabel }) {
+function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false }) {
   const colors = data.map((item) => item.color);
 
   return {
@@ -394,30 +459,34 @@ function buildPieOption({ data, tokens, unitLabel }) {
         label: {
           show: true,
           position: 'outer',
-          alignTo: 'labelLine',
-          edgeDistance: 12,
-          distanceToLabelLine: 0,
-          bleedMargin: 12,
-          minMargin: 12,
           color: tokens.chartText,
-          fontSize: 12,
-          lineHeight: 15,
-          formatter: (params) => `{name|${formatPieLabelName(params.name)}} {value|${params.percent}%}`,
+          fontSize: 14,
+          lineHeight: 18,
+          formatter: formatComputePieLabel,
           rich: {
-            name: { color: tokens.chartText, fontSize: 12, fontWeight: 700, lineHeight: 15 },
-            value: { color: tokens.chartMuted, fontSize: 11, fontWeight: 650, lineHeight: 15 },
+            name: {
+              color: tokens.chartText,
+              fontSize: 14,
+              fontWeight: 820,
+              lineHeight: 18,
+              textShadowColor: 'rgba(0,0,0,.52)',
+              textShadowBlur: 8,
+            },
+            value: {
+              color: tokens.chartText,
+              fontSize: 13,
+              fontWeight: 780,
+              lineHeight: 18,
+              textShadowColor: 'rgba(0,0,0,.52)',
+              textShadowBlur: 8,
+            },
           },
         },
         labelLine: {
           show: true,
-          length: 18,
-          length2: 18,
           lineStyle: { color: tokens.chartAxis, width: 1, opacity: .72 },
         },
-        labelLayout: (params) => ({
-          align: params.labelRect.x < params.rect.x ? 'right' : 'left',
-          moveOverlap: 'shiftY',
-        }),
+        ...(naturalLabelLayout ? {} : { labelLayout: computePieLabelLayout }),
         emphasis: {
           scale: true,
           scaleSize: 3,
@@ -441,8 +510,8 @@ function buildPieOption({ data, tokens, unitLabel }) {
             {
               radius: ['50%', '80%'],
               center: ['54%', '48%'],
-              label: { edgeDistance: 6, distanceToLabelLine: 0, fontSize: 10 },
-              labelLine: { length: 12, length2: 12 },
+              label: { fontSize: 12 },
+              labelLine: { show: true },
             },
           ],
         },
@@ -543,13 +612,21 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
   ];
 
   const trendOption = useMemo(() => buildTrendOption({ trend, tokens }), [trend, tokens]);
+  const versionPieData = useMemo(
+    () => applyComputeRingPalette(versions),
+    [versions]
+  );
+  const distributionPieData = useMemo(
+    () => applyComputeRingPalette(distribution),
+    [distribution]
+  );
   const versionPieOption = useMemo(
-    () => buildPieOption({ data: versions, tokens, unitLabel: '消耗权重' }),
-    [versions, tokens]
+    () => buildPieOption({ data: versionPieData, tokens, unitLabel: '消耗权重', naturalLabelLayout: true }),
+    [versionPieData, tokens]
   );
   const distributionPieOption = useMemo(
-    () => buildPieOption({ data: distribution, tokens, unitLabel: '客户占比权重' }),
-    [distribution, tokens]
+    () => buildPieOption({ data: distributionPieData, tokens, unitLabel: '客户占比权重' }),
+    [distributionPieData, tokens]
   );
   const customerRows = useMemo(
     () => buildCustomerTableRows(customers, overview.totalCustomers),
@@ -645,7 +722,7 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
           active={matchesTerm(SEARCH_KEYWORDS.trend, searchTerm)}
         >
           <div className="cpu-trend-chart">
-            <EChart option={trendOption} style={{ height: '100%' }} />
+            <EChart className="cpu-trend-echart" option={trendOption} style={{ height: '100%' }} />
           </div>
         </Panel>
 

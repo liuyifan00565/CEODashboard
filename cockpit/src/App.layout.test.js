@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 16:45:56 CST
- 更新内容: 回归测试保留算力趋势 15 根拖动窗口，并约束饼图外拉标签按左右位置贴线对齐。
+ 更新时间: 2026-07-01 17:05:37 CST
+ 更新内容: 回归测试约束算力趋势粉紫玻璃质感，并让版本算力圆环图使用 ECharts 默认自然外拉折线。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -59,11 +59,15 @@ test('removes the compute page inner title and ratio header block', () => {
 
 test('matches the compute trend chart to the overview target-bar and completion-line language', () => {
   assert.match(computePageSource, /data:\s*\['算力用量', '目标用量', '完成率%'\]/);
+  assert.match(computePageSource, /itemWidth:\s*16/);
+  assert.match(computePageSource, /itemHeight:\s*11/);
+  assert.match(computePageSource, /textStyle:\s*\{ color: txt, fontSize: 16, fontWeight: 800 \}/);
   assert.match(computePageSource, /name:\s*'目标用量'[\s\S]*?type:\s*'bar'[\s\S]*?color:\s*tokens\.chartBarFaint/);
   assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'bar'[\s\S]*?barGap:\s*'-100%'/);
   assert.match(computePageSource, /barCategoryGap:\s*'42%'/);
   assert.match(computePageSource, /name:\s*'完成率%'[\s\S]*?type:\s*'line'[\s\S]*?yAxisIndex:\s*1/);
-  assert.match(computePageSource, /const completionColor = '#dfff00';/);
+  assert.match(computePageSource, /const completionColor = '#f472b6';/);
+  assert.doesNotMatch(computePageSource, /#dfff00/);
   assert.doesNotMatch(computePageSource, /#ff4d5f/);
   assert.match(computePageSource, /axisLabel:\s*\{ color: faint, fontSize: 12, interval: 0, hideOverlap: false, margin: 12 \}/);
   assert.match(computePageSource, /xAxis:\s*\{ axisLabel:\s*\{ interval: 0, hideOverlap: false, fontSize: 11 \} \}/);
@@ -100,6 +104,17 @@ test('uses a full-width compute trend card with draggable 15-bar window and desc
   assert.match(computePageSource, /maxValueSpan:\s*sliderWindowSpan/);
   assert.match(computePageSource, /zoomLock:\s*true/);
   assert.match(computePageSource, /realtime:\s*true/);
+  assert.match(computePageSource, /borderColor:\s*'rgba\(192,132,252,\.32\)'/);
+  assert.match(computePageSource, /fillerColor:\s*'rgba\(244,114,182,\.26\)'/);
+  assert.match(computePageSource, /shadowColor:\s*'rgba\(192,132,252,\.56\)'/);
+  assert.match(computePageSource, /shadowBlur:\s*16/);
+  assert.match(computePageSource, /className="cpu-trend-echart"/);
+  assert.match(computePageCss, /\.cpu-trend-chart \{[\s\S]*?position:\s*relative;/);
+  assert.match(computePageCss, /\.cpu-trend-echart \{[\s\S]*?height:\s*100% !important;/);
+  assert.doesNotMatch(computePageCss, /\.cpu-trend-chart > div,\s*[\s\S]*?height:\s*100% !important;/);
+  assert.doesNotMatch(computePageSource, /cpu-trend-slider-glow/);
+  assert.doesNotMatch(computePageCss, /cpu-trend-slider-glow/);
+  assert.doesNotMatch(computePageCss, /cpuSliderGlow/);
   assert.match(computePageSource, /type:\s*'slider'[\s\S]*?showDetail:\s*false[\s\S]*?brushSelect:\s*false/);
   assert.match(computePageSource, /grid:\s*\{ top: 42, left: 10, right: 12, bottom: showSlider \? 44 : 8, containLabel: true \}/);
   assert.match(computePageSource, /const trend = getComputeUsageTrend\(\{ dim, dateRange \}\);/);
@@ -131,7 +146,7 @@ test('places compute pie cards side by side without bottom legend explanations',
 test('keeps compute pie labels and tooltip cards readable around donut charts', () => {
   assert.match(computePageSource, /'padding:12px 14px'/);
   assert.match(computePageSource, /position:\s*'outer'/);
-  assert.match(computePageSource, /alignTo:\s*'labelLine'/);
+  assert.doesNotMatch(computePageSource, /alignTo:\s*'labelLine'/);
   assert.match(computePageSource, /radius:\s*\['58%', '92%'\]/);
   assert.match(computePageSource, /center:\s*\['55%', '52%'\]/);
   assert.doesNotMatch(computePageSource, /width:\s*126/);
@@ -139,14 +154,37 @@ test('keeps compute pie labels and tooltip cards readable around donut charts', 
   assert.doesNotMatch(computePageSource, /ellipsis:\s*'…'/);
   assert.match(computePageSource, /function formatPieLabelName/);
   assert.match(computePageSource, /formatPieLabelName\(params\.name\)/);
-  assert.match(computePageSource, /edgeDistance:\s*12/);
-  assert.match(computePageSource, /distanceToLabelLine:\s*0/);
-  assert.match(computePageSource, /bleedMargin:\s*12/);
-  assert.match(computePageSource, /labelLine:\s*\{[\s\S]*?length:\s*18,[\s\S]*?length2:\s*18/);
-  assert.match(computePageSource, /labelLayout:\s*\(params\) => \(\{/);
-  assert.match(computePageSource, /align:\s*params\.labelRect\.x < params\.rect\.x \? 'right' : 'left'/);
-  assert.match(computePageSource, /moveOverlap:\s*'shiftY'/);
+  assert.doesNotMatch(computePageSource, /edgeDistance:\s*12/);
+  assert.doesNotMatch(computePageSource, /distanceToLabelLine:\s*0/);
+  assert.doesNotMatch(computePageSource, /bleedMargin:\s*12/);
+  assert.match(computePageSource, /labelLine:\s*\{[\s\S]*?show:\s*true,[\s\S]*?lineStyle:/);
+  assert.match(computePageSource, /label:\s*\{[\s\S]*?fontSize:\s*14,[\s\S]*?lineHeight:\s*18/);
+  assert.match(computePageSource, /name:\s*\{[\s\S]*?fontSize:\s*14,[\s\S]*?fontWeight:\s*820,[\s\S]*?textShadowBlur:\s*8/);
+  assert.match(computePageSource, /value:\s*\{[\s\S]*?color:\s*tokens\.chartText,[\s\S]*?fontSize:\s*13,[\s\S]*?fontWeight:\s*780/);
+  assert.match(computePageSource, /const COMPUTE_STACKED_PIE_LABELS = new Set\(\['卓越版'\]\);/);
+  assert.match(computePageSource, /function formatComputePieLabel\(params\)/);
+  assert.match(computePageSource, /COMPUTE_STACKED_PIE_LABELS\.has\(String\(params\.name\)\)/);
+  assert.match(computePageSource, /return `\{name\|\$\{name\}\}\\n\{value\|\$\{params\.percent\}%\}`;/);
+  assert.match(computePageSource, /return `\{name\|\$\{name\}\} \{value\|\$\{params\.percent\}%\}`;/);
+  assert.match(computePageSource, /formatter:\s*formatComputePieLabel/);
+  assert.match(computePageSource, /const COMPUTE_VERSION_RIGHT_LABEL_SLOTS = \{[\s\S]*?'试用版': -82,[\s\S]*?'企业版': -42,[\s\S]*?'旗舰版': -2,[\s\S]*?'免费版': 38,[\s\S]*?'卓越版': 86/);
+  assert.match(computePageSource, /function buildPieOption\(\{ data, tokens, unitLabel, naturalLabelLayout = false \}\)/);
+  assert.match(computePageSource, /\.\.\.\(naturalLabelLayout \? \{\} : \{ labelLayout: computePieLabelLayout \}\)/);
+  assert.match(computePageSource, /function computePieLabelLayout\(params\)/);
+  assert.match(computePageSource, /align:\s*'left'/);
+  assert.match(computePageSource, /verticalAlign:\s*'middle'/);
+  assert.match(computePageSource, /hideOverlap:\s*false/);
   assert.doesNotMatch(computePageSource, /formatter:\s*\(params\) => `\{name\|\$\{params\.name\}\}\\n/);
+});
+
+test('uses the overview half-ring palette for compute donut charts', () => {
+  assert.match(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#e6fbff'[\s\S]*?'#9eeeff'[\s\S]*?'#6ea8ff'[\s\S]*?'#b8ffd9'[\s\S]*?'rgba\(230, 251, 255, \.42\)'/);
+  assert.match(computePageSource, /function applyComputeRingPalette\(data\)/);
+  assert.match(computePageSource, /sort\(\(a, b\) => b\.value - a\.value\)/);
+  assert.match(computePageSource, /const versionPieData = useMemo\(\s*\(\) => applyComputeRingPalette\(versions\),/);
+  assert.match(computePageSource, /const distributionPieData = useMemo\(\s*\(\) => applyComputeRingPalette\(distribution\),/);
+  assert.match(computePageSource, /buildPieOption\(\{ data: versionPieData, tokens, unitLabel: '消耗权重', naturalLabelLayout: true \}\)/);
+  assert.match(computePageSource, /buildPieOption\(\{ data: distributionPieData, tokens, unitLabel: '客户占比权重' \}\)/);
 });
 
 test('adds dropdown filters and pagination to compute customer ranking', () => {

@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 16:53:06 CST  更新内容: 将算力趋势荧光动效收窄到底部拖动条本身，并将顶部 KPI 边框改为 AI 经营分析同款 BorderGlow 柔光效果。 */
+/* 更新时间: 2026-07-01 17:03:19 CST  更新内容: 移除算力趋势底部拖动条动态脉冲，仅保留静态粉紫玻璃质感。 */
 @property --cursor-angle {
   syntax: "<angle>";
   inherits: false;
@@ -214,11 +214,15 @@
 }
 
 .cpu-trend-chart {
+  position: relative;
   flex: 1;
   min-height: 420px;
 }
 
-.cpu-trend-chart > div,
+.cpu-trend-echart {
+  height: 100% !important;
+}
+
 .cpu-pie-wrap > div {
   height: 100% !important;
 }
@@ -536,8 +540,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cpu-kpi-glow,
-  .cpu-trend-slider-glow {
+  .cpu-kpi-glow {
     animation: none;
   }
 }
