@@ -1,12 +1,12 @@
 /*
- 更新时间: 2026-07-01 12:30:19 CST
- 更新内容: 约束普通悬浮文字不再显示默认读字气泡话术。
+ 更新时间: 2026-07-01 14:11:25 CST
+ 更新内容: 删除悬浮气泡本地即时话术测试，约束截图中的目标信号句不再出现。
 */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
-  buildInstantHoverCue,
   buildHoverCueCacheKey,
   normalizeHoverCueText,
   shouldRequestHoverCue,
@@ -42,20 +42,10 @@ test('builds a stable cache key per page context and hovered text', () => {
   assert.equal(key, 'overview|month|all|目标完成率 83.8%');
 });
 
-test('builds an instant local cue for matched business text before Qwen returns', () => {
-  assert.equal(
-    buildInstantHoverCue('ROI 5.06 目标完成率 83.8%'),
-    '先看 ROI 与目标完成率，判断这处投入是否值得加码。'
-  );
-  assert.equal(
-    buildInstantHoverCue('续费率 70%'),
-    '这处续费信号建议先看流失风险和可挽回金额。'
-  );
-});
+test('does not ship local instant hover bubble copy', () => {
+  const source = readFileSync(new URL('./hoverCue.js', import.meta.url), 'utf8');
 
-test('does not show the generic text-reading placeholder in hover bubbles', () => {
-  const cue = buildInstantHoverCue('随机说明文字');
-
-  assert.equal(cue, '');
-  assert.doesNotMatch(cue, /我先看这处文字|正在结合当前经营数据判断/);
+  assert.doesNotMatch(source, /buildInstantHoverCue/);
+  assert.doesNotMatch(source, /这处目标信号要先看缺口，再找最能补量的渠道。/);
+  assert.doesNotMatch(source, /我先看这处文字|正在结合当前经营数据判断/);
 });

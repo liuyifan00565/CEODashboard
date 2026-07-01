@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 12:26:32 CST
- 更新内容: 约束鼠标悬浮文字气泡绕过自动提示冷却，保证用户主动悬浮立即响应。
+ 更新时间: 2026-07-01 14:11:25 CST
+ 更新内容: 约束福小客气泡仅在鼠标停留可读文字后出现，移除闲置自动气泡并放慢悬浮触发节奏。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -8,7 +8,6 @@ import assert from 'node:assert/strict';
 
 const componentSource = readFileSync(new URL('./AIAnalysisWidget.jsx', import.meta.url), 'utf8');
 const componentCss = readFileSync(new URL('./AIAnalysisWidget.css', import.meta.url), 'utf8');
-const companionSource = readFileSync(new URL('../lib/mascotCompanion.js', import.meta.url), 'utf8');
 const hoverCueSource = readFileSync(new URL('../lib/hoverCue.js', import.meta.url), 'utf8');
 const indexCss = readFileSync(new URL('../index.css', import.meta.url), 'utf8');
 const mascotTransparentUrl = new URL('../../public/ai-mascot-transparent.png', import.meta.url);
@@ -22,7 +21,7 @@ function themeBlock(theme) {
 
 test('uses the 3D mascot stage for the AI launcher', () => {
   assert.match(componentSource, /import Mascot3DStage from '\.\/Mascot3DStage';/);
-  assert.match(componentSource, /import \{\s*MASCOT_ACTIONS,\s*getIdleCompanionCue,\s*getSpeechAction,\s*\} from '\.\.\/lib\/mascotCompanion';/s);
+  assert.match(componentSource, /import \{\s*MASCOT_ACTIONS,\s*getSpeechAction,\s*\} from '\.\.\/lib\/mascotCompanion';/s);
   assert.match(componentSource, /export default function AIAnalysisWidget\(\{ activeMenu, dim, channelKey = 'all', companionCue \}\)/);
   assert.match(componentSource, /const \[mascotAction,\s*setMascotAction\] = useState\(MASCOT_ACTIONS\.idle\);/);
   assert.match(componentSource, /const \[mascotPointer,\s*setMascotPointer\] = useState\(\{ x: 0, y: 0, active: false \}\);/);
@@ -49,31 +48,29 @@ test('tracks pointer position for Codex-like desktop pet movement', () => {
   assert.match(componentSource, /setMascotPointer\(\{ x: 0, y: 0, active: false \}\);/);
 });
 
-test('shows random Fu Xiaoke bubble prompts while the dialog is closed', () => {
-  assert.match(componentSource, /const IDLE_BUBBLE_INTERVAL = 28000;/);
+test('keeps Fu Xiaoke quiet until the pointer rests on readable text', () => {
+  assert.doesNotMatch(componentSource, /IDLE_BUBBLE_INTERVAL/);
   assert.match(componentSource, /const \[bubbleCue,\s*setBubbleCue\] = useState\(null\);/);
   assert.match(componentSource, /const \[bubbleVisible,\s*setBubbleVisible\] = useState\(false\);/);
-  assert.match(componentSource, /const idlePromptIndexRef = useRef\(0\);/);
-  assert.match(componentSource, /window\.setInterval\(\(\) => \{/);
-  assert.match(componentSource, /idlePromptIndexRef\.current \+= 1;/);
-  assert.match(componentSource, /showCompanionCue\(getIdleCompanionCue\(idlePromptIndexRef\.current\), \{ openDialog: false, respectCooldown: true \}\);/);
-  assert.match(componentSource, /\}, IDLE_BUBBLE_INTERVAL\);/);
+  assert.doesNotMatch(componentSource, /idlePromptIndexRef/);
+  assert.doesNotMatch(componentSource, /getIdleCompanionCue/);
   assert.match(componentSource, /className=\{`ai-bubble\$\{bubbleVisible \? ' ai-bubble--visible' : ''\}`\}/);
   assert.doesNotMatch(componentSource, /ai-bubble-name/);
-  assert.match(companionSource, /您好，我是福小客，有什么可以帮助您的吗？/);
 });
 
-test('throttles passive idle bubbles without delaying user text hover cues', () => {
-  assert.match(componentSource, /const PASSIVE_BUBBLE_COOLDOWN = 9000;/);
+test('delays and throttles readable-text hover bubbles', () => {
+  assert.match(componentSource, /const HOVER_CUE_DELAY = 900;/);
+  assert.match(componentSource, /const HOVER_BUBBLE_COOLDOWN = 12000;/);
   assert.match(componentSource, /const lastBubbleShownAtRef = useRef\(0\);/);
   assert.match(componentSource, /function showCompanionCue\(cue, \{ openDialog = false, duration = 5600, respectCooldown = false \} = \{\}\)/);
   assert.match(componentSource, /const now = Date\.now\(\);/);
-  assert.match(componentSource, /if \(respectCooldown && now - lastBubbleShownAtRef\.current < PASSIVE_BUBBLE_COOLDOWN\) \{\s*return false;\s*\}/s);
+  assert.match(componentSource, /if \(respectCooldown && now - lastBubbleShownAtRef\.current < HOVER_BUBBLE_COOLDOWN\) \{\s*return false;\s*\}/s);
   assert.match(componentSource, /lastBubbleShownAtRef\.current = now;/);
   assert.match(componentSource, /return true;/);
-  assert.match(componentSource, /showCompanionCue\(getIdleCompanionCue\(idlePromptIndexRef\.current\), \{ openDialog: false, respectCooldown: true \}\);/);
-  assert.match(componentSource, /showCompanionCue\(\{\s*text: buildInstantHoverCue\(normalizedText\),\s*action: MASCOT_ACTIONS\.think,\s*\}, \{ openDialog: false, duration: HOVER_INSTANT_CUE_DURATION \}\);/s);
-  assert.doesNotMatch(componentSource, /buildInstantHoverCue\(normalizedText\),\s*action: MASCOT_ACTIONS\.think,\s*\}, \{ openDialog: false, duration: HOVER_INSTANT_CUE_DURATION, respectCooldown: true \}/s);
+  assert.doesNotMatch(componentSource, /HOVER_INSTANT_CUE_DURATION/);
+  assert.doesNotMatch(componentSource, /buildInstantHoverCue\(normalizedText\)/);
+  assert.match(componentSource, /showCompanionCue\(\{ text: cue, action: MASCOT_ACTIONS\.talk \}, \{ openDialog: false, duration: HOVER_CUE_DURATION, respectCooldown: true \}\);/);
+  assert.match(componentSource, /showCompanionCue\(\{ text: fallbackCue, action: MASCOT_ACTIONS\.think \}, \{ openDialog: false, duration: 3200, respectCooldown: true \}\);/);
 });
 
 test('responds to KPI card context with matching speech and motion', () => {
@@ -83,22 +80,21 @@ test('responds to KPI card context with matching speech and motion', () => {
 });
 
 test('requests Qwen hover bubble cues from readable page text', () => {
-  assert.match(componentSource, /buildInstantHoverCue/);
+  assert.doesNotMatch(componentSource, /buildInstantHoverCue/);
   assert.match(componentSource, /normalizeHoverCueText/);
   assert.match(componentSource, /shouldRequestHoverCue/);
   assert.match(componentSource, /buildHoverCueCacheKey/);
   assert.match(componentSource, /getHoverCueTextFromElement/);
-  assert.match(componentSource, /const HOVER_CUE_DELAY = 120;/);
+  assert.match(componentSource, /const HOVER_CUE_DELAY = 900;/);
   assert.match(componentSource, /const hoverCueTimerRef = useRef\(null\);/);
   assert.match(componentSource, /const hoverCueCacheRef = useRef\(new Map\(\)\);/);
   assert.match(componentSource, /const hoverCueActiveKeyRef = useRef\(''\);/);
   assert.match(componentSource, /document\.addEventListener\('pointerover', handleTextPointerOver\);/);
-  assert.match(componentSource, /showCompanionCue\(\{\s*text: buildInstantHoverCue\(normalizedText\),\s*action: MASCOT_ACTIONS\.think,\s*\}/s);
   assert.match(componentSource, /hoverCueActiveKeyRef\.current !== cacheKey/);
   assert.match(componentSource, /fetch\('\/api\/ai\/hover-cue'/);
-  assert.match(componentSource, /showCompanionCue\(\{ text: cue, action: MASCOT_ACTIONS\.talk \}/);
-  assert.match(componentSource, /showCompanionCue\(\{ text: fallbackCue, action: MASCOT_ACTIONS\.think \}/);
-  assert.match(hoverCueSource, /export function buildInstantHoverCue/);
+  assert.match(componentSource, /showCompanionCue\(\{ text: cue, action: MASCOT_ACTIONS\.talk \}, \{ openDialog: false, duration: HOVER_CUE_DURATION, respectCooldown: true \}\);/);
+  assert.match(componentSource, /showCompanionCue\(\{ text: fallbackCue, action: MASCOT_ACTIONS\.think \}, \{ openDialog: false, duration: 3200, respectCooldown: true \}\);/);
+  assert.doesNotMatch(hoverCueSource, /export function buildInstantHoverCue/);
   assert.match(hoverCueSource, /export function getHoverCueTextFromElement/);
   assert.match(hoverCueSource, /\.closest\('\.ai-widget'\)/);
 });
