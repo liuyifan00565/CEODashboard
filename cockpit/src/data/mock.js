@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-06-29 11:34:00
- 更新内容: 本月销售完成一级维度恢复为线上、线下华南、线下华东、代理，线下不再合并。
+ 更新时间: 2026-07-01 14:22:55 CST
+ 更新内容: 左侧导航新增“算力用量分析”入口，暂沿用全局经营数据上下文。
 */
 import { calculateRenewalOverview, getRenewalChannelBreakdown } from '../lib/renewal.js';
 
@@ -440,6 +440,7 @@ export const MENU = [
   { key: 'south', name: '华南线下销售分析', channelKey: 'south' },
   { key: 'east', name: '华东线下销售分析', channelKey: 'east' },
   { key: 'agent', name: '代理销售分析', channelKey: 'agent' },
+  { key: 'compute', name: '算力用量分析', channelKey: 'all' },
 ];
 
 export function getDashboardChannelKey(menuKey = 'overview') {

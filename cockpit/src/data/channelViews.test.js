@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-06-29 11:34:00
- 更新内容: 修正本月销售完成一级维度为线上、线下华南、线下华东、代理，并保持人员明细弹窗数据测试。
+ 更新时间: 2026-07-01 14:22:55 CST
+ 更新内容: 回归测试新增左侧导航“算力用量分析”入口，并确认其沿用全局数据上下文。
 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -27,14 +27,14 @@ function byKey(rows, key) {
   return rows.find((row) => row.key === key);
 }
 
-test('defines CEO overview plus four channel analysis menu entries', () => {
+test('defines CEO overview, channel analysis, and compute usage menu entries', () => {
   assert.deepEqual(
     MENU.map((item) => item.name),
-    ['经营总览', '线上销售分析', '华南线下销售分析', '华东线下销售分析', '代理销售分析']
+    ['经营总览', '线上销售分析', '华南线下销售分析', '华东线下销售分析', '代理销售分析', '算力用量分析']
   );
   assert.deepEqual(
     MENU.map((item) => getDashboardChannelKey(item.key)),
-    ['all', 'online', 'south', 'east', 'agent']
+    ['all', 'online', 'south', 'east', 'agent', 'all']
   );
 });
 

@@ -1,8 +1,8 @@
-/* 更新时间: 2026-06-29 10:45:53  更新内容: 左侧菜单文案跟随销售分析命名，避免销售来源歧义。 */
+/* 更新时间: 2026-07-01 14:22:55 CST  更新内容: 左侧导航支持新增“算力用量分析”入口，并补充第六个导航图标。 */
 import GlassSurface from './GlassSurface/GlassSurface'
 import './Sidebar.css'
 
-const ICONS = ['⬡', '◈', '▤', '⊞', '◎']
+const ICONS = ['⬡', '◈', '▤', '⊞', '◎', '◌']
 
 export default function Sidebar({ items = [], active, onChange }) {
   return (
