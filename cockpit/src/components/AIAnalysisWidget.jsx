@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 12:02:44 CST
- 更新内容: 移除福小客头顶提示气泡与悬浮文案请求，仅保留小人动作和 AI 经营分析窗口。
+ 更新时间: 2026-07-01 11:51:09 CST
+ 更新内容: 恢复福小客头顶提示气泡与悬浮文案请求，回到上一版提示效果。
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
@@ -20,8 +20,16 @@ import {
 } from '../data/mock';
 import {
   MASCOT_ACTIONS,
+  getIdleCompanionCue,
   getSpeechAction,
 } from '../lib/mascotCompanion';
+import {
+  buildInstantHoverCue,
+  buildHoverCueCacheKey,
+  getHoverCueTextFromElement,
+  normalizeHoverCueText,
+  shouldRequestHoverCue,
+} from '../lib/hoverCue';
 import './AIAnalysisWidget.css';
 
 const INITIAL_MESSAGE = {
@@ -35,6 +43,11 @@ const QUICK_PROMPTS = [
   '哪个销售维度拖后腿，应该怎么处理？',
   '从 ROI 和目标完成率看，下个月预算怎么调？',
 ];
+const HOVER_CUE_DELAY = 120;
+const HOVER_CUE_DURATION = 4200;
+const HOVER_INSTANT_CUE_DURATION = 2800;
+const fallbackCue = '这处信息建议结合目标完成率、ROI 和续费一起看。';
+
 function makeId(prefix) {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return `${prefix}-${crypto.randomUUID()}`;
@@ -82,6 +95,7 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   const [open, setOpen] = useState(false);
   const [mascotAction, setMascotAction] = useState(MASCOT_ACTIONS.idle);
   const [mascotPointer, setMascotPointer] = useState({ x: 0, y: 0, active: false });
+  const [bubbleCue, setBubbleCue] = useState(() => getIdleCompanionCue(0));
   const [renderCard, setRenderCard] = useState(false);
   const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [draft, setDraft] = useState('');
@@ -92,7 +106,13 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   const listRef = useRef(null);
   const abortRef = useRef(null);
   const mascotTimerRef = useRef(null);
-  const companionCueTimerRef = useRef(null);
+  const bubbleTimerRef = useRef(null);
+  const hoverCueTimerRef = useRef(null);
+  const hoverCueAbortRef = useRef(null);
+  const hoverCueCacheRef = useRef(new Map());
+  const hoverCueActiveKeyRef = useRef('');
+  const hoverCueRequestIdRef = useRef(0);
+  const idlePromptIndexRef = useRef(0);
 
   const snapshot = useMemo(() => buildDashboardSnapshot(activeMenu, dim, channelKey), [activeMenu, dim, channelKey]);
 
@@ -207,9 +227,113 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
 
   useEffect(() => () => {
     abortRef.current?.abort();
+    hoverCueAbortRef.current?.abort();
     clearTimeout(mascotTimerRef.current);
-    clearTimeout(companionCueTimerRef.current);
+    clearTimeout(bubbleTimerRef.current);
+    clearTimeout(hoverCueTimerRef.current);
   }, []);
+
+  useEffect(() => {
+    async function requestHoverCue(text, cacheKey) {
+      if (hoverCueActiveKeyRef.current !== cacheKey) return;
+
+      const cachedCue = hoverCueCacheRef.current.get(cacheKey);
+      if (cachedCue) {
+        showCompanionCue({ text: cachedCue, action: MASCOT_ACTIONS.talk }, { openDialog: false, duration: HOVER_CUE_DURATION });
+        return;
+      }
+
+      hoverCueAbortRef.current?.abort();
+      const controller = new AbortController();
+      hoverCueAbortRef.current = controller;
+      const requestId = hoverCueRequestIdRef.current + 1;
+      hoverCueRequestIdRef.current = requestId;
+      setMascotAction(MASCOT_ACTIONS.think);
+
+      try {
+        const response = await fetch('/api/ai/hover-cue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, snapshot }),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`AI 悬浮气泡接口返回 ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const cue = normalizeHoverCueText(payload.cue);
+        if (!cue || hoverCueRequestIdRef.current !== requestId || hoverCueActiveKeyRef.current !== cacheKey) return;
+
+        hoverCueCacheRef.current.set(cacheKey, cue);
+        showCompanionCue({ text: cue, action: MASCOT_ACTIONS.talk }, { openDialog: false, duration: HOVER_CUE_DURATION });
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+        if (hoverCueActiveKeyRef.current !== cacheKey) return;
+        showCompanionCue({ text: fallbackCue, action: MASCOT_ACTIONS.think }, { openDialog: false, duration: 3200 });
+      } finally {
+        if (hoverCueAbortRef.current === controller) {
+          hoverCueAbortRef.current = null;
+        }
+      }
+    }
+
+    function handleTextPointerOver(event) {
+      clearTimeout(hoverCueTimerRef.current);
+      const text = getHoverCueTextFromElement(event.target);
+      if (!shouldRequestHoverCue(text)) {
+        hoverCueActiveKeyRef.current = '';
+        hoverCueAbortRef.current?.abort();
+        hoverCueAbortRef.current = null;
+        return;
+      }
+
+      const normalizedText = normalizeHoverCueText(text);
+      const cacheKey = buildHoverCueCacheKey({
+        activeMenu,
+        dim,
+        channelKey,
+        text: normalizedText,
+      });
+      if (hoverCueActiveKeyRef.current === cacheKey) return;
+
+      hoverCueActiveKeyRef.current = cacheKey;
+      hoverCueAbortRef.current?.abort();
+      hoverCueAbortRef.current = null;
+
+      const cachedCue = hoverCueCacheRef.current.get(cacheKey);
+      if (cachedCue) {
+        showCompanionCue({ text: cachedCue, action: MASCOT_ACTIONS.talk }, { openDialog: false, duration: HOVER_CUE_DURATION });
+        return;
+      }
+
+      showCompanionCue({
+        text: buildInstantHoverCue(normalizedText),
+        action: MASCOT_ACTIONS.think,
+      }, { openDialog: false, duration: HOVER_INSTANT_CUE_DURATION });
+
+      hoverCueTimerRef.current = window.setTimeout(() => {
+        requestHoverCue(normalizedText, cacheKey);
+      }, HOVER_CUE_DELAY);
+    }
+
+    document.addEventListener('pointerover', handleTextPointerOver);
+    return () => {
+      document.removeEventListener('pointerover', handleTextPointerOver);
+      clearTimeout(hoverCueTimerRef.current);
+    };
+  }, [activeMenu, dim, channelKey, snapshot]);
+
+  useEffect(() => {
+    if (open) return undefined;
+    const idleTimer = window.setInterval(() => {
+      idlePromptIndexRef.current += 1;
+      showCompanionCue(getIdleCompanionCue(idlePromptIndexRef.current), { openDialog: false });
+    }, 12000);
+
+    return () => window.clearInterval(idleTimer);
+  }, [open]);
 
   useEffect(() => {
     if (!companionCue) return;
@@ -238,14 +362,16 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
 
   function showCompanionCue(cue, { openDialog = false, duration = 5600 } = {}) {
     if (!cue?.text) return;
-    clearTimeout(companionCueTimerRef.current);
+    clearTimeout(bubbleTimerRef.current);
+    setBubbleCue(cue);
     setMascotAction(cue.action ?? getSpeechAction(cue.text));
 
     if (openDialog) {
       openAiDialog();
     }
 
-    companionCueTimerRef.current = setTimeout(() => {
+    bubbleTimerRef.current = setTimeout(() => {
+      setBubbleCue(null);
       setMascotAction(getRestingMascotAction(openDialog || open));
     }, duration);
   }
@@ -355,7 +481,14 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   }
 
   return (
-    <div className={`ai-widget${open ? ' ai-widget--open' : ''}`} ref={widgetRef}>
+    <div className={`ai-widget${open ? ' ai-widget--open' : ''}${bubbleCue ? ' ai-widget--speaking' : ''}`} ref={widgetRef}>
+      {bubbleCue && (
+        <div className="ai-bubble" role="status" aria-live="polite">
+          <span className="ai-bubble-name">福小客</span>
+          <span>{bubbleCue.text}</span>
+        </div>
+      )}
+
       <button
         className={`ai-orb ai-orb--${mascotAction}`}
         type="button"
