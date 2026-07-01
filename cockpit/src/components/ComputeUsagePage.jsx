@@ -1,9 +1,10 @@
 /*
- 更新时间: 2026-07-01 16:45:56 CST
- 更新内容: 保留算力趋势 15 根拖动窗口，并按标签左右位置设置文字对齐，让左侧饼图外拉折线紧贴文字。
+ 更新时间: 2026-07-01 16:58:56 CST
+ 更新内容: 将算力趋势荧光动效限制到底部拖动条本身，保留顶部 KPI BorderGlow，并让算力圆环图外拉标签百分比换行显示。
 */
 import { useMemo, useState } from 'react';
 
+import BorderGlow from './BorderGlow/BorderGlow';
 import EChart from './EChart';
 import {
   getComputeCustomerRows,
@@ -452,12 +453,27 @@ function buildPieOption({ data, tokens, unitLabel }) {
 
 function KpiCard({ label, value, sub, meta, tone, active }) {
   return (
-    <article className={`cpu-kpi cpu-kpi--${tone}${active ? ' cpu-kpi--match' : ''}`} data-anim>
-      <span className="cpu-kpi__label">{label}</span>
-      <strong className="cpu-kpi__value">{value}</strong>
-      <span className="cpu-kpi__sub">{sub}</span>
-      <span className="cpu-kpi__meta">{meta}</span>
-    </article>
+    <div className="cpu-kpi-slot" data-anim>
+      <BorderGlow
+        className={`cpu-kpi-glow cpu-kpi-glow--${tone} sweep-active${active ? ' cpu-kpi-glow--match' : ''}`}
+        edgeSensitivity={30}
+        glowColor="40 80 80"
+        backgroundColor="var(--ai-card-bg)"
+        borderRadius={16}
+        glowRadius={34}
+        glowIntensity={2.2}
+        coneSpread={25}
+        colors={['#c084fc', '#f472b6', '#38bdf8']}
+        fillOpacity={0.42}
+      >
+        <article className={`cpu-kpi cpu-kpi--${tone}${active ? ' cpu-kpi--match' : ''}`}>
+          <span className="cpu-kpi__label">{label}</span>
+          <strong className="cpu-kpi__value">{value}</strong>
+          <span className="cpu-kpi__sub">{sub}</span>
+          <span className="cpu-kpi__meta">{meta}</span>
+        </article>
+      </BorderGlow>
+    </div>
   );
 }
 

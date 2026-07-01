@@ -32,6 +32,19 @@ test('renders compute usage analysis as an independent dashboard page', () => {
   assert.match(appSource, /: \(\s*<>\s*<div className="dash-kpis">/);
 });
 
+test('uses the AI analysis BorderGlow treatment for all top compute KPI cards', () => {
+  assert.match(computePageSource, /import BorderGlow from '\.\/BorderGlow\/BorderGlow';/);
+  assert.match(computePageSource, /<BorderGlow[\s\S]*?className=\{`cpu-kpi-glow cpu-kpi-glow--\$\{tone\}/);
+  assert.match(computePageSource, /glowColor="40 80 80"/);
+  assert.match(computePageSource, /colors=\{\['#c084fc', '#f472b6', '#38bdf8'\]\}/);
+  assert.match(computePageCss, /\.cpu-kpi-glow\.border-glow-card \{/);
+  assert.match(computePageCss, /animation:\s*cpuAiBorderSweep/);
+  assert.doesNotMatch(computePageSource, /cpu-kpi--pink-flow/);
+  assert.doesNotMatch(computePageCss, /cpu-kpi--pink-flow/);
+  assert.doesNotMatch(computePageCss, /cpuPinkFlow/);
+  assert.doesNotMatch(computePageCss, /conic-gradient\(\s*from var\(--cpu-flow-angle\)/);
+});
+
 test('removes the compute page inner title and ratio header block', () => {
   assert.doesNotMatch(computePageSource, /cpu-eyebrow/);
   assert.doesNotMatch(computePageSource, /cpu-head/);
