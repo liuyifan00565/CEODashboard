@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:45:50 CST
- 更新内容: 版本情况回归测试约束二级弹窗深色遮罩、背景虚化和四个小卡片独立入口。
+ 更新时间: 2026-07-01 15:50:21 CST
+ 更新内容: 版本情况回归测试约束二级弹窗根层渲染、视口全屏覆盖和整屏背景虚化。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -22,6 +22,7 @@ test('keeps VersionFinancePanel free of the removed finance health summary', () 
 
 test('renders the large overview layout with half ring and amount/count switch', () => {
   assert.match(source, /import \{ useEffect, useMemo, useRef, useState \} from 'react';/);
+  assert.match(source, /import \{ createPortal \} from 'react-dom';/);
   assert.match(source, /import EChart from '\.\/EChart';/);
   assert.match(source, /const VERSION_DISPLAY_KEYS = \['qihang', 'zhuoyue', 'zhizun', 'custom'\];/);
   assert.match(source, /const VERSION_MODES = \[/);
@@ -69,7 +70,10 @@ test('adds a KPI-style secondary expand entry and version detail modal', () => {
   assert.match(source, /label: '金额'/);
   assert.match(source, /label: '套数'/);
   assert.match(source, /function VersionDetailModal/);
+  assert.match(source, /return createPortal\(modal, document\.body\);/);
   assert.match(source, /function buildVersionDetailSeries\(\{ salesKeys, mode, dim, versionKey \}\)/);
+  assert.match(source, /className="km-overlay vf-detail-overlay"/);
+  assert.match(source, /className="km-mask vf-detail-mask"/);
   assert.match(source, /className="km-card vf-detail-card"/);
   assert.match(source, /点击展开二级 ▸/);
   assert.match(source, /className="vf-version-footer"/);
@@ -81,13 +85,18 @@ test('adds a KPI-style secondary expand entry and version detail modal', () => {
   assert.match(css, /\.vf-expand-hint/);
   assert.match(css, /\.vf-version-footer/);
   assert.match(css, /\.vf-detail-card/);
+  assert.match(css, /\.vf-detail-card \{[\s\S]*?width: min\(720px, calc\(100vw - 48px\)\);/);
+  assert.match(css, /\.vf-detail-card \{[\s\S]*?max-height: calc\(100vh - 48px\);/);
   assert.match(css, /\.vf-detail-card \{[\s\S]*?rgba\(7, 7, 10, \.78\);/);
   assert.match(css, /\.vf-detail-card \{[\s\S]*?backdrop-filter: blur\(24px\) saturate\(155%\);/);
   assert.match(css, /\.vf-panel \{[\s\S]*?overflow: visible;/);
-  assert.match(css, /\.vf-panel \.km-overlay \{[\s\S]*?position: fixed;/);
-  assert.match(css, /\.vf-panel \.km-overlay \{[\s\S]*?z-index: 1000;/);
-  assert.match(css, /\.vf-panel \.km-mask \{[\s\S]*?background: rgba\(0, 0, 0, \.72\);/);
-  assert.match(css, /\.vf-panel \.km-mask \{[\s\S]*?backdrop-filter: blur\(10px\) saturate\(125%\);/);
+  assert.match(css, /\.vf-detail-overlay \{[\s\S]*?position: fixed;/);
+  assert.match(css, /\.vf-detail-overlay \{[\s\S]*?inset: 0;/);
+  assert.match(css, /\.vf-detail-overlay \{[\s\S]*?width: 100vw;/);
+  assert.match(css, /\.vf-detail-overlay \{[\s\S]*?height: 100vh;/);
+  assert.match(css, /\.vf-detail-overlay \{[\s\S]*?z-index: 1000;/);
+  assert.match(css, /\.vf-detail-mask \{[\s\S]*?background: rgba\(0, 0, 0, \.72\);/);
+  assert.match(css, /\.vf-detail-mask \{[\s\S]*?backdrop-filter: blur\(10px\) saturate\(125%\);/);
 });
 
 test('nudges the enlarged half ring upward and left', () => {

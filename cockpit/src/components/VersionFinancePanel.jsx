@@ -1,5 +1,6 @@
-/* 更新时间: 2026-07-01 15:43:51 CST  更新内容: 版本情况半环图放大并上移靠左，四个版本小卡片分别显示二级展开入口，并按所选版本展示金额/套数柱状图。 */
+/* 更新时间: 2026-07-01 15:50:21 CST  更新内容: 版本情况二级弹窗改为页面根层渲染，确保完整展示并让整屏背景虚化。 */
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import * as echarts from 'echarts';
 import gsap from 'gsap';
 
@@ -337,9 +338,9 @@ function VersionDetailModal({ channelKey, versionKey, onClose }) {
   const selected = series[selIndex] ?? series.at(-1) ?? { label: '', value: 0, prev: 0 };
   const mom = selected.prev ? +(((selected.value - selected.prev) / selected.prev) * 100).toFixed(1) : 0;
 
-  return (
-    <div className="km-overlay" role="dialog" aria-modal="true">
-      <div className="km-mask" ref={maskRef} onClick={handleClose} />
+  const modal = (
+    <div className="km-overlay vf-detail-overlay" role="dialog" aria-modal="true">
+      <div className="km-mask vf-detail-mask" ref={maskRef} onClick={handleClose} />
       <div className="km-card vf-detail-card" ref={cardRef}>
         <div className="km-head">
           <h3 className="km-title">{DIM_TITLE[dim]}{versionName}{modeMeta.label}</h3>
@@ -369,6 +370,8 @@ function VersionDetailModal({ channelKey, versionKey, onClose }) {
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
 
 export default function VersionFinancePanel({ channelKey = 'all' }) {
