@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 17:29:45 CST  更新内容: 交付看板面板改为深黑玻璃底，和首页续费率卡片保持一致的实体背景层级。 */
+/* 更新时间: 2026-07-01 17:51:45 CST  更新内容: 交付看板背景调整为 KPI 卡片同款深黑实体玻璃底。 */
 .dlv-panel {
   position: relative;
   height: 100%;
@@ -9,8 +9,8 @@
   padding: 22px 24px 24px;
   border-radius: 18px;
   background:
-    radial-gradient(circle at 82% 10%, rgba(96,0,255,.16), rgba(96,0,255,0) 42%),
-    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.012)),
+    radial-gradient(circle at 78% 14%, rgba(255,255,255,.035), rgba(255,255,255,0) 38%),
+    linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.012) 46%, rgba(255,255,255,.018)),
     #101012;
   border: 1px solid var(--line-2);
   backdrop-filter: var(--glass-blur);

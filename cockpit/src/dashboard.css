@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 17:40:59 CST
- 更新内容: 首页月度经营趋势和交付看板增加 hover 流光边框，并保留深黑实体玻璃底。
+ 更新时间: 2026-07-01 17:51:45 CST
+ 更新内容: 首页月度经营趋势和交付看板背景调整为 KPI 卡片同款深黑实体玻璃底。
 */
 
 /* ===== 外层 shell：左侧栏 + 右内容列 ===== */
@@ -122,8 +122,8 @@
   display:flex;
   flex-direction:column;
   background:
-    radial-gradient(circle at 82% 10%, rgba(96,0,255,.16), rgba(96,0,255,0) 42%),
-    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.012)),
+    radial-gradient(circle at 78% 14%, rgba(255,255,255,.035), rgba(255,255,255,0) 38%),
+    linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.012) 46%, rgba(255,255,255,.018)),
     #101012;
   border:1px solid var(--line-2);
   backdrop-filter:var(--glass-blur);
