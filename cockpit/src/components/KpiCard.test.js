@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 12:14:15
- 更新内容: 将回款 KPI 半环悬浮提示测试调整为统一透明黑玻璃卡片规则。
+ 更新时间: 2026-07-01 12:19:45
+ 更新内容: 将回款 KPI 半环悬浮提示测试调整为复用原 KPI 二级卡片背景规则。
 */
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 
 const componentSource = readFileSync(new URL('./KpiCard.jsx', import.meta.url), 'utf8');
 const cssSource = readFileSync(new URL('./KpiCard.css', import.meta.url), 'utf8');
+const modalCssSource = readFileSync(new URL('./KpiModal.css', import.meta.url), 'utf8');
 
 test('uses optional display fields for the large KPI number', () => {
   assert.match(componentSource, /const displayValue = card\.displayValue \?\? card\.value;/);
@@ -160,11 +161,13 @@ test('formats recovery pie hover text as name over number instead of inline rows
   assert.doesNotMatch(componentSource, /formatter:\s*\(params\) => `\{name\|\$\{params\.name\}\}\\n\{percent\|\$\{params\.percent\}%\}`/);
 });
 
-test('styles every recovery pie tooltip as a transparent black floating glass card', () => {
-  assert.match(cssSource, /\.kpi-pie-tooltip\s*\{[\s\S]*?position:\s*relative;[\s\S]*?overflow:\s*hidden;[\s\S]*?border:\s*1px solid rgba\(255,\s*255,\s*255,\s*\.18\);[\s\S]*?background:[\s\S]*?rgba\(0,\s*0,\s*0,\s*\.44\)[\s\S]*?rgba\(0,\s*0,\s*0,\s*\.34\)[\s\S]*?backdrop-filter:\s*blur\(14px\) saturate\(1\.18\);/);
+test('styles the recovery pie mini tooltip with the same glass background as the original KPI modal card', () => {
+  assert.match(modalCssSource, /\.km-card\s*\{[\s\S]*?background:\s*transparent;[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?backdrop-filter:\s*var\(--glass-blur\);[\s\S]*?box-shadow:\s*0 24px 80px rgba\(0,\s*0,\s*0,\s*0\.48\), inset 0 1px 0 rgba\(255,\s*255,\s*255,\s*0\.2\);/);
+  assert.match(cssSource, /\.kpi-pie-tooltip\s*\{[\s\S]*?position:\s*relative;[\s\S]*?overflow:\s*hidden;[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?background:\s*transparent;[\s\S]*?backdrop-filter:\s*var\(--glass-blur\);[\s\S]*?box-shadow:\s*0 24px 80px rgba\(0,\s*0,\s*0,\s*0\.48\), inset 0 1px 0 rgba\(255,\s*255,\s*255,\s*0\.2\);/);
   assert.match(cssSource, /\.kpi-pie-tooltip::after\s*\{[\s\S]*?animation:\s*kpiTooltipSweep 2\.8s linear infinite;/);
   assert.match(cssSource, /@keyframes kpiTooltipSweep\s*\{[\s\S]*?from\s*\{[\s\S]*?translateX\(-150%\)[\s\S]*?to\s*\{[\s\S]*?translateX\(260%\)/);
   assert.match(cssSource, /@keyframes kpiTooltipPulse\s*\{[\s\S]*?box-shadow:[\s\S]*?rgba\(0,\s*0,\s*0,\s*\.5\)/);
   assert.doesNotMatch(componentSource, /kpi-pie-tooltip--success/);
   assert.doesNotMatch(cssSource, /kpi-pie-tooltip--success/);
+  assert.doesNotMatch(cssSource, /\.km-card/);
 });

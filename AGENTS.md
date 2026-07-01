@@ -1,7 +1,7 @@
 # AGENTS.md
 
-更新时间: 2026-07-01 12:14:15
-更新内容: 增加半环图悬浮提示卡片统一使用透明黑玻璃背景的 UI 规则
+更新时间: 2026-07-01 12:19:45
+更新内容: 修正半环图悬浮迷你卡片背景规则，限定其沿用原 KPI 二级卡片玻璃样式
 
 This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
@@ -34,4 +34,4 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## UI 规则
 
-- 半环图区域块鼠标悬浮时显示的小卡片，背景必须统一使用透明偏黑的玻璃质感，不按占比切换紫色、荧光绿或其它高饱和底色。
+- 半环图扇区鼠标悬浮时显示的迷你提示卡片，背景必须沿用原 KPI 二级弹窗卡片的玻璃样式；不要按占比切换紫色、荧光绿或其它高饱和底色，也不要因此修改其它二级卡片。
