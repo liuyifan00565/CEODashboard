@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 15:50:21 CST  更新内容: 版本情况二级弹窗改为页面根层渲染，确保完整展示并让整屏背景虚化。 */
+/* 更新时间: 2026-07-01 16:00:36 CST  更新内容: 版本情况四个版本小卡片整卡可点击打开对应二级弹窗。 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import * as echarts from 'echarts';
@@ -434,7 +434,19 @@ export default function VersionFinancePanel({ channelKey = 'all' }) {
         <div className="vf-card-zone">
           <div className="vf-card-grid">
             {versions.map((v) => (
-              <div className="vf-version-card" key={v.key}>
+              <div
+                className="vf-version-card"
+                key={v.key}
+                role="button"
+                tabIndex={0}
+                onClick={() => setDetailVersionKey(v.key)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setDetailVersionKey(v.key);
+                  }
+                }}
+              >
                 <div className="vf-version-top">
                   <div>
                     <h4 className="vf-version-name">{v.name}</h4>
@@ -448,9 +460,9 @@ export default function VersionFinancePanel({ channelKey = 'all' }) {
                     <VersionMetric label="套数" value={v.units} />
                     <VersionMetric label="回款" value={`${v.recovered}万`} />
                   </div>
-                  <button type="button" className="vf-expand-hint" onClick={() => setDetailVersionKey(v.key)}>
+                  <span className="vf-expand-hint">
                     点击展开二级 ▸
-                  </button>
+                  </span>
                 </div>
               </div>
             ))}

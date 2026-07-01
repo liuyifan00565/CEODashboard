@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:50:21 CST
- 更新内容: 版本情况回归测试约束二级弹窗根层渲染、视口全屏覆盖和整屏背景虚化。
+ 更新时间: 2026-07-01 16:00:36 CST
+ 更新内容: 版本情况回归测试约束整张版本小卡片可点击打开对应二级弹窗。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -97,6 +97,17 @@ test('adds a KPI-style secondary expand entry and version detail modal', () => {
   assert.match(css, /\.vf-detail-overlay \{[\s\S]*?z-index: 1000;/);
   assert.match(css, /\.vf-detail-mask \{[\s\S]*?background: rgba\(0, 0, 0, \.72\);/);
   assert.match(css, /\.vf-detail-mask \{[\s\S]*?backdrop-filter: blur\(10px\) saturate\(125%\);/);
+});
+
+test('opens the matching secondary card from any point on a version card', () => {
+  assert.match(source, /className="vf-version-card"[\s\S]*?role="button"[\s\S]*?tabIndex=\{0\}/);
+  assert.match(source, /onClick=\{\(\) => setDetailVersionKey\(v\.key\)\}/);
+  assert.match(source, /onKeyDown=\{\(event\) => \{[\s\S]*?event\.key === 'Enter'[\s\S]*?event\.key === ' '[\s\S]*?setDetailVersionKey\(v\.key\)/);
+  assert.match(source, /<span className="vf-expand-hint">[\s\S]*?点击展开二级 ▸[\s\S]*?<\/span>/);
+  assert.doesNotMatch(source, /<button type="button" className="vf-expand-hint"/);
+  assert.match(css, /\.vf-version-card \{[\s\S]*?cursor: pointer;/);
+  assert.match(css, /\.vf-version-card:hover,[\s\S]*?\.vf-version-card:focus-visible \{/);
+  assert.match(css, /\.vf-expand-hint \{[\s\S]*?pointer-events: none;/);
 });
 
 test('nudges the enlarged half ring upward and left', () => {
