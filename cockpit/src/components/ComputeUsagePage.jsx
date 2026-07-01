@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:35:23 CST
- 更新内容: 移除算力页内标题统计头部，顶部日期选择改由全局工具栏承载。
+ 更新时间: 2026-07-01 15:41:19 CST
+ 更新内容: 饼图卡片改为上下堆叠的左图右说明布局，并优化外拉标签线与悬浮卡片留白。
 */
 import { useMemo } from 'react';
 
@@ -60,7 +60,7 @@ function tooltipExtraCss() {
     'backdrop-filter:blur(22px) saturate(155%)',
     '-webkit-backdrop-filter:blur(22px) saturate(155%)',
     'box-shadow:0 24px 80px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.18)',
-    'padding:0',
+    'padding:12px 14px',
   ].join(';');
 }
 
@@ -282,10 +282,10 @@ function buildPieOption({ data, tokens, unitLabel }) {
     series: [
       {
         type: 'pie',
-        radius: ['44%', '70%'],
-        center: ['46%', '50%'],
+        radius: ['38%', '62%'],
+        center: ['50%', '51%'],
         avoidLabelOverlap: true,
-        minShowLabelAngle: 2,
+        minShowLabelAngle: 1,
         padAngle: 1,
         itemStyle: {
           borderRadius: 8,
@@ -296,9 +296,10 @@ function buildPieOption({ data, tokens, unitLabel }) {
           show: true,
           position: 'outside',
           alignTo: 'edge',
-          edgeDistance: 8,
-          minMargin: 4,
-          width: 112,
+          edgeDistance: 16,
+          bleedMargin: 8,
+          minMargin: 8,
+          width: 118,
           overflow: 'break',
           color: tokens.chartText,
           fontSize: 12,
@@ -311,12 +312,22 @@ function buildPieOption({ data, tokens, unitLabel }) {
         },
         labelLine: {
           show: true,
-          length: 14,
-          length2: 18,
+          length: 18,
+          length2: 26,
+          smooth: true,
           lineStyle: { color: tokens.chartAxis, width: 1 },
         },
-        labelLayout: {
-          hideOverlap: true,
+        labelLayout: (params) => {
+          const rect = params?.rect;
+          const labelRect = params?.labelRect;
+          if (!rect || !labelRect) {
+            return { moveOverlap: 'shiftY' };
+          }
+          const isLeftSide = labelRect.x < rect.x + rect.width / 2;
+          return {
+            x: isLeftSide ? rect.x + 8 : rect.x + rect.width - labelRect.width - 8,
+            moveOverlap: 'shiftY',
+          };
         },
         emphasis: {
           scale: true,
@@ -342,7 +353,7 @@ function buildPieOption({ data, tokens, unitLabel }) {
               radius: ['38%', '62%'],
               center: ['50%', '48%'],
               label: { width: 92, edgeDistance: 4, fontSize: 10 },
-              labelLine: { length: 8, length2: 10 },
+              labelLine: { length: 10, length2: 12 },
             },
           ],
         },
@@ -377,13 +388,16 @@ function Panel({ className = '', title, sub, active, children }) {
 }
 
 function PieSummary({ data }) {
+  const total = data.reduce((sum, item) => sum + Number(item.value || 0), 0);
+
   return (
-    <div className="cpu-pie-summary" aria-label="图例">
-      {data.slice(0, 5).map((item) => (
+    <div className="cpu-pie-summary" aria-label="图例说明">
+      {data.map((item) => (
         <span className="cpu-pie-chip" key={item.name}>
           <i style={{ background: item.color }} />
           <b>{item.name}</b>
           <em>{item.value}</em>
+          <small>{formatPct(total ? (Number(item.value) / total) * 100 : 0)}</small>
         </span>
       ))}
     </div>

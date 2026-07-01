@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 15:35:23 CST  更新内容: 移除算力页内标题头部，日期选择统一放入顶部工具栏。 */
+/* 更新时间: 2026-07-01 15:41:19 CST  更新内容: 饼图卡片改为上下堆叠的左图右说明布局，并优化图例说明和响应式尺寸。 */
 .cpu-page {
   display: flex;
   flex-direction: column;
@@ -129,11 +129,13 @@
 
 .cpu-grid {
   display: grid;
-  grid-template-columns: minmax(300px, .82fr) repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(300px, .74fr) minmax(0, 1.36fr);
   grid-template-areas:
-    "trend trend trend"
-    "health version usage";
+    "trend trend"
+    "health version"
+    "health usage";
   gap: 16px;
+  align-items: stretch;
   min-width: 0;
 }
 
@@ -144,17 +146,17 @@
 
 .cpu-panel--health {
   grid-area: health;
-  min-height: 426px;
+  min-height: 604px;
 }
 
 .cpu-panel--version-pie {
   grid-area: version;
-  min-height: 426px;
+  min-height: 340px;
 }
 
 .cpu-panel--usage-pie {
   grid-area: usage;
-  min-height: 426px;
+  min-height: 340px;
 }
 
 .cpu-trend-chart {
@@ -249,7 +251,24 @@
 
 .cpu-pie-wrap {
   flex: 1;
-  min-height: 300px;
+  min-height: 310px;
+}
+
+.cpu-panel--pie {
+  display: grid;
+  grid-template-columns: minmax(340px, 1fr) minmax(210px, .64fr);
+  grid-template-rows: auto minmax(310px, 1fr);
+  column-gap: 18px;
+  row-gap: 12px;
+  align-items: stretch;
+}
+
+.cpu-panel--pie .cpu-panel__head {
+  grid-column: 1 / -1;
+}
+
+.cpu-panel--pie .cpu-pie-wrap {
+  min-height: 310px;
 }
 
 .cpu-pie-summary {
@@ -257,6 +276,18 @@
   flex-wrap: wrap;
   gap: 8px;
   min-width: 0;
+}
+
+.cpu-panel--pie .cpu-pie-summary {
+  display: grid;
+  align-content: start;
+  align-self: stretch;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  max-height: 310px;
+  min-width: 0;
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .cpu-pie-chip {
@@ -269,6 +300,13 @@
   border-radius: 9px;
   border: 1px solid var(--line);
   background: var(--glass-cell);
+}
+
+.cpu-panel--pie .cpu-pie-chip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  width: 100%;
+  padding: 8px 10px;
 }
 
 .cpu-pie-chip i {
@@ -294,6 +332,13 @@
   font-size: 12px;
   font-style: normal;
   font-weight: 760;
+  font-variant-numeric: tabular-nums;
+}
+
+.cpu-pie-chip small {
+  flex: none;
+  color: var(--faint);
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -395,6 +440,21 @@
   .cpu-health-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 920px) {
+  .cpu-panel--pie {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+
+  .cpu-panel--pie .cpu-panel__head {
+    grid-column: auto;
+  }
+
+  .cpu-panel--pie .cpu-pie-summary {
+    max-height: none;
   }
 }
 

@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:35:23 CST
- 更新内容: 回归测试补充算力页顶部日期选择回归工具栏，并移除页内标题环比区。
+ 更新时间: 2026-07-01 15:41:19 CST
+ 更新内容: 回归测试补充算力页饼图卡片上下排列、左图右说明、外拉标签与悬浮卡片留白。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -77,15 +77,32 @@ test('uses a full-width compute trend card with draggable 30-day window and mont
   assert.match(computePageSource, /endValue:\s*Math\.min\(9, days\.length - 1\)/);
   assert.match(computePageSource, /type:\s*'slider'[\s\S]*?showDetail:\s*false[\s\S]*?brushSelect:\s*false/);
   assert.match(computePageSource, /const trend = getComputeUsageTrend\(period\);/);
-  assert.match(computePageCss, /grid-template-areas:\s*"trend trend trend"\s*"health version usage";/);
+  assert.match(computePageCss, /grid-template-areas:\s*"trend trend"\s*"health version"\s*"health usage";/);
   assert.match(computePageCss, /\.cpu-panel--trend \{[\s\S]*?min-height:\s*560px;/);
   assert.match(computePageCss, /\.cpu-trend-chart \{[\s\S]*?min-height:\s*420px;/);
+});
+
+test('stacks compute pie cards with chart-left and explanation-right layout', () => {
+  assert.match(computePageCss, /\.cpu-grid \{[\s\S]*?grid-template-columns:\s*minmax\(300px,\s*\.74fr\) minmax\(0,\s*1\.36fr\);[\s\S]*?grid-template-areas:\s*"trend trend"\s*"health version"\s*"health usage";/);
+  assert.match(computePageCss, /\.cpu-panel--pie \{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-columns:\s*minmax\(340px,\s*1fr\) minmax\(210px,\s*\.64fr\);/);
+  assert.match(computePageCss, /\.cpu-panel--pie \.cpu-panel__head \{[\s\S]*?grid-column:\s*1 \/ -1;/);
+  assert.match(computePageCss, /\.cpu-panel--pie \.cpu-pie-summary \{[\s\S]*?display:\s*grid;[\s\S]*?align-content:\s*start;/);
+  assert.doesNotMatch(computePageSource, /data\.slice\(0,\s*5\)\.map/);
+});
+
+test('keeps compute pie labels and tooltip cards readable around donut charts', () => {
+  assert.match(computePageSource, /'padding:12px 14px'/);
+  assert.match(computePageSource, /edgeDistance:\s*16/);
+  assert.match(computePageSource, /bleedMargin:\s*8/);
+  assert.match(computePageSource, /labelLine:\s*\{[\s\S]*?length:\s*18,[\s\S]*?length2:\s*26/);
+  assert.match(computePageSource, /labelLayout:\s*\(params\) =>/);
+  assert.match(computePageSource, /moveOverlap:\s*'shiftY'/);
 });
 
 test('renders all compute resource utilization rows in compact equal-height cards', () => {
   assert.match(computePageSource, /resourceHealth\.filter\(\(item\) => item\.usage > 0\)\.map/);
   assert.match(computePageSource, /style=\{\{ width: `\$\{item\.usage\}%`, '--cpu-resource-color': item\.color \}\}/);
-  assert.match(computePageCss, /\.cpu-panel--health \{[\s\S]*?min-height:\s*426px;/);
+  assert.match(computePageCss, /\.cpu-panel--health \{[\s\S]*?min-height:\s*604px;/);
   assert.match(computePageCss, /\.cpu-health-list \{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-rows:\s*repeat\(auto-fit,\s*minmax\(58px,\s*1fr\)\);/);
   assert.match(computePageCss, /\.cpu-health-row \{[\s\S]*?min-height:\s*58px;[\s\S]*?padding:\s*10px 14px;/);
 });
