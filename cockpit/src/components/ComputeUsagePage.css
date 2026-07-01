@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 15:51:08 CST  更新内容: 压缩饼图右侧说明列并放大左侧图表区，避免外拉标签被截断。 */
+/* 更新时间: 2026-07-01 16:06:41 CST  更新内容: 移除资源利用率与饼图底部说明标签，进一步压缩两个饼图卡片高度并保持左右并排展示。 */
 .cpu-page {
   display: flex;
   flex-direction: column;
@@ -129,11 +129,10 @@
 
 .cpu-grid {
   display: grid;
-  grid-template-columns: minmax(300px, .74fr) minmax(0, 1.36fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-areas:
     "trend trend"
-    "health version"
-    "health usage";
+    "version usage";
   gap: 16px;
   align-items: stretch;
   min-width: 0;
@@ -144,19 +143,14 @@
   min-height: 560px;
 }
 
-.cpu-panel--health {
-  grid-area: health;
-  min-height: 684px;
-}
-
 .cpu-panel--version-pie {
   grid-area: version;
-  min-height: 380px;
+  min-height: 430px;
 }
 
 .cpu-panel--usage-pie {
   grid-area: usage;
-  min-height: 380px;
+  min-height: 430px;
 }
 
 .cpu-trend-chart {
@@ -169,182 +163,18 @@
   height: 100% !important;
 }
 
-.cpu-health-list {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-rows: repeat(auto-fit, minmax(58px, 1fr));
-  gap: 8px;
-}
-
-.cpu-health-row {
-  display: grid;
-  align-content: center;
-  gap: 7px;
-  min-width: 0;
-  min-height: 58px;
-  padding: 10px 14px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: var(--glass-cell);
-}
-
-.cpu-health-row--warn {
-  border-color: rgba(var(--warn-rgb), .26);
-  background: rgba(var(--warn-rgb), .08);
-}
-
-.cpu-health-row__top,
-.cpu-health-row__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  min-width: 0;
-}
-
-.cpu-health-row__top strong {
-  min-width: 0;
-  color: var(--txt);
-  font-size: 14px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.cpu-health-row__top span {
-  flex: none;
-  color: var(--cpu-resource-color, var(--up));
-  font-size: 13px;
-  font-weight: 720;
-  font-variant-numeric: tabular-nums;
-}
-
-.cpu-health-row__bar {
-  position: relative;
-  height: 7px;
-  overflow: hidden;
-  border-radius: 99px;
-  background: rgba(255,255,255,.07);
-}
-
-.cpu-health-row__bar i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: inherit;
-  background: var(--cpu-resource-color, var(--txt));
-  box-shadow: 0 0 18px color-mix(in srgb, var(--cpu-resource-color, var(--txt)) 30%, transparent);
-}
-
-.cpu-health-row--warn .cpu-health-row__bar i {
-  background: var(--cpu-resource-color, var(--warn));
-}
-
-.cpu-health-row__foot span,
-.cpu-health-row__foot em {
-  color: var(--faint);
-  font-size: 12px;
-  font-style: normal;
-  font-variant-numeric: tabular-nums;
-}
-
 .cpu-pie-wrap {
   flex: 1;
-  min-height: 350px;
+  min-height: 310px;
 }
 
 .cpu-panel--pie {
-  display: grid;
-  grid-template-columns: minmax(400px, 1.62fr) minmax(150px, .38fr);
-  grid-template-rows: auto minmax(350px, 1fr);
-  column-gap: 12px;
-  row-gap: 12px;
-  align-items: stretch;
-}
-
-.cpu-panel--pie .cpu-panel__head {
-  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
 }
 
 .cpu-panel--pie .cpu-pie-wrap {
-  min-height: 350px;
-}
-
-.cpu-pie-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  min-width: 0;
-}
-
-.cpu-panel--pie .cpu-pie-summary {
-  display: grid;
-  align-content: start;
-  align-self: stretch;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
-  max-height: 350px;
-  min-width: 0;
-  overflow: auto;
-  padding-right: 2px;
-}
-
-.cpu-pie-chip {
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  max-width: 100%;
-  padding: 6px 8px;
-  border-radius: 9px;
-  border: 1px solid var(--line);
-  background: var(--glass-cell);
-}
-
-.cpu-panel--pie .cpu-pie-chip {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  width: 100%;
-  gap: 6px;
-  padding: 7px 8px;
-}
-
-.cpu-panel--pie .cpu-pie-chip small {
-  display: none;
-}
-
-.cpu-pie-chip i {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.cpu-pie-chip b {
-  min-width: 0;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 650;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cpu-pie-chip em {
-  flex: none;
-  color: var(--txt);
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 760;
-  font-variant-numeric: tabular-nums;
-}
-
-.cpu-pie-chip small {
-  flex: none;
-  color: var(--faint);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
+  min-height: 310px;
 }
 
 .cpu-panel--customers {
@@ -427,12 +257,10 @@
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "trend"
-      "health"
       "version"
       "usage";
   }
 
-  .cpu-panel--health,
   .cpu-panel--version-pie,
   .cpu-panel--usage-pie {
     min-height: 0;
@@ -442,30 +270,10 @@
     min-height: 500px;
   }
 
-  .cpu-health-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 920px) {
-  .cpu-panel--pie {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto;
-  }
-
-  .cpu-panel--pie .cpu-panel__head {
-    grid-column: auto;
-  }
-
-  .cpu-panel--pie .cpu-pie-summary {
-    max-height: none;
-  }
 }
 
 @media (max-width: 760px) {
-  .cpu-kpi-grid,
-  .cpu-health-list {
+  .cpu-kpi-grid {
     grid-template-columns: 1fr;
   }
 

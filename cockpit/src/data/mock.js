@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:28:42 CST
- 更新内容: 算力趋势支持近7日、近30日和近半年三种周期数据。
+ 更新时间: 2026-07-01 16:06:41 CST
+ 更新内容: 算力趋势支持顶部年/月/日与日期范围联动，并保留旧周期参数兼容。
 */
 import { calculateRenewalOverview, getRenewalChannelBreakdown } from '../lib/renewal.js';
 
@@ -270,6 +270,8 @@ const COMPUTE_DAYS = Array.from({ length: 29 }, (_, index) => `06-${String(index
 const COMPUTE_USAGE = [468, 462, 459, 442, 435, 444, 452, 438, 458, 453, 429, 423, 456, 486, 492, 487, 504, 423, 441, 468, 482, 477, 471, 455, 466, 486, 496, 512, 536];
 const COMPUTE_ADD_ON = [16, 14, 13, 11, 10, 12, 11, 9, 14, 12, 10, 8, 12, 18, 16, 15, 17, 8, 10, 13, 14, 13, 12, 10, 12, 14, 15, 16, 18];
 const COMPUTE_CAPACITY = [2360, 2380, 2376, 2382, 2392, 2388, 2394, 2401, 2410, 2408, 2417, 2440, 2438, 2434, 2441, 2480, 2501, 2512, 2510, 2515, 2512, 2522, 2534, 2540, 2552, 2570, 2582, 2578, 2600];
+const COMPUTE_DEFAULT_RANGE = ['2026-06-01', '2026-06-30'];
+const COMPUTE_YEAR = '2026';
 
 export const COMPUTE_USAGE_TREND = COMPUTE_DAYS.map((day, index) => ({
   day,
@@ -332,9 +334,61 @@ export function getComputeOverview() {
   return COMPUTE_OVERVIEW;
 }
 
-export function getComputeUsageTrend(period = '30d') {
-  if (period === '7d') return COMPUTE_USAGE_TREND.slice(-7);
-  if (period === 'half-year') return COMPUTE_HALF_YEAR_TREND;
+function computeTrendDateKey(day) {
+  return `${COMPUTE_YEAR}-${day}`;
+}
+
+function normalizeComputeDateKey(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+    return `${value.getFullYear()}-${month}-${day}`;
+  }
+
+  if (typeof value === 'string') {
+    const matched = value.match(/\d{4}-\d{2}-\d{2}/);
+    if (matched) return matched[0];
+  }
+
+  return null;
+}
+
+function normalizeComputeDateRange(dateRange) {
+  const keys = (Array.isArray(dateRange) ? dateRange : [])
+    .map(normalizeComputeDateKey)
+    .filter(Boolean)
+    .sort();
+
+  if (!keys.length) return [...COMPUTE_DEFAULT_RANGE];
+  if (keys.length === 1) return [keys[0], keys[0]];
+  return [keys[0], keys.at(-1)];
+}
+
+function getComputeRowsInRange(dateRange) {
+  const [start, end] = normalizeComputeDateRange(dateRange);
+  const rows = COMPUTE_USAGE_TREND.filter((row) => {
+    const key = computeTrendDateKey(row.day);
+    return key >= start && key <= end;
+  });
+
+  return rows.length ? rows : COMPUTE_USAGE_TREND;
+}
+
+function getComputeDayWindow(dateRange) {
+  const [, end] = normalizeComputeDateRange(dateRange);
+  const rows = COMPUTE_USAGE_TREND.filter((row) => computeTrendDateKey(row.day) <= end);
+  return (rows.length ? rows : COMPUTE_USAGE_TREND).slice(-7);
+}
+
+export function getComputeUsageTrend(request = '30d') {
+  if (request && typeof request === 'object') {
+    if (request.dim === 'year') return COMPUTE_HALF_YEAR_TREND;
+    if (request.dim === 'day') return getComputeDayWindow(request.dateRange);
+    return getComputeRowsInRange(request.dateRange);
+  }
+
+  if (request === '7d') return COMPUTE_USAGE_TREND.slice(-7);
+  if (request === 'half-year') return COMPUTE_HALF_YEAR_TREND;
   return COMPUTE_USAGE_TREND;
 }
 

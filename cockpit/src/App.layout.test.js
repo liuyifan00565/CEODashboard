@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:51:08 CST
- 更新内容: 回归测试补充算力页饼图图例压缩、图心右移和长标签短名展示规则。
+ 更新时间: 2026-07-01 16:06:41 CST
+ 更新内容: 回归测试补充算力页统一年月日筛选、移除资源利用率、进一步压缩饼图卡片并去掉底部说明标签。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -28,7 +28,7 @@ test('renders compute usage analysis as an independent dashboard page', () => {
   assert.match(appSource, /import ComputeUsagePage from '\.\/components\/ComputeUsagePage';/);
   assert.match(appSource, /const isComputePage = activeMenu === 'compute';/);
   assert.match(appSource, /isComputePage \? \(/);
-  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} period=\{computePeriod\} \/>/);
+  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim=\{dim\} dateRange=\{dateRange\} \/>/);
   assert.match(appSource, /: \(\s*<>\s*<div className="dash-kpis">/);
 });
 
@@ -58,38 +58,45 @@ test('matches the compute trend chart to the overview target-bar and completion-
   assert.doesNotMatch(computePageSource, /name:\s*'总容量'[\s\S]*?type:\s*'line'/);
 });
 
-test('keeps compute page topbar date picker before period presets and drives trend labels', () => {
-  assert.match(appSource, /const COMPUTE_PERIOD_OPTS = \[/);
-  assert.match(appSource, /\{ value: '7d', label: '近7日' \}/);
-  assert.match(appSource, /\{ value: '30d', label: '近30日' \}/);
-  assert.match(appSource, /\{ value: 'half-year', label: '近半年' \}/);
-  assert.match(appSource, /const \[computePeriod, setComputePeriod\] = useState\('30d'\);/);
-  assert.match(appSource, /isComputePage \? \([\s\S]*?<DateRangePicker value=\{dateRange\}[\s\S]*?<Segmented options=\{COMPUTE_PERIOD_OPTS\} value=\{computePeriod\} onChange=\{setComputePeriod\} \/>[\s\S]*?\) : \(/);
-  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} period=\{computePeriod\} \/>/);
-  assert.match(computePageSource, /export default function ComputeUsagePage\(\{ searchTerm = '', period = '30d' \}\)/);
-  assert.match(computePageSource, /const periodLabel = PERIOD_LABELS\[period\] \?\? PERIOD_LABELS\['30d'\];/);
+test('uses the same year month day topbar controls for compute and links them to trend dates', () => {
+  assert.match(appSource, /const DIM_OPTS = \[/);
+  assert.match(appSource, /\{ value: 'year', label: '年' \}/);
+  assert.match(appSource, /\{ value: 'month', label: '月' \}/);
+  assert.match(appSource, /\{ value: 'day', label: '日' \}/);
+  assert.doesNotMatch(appSource, /COMPUTE_PERIOD_OPTS/);
+  assert.doesNotMatch(appSource, /computePeriod/);
+  assert.match(appSource, /<DateRangePicker value=\{dateRange\} onChange=\{\(dates\) => setDateRange\(dates\?\.length \? \[\.\.\.dates\] : DEFAULT_FILTER_RANGE\)\} \/>/);
+  assert.match(appSource, /<Segmented options=\{DIM_OPTS\} value=\{dim\} onChange=\{setDim\} \/>/);
+  assert.doesNotMatch(appSource, /isComputePage \? \([\s\S]*?<DateRangePicker/);
+  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim=\{dim\} dateRange=\{dateRange\} \/>/);
+  assert.match(computePageSource, /export default function ComputeUsagePage\(\{ searchTerm = '', dim = 'month', dateRange = \[\] \}\)/);
+  assert.match(computePageSource, /const periodLabel = DIM_TREND_LABELS\[dim\] \?\? DIM_TREND_LABELS\.month;/);
+  assert.match(computePageSource, /const trend = getComputeUsageTrend\(\{ dim, dateRange \}\);/);
   assert.match(computePageSource, /title=\{`\$\{periodLabel\}算力用量趋势`\}/);
 });
 
-test('uses a full-width compute trend card with draggable 30-day window and month labels for half-year', () => {
-  assert.match(computePageSource, /const canSlide = period === '30d' && days\.length > 10;/);
+test('uses a full-width compute trend card with draggable month window and year month labels', () => {
+  assert.match(computePageSource, /const canSlide = dim === 'month' && days\.length > 10;/);
   assert.match(computePageSource, /dataZoom: canSlide \? \[/);
   assert.match(computePageSource, /endValue:\s*Math\.min\(9, days\.length - 1\)/);
   assert.match(computePageSource, /type:\s*'slider'[\s\S]*?showDetail:\s*false[\s\S]*?brushSelect:\s*false/);
-  assert.match(computePageSource, /const trend = getComputeUsageTrend\(period\);/);
-  assert.match(computePageCss, /grid-template-areas:\s*"trend trend"\s*"health version"\s*"health usage";/);
+  assert.match(computePageSource, /const trend = getComputeUsageTrend\(\{ dim, dateRange \}\);/);
+  assert.match(computePageCss, /grid-template-areas:\s*"trend trend"\s*"version usage";/);
   assert.match(computePageCss, /\.cpu-panel--trend \{[\s\S]*?min-height:\s*560px;/);
   assert.match(computePageCss, /\.cpu-trend-chart \{[\s\S]*?min-height:\s*420px;/);
 });
 
-test('stacks compute pie cards with chart-left and explanation-right layout', () => {
-  assert.match(computePageCss, /\.cpu-grid \{[\s\S]*?grid-template-columns:\s*minmax\(300px,\s*\.74fr\) minmax\(0,\s*1\.36fr\);[\s\S]*?grid-template-areas:\s*"trend trend"\s*"health version"\s*"health usage";/);
-  assert.match(computePageCss, /\.cpu-panel--pie \{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-columns:\s*minmax\(400px,\s*1\.62fr\) minmax\(150px,\s*\.38fr\);/);
-  assert.match(computePageCss, /\.cpu-panel--pie \{[\s\S]*?column-gap:\s*12px;/);
-  assert.match(computePageCss, /\.cpu-panel--pie \.cpu-panel__head \{[\s\S]*?grid-column:\s*1 \/ -1;/);
-  assert.match(computePageCss, /\.cpu-panel--pie \.cpu-pie-summary \{[\s\S]*?display:\s*grid;[\s\S]*?align-content:\s*start;/);
-  assert.match(computePageCss, /\.cpu-panel--pie \.cpu-pie-chip \{[\s\S]*?grid-template-columns:\s*auto minmax\(0,\s*1fr\) auto;/);
-  assert.match(computePageCss, /\.cpu-panel--pie \.cpu-pie-chip small \{[\s\S]*?display:\s*none;/);
+test('places compute pie cards side by side without bottom legend explanations', () => {
+  assert.match(computePageCss, /\.cpu-grid \{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);[\s\S]*?grid-template-areas:\s*"trend trend"\s*"version usage";/);
+  assert.match(computePageCss, /\.cpu-panel--pie \{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;/);
+  assert.doesNotMatch(computePageCss, /\.cpu-panel--pie \{[^}]*grid-template-columns:/);
+  assert.doesNotMatch(computePageSource, /function PieSummary/);
+  assert.doesNotMatch(computePageSource, /<PieSummary/);
+  assert.doesNotMatch(computePageCss, /cpu-pie-summary/);
+  assert.doesNotMatch(computePageCss, /cpu-pie-chip/);
+  assert.match(computePageCss, /\.cpu-panel--version-pie \{[\s\S]*?min-height:\s*430px;/);
+  assert.match(computePageCss, /\.cpu-panel--usage-pie \{[\s\S]*?min-height:\s*430px;/);
+  assert.match(computePageCss, /\.cpu-panel--pie \.cpu-pie-wrap \{[\s\S]*?min-height:\s*310px;/);
   assert.doesNotMatch(computePageSource, /data\.slice\(0,\s*5\)\.map/);
 });
 
@@ -111,12 +118,15 @@ test('keeps compute pie labels and tooltip cards readable around donut charts', 
   assert.doesNotMatch(computePageSource, /formatter:\s*\(params\) => `\{name\|\$\{params\.name\}\}\\n/);
 });
 
-test('renders all compute resource utilization rows in compact equal-height cards', () => {
-  assert.match(computePageSource, /resourceHealth\.filter\(\(item\) => item\.usage > 0\)\.map/);
-  assert.match(computePageSource, /style=\{\{ width: `\$\{item\.usage\}%`, '--cpu-resource-color': item\.color \}\}/);
-  assert.match(computePageCss, /\.cpu-panel--health \{[\s\S]*?min-height:\s*684px;/);
-  assert.match(computePageCss, /\.cpu-health-list \{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-rows:\s*repeat\(auto-fit,\s*minmax\(58px,\s*1fr\)\);/);
-  assert.match(computePageCss, /\.cpu-health-row \{[\s\S]*?min-height:\s*58px;[\s\S]*?padding:\s*10px 14px;/);
+test('removes compute resource utilization from the compute analysis page', () => {
+  assert.doesNotMatch(computePageSource, /getComputeResourceHealth/);
+  assert.doesNotMatch(computePageSource, /resourceHealth/);
+  assert.doesNotMatch(computePageSource, /SEARCH_KEYWORDS[\s\S]*?health:/);
+  assert.doesNotMatch(computePageSource, /资源利用率/);
+  assert.doesNotMatch(computePageSource, /cpu-panel--health/);
+  assert.doesNotMatch(computePageCss, /cpu-panel--health/);
+  assert.doesNotMatch(computePageCss, /cpu-health/);
+  assert.doesNotMatch(computePageCss, /grid-area:\s*health/);
 });
 
 test('notifies Fu Xiaoke when a KPI card is opened', () => {

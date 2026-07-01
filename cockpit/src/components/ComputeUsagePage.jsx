@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:51:08 CST
- 更新内容: 压缩饼图右侧说明列并右移图心，长区间标签改用短名展示以避免左侧截断。
+ 更新时间: 2026-07-01 16:06:41 CST
+ 更新内容: 移除资源模块和饼图底部说明标签，算力趋势改为跟随顶部年/月/日和日期范围联动。
 */
 import { useMemo } from 'react';
 
@@ -8,7 +8,6 @@ import EChart from './EChart';
 import {
   getComputeCustomerRows,
   getComputeOverview,
-  getComputeResourceHealth,
   getComputeUsageDistribution,
   getComputeUsageTrend,
   getComputeVersionConsumption,
@@ -18,17 +17,16 @@ import './ComputeUsagePage.css';
 
 const SEARCH_KEYWORDS = {
   overview: ['算力', '总容量', '新增', '消耗', '客户', '回复率', '余额'],
-  trend: ['趋势', '近7日', '近30日', '近半年', '自动回复', '商品同步', '容量'],
+  trend: ['趋势', '年', '月', '日', '日期', '自动回复', '商品同步', '容量'],
   version: ['版本', '试用版', '企业版', '旗舰版', '卓越版', '创世版', '启航版'],
   distribution: ['分布', '用量', '客户占比', '高消耗', '零用量'],
-  health: ['资源', '利用率', '异常', '自动回复', '商品同步', '会眼智宝', '视频识别', '拦截', '对话测试'],
   customer: ['客户', '排行', '手机号', '负责人', '平均回复率'],
 };
 
-const PERIOD_LABELS = {
-  '7d': '近7日',
-  '30d': '近30日',
-  'half-year': '近半年',
+const DIM_TREND_LABELS = {
+  day: '日度',
+  month: '月度',
+  year: '年度',
 };
 
 function formatInt(value) {
@@ -100,13 +98,13 @@ function buildTrendPoints(trend) {
   });
 }
 
-function buildTrendOption({ trend, tokens, period }) {
+function buildTrendOption({ trend, tokens, dim }) {
   const buckets = buildTrendPoints(trend);
   const days = buckets.map((point) => point.label);
   const usage = buckets.map((point) => point.usage);
   const target = buckets.map((point) => point.target);
   const completion = buckets.map((point) => point.completion);
-  const canSlide = period === '30d' && days.length > 10;
+  const canSlide = dim === 'month' && days.length > 10;
   const txt = tokens.chartText;
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
@@ -388,35 +386,15 @@ function Panel({ className = '', title, sub, active, children }) {
   );
 }
 
-function PieSummary({ data }) {
-  const total = data.reduce((sum, item) => sum + Number(item.value || 0), 0);
-
-  return (
-    <div className="cpu-pie-summary" aria-label="图例说明">
-      {data.map((item) => (
-        <span className="cpu-pie-chip" key={item.name}>
-          <i style={{ background: item.color }} />
-          <b>{item.name}</b>
-          <em>{item.value}</em>
-          <small>{formatPct(total ? (Number(item.value) / total) * 100 : 0)}</small>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-export default function ComputeUsagePage({ searchTerm = '', period = '30d' }) {
+export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateRange = [] }) {
   const tokens = useThemeTokens();
-  const periodLabel = PERIOD_LABELS[period] ?? PERIOD_LABELS['30d'];
+  const periodLabel = DIM_TREND_LABELS[dim] ?? DIM_TREND_LABELS.month;
   const overview = getComputeOverview();
-  const trend = getComputeUsageTrend(period);
+  const trend = getComputeUsageTrend({ dim, dateRange });
   const versions = getComputeVersionConsumption();
   const distribution = getComputeUsageDistribution();
   const customers = getComputeCustomerRows();
-  const resourceHealth = getComputeResourceHealth();
-  const latestTrend = trend.at(-1);
-  const highUsageBucket = distribution.find((item) => item.name === '算力用量>10000');
-  const zeroUsageBucket = distribution.find((item) => item.name === '算力用量=0');
+  const latestTrend = trend.at(-1) ?? { capacity: 0, usage: 0, addOn: 0 };
 
   const kpis = [
     {
@@ -453,7 +431,7 @@ export default function ComputeUsagePage({ searchTerm = '', period = '30d' }) {
     },
   ];
 
-  const trendOption = useMemo(() => buildTrendOption({ trend, tokens, period }), [trend, tokens, period]);
+  const trendOption = useMemo(() => buildTrendOption({ trend, tokens, dim }), [trend, tokens, dim]);
   const versionPieOption = useMemo(
     () => buildPieOption({ data: versions, tokens, unitLabel: '消耗权重' }),
     [versions, tokens]
@@ -492,35 +470,6 @@ export default function ComputeUsagePage({ searchTerm = '', period = '30d' }) {
         </Panel>
 
         <Panel
-          className="cpu-panel--health"
-          title="资源利用率"
-          sub={`高消耗客户权重 ${highUsageBucket?.value ?? 0} · 零用量权重 ${zeroUsageBucket?.value ?? 0}`}
-          active={matchesTerm(SEARCH_KEYWORDS.health, searchTerm)}
-        >
-          <div className="cpu-health-list">
-            {resourceHealth.filter((item) => item.usage > 0).map((item) => (
-              <div
-                className={`cpu-health-row cpu-health-row--${item.tone}`}
-                key={item.key}
-                style={{ '--cpu-resource-color': item.color }}
-              >
-                <div className="cpu-health-row__top">
-                  <strong>{item.name}</strong>
-                  <span>{item.trend}</span>
-                </div>
-                <div className="cpu-health-row__bar">
-                  <i style={{ width: `${item.usage}%`, '--cpu-resource-color': item.color }} />
-                </div>
-                <div className="cpu-health-row__foot">
-                  <span>{formatPct(item.usage)}</span>
-                  <em>{item.state}</em>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Panel>
-
-        <Panel
           className="cpu-panel--pie cpu-panel--version-pie"
           title="各版本算力消耗"
           sub="圆角环图 · 外拉标签"
@@ -529,7 +478,6 @@ export default function ComputeUsagePage({ searchTerm = '', period = '30d' }) {
           <div className="cpu-pie-wrap">
             <EChart option={versionPieOption} style={{ height: '100%' }} />
           </div>
-          <PieSummary data={[...versions].sort((a, b) => b.value - a.value)} />
         </Panel>
 
         <Panel
@@ -541,7 +489,6 @@ export default function ComputeUsagePage({ searchTerm = '', period = '30d' }) {
           <div className="cpu-pie-wrap">
             <EChart option={distributionPieOption} style={{ height: '100%' }} />
           </div>
-          <PieSummary data={distribution} />
         </Panel>
       </div>
 
