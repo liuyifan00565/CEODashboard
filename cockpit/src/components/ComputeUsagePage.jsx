@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 17:05:37 CST
- 更新内容: 将算力趋势完成率和静态拖动条统一为粉紫玻璃质感，并让版本算力圆环图使用 ECharts 默认自然外拉折线。
+ 更新时间: 2026-07-01 17:20:18 CST
+ 更新内容: 修复算力总容量趋势图为空的问题，趋势整理时保留容量字段并继续复用日期联动窗口。
 */
 import { useMemo, useState } from 'react';
 
@@ -234,6 +234,7 @@ function buildTrendPoints(trend) {
     return {
       label: point.day,
       range: point.range ?? point.day,
+      capacity: point.capacity ?? 0,
       usage,
       target,
       completion: target ? +((usage / target) * 100).toFixed(1) : 0,
@@ -264,10 +265,16 @@ function buildTrendOption({ trend, tokens }) {
       top: 0,
       left: 'center',
       selectedMode: false,
-      itemWidth: 16,
-      itemHeight: 11,
-      itemGap: 18,
-      textStyle: { color: txt, fontSize: 16, fontWeight: 800 },
+      itemWidth: 18,
+      itemHeight: 12,
+      itemGap: 22,
+      textStyle: {
+        color: txt,
+        fontSize: 18,
+        fontWeight: 850,
+        textShadowColor: 'rgba(0,0,0,.55)',
+        textShadowBlur: 8,
+      },
       data: ['算力用量', '目标用量', '完成率%'],
     },
     grid: { top: 42, left: 10, right: 12, bottom: showSlider ? 44 : 8, containLabel: true },
@@ -415,6 +422,158 @@ function buildTrendOption({ trend, tokens }) {
         option: {
           grid: { top: 48, left: 4, right: 4, bottom: showSlider ? 38 : 4, containLabel: true },
           legend: { left: 0, itemGap: 10, textStyle: { fontSize: 11 } },
+          xAxis: { axisLabel: { interval: 0, hideOverlap: false, fontSize: 11 } },
+        },
+      },
+    ],
+  };
+}
+
+function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
+  const buckets = buildTrendPoints(trend);
+  const days = buckets.map((point) => point.label);
+  const latestCapacityBase = buckets[0]?.capacity || 1;
+  const capacityScale = totalCapacity / latestCapacityBase;
+  const capacity = buckets.map((point) => Math.round(point.capacity * capacityScale));
+  const showSlider = days.length > MAX_VISIBLE_TREND_BARS;
+  const sliderEndValue = Math.min(MAX_VISIBLE_TREND_BARS - 1, days.length - 1);
+  const sliderWindowSpan = sliderEndValue;
+  const txt = tokens.chartText;
+  const faint = tokens.chartMuted;
+  const line = tokens.chartGrid;
+  const capacityColor = '#38f5ff';
+
+  return {
+    backgroundColor: 'transparent',
+    textStyle: { color: faint, fontFamily: 'inherit' },
+    legend: {
+      top: 0,
+      left: 'center',
+      selectedMode: false,
+      itemWidth: 18,
+      itemHeight: 12,
+      itemGap: 22,
+      textStyle: {
+        color: txt,
+        fontSize: 18,
+        fontWeight: 850,
+        textShadowColor: 'rgba(0,0,0,.55)',
+        textShadowBlur: 8,
+      },
+      data: ['算力总容量'],
+    },
+    grid: { top: 42, left: 10, right: 12, bottom: showSlider ? 44 : 8, containLabel: true },
+    dataZoom: showSlider ? [
+      {
+        type: 'inside',
+        xAxisIndex: 0,
+        startValue: 0,
+        endValue: sliderEndValue,
+        minValueSpan: sliderWindowSpan,
+        maxValueSpan: sliderWindowSpan,
+        zoomLock: true,
+        realtime: true,
+      },
+      {
+        type: 'slider',
+        xAxisIndex: 0,
+        height: 18,
+        bottom: 8,
+        startValue: 0,
+        endValue: sliderEndValue,
+        minValueSpan: sliderWindowSpan,
+        maxValueSpan: sliderWindowSpan,
+        zoomLock: true,
+        realtime: true,
+        borderColor: 'rgba(56,245,255,.34)',
+        backgroundColor: 'rgba(255,255,255,.045)',
+        fillerColor: 'rgba(56,245,255,.24)',
+        handleStyle: {
+          color: 'rgba(224,252,255,.9)',
+          borderColor: 'rgba(56,245,255,.82)',
+          shadowBlur: 16,
+          shadowColor: 'rgba(56,245,255,.5)',
+        },
+        dataBackground: {
+          lineStyle: { color: 'rgba(255,255,255,.16)' },
+          areaStyle: { color: 'rgba(255,255,255,.04)' },
+        },
+        selectedDataBackground: {
+          lineStyle: { color: 'rgba(56,245,255,.45)' },
+          areaStyle: { color: 'rgba(56,245,255,.08)' },
+        },
+        showDetail: false,
+        brushSelect: false,
+      },
+    ] : [],
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'line', lineStyle: { color: 'rgba(56,245,255,.34)', width: 1 } },
+      appendToBody: true,
+      confine: true,
+      backgroundColor: 'rgba(0,0,0,.72)',
+      borderColor: tokens.chartTooltipBorder,
+      borderWidth: 1,
+      extraCssText: tooltipExtraCss(),
+      textStyle: { color: txt, fontSize: 13 },
+      formatter: (params) => {
+        const bucket = buckets[params[0]?.dataIndex] ?? null;
+        return [
+          tooltipHeader(`${bucket?.range || params[0]?.axisValue || ''} 算力总容量`),
+          tooltipRow({ color: capacityColor, label: '算力总容量', value: formatInt(params[0]?.value || 0) }),
+        ].join('');
+      },
+    },
+    xAxis: {
+      type: 'category',
+      data: days,
+      boundaryGap: false,
+      axisLine: { lineStyle: { color: line } },
+      axisTick: { show: false },
+      axisLabel: { color: faint, fontSize: 12, interval: 0, hideOverlap: false, margin: 12 },
+    },
+    yAxis: {
+      type: 'value',
+      name: '点',
+      scale: true,
+      nameTextStyle: { color: faint, fontSize: 12, padding: [0, 0, 0, 8] },
+      axisLabel: { color: faint, fontSize: 12 },
+      splitLine: { lineStyle: { color: line } },
+      axisLine: { show: false },
+    },
+    series: [
+      {
+        name: '算力总容量',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 7,
+        lineStyle: { color: capacityColor, width: 2.4, shadowBlur: 10, shadowColor: 'rgba(56,245,255,.36)' },
+        itemStyle: { color: capacityColor, borderColor: 'rgba(239,251,255,.88)', borderWidth: 1.5 },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(56,245,255,.32)' },
+              { offset: .55, color: 'rgba(56,245,255,.12)' },
+              { offset: 1, color: 'rgba(56,245,255,.015)' },
+            ],
+          },
+        },
+        emphasis: { focus: 'series' },
+        data: capacity,
+      },
+    ],
+    media: [
+      {
+        query: { maxWidth: 620 },
+        option: {
+          grid: { top: 48, left: 4, right: 4, bottom: showSlider ? 38 : 4, containLabel: true },
+          legend: { left: 0, itemGap: 10, textStyle: { fontSize: 12 } },
           xAxis: { axisLabel: { interval: 0, hideOverlap: false, fontSize: 11 } },
         },
       },
@@ -612,6 +771,10 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
   ];
 
   const trendOption = useMemo(() => buildTrendOption({ trend, tokens }), [trend, tokens]);
+  const capacityTrendOption = useMemo(
+    () => buildCapacityTrendOption({ trend, tokens, totalCapacity: overview.totalCapacity }),
+    [trend, tokens, overview.totalCapacity]
+  );
   const versionPieData = useMemo(
     () => applyComputeRingPalette(versions),
     [versions]
@@ -718,11 +881,22 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
         <Panel
           className="cpu-panel--trend"
           title={`${periodLabel}算力用量趋势`}
-          sub="基础消耗 + 高峰增量 · 同步观察总容量"
+          sub="基础消耗 + 目标用量 · 完成率"
           active={matchesTerm(SEARCH_KEYWORDS.trend, searchTerm)}
         >
           <div className="cpu-trend-chart">
             <EChart className="cpu-trend-echart" option={trendOption} style={{ height: '100%' }} />
+          </div>
+        </Panel>
+
+        <Panel
+          className="cpu-panel--capacity-trend"
+          title={`${periodLabel}算力总容量趋势`}
+          sub="容量池变化 · 可调度算力"
+          active={matchesTerm(SEARCH_KEYWORDS.trend, searchTerm)}
+        >
+          <div className="cpu-capacity-chart">
+            <EChart className="cpu-capacity-echart" option={capacityTrendOption} style={{ height: '100%' }} />
           </div>
         </Panel>
 

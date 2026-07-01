@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 17:05:37 CST
- 更新内容: 回归测试约束算力趋势粉紫玻璃质感，并让版本算力圆环图使用 ECharts 默认自然外拉折线。
+ 更新时间: 2026-07-01 17:20:18 CST
+ 更新内容: 增加算力总容量趋势字段保留约束，避免容量图因数据整理丢失 capacity 后空白。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -59,9 +59,12 @@ test('removes the compute page inner title and ratio header block', () => {
 
 test('matches the compute trend chart to the overview target-bar and completion-line language', () => {
   assert.match(computePageSource, /data:\s*\['算力用量', '目标用量', '完成率%'\]/);
-  assert.match(computePageSource, /itemWidth:\s*16/);
-  assert.match(computePageSource, /itemHeight:\s*11/);
-  assert.match(computePageSource, /textStyle:\s*\{ color: txt, fontSize: 16, fontWeight: 800 \}/);
+  assert.match(computePageSource, /sub="基础消耗 \+ 目标用量 · 完成率"/);
+  assert.doesNotMatch(computePageSource, /同步观察总容量/);
+  assert.match(computePageSource, /itemWidth:\s*18/);
+  assert.match(computePageSource, /itemHeight:\s*12/);
+  assert.match(computePageSource, /itemGap:\s*22/);
+  assert.match(computePageSource, /textStyle:\s*\{[\s\S]*?color:\s*txt,[\s\S]*?fontSize:\s*18,[\s\S]*?fontWeight:\s*850,[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.55\)',[\s\S]*?textShadowBlur:\s*8,[\s\S]*?\}/);
   assert.match(computePageSource, /name:\s*'目标用量'[\s\S]*?type:\s*'bar'[\s\S]*?color:\s*tokens\.chartBarFaint/);
   assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'bar'[\s\S]*?barGap:\s*'-100%'/);
   assert.match(computePageSource, /barCategoryGap:\s*'42%'/);
@@ -118,13 +121,37 @@ test('uses a full-width compute trend card with draggable 15-bar window and desc
   assert.match(computePageSource, /type:\s*'slider'[\s\S]*?showDetail:\s*false[\s\S]*?brushSelect:\s*false/);
   assert.match(computePageSource, /grid:\s*\{ top: 42, left: 10, right: 12, bottom: showSlider \? 44 : 8, containLabel: true \}/);
   assert.match(computePageSource, /const trend = getComputeUsageTrend\(\{ dim, dateRange \}\);/);
-  assert.match(computePageCss, /grid-template-areas:\s*"trend trend"\s*"version usage";/);
+  assert.match(computePageCss, /grid-template-areas:\s*"trend trend"\s*"capacity capacity"\s*"version usage";/);
   assert.match(computePageCss, /\.cpu-panel--trend \{[\s\S]*?min-height:\s*560px;/);
   assert.match(computePageCss, /\.cpu-trend-chart \{[\s\S]*?min-height:\s*420px;/);
 });
 
+test('adds a linked full-width compute capacity trend card below usage trend', () => {
+  assert.match(computePageSource, /function buildCapacityTrendOption\(\{ trend, tokens, totalCapacity \}\)/);
+  assert.match(computePageSource, /const capacityColor = '#38f5ff';/);
+  assert.match(computePageSource, /capacity:\s*point\.capacity \?\? 0/);
+  assert.match(computePageSource, /const latestCapacityBase = buckets\[0\]\?\.capacity \|\| 1;/);
+  assert.match(computePageSource, /const capacityScale = totalCapacity \/ latestCapacityBase;/);
+  assert.match(computePageSource, /const capacity = buckets\.map\(\(point\) => Math\.round\(point\.capacity \* capacityScale\)\);/);
+  assert.match(computePageSource, /value: formatInt\(params\[0\]\?\.value \|\| 0\)/);
+  assert.match(computePageSource, /const capacityTrendOption = useMemo\([\s\S]*?buildCapacityTrendOption\(\{ trend, tokens, totalCapacity: overview\.totalCapacity \}\),[\s\S]*?\[trend, tokens, overview\.totalCapacity\]/);
+  assert.match(computePageSource, /title=\{`\$\{periodLabel\}算力总容量趋势`\}/);
+  assert.match(computePageSource, /sub="容量池变化 · 可调度算力"/);
+  assert.match(computePageSource, /className="cpu-panel--capacity-trend"/);
+  assert.match(computePageSource, /className="cpu-capacity-chart"/);
+  assert.match(computePageSource, /className="cpu-capacity-echart"/);
+  assert.match(computePageSource, /option=\{capacityTrendOption\}/);
+  assert.match(computePageSource, /name:\s*'算力总容量'[\s\S]*?type:\s*'line'[\s\S]*?smooth:\s*true[\s\S]*?areaStyle:/);
+  assert.match(computePageSource, /fillerColor:\s*'rgba\(56,245,255,\.24\)'/);
+  assert.match(computePageSource, /borderColor:\s*'rgba\(56,245,255,\.34\)'/);
+  assert.match(computePageSource, /shadowColor:\s*'rgba\(56,245,255,\.5\)'/);
+  assert.match(computePageCss, /\.cpu-panel--capacity-trend \{[\s\S]*?grid-area:\s*capacity;[\s\S]*?min-height:\s*430px;/);
+  assert.match(computePageCss, /\.cpu-capacity-chart \{[\s\S]*?min-height:\s*300px;/);
+  assert.match(computePageCss, /\.cpu-capacity-echart \{[\s\S]*?height:\s*100% !important;/);
+});
+
 test('places compute pie cards side by side without bottom legend explanations', () => {
-  assert.match(computePageCss, /\.cpu-grid \{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);[\s\S]*?grid-template-areas:\s*"trend trend"\s*"version usage";/);
+  assert.match(computePageCss, /\.cpu-grid \{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);[\s\S]*?grid-template-areas:\s*"trend trend"\s*"capacity capacity"\s*"version usage";/);
   assert.match(computePageCss, /\.cpu-panel--pie \{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;/);
   assert.doesNotMatch(computePageCss, /\.cpu-panel--pie \{[^}]*grid-template-columns:/);
   assert.doesNotMatch(computePageSource, /sub="圆角环图 · 外拉标签"/);

@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 17:03:19 CST  更新内容: 移除算力趋势底部拖动条动态脉冲，仅保留静态粉紫玻璃质感。 */
+/* 更新时间: 2026-07-01 17:10:24 CST  更新内容: 新增算力总容量趋势图布局，放在用量趋势下方并使用荧光青蓝主题。 */
 @property --cursor-angle {
   syntax: "<angle>";
   inherits: false;
@@ -192,6 +192,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-areas:
     "trend trend"
+    "capacity capacity"
     "version usage";
   gap: 16px;
   align-items: stretch;
@@ -201,6 +202,11 @@
 .cpu-panel--trend {
   grid-area: trend;
   min-height: 560px;
+}
+
+.cpu-panel--capacity-trend {
+  grid-area: capacity;
+  min-height: 430px;
 }
 
 .cpu-panel--version-pie {
@@ -219,7 +225,17 @@
   min-height: 420px;
 }
 
+.cpu-capacity-chart {
+  position: relative;
+  flex: 1;
+  min-height: 300px;
+}
+
 .cpu-trend-echart {
+  height: 100% !important;
+}
+
+.cpu-capacity-echart {
   height: 100% !important;
 }
 
@@ -554,6 +570,7 @@
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "trend"
+      "capacity"
       "version"
       "usage";
   }
