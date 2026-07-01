@@ -1,7 +1,7 @@
 # AGENTS.md
 
-更新时间: 2026-05-28 11:38:43
-更新内容: 关闭代理渠道 11 全局过滤规则，代理渠道按普通来源进入统计
+更新时间: 2026-07-01 12:14:15
+更新内容: 增加半环图悬浮提示卡片统一使用透明黑玻璃背景的 UI 规则
 
 This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
@@ -31,3 +31,7 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 ## 文档同步规则
 
 - 每次修改统计口径、同步逻辑、字段映射、表结构、API 取数字段、看板指标计算方式后，必须同步更新对应说明文档。
+
+## UI 规则
+
+- 半环图区域块鼠标悬浮时显示的小卡片，背景必须统一使用透明偏黑的玻璃质感，不按占比切换紫色、荧光绿或其它高饱和底色。
