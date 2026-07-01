@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 12:01:07 CST
- 更新内容: 去掉福小客头顶提示气泡中的名称标题，仅保留提示正文。
+ 更新时间: 2026-07-01 12:02:55 CST
+ 更新内容: 降低福小客头顶气泡弹出频率，并增加可见状态让气泡进出场更丝滑。
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
@@ -46,6 +46,9 @@ const QUICK_PROMPTS = [
 const HOVER_CUE_DELAY = 120;
 const HOVER_CUE_DURATION = 4200;
 const HOVER_INSTANT_CUE_DURATION = 2800;
+const IDLE_BUBBLE_INTERVAL = 28000;
+const PASSIVE_BUBBLE_COOLDOWN = 9000;
+const BUBBLE_EXIT_DURATION = 360;
 const fallbackCue = '这处信息建议结合目标完成率、ROI 和续费一起看。';
 
 function makeId(prefix) {
@@ -95,7 +98,8 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   const [open, setOpen] = useState(false);
   const [mascotAction, setMascotAction] = useState(MASCOT_ACTIONS.idle);
   const [mascotPointer, setMascotPointer] = useState({ x: 0, y: 0, active: false });
-  const [bubbleCue, setBubbleCue] = useState(() => getIdleCompanionCue(0));
+  const [bubbleCue, setBubbleCue] = useState(null);
+  const [bubbleVisible, setBubbleVisible] = useState(false);
   const [renderCard, setRenderCard] = useState(false);
   const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [draft, setDraft] = useState('');
@@ -107,12 +111,15 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   const abortRef = useRef(null);
   const mascotTimerRef = useRef(null);
   const bubbleTimerRef = useRef(null);
+  const bubbleExitTimerRef = useRef(null);
+  const bubbleFrameRef = useRef(null);
   const hoverCueTimerRef = useRef(null);
   const hoverCueAbortRef = useRef(null);
   const hoverCueCacheRef = useRef(new Map());
   const hoverCueActiveKeyRef = useRef('');
   const hoverCueRequestIdRef = useRef(0);
   const idlePromptIndexRef = useRef(0);
+  const lastBubbleShownAtRef = useRef(0);
 
   const snapshot = useMemo(() => buildDashboardSnapshot(activeMenu, dim, channelKey), [activeMenu, dim, channelKey]);
 
@@ -230,7 +237,11 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
     hoverCueAbortRef.current?.abort();
     clearTimeout(mascotTimerRef.current);
     clearTimeout(bubbleTimerRef.current);
+    clearTimeout(bubbleExitTimerRef.current);
     clearTimeout(hoverCueTimerRef.current);
+    if (bubbleFrameRef.current) {
+      window.cancelAnimationFrame(bubbleFrameRef.current);
+    }
   }, []);
 
   useEffect(() => {
@@ -304,14 +315,18 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
 
       const cachedCue = hoverCueCacheRef.current.get(cacheKey);
       if (cachedCue) {
-        showCompanionCue({ text: cachedCue, action: MASCOT_ACTIONS.talk }, { openDialog: false, duration: HOVER_CUE_DURATION });
+        showCompanionCue(
+          { text: cachedCue, action: MASCOT_ACTIONS.talk },
+          { openDialog: false, duration: HOVER_CUE_DURATION, respectCooldown: true },
+        );
         return;
       }
 
-      showCompanionCue({
+      const cueShown = showCompanionCue({
         text: buildInstantHoverCue(normalizedText),
         action: MASCOT_ACTIONS.think,
-      }, { openDialog: false, duration: HOVER_INSTANT_CUE_DURATION });
+      }, { openDialog: false, duration: HOVER_INSTANT_CUE_DURATION, respectCooldown: true });
+      if (!cueShown) return;
 
       hoverCueTimerRef.current = window.setTimeout(() => {
         requestHoverCue(normalizedText, cacheKey);
@@ -329,8 +344,8 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
     if (open) return undefined;
     const idleTimer = window.setInterval(() => {
       idlePromptIndexRef.current += 1;
-      showCompanionCue(getIdleCompanionCue(idlePromptIndexRef.current), { openDialog: false });
-    }, 12000);
+      showCompanionCue(getIdleCompanionCue(idlePromptIndexRef.current), { openDialog: false, respectCooldown: true });
+    }, IDLE_BUBBLE_INTERVAL);
 
     return () => window.clearInterval(idleTimer);
   }, [open]);
@@ -360,20 +375,39 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
     }, duration);
   }
 
-  function showCompanionCue(cue, { openDialog = false, duration = 5600 } = {}) {
-    if (!cue?.text) return;
+  function showCompanionCue(cue, { openDialog = false, duration = 5600, respectCooldown = false } = {}) {
+    if (!cue?.text) return false;
+    const now = Date.now();
+    if (respectCooldown && now - lastBubbleShownAtRef.current < PASSIVE_BUBBLE_COOLDOWN) {
+      return false;
+    }
+    lastBubbleShownAtRef.current = now;
+
     clearTimeout(bubbleTimerRef.current);
+    clearTimeout(bubbleExitTimerRef.current);
+    if (bubbleFrameRef.current) {
+      window.cancelAnimationFrame(bubbleFrameRef.current);
+    }
+    setBubbleVisible(false);
     setBubbleCue(cue);
     setMascotAction(cue.action ?? getSpeechAction(cue.text));
+    bubbleFrameRef.current = window.requestAnimationFrame(() => {
+      bubbleFrameRef.current = null;
+      setBubbleVisible(true);
+    });
 
     if (openDialog) {
       openAiDialog();
     }
 
     bubbleTimerRef.current = setTimeout(() => {
-      setBubbleCue(null);
-      setMascotAction(getRestingMascotAction(openDialog || open));
+      setBubbleVisible(false);
+      bubbleExitTimerRef.current = setTimeout(() => {
+        setBubbleCue(null);
+        setMascotAction(getRestingMascotAction(openDialog || open));
+      }, BUBBLE_EXIT_DURATION);
     }, duration);
+    return true;
   }
 
   function openAiDialog() {
@@ -481,9 +515,9 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   }
 
   return (
-    <div className={`ai-widget${open ? ' ai-widget--open' : ''}${bubbleCue ? ' ai-widget--speaking' : ''}`} ref={widgetRef}>
+    <div className={`ai-widget${open ? ' ai-widget--open' : ''}${bubbleCue && bubbleVisible ? ' ai-widget--speaking' : ''}`} ref={widgetRef}>
       {bubbleCue && (
-        <div className="ai-bubble" role="status" aria-live="polite">
+        <div className={`ai-bubble${bubbleVisible ? ' ai-bubble--visible' : ''}`} role="status" aria-live="polite">
           <span>{bubbleCue.text}</span>
         </div>
       )}

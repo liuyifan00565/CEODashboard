@@ -50,14 +50,29 @@ test('tracks pointer position for Codex-like desktop pet movement', () => {
 });
 
 test('shows random Fu Xiaoke bubble prompts while the dialog is closed', () => {
-  assert.match(componentSource, /const \[bubbleCue,\s*setBubbleCue\] = useState\(\(\) => getIdleCompanionCue\(0\)\);/);
+  assert.match(componentSource, /const IDLE_BUBBLE_INTERVAL = 28000;/);
+  assert.match(componentSource, /const \[bubbleCue,\s*setBubbleCue\] = useState\(null\);/);
+  assert.match(componentSource, /const \[bubbleVisible,\s*setBubbleVisible\] = useState\(false\);/);
   assert.match(componentSource, /const idlePromptIndexRef = useRef\(0\);/);
   assert.match(componentSource, /window\.setInterval\(\(\) => \{/);
   assert.match(componentSource, /idlePromptIndexRef\.current \+= 1;/);
-  assert.match(componentSource, /showCompanionCue\(getIdleCompanionCue\(idlePromptIndexRef\.current\), \{ openDialog: false \}\);/);
-  assert.match(componentSource, /className="ai-bubble"/);
+  assert.match(componentSource, /showCompanionCue\(getIdleCompanionCue\(idlePromptIndexRef\.current\), \{ openDialog: false, respectCooldown: true \}\);/);
+  assert.match(componentSource, /\}, IDLE_BUBBLE_INTERVAL\);/);
+  assert.match(componentSource, /className=\{`ai-bubble\$\{bubbleVisible \? ' ai-bubble--visible' : ''\}`\}/);
   assert.doesNotMatch(componentSource, /ai-bubble-name/);
   assert.match(companionSource, /您好，我是福小客，有什么可以帮助您的吗？/);
+});
+
+test('throttles passive bubble prompts so they do not pop up too frequently', () => {
+  assert.match(componentSource, /const PASSIVE_BUBBLE_COOLDOWN = 9000;/);
+  assert.match(componentSource, /const lastBubbleShownAtRef = useRef\(0\);/);
+  assert.match(componentSource, /function showCompanionCue\(cue, \{ openDialog = false, duration = 5600, respectCooldown = false \} = \{\}\)/);
+  assert.match(componentSource, /const now = Date\.now\(\);/);
+  assert.match(componentSource, /if \(respectCooldown && now - lastBubbleShownAtRef\.current < PASSIVE_BUBBLE_COOLDOWN\) \{\s*return false;\s*\}/s);
+  assert.match(componentSource, /lastBubbleShownAtRef\.current = now;/);
+  assert.match(componentSource, /return true;/);
+  assert.match(componentSource, /const cueShown = showCompanionCue\(\{\s*text: buildInstantHoverCue\(normalizedText\),\s*action: MASCOT_ACTIONS\.think,\s*\}, \{ openDialog: false, duration: HOVER_INSTANT_CUE_DURATION, respectCooldown: true \}\);/s);
+  assert.match(componentSource, /if \(!cueShown\) return;/);
 });
 
 test('responds to KPI card context with matching speech and motion', () => {
@@ -120,12 +135,14 @@ test('styles the launcher as a transparent 3D mascot and speech bubble', () => {
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*bottom:\s*226px;/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*left:\s*50%;/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*width:\s*min\(186px, calc\(100vw - 32px\)\);/s);
-  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*transform:\s*translateX\(-50%\);/s);
+  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*opacity:\s*0;/s);
+  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*transform:\s*translateX\(-50%\) translateY\(10px\) scale\(\.96\);/s);
+  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*transition:\s*opacity \.42s cubic-bezier\(\.2, \.82, \.2, 1\),\s*transform \.42s cubic-bezier\(\.2, \.82, \.2, 1\),\s*filter \.42s ease;/s);
+  assert.match(componentCss, /\.ai-bubble--visible\s*\{[^}]*opacity:\s*1;[^}]*transform:\s*translateX\(-50%\) translateY\(0\) scale\(1\);/s);
   assert.match(componentCss, /\.ai-bubble::after\s*\{[^}]*left:\s*50%;/s);
   assert.doesNotMatch(componentCss, /\.ai-bubble-name/);
-  assert.match(componentCss, /@keyframes ai-bubble-in/);
   assert.match(componentCss, /\.ai-card-wrap\s*\{[^}]*z-index:\s*1000;/s);
-  assert.match(componentCss, /\.ai-widget--speaking \.ai-bubble/);
+  assert.match(componentCss, /\.ai-widget--speaking \.ai-bubble\.ai-bubble--visible/);
   assert.doesNotMatch(componentCss, /--mascot-frame-count/);
   assert.doesNotMatch(componentCss, /ai-mascot-frames/);
   assert.doesNotMatch(componentCss, /ai-mascot-sprite/);
