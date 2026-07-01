@@ -1,4 +1,4 @@
-/* 更新时间: 2026-06-29 11:34:00  更新内容: KPI 二级弹层订单类型控件只展示新签/续订切换，不显示 type 标签。 */
+/* 更新时间: 2026-07-01 17:43:10 CST  更新内容: KPI 二级弹窗恢复深黑实体玻璃背景，避免弹层透出首页点阵底。 */
 
 .km-overlay {
   position: fixed;
@@ -25,7 +25,10 @@
   overflow: auto;
   padding: 24px 26px 22px;
   border-radius: 18px;
-  background: transparent;
+  background:
+    radial-gradient(circle at 20% 34%, rgba(96, 0, 255, 0.14), rgba(96, 0, 255, 0) 46%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.016)),
+    rgba(7, 7, 10, 0.9);
   border: 1px solid var(--line-2);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);

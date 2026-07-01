@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 17:37:49 CST
- 更新内容: 增加算力趋势双滑动条 3 到 15 条可缩放窗口约束，保证最大窗口可拖动延续查看。
+ 更新时间: 2026-07-01 17:43:10 CST
+ 更新内容: 增加首页面板 hover 流光测试，并校验渠道二级弹窗恢复实体深色背景。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -369,6 +369,28 @@ test('uses solid dark glass backgrounds for overview trend and delivery panels',
   assert.match(deliveryPanelBlock, /background:\s*[\s\S]*?#101012;/);
   assert.match(deliveryPanelBlock, /border: 1px solid var\(--line-2\);/);
   assert.match(deliveryPanelBlock, /backdrop-filter: var\(--glass-blur\);/);
+  assert.doesNotMatch(deliveryPanelBlock, /background:\s*transparent;/);
+});
+
+test('keeps channel secondary detail modal on a solid dark glass background', () => {
+  const channelModalBlock = cssRuleBody(channelPanelCss, '.ch-modal-card');
+
+  assert.match(channelModalBlock, /background:\s*[\s\S]*?rgba\(7,\s*7,\s*10,\s*0\.9\);/);
+  assert.match(channelModalBlock, /border: 1px solid var\(--line-2\);/);
+  assert.match(channelModalBlock, /backdrop-filter: var\(--glass-blur\);/);
+  assert.doesNotMatch(channelModalBlock, /background:\s*transparent;/);
+});
+
+test('adds hover flow borders to overview trend and delivery panels', () => {
+  const trendPanelBlock = cssRuleBody(dashboardCss, '.dash-cell .mt-panel');
+  const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-panel');
+
+  assert.match(dashboardCss, /@property --dash-flow-angle/);
+  assert.match(dashboardCss, /\.dash-cell \.mt-panel::before,\s*\.dash-delivery-row \.dlv-panel::before\{[\s\S]*?conic-gradient\(\s*from var\(--dash-flow-angle\)/);
+  assert.match(dashboardCss, /\.dash-cell \.mt-panel:hover::before,[\s\S]*?\.dash-delivery-row \.dlv-panel:focus-within::before\{[\s\S]*?animation:dashPanelFlow 2\.6s linear infinite;/);
+  assert.match(dashboardCss, /\.dash-cell \.mt-panel:hover,[\s\S]*?\.dash-delivery-row \.dlv-panel:focus-within\{[\s\S]*?border-color:rgba\(255,255,255,\.34\);/);
+  assert.match(dashboardCss, /\.dash-delivery-row \.dlv-panel\{[\s\S]*?transition:border-color \.22s ease, box-shadow \.22s ease;/);
+  assert.doesNotMatch(trendPanelBlock, /background:\s*transparent;/);
   assert.doesNotMatch(deliveryPanelBlock, /background:\s*transparent;/);
 });
 

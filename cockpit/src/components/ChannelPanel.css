@@ -1,4 +1,4 @@
-/* 更新时间: 2026-06-29 12:02:00  更新内容: 销售完成行增加右下角展开箭头，并为格式化金额预留稳定布局。 */
+/* 更新时间: 2026-07-01 17:43:10 CST  更新内容: 渠道人员二级明细弹窗恢复深黑实体玻璃背景，避免弹层透明。 */
 
 .ch-panel {
   position: relative;
@@ -216,7 +216,10 @@
   overflow: auto;
   padding: 22px 24px 24px;
   border-radius: 18px;
-  background: transparent;
+  background:
+    radial-gradient(circle at 20% 34%, rgba(96, 0, 255, 0.14), rgba(96, 0, 255, 0) 46%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.016)),
+    rgba(7, 7, 10, 0.9);
   border: 1px solid var(--line-2);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);

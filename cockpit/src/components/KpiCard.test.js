@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 12:23:05
- 更新内容: 将回款 KPI 半环悬浮提示测试调整为更深黑底且不影响其它二级卡片。
+ 更新时间: 2026-07-01 17:43:10 CST
+ 更新内容: KPI 二级弹窗回归测试改为要求深黑实体玻璃背景，避免弹层透明。
 */
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -162,7 +162,8 @@ test('formats recovery pie hover text as name over number instead of inline rows
 });
 
 test('styles the recovery pie mini tooltip with the modal glass frame and a darker readable fill', () => {
-  assert.match(modalCssSource, /\.km-card\s*\{[\s\S]*?background:\s*transparent;[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?backdrop-filter:\s*var\(--glass-blur\);[\s\S]*?box-shadow:\s*0 24px 80px rgba\(0,\s*0,\s*0,\s*0\.48\), inset 0 1px 0 rgba\(255,\s*255,\s*255,\s*0\.2\);/);
+  assert.match(modalCssSource, /\.km-card\s*\{[\s\S]*?background:\s*[\s\S]*?rgba\(7,\s*7,\s*10,\s*0\.9\);[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?backdrop-filter:\s*var\(--glass-blur\);[\s\S]*?box-shadow:\s*0 24px 80px rgba\(0,\s*0,\s*0,\s*0\.48\), inset 0 1px 0 rgba\(255,\s*255,\s*255,\s*0\.2\);/);
+  assert.doesNotMatch(modalCssSource, /\.km-card\s*\{[\s\S]*?background:\s*transparent;/);
   assert.match(cssSource, /\.kpi-pie-tooltip\s*\{[\s\S]*?position:\s*relative;[\s\S]*?overflow:\s*hidden;[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?background:\s*rgba\(0,\s*0,\s*0,\s*\.68\);[\s\S]*?backdrop-filter:\s*var\(--glass-blur\);[\s\S]*?box-shadow:\s*0 24px 80px rgba\(0,\s*0,\s*0,\s*0\.58\), inset 0 1px 0 rgba\(255,\s*255,\s*255,\s*0\.18\);/);
   assert.match(cssSource, /\.kpi-pie-tooltip::after\s*\{[\s\S]*?animation:\s*kpiTooltipSweep 2\.8s linear infinite;/);
   assert.match(cssSource, /@keyframes kpiTooltipSweep\s*\{[\s\S]*?from\s*\{[\s\S]*?translateX\(-150%\)[\s\S]*?to\s*\{[\s\S]*?translateX\(260%\)/);
