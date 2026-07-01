@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 12:01:07 CST
- 更新内容: 约束福小客头顶提示气泡不再渲染名称标题，仅显示提示正文。
+ 更新时间: 2026-07-01 12:06:57 CST
+ 更新内容: 约束福小客头顶提示气泡上移，避免遮挡小人头部。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -117,7 +117,7 @@ test('styles the launcher as a transparent 3D mascot and speech bubble', () => {
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*height:\s*184px;/s);
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*background:\s*transparent;/s);
   assert.match(componentCss, /\.ai-bubble\s*\{/);
-  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*bottom:\s*204px;/s);
+  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*bottom:\s*226px;/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*left:\s*50%;/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*width:\s*min\(186px, calc\(100vw - 32px\)\);/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*transform:\s*translateX\(-50%\);/s);

@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 12:01:07 CST
- 更新内容: 去掉福小客头顶提示气泡名称标题样式，气泡只展示提示正文。
+ 更新时间: 2026-07-01 12:06:57 CST
+ 更新内容: 上移福小客头顶提示气泡，避免遮挡小人头部。
 */
 .ai-widget {
   position: relative;
@@ -60,7 +60,7 @@
 .ai-bubble {
   position: absolute;
   left: 50%;
-  bottom: 204px;
+  bottom: 226px;
   z-index: 4;
   display: grid;
   gap: 4px;
@@ -353,7 +353,7 @@
   .ai-bubble {
     right: 10px;
     left: auto;
-    bottom: 154px;
+    bottom: 174px;
     transform: none;
   }
 
