@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 17:43:39 CST  更新内容: 算力页顶部 KPI 卡片增加 hover 流光边框，并保留深黑实体玻璃背景。 */
+/* 更新时间: 2026-07-01 17:52:30 CST  更新内容: 算力页顶部四张 KPI 卡片背景改为与月度算力用量趋势一致的透明玻璃层。 */
 
 .cpu-page {
   display: flex;
@@ -41,24 +41,11 @@
   overflow: hidden;
   border: 1px solid var(--line-2);
   border-radius: 16px;
-  background:
-    radial-gradient(circle at 82% 12%, rgba(96,0,255,.12), rgba(96,0,255,0) 42%),
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.015)),
-    #101012;
+  background: transparent;
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
-  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease, background .22s ease;
-}
-
-.cpu-kpi::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(192,132,252,.72), var(--cpu-accent), rgba(56,189,248,.46), transparent);
-  opacity: .74;
-  z-index: 1;
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
 }
 
 .cpu-kpi::after {

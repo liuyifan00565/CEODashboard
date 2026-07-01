@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 17:43:10 CST
- 更新内容: 增加首页面板 hover 流光测试，并校验渠道二级弹窗恢复实体深色背景。
+ 更新时间: 2026-07-01 17:52:30 CST
+ 更新内容: 增加算力顶部 KPI 卡片背景与月度算力用量趋势面板一致的回归测试。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -38,11 +38,19 @@ test('renders compute usage analysis as an independent dashboard page', () => {
   assert.match(appSource, /: \(\s*<>\s*<div className="dash-kpis">/);
 });
 
-test('uses static glass cards without BorderGlow sweep for top compute KPI cards', () => {
+test('uses trend-panel glass backgrounds without BorderGlow sweep for top compute KPI cards', () => {
+  const computeKpiBlock = cssRuleBody(computePageCss, '.cpu-kpi');
+  const computeTrendPanelBlock = cssRuleBody(computePageCss, '.cpu-panel');
+
   assert.doesNotMatch(computePageSource, /import BorderGlow from '\.\/BorderGlow\/BorderGlow';/);
   assert.doesNotMatch(computePageSource, /<BorderGlow/);
   assert.match(computePageSource, /<article className=\{`cpu-kpi cpu-kpi--\$\{tone\}\$\{active \? ' cpu-kpi--match' : ''\}`\}>/);
   assert.match(computePageCss, /\.cpu-kpi \{[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?border-radius:\s*16px;[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
+  assert.match(computeKpiBlock, /background:\s*transparent;/);
+  assert.match(computeTrendPanelBlock, /background:\s*transparent;/);
+  assert.doesNotMatch(computeKpiBlock, /#101012/);
+  assert.doesNotMatch(computeKpiBlock, /radial-gradient\(circle at 82% 12%/);
+  assert.doesNotMatch(computePageCss, /\.cpu-kpi::before/);
   assert.doesNotMatch(computePageCss, /cpu-kpi-glow/);
   assert.doesNotMatch(computePageCss, /cpuAiBorderSweep/);
   assert.doesNotMatch(computePageCss, /--edge-proximity/);
