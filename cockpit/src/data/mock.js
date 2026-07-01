@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:18:13 CST
- 更新内容: 算力资源利用率补齐自动回复、商品同步、会眼智宝、视频识别、后置回复拦截和对话测试 6 个场景。
+ 更新时间: 2026-07-01 15:28:42 CST
+ 更新内容: 算力趋势支持近7日、近30日和近半年三种周期数据。
 */
 import { calculateRenewalOverview, getRenewalChannelBreakdown } from '../lib/renewal.js';
 
@@ -277,6 +277,14 @@ export const COMPUTE_USAGE_TREND = COMPUTE_DAYS.map((day, index) => ({
   addOn: COMPUTE_ADD_ON[index],
   capacity: COMPUTE_CAPACITY[index],
 }));
+export const COMPUTE_HALF_YEAR_TREND = [
+  { day: '1月', usage: 2380, addOn: 82, capacity: 19860, target: 2860 },
+  { day: '2月', usage: 2515, addOn: 88, capacity: 20940, target: 2920 },
+  { day: '3月', usage: 2660, addOn: 94, capacity: 22180, target: 3060 },
+  { day: '4月', usage: 2810, addOn: 101, capacity: 23620, target: 3240 },
+  { day: '5月', usage: 2590, addOn: 78, capacity: 24740, target: 3040 },
+  { day: '6月', usage: 3010, addOn: 112, capacity: 26000, target: 3420 },
+];
 
 export const COMPUTE_VERSION_CONSUMPTION = [
   { name: '试用版', value: 2, color: '#8a6200' },
@@ -324,7 +332,9 @@ export function getComputeOverview() {
   return COMPUTE_OVERVIEW;
 }
 
-export function getComputeUsageTrend() {
+export function getComputeUsageTrend(period = '30d') {
+  if (period === '7d') return COMPUTE_USAGE_TREND.slice(-7);
+  if (period === 'half-year') return COMPUTE_HALF_YEAR_TREND;
   return COMPUTE_USAGE_TREND;
 }
 

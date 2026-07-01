@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 14:46:59 CST
- 更新内容: 导航“算力用量分析”接入专属算力看板页面，经营总览和销售分析布局保持不变。
+ 更新时间: 2026-07-01 15:28:42 CST
+ 更新内容: 算力页顶部筛选改为近7日/近30日/近半年，并传递周期驱动趋势图。
 */
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
@@ -32,6 +32,12 @@ const DIM_OPTS = [
   { value: 'year', label: '年' },
   { value: 'month', label: '月' },
   { value: 'day', label: '日' },
+];
+
+const COMPUTE_PERIOD_OPTS = [
+  { value: '7d', label: '近7日' },
+  { value: '30d', label: '近30日' },
+  { value: 'half-year', label: '近半年' },
 ];
 
 // 各主体面板的搜索关键字
@@ -78,6 +84,7 @@ export default function App() {
   const [activeMenu, setActiveMenu] = useState('overview');
   const [dim, setDim] = useState('month');
   const [dateRange, setDateRange] = useState(DEFAULT_FILTER_RANGE);
+  const [computePeriod, setComputePeriod] = useState('30d');
   const [searchTerm, setSearchTerm] = useState('');
   const [openCard, setOpenCard] = useState(null);
   const [companionCue, setCompanionCue] = useState(null);
@@ -210,8 +217,14 @@ export default function App() {
               </div>
             </GlassSurface>
             <div className="dash-tools">
-              <DateRangePicker value={dateRange} onChange={(dates) => setDateRange(dates?.length ? [...dates] : DEFAULT_FILTER_RANGE)} />
-              <Segmented options={DIM_OPTS} value={dim} onChange={setDim} />
+              {isComputePage ? (
+                <Segmented options={COMPUTE_PERIOD_OPTS} value={computePeriod} onChange={setComputePeriod} />
+              ) : (
+                <>
+                  <DateRangePicker value={dateRange} onChange={(dates) => setDateRange(dates?.length ? [...dates] : DEFAULT_FILTER_RANGE)} />
+                  <Segmented options={DIM_OPTS} value={dim} onChange={setDim} />
+                </>
+              )}
               <ThemeToggle />
               <ExpandableSearch onChange={setSearchTerm} />
             </div>
@@ -219,7 +232,7 @@ export default function App() {
 
           <div className="dash-content" ref={gridRef} key={activeMenu}>
             {isComputePage ? (
-              <ComputeUsagePage searchTerm={searchTerm} />
+              <ComputeUsagePage searchTerm={searchTerm} period={computePeriod} />
             ) : (
               <>
                 <div className="dash-kpis">

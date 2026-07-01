@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 15:18:13 CST  更新内容: 算力趋势日期完整展示，资源利用率扩展为 6 个等高紧凑小框。 */
+/* 更新时间: 2026-07-01 15:28:42 CST  更新内容: 算力趋势图改为整行大卡，适配近7日/近30日/近半年切换。 */
 .cpu-page {
   display: flex;
   flex-direction: column;
@@ -10,8 +10,8 @@
 
 .cpu-head {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: flex-start;
   gap: 16px;
   min-width: 0;
   padding: 0 2px 0;
@@ -176,25 +176,22 @@
 
 .cpu-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(310px, .8fr);
+  grid-template-columns: minmax(300px, .82fr) repeat(2, minmax(0, 1fr));
   grid-template-areas:
-    "trend health"
-    "version usage";
+    "trend trend trend"
+    "health version usage";
   gap: 16px;
   min-width: 0;
 }
 
-.cpu-panel--trend,
-.cpu-panel--health {
-  min-height: 486px;
-}
-
 .cpu-panel--trend {
   grid-area: trend;
+  min-height: 560px;
 }
 
 .cpu-panel--health {
   grid-area: health;
+  min-height: 426px;
 }
 
 .cpu-panel--version-pie {
@@ -209,7 +206,7 @@
 
 .cpu-trend-chart {
   flex: 1;
-  min-height: 300px;
+  min-height: 420px;
 }
 
 .cpu-trend-chart > div,
@@ -438,6 +435,10 @@
     min-height: 0;
   }
 
+  .cpu-panel--trend {
+    min-height: 500px;
+  }
+
   .cpu-health-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -472,6 +473,14 @@
   .cpu-trend-chart,
   .cpu-pie-wrap {
     min-height: 286px;
+  }
+
+  .cpu-panel--trend {
+    min-height: 410px;
+  }
+
+  .cpu-trend-chart {
+    min-height: 320px;
   }
 
   .cpu-panel__head {

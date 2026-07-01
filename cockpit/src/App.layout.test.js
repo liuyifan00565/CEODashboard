@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:18:13 CST
- 更新内容: 回归测试补充算力趋势日期完整展示、红色完成率和 6 项资源利用率紧凑布局。
+ 更新时间: 2026-07-01 15:28:42 CST
+ 更新内容: 回归测试补充算力页近7日/近30日/近半年切换、30日拖动窗口和横向大趋势卡布局。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -28,7 +28,7 @@ test('renders compute usage analysis as an independent dashboard page', () => {
   assert.match(appSource, /import ComputeUsagePage from '\.\/components\/ComputeUsagePage';/);
   assert.match(appSource, /const isComputePage = activeMenu === 'compute';/);
   assert.match(appSource, /isComputePage \? \(/);
-  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} \/>/);
+  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} period=\{computePeriod\} \/>/);
   assert.match(appSource, /: \(\s*<>\s*<div className="dash-kpis">/);
 });
 
@@ -47,17 +47,42 @@ test('matches the compute trend chart to the overview target-bar and completion-
   assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'bar'[\s\S]*?barGap:\s*'-100%'/);
   assert.match(computePageSource, /barCategoryGap:\s*'42%'/);
   assert.match(computePageSource, /name:\s*'完成率%'[\s\S]*?type:\s*'line'[\s\S]*?yAxisIndex:\s*1/);
-  assert.match(computePageSource, /const completionColor = '#ff4d5f';/);
+  assert.match(computePageSource, /const completionColor = '#dfff00';/);
+  assert.doesNotMatch(computePageSource, /#ff4d5f/);
   assert.match(computePageSource, /axisLabel:\s*\{ color: faint, fontSize: 12, interval: 0, hideOverlap: false, margin: 12 \}/);
   assert.match(computePageSource, /xAxis:\s*\{ axisLabel:\s*\{ interval: 0, hideOverlap: false, fontSize: 11 \} \}/);
   assert.doesNotMatch(computePageSource, /stack:\s*'usage'/);
   assert.doesNotMatch(computePageSource, /name:\s*'总容量'[\s\S]*?type:\s*'line'/);
 });
 
+test('replaces compute page date controls with period presets and drives trend labels', () => {
+  assert.match(appSource, /const COMPUTE_PERIOD_OPTS = \[/);
+  assert.match(appSource, /\{ value: '7d', label: '近7日' \}/);
+  assert.match(appSource, /\{ value: '30d', label: '近30日' \}/);
+  assert.match(appSource, /\{ value: 'half-year', label: '近半年' \}/);
+  assert.match(appSource, /const \[computePeriod, setComputePeriod\] = useState\('30d'\);/);
+  assert.match(appSource, /isComputePage \? \([\s\S]*?<Segmented options=\{COMPUTE_PERIOD_OPTS\} value=\{computePeriod\} onChange=\{setComputePeriod\} \/>[\s\S]*?\) : \(/);
+  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} period=\{computePeriod\} \/>/);
+  assert.match(computePageSource, /export default function ComputeUsagePage\(\{ searchTerm = '', period = '30d' \}\)/);
+  assert.match(computePageSource, /const periodLabel = PERIOD_LABELS\[period\] \?\? PERIOD_LABELS\['30d'\];/);
+  assert.match(computePageSource, /title=\{`\$\{periodLabel\}算力用量趋势`\}/);
+});
+
+test('uses a full-width compute trend card with draggable 30-day window and month labels for half-year', () => {
+  assert.match(computePageSource, /const canSlide = period === '30d' && days\.length > 10;/);
+  assert.match(computePageSource, /dataZoom: canSlide \? \[/);
+  assert.match(computePageSource, /endValue:\s*Math\.min\(9, days\.length - 1\)/);
+  assert.match(computePageSource, /type:\s*'slider'[\s\S]*?showDetail:\s*false[\s\S]*?brushSelect:\s*false/);
+  assert.match(computePageSource, /const trend = getComputeUsageTrend\(period\);/);
+  assert.match(computePageCss, /grid-template-areas:\s*"trend trend trend"\s*"health version usage";/);
+  assert.match(computePageCss, /\.cpu-panel--trend \{[\s\S]*?min-height:\s*560px;/);
+  assert.match(computePageCss, /\.cpu-trend-chart \{[\s\S]*?min-height:\s*420px;/);
+});
+
 test('renders all compute resource utilization rows in compact equal-height cards', () => {
   assert.match(computePageSource, /resourceHealth\.filter\(\(item\) => item\.usage > 0\)\.map/);
   assert.match(computePageSource, /style=\{\{ width: `\$\{item\.usage\}%`, '--cpu-resource-color': item\.color \}\}/);
-  assert.match(computePageCss, /\.cpu-panel--trend,\s*\.cpu-panel--health \{[\s\S]*?min-height:\s*486px;/);
+  assert.match(computePageCss, /\.cpu-panel--health \{[\s\S]*?min-height:\s*426px;/);
   assert.match(computePageCss, /\.cpu-health-list \{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-rows:\s*repeat\(auto-fit,\s*minmax\(58px,\s*1fr\)\);/);
   assert.match(computePageCss, /\.cpu-health-row \{[\s\S]*?min-height:\s*58px;[\s\S]*?padding:\s*10px 14px;/);
 });

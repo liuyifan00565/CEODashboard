@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:18:13 CST
- 更新内容: 算力趋势日期完整展示、完成率改红色，并让资源利用率按有用量的 6 个场景展示。
+ 更新时间: 2026-07-01 15:28:42 CST
+ 更新内容: 算力趋势支持近7日/近30日/近半年切换，30日可拖动查看，完成率恢复原色。
 */
 import { useMemo } from 'react';
 
@@ -18,11 +18,17 @@ import './ComputeUsagePage.css';
 
 const SEARCH_KEYWORDS = {
   overview: ['算力', '总容量', '新增', '消耗', '客户', '回复率', '余额'],
-  trend: ['趋势', '近30日', '自动回复', '商品同步', '容量'],
+  trend: ['趋势', '近7日', '近30日', '近半年', '自动回复', '商品同步', '容量'],
   version: ['版本', '试用版', '企业版', '旗舰版', '卓越版', '创世版', '启航版'],
   distribution: ['分布', '用量', '客户占比', '高消耗', '零用量'],
   health: ['资源', '利用率', '异常', '自动回复', '商品同步', '会眼智宝', '视频识别', '拦截', '对话测试'],
   customer: ['客户', '排行', '手机号', '负责人', '平均回复率'],
+};
+
+const PERIOD_LABELS = {
+  '7d': '近7日',
+  '30d': '近30日',
+  'half-year': '近半年',
 };
 
 function formatInt(value) {
@@ -70,43 +76,34 @@ function tooltipRow({ color, label, value }) {
   </div>`;
 }
 
-function average(values) {
-  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
-}
-
-function buildTrendBuckets(trend) {
-  const bucketCount = 6;
-  const bucketSize = Math.ceil(trend.length / bucketCount);
-
-  return Array.from({ length: bucketCount }, (_, index) => {
-    const points = trend.slice(index * bucketSize, (index + 1) * bucketSize);
-    const usage = Math.round(average(points.map((point) => point.usage)));
-    const high = Math.max(...points.map((point) => point.usage));
-    const addOn = Math.round(average(points.map((point) => point.addOn)));
-    const target = Math.max(usage + 36, high + addOn + 34);
+function buildTrendPoints(trend) {
+  return trend.map((point) => {
+    const usage = point.usage;
+    const target = point.target ?? Math.max(usage + 36, usage + (point.addOn ?? 0) + 34);
 
     return {
-      label: points[0]?.day ?? '',
-      range: points.length > 1 ? `${points[0].day} - ${points.at(-1).day}` : points[0]?.day ?? '',
+      label: point.day,
+      range: point.range ?? point.day,
       usage,
       target,
       completion: target ? +((usage / target) * 100).toFixed(1) : 0,
     };
-  }).filter((bucket) => bucket.label);
+  });
 }
 
-function buildTrendOption({ trend, tokens }) {
-  const buckets = buildTrendBuckets(trend);
+function buildTrendOption({ trend, tokens, period }) {
+  const buckets = buildTrendPoints(trend);
   const days = buckets.map((point) => point.label);
   const usage = buckets.map((point) => point.usage);
   const target = buckets.map((point) => point.target);
   const completion = buckets.map((point) => point.completion);
+  const canSlide = period === '30d' && days.length > 10;
   const txt = tokens.chartText;
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
   const usageColor = tokens.chartBar;
   const targetColor = tokens.chartBarFaint;
-  const completionColor = '#ff4d5f';
+  const completionColor = '#dfff00';
 
   return {
     backgroundColor: 'transparent',
@@ -121,7 +118,38 @@ function buildTrendOption({ trend, tokens }) {
       textStyle: { color: faint, fontSize: 13 },
       data: ['算力用量', '目标用量', '完成率%'],
     },
-    grid: { top: 42, left: 10, right: 12, bottom: 8, containLabel: true },
+    grid: { top: 42, left: 10, right: 12, bottom: canSlide ? 44 : 8, containLabel: true },
+    dataZoom: canSlide ? [
+      {
+        type: 'inside',
+        xAxisIndex: 0,
+        startValue: 0,
+        endValue: Math.min(9, days.length - 1),
+        zoomLock: true,
+      },
+      {
+        type: 'slider',
+        xAxisIndex: 0,
+        height: 18,
+        bottom: 8,
+        startValue: 0,
+        endValue: Math.min(9, days.length - 1),
+        borderColor: 'rgba(255,255,255,.12)',
+        backgroundColor: 'rgba(255,255,255,.04)',
+        fillerColor: 'rgba(223,255,0,.16)',
+        handleStyle: { color: 'rgba(239,251,255,.68)', borderColor: 'rgba(255,255,255,.34)' },
+        dataBackground: {
+          lineStyle: { color: 'rgba(255,255,255,.16)' },
+          areaStyle: { color: 'rgba(255,255,255,.04)' },
+        },
+        selectedDataBackground: {
+          lineStyle: { color: 'rgba(223,255,0,.46)' },
+          areaStyle: { color: 'rgba(223,255,0,.08)' },
+        },
+        showDetail: false,
+        brushSelect: false,
+      },
+    ] : [],
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow', shadowStyle: { color: tokens.chartPointer } },
@@ -221,7 +249,7 @@ function buildTrendOption({ trend, tokens }) {
       {
         query: { maxWidth: 620 },
         option: {
-          grid: { top: 48, left: 4, right: 4, bottom: 4, containLabel: true },
+          grid: { top: 48, left: 4, right: 4, bottom: canSlide ? 38 : 4, containLabel: true },
           legend: { left: 0, itemGap: 10, textStyle: { fontSize: 11 } },
           xAxis: { axisLabel: { interval: 0, hideOverlap: false, fontSize: 11 } },
         },
@@ -362,10 +390,11 @@ function PieSummary({ data }) {
   );
 }
 
-export default function ComputeUsagePage({ searchTerm = '' }) {
+export default function ComputeUsagePage({ searchTerm = '', period = '30d' }) {
   const tokens = useThemeTokens();
+  const periodLabel = PERIOD_LABELS[period] ?? PERIOD_LABELS['30d'];
   const overview = getComputeOverview();
-  const trend = getComputeUsageTrend();
+  const trend = getComputeUsageTrend(period);
   const versions = getComputeVersionConsumption();
   const distribution = getComputeUsageDistribution();
   const customers = getComputeCustomerRows();
@@ -380,14 +409,14 @@ export default function ComputeUsagePage({ searchTerm = '' }) {
       label: '算力总容量',
       value: formatInt(overview.totalCapacity),
       sub: '当前可调度容量池',
-      meta: `近30日容量 ${formatWan(latestTrend.capacity)}`,
+      meta: `${periodLabel}容量 ${formatWan(latestTrend.capacity)}`,
       tone: 'capacity',
       keywords: ['算力总容量', '容量', '余额'],
     },
     {
       label: '消耗算力',
       value: formatInt(overview.consumedCapacity),
-      sub: '近30日累计消耗',
+      sub: `${periodLabel}累计消耗`,
       meta: `日峰值 ${formatWan(latestTrend.usage)}`,
       tone: 'burn',
       keywords: ['消耗算力', '用量', '趋势'],
@@ -410,7 +439,7 @@ export default function ComputeUsagePage({ searchTerm = '' }) {
     },
   ];
 
-  const trendOption = useMemo(() => buildTrendOption({ trend, tokens }), [trend, tokens]);
+  const trendOption = useMemo(() => buildTrendOption({ trend, tokens, period }), [trend, tokens, period]);
   const versionPieOption = useMemo(
     () => buildPieOption({ data: versions, tokens, unitLabel: '消耗权重' }),
     [versions, tokens]
@@ -450,7 +479,7 @@ export default function ComputeUsagePage({ searchTerm = '' }) {
       <div className="cpu-grid">
         <Panel
           className="cpu-panel--trend"
-          title="近30日算力用量趋势"
+          title={`${periodLabel}算力用量趋势`}
           sub="基础消耗 + 高峰增量 · 同步观察总容量"
           active={matchesTerm(SEARCH_KEYWORDS.trend, searchTerm)}
         >

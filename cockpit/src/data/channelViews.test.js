@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:18:13 CST
- 更新内容: 回归测试补充算力资源利用率 6 个场景，并确认无用量场景不会展示。
+ 更新时间: 2026-07-01 15:28:42 CST
+ 更新内容: 回归测试补充算力趋势近7日、近30日和近半年三种周期数据。
 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -91,6 +91,21 @@ test('returns compute resource utilization rows for every visible usage scene', 
   );
   assert.ok(rows.every((row) => row.usage > 0));
   assert.ok(rows.every((row) => row.color && row.tone));
+});
+
+test('returns compute usage trend by 7-day, 30-day, and half-year periods', () => {
+  const sevenDays = getComputeUsageTrend('7d');
+  const thirtyDays = getComputeUsageTrend('30d');
+  const halfYear = getComputeUsageTrend('half-year');
+
+  assert.equal(sevenDays.length, 7);
+  assert.equal(sevenDays[0].day, '06-24');
+  assert.equal(sevenDays.at(-1).day, '06-30');
+  assert.equal(thirtyDays.length, 29);
+  assert.equal(thirtyDays[0].day, '06-02');
+  assert.equal(thirtyDays.at(-1).day, '06-30');
+  assert.deepEqual(halfYear.map((point) => point.day), ['1月', '2月', '3月', '4月', '5月', '6月']);
+  assert.ok(halfYear.every((point) => point.target > point.usage));
 });
 
 test('filters KPI cards to the selected channel while overview keeps all-channel totals', () => {
