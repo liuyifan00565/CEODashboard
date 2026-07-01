@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 12:19:45  更新内容: 回款 KPI 半环悬浮提示卡片背景改为沿用原 KPI 二级卡片玻璃样式。 */
+/* 更新时间: 2026-07-01 12:23:05  更新内容: 加深回款 KPI 半环悬浮提示卡片底色，提升亮色扇区上的文字可读性。 */
 .kpi-card {
   position: relative;
   display: flex;
@@ -134,10 +134,10 @@
   overflow: hidden;
   border: 1px solid var(--line-2);
   border-radius: 8px;
-  background: transparent;
+  background: rgba(0, 0, 0, .68);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.18);
   text-align: left;
   animation: kpiTooltipPulse 2.6s ease-in-out infinite;
 }
@@ -211,14 +211,14 @@
   0%,
   100% {
     box-shadow:
-      0 24px 80px rgba(0, 0, 0, 0.48),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      0 24px 80px rgba(0, 0, 0, 0.58),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
   }
 
   50% {
     box-shadow:
-      0 26px 86px rgba(0, 0, 0, .5),
-      inset 0 1px 0 rgba(255, 255, 255, 0.24);
+      0 26px 86px rgba(0, 0, 0, .62),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
   }
 }
 
