@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:06:18
- 更新内容: 福小客分析电脑改为右侧双手托举姿势，并保持原图角色不变。
+ 更新时间: 2026-07-01 11:47:04
+ 更新内容: 移除福小客动作缩放，仅保留位移与倾斜，确保所有动作不改变小人尺寸。
 */
 import { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
@@ -12,8 +12,11 @@ import './Mascot3DStage.css';
 
 const MASCOT_IMAGE_WIDTH = 1084;
 const MASCOT_IMAGE_HEIGHT = 1451;
+const MASCOT_ANALYSIS_IMAGE_WIDTH = MASCOT_IMAGE_WIDTH;
+const MASCOT_ANALYSIS_IMAGE_HEIGHT = MASCOT_IMAGE_HEIGHT;
 const MASCOT_STAGE_HEIGHT = 2.04;
 const MASCOT_STAGE_WIDTH = MASCOT_STAGE_HEIGHT * (MASCOT_IMAGE_WIDTH / MASCOT_IMAGE_HEIGHT);
+const MASCOT_ANALYSIS_STAGE_WIDTH = MASCOT_STAGE_WIDTH;
 const DEFAULT_POINTER = { x: 0, y: 0, active: false };
 
 function getDesktopPetMotion(action = MASCOT_ACTIONS.idle, t = 0, pointer = DEFAULT_POINTER, analysisActive = false) {
@@ -28,39 +31,57 @@ function getDesktopPetMotion(action = MASCOT_ACTIONS.idle, t = 0, pointer = DEFA
     x: pointerX * 0.1,
     y: idleFloat - pointerY * 0.055 + flyLift,
     tilt: pointerX * -0.12 + Math.sin(t * 1.1) * 0.018,
-    scale: isAnalyzing ? 1.035 : 1,
-    laptopOpacity: isAnalyzing ? 1 : 0,
+    scale: 1,
+    analysisPoseOpacity: isAnalyzing ? 1 : 0,
   };
 
   if (action === MASCOT_ACTIONS.wave) {
     motion.x += pointerX * 0.035;
     motion.y += bounce * 0.055;
-    motion.tilt += 0.05 * Math.sin(t * 5.2);
-    motion.scale = 1.02;
+    motion.tilt += 0.075 * Math.sin(t * 6.4);
+  }
+
+  if (action === MASCOT_ACTIONS.think) {
+    motion.x += Math.sin(t * 1.45) * 0.012 + pointerX * 0.025;
+    motion.y += Math.sin(t * 2.8) * 0.022;
+    motion.tilt += Math.sin(t * 1.7) * 0.042;
+  }
+
+  if (action === MASCOT_ACTIONS.talk) {
+    motion.x += Math.sin(t * 3.6) * 0.008;
+    motion.y += Math.sin(t * 5.8) * 0.012;
+    motion.tilt += Math.sin(t * 4.2) * 0.025;
   }
 
   if (action === MASCOT_ACTIONS.alert) {
-    motion.y += bounce * 0.06;
-    motion.tilt += Math.sin(t * 8.2) * 0.05;
-    motion.scale = 1.045;
+    motion.x += Math.sin(t * 12) * 0.012;
+    motion.y += bounce * 0.07;
+    motion.tilt += Math.sin(t * 8.2) * 0.06;
   }
 
   if (action === MASCOT_ACTIONS.celebrate) {
-    motion.y += bounce * 0.14;
-    motion.tilt += Math.sin(t * 4.8) * 0.055;
-    motion.scale = 1.055;
+    motion.y += Math.pow(bounce, 1.4) * 0.18;
+    motion.tilt += Math.sin(t * 5.2) * 0.065;
   }
 
   if (action === MASCOT_ACTIONS.click) {
-    motion.y += bounce * 0.09;
-    motion.scale = 1.06 - bounce * 0.018;
+    motion.y += Math.pow(bounce, 1.7) * 0.105;
+    motion.tilt += Math.sin(t * 7.5) * 0.025;
   }
 
   return motion;
 }
 
-function MascotImage({ meshRef }) {
-  const texture = useTexture('/ai-mascot-transparent.png');
+function MascotImage({
+  meshRef,
+  materialRef,
+  source = '/ai-mascot-transparent.png',
+  width = MASCOT_STAGE_WIDTH,
+  height = MASCOT_STAGE_HEIGHT,
+  z = 0,
+  initialOpacity = 1,
+}) {
+  const texture = useTexture(source);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 8;
   texture.wrapS = THREE.ClampToEdgeWrapping;
@@ -68,9 +89,10 @@ function MascotImage({ meshRef }) {
   texture.needsUpdate = true;
 
   return (
-    <mesh ref={meshRef} frustumCulled={false}>
-      <planeGeometry args={[MASCOT_STAGE_WIDTH, MASCOT_STAGE_HEIGHT]} />
+    <mesh ref={meshRef} position={[0, 0, z]} frustumCulled={false}>
+      <planeGeometry args={[width, height]} />
       <meshBasicMaterial
+        ref={materialRef}
         map={texture}
         transparent
         toneMapped={false}
@@ -78,69 +100,20 @@ function MascotImage({ meshRef }) {
         depthWrite={false}
         depthTest={false}
         alphaTest={0.02}
+        opacity={initialOpacity}
       />
     </mesh>
-  );
-}
-
-function LaptopLine({ x, y, width, color = '#62e7ff' }) {
-  return (
-    <mesh position={[x, y, 0.014]}>
-      <planeGeometry args={[width, 0.014]} />
-      <meshBasicMaterial color={color} transparent opacity={0.82} toneMapped={false} depthWrite={false} />
-    </mesh>
-  );
-}
-
-function LaptopGripHand({ x, y, rotation = 0 }) {
-  return (
-    <group position={[x, y, 0.035]} rotation={[0, 0, rotation]}>
-      <mesh scale={[1.22, 0.74, 1]}>
-        <circleGeometry args={[0.095, 32]} />
-        <meshBasicMaterial color="#f5f8ff" transparent opacity={0} toneMapped={false} depthWrite={false} depthTest={false} />
-      </mesh>
-      <mesh position={[0, -0.065, -0.002]} rotation={[0, 0, -rotation * 0.35]}>
-        <planeGeometry args={[0.18, 0.05]} />
-        <meshBasicMaterial color="#6b35f4" transparent opacity={0} toneMapped={false} depthWrite={false} depthTest={false} />
-      </mesh>
-      <mesh position={[0, -0.037, 0.002]} rotation={[0, 0, -rotation * 0.35]}>
-        <planeGeometry args={[0.13, 0.014]} />
-        <meshBasicMaterial color="#7ddfff" transparent opacity={0} toneMapped={false} depthWrite={false} depthTest={false} />
-      </mesh>
-    </group>
-  );
-}
-
-function AnalysisLaptop({ laptopRef }) {
-  return (
-    <group ref={laptopRef} position={[0.56, -0.36, 0.18]} rotation={[0, 0, -0.08]} visible={false}>
-      <mesh position={[0, 0.05, 0]}>
-        <planeGeometry args={[0.68, 0.42]} />
-        <meshBasicMaterial color="#0d1230" transparent opacity={0} toneMapped={false} depthWrite={false} depthTest={false} />
-      </mesh>
-      <mesh position={[0, -0.155, 0.006]}>
-        <planeGeometry args={[0.78, 0.09]} />
-        <meshBasicMaterial color="#e8f6ff" transparent opacity={0} toneMapped={false} depthWrite={false} depthTest={false} />
-      </mesh>
-      <mesh position={[0, 0.05, 0.01]}>
-        <planeGeometry args={[0.56, 0.31]} />
-        <meshBasicMaterial color="#151a45" transparent opacity={0} toneMapped={false} depthWrite={false} depthTest={false} />
-      </mesh>
-      <LaptopLine x={-0.11} y={0.145} width={0.28} />
-      <LaptopLine x={0.05} y={0.076} width={0.39} color="#b48cff" />
-      <LaptopLine x={-0.04} y={0.005} width={0.26} color="#f472b6" />
-      <LaptopLine x={0.11} y={-0.066} width={0.2} color="#67f6c8" />
-      <LaptopGripHand x={-0.34} y={-0.1} rotation={0.18} />
-      <LaptopGripHand x={0.34} y={-0.105} rotation={-0.2} />
-    </group>
   );
 }
 
 function MascotPuppet({ action, pointer, analysisActive }) {
   const group = useRef(null);
   const mascotRef = useRef(null);
-  const laptopRef = useRef(null);
+  const analysisRef = useRef(null);
+  const mascotMaterialRef = useRef(null);
+  const analysisMaterialRef = useRef(null);
   const pointerTarget = useRef({ x: 0, y: 0 }).current;
+  const analysisOpacity = useRef(0);
 
   useFrame(({ clock }) => {
     if (!group.current) return;
@@ -154,25 +127,37 @@ function MascotPuppet({ action, pointer, analysisActive }) {
     group.current.rotation.z = motion.tilt;
     group.current.scale.set(motion.scale, motion.scale, 1);
 
+    analysisOpacity.current = THREE.MathUtils.lerp(analysisOpacity.current, motion.analysisPoseOpacity, 0.18);
+    const poseOpacity = analysisOpacity.current;
+
     if (mascotRef.current) {
       mascotRef.current.position.y = Math.sin(t * 2.1) * 0.012;
     }
-
-    if (laptopRef.current) {
-      laptopRef.current.visible = motion.laptopOpacity > 0.05;
-      laptopRef.current.position.y = -0.36 + Math.sin(t * 3.2) * 0.018;
-      laptopRef.current.rotation.z = Math.sin(t * 2.6) * 0.018;
-      laptopRef.current.traverse((node) => {
-        const material = node.material;
-        if (material) material.opacity = motion.laptopOpacity;
-      });
+    if (analysisRef.current) {
+      analysisRef.current.visible = poseOpacity > 0.02;
+      analysisRef.current.position.y = Math.sin(t * 3.2) * 0.014;
+      analysisRef.current.rotation.z = Math.sin(t * 2.6) * 0.012;
+    }
+    if (mascotMaterialRef.current) {
+      mascotMaterialRef.current.opacity = 1 - poseOpacity;
+    }
+    if (analysisMaterialRef.current) {
+      analysisMaterialRef.current.opacity = poseOpacity;
     }
   });
 
   return (
     <group ref={group}>
-      <MascotImage meshRef={mascotRef} />
-      <AnalysisLaptop laptopRef={laptopRef} />
+      <MascotImage meshRef={mascotRef} materialRef={mascotMaterialRef} />
+      <MascotImage
+        meshRef={analysisRef}
+        materialRef={analysisMaterialRef}
+        source="/ai-mascot-analysis-laptop.png"
+        width={MASCOT_ANALYSIS_STAGE_WIDTH}
+        height={MASCOT_STAGE_HEIGHT}
+        z={0.02}
+        initialOpacity={0}
+      />
     </group>
   );
 }

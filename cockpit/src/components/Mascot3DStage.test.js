@@ -1,27 +1,48 @@
 /*
- 更新时间: 2026-07-01 11:06:18
- 更新内容: 福小客舞台测试约束分析电脑保持在右侧，并增加双手捧电脑姿势。
+ 更新时间: 2026-07-01 11:47:04
+ 更新内容: 增加福小客动作不缩放测试，确保所有动作只移动和倾斜、不改变小人尺寸。
 */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 const stageSource = readFileSync(new URL('./Mascot3DStage.jsx', import.meta.url), 'utf8');
 const stageCss = readFileSync(new URL('./Mascot3DStage.css', import.meta.url), 'utf8');
+const mascotTransparentUrl = new URL('../../public/ai-mascot-transparent.png', import.meta.url);
+const mascotAnalysisUrl = new URL('../../public/ai-mascot-analysis-laptop.png', import.meta.url);
 
-test('uses the original Fu Xiaoke PNG as the only visible character texture', () => {
-  assert.match(stageSource, /useTexture\('\/ai-mascot-transparent\.png'\)/);
+function readPngSize(url) {
+  const png = readFileSync(url);
+  return {
+    width: png.readUInt32BE(16),
+    height: png.readUInt32BE(20),
+  };
+}
+
+test('uses the original Fu Xiaoke PNG and the generated laptop analysis pose as full-character textures', () => {
+  assert.ok(existsSync(mascotTransparentUrl));
+  assert.ok(existsSync(mascotAnalysisUrl));
+  assert.match(stageSource, /source = '\/ai-mascot-transparent\.png'/);
+  assert.match(stageSource, /source="\/ai-mascot-analysis-laptop\.png"/);
+  assert.match(stageSource, /const texture = useTexture\(source\);/);
   assert.match(stageSource, /texture\.colorSpace = THREE\.SRGBColorSpace;/);
-  assert.match(stageSource, /<meshBasicMaterial\s+map=\{texture\}\s+transparent\s+toneMapped=\{false\}/s);
+  assert.match(stageSource, /<meshBasicMaterial\s+ref=\{materialRef\}\s+map=\{texture\}\s+transparent\s+toneMapped=\{false\}/s);
   assert.doesNotMatch(stageSource, /sphereGeometry/);
   assert.doesNotMatch(stageSource, /capsuleGeometry/);
   assert.doesNotMatch(stageSource, /function HelmetHead/);
 });
 
+test('keeps the analysis laptop pose on the exact same canvas size as the original mascot', () => {
+  assert.deepEqual(readPngSize(mascotAnalysisUrl), readPngSize(mascotTransparentUrl));
+  assert.match(stageSource, /const MASCOT_ANALYSIS_IMAGE_WIDTH = MASCOT_IMAGE_WIDTH;/);
+  assert.match(stageSource, /const MASCOT_ANALYSIS_IMAGE_HEIGHT = MASCOT_IMAGE_HEIGHT;/);
+  assert.match(stageSource, /const MASCOT_ANALYSIS_STAGE_WIDTH = MASCOT_STAGE_WIDTH;/);
+});
+
 test('keeps one complete original image plane and forbids soft-bone warping', () => {
-  assert.match(stageSource, /function MascotImage\(\{ meshRef \}\)/);
-  assert.match(stageSource, /<planeGeometry args=\{\[MASCOT_STAGE_WIDTH, MASCOT_STAGE_HEIGHT\]\}/);
-  assert.match(stageSource, /<meshBasicMaterial\s+map=\{texture\}\s+transparent\s+toneMapped=\{false\}/s);
+  assert.match(stageSource, /function MascotImage\(\{\s*meshRef,\s*materialRef,\s*source = '\/ai-mascot-transparent\.png',\s*width = MASCOT_STAGE_WIDTH,\s*height = MASCOT_STAGE_HEIGHT,\s*z = 0,\s*initialOpacity = 1,\s*\}\)/s);
+  assert.match(stageSource, /<planeGeometry args=\{\[width, height\]\}/);
+  assert.match(stageSource, /<meshBasicMaterial\s+ref=\{materialRef\}\s+map=\{texture\}\s+transparent\s+toneMapped=\{false\}/s);
   assert.match(stageSource, /function getDesktopPetMotion\(action = MASCOT_ACTIONS\.idle, t = 0, pointer = DEFAULT_POINTER, analysisActive = false\)/);
   assert.doesNotMatch(stageSource, /const MASCOT_PARTS = \[/);
   assert.doesNotMatch(stageSource, /function createMascotPartMesh/);
@@ -50,23 +71,43 @@ test('follows the mouse like a desktop pet while staying fixed-facing', () => {
   assert.doesNotMatch(stageSource, /Math\.PI \* 2/);
 });
 
-test('shows a laptop analysis prop and flies upward during analysis', () => {
-  assert.match(stageSource, /function AnalysisLaptop\(\{ laptopRef \}\)/);
-  assert.match(stageSource, /<group ref=\{laptopRef\} position=\{\[0\.56, -0\.36, 0\.18\]\} rotation=\{\[0, 0, -0\.08\]\} visible=\{false\}>/);
-  assert.match(stageSource, /<planeGeometry args=\{\[0\.68, 0\.42\]\} \/>/);
-  assert.match(stageSource, /<planeGeometry args=\{\[0\.56, 0\.31\]\} \/>/);
-  assert.match(stageSource, /color="#0d1230"/);
-  assert.match(stageSource, /color="#e8f6ff"/);
-  assert.match(stageSource, /function LaptopGripHand\(\{ x, y, rotation = 0 \}\)/);
-  assert.match(stageSource, /<LaptopGripHand x=\{-0\.34\} y=\{-0\.1\} rotation=\{0\.18\} \/>/);
-  assert.match(stageSource, /<LaptopGripHand x=\{0\.34\} y=\{-0\.105\} rotation=\{-0\.2\} \/>/);
+test('gives each companion action a distinct desktop-pet motion while preserving proportions', () => {
+  assert.match(stageSource, /if \(action === MASCOT_ACTIONS\.think\) \{/);
+  assert.match(stageSource, /motion\.y \+= Math\.sin\(t \* 2\.8\) \* 0\.022;/);
+  assert.match(stageSource, /motion\.tilt \+= Math\.sin\(t \* 1\.7\) \* 0\.042;/);
+  assert.match(stageSource, /if \(action === MASCOT_ACTIONS\.talk\) \{/);
+  assert.match(stageSource, /motion\.tilt \+= Math\.sin\(t \* 4\.2\) \* 0\.025;/);
+  assert.match(stageSource, /motion\.tilt \+= 0\.075 \* Math\.sin\(t \* 6\.4\);/);
+  assert.match(stageSource, /motion\.y \+= Math\.pow\(bounce, 1\.4\) \* 0\.18;/);
+  assert.match(stageSource, /scale: 1,/);
+  assert.doesNotMatch(stageSource, /scale: isAnalyzing/);
+  assert.doesNotMatch(stageSource, /motion\.scale =/);
+  assert.doesNotMatch(stageSource, /motion\.scaleX|motion\.scaleY/);
+  assert.doesNotMatch(stageSource, /scale\.set\(motion\.scaleX/);
+  assert.doesNotMatch(stageSource, /scale\.set\(motion\.scale,\s*motion\.scale \*/);
+});
+
+test('crossfades to the generated laptop pose and flies upward during analysis', () => {
+  assert.match(stageSource, /const MASCOT_ANALYSIS_IMAGE_WIDTH = MASCOT_IMAGE_WIDTH;/);
+  assert.match(stageSource, /const MASCOT_ANALYSIS_IMAGE_HEIGHT = MASCOT_IMAGE_HEIGHT;/);
+  assert.match(stageSource, /const MASCOT_ANALYSIS_STAGE_WIDTH = MASCOT_STAGE_WIDTH;/);
+  assert.doesNotMatch(stageSource, /MASCOT_STAGE_HEIGHT \* \(MASCOT_ANALYSIS_IMAGE_WIDTH \/ MASCOT_ANALYSIS_IMAGE_HEIGHT\)/);
+  assert.match(stageSource, /const analysisRef = useRef\(null\);/);
+  assert.match(stageSource, /const mascotMaterialRef = useRef\(null\);/);
+  assert.match(stageSource, /const analysisMaterialRef = useRef\(null\);/);
+  assert.match(stageSource, /const analysisOpacity = useRef\(0\);/);
   assert.match(stageSource, /const isAnalyzing = analysisActive \|\| action === MASCOT_ACTIONS\.think \|\| action === MASCOT_ACTIONS\.talk \|\| action === MASCOT_ACTIONS\.click;/);
   assert.match(stageSource, /const flyLift = isAnalyzing \? 0\.18 \+ Math\.abs\(Math\.sin\(t \* 2\.4\)\) \* 0\.045 : 0;/);
-  assert.match(stageSource, /laptopOpacity: isAnalyzing \? 1 : 0,/);
-  assert.match(stageSource, /laptopRef\.current\.visible = motion\.laptopOpacity > 0\.05;/);
-  assert.match(stageSource, /material\.opacity = motion\.laptopOpacity;/);
-  assert.match(stageSource, /laptopRef\.current\.position\.y = -0\.36 \+ Math\.sin\(t \* 3\.2\) \* 0\.018;/);
-  assert.match(stageSource, /<AnalysisLaptop laptopRef=\{laptopRef\} \/>/);
+  assert.match(stageSource, /analysisPoseOpacity: isAnalyzing \? 1 : 0,/);
+  assert.match(stageSource, /analysisOpacity\.current = THREE\.MathUtils\.lerp\(analysisOpacity\.current, motion\.analysisPoseOpacity, 0\.18\);/);
+  assert.match(stageSource, /mascotMaterialRef\.current\.opacity = 1 - poseOpacity;/);
+  assert.match(stageSource, /analysisMaterialRef\.current\.opacity = poseOpacity;/);
+  assert.match(stageSource, /analysisRef\.current\.visible = poseOpacity > 0\.02;/);
+  assert.match(stageSource, /analysisRef\.current\.position\.y = Math\.sin\(t \* 3\.2\) \* 0\.014;/);
+  assert.match(stageSource, /analysisRef\.current\.rotation\.z = Math\.sin\(t \* 2\.6\) \* 0\.012;/);
+  assert.match(stageSource, /source="\/ai-mascot-analysis-laptop\.png"/);
+  assert.doesNotMatch(stageSource, /function AnalysisLaptop/);
+  assert.doesNotMatch(stageSource, /function LaptopBoneArm/);
 });
 
 test('renders with extra headroom so the helmet is not clipped', () => {
