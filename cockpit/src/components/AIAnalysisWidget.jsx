@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 14:11:25 CST
- 更新内容: 福小客气泡仅在鼠标停留可读文字后延迟出现，移除闲置自动弹出和本地即时话术。
+ 更新时间: 2026-07-01 14:22:41 CST
+ 更新内容: 福小客悬浮气泡冷却时间调整为 6 秒。
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
@@ -43,7 +43,7 @@ const QUICK_PROMPTS = [
 ];
 const HOVER_CUE_DELAY = 900;
 const HOVER_CUE_DURATION = 4200;
-const HOVER_BUBBLE_COOLDOWN = 12000;
+const HOVER_BUBBLE_COOLDOWN = 6000;
 const BUBBLE_EXIT_DURATION = 360;
 const fallbackCue = '这处信息建议结合目标完成率、ROI 和续费一起看。';
 

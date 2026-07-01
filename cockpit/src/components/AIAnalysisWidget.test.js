@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 14:11:25 CST
- 更新内容: 约束福小客气泡仅在鼠标停留可读文字后出现，移除闲置自动气泡并放慢悬浮触发节奏。
+ 更新时间: 2026-07-01 14:22:41 CST
+ 更新内容: 约束福小客悬浮气泡冷却时间调整为 6 秒。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -60,7 +60,7 @@ test('keeps Fu Xiaoke quiet until the pointer rests on readable text', () => {
 
 test('delays and throttles readable-text hover bubbles', () => {
   assert.match(componentSource, /const HOVER_CUE_DELAY = 900;/);
-  assert.match(componentSource, /const HOVER_BUBBLE_COOLDOWN = 12000;/);
+  assert.match(componentSource, /const HOVER_BUBBLE_COOLDOWN = 6000;/);
   assert.match(componentSource, /const lastBubbleShownAtRef = useRef\(0\);/);
   assert.match(componentSource, /function showCompanionCue\(cue, \{ openDialog = false, duration = 5600, respectCooldown = false \} = \{\}\)/);
   assert.match(componentSource, /const now = Date\.now\(\);/);
