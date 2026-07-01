@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 17:33:45 CST  更新内容: 移除算力页顶部 KPI 卡片边框流光，保留静态深色玻璃质感。 */
+/* 更新时间: 2026-07-01 17:43:39 CST  更新内容: 算力页顶部 KPI 卡片增加 hover 流光边框，并保留深黑实体玻璃背景。 */
 
 .cpu-page {
   display: flex;
@@ -19,9 +19,17 @@
   min-width: 0;
 }
 
+@property --cpu-kpi-flow-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
 .cpu-kpi {
   --cpu-accent: rgba(255,255,255,.78);
+  --cpu-kpi-flow-angle: 0deg;
   position: relative;
+  isolation: isolate;
   width: 100%;
   min-width: 0;
   height: 100%;
@@ -51,6 +59,37 @@
   background: linear-gradient(90deg, transparent, rgba(192,132,252,.72), var(--cpu-accent), rgba(56,189,248,.46), transparent);
   opacity: .74;
   z-index: 1;
+}
+
+.cpu-kpi::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  padding: 1.5px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--cpu-kpi-flow-angle),
+    transparent 0deg,
+    transparent 48deg,
+    rgba(255,255,255,.12) 74deg,
+    rgba(255,255,255,.95) 94deg,
+    rgba(244,114,182,.92) 112deg,
+    rgba(192,132,252,.58) 134deg,
+    transparent 166deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity .26s ease;
 }
 
 .cpu-kpi > * {
@@ -498,10 +537,35 @@
 
 @media (hover: hover) {
   .cpu-kpi:hover,
+  .cpu-kpi:focus-within {
+    transform: translateY(-3px);
+    border-color: rgba(255,255,255,.34);
+    box-shadow: 0 22px 58px rgba(0,0,0,.42), 0 0 28px rgba(244,114,182,.14), 0 0 42px rgba(192,132,252,.08), inset 0 1px 0 rgba(255,255,255,.24);
+  }
+
   .cpu-panel:hover {
     transform: translateY(-3px);
     border-color: var(--line-2);
     box-shadow: 0 22px 58px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.24);
+  }
+
+  .cpu-kpi:hover::after,
+  .cpu-kpi:focus-within::after {
+    opacity: 1;
+    animation: cpuKpiFlow 2.6s linear infinite;
+  }
+}
+
+@keyframes cpuKpiFlow {
+  to {
+    --cpu-kpi-flow-angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cpu-kpi:hover::after,
+  .cpu-kpi:focus-within::after {
+    animation: none;
   }
 }
 
