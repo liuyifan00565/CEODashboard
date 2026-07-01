@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:41:19 CST
- 更新内容: 回归测试补充算力页饼图卡片上下排列、左图右说明、外拉标签与悬浮卡片留白。
+ 更新时间: 2026-07-01 15:51:08 CST
+ 更新内容: 回归测试补充算力页饼图图例压缩、图心右移和长标签短名展示规则。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -84,25 +84,37 @@ test('uses a full-width compute trend card with draggable 30-day window and mont
 
 test('stacks compute pie cards with chart-left and explanation-right layout', () => {
   assert.match(computePageCss, /\.cpu-grid \{[\s\S]*?grid-template-columns:\s*minmax\(300px,\s*\.74fr\) minmax\(0,\s*1\.36fr\);[\s\S]*?grid-template-areas:\s*"trend trend"\s*"health version"\s*"health usage";/);
-  assert.match(computePageCss, /\.cpu-panel--pie \{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-columns:\s*minmax\(340px,\s*1fr\) minmax\(210px,\s*\.64fr\);/);
+  assert.match(computePageCss, /\.cpu-panel--pie \{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-columns:\s*minmax\(400px,\s*1\.62fr\) minmax\(150px,\s*\.38fr\);/);
+  assert.match(computePageCss, /\.cpu-panel--pie \{[\s\S]*?column-gap:\s*12px;/);
   assert.match(computePageCss, /\.cpu-panel--pie \.cpu-panel__head \{[\s\S]*?grid-column:\s*1 \/ -1;/);
   assert.match(computePageCss, /\.cpu-panel--pie \.cpu-pie-summary \{[\s\S]*?display:\s*grid;[\s\S]*?align-content:\s*start;/);
+  assert.match(computePageCss, /\.cpu-panel--pie \.cpu-pie-chip \{[\s\S]*?grid-template-columns:\s*auto minmax\(0,\s*1fr\) auto;/);
+  assert.match(computePageCss, /\.cpu-panel--pie \.cpu-pie-chip small \{[\s\S]*?display:\s*none;/);
   assert.doesNotMatch(computePageSource, /data\.slice\(0,\s*5\)\.map/);
 });
 
 test('keeps compute pie labels and tooltip cards readable around donut charts', () => {
   assert.match(computePageSource, /'padding:12px 14px'/);
-  assert.match(computePageSource, /edgeDistance:\s*16/);
-  assert.match(computePageSource, /bleedMargin:\s*8/);
-  assert.match(computePageSource, /labelLine:\s*\{[\s\S]*?length:\s*18,[\s\S]*?length2:\s*26/);
-  assert.match(computePageSource, /labelLayout:\s*\(params\) =>/);
+  assert.match(computePageSource, /position:\s*'outer'/);
+  assert.match(computePageSource, /alignTo:\s*'labelLine'/);
+  assert.match(computePageSource, /center:\s*\['56%', '52%'\]/);
+  assert.match(computePageSource, /width:\s*152/);
+  assert.match(computePageSource, /function formatPieLabelName/);
+  assert.match(computePageSource, /formatPieLabelName\(params\.name\)/);
+  assert.match(computePageSource, /edgeDistance:\s*18/);
+  assert.match(computePageSource, /distanceToLabelLine:\s*8/);
+  assert.match(computePageSource, /bleedMargin:\s*12/);
+  assert.match(computePageSource, /labelLine:\s*\{[\s\S]*?length:\s*16,[\s\S]*?length2:\s*14/);
+  assert.match(computePageSource, /labelLayout:\s*\{[\s\S]*?moveOverlap:\s*'shiftY'/);
   assert.match(computePageSource, /moveOverlap:\s*'shiftY'/);
+  assert.doesNotMatch(computePageSource, /labelLayout:\s*\(params\) =>/);
+  assert.doesNotMatch(computePageSource, /formatter:\s*\(params\) => `\{name\|\$\{params\.name\}\}\\n/);
 });
 
 test('renders all compute resource utilization rows in compact equal-height cards', () => {
   assert.match(computePageSource, /resourceHealth\.filter\(\(item\) => item\.usage > 0\)\.map/);
   assert.match(computePageSource, /style=\{\{ width: `\$\{item\.usage\}%`, '--cpu-resource-color': item\.color \}\}/);
-  assert.match(computePageCss, /\.cpu-panel--health \{[\s\S]*?min-height:\s*604px;/);
+  assert.match(computePageCss, /\.cpu-panel--health \{[\s\S]*?min-height:\s*684px;/);
   assert.match(computePageCss, /\.cpu-health-list \{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-rows:\s*repeat\(auto-fit,\s*minmax\(58px,\s*1fr\)\);/);
   assert.match(computePageCss, /\.cpu-health-row \{[\s\S]*?min-height:\s*58px;[\s\S]*?padding:\s*10px 14px;/);
 });

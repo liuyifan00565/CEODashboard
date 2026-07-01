@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:41:19 CST
- 更新内容: 饼图卡片改为上下堆叠的左图右说明布局，并优化外拉标签线与悬浮卡片留白。
+ 更新时间: 2026-07-01 15:51:08 CST
+ 更新内容: 压缩饼图右侧说明列并右移图心，长区间标签改用短名展示以避免左侧截断。
 */
 import { useMemo } from 'react';
 
@@ -41,6 +41,15 @@ function formatWan(value) {
 
 function formatPct(value) {
   return `${Number(value).toFixed(Number.isInteger(value) ? 0 : 1)}%`;
+}
+
+function formatPieLabelName(name) {
+  const text = String(name || '');
+  const rangeMatch = text.match(/^(\d+)<算力用量<=([\d]+)$/);
+  if (rangeMatch) return `${rangeMatch[1]}-${rangeMatch[2]}`;
+  if (text.startsWith('算力用量>')) return text.replace('算力用量', '');
+  if (text.startsWith('算力用量=')) return text.replace('算力用量', '');
+  return text;
 }
 
 function normalizeTerm(term) {
@@ -282,8 +291,8 @@ function buildPieOption({ data, tokens, unitLabel }) {
     series: [
       {
         type: 'pie',
-        radius: ['38%', '62%'],
-        center: ['50%', '51%'],
+        radius: ['36%', '58%'],
+        center: ['56%', '52%'],
         avoidLabelOverlap: true,
         minShowLabelAngle: 1,
         padAngle: 1,
@@ -294,40 +303,32 @@ function buildPieOption({ data, tokens, unitLabel }) {
         },
         label: {
           show: true,
-          position: 'outside',
-          alignTo: 'edge',
-          edgeDistance: 16,
-          bleedMargin: 8,
-          minMargin: 8,
-          width: 118,
-          overflow: 'break',
+          position: 'outer',
+          alignTo: 'labelLine',
+          edgeDistance: 18,
+          distanceToLabelLine: 8,
+          bleedMargin: 12,
+          minMargin: 12,
+          width: 152,
+          overflow: 'truncate',
+          ellipsis: '…',
           color: tokens.chartText,
           fontSize: 12,
-          lineHeight: 16,
-          formatter: (params) => `{name|${params.name}}\n{value|${params.value} · ${params.percent}%}`,
+          lineHeight: 15,
+          formatter: (params) => `{name|${formatPieLabelName(params.name)}} {value|${params.percent}%}`,
           rich: {
-            name: { color: tokens.chartText, fontSize: 12, fontWeight: 700, lineHeight: 16 },
+            name: { color: tokens.chartText, fontSize: 12, fontWeight: 700, lineHeight: 15 },
             value: { color: tokens.chartMuted, fontSize: 11, fontWeight: 650, lineHeight: 15 },
           },
         },
         labelLine: {
           show: true,
-          length: 18,
-          length2: 26,
-          smooth: true,
-          lineStyle: { color: tokens.chartAxis, width: 1 },
+          length: 16,
+          length2: 14,
+          lineStyle: { color: tokens.chartAxis, width: 1, opacity: .72 },
         },
-        labelLayout: (params) => {
-          const rect = params?.rect;
-          const labelRect = params?.labelRect;
-          if (!rect || !labelRect) {
-            return { moveOverlap: 'shiftY' };
-          }
-          const isLeftSide = labelRect.x < rect.x + rect.width / 2;
-          return {
-            x: isLeftSide ? rect.x + 8 : rect.x + rect.width - labelRect.width - 8,
-            moveOverlap: 'shiftY',
-          };
+        labelLayout: {
+          moveOverlap: 'shiftY',
         },
         emphasis: {
           scale: true,
@@ -350,10 +351,10 @@ function buildPieOption({ data, tokens, unitLabel }) {
         option: {
           series: [
             {
-              radius: ['38%', '62%'],
-              center: ['50%', '48%'],
-              label: { width: 92, edgeDistance: 4, fontSize: 10 },
-              labelLine: { length: 10, length2: 12 },
+              radius: ['36%', '58%'],
+              center: ['54%', '48%'],
+              label: { width: 112, edgeDistance: 6, distanceToLabelLine: 6, fontSize: 10 },
+              labelLine: { length: 10, length2: 8 },
             },
           ],
         },

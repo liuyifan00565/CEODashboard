@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 15:41:19 CST  更新内容: 饼图卡片改为上下堆叠的左图右说明布局，并优化图例说明和响应式尺寸。 */
+/* 更新时间: 2026-07-01 15:51:08 CST  更新内容: 压缩饼图右侧说明列并放大左侧图表区，避免外拉标签被截断。 */
 .cpu-page {
   display: flex;
   flex-direction: column;
@@ -146,17 +146,17 @@
 
 .cpu-panel--health {
   grid-area: health;
-  min-height: 604px;
+  min-height: 684px;
 }
 
 .cpu-panel--version-pie {
   grid-area: version;
-  min-height: 340px;
+  min-height: 380px;
 }
 
 .cpu-panel--usage-pie {
   grid-area: usage;
-  min-height: 340px;
+  min-height: 380px;
 }
 
 .cpu-trend-chart {
@@ -251,14 +251,14 @@
 
 .cpu-pie-wrap {
   flex: 1;
-  min-height: 310px;
+  min-height: 350px;
 }
 
 .cpu-panel--pie {
   display: grid;
-  grid-template-columns: minmax(340px, 1fr) minmax(210px, .64fr);
-  grid-template-rows: auto minmax(310px, 1fr);
-  column-gap: 18px;
+  grid-template-columns: minmax(400px, 1.62fr) minmax(150px, .38fr);
+  grid-template-rows: auto minmax(350px, 1fr);
+  column-gap: 12px;
   row-gap: 12px;
   align-items: stretch;
 }
@@ -268,7 +268,7 @@
 }
 
 .cpu-panel--pie .cpu-pie-wrap {
-  min-height: 310px;
+  min-height: 350px;
 }
 
 .cpu-pie-summary {
@@ -284,7 +284,7 @@
   align-self: stretch;
   grid-template-columns: minmax(0, 1fr);
   gap: 8px;
-  max-height: 310px;
+  max-height: 350px;
   min-width: 0;
   overflow: auto;
   padding-right: 2px;
@@ -304,9 +304,14 @@
 
 .cpu-panel--pie .cpu-pie-chip {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   width: 100%;
-  padding: 8px 10px;
+  gap: 6px;
+  padding: 7px 8px;
+}
+
+.cpu-panel--pie .cpu-pie-chip small {
+  display: none;
 }
 
 .cpu-pie-chip i {
