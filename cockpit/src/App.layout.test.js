@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 17:29:45 CST
- 更新内容: 增加首页月度经营趋势和交付看板深黑实体背景约束，避免大面板再次透明。
+ 更新时间: 2026-07-01 17:33:45 CST
+ 更新内容: 增加算力页顶部 KPI 卡片静态边框约束，避免恢复 BorderGlow 流光效果。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -38,13 +38,14 @@ test('renders compute usage analysis as an independent dashboard page', () => {
   assert.match(appSource, /: \(\s*<>\s*<div className="dash-kpis">/);
 });
 
-test('uses the AI analysis BorderGlow treatment for all top compute KPI cards', () => {
-  assert.match(computePageSource, /import BorderGlow from '\.\/BorderGlow\/BorderGlow';/);
-  assert.match(computePageSource, /<BorderGlow[\s\S]*?className=\{`cpu-kpi-glow cpu-kpi-glow--\$\{tone\}/);
-  assert.match(computePageSource, /glowColor="40 80 80"/);
-  assert.match(computePageSource, /colors=\{\['#c084fc', '#f472b6', '#38bdf8'\]\}/);
-  assert.match(computePageCss, /\.cpu-kpi-glow\.border-glow-card \{/);
-  assert.match(computePageCss, /animation:\s*cpuAiBorderSweep/);
+test('uses static glass cards without BorderGlow sweep for top compute KPI cards', () => {
+  assert.doesNotMatch(computePageSource, /import BorderGlow from '\.\/BorderGlow\/BorderGlow';/);
+  assert.doesNotMatch(computePageSource, /<BorderGlow/);
+  assert.match(computePageSource, /<article className=\{`cpu-kpi cpu-kpi--\$\{tone\}\$\{active \? ' cpu-kpi--match' : ''\}`\}>/);
+  assert.match(computePageCss, /\.cpu-kpi \{[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?border-radius:\s*16px;[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
+  assert.doesNotMatch(computePageCss, /cpu-kpi-glow/);
+  assert.doesNotMatch(computePageCss, /cpuAiBorderSweep/);
+  assert.doesNotMatch(computePageCss, /--edge-proximity/);
   assert.doesNotMatch(computePageSource, /cpu-kpi--pink-flow/);
   assert.doesNotMatch(computePageCss, /cpu-kpi--pink-flow/);
   assert.doesNotMatch(computePageCss, /cpuPinkFlow/);

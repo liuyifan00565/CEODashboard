@@ -1,10 +1,9 @@
 /*
- 更新时间: 2026-07-01 17:20:18 CST
- 更新内容: 修复算力总容量趋势图为空的问题，趋势整理时保留容量字段并继续复用日期联动窗口。
+ 更新时间: 2026-07-01 17:33:45 CST
+ 更新内容: 移除算力页顶部四个 KPI 卡片的 BorderGlow 流光边框，改为静态深色玻璃卡片。
 */
 import { useMemo, useState } from 'react';
 
-import BorderGlow from './BorderGlow/BorderGlow';
 import EChart from './EChart';
 import {
   getComputeCustomerRows,
@@ -682,25 +681,12 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
 function KpiCard({ label, value, sub, meta, tone, active }) {
   return (
     <div className="cpu-kpi-slot" data-anim>
-      <BorderGlow
-        className={`cpu-kpi-glow cpu-kpi-glow--${tone} sweep-active${active ? ' cpu-kpi-glow--match' : ''}`}
-        edgeSensitivity={30}
-        glowColor="40 80 80"
-        backgroundColor="var(--ai-card-bg)"
-        borderRadius={16}
-        glowRadius={34}
-        glowIntensity={2.2}
-        coneSpread={25}
-        colors={['#c084fc', '#f472b6', '#38bdf8']}
-        fillOpacity={0.42}
-      >
-        <article className={`cpu-kpi cpu-kpi--${tone}${active ? ' cpu-kpi--match' : ''}`}>
-          <span className="cpu-kpi__label">{label}</span>
-          <strong className="cpu-kpi__value">{value}</strong>
-          <span className="cpu-kpi__sub">{sub}</span>
-          <span className="cpu-kpi__meta">{meta}</span>
-        </article>
-      </BorderGlow>
+      <article className={`cpu-kpi cpu-kpi--${tone}${active ? ' cpu-kpi--match' : ''}`}>
+        <span className="cpu-kpi__label">{label}</span>
+        <strong className="cpu-kpi__value">{value}</strong>
+        <span className="cpu-kpi__sub">{sub}</span>
+        <span className="cpu-kpi__meta">{meta}</span>
+      </article>
     </div>
   );
 }

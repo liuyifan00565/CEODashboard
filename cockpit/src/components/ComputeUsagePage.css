@@ -1,15 +1,4 @@
-/* 更新时间: 2026-07-01 17:10:24 CST  更新内容: 新增算力总容量趋势图布局，放在用量趋势下方并使用荧光青蓝主题。 */
-@property --cursor-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 110deg;
-}
-
-@property --edge-proximity {
-  syntax: "<number>";
-  inherits: false;
-  initial-value: 88;
-}
+/* 更新时间: 2026-07-01 17:33:45 CST  更新内容: 移除算力页顶部 KPI 卡片边框流光，保留静态深色玻璃质感。 */
 
 .cpu-page {
   display: flex;
@@ -30,26 +19,10 @@
   min-width: 0;
 }
 
-.cpu-kpi-glow.border-glow-card {
-  --edge-proximity: 88;
-  --cursor-angle: 110deg;
-  width: 100%;
-  min-width: 0;
-  min-height: 142px;
-  animation: cpuAiBorderSweep 4.8s ease-in-out infinite;
-  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
-}
-
-.cpu-kpi-glow .border-glow-inner {
-  min-height: 142px;
-  height: 100%;
-  overflow: hidden;
-  border-radius: inherit;
-}
-
 .cpu-kpi {
   --cpu-accent: rgba(255,255,255,.78);
   position: relative;
+  width: 100%;
   min-width: 0;
   height: 100%;
   display: flex;
@@ -58,15 +31,16 @@
   min-height: 142px;
   padding: 17px 18px;
   overflow: hidden;
-  border: 0;
-  border-radius: inherit;
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
   background:
+    radial-gradient(circle at 82% 12%, rgba(96,0,255,.12), rgba(96,0,255,0) 42%),
     linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.015)),
-    transparent;
+    #101012;
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
-  box-shadow: none;
-  transition: background .22s ease;
+  box-shadow: var(--glass-shadow);
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease, background .22s ease;
 }
 
 .cpu-kpi::before {
@@ -91,24 +65,6 @@
   --cpu-accent: rgba(255,255,255,.82);
 }
 
-@keyframes cpuAiBorderSweep {
-  0% {
-    --cursor-angle: 110deg;
-    --edge-proximity: 76;
-  }
-
-  45% {
-    --cursor-angle: 315deg;
-    --edge-proximity: 100;
-  }
-
-  100% {
-    --cursor-angle: 465deg;
-    --edge-proximity: 76;
-  }
-}
-
-.cpu-kpi-glow--match.border-glow-card,
 .cpu-kpi--match,
 .cpu-panel--match {
   border-color: rgba(255,255,255,.44);
@@ -541,23 +497,11 @@
 }
 
 @media (hover: hover) {
-  .cpu-kpi-glow:hover,
+  .cpu-kpi:hover,
   .cpu-panel:hover {
     transform: translateY(-3px);
     border-color: var(--line-2);
     box-shadow: 0 22px 58px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.24);
-  }
-
-  .cpu-kpi-glow:hover {
-    --edge-proximity: 100;
-    border-color: rgba(255,255,255,.3);
-    box-shadow: 0 22px 62px rgba(0,0,0,.42), 0 0 28px rgba(192,132,252,.22), inset 0 1px 0 rgba(255,255,255,.24);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cpu-kpi-glow {
-    animation: none;
   }
 }
 
