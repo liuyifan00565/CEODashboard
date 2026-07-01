@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 14:46:59 CST
- 更新内容: 回归测试新增“算力用量分析”专属看板数据形状，覆盖核心指标、趋势、饼图和客户明细。
+ 更新时间: 2026-07-01 15:18:13 CST
+ 更新内容: 回归测试补充算力资源利用率 6 个场景，并确认无用量场景不会展示。
 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -13,6 +13,7 @@ import {
   VERSIONS,
   getComputeCustomerRows,
   getComputeOverview,
+  getComputeResourceHealth,
   getComputeUsageDistribution,
   getComputeUsageTrend,
   getComputeVersionConsumption,
@@ -79,6 +80,17 @@ test('returns compute dashboard metrics, trend, pie slices, and customer rows fr
   assert.equal(customers[0].phone, '150****1491');
   assert.equal(customers[0].usage, 2010190);
   assert.ok(customers.every((customer, index, list) => index === 0 || list[index - 1].usage >= customer.usage));
+});
+
+test('returns compute resource utilization rows for every visible usage scene', () => {
+  const rows = getComputeResourceHealth();
+
+  assert.deepEqual(
+    rows.map((row) => row.name),
+    ['自动回复', '商品同步', '会眼智宝', '视频识别', '后置回复拦截', '对话测试']
+  );
+  assert.ok(rows.every((row) => row.usage > 0));
+  assert.ok(rows.every((row) => row.color && row.tone));
 });
 
 test('filters KPI cards to the selected channel while overview keeps all-channel totals', () => {

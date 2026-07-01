@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:08:17 CST
- 更新内容: 回归测试新增算力页面标题去说明文案、整体上移和趋势柱状图对齐经营趋势样式。
+ 更新时间: 2026-07-01 15:18:13 CST
+ 更新内容: 回归测试补充算力趋势日期完整展示、红色完成率和 6 项资源利用率紧凑布局。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -47,8 +47,19 @@ test('matches the compute trend chart to the overview target-bar and completion-
   assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'bar'[\s\S]*?barGap:\s*'-100%'/);
   assert.match(computePageSource, /barCategoryGap:\s*'42%'/);
   assert.match(computePageSource, /name:\s*'完成率%'[\s\S]*?type:\s*'line'[\s\S]*?yAxisIndex:\s*1/);
+  assert.match(computePageSource, /const completionColor = '#ff4d5f';/);
+  assert.match(computePageSource, /axisLabel:\s*\{ color: faint, fontSize: 12, interval: 0, hideOverlap: false, margin: 12 \}/);
+  assert.match(computePageSource, /xAxis:\s*\{ axisLabel:\s*\{ interval: 0, hideOverlap: false, fontSize: 11 \} \}/);
   assert.doesNotMatch(computePageSource, /stack:\s*'usage'/);
   assert.doesNotMatch(computePageSource, /name:\s*'总容量'[\s\S]*?type:\s*'line'/);
+});
+
+test('renders all compute resource utilization rows in compact equal-height cards', () => {
+  assert.match(computePageSource, /resourceHealth\.filter\(\(item\) => item\.usage > 0\)\.map/);
+  assert.match(computePageSource, /style=\{\{ width: `\$\{item\.usage\}%`, '--cpu-resource-color': item\.color \}\}/);
+  assert.match(computePageCss, /\.cpu-panel--trend,\s*\.cpu-panel--health \{[\s\S]*?min-height:\s*486px;/);
+  assert.match(computePageCss, /\.cpu-health-list \{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-rows:\s*repeat\(auto-fit,\s*minmax\(58px,\s*1fr\)\);/);
+  assert.match(computePageCss, /\.cpu-health-row \{[\s\S]*?min-height:\s*58px;[\s\S]*?padding:\s*10px 14px;/);
 });
 
 test('notifies Fu Xiaoke when a KPI card is opened', () => {

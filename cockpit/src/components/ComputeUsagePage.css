@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 15:08:17 CST  更新内容: 算力页标题区去除英文和副文案并上移，趋势图样式对齐经营趋势柱线组合。 */
+/* 更新时间: 2026-07-01 15:18:13 CST  更新内容: 算力趋势日期完整展示，资源利用率扩展为 6 个等高紧凑小框。 */
 .cpu-page {
   display: flex;
   flex-direction: column;
@@ -184,14 +184,17 @@
   min-width: 0;
 }
 
+.cpu-panel--trend,
+.cpu-panel--health {
+  min-height: 486px;
+}
+
 .cpu-panel--trend {
   grid-area: trend;
-  min-height: 382px;
 }
 
 .cpu-panel--health {
   grid-area: health;
-  min-height: 382px;
 }
 
 .cpu-panel--version-pie {
@@ -215,17 +218,20 @@
 }
 
 .cpu-health-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex: 1;
   min-height: 0;
+  display: grid;
+  grid-template-rows: repeat(auto-fit, minmax(58px, 1fr));
+  gap: 8px;
 }
 
 .cpu-health-row {
   display: grid;
-  gap: 9px;
+  align-content: center;
+  gap: 7px;
   min-width: 0;
-  padding: 13px 14px;
+  min-height: 58px;
+  padding: 10px 14px;
   border: 1px solid var(--line);
   border-radius: 13px;
   background: var(--glass-cell);
@@ -257,7 +263,7 @@
 
 .cpu-health-row__top span {
   flex: none;
-  color: var(--up);
+  color: var(--cpu-resource-color, var(--up));
   font-size: 13px;
   font-weight: 720;
   font-variant-numeric: tabular-nums;
@@ -265,7 +271,7 @@
 
 .cpu-health-row__bar {
   position: relative;
-  height: 8px;
+  height: 7px;
   overflow: hidden;
   border-radius: 99px;
   background: rgba(255,255,255,.07);
@@ -275,12 +281,12 @@
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
-  background: var(--txt);
-  box-shadow: 0 0 18px rgba(255,255,255,.16);
+  background: var(--cpu-resource-color, var(--txt));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--cpu-resource-color, var(--txt)) 30%, transparent);
 }
 
 .cpu-health-row--warn .cpu-health-row__bar i {
-  background: var(--warn);
+  background: var(--cpu-resource-color, var(--warn));
 }
 
 .cpu-health-row__foot span,

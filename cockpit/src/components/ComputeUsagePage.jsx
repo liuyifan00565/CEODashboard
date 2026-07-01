@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:08:17 CST
- 更新内容: 算力页面标题去除英文和说明文案并整体上移，趋势柱状图改为目标背景柱、实际前景柱和完成率曲线。
+ 更新时间: 2026-07-01 15:18:13 CST
+ 更新内容: 算力趋势日期完整展示、完成率改红色，并让资源利用率按有用量的 6 个场景展示。
 */
 import { useMemo } from 'react';
 
@@ -21,7 +21,7 @@ const SEARCH_KEYWORDS = {
   trend: ['趋势', '近30日', '自动回复', '商品同步', '容量'],
   version: ['版本', '试用版', '企业版', '旗舰版', '卓越版', '创世版', '启航版'],
   distribution: ['分布', '用量', '客户占比', '高消耗', '零用量'],
-  health: ['资源', '利用率', '异常', '自动回复', '视频识别', '拦截'],
+  health: ['资源', '利用率', '异常', '自动回复', '商品同步', '会眼智宝', '视频识别', '拦截', '对话测试'],
   customer: ['客户', '排行', '手机号', '负责人', '平均回复率'],
 };
 
@@ -106,7 +106,7 @@ function buildTrendOption({ trend, tokens }) {
   const line = tokens.chartGrid;
   const usageColor = tokens.chartBar;
   const targetColor = tokens.chartBarFaint;
-  const completionColor = '#dfff00';
+  const completionColor = '#ff4d5f';
 
   return {
     backgroundColor: 'transparent',
@@ -147,7 +147,7 @@ function buildTrendOption({ trend, tokens }) {
       data: days,
       axisLine: { lineStyle: { color: line } },
       axisTick: { show: false },
-      axisLabel: { color: faint, fontSize: 12, interval: 2, margin: 12 },
+      axisLabel: { color: faint, fontSize: 12, interval: 0, hideOverlap: false, margin: 12 },
     },
     yAxis: [
       {
@@ -223,7 +223,7 @@ function buildTrendOption({ trend, tokens }) {
         option: {
           grid: { top: 48, left: 4, right: 4, bottom: 4, containLabel: true },
           legend: { left: 0, itemGap: 10, textStyle: { fontSize: 11 } },
-          xAxis: { axisLabel: { interval: 5, fontSize: 11 } },
+          xAxis: { axisLabel: { interval: 0, hideOverlap: false, fontSize: 11 } },
         },
       },
     ],
@@ -466,14 +466,18 @@ export default function ComputeUsagePage({ searchTerm = '' }) {
           active={matchesTerm(SEARCH_KEYWORDS.health, searchTerm)}
         >
           <div className="cpu-health-list">
-            {resourceHealth.map((item) => (
-              <div className={`cpu-health-row cpu-health-row--${item.tone}`} key={item.key}>
+            {resourceHealth.filter((item) => item.usage > 0).map((item) => (
+              <div
+                className={`cpu-health-row cpu-health-row--${item.tone}`}
+                key={item.key}
+                style={{ '--cpu-resource-color': item.color }}
+              >
                 <div className="cpu-health-row__top">
                   <strong>{item.name}</strong>
                   <span>{item.trend}</span>
                 </div>
                 <div className="cpu-health-row__bar">
-                  <i style={{ width: `${item.usage}%` }} />
+                  <i style={{ width: `${item.usage}%`, '--cpu-resource-color': item.color }} />
                 </div>
                 <div className="cpu-health-row__foot">
                   <span>{formatPct(item.usage)}</span>
