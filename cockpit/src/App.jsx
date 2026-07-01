@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:28:42 CST
- 更新内容: 算力页顶部筛选改为近7日/近30日/近半年，并传递周期驱动趋势图。
+ 更新时间: 2026-07-01 15:35:23 CST
+ 更新内容: 算力页顶部工具栏恢复日期范围选择，并保留近7日/近30日/近半年周期切换。
 */
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
@@ -218,7 +218,10 @@ export default function App() {
             </GlassSurface>
             <div className="dash-tools">
               {isComputePage ? (
-                <Segmented options={COMPUTE_PERIOD_OPTS} value={computePeriod} onChange={setComputePeriod} />
+                <>
+                  <DateRangePicker value={dateRange} onChange={(dates) => setDateRange(dates?.length ? [...dates] : DEFAULT_FILTER_RANGE)} />
+                  <Segmented options={COMPUTE_PERIOD_OPTS} value={computePeriod} onChange={setComputePeriod} />
+                </>
               ) : (
                 <>
                   <DateRangePicker value={dateRange} onChange={(dates) => setDateRange(dates?.length ? [...dates] : DEFAULT_FILTER_RANGE)} />

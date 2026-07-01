@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:28:42 CST
- 更新内容: 回归测试补充算力页近7日/近30日/近半年切换、30日拖动窗口和横向大趋势卡布局。
+ 更新时间: 2026-07-01 15:35:23 CST
+ 更新内容: 回归测试补充算力页顶部日期选择回归工具栏，并移除页内标题环比区。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -32,13 +32,16 @@ test('renders compute usage analysis as an independent dashboard page', () => {
   assert.match(appSource, /: \(\s*<>\s*<div className="dash-kpis">/);
 });
 
-test('keeps compute usage page header compact without extra English or subtitle copy', () => {
+test('removes the compute page inner title and ratio header block', () => {
   assert.doesNotMatch(computePageSource, /cpu-eyebrow/);
+  assert.doesNotMatch(computePageSource, /cpu-head/);
+  assert.doesNotMatch(computePageCss, /\.cpu-head/);
   assert.doesNotMatch(computePageSource, /Compute Usage/);
   assert.doesNotMatch(computePageSource, /近30日消耗、容量与客户用量结构/);
+  assert.doesNotMatch(computePageSource, /日用量环比/);
+  assert.doesNotMatch(computePageSource, /previousTrend/);
   assert.doesNotMatch(computePageSource, /<p>/);
-  assert.match(computePageCss, /\.cpu-page \{[\s\S]*?margin-top:\s*-10px;/);
-  assert.match(computePageCss, /\.cpu-head \{[\s\S]*?padding:\s*0 2px 0;/);
+  assert.match(computePageCss, /\.cpu-page \{[\s\S]*?margin-top:\s*0;/);
 });
 
 test('matches the compute trend chart to the overview target-bar and completion-line language', () => {
@@ -55,13 +58,13 @@ test('matches the compute trend chart to the overview target-bar and completion-
   assert.doesNotMatch(computePageSource, /name:\s*'总容量'[\s\S]*?type:\s*'line'/);
 });
 
-test('replaces compute page date controls with period presets and drives trend labels', () => {
+test('keeps compute page topbar date picker before period presets and drives trend labels', () => {
   assert.match(appSource, /const COMPUTE_PERIOD_OPTS = \[/);
   assert.match(appSource, /\{ value: '7d', label: '近7日' \}/);
   assert.match(appSource, /\{ value: '30d', label: '近30日' \}/);
   assert.match(appSource, /\{ value: 'half-year', label: '近半年' \}/);
   assert.match(appSource, /const \[computePeriod, setComputePeriod\] = useState\('30d'\);/);
-  assert.match(appSource, /isComputePage \? \([\s\S]*?<Segmented options=\{COMPUTE_PERIOD_OPTS\} value=\{computePeriod\} onChange=\{setComputePeriod\} \/>[\s\S]*?\) : \(/);
+  assert.match(appSource, /isComputePage \? \([\s\S]*?<DateRangePicker value=\{dateRange\}[\s\S]*?<Segmented options=\{COMPUTE_PERIOD_OPTS\} value=\{computePeriod\} onChange=\{setComputePeriod\} \/>[\s\S]*?\) : \(/);
   assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} period=\{computePeriod\} \/>/);
   assert.match(computePageSource, /export default function ComputeUsagePage\(\{ searchTerm = '', period = '30d' \}\)/);
   assert.match(computePageSource, /const periodLabel = PERIOD_LABELS\[period\] \?\? PERIOD_LABELS\['30d'\];/);

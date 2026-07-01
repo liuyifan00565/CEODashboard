@@ -1,58 +1,11 @@
-/* 更新时间: 2026-07-01 15:28:42 CST  更新内容: 算力趋势图改为整行大卡，适配近7日/近30日/近半年切换。 */
+/* 更新时间: 2026-07-01 15:35:23 CST  更新内容: 移除算力页内标题头部，日期选择统一放入顶部工具栏。 */
 .cpu-page {
   display: flex;
   flex-direction: column;
   gap: 16px;
   min-width: 0;
-  margin-top: -10px;
+  margin-top: 0;
   color: var(--txt);
-}
-
-.cpu-head {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 16px;
-  min-width: 0;
-  padding: 0 2px 0;
-}
-
-.cpu-head h2 {
-  margin: 0;
-  color: var(--txt);
-  font-size: clamp(24px, 2.2vw, 34px);
-  line-height: 1.1;
-  font-weight: 760;
-}
-
-.cpu-head__meta {
-  flex: none;
-  min-width: 158px;
-  display: grid;
-  gap: 3px;
-  padding: 12px 14px;
-  border: 1px solid var(--line-2);
-  border-radius: 14px;
-  background: transparent;
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-shadow);
-  text-align: right;
-}
-
-.cpu-head__meta span,
-.cpu-head__meta em {
-  color: var(--faint);
-  font-size: 12px;
-  font-style: normal;
-}
-
-.cpu-head__meta b {
-  color: var(--txt);
-  font-size: 22px;
-  line-height: 1.05;
-  font-weight: 780;
-  font-variant-numeric: tabular-nums;
 }
 
 .cpu-kpi-grid {
@@ -446,16 +399,6 @@
 }
 
 @media (max-width: 760px) {
-  .cpu-head {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .cpu-head__meta {
-    width: 100%;
-    text-align: left;
-  }
-
   .cpu-kpi-grid,
   .cpu-health-list {
     grid-template-columns: 1fr;

@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:28:42 CST
- 更新内容: 算力趋势支持近7日/近30日/近半年切换，30日可拖动查看，完成率恢复原色。
+ 更新时间: 2026-07-01 15:35:23 CST
+ 更新内容: 移除算力页内标题统计头部，顶部日期选择改由全局工具栏承载。
 */
 import { useMemo } from 'react';
 
@@ -400,7 +400,6 @@ export default function ComputeUsagePage({ searchTerm = '', period = '30d' }) {
   const customers = getComputeCustomerRows();
   const resourceHealth = getComputeResourceHealth();
   const latestTrend = trend.at(-1);
-  const previousTrend = trend.at(-2);
   const highUsageBucket = distribution.find((item) => item.name === '算力用量>10000');
   const zeroUsageBucket = distribution.find((item) => item.name === '算力用量=0');
 
@@ -451,17 +450,6 @@ export default function ComputeUsagePage({ searchTerm = '', period = '30d' }) {
 
   return (
     <div className="cpu-page">
-      <header className="cpu-head" data-anim>
-        <div>
-          <h2>算力用量分析</h2>
-        </div>
-        <div className="cpu-head__meta">
-          <span>近30日</span>
-          <b>{previousTrend ? formatPct(((latestTrend.usage - previousTrend.usage) / previousTrend.usage) * 100) : '0%'}</b>
-          <em>日用量环比</em>
-        </div>
-      </header>
-
       <div className="cpu-kpi-grid">
         {kpis.map((item) => (
           <KpiCard
