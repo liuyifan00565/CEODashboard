@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-06-30 16:18:17
- 更新内容: 顶部 KPI 区改为两张内嵌销售完成的回款大长卡。
+ 更新时间: 2026-07-01 15:18:00 CST
+ 更新内容: 版本情况所在总览网格行收紧到回款大卡片规格，避免新版本大卡片被拉高。
 */
 
 /* ===== 外层 shell：左侧栏 + 右内容列 ===== */
@@ -68,7 +68,7 @@
 /* 总览：趋势与费比续费 KPI 在首行，版本情况横跨底部整行 */
 .dash-grid--overview{
   grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);
-  grid-template-rows:1fr 1fr;
+  grid-template-rows:minmax(326px,1fr) minmax(326px,342px);
   grid-template-areas:
     "trend finance"
     "version version";
