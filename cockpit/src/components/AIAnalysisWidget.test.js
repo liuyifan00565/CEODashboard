@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:19:49 CST
- 更新内容: AI 小人测试补充页面文字悬浮触发千问短气泡，以及桌宠鼠标跟随和分析飞行状态传递。
+ 更新时间: 2026-07-01 11:35:33 CST
+ 更新内容: AI 小人测试补充悬浮文字即时气泡与当前悬浮位置校验，减少千问返回前的等待感。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -66,16 +66,22 @@ test('responds to KPI card context with matching speech and motion', () => {
 });
 
 test('requests Qwen hover bubble cues from readable page text', () => {
+  assert.match(componentSource, /buildInstantHoverCue/);
   assert.match(componentSource, /normalizeHoverCueText/);
   assert.match(componentSource, /shouldRequestHoverCue/);
   assert.match(componentSource, /buildHoverCueCacheKey/);
   assert.match(componentSource, /getHoverCueTextFromElement/);
+  assert.match(componentSource, /const HOVER_CUE_DELAY = 120;/);
   assert.match(componentSource, /const hoverCueTimerRef = useRef\(null\);/);
   assert.match(componentSource, /const hoverCueCacheRef = useRef\(new Map\(\)\);/);
+  assert.match(componentSource, /const hoverCueActiveKeyRef = useRef\(''\);/);
   assert.match(componentSource, /document\.addEventListener\('pointerover', handleTextPointerOver\);/);
+  assert.match(componentSource, /showCompanionCue\(\{\s*text: buildInstantHoverCue\(normalizedText\),\s*action: MASCOT_ACTIONS\.think,\s*\}/s);
+  assert.match(componentSource, /hoverCueActiveKeyRef\.current !== cacheKey/);
   assert.match(componentSource, /fetch\('\/api\/ai\/hover-cue'/);
   assert.match(componentSource, /showCompanionCue\(\{ text: cue, action: MASCOT_ACTIONS\.talk \}/);
   assert.match(componentSource, /showCompanionCue\(\{ text: fallbackCue, action: MASCOT_ACTIONS\.think \}/);
+  assert.match(hoverCueSource, /export function buildInstantHoverCue/);
   assert.match(hoverCueSource, /export function getHoverCueTextFromElement/);
   assert.match(hoverCueSource, /\.closest\('\.ai-widget'\)/);
 });

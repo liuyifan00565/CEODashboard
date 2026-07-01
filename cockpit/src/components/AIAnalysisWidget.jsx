@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:19:49 CST
- 更新内容: AI 分析入口增加页面文字悬浮千问短气泡，鼠标停留在经营文字上时福小客即时提示。
+ 更新时间: 2026-07-01 11:35:33 CST
+ 更新内容: AI 悬浮气泡改为先显示本地即时提示，并校验当前悬浮文字，避免千问回复延迟错位。
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
@@ -24,6 +24,7 @@ import {
   getSpeechAction,
 } from '../lib/mascotCompanion';
 import {
+  buildInstantHoverCue,
   buildHoverCueCacheKey,
   getHoverCueTextFromElement,
   normalizeHoverCueText,
@@ -42,8 +43,9 @@ const QUICK_PROMPTS = [
   '哪个销售维度拖后腿，应该怎么处理？',
   '从 ROI 和目标完成率看，下个月预算怎么调？',
 ];
-const HOVER_CUE_DELAY = 650;
+const HOVER_CUE_DELAY = 120;
 const HOVER_CUE_DURATION = 4200;
+const HOVER_INSTANT_CUE_DURATION = 2800;
 const fallbackCue = '这处信息建议结合目标完成率、ROI 和续费一起看。';
 
 function makeId(prefix) {
@@ -108,6 +110,7 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   const hoverCueTimerRef = useRef(null);
   const hoverCueAbortRef = useRef(null);
   const hoverCueCacheRef = useRef(new Map());
+  const hoverCueActiveKeyRef = useRef('');
   const hoverCueRequestIdRef = useRef(0);
   const idlePromptIndexRef = useRef(0);
 
@@ -232,6 +235,8 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
 
   useEffect(() => {
     async function requestHoverCue(text, cacheKey) {
+      if (hoverCueActiveKeyRef.current !== cacheKey) return;
+
       const cachedCue = hoverCueCacheRef.current.get(cacheKey);
       if (cachedCue) {
         showCompanionCue({ text: cachedCue, action: MASCOT_ACTIONS.talk }, { openDialog: false, duration: HOVER_CUE_DURATION });
@@ -259,12 +264,13 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
 
         const payload = await response.json();
         const cue = normalizeHoverCueText(payload.cue);
-        if (!cue || hoverCueRequestIdRef.current !== requestId) return;
+        if (!cue || hoverCueRequestIdRef.current !== requestId || hoverCueActiveKeyRef.current !== cacheKey) return;
 
         hoverCueCacheRef.current.set(cacheKey, cue);
         showCompanionCue({ text: cue, action: MASCOT_ACTIONS.talk }, { openDialog: false, duration: HOVER_CUE_DURATION });
       } catch (err) {
         if (err.name === 'AbortError') return;
+        if (hoverCueActiveKeyRef.current !== cacheKey) return;
         showCompanionCue({ text: fallbackCue, action: MASCOT_ACTIONS.think }, { openDialog: false, duration: 3200 });
       } finally {
         if (hoverCueAbortRef.current === controller) {
@@ -276,7 +282,12 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
     function handleTextPointerOver(event) {
       clearTimeout(hoverCueTimerRef.current);
       const text = getHoverCueTextFromElement(event.target);
-      if (!shouldRequestHoverCue(text)) return;
+      if (!shouldRequestHoverCue(text)) {
+        hoverCueActiveKeyRef.current = '';
+        hoverCueAbortRef.current?.abort();
+        hoverCueAbortRef.current = null;
+        return;
+      }
 
       const normalizedText = normalizeHoverCueText(text);
       const cacheKey = buildHoverCueCacheKey({
@@ -285,6 +296,22 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
         channelKey,
         text: normalizedText,
       });
+      if (hoverCueActiveKeyRef.current === cacheKey) return;
+
+      hoverCueActiveKeyRef.current = cacheKey;
+      hoverCueAbortRef.current?.abort();
+      hoverCueAbortRef.current = null;
+
+      const cachedCue = hoverCueCacheRef.current.get(cacheKey);
+      if (cachedCue) {
+        showCompanionCue({ text: cachedCue, action: MASCOT_ACTIONS.talk }, { openDialog: false, duration: HOVER_CUE_DURATION });
+        return;
+      }
+
+      showCompanionCue({
+        text: buildInstantHoverCue(normalizedText),
+        action: MASCOT_ACTIONS.think,
+      }, { openDialog: false, duration: HOVER_INSTANT_CUE_DURATION });
 
       hoverCueTimerRef.current = window.setTimeout(() => {
         requestHoverCue(normalizedText, cacheKey);
