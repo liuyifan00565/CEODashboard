@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 14:22:55 CST
- 更新内容: 左侧导航新增“算力用量分析”入口，暂沿用全局经营数据上下文。
+ 更新时间: 2026-07-01 14:46:59 CST
+ 更新内容: 新增“算力用量分析”专属看板数据，包含核心指标、趋势、版本消耗、用量分布和客户明细。
 */
 import { calculateRenewalOverview, getRenewalChannelBreakdown } from '../lib/renewal.js';
 
@@ -251,6 +251,96 @@ export const MONTHLY_TREND = [
   { month: '5月', target: 560, recovered: 432 },
   { month: '6月', target: 580, recovered: 486 },
 ].map(m => ({ ...m, completion: +(m.recovered / m.target * 100).toFixed(1) }));
+
+// ===== 算力用量分析（参考原算力看板，算力单位为点，趋势单位为万点）=====
+export const COMPUTE_OVERVIEW = {
+  totalCapacity: 2650773741,
+  addedCapacity: 449249887,
+  consumedCapacity: 139751667,
+  customerCount: 5558,
+  customerUsage: 34186157,
+  customerBalance: 2650773741,
+  newCustomers: 52,
+  newStores: 1174,
+  averageReplyRate: 70,
+  totalCustomers: 4905,
+};
+
+const COMPUTE_DAYS = Array.from({ length: 29 }, (_, index) => `06-${String(index + 2).padStart(2, '0')}`);
+const COMPUTE_USAGE = [468, 462, 459, 442, 435, 444, 452, 438, 458, 453, 429, 423, 456, 486, 492, 487, 504, 423, 441, 468, 482, 477, 471, 455, 466, 486, 496, 512, 536];
+const COMPUTE_ADD_ON = [16, 14, 13, 11, 10, 12, 11, 9, 14, 12, 10, 8, 12, 18, 16, 15, 17, 8, 10, 13, 14, 13, 12, 10, 12, 14, 15, 16, 18];
+const COMPUTE_CAPACITY = [2360, 2380, 2376, 2382, 2392, 2388, 2394, 2401, 2410, 2408, 2417, 2440, 2438, 2434, 2441, 2480, 2501, 2512, 2510, 2515, 2512, 2522, 2534, 2540, 2552, 2570, 2582, 2578, 2600];
+
+export const COMPUTE_USAGE_TREND = COMPUTE_DAYS.map((day, index) => ({
+  day,
+  usage: COMPUTE_USAGE[index],
+  addOn: COMPUTE_ADD_ON[index],
+  capacity: COMPUTE_CAPACITY[index],
+}));
+
+export const COMPUTE_VERSION_CONSUMPTION = [
+  { name: '试用版', value: 2, color: '#8a6200' },
+  { name: '企业版', value: 3, color: '#d49700' },
+  { name: '旗舰版', value: 5, color: '#ffc533' },
+  { name: '免费版', value: 3, color: '#ff3d4f' },
+  { name: '卓越版', value: 37, color: '#ff6b78' },
+  { name: '创世版', value: 28, color: '#0e77e6' },
+  { name: '至尊版ultra', value: 1, color: '#5596e8' },
+  { name: '启航版', value: 31, color: '#6c2bd0' },
+];
+
+export const COMPUTE_USAGE_DISTRIBUTION = [
+  { name: '算力用量=0', value: 75, color: '#ffc533' },
+  { name: '0<算力用量<=100', value: 3, color: '#976b00' },
+  { name: '100<算力用量<=1000', value: 5, color: '#ff3d4f' },
+  { name: '1000<算力用量<=5000', value: 7, color: '#ff6576' },
+  { name: '5000<算力用量<=10000', value: 5, color: '#0e77e6' },
+  { name: '算力用量>10000', value: 10, color: '#5596e8' },
+];
+
+export const COMPUTE_CUSTOMER_ROWS = [
+  { phone: '150****1491', owner: '一本官方旗舰店-开心图书-周维', accountType: '至尊版pro', salesOwner: '雪姐', successOwner: '龙涛', usage: 2010190, balance: 7783896, averageReplyRate: 81 },
+  { phone: '187****8478', owner: 'XNDSFK-主账号', accountType: '定制尊享版', salesOwner: '雪姐虾米', successOwner: '小管家灵灵', usage: 656964, balance: 64577177, averageReplyRate: 61 },
+  { phone: '158****7950', owner: '春雨牧童旗舰店-斗半匠', accountType: '至尊版', salesOwner: '雪姐', successOwner: '小管家昭昭', usage: 589933, balance: 1108058, averageReplyRate: 86 },
+  { phone: '188****0298', owner: '上海弘智科技发展有限公司-孟秀英', accountType: '至尊版pro', salesOwner: '李莉', successOwner: '小管家灵灵', usage: 556213, balance: 8224138, averageReplyRate: 56 },
+  { phone: '137****5114', owner: '美的总部', accountType: '定制尊享版', salesOwner: '黄俊伟', successOwner: '陈敬丰', usage: 491937, balance: 36143629, averageReplyRate: 63 },
+  { phone: '173****3531', owner: '宁波塔塔-波咯咯母婴旗舰店-方奕敏', accountType: '至尊版', salesOwner: '李莉', successOwner: '小管家昭昭', usage: 480535, balance: 4291374, averageReplyRate: 54 },
+  { phone: '189****4175', owner: '玺承福客ai-李浩创世版对接群', accountType: '至尊版pro', salesOwner: '糖宝', successOwner: '小管家灵灵', usage: 417875, balance: 5738763, averageReplyRate: 74 },
+  { phone: '153****5080', owner: 'kocotree旗舰店-章珍珍-kk', accountType: '至尊版pro', salesOwner: '雪姐', successOwner: '小管家灵灵', usage: 412499, balance: 10188917, averageReplyRate: 82 },
+  { phone: '139****5342', owner: '猫人家纺旗舰店', accountType: '至尊版', salesOwner: '李莉', successOwner: '陈映全', usage: 396419, balance: 790946, averageReplyRate: 80 },
+  { phone: '187****6226', owner: '多方达-叶旭挺', accountType: '至尊版pro', salesOwner: '雪姐', successOwner: '小管家灵灵', usage: 389098, balance: 2552717, averageReplyRate: 75 },
+];
+
+export const COMPUTE_RESOURCE_HEALTH = [
+  { key: 'reply', name: '自动回复', usage: 57.4, trend: '+6.8%', state: '高频稳定', tone: 'good' },
+  { key: 'sync', name: '商品同步', usage: 18.9, trend: '+2.1%', state: '增长可控', tone: 'neutral' },
+  { key: 'vision', name: '视频识别', usage: 9.6, trend: '-1.4%', state: '低峰运行', tone: 'neutral' },
+  { key: 'guard', name: '后置回复拦截', usage: 6.8, trend: '+0.9%', state: '需关注', tone: 'warn' },
+];
+
+export function getComputeOverview() {
+  return COMPUTE_OVERVIEW;
+}
+
+export function getComputeUsageTrend() {
+  return COMPUTE_USAGE_TREND;
+}
+
+export function getComputeVersionConsumption() {
+  return COMPUTE_VERSION_CONSUMPTION;
+}
+
+export function getComputeUsageDistribution() {
+  return COMPUTE_USAGE_DISTRIBUTION;
+}
+
+export function getComputeCustomerRows() {
+  return [...COMPUTE_CUSTOMER_ROWS].sort((a, b) => b.usage - a.usage);
+}
+
+export function getComputeResourceHealth() {
+  return COMPUTE_RESOURCE_HEALTH;
+}
 
 const ORDER_TYPE_TRENDS = {
   new: {

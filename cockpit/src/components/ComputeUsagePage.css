@@ -1,0 +1,490 @@
+/* 更新时间: 2026-07-01 14:46:59 CST  更新内容: 新增“算力用量分析”页面的玻璃卡片、图表、资源健康和客户明细响应式样式。 */
+.cpu-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  color: var(--txt);
+}
+
+.cpu-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 2px 2px 0;
+}
+
+.cpu-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.cpu-head h2 {
+  margin: 0;
+  color: var(--txt);
+  font-size: clamp(24px, 2.2vw, 34px);
+  line-height: 1.1;
+  font-weight: 760;
+}
+
+.cpu-head p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.cpu-head__meta {
+  flex: none;
+  min-width: 158px;
+  display: grid;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  background: transparent;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  text-align: right;
+}
+
+.cpu-head__meta span,
+.cpu-head__meta em {
+  color: var(--faint);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.cpu-head__meta b {
+  color: var(--txt);
+  font-size: 22px;
+  line-height: 1.05;
+  font-weight: 780;
+  font-variant-numeric: tabular-nums;
+}
+
+.cpu-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.cpu-kpi {
+  --cpu-accent: rgba(255,255,255,.72);
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-height: 142px;
+  padding: 17px 18px;
+  overflow: hidden;
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.015)),
+    transparent;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease, background .22s ease;
+}
+
+.cpu-kpi::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cpu-accent), transparent);
+  opacity: .74;
+}
+
+.cpu-kpi--capacity { --cpu-accent: rgba(255,255,255,.88); }
+.cpu-kpi--burn { --cpu-accent: rgba(255,79,216,.88); }
+.cpu-kpi--add { --cpu-accent: rgba(85,150,232,.88); }
+.cpu-kpi--reply { --cpu-accent: rgba(223,255,0,.78); }
+
+.cpu-kpi--match,
+.cpu-panel--match {
+  border-color: rgba(255,255,255,.44);
+  box-shadow: 0 22px 66px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.24);
+}
+
+.cpu-kpi__label,
+.cpu-kpi__sub,
+.cpu-kpi__meta {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cpu-kpi__label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.cpu-kpi__value {
+  color: var(--txt);
+  font-size: clamp(24px, 2vw, 31px);
+  line-height: 1.05;
+  font-weight: 780;
+  font-variant-numeric: tabular-nums;
+}
+
+.cpu-kpi__sub {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.cpu-kpi__meta {
+  margin-top: auto;
+  color: var(--faint);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cpu-panel {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 22px 22px;
+  overflow: hidden;
+  border: 1px solid var(--line-2);
+  border-radius: 18px;
+  background: transparent;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+}
+
+.cpu-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.cpu-panel__head h3 {
+  margin: 0;
+  color: var(--txt);
+  font-size: 16px;
+  font-weight: 680;
+  letter-spacing: .02em;
+}
+
+.cpu-panel__head span {
+  display: block;
+  margin-top: 5px;
+  color: var(--faint);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.cpu-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(310px, .8fr);
+  grid-template-areas:
+    "trend health"
+    "version usage";
+  gap: 16px;
+  min-width: 0;
+}
+
+.cpu-panel--trend {
+  grid-area: trend;
+  min-height: 382px;
+}
+
+.cpu-panel--health {
+  grid-area: health;
+  min-height: 382px;
+}
+
+.cpu-panel--version-pie {
+  grid-area: version;
+  min-height: 426px;
+}
+
+.cpu-panel--usage-pie {
+  grid-area: usage;
+  min-height: 426px;
+}
+
+.cpu-trend-chart {
+  flex: 1;
+  min-height: 300px;
+}
+
+.cpu-trend-chart > div,
+.cpu-pie-wrap > div {
+  height: 100% !important;
+}
+
+.cpu-health-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.cpu-health-row {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--glass-cell);
+}
+
+.cpu-health-row--warn {
+  border-color: rgba(var(--warn-rgb), .26);
+  background: rgba(var(--warn-rgb), .08);
+}
+
+.cpu-health-row__top,
+.cpu-health-row__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cpu-health-row__top strong {
+  min-width: 0;
+  color: var(--txt);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cpu-health-row__top span {
+  flex: none;
+  color: var(--up);
+  font-size: 13px;
+  font-weight: 720;
+  font-variant-numeric: tabular-nums;
+}
+
+.cpu-health-row__bar {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(255,255,255,.07);
+}
+
+.cpu-health-row__bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--txt);
+  box-shadow: 0 0 18px rgba(255,255,255,.16);
+}
+
+.cpu-health-row--warn .cpu-health-row__bar i {
+  background: var(--warn);
+}
+
+.cpu-health-row__foot span,
+.cpu-health-row__foot em {
+  color: var(--faint);
+  font-size: 12px;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+.cpu-pie-wrap {
+  flex: 1;
+  min-height: 300px;
+}
+
+.cpu-pie-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cpu-pie-chip {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 6px 8px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--glass-cell);
+}
+
+.cpu-pie-chip i {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.cpu-pie-chip b {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cpu-pie-chip em {
+  flex: none;
+  color: var(--txt);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 760;
+  font-variant-numeric: tabular-nums;
+}
+
+.cpu-panel--customers {
+  min-height: 0;
+}
+
+.cpu-table-wrap {
+  min-width: 0;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.cpu-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+  color: var(--txt);
+  font-size: 13px;
+}
+
+.cpu-table th,
+.cpu-table td {
+  padding: 12px 13px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.cpu-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(0,0,0,.16);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.cpu-table td {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cpu-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.cpu-table tbody tr:hover td {
+  color: var(--txt);
+  background: var(--glass-cell-hover);
+}
+
+.cpu-table__owner {
+  max-width: 300px;
+  overflow: hidden;
+  color: var(--txt) !important;
+  font-weight: 650;
+  text-overflow: ellipsis;
+}
+
+@media (hover: hover) {
+  .cpu-kpi:hover,
+  .cpu-panel:hover {
+    transform: translateY(-3px);
+    border-color: var(--line-2);
+    box-shadow: 0 22px 58px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.24);
+  }
+}
+
+@media (max-width: 1280px) {
+  .cpu-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cpu-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "trend"
+      "health"
+      "version"
+      "usage";
+  }
+
+  .cpu-panel--health,
+  .cpu-panel--version-pie,
+  .cpu-panel--usage-pie {
+    min-height: 0;
+  }
+
+  .cpu-health-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .cpu-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cpu-head__meta {
+    width: 100%;
+    text-align: left;
+  }
+
+  .cpu-kpi-grid,
+  .cpu-health-list {
+    grid-template-columns: 1fr;
+  }
+
+  .cpu-kpi {
+    min-height: 126px;
+  }
+
+  .cpu-panel {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .cpu-trend-chart,
+  .cpu-pie-wrap {
+    min-height: 286px;
+  }
+
+  .cpu-panel__head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

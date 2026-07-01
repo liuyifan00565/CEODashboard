@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 10:26:08
- 更新内容: 回归测试同步 KPI 卡片打开时通知福小客的交互处理函数。
+ 更新时间: 2026-07-01 14:46:59 CST
+ 更新内容: 回归测试新增“算力用量分析”菜单渲染专属页面，并保留经营总览布局断言。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -20,6 +20,14 @@ test('keeps all dashboard data cards on fixed grid layouts', () => {
   assert.match(appSource, /data-kpi-key=\{card\.key\}/);
   assert.match(appSource, /const gridClassName = activeMenu === 'overview'/);
   assert.match(appSource, /className=\{gridClassName\}/);
+});
+
+test('renders compute usage analysis as an independent dashboard page', () => {
+  assert.match(appSource, /import ComputeUsagePage from '\.\/components\/ComputeUsagePage';/);
+  assert.match(appSource, /const isComputePage = activeMenu === 'compute';/);
+  assert.match(appSource, /isComputePage \? \(/);
+  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} \/>/);
+  assert.match(appSource, /: \(\s*<>\s*<div className="dash-kpis">/);
 });
 
 test('notifies Fu Xiaoke when a KPI card is opened', () => {

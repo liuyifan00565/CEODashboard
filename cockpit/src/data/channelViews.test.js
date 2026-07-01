@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 14:22:55 CST
- 更新内容: 回归测试新增左侧导航“算力用量分析”入口，并确认其沿用全局数据上下文。
+ 更新时间: 2026-07-01 14:46:59 CST
+ 更新内容: 回归测试新增“算力用量分析”专属看板数据形状，覆盖核心指标、趋势、饼图和客户明细。
 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -11,6 +11,11 @@ import {
   MENU,
   SALES_GROUPS,
   VERSIONS,
+  getComputeCustomerRows,
+  getComputeOverview,
+  getComputeUsageDistribution,
+  getComputeUsageTrend,
+  getComputeVersionConsumption,
   getChannelRows,
   getChannelTrend,
   getDashboardChannelKey,
@@ -36,6 +41,44 @@ test('defines CEO overview, channel analysis, and compute usage menu entries', (
     MENU.map((item) => getDashboardChannelKey(item.key)),
     ['all', 'online', 'south', 'east', 'agent', 'all']
   );
+});
+
+test('returns compute dashboard metrics, trend, pie slices, and customer rows from the reference dashboard', () => {
+  const overview = getComputeOverview();
+  const trend = getComputeUsageTrend();
+  const versions = getComputeVersionConsumption();
+  const distribution = getComputeUsageDistribution();
+  const customers = getComputeCustomerRows();
+
+  assert.deepEqual(
+    {
+      totalCapacity: overview.totalCapacity,
+      addedCapacity: overview.addedCapacity,
+      consumedCapacity: overview.consumedCapacity,
+      customerCount: overview.customerCount,
+      customerUsage: overview.customerUsage,
+      averageReplyRate: overview.averageReplyRate,
+    },
+    {
+      totalCapacity: 2650773741,
+      addedCapacity: 449249887,
+      consumedCapacity: 139751667,
+      customerCount: 5558,
+      customerUsage: 34186157,
+      averageReplyRate: 70,
+    }
+  );
+
+  assert.equal(trend.length, 29);
+  assert.deepEqual(trend[0], { day: '06-02', usage: 468, addOn: 16, capacity: 2360 });
+  assert.deepEqual(trend.at(-1), { day: '06-30', usage: 536, addOn: 18, capacity: 2600 });
+  assert.deepEqual(versions.map((item) => item.name), ['试用版', '企业版', '旗舰版', '免费版', '卓越版', '创世版', '至尊版ultra', '启航版']);
+  assert.equal(versions.reduce((sum, item) => sum + item.value, 0), 110);
+  assert.equal(distribution[0].name, '算力用量=0');
+  assert.equal(distribution.at(-1).name, '算力用量>10000');
+  assert.equal(customers[0].phone, '150****1491');
+  assert.equal(customers[0].usage, 2010190);
+  assert.ok(customers.every((customer, index, list) => index === 0 || list[index - 1].usage >= customer.usage));
 });
 
 test('filters KPI cards to the selected channel while overview keeps all-channel totals', () => {

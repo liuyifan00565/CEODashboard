@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 11:12:00
- 更新内容: KPI 卡片点击联动福小客 3D 桌宠气泡，同时保留原二级弹窗。
+ 更新时间: 2026-07-01 14:46:59 CST
+ 更新内容: 导航“算力用量分析”接入专属算力看板页面，经营总览和销售分析布局保持不变。
 */
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
@@ -21,6 +21,7 @@ import MonthlyTrend from './components/MonthlyTrend';
 import ChannelPanel from './components/ChannelPanel';
 import VersionFinancePanel from './components/VersionFinancePanel';
 import DeliveryPanel from './components/DeliveryPanel';
+import ComputeUsagePage from './components/ComputeUsagePage';
 
 import { META, MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
@@ -83,6 +84,7 @@ export default function App() {
 
   const gridRef = useRef(null);
   const pendingMenuScrollRef = useRef(false);
+  const isComputePage = activeMenu === 'compute';
   const activeChannelKey = getDashboardChannelKey(activeMenu);
   const activeMenuLabel = getDashboardMenuLabel(activeMenu);
   const gridClassName = activeMenu === 'overview'
@@ -216,49 +218,55 @@ export default function App() {
           </header>
 
           <div className="dash-content" ref={gridRef} key={activeMenu}>
-            <div className="dash-kpis">
-              {recoveryKpiCards.map((card) => (
-                <div className="dash-kpi-item" data-anim data-kpi-key={card.key} key={card.key}>
-                  <SearchResultBorder active={hit(card.keywords, searchTerm)}>
-                    <KpiCard
-                      card={card}
-                      onOpen={handleOpenCard}
-                      sidePanel={<ChannelPanel channelKey={activeChannelKey} title={recoveryChannelTitle(card)} />}
-                    />
-                  </SearchResultBorder>
-                </div>
-              ))}
-            </div>
-
-            <div className={gridClassName}>
-              <div className="dash-cell dash-cell--trend" data-anim>
-                <SearchResultBorder active={hit(PANEL_KEYWORDS.trend, searchTerm)}>
-                  <MonthlyTrend channelKey={activeChannelKey} />
-                </SearchResultBorder>
-              </div>
-              <div className="dash-cell dash-cell--finance-kpis" data-anim>
-                <div className="dash-finance-kpis">
-                  {financeKpiCards.map((card) => (
-                    <div className="dash-finance-kpi-item" data-kpi-key={card.key} key={card.key}>
+            {isComputePage ? (
+              <ComputeUsagePage searchTerm={searchTerm} />
+            ) : (
+              <>
+                <div className="dash-kpis">
+                  {recoveryKpiCards.map((card) => (
+                    <div className="dash-kpi-item" data-anim data-kpi-key={card.key} key={card.key}>
                       <SearchResultBorder active={hit(card.keywords, searchTerm)}>
-                        <KpiCard card={card} onOpen={handleOpenCard} />
+                        <KpiCard
+                          card={card}
+                          onOpen={handleOpenCard}
+                          sidePanel={<ChannelPanel channelKey={activeChannelKey} title={recoveryChannelTitle(card)} />}
+                        />
                       </SearchResultBorder>
                     </div>
                   ))}
                 </div>
-              </div>
-              <div className="dash-cell dash-cell--version" data-anim>
-                <SearchResultBorder active={hit(PANEL_KEYWORDS.version, searchTerm)}>
-                  <VersionFinancePanel channelKey={activeChannelKey} />
-                </SearchResultBorder>
-              </div>
-            </div>
 
-            <div className="dash-delivery-row" data-anim>
-              <SearchResultBorder active={hit(PANEL_KEYWORDS.delivery, searchTerm)}>
-                <DeliveryPanel />
-              </SearchResultBorder>
-            </div>
+                <div className={gridClassName}>
+                  <div className="dash-cell dash-cell--trend" data-anim>
+                    <SearchResultBorder active={hit(PANEL_KEYWORDS.trend, searchTerm)}>
+                      <MonthlyTrend channelKey={activeChannelKey} />
+                    </SearchResultBorder>
+                  </div>
+                  <div className="dash-cell dash-cell--finance-kpis" data-anim>
+                    <div className="dash-finance-kpis">
+                      {financeKpiCards.map((card) => (
+                        <div className="dash-finance-kpi-item" data-kpi-key={card.key} key={card.key}>
+                          <SearchResultBorder active={hit(card.keywords, searchTerm)}>
+                            <KpiCard card={card} onOpen={handleOpenCard} />
+                          </SearchResultBorder>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="dash-cell dash-cell--version" data-anim>
+                    <SearchResultBorder active={hit(PANEL_KEYWORDS.version, searchTerm)}>
+                      <VersionFinancePanel channelKey={activeChannelKey} />
+                    </SearchResultBorder>
+                  </div>
+                </div>
+
+                <div className="dash-delivery-row" data-anim>
+                  <SearchResultBorder active={hit(PANEL_KEYWORDS.delivery, searchTerm)}>
+                    <DeliveryPanel />
+                  </SearchResultBorder>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

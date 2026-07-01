@@ -1,0 +1,518 @@
+/*
+ 更新时间: 2026-07-01 14:46:59 CST
+ 更新内容: 新增“算力用量分析”完整页面，接入核心 KPI、趋势柱状图、圆角环图、资源健康和客户明细。
+*/
+import { useMemo } from 'react';
+
+import EChart from './EChart';
+import {
+  getComputeCustomerRows,
+  getComputeOverview,
+  getComputeResourceHealth,
+  getComputeUsageDistribution,
+  getComputeUsageTrend,
+  getComputeVersionConsumption,
+} from '../data/mock';
+import { useThemeTokens } from '../lib/theme';
+import './ComputeUsagePage.css';
+
+const SEARCH_KEYWORDS = {
+  overview: ['算力', '总容量', '新增', '消耗', '客户', '回复率', '余额'],
+  trend: ['趋势', '近30日', '自动回复', '商品同步', '容量'],
+  version: ['版本', '试用版', '企业版', '旗舰版', '卓越版', '创世版', '启航版'],
+  distribution: ['分布', '用量', '客户占比', '高消耗', '零用量'],
+  health: ['资源', '利用率', '异常', '自动回复', '视频识别', '拦截'],
+  customer: ['客户', '排行', '手机号', '负责人', '平均回复率'],
+};
+
+function formatInt(value) {
+  return Number(value).toLocaleString('zh-CN');
+}
+
+function formatWan(value) {
+  return `${Number(value).toLocaleString('zh-CN')}万`;
+}
+
+function formatPct(value) {
+  return `${Number(value).toFixed(Number.isInteger(value) ? 0 : 1)}%`;
+}
+
+function normalizeTerm(term) {
+  return String(term || '').trim().toLowerCase();
+}
+
+function matchesTerm(keywords, term) {
+  const normalized = normalizeTerm(term);
+  if (!normalized) return false;
+  return keywords.some((keyword) => String(keyword).toLowerCase().includes(normalized));
+}
+
+function tooltipExtraCss() {
+  return [
+    'border-radius:8px',
+    'background:rgba(0,0,0,.72)',
+    'backdrop-filter:blur(22px) saturate(155%)',
+    '-webkit-backdrop-filter:blur(22px) saturate(155%)',
+    'box-shadow:0 24px 80px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.18)',
+    'padding:0',
+  ].join(';');
+}
+
+function tooltipHeader(label) {
+  return `<div style="color:rgba(239,251,255,.72);font-size:12px;font-weight:750;margin-bottom:8px">${label}</div>`;
+}
+
+function tooltipRow({ color, label, value }) {
+  return `<div style="display:flex;align-items:center;gap:8px;line-height:1.7;min-width:190px">
+    <span style="width:8px;height:8px;border-radius:2px;background:${color};box-shadow:0 0 10px ${color}66"></span>
+    <span style="color:rgba(239,251,255,.68);font-size:12px">${label}</span>
+    <strong style="color:#fff;margin-left:auto;font-size:14px;font-variant-numeric:tabular-nums">${value}</strong>
+  </div>`;
+}
+
+function buildTrendOption({ trend, tokens }) {
+  const days = trend.map((point) => point.day);
+  const baseUsage = trend.map((point) => Math.max(point.usage - point.addOn, 0));
+  const addOn = trend.map((point) => point.addOn);
+  const capacity = trend.map((point) => point.capacity);
+  const txt = tokens.chartText;
+  const faint = tokens.chartMuted;
+  const line = tokens.chartGrid;
+  const baseColor = tokens.chartBar;
+  const addOnColor = '#ff4fd8';
+  const capacityColor = '#5596e8';
+
+  return {
+    backgroundColor: 'transparent',
+    textStyle: { color: faint, fontFamily: 'inherit' },
+    legend: {
+      top: 0,
+      left: 'center',
+      selectedMode: false,
+      itemWidth: 12,
+      itemHeight: 8,
+      itemGap: 18,
+      textStyle: { color: faint, fontSize: 13 },
+      data: ['基础消耗', '高峰增量', '总容量'],
+    },
+    grid: { top: 42, left: 10, right: 12, bottom: 8, containLabel: true },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow', shadowStyle: { color: tokens.chartPointer } },
+      appendToBody: true,
+      confine: true,
+      backgroundColor: 'rgba(0,0,0,.72)',
+      borderColor: tokens.chartTooltipBorder,
+      borderWidth: 1,
+      extraCssText: tooltipExtraCss(),
+      textStyle: { color: txt, fontSize: 13 },
+      formatter: (params) => {
+        const usage = (params.find((item) => item.seriesName === '基础消耗')?.value || 0)
+          + (params.find((item) => item.seriesName === '高峰增量')?.value || 0);
+        return [
+          tooltipHeader(`${params[0]?.axisValue || ''} 算力用量`),
+          tooltipRow({ color: baseColor, label: '当日总消耗', value: formatWan(usage) }),
+          tooltipRow({ color: addOnColor, label: '高峰增量', value: formatWan(params.find((item) => item.seriesName === '高峰增量')?.value || 0) }),
+          tooltipRow({ color: capacityColor, label: '总容量', value: formatWan(params.find((item) => item.seriesName === '总容量')?.value || 0) }),
+        ].join('');
+      },
+    },
+    xAxis: {
+      type: 'category',
+      data: days,
+      axisLine: { lineStyle: { color: line } },
+      axisTick: { show: false },
+      axisLabel: { color: faint, fontSize: 12, interval: 2, margin: 12 },
+    },
+    yAxis: [
+      {
+        type: 'value',
+        name: '万点',
+        nameTextStyle: { color: faint, fontSize: 12, padding: [0, 0, 0, 8] },
+        axisLabel: { color: faint, fontSize: 12 },
+        splitLine: { lineStyle: { color: line } },
+        axisLine: { show: false },
+      },
+      {
+        type: 'value',
+        name: '容量',
+        min: 2200,
+        max: 2700,
+        nameTextStyle: { color: faint, fontSize: 12 },
+        axisLabel: { color: faint, fontSize: 12 },
+        splitLine: { show: false },
+        axisLine: { show: false },
+      },
+    ],
+    series: [
+      {
+        name: '基础消耗',
+        type: 'bar',
+        stack: 'usage',
+        barWidth: 12,
+        itemStyle: {
+          color: baseColor,
+          borderRadius: [0, 0, 3, 3],
+        },
+        emphasis: { itemStyle: { color: txt } },
+        data: baseUsage,
+      },
+      {
+        name: '高峰增量',
+        type: 'bar',
+        stack: 'usage',
+        barWidth: 12,
+        itemStyle: {
+          color: addOnColor,
+          borderRadius: [3, 3, 0, 0],
+        },
+        emphasis: { itemStyle: { color: '#ffffff' } },
+        data: addOn,
+      },
+      {
+        name: '总容量',
+        type: 'line',
+        yAxisIndex: 1,
+        smooth: true,
+        showSymbol: false,
+        symbol: 'circle',
+        symbolSize: 5,
+        lineStyle: { color: capacityColor, width: 2 },
+        areaStyle: { color: 'rgba(85,150,232,.08)' },
+        data: capacity,
+      },
+    ],
+    media: [
+      {
+        query: { maxWidth: 620 },
+        option: {
+          grid: { top: 48, left: 4, right: 4, bottom: 4, containLabel: true },
+          legend: { left: 0, itemGap: 10, textStyle: { fontSize: 11 } },
+          xAxis: { axisLabel: { interval: 5, fontSize: 11 } },
+        },
+      },
+    ],
+  };
+}
+
+function buildPieOption({ data, tokens, unitLabel }) {
+  const colors = data.map((item) => item.color);
+
+  return {
+    backgroundColor: 'transparent',
+    color: colors,
+    tooltip: {
+      trigger: 'item',
+      appendToBody: true,
+      confine: true,
+      backgroundColor: 'rgba(0,0,0,.72)',
+      borderColor: tokens.chartTooltipBorder,
+      borderWidth: 1,
+      extraCssText: tooltipExtraCss(),
+      textStyle: { color: '#fff', fontSize: 13 },
+      formatter: (params) => [
+        tooltipHeader(params.name),
+        tooltipRow({ color: params.color, label: unitLabel, value: `${params.value}` }),
+        tooltipRow({ color: params.color, label: '图表占比', value: `${params.percent}%` }),
+      ].join(''),
+    },
+    series: [
+      {
+        type: 'pie',
+        radius: ['44%', '70%'],
+        center: ['46%', '50%'],
+        avoidLabelOverlap: true,
+        minShowLabelAngle: 2,
+        padAngle: 1,
+        itemStyle: {
+          borderRadius: 8,
+          borderColor: 'rgba(12,12,13,.72)',
+          borderWidth: 2,
+        },
+        label: {
+          show: true,
+          position: 'outside',
+          alignTo: 'edge',
+          edgeDistance: 8,
+          minMargin: 4,
+          width: 112,
+          overflow: 'break',
+          color: tokens.chartText,
+          fontSize: 12,
+          lineHeight: 16,
+          formatter: (params) => `{name|${params.name}}\n{value|${params.value} · ${params.percent}%}`,
+          rich: {
+            name: { color: tokens.chartText, fontSize: 12, fontWeight: 700, lineHeight: 16 },
+            value: { color: tokens.chartMuted, fontSize: 11, fontWeight: 650, lineHeight: 15 },
+          },
+        },
+        labelLine: {
+          show: true,
+          length: 14,
+          length2: 18,
+          lineStyle: { color: tokens.chartAxis, width: 1 },
+        },
+        labelLayout: {
+          hideOverlap: true,
+        },
+        emphasis: {
+          scale: true,
+          scaleSize: 3,
+          itemStyle: {
+            shadowBlur: 18,
+            shadowColor: 'rgba(255,255,255,.18)',
+          },
+        },
+        data: data.map((item) => ({
+          name: item.name,
+          value: item.value,
+          itemStyle: { color: item.color },
+        })),
+      },
+    ],
+    media: [
+      {
+        query: { maxWidth: 620 },
+        option: {
+          series: [
+            {
+              radius: ['38%', '62%'],
+              center: ['50%', '48%'],
+              label: { width: 92, edgeDistance: 4, fontSize: 10 },
+              labelLine: { length: 8, length2: 10 },
+            },
+          ],
+        },
+      },
+    ],
+  };
+}
+
+function KpiCard({ label, value, sub, meta, tone, active }) {
+  return (
+    <article className={`cpu-kpi cpu-kpi--${tone}${active ? ' cpu-kpi--match' : ''}`} data-anim>
+      <span className="cpu-kpi__label">{label}</span>
+      <strong className="cpu-kpi__value">{value}</strong>
+      <span className="cpu-kpi__sub">{sub}</span>
+      <span className="cpu-kpi__meta">{meta}</span>
+    </article>
+  );
+}
+
+function Panel({ className = '', title, sub, active, children }) {
+  return (
+    <section className={`cpu-panel ${className}${active ? ' cpu-panel--match' : ''}`} data-anim>
+      <header className="cpu-panel__head">
+        <div>
+          <h3>{title}</h3>
+          {sub && <span>{sub}</span>}
+        </div>
+      </header>
+      {children}
+    </section>
+  );
+}
+
+function PieSummary({ data }) {
+  return (
+    <div className="cpu-pie-summary" aria-label="图例">
+      {data.slice(0, 5).map((item) => (
+        <span className="cpu-pie-chip" key={item.name}>
+          <i style={{ background: item.color }} />
+          <b>{item.name}</b>
+          <em>{item.value}</em>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export default function ComputeUsagePage({ searchTerm = '' }) {
+  const tokens = useThemeTokens();
+  const overview = getComputeOverview();
+  const trend = getComputeUsageTrend();
+  const versions = getComputeVersionConsumption();
+  const distribution = getComputeUsageDistribution();
+  const customers = getComputeCustomerRows();
+  const resourceHealth = getComputeResourceHealth();
+  const latestTrend = trend.at(-1);
+  const previousTrend = trend.at(-2);
+  const highUsageBucket = distribution.find((item) => item.name === '算力用量>10000');
+  const zeroUsageBucket = distribution.find((item) => item.name === '算力用量=0');
+
+  const kpis = [
+    {
+      label: '算力总容量',
+      value: formatInt(overview.totalCapacity),
+      sub: '当前可调度容量池',
+      meta: `近30日容量 ${formatWan(latestTrend.capacity)}`,
+      tone: 'capacity',
+      keywords: ['算力总容量', '容量', '余额'],
+    },
+    {
+      label: '消耗算力',
+      value: formatInt(overview.consumedCapacity),
+      sub: '近30日累计消耗',
+      meta: `日峰值 ${formatWan(latestTrend.usage)}`,
+      tone: 'burn',
+      keywords: ['消耗算力', '用量', '趋势'],
+    },
+    {
+      label: '新增算力',
+      value: formatInt(overview.addedCapacity),
+      sub: '充值与扩容入池',
+      meta: `最近一日增量 ${formatWan(latestTrend.addOn)}`,
+      tone: 'add',
+      keywords: ['新增算力', '扩容', '充值'],
+    },
+    {
+      label: '客户回复效率',
+      value: formatPct(overview.averageReplyRate),
+      sub: `${formatInt(overview.customerCount)} 个客户纳入统计`,
+      meta: `新开客户 ${overview.newCustomers} · 店铺 ${overview.newStores}`,
+      tone: 'reply',
+      keywords: ['客户', '平均回复率', '店铺'],
+    },
+  ];
+
+  const trendOption = useMemo(() => buildTrendOption({ trend, tokens }), [trend, tokens]);
+  const versionPieOption = useMemo(
+    () => buildPieOption({ data: versions, tokens, unitLabel: '消耗权重' }),
+    [versions, tokens]
+  );
+  const distributionPieOption = useMemo(
+    () => buildPieOption({ data: distribution, tokens, unitLabel: '客户占比权重' }),
+    [distribution, tokens]
+  );
+
+  return (
+    <div className="cpu-page">
+      <header className="cpu-head" data-anim>
+        <div>
+          <span className="cpu-eyebrow">Compute Usage</span>
+          <h2>算力用量分析</h2>
+          <p>近30日消耗、容量与客户用量结构</p>
+        </div>
+        <div className="cpu-head__meta">
+          <span>近30日</span>
+          <b>{previousTrend ? formatPct(((latestTrend.usage - previousTrend.usage) / previousTrend.usage) * 100) : '0%'}</b>
+          <em>日用量环比</em>
+        </div>
+      </header>
+
+      <div className="cpu-kpi-grid">
+        {kpis.map((item) => (
+          <KpiCard
+            key={item.label}
+            label={item.label}
+            value={item.value}
+            sub={item.sub}
+            meta={item.meta}
+            tone={item.tone}
+            active={matchesTerm(item.keywords, searchTerm)}
+          />
+        ))}
+      </div>
+
+      <div className="cpu-grid">
+        <Panel
+          className="cpu-panel--trend"
+          title="近30日算力用量趋势"
+          sub="基础消耗 + 高峰增量 · 同步观察总容量"
+          active={matchesTerm(SEARCH_KEYWORDS.trend, searchTerm)}
+        >
+          <div className="cpu-trend-chart">
+            <EChart option={trendOption} style={{ height: '100%' }} />
+          </div>
+        </Panel>
+
+        <Panel
+          className="cpu-panel--health"
+          title="资源利用率"
+          sub={`高消耗客户权重 ${highUsageBucket?.value ?? 0} · 零用量权重 ${zeroUsageBucket?.value ?? 0}`}
+          active={matchesTerm(SEARCH_KEYWORDS.health, searchTerm)}
+        >
+          <div className="cpu-health-list">
+            {resourceHealth.map((item) => (
+              <div className={`cpu-health-row cpu-health-row--${item.tone}`} key={item.key}>
+                <div className="cpu-health-row__top">
+                  <strong>{item.name}</strong>
+                  <span>{item.trend}</span>
+                </div>
+                <div className="cpu-health-row__bar">
+                  <i style={{ width: `${item.usage}%` }} />
+                </div>
+                <div className="cpu-health-row__foot">
+                  <span>{formatPct(item.usage)}</span>
+                  <em>{item.state}</em>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Panel>
+
+        <Panel
+          className="cpu-panel--pie cpu-panel--version-pie"
+          title="各版本算力消耗"
+          sub="圆角环图 · 外拉标签"
+          active={matchesTerm(SEARCH_KEYWORDS.version, searchTerm)}
+        >
+          <div className="cpu-pie-wrap">
+            <EChart option={versionPieOption} style={{ height: '100%' }} />
+          </div>
+          <PieSummary data={[...versions].sort((a, b) => b.value - a.value)} />
+        </Panel>
+
+        <Panel
+          className="cpu-panel--pie cpu-panel--usage-pie"
+          title="算力用量分布"
+          sub="客户用量区间 · 中心不堆数据"
+          active={matchesTerm(SEARCH_KEYWORDS.distribution, searchTerm)}
+        >
+          <div className="cpu-pie-wrap">
+            <EChart option={distributionPieOption} style={{ height: '100%' }} />
+          </div>
+          <PieSummary data={distribution} />
+        </Panel>
+      </div>
+
+      <Panel
+        className="cpu-panel--customers"
+        title="客户算力明细排行"
+        sub={`${formatInt(overview.totalCustomers)} 条客户记录 · 按算力用量降序`}
+        active={matchesTerm(SEARCH_KEYWORDS.customer, searchTerm)}
+      >
+        <div className="cpu-table-wrap">
+          <table className="cpu-table">
+            <thead>
+              <tr>
+                <th>手机号</th>
+                <th>负责人</th>
+                <th>账号类型</th>
+                <th>销售负责人</th>
+                <th>客成负责人</th>
+                <th>算力用量</th>
+                <th>算力余额</th>
+                <th>平均回复率</th>
+              </tr>
+            </thead>
+            <tbody>
+              {customers.map((customer) => (
+                <tr key={`${customer.phone}-${customer.owner}`}>
+                  <td>{customer.phone}</td>
+                  <td className="cpu-table__owner">{customer.owner}</td>
+                  <td>{customer.accountType}</td>
+                  <td>{customer.salesOwner}</td>
+                  <td>{customer.successOwner}</td>
+                  <td>{formatInt(customer.usage)}</td>
+                  <td>{formatInt(customer.balance)}</td>
+                  <td>{formatPct(customer.averageReplyRate)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+    </div>
+  );
+}
