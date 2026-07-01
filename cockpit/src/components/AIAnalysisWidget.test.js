@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 14:22:41 CST
- 更新内容: 约束福小客悬浮气泡冷却时间调整为 6 秒。
+ 更新时间: 2026-07-01 14:43:35 CST
+ 更新内容: 约束福小客默认状态每 10 秒弹出闲置气泡并持续 4 秒，悬浮文字时不触发默认气泡。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -21,7 +21,7 @@ function themeBlock(theme) {
 
 test('uses the 3D mascot stage for the AI launcher', () => {
   assert.match(componentSource, /import Mascot3DStage from '\.\/Mascot3DStage';/);
-  assert.match(componentSource, /import \{\s*MASCOT_ACTIONS,\s*getSpeechAction,\s*\} from '\.\.\/lib\/mascotCompanion';/s);
+  assert.match(componentSource, /import \{\s*MASCOT_ACTIONS,\s*getIdleCompanionCue,\s*getSpeechAction,\s*\} from '\.\.\/lib\/mascotCompanion';/s);
   assert.match(componentSource, /export default function AIAnalysisWidget\(\{ activeMenu, dim, channelKey = 'all', companionCue \}\)/);
   assert.match(componentSource, /const \[mascotAction,\s*setMascotAction\] = useState\(MASCOT_ACTIONS\.idle\);/);
   assert.match(componentSource, /const \[mascotPointer,\s*setMascotPointer\] = useState\(\{ x: 0, y: 0, active: false \}\);/);
@@ -48,12 +48,16 @@ test('tracks pointer position for Codex-like desktop pet movement', () => {
   assert.match(componentSource, /setMascotPointer\(\{ x: 0, y: 0, active: false \}\);/);
 });
 
-test('keeps Fu Xiaoke quiet until the pointer rests on readable text', () => {
-  assert.doesNotMatch(componentSource, /IDLE_BUBBLE_INTERVAL/);
+test('shows default Fu Xiaoke bubbles every 10 seconds only when no readable text is hovered', () => {
+  assert.match(componentSource, /const DEFAULT_BUBBLE_INTERVAL = 10000;/);
+  assert.match(componentSource, /const DEFAULT_BUBBLE_DURATION = 4000;/);
   assert.match(componentSource, /const \[bubbleCue,\s*setBubbleCue\] = useState\(null\);/);
   assert.match(componentSource, /const \[bubbleVisible,\s*setBubbleVisible\] = useState\(false\);/);
-  assert.doesNotMatch(componentSource, /idlePromptIndexRef/);
-  assert.doesNotMatch(componentSource, /getIdleCompanionCue/);
+  assert.match(componentSource, /const idlePromptIndexRef = useRef\(0\);/);
+  assert.match(componentSource, /if \(hoverCueActiveKeyRef\.current\) return;/);
+  assert.match(componentSource, /idlePromptIndexRef\.current \+= 1;/);
+  assert.match(componentSource, /showCompanionCue\(getIdleCompanionCue\(idlePromptIndexRef\.current\), \{\s*openDialog: false,\s*duration: DEFAULT_BUBBLE_DURATION,\s*respectCooldown: true,\s*\}\);/s);
+  assert.match(componentSource, /\}, DEFAULT_BUBBLE_INTERVAL\);/);
   assert.match(componentSource, /className=\{`ai-bubble\$\{bubbleVisible \? ' ai-bubble--visible' : ''\}`\}/);
   assert.doesNotMatch(componentSource, /ai-bubble-name/);
 });

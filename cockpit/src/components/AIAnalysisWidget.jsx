@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 14:22:41 CST
- 更新内容: 福小客悬浮气泡冷却时间调整为 6 秒。
+ 更新时间: 2026-07-01 14:43:35 CST
+ 更新内容: 默认状态新增每 10 秒弹出一次、持续 4 秒的福小客闲置气泡，并在悬浮文字时暂停默认气泡。
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
@@ -20,6 +20,7 @@ import {
 } from '../data/mock';
 import {
   MASCOT_ACTIONS,
+  getIdleCompanionCue,
   getSpeechAction,
 } from '../lib/mascotCompanion';
 import {
@@ -44,6 +45,8 @@ const QUICK_PROMPTS = [
 const HOVER_CUE_DELAY = 900;
 const HOVER_CUE_DURATION = 4200;
 const HOVER_BUBBLE_COOLDOWN = 6000;
+const DEFAULT_BUBBLE_INTERVAL = 10000;
+const DEFAULT_BUBBLE_DURATION = 4000;
 const BUBBLE_EXIT_DURATION = 360;
 const fallbackCue = '这处信息建议结合目标完成率、ROI 和续费一起看。';
 
@@ -114,6 +117,7 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   const hoverCueCacheRef = useRef(new Map());
   const hoverCueActiveKeyRef = useRef('');
   const hoverCueRequestIdRef = useRef(0);
+  const idlePromptIndexRef = useRef(0);
   const lastBubbleShownAtRef = useRef(0);
 
   const snapshot = useMemo(() => buildDashboardSnapshot(activeMenu, dim, channelKey), [activeMenu, dim, channelKey]);
@@ -327,6 +331,22 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
     if (!companionCue) return;
     showCompanionCue(companionCue, { openDialog: false });
   }, [companionCue]);
+
+  useEffect(() => {
+    if (open) return undefined;
+
+    const idleTimer = window.setInterval(() => {
+      if (hoverCueActiveKeyRef.current) return;
+      idlePromptIndexRef.current += 1;
+      showCompanionCue(getIdleCompanionCue(idlePromptIndexRef.current), {
+        openDialog: false,
+        duration: DEFAULT_BUBBLE_DURATION,
+        respectCooldown: true,
+      });
+    }, DEFAULT_BUBBLE_INTERVAL);
+
+    return () => window.clearInterval(idleTimer);
+  }, [open]);
 
   useEffect(() => {
     setMascotAction((current) => (
