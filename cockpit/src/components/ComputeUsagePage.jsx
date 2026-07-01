@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 16:44:24 CST
- 更新内容: 保留算力趋势 15 根拖动窗口，并参照 ECharts 半环示例继续放大饼状图、取消标签固定宽度让折线自然接到文字。
+ 更新时间: 2026-07-01 16:45:56 CST
+ 更新内容: 保留算力趋势 15 根拖动窗口，并按标签左右位置设置文字对齐，让左侧饼图外拉折线紧贴文字。
 */
 import { useMemo, useState } from 'react';
 
@@ -413,9 +413,10 @@ function buildPieOption({ data, tokens, unitLabel }) {
           length2: 18,
           lineStyle: { color: tokens.chartAxis, width: 1, opacity: .72 },
         },
-        labelLayout: {
+        labelLayout: (params) => ({
+          align: params.labelRect.x < params.rect.x ? 'right' : 'left',
           moveOverlap: 'shiftY',
-        },
+        }),
         emphasis: {
           scale: true,
           scaleSize: 3,

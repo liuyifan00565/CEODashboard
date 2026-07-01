@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 16:44:24 CST
- 更新内容: 回归测试保留算力趋势 15 根拖动窗口，并约束饼图按 ECharts 自然外拉标签方式继续放大。
+ 更新时间: 2026-07-01 16:45:56 CST
+ 更新内容: 回归测试保留算力趋势 15 根拖动窗口，并约束饼图外拉标签按左右位置贴线对齐。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -130,9 +130,9 @@ test('keeps compute pie labels and tooltip cards readable around donut charts', 
   assert.match(computePageSource, /distanceToLabelLine:\s*0/);
   assert.match(computePageSource, /bleedMargin:\s*12/);
   assert.match(computePageSource, /labelLine:\s*\{[\s\S]*?length:\s*18,[\s\S]*?length2:\s*18/);
-  assert.match(computePageSource, /labelLayout:\s*\{[\s\S]*?moveOverlap:\s*'shiftY'/);
+  assert.match(computePageSource, /labelLayout:\s*\(params\) => \(\{/);
+  assert.match(computePageSource, /align:\s*params\.labelRect\.x < params\.rect\.x \? 'right' : 'left'/);
   assert.match(computePageSource, /moveOverlap:\s*'shiftY'/);
-  assert.doesNotMatch(computePageSource, /labelLayout:\s*\(params\) =>/);
   assert.doesNotMatch(computePageSource, /formatter:\s*\(params\) => `\{name\|\$\{params\.name\}\}\\n/);
 });
 
