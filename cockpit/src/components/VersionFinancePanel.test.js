@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 15:19:39 CST
- 更新内容: 版本情况回归测试约束合计数量/金额显示在标题下方左上角，并要求右侧四卡片上下均衡。
+ 更新时间: 2026-07-01 15:45:50 CST
+ 更新内容: 版本情况回归测试约束二级弹窗深色遮罩、背景虚化和四个小卡片独立入口。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -21,7 +21,7 @@ test('keeps VersionFinancePanel free of the removed finance health summary', () 
 });
 
 test('renders the large overview layout with half ring and amount/count switch', () => {
-  assert.match(source, /import \{ useState \} from 'react';/);
+  assert.match(source, /import \{ useEffect, useMemo, useRef, useState \} from 'react';/);
   assert.match(source, /import EChart from '\.\/EChart';/);
   assert.match(source, /const VERSION_DISPLAY_KEYS = \['qihang', 'zhuoyue', 'zhizun', 'custom'\];/);
   assert.match(source, /const VERSION_MODES = \[/);
@@ -32,6 +32,12 @@ test('renders the large overview layout with half ring and amount/count switch',
   assert.match(css, /\.vf-ring/);
   assert.match(css, /\.vf-metric-switch/);
   assert.match(css, /\.vf-card-grid/);
+});
+
+test('matches the version half ring size to the recovery half ring', () => {
+  assert.match(source, /className="vf-ring-chart" style=\{\{ height: 326 \}\}/);
+  assert.match(css, /\.vf-ring \{[\s\S]*?width: clamp\(430px, 34vw, 560px\);/);
+  assert.match(css, /\.vf-ring \{[\s\S]*?min-height: 326px;/);
 });
 
 test('places both totals under the version title instead of inside the ring', () => {
@@ -46,9 +52,51 @@ test('places both totals under the version title instead of inside the ring', ()
 });
 
 test('balances the four right-side version cards vertically', () => {
-  assert.match(css, /\.vf-card-grid \{[\s\S]*?align-self: center;/);
-  assert.match(css, /\.vf-card-grid \{[\s\S]*?align-content: center;/);
-  assert.match(css, /\.vf-card-grid \{[\s\S]*?grid-template-rows: repeat\(2, minmax\(118px, 136px\)\);/);
+  assert.match(css, /\.vf-card-zone \{[\s\S]*?align-self: start;/);
+  assert.match(css, /\.vf-card-grid \{[\s\S]*?height: min\(100%, 304px\);/);
+  assert.match(css, /\.vf-card-grid \{[\s\S]*?grid-template-rows: repeat\(2, minmax\(124px, 1fr\)\);/);
+  assert.match(css, /\.vf-card-grid \{[\s\S]*?align-content: stretch;/);
+  assert.match(css, /\.vf-version-card \{[\s\S]*?justify-content: space-between;/);
+  assert.match(css, /\.vf-version-footer \{[\s\S]*?gap: 7px;/);
+});
+
+test('adds a KPI-style secondary expand entry and version detail modal', () => {
+  assert.match(source, /import \* as echarts from 'echarts';/);
+  assert.match(source, /import gsap from 'gsap';/);
+  assert.match(source, /import MultiSegmented from '\.\/MultiSegmented';/);
+  assert.match(source, /import Segmented from '\.\/Segmented';/);
+  assert.match(source, /const VERSION_DETAIL_MODES = \[/);
+  assert.match(source, /label: '金额'/);
+  assert.match(source, /label: '套数'/);
+  assert.match(source, /function VersionDetailModal/);
+  assert.match(source, /function buildVersionDetailSeries\(\{ salesKeys, mode, dim, versionKey \}\)/);
+  assert.match(source, /className="km-card vf-detail-card"/);
+  assert.match(source, /点击展开二级 ▸/);
+  assert.match(source, /className="vf-version-footer"/);
+  assert.match(source, /setDetailVersionKey\(v\.key\)/);
+  assert.match(source, /versionKey=\{detailVersionKey\}/);
+  assert.match(source, /<MultiSegmented options=\{SALES_FILTER_OPTS\}/);
+  assert.match(source, /<Segmented options=\{VERSION_DETAIL_MODES\}/);
+  assert.match(source, /{DIM_FOOTER\[dim\]} · {versionName}{modeMeta\.label}合计/);
+  assert.match(css, /\.vf-expand-hint/);
+  assert.match(css, /\.vf-version-footer/);
+  assert.match(css, /\.vf-detail-card/);
+  assert.match(css, /\.vf-detail-card \{[\s\S]*?rgba\(7, 7, 10, \.78\);/);
+  assert.match(css, /\.vf-detail-card \{[\s\S]*?backdrop-filter: blur\(24px\) saturate\(155%\);/);
+  assert.match(css, /\.vf-panel \{[\s\S]*?overflow: visible;/);
+  assert.match(css, /\.vf-panel \.km-overlay \{[\s\S]*?position: fixed;/);
+  assert.match(css, /\.vf-panel \.km-overlay \{[\s\S]*?z-index: 1000;/);
+  assert.match(css, /\.vf-panel \.km-mask \{[\s\S]*?background: rgba\(0, 0, 0, \.72\);/);
+  assert.match(css, /\.vf-panel \.km-mask \{[\s\S]*?backdrop-filter: blur\(10px\) saturate\(125%\);/);
+});
+
+test('nudges the enlarged half ring upward and left', () => {
+  assert.match(source, /center: \['46%', '70%'\]/);
+  assert.match(css, /\.vf-ring-pane \{[\s\S]*?align-items: flex-start;/);
+  assert.match(css, /\.vf-ring-pane \{[\s\S]*?padding-top: 6px;/);
+  assert.match(css, /\.vf-ring-pane \{[\s\S]*?padding-left: 4px;/);
+  assert.match(css, /\.vf-ring \{[\s\S]*?margin-top: -24px;/);
+  assert.match(css, /\.vf-ring \{[\s\S]*?margin-left: -16px;/);
 });
 
 test('keeps the overview version row aligned to the large recovery card height', () => {
