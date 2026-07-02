@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:34:56 CST
+ Update content: Limit search result highlighting to edge-only changes without full-card purple wash.
+*/
+/*
  Update time: 2026-07-02 17:18:50 CST
  Update content: Strengthen the current search result's wrapped electric glow for Enter navigation.
 */
@@ -68,20 +72,27 @@
 .dash-kpi-item .search-result-border .eb-content,
 .dash-kpi-item .kpi-card{height:100%}
 .search-result-border{width:100%}
+.search-result-border .eb-background-glow{
+  opacity:0;
+  transform:none;
+}
 .search-result-border[data-search-current="true"]{
   z-index:5;
-  filter:drop-shadow(0 0 18px rgba(214,248,74,.34)) drop-shadow(0 0 26px rgba(96,0,255,.42));
+}
+.search-result-border[data-search-current="true"] .eb-glow-1{
+  border-color:rgba(214,248,74,.34);
+  filter:blur(.5px);
 }
 .search-result-border[data-search-current="true"] .eb-background-glow{
-  opacity:.62;
-  transform:scale(1.16);
+  opacity:0;
+  transform:none;
 }
 .search-result-border[data-search-current="true"] .eb-glow-2{
-  filter:blur(6px);
+  border-color:rgba(96,0,255,.68);
+  filter:blur(3px);
 }
 .search-result-border[data-search-current="true"] .eb-content{
   border-radius:inherit;
-  box-shadow:0 0 0 1px rgba(214,248,74,.42),0 0 34px rgba(96,0,255,.38);
 }
 
 /* ===== 主体 grid ===== */

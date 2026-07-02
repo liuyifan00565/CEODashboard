@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:34:56 CST
+ Update content: Keep current search result styling edge-only without card-wide glow.
+*/
+/*
  Update time: 2026-07-02 17:18:50 CST
  Update content: Add current search result glow for compute page cards and panels.
 */
@@ -71,12 +75,7 @@
 .cpu-kpi-slot[data-search-current="true"] .cpu-kpi,
 .cpu-panel[data-search-current="true"] {
   border-color: rgba(214,248,74,.54);
-  box-shadow: 0 0 0 1px rgba(214,248,74,.42), 0 0 34px rgba(96,0,255,.38), var(--glass-shadow);
-}
-
-.cpu-kpi-slot[data-search-current="true"],
-.cpu-panel[data-search-current="true"] {
-  filter: drop-shadow(0 0 18px rgba(214,248,74,.3)) drop-shadow(0 0 26px rgba(96,0,255,.34));
+  box-shadow: inset 0 0 0 1px rgba(214,248,74,.45), var(--glass-shadow);
 }
 
 .cpu-kpi__label,

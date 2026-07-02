@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:34:56 CST
+ Update content: Guard current search result highlighting against full-card purple glow.
+*/
+/*
  Update time: 2026-07-02 17:18:50 CST
  Update content: Add Word-style search navigation and current-result highlight regression tests.
 */
@@ -434,6 +438,26 @@ test('uses ElectricBorder for search result highlighting instead of HighlightBea
   assert.match(appSource, /aria-label="搜索命中结果"/);
   assert.match(appSource, /<ElectricBorder[\s\S]*?color="#6000FF"[\s\S]*?speed=\{1\}[\s\S]*?chaos=\{0\.12\}[\s\S]*?thickness=\{2\}/);
   assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\]/);
+});
+
+test('keeps the current search result highlight edge-only without full-card purple wash', () => {
+  const currentSearchBlock = cssRuleBody(dashboardCss, '.search-result-border[data-search-current="true"]');
+  const currentSearchContentBlock = cssRuleBody(
+    dashboardCss,
+    '.search-result-border[data-search-current="true"] .eb-content'
+  );
+  const currentSearchBackgroundBlock = cssRuleBody(
+    dashboardCss,
+    '.search-result-border[data-search-current="true"] .eb-background-glow'
+  );
+
+  assert.doesNotMatch(currentSearchBlock, /filter:\s*drop-shadow/);
+  assert.doesNotMatch(currentSearchContentBlock, /box-shadow:/);
+  assert.doesNotMatch(currentSearchBackgroundBlock, /transform:\s*scale/);
+  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\] \.eb-glow-1\{[\s\S]*?border-color:rgba\(214,248,74,\.34\);/);
+  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\] \.eb-glow-2\{[\s\S]*?filter:blur\(3px\);/);
+  assert.doesNotMatch(computePageCss, /\.cpu-kpi-slot\[data-search-current="true"\],[\s\S]*?filter:\s*drop-shadow/);
+  assert.doesNotMatch(computePageCss, /\.cpu-panel\[data-search-current="true"\][\s\S]*?box-shadow:[\s\S]*?rgba\(96,0,255/);
 });
 
 test('removes the overview channel ROI card and keeps delivery below the original overview grid', () => {
