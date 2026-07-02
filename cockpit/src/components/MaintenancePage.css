@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 16:47:50 CST
- 更新内容: 压低维护页顶部栏，并让年份下拉框固定在下载模板左侧同一行。
+ 更新时间: 2026-07-02 16:51:18 CST
+ 更新内容: 维护页顶部标题范围改为同一行点分隔显示，并移除题头下方小字。
 */
 .mnt-page {
   --kpi-accent: var(--good);
@@ -78,15 +78,18 @@
 .mnt-toolbar .mnt-title-block h2 {
   font-size: 14px;
   line-height: 1.1;
+  white-space: nowrap;
 }
 
-.mnt-toolbar .mnt-title-block span {
-  margin-top: 2px;
-  font-size: 11px;
-  line-height: 1.2;
+.mnt-title-scope {
+  display: inline;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1;
 }
 
-.mnt-title-block span,
+.mnt-title-block > span,
 .mnt-panel__head > span {
   display: block;
   margin-top: 3px;

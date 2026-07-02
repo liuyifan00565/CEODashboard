@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 16:47:50 CST
- 更新内容: 调整维护页顶部栏按钮顺序，让年份下拉紧邻下载模板左侧。
+ 更新时间: 2026-07-02 16:51:18 CST
+ 更新内容: 维护页题头范围文本改为跟标题同一行点分隔显示。
 */
 import { useMemo, useState } from 'react';
 
@@ -125,8 +125,7 @@ function MaintenanceToolbar({ activePage, status, onBack, onDirty, onSave }) {
     <MaintenanceSurface className="mnt-toolbar-glass">
       <section className="mnt-toolbar" aria-label={`${title}工具栏`}>
         <div className="mnt-title-block">
-          <h2>{title}</h2>
-          <span>{meta.scope}</span>
+          <h2>{title}<span className="mnt-title-scope"> · {meta.scope}</span></h2>
         </div>
         <div className="mnt-actions">
           {actions[activePage] ?? actions['target-maintenance']}

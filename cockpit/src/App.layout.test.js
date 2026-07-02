@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 16:47:50 CST
- 更新内容: 增加维护页年份下拉位置和矮顶部栏布局回归测试。
+ 更新时间: 2026-07-02 16:51:18 CST
+ 更新内容: 增加维护页题头范围文本改为同一行点分隔的回归测试。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -224,6 +224,10 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.match(maintenancePageSource, /import GlassSurface from '\.\/GlassSurface\/GlassSurface';/);
   assert.match(maintenancePageSource, /function MaintenanceSurface/);
   assert.match(maintenancePageCss, /\.mnt-glass \.glass-surface__content\{padding:0;display:block\}/);
+  assert.match(maintenancePageSource, /<h2>\{title\}<span className="mnt-title-scope"> · \{meta\.scope\}<\/span><\/h2>/);
+  assert.doesNotMatch(maintenancePageSource, /<h2>\{title\}<\/h2>\s*<span>\{meta\.scope\}<\/span>/);
+  assert.match(maintenancePageCss, /\.mnt-title-scope \{[\s\S]*?display:\s*inline;[\s\S]*?font-size:\s*12px;/);
+  assert.doesNotMatch(maintenancePageCss, /\.mnt-toolbar \.mnt-title-block span \{/);
   assert.match(maintenancePageSource, /aria-label="目标年份"[\s\S]*?<\/select>\s*<button className="mnt-btn" type="button" onClick=\{onDirty\}>下载模板<\/button>/);
   assert.match(maintenancePageSource, /<div className="mnt-actions">\s*\{actions\[activePage\] \?\? actions\['target-maintenance'\]\}\s*<button className="mnt-btn" type="button" onClick=\{onBack\}>返回看板<\/button>\s*<SaveBadge status=\{status\} \/>/);
   assert.doesNotMatch(maintenancePageSource, /<div className="mnt-actions">\s*<SaveBadge/);
