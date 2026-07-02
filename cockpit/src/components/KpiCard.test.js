@@ -2,10 +2,6 @@
  更新时间: 2026-07-01 18:37:59 CST
  更新内容: KPI 二级弹窗回归测试改为要求深色无紫色光晕背景。
 */
-/*
- Update time: 2026-07-02 17:18:00 CST
- Update content: Update recovery half-ring style assertions for the calmer Apple-inspired glow.
-*/
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -117,11 +113,9 @@ test('removes the bottom recovery legend so the half-donut can use the full visu
   assert.doesNotMatch(cssSource, /\.kpi-card__pie-chip/);
 });
 
-test('keeps a restrained glass glow for the recovery half-donut', () => {
-  assert.match(cssSource, /color-mix\(in srgb, var\(--kpi-accent\) 10%, transparent\)/);
-  assert.match(cssSource, /color-mix\(in srgb, var\(--kpi-accent\) 12%, transparent\)/);
-  assert.match(cssSource, /filter:\s*drop-shadow\(0 0 14px color-mix\(in srgb, var\(--kpi-accent\) 18%, transparent\)\)/);
-  assert.doesNotMatch(cssSource, /color-mix\(in srgb, var\(--kpi-accent\) (?:24|30|36)%, transparent\)/);
+test('keeps luminous but quiet glass styling for the recovery half-donut glow', () => {
+  assert.match(cssSource, /color-mix\(in srgb, var\(--kpi-accent\) 24%, transparent\)/);
+  assert.match(cssSource, /filter:\s*drop-shadow\(0 0 20px color-mix\(in srgb, var\(--kpi-accent\) 36%, transparent\)\)/);
 });
 
 test('keeps recovery half-donut labels readable in the elongated card', () => {
@@ -173,10 +167,10 @@ test('styles the recovery pie mini tooltip with the modal glass frame and a dark
   assert.doesNotMatch(modalCssSource, /\.km-card\s*\{[\s\S]*?background:\s*transparent;/);
   assert.doesNotMatch(modalCssSource, /\.km-card\s*\{[\s\S]*?radial-gradient\(circle at 20% 42%, rgba\(255, 79, 216/);
   assert.doesNotMatch(modalCssSource, /\.km-card\s*\{[\s\S]*?radial-gradient\(circle at 4% 86%, rgba\(96, 0, 255/);
-  assert.match(cssSource, /\.kpi-pie-tooltip\s*\{[\s\S]*?position:\s*relative;[\s\S]*?overflow:\s*hidden;[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?background:\s*rgba\(8,\s*9,\s*14,\s*\.86\);[\s\S]*?backdrop-filter:\s*var\(--glass-blur\);[\s\S]*?box-shadow:\s*0 24px 70px rgba\(0,\s*0,\s*0,\s*0\.52\), inset 0 1px 0 rgba\(255,\s*255,\s*255,\s*0\.14\);/);
+  assert.match(cssSource, /\.kpi-pie-tooltip\s*\{[\s\S]*?position:\s*relative;[\s\S]*?overflow:\s*hidden;[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?background:\s*rgba\(0,\s*0,\s*0,\s*\.68\);[\s\S]*?backdrop-filter:\s*var\(--glass-blur\);[\s\S]*?box-shadow:\s*0 24px 80px rgba\(0,\s*0,\s*0,\s*0\.58\), inset 0 1px 0 rgba\(255,\s*255,\s*255,\s*0\.18\);/);
   assert.match(cssSource, /\.kpi-pie-tooltip::after\s*\{[\s\S]*?animation:\s*kpiTooltipSweep 2\.8s linear infinite;/);
   assert.match(cssSource, /@keyframes kpiTooltipSweep\s*\{[\s\S]*?from\s*\{[\s\S]*?translateX\(-150%\)[\s\S]*?to\s*\{[\s\S]*?translateX\(260%\)/);
-  assert.match(cssSource, /@keyframes kpiTooltipPulse\s*\{[\s\S]*?box-shadow:[\s\S]*?rgba\(0,\s*0,\s*0,\s*\.56\)/);
+  assert.match(cssSource, /@keyframes kpiTooltipPulse\s*\{[\s\S]*?box-shadow:[\s\S]*?rgba\(0,\s*0,\s*0,\s*\.62\)/);
   assert.doesNotMatch(componentSource, /kpi-pie-tooltip--success/);
   assert.doesNotMatch(cssSource, /kpi-pie-tooltip--success/);
   assert.doesNotMatch(cssSource, /\.km-card/);

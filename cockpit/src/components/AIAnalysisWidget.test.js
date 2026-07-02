@@ -2,10 +2,6 @@
  更新时间: 2026-07-02 16:25:43 CST
  更新内容: 约束左下角 AI 小人入口保持小尺寸，同时恢复原亮度与动作发光强度。
 */
-/*
- Update time: 2026-07-02 17:18:00 CST
- Update content: Align AI dialog theme assertions with the calmer dark dashboard palette.
-*/
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -127,9 +123,9 @@ test('uses theme-specific AI dialog card backgrounds', () => {
 
   assert.match(componentSource, /backgroundColor="var\(--ai-card-bg\)"/);
   assert.doesNotMatch(componentSource, /backgroundColor="#120F17"/);
-  assert.match(darkBlock, /--ai-card-bg:#111217;/);
+  assert.match(darkBlock, /--ai-card-bg:#120F17;/);
   assert.match(lightBlock, /--ai-card-bg:/);
-  assert.doesNotMatch(lightBlock, /--ai-card-bg:\s*#111217;/);
+  assert.doesNotMatch(lightBlock, /--ai-card-bg:\s*#120F17;/);
 });
 
 test('styles the launcher as a transparent 3D mascot and speech bubble', () => {
