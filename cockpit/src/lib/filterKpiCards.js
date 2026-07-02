@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-02 17:39:16 CST
+ 更新内容: 主 KPI 卡副文案移除日期区间显示，保留日期范围对指标数值的筛选影响。
+*/
+/*
  更新时间: 2026-07-01 12:26:40
  更新内容: 回款 KPI 副文案目标标签与目标金额换到同一行，并移除日期后的分隔点。
 */
@@ -174,7 +178,7 @@ function getScopedDimConfig(dim, context) {
   };
 }
 
-function createRenewalCard(baseCard, dim, factor, rangeLabel, channelKey) {
+function createRenewalCard(baseCard, dim, factor, channelKey) {
   const config = DIM_CONFIG[dim] ?? DIM_CONFIG.month;
   const overview = getRenewalModalData('all', config.renewalPeriod, channelKey).overview;
   const adjustedRate = round1(clamp(overview.rate + (factor - 1) * 8, 0, 99));
@@ -187,15 +191,15 @@ function createRenewalCard(baseCard, dim, factor, rangeLabel, channelKey) {
     ...baseCard,
     title: dim === 'month' ? baseCard.title : `${config.label}续费率`,
     value: adjustedRate,
-    sub: `${rangeLabel} · 到期 ${due} 单 · 已续 ${renewed} 单 · 续费 ${revenue} 万`,
+    sub: `到期 ${due} 单 · 已续 ${renewed} 单 · 续费 ${revenue} 万`,
     progress: adjustedRate,
     delta: round1(adjustedRate - adjustedPrevRate),
     channelKey,
   };
 }
 
-function targetSub(rangeLabel, targetLabel, target) {
-  return `${rangeLabel}\n${targetLabel} ${target} 万`;
+function targetSub(targetLabel, target) {
+  return `${targetLabel} ${target} 万`;
 }
 
 export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_RANGE, channel = 'all' } = {}) {
@@ -203,7 +207,6 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
   const channelContext = getChannelContext(channel);
   const config = getScopedDimConfig(safeDim, channelContext);
   const factor = getDateRangeFactor(dateRange);
-  const rangeLabel = formatDateRangeLabel(dateRange);
 
   const recovered = scaled(config.recovered, factor);
   const target = scaled(config.target, factor);
@@ -225,8 +228,8 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
   const laborCost = scaled(config.laborCost, factor);
   const costRatio = recovered ? round1((cost / recovered) * 100) : KPI_DERIVED.costRatio;
   const costSub = channelContext.channelKey === 'all'
-    ? `${rangeLabel} · 总投入 ${cost} 万 · 广告 ${adCost} 万 + 人力 ${laborCost} 万`
-    : `${rangeLabel} · 销售投入 ${cost} 万 · 费比 ${costRatio}%`;
+    ? `总投入 ${cost} 万 · 广告 ${adCost} 万 + 人力 ${laborCost} 万`
+    : `销售投入 ${cost} 万 · 费比 ${costRatio}%`;
 
   const cardsByKey = new Map(KPI_CARDS.map((card) => [card.key, card]));
   const monthCard = cardsByKey.get('month');
@@ -239,7 +242,7 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
       ...monthCard,
       title: safeDim === 'month' ? monthCard.title : `${config.label}回款`,
       value: recovered,
-      sub: targetSub(rangeLabel, `${config.label}目标`, target),
+      sub: targetSub(`${config.label}目标`, target),
       progress: completion(recovered, target),
       progressLabel: `${config.label}目标完成率`,
       gap: Math.max(target - recovered, 0),
@@ -250,7 +253,7 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
       ...yearCard,
       title: safeDim === 'month' ? yearCard.title : `${config.label}累计回款`,
       value: cumulativeRecovered,
-      sub: targetSub(rangeLabel, safeDim === 'month' ? '年度目标' : `${config.label}目标`, cumulativeTarget),
+      sub: targetSub(safeDim === 'month' ? '年度目标' : `${config.label}目标`, cumulativeTarget),
       progress: completion(cumulativeRecovered, cumulativeTarget),
       progressLabel: `${config.label}累计完成率`,
       gap: Math.max(cumulativeTarget - cumulativeRecovered, 0),
@@ -268,6 +271,6 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
       sub: costSub,
       channelKey: channelContext.channelKey,
     },
-    createRenewalCard(renewalCard, safeDim, factor, rangeLabel, channelContext.channelKey),
+    createRenewalCard(renewalCard, safeDim, factor, channelContext.channelKey),
   ];
 }

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-02 17:38:31 CST
+ 更新内容: 增加主 KPI 卡副文案不显示日期区间的回归测试。
+*/
+/*
  更新时间: 2026-07-01 12:26:40
  更新内容: 增加回款 KPI 副文案目标标签与目标金额同行且移除日期分隔点的回归测试。
 */
@@ -11,6 +15,12 @@ function byKey(cards, key) {
   return cards.find((card) => card.key === key);
 }
 
+function expectNoMainCardDateRange(cards) {
+  for (const card of cards) {
+    assert.doesNotMatch(String(card.sub ?? ''), /\d{4}-\d{2}-\d{2} 至 \d{4}-\d{2}-\d{2}/);
+  }
+}
+
 test('keeps the default June monthly filter aligned with the existing mock KPI values', () => {
   const cards = getFilteredKpiCards({ dim: 'month', dateRange: ['2026-06-01', '2026-06-30'] });
   const recovered = byKey(cards, 'month');
@@ -19,7 +29,7 @@ test('keeps the default June monthly filter aligned with the existing mock KPI v
   assert.equal(recovered.value, 486);
   assert.equal(recovered.progress, 83.8);
   assert.equal(recovered.delta, 12.5);
-  assert.match(recovered.sub, /2026-06-01 至 2026-06-30/);
+  expectNoMainCardDateRange(cards);
   assert.equal(renewal.value, 75.4);
 });
 
@@ -28,8 +38,8 @@ test('places monthly and annual target labels on the same subtitle line as their
   const recovered = byKey(cards, 'month');
   const annual = byKey(cards, 'year');
 
-  assert.equal(recovered.sub, '2026-06-01 至 2026-06-30\n月度目标 580 万');
-  assert.equal(annual.sub, '2026-06-01 至 2026-06-30\n年度目标 5800 万');
+  assert.equal(recovered.sub, '月度目标 580 万');
+  assert.equal(annual.sub, '年度目标 5800 万');
   assert.doesNotMatch(recovered.sub, / · /);
   assert.doesNotMatch(annual.sub, / · /);
 });
@@ -53,7 +63,7 @@ test('changes KPI card values when the calendar range changes', () => {
 
   assert.notEqual(byKey(shortRangeCards, 'month').value, byKey(defaultCards, 'month').value);
   assert.notEqual(byKey(shortRangeCards, 'cost').sub, byKey(defaultCards, 'cost').sub);
-  assert.match(byKey(shortRangeCards, 'month').sub, /2026-06-01 至 2026-06-10/);
+  expectNoMainCardDateRange(shortRangeCards);
 });
 
 test('changes KPI card values when the year-month-day granularity changes', () => {
