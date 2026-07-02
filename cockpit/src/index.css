@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:18:50 CST
+ Update content: Add compact right-side search result counter styles for Word-style navigation.
+*/
+/*
  Update time: 2026-07-02 17:09:15 CST
  Update content: Refine the dark cockpit palette with softer cyber neon accents and lower ambient noise.
 */
@@ -184,6 +188,19 @@ body{
 .search-input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--txt);
   font-size:14px;transition:opacity .25s}
 .search-input::placeholder{color:var(--muted)}
+.search-count{
+  flex:none;display:inline-flex;align-items:center;justify-content:center;
+  min-width:50px;height:28px;padding:0 10px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.22);background:rgba(10,10,12,.46);
+  color:var(--txt);font-size:12px;font-weight:700;line-height:1;cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 8px 20px rgba(0,0,0,.22);
+  transition:background .2s,border-color .2s,box-shadow .2s;
+}
+.search-count:hover,
+.search-count:focus-visible{
+  background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.36);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 18px rgba(96,0,255,.32);
+}
 
 /* 黑白主题切换（包裹 ReactBits GlassSurface） */
 .theme-toggle{

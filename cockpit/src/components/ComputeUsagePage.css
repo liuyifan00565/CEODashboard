@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:18:50 CST
+ Update content: Add current search result glow for compute page cards and panels.
+*/
+/*
  更新时间: 2026-07-02 17:09:00 CST
  更新内容: 固定算力表格筛选 SVG 图标宽高，避免表头紧缩导致图标过窄。
  备注: 表格上移仅作用于客户算力明细排行的表格容器，不影响其它算力分析表格或分页布局。
@@ -62,6 +66,17 @@
 .cpu-panel--match {
   border-color: rgba(255,255,255,.44);
   box-shadow: 0 22px 66px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.24);
+}
+
+.cpu-kpi-slot[data-search-current="true"] .cpu-kpi,
+.cpu-panel[data-search-current="true"] {
+  border-color: rgba(214,248,74,.54);
+  box-shadow: 0 0 0 1px rgba(214,248,74,.42), 0 0 34px rgba(96,0,255,.38), var(--glass-shadow);
+}
+
+.cpu-kpi-slot[data-search-current="true"],
+.cpu-panel[data-search-current="true"] {
+  filter: drop-shadow(0 0 18px rgba(214,248,74,.3)) drop-shadow(0 0 26px rgba(96,0,255,.34));
 }
 
 .cpu-kpi__label,

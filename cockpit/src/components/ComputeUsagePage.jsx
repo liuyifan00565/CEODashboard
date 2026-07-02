@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:18:50 CST
+ Update content: Mark compute KPI cards and panels as searchable matches for top search navigation.
+*/
+/*
  更新时间: 2026-07-02 16:52:00 CST
  更新内容: 算力用量表格筛选、排序、分页和下拉控制改用统一 AppIcon 线性图标。
 */
@@ -703,7 +707,7 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
 
 function KpiCard({ label, value, sub, meta, tone, active }) {
   return (
-    <div className="cpu-kpi-slot" data-anim>
+    <div className="cpu-kpi-slot" data-anim data-search-match={active ? 'true' : undefined}>
       <article className={`cpu-kpi cpu-kpi--${tone}${active ? ' cpu-kpi--match' : ''}`}>
         <span className="cpu-kpi__label">{label}</span>
         <strong className="cpu-kpi__value">{value}</strong>
@@ -716,7 +720,11 @@ function KpiCard({ label, value, sub, meta, tone, active }) {
 
 function Panel({ className = '', title, sub, active, children }) {
   return (
-    <section className={`cpu-panel ${className}${active ? ' cpu-panel--match' : ''}`} data-anim>
+    <section
+      className={`cpu-panel ${className}${active ? ' cpu-panel--match' : ''}`}
+      data-anim
+      data-search-match={active ? 'true' : undefined}
+    >
       <header className="cpu-panel__head">
         <div>
           <h3>{title}</h3>

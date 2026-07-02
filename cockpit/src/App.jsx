@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:18:50 CST
+ Update content: Add Word-style search result counting, Enter cycling, and current hit marking.
+*/
+/*
  Update time: 2026-07-02 17:13:39 CST
  Update content: Change the top brand title to 福客经营驾驶舱 and the overview subtitle to CEO视角.
 */
@@ -58,6 +62,9 @@ function SearchResultBorder({ active, children }) {
   if (!active) return children;
   return (
     <ElectricBorder
+      data-search-match="true"
+      data-search-current="false"
+      aria-label="搜索命中结果"
       color="#6000FF"
       speed={1}
       chaos={0.12}
@@ -84,11 +91,14 @@ export default function App() {
   const dim = 'month';
   const dateRange = DEFAULT_FILTER_RANGE;
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchStats, setSearchStats] = useState({ current: 0, total: 0 });
+  const [activeSearchIndex, setActiveSearchIndex] = useState(0);
   const [openCard, setOpenCard] = useState(null);
   const [companionCue, setCompanionCue] = useState(null);
 
   const gridRef = useRef(null);
   const pendingMenuScrollRef = useRef(false);
+  const pendingSearchScrollRef = useRef(false);
   const isComputePage = activeMenu === 'compute';
   const showOpeningMetrics = activeMenu === 'overview';
   const activeChannelKey = getDashboardChannelKey(activeMenu);
@@ -128,6 +138,50 @@ export default function App() {
       id: makeCompanionCueId(card),
     });
   }
+
+  function jumpToNextSearchResult() {
+    if (!searchStats.total) return;
+    pendingSearchScrollRef.current = true;
+    setActiveSearchIndex((index) => (index + 1) % Math.max(searchStats.total, 1));
+  }
+
+  useLayoutEffect(() => {
+    pendingSearchScrollRef.current = Boolean(searchTerm.trim());
+    setActiveSearchIndex(0);
+  }, [searchTerm, activeMenu]);
+
+  useLayoutEffect(() => {
+    const root = gridRef.current;
+    if (!root) return;
+
+    root.querySelectorAll('[data-search-current]').forEach((node) => {
+      node.removeAttribute('data-search-current');
+    });
+
+    if (!searchTerm.trim()) {
+      pendingSearchScrollRef.current = false;
+      setSearchStats((stats) => (stats.current === 0 && stats.total === 0 ? stats : { current: 0, total: 0 }));
+      return;
+    }
+
+    const matches = Array.from(root.querySelectorAll('[data-search-match="true"]'));
+    const total = matches.length;
+    const currentIndex = total ? activeSearchIndex % total : -1;
+
+    matches.forEach((node, index) => {
+      node.dataset.searchCurrent = index === currentIndex ? 'true' : 'false';
+    });
+
+    setSearchStats((stats) => {
+      const next = { current: total ? currentIndex + 1 : 0, total };
+      return stats.current === next.current && stats.total === next.total ? stats : next;
+    });
+
+    if (total && pendingSearchScrollRef.current) {
+      matches[currentIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    }
+    pendingSearchScrollRef.current = false;
+  }, [searchTerm, activeSearchIndex, activeMenu, isComputePage, filteredKpiCards]);
 
   // GSAP 入场：KPI 卡 + 面板 stagger fade-up（菜单切换时重放）
   useLayoutEffect(() => {
@@ -235,7 +289,12 @@ export default function App() {
               </div>
             </GlassSurface>
             <div className="dash-tools">
-              <ExpandableSearch onChange={setSearchTerm} />
+              <ExpandableSearch
+                onChange={setSearchTerm}
+                currentIndex={searchStats.current}
+                totalResults={searchStats.total}
+                onNext={jumpToNextSearchResult}
+              />
             </div>
           </header>
 

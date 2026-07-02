@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:18:50 CST
+ Update content: Update toolbar search assertion for Word-style result navigation props.
+*/
+/*
  Update time: 2026-07-02 17:09:15 CST
  Update content: Align light theme accent assertions with the refined softer neon palette.
 */
@@ -46,7 +50,7 @@ test('defines a circular GlassSurface theme toggle with persistent theme state',
 test('does not render the theme toggle in the top toolbar', () => {
   assert.doesNotMatch(appSource, /import ThemeToggle from '\.\/components\/ThemeToggle';/);
   assert.doesNotMatch(appSource, /<ThemeToggle\s*\/>/);
-  assert.match(appSource, /<div className="dash-tools">\s*<ExpandableSearch onChange=\{setSearchTerm\} \/>\s*<\/div>/);
+  assert.match(appSource, /<div className="dash-tools">\s*<ExpandableSearch[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
 });
 
 test('provides dark and light theme variable contracts', () => {

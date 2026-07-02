@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:18:50 CST
+ Update content: Strengthen the current search result's wrapped electric glow for Enter navigation.
+*/
+/*
  Update time: 2026-07-02 15:53:58 CST
  Update content: Widen the top brand glass surface for the MetallicPaint logo.
 */
@@ -64,6 +68,21 @@
 .dash-kpi-item .search-result-border .eb-content,
 .dash-kpi-item .kpi-card{height:100%}
 .search-result-border{width:100%}
+.search-result-border[data-search-current="true"]{
+  z-index:5;
+  filter:drop-shadow(0 0 18px rgba(214,248,74,.34)) drop-shadow(0 0 26px rgba(96,0,255,.42));
+}
+.search-result-border[data-search-current="true"] .eb-background-glow{
+  opacity:.62;
+  transform:scale(1.16);
+}
+.search-result-border[data-search-current="true"] .eb-glow-2{
+  filter:blur(6px);
+}
+.search-result-border[data-search-current="true"] .eb-content{
+  border-radius:inherit;
+  box-shadow:0 0 0 1px rgba(214,248,74,.42),0 0 34px rgba(96,0,255,.38);
+}
 
 /* ===== 主体 grid ===== */
 .dash-grid{

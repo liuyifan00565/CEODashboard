@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:18:50 CST
+ Update content: Add Word-style search navigation and current-result highlight regression tests.
+*/
+/*
  Update time: 2026-07-02 17:12:03 CST
  Update content: Add a brand title regression test for 福客经营驾驶舱, compact month label, CEO视角 subtitle, and 3D default text.
 */
@@ -126,7 +130,7 @@ test('keeps only search in the top toolbar while data keeps default monthly filt
   assert.doesNotMatch(appSource, /computePeriod/);
   assert.match(appSource, /const dim = 'month';/);
   assert.match(appSource, /const dateRange = DEFAULT_FILTER_RANGE;/);
-  assert.match(appSource, /<div className="dash-tools">\s*<ExpandableSearch onChange=\{setSearchTerm\} \/>\s*<\/div>/);
+  assert.match(appSource, /<div className="dash-tools">\s*<ExpandableSearch[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
   assert.doesNotMatch(appSource, /<DateRangePicker/);
   assert.doesNotMatch(appSource, /<Segmented options=\{DIM_OPTS\}/);
   assert.doesNotMatch(appSource, /<ThemeToggle/);
@@ -134,6 +138,16 @@ test('keeps only search in the top toolbar while data keeps default monthly filt
   assert.match(computePageSource, /export default function ComputeUsagePage\(\{ searchTerm = '', dim = 'month', dateRange = \[\] \}\)/);
   assert.match(computePageSource, /const periodLabel = DIM_TREND_LABELS\[dim\] \?\? DIM_TREND_LABELS\.month;/);
   assert.match(computePageSource, /const trend = getComputeUsageTrend\(\{ dim, dateRange \}\);/);
+});
+
+test('counts searchable matches and cycles the current result from the top search field', () => {
+  assert.match(appSource, /const \[searchStats, setSearchStats\] = useState\(\{ current: 0, total: 0 \}\);/);
+  assert.match(appSource, /const \[activeSearchIndex, setActiveSearchIndex\] = useState\(0\);/);
+  assert.match(appSource, /function jumpToNextSearchResult\(\) \{/);
+  assert.match(appSource, /setActiveSearchIndex\(\(index\) => \(index \+ 1\) % Math\.max\(searchStats\.total, 1\)\);/);
+  assert.match(appSource, /querySelectorAll\('\[data-search-match="true"\]'\)/);
+  assert.match(appSource, /node\.dataset\.searchCurrent = index === currentIndex \? 'true' : 'false';/);
+  assert.match(appSource, /scrollIntoView\(\{ behavior: 'smooth', block: 'center', inline: 'nearest' \}\)/);
 });
 
 test('renders the brand title as 福客经营驾驶舱 with CEO monthly perspective', () => {
@@ -416,7 +430,10 @@ test('uses ElectricBorder for search result highlighting instead of HighlightBea
   assert.doesNotMatch(appSource, /import HighlightBeam/);
   assert.doesNotMatch(appSource, /<HighlightBeam/);
   assert.match(appSource, /<SearchResultBorder active=\{hit\(card\.keywords,\s*searchTerm\)\}>/);
+  assert.match(appSource, /data-search-match="true"/);
+  assert.match(appSource, /aria-label="搜索命中结果"/);
   assert.match(appSource, /<ElectricBorder[\s\S]*?color="#6000FF"[\s\S]*?speed=\{1\}[\s\S]*?chaos=\{0\.12\}[\s\S]*?thickness=\{2\}/);
+  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\]/);
 });
 
 test('removes the overview channel ROI card and keeps delivery below the original overview grid', () => {
