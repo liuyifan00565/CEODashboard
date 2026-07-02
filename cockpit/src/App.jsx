@@ -1,6 +1,34 @@
 /*
+ 更新时间: 2026-07-02 18:10:27 CST
+ 更新内容: 合并 GitHub 数据维护页面与本地品牌、搜索和顶部栏改动。
+*/
+/*
+ Update time: 2026-07-02 17:18:50 CST
+ Update content: Add Word-style search result counting, Enter cycling, and current hit marking.
+*/
+/*
+ Update time: 2026-07-02 17:13:39 CST
+ Update content: Change the top brand title to 福客经营驾驶舱 and the overview subtitle to CEO视角.
+*/
+/*
+ Update time: 2026-07-02 16:43:06 CST
+ Update content: Remove the top toolbar date, dimension, and theme controls while keeping search.
+*/
+/*
+ Update time: 2026-07-02 15:53:58 CST
+ Update content: Use MetallicPaint with the black PNG logo in the top brand area.
+*/
+/*
+ 更新时间: 2026-07-02 15:13:35 CST
+ 更新内容: 首页右侧财务卡片区移除续费率，将开户数上移到原总投入位置，总投入下移到原续费率位置。
+*/
+/*
  更新时间: 2026-07-02 16:25:57 CST
  更新内容: 数据维护模式接入目标、成本、组织、渠道四个独立维护界面。
+*/
+/*
+ Update time: 2026-07-02 18:16:13 CST
+ Update content: Restore DotField to solid purple background dots.
 */
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
@@ -10,11 +38,9 @@ import DotField from './components/DotField/DotField';
 import FluidGlass from './components/FluidGlass/FluidGlass';
 import GlassSurface from './components/GlassSurface/GlassSurface';
 import Sidebar from './components/Sidebar';
-import ThemeToggle from './components/ThemeToggle';
 import ExpandableSearch from './components/ExpandableSearch';
-import DateRangePicker from './components/DateRangePicker';
-import Segmented from './components/Segmented';
 import ElectricBorder from './components/ElectricBorder/ElectricBorder';
+import MetallicPaint from './components/MetallicPaint/MetallicPaint';
 import KpiCard from './components/KpiCard';
 import KpiModal from './components/KpiModal';
 import MonthlyTrend from './components/MonthlyTrend';
@@ -29,12 +55,6 @@ import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuL
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
 import './dashboard.css';
-
-const DIM_OPTS = [
-  { value: 'year', label: '年' },
-  { value: 'month', label: '月' },
-  { value: 'day', label: '日' },
-];
 
 const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance';
 
@@ -57,6 +77,9 @@ function SearchResultBorder({ active, children }) {
   if (!active) return children;
   return (
     <ElectricBorder
+      data-search-match="true"
+      data-search-current="false"
+      aria-label="搜索命中结果"
       color="#6000FF"
       speed={1}
       chaos={0.12}
@@ -82,14 +105,17 @@ export default function App() {
   const [activeMenu, setActiveMenu] = useState('overview');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [activeMaintenanceMenu, setActiveMaintenanceMenu] = useState(DEFAULT_MAINTENANCE_MENU);
-  const [dim, setDim] = useState('month');
-  const [dateRange, setDateRange] = useState(DEFAULT_FILTER_RANGE);
+  const dim = 'month';
+  const dateRange = DEFAULT_FILTER_RANGE;
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchStats, setSearchStats] = useState({ current: 0, total: 0 });
+  const [activeSearchIndex, setActiveSearchIndex] = useState(0);
   const [openCard, setOpenCard] = useState(null);
   const [companionCue, setCompanionCue] = useState(null);
 
   const gridRef = useRef(null);
   const pendingMenuScrollRef = useRef(false);
+  const pendingSearchScrollRef = useRef(false);
   const isMaintenancePage = maintenanceMode;
   const isComputePage = activeMenu === 'compute';
   const showOpeningMetrics = activeMenu === 'overview';
@@ -97,7 +123,7 @@ export default function App() {
   const activeMenuLabel = getDashboardMenuLabel(activeMenu);
   const activeContextLabel = maintenanceMode
     ? '数据维护'
-    : activeMenu === 'overview' ? '月度视角' : activeMenuLabel;
+    : activeMenu === 'overview' ? 'CEO视角' : activeMenuLabel;
   const sidebarItems = maintenanceMode ? MAINTENANCE_MENU : MENU;
   const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const contentKey = maintenanceMode ? activeMaintenanceMenu : activeMenu;
@@ -164,6 +190,50 @@ export default function App() {
     });
   }
 
+  function jumpToNextSearchResult() {
+    if (!searchStats.total) return;
+    pendingSearchScrollRef.current = true;
+    setActiveSearchIndex((index) => (index + 1) % Math.max(searchStats.total, 1));
+  }
+
+  useLayoutEffect(() => {
+    pendingSearchScrollRef.current = Boolean(searchTerm.trim());
+    setActiveSearchIndex(0);
+  }, [searchTerm, contentKey]);
+
+  useLayoutEffect(() => {
+    const root = gridRef.current;
+    if (!root) return;
+
+    root.querySelectorAll('[data-search-current]').forEach((node) => {
+      node.removeAttribute('data-search-current');
+    });
+
+    if (!searchTerm.trim()) {
+      pendingSearchScrollRef.current = false;
+      setSearchStats((stats) => (stats.current === 0 && stats.total === 0 ? stats : { current: 0, total: 0 }));
+      return;
+    }
+
+    const matches = Array.from(root.querySelectorAll('[data-search-match="true"]'));
+    const total = matches.length;
+    const currentIndex = total ? activeSearchIndex % total : -1;
+
+    matches.forEach((node, index) => {
+      node.dataset.searchCurrent = index === currentIndex ? 'true' : 'false';
+    });
+
+    setSearchStats((stats) => {
+      const next = { current: total ? currentIndex + 1 : 0, total };
+      return stats.current === next.current && stats.total === next.total ? stats : next;
+    });
+
+    if (total && pendingSearchScrollRef.current) {
+      matches[currentIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    }
+    pendingSearchScrollRef.current = false;
+  }, [searchTerm, activeSearchIndex, contentKey, isComputePage, filteredKpiCards]);
+
   // GSAP 入场：KPI 卡 + 面板 stagger fade-up（菜单切换时重放）
   useLayoutEffect(() => {
     const root = gridRef.current;
@@ -205,7 +275,7 @@ export default function App() {
           cursorForce={0.15}
           bulgeOnly={false}
           gradientFrom="#6000FF"
-          gradientTo="#ffffff"
+          gradientTo="#6000FF"
           glowColor="#6000FF"
         />
         <div className="fluid-glass-layer" aria-hidden="true">
@@ -232,7 +302,7 @@ export default function App() {
         <div className="dash-main">
           <header className="dash-topbar">
             <GlassSurface
-              width={230}
+              width={286}
               height={52}
               borderRadius={16}
               brightness={58}
@@ -243,10 +313,29 @@ export default function App() {
               className="brand-glass"
             >
               <div className="brand">
-                <span className="brand-dot" />
+                <span className="brand-logo-paint" aria-hidden="true">
+                  <MetallicPaint
+                    imageSrc="/logo-black.png"
+                    seed={64}
+                    scale={3.6}
+                    refraction={0.018}
+                    blur={0.014}
+                    liquid={0.68}
+                    speed={0.28}
+                    brightness={1.75}
+                    contrast={0.8}
+                    fresnel={1.2}
+                    lightColor="#ffffff"
+                    darkColor="#050505"
+                    tintColor="#d7fbff"
+                    chromaticSpread={1.8}
+                    distortion={0.75}
+                    contour={0.28}
+                  />
+                </span>
                 <div className="brand-copy">
-                  <b>福客 · CEO 经营驾驶舱</b>
-                  <small>{META.monthLabel} · {activeContextLabel}</small>
+                  <b>福客经营驾驶舱</b>
+                  <small>{META.monthLabel}｜{activeContextLabel}</small>
                 </div>
               </div>
             </GlassSurface>
@@ -272,10 +361,12 @@ export default function App() {
               </button>
             </GlassSurface>
             <div className="dash-tools">
-              <DateRangePicker value={dateRange} onChange={(dates) => setDateRange(dates?.length ? [...dates] : DEFAULT_FILTER_RANGE)} />
-              <Segmented options={DIM_OPTS} value={dim} onChange={setDim} />
-              <ThemeToggle />
-              <ExpandableSearch onChange={setSearchTerm} />
+              <ExpandableSearch
+                onChange={setSearchTerm}
+                currentIndex={searchStats.current}
+                totalResults={searchStats.total}
+                onNext={jumpToNextSearchResult}
+              />
             </div>
           </header>
 

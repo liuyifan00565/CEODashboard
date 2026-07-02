@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:18:50 CST
+ Update content: Allow ElectricBorder to pass search navigation data and aria attributes to its root node.
+*/
+/*
  更新时间: 2026-06-25 18:51:26
  更新内容: 新增 ReactBits ElectricBorder 组件，用于搜索命中卡片电光描边高亮。
 */
@@ -14,6 +18,7 @@ const ElectricBorder = ({
   borderRadius = 24,
   className,
   style,
+  ...rootProps
 }) => {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -286,7 +291,7 @@ const ElectricBorder = ({
   };
 
   return (
-    <div ref={containerRef} className={`electric-border ${className ?? ''}`} style={{ ...vars, ...style }}>
+    <div ref={containerRef} className={`electric-border ${className ?? ''}`} style={{ ...vars, ...style }} {...rootProps}>
       <div className="eb-canvas-container">
         <canvas ref={canvasRef} className="eb-canvas" />
       </div>

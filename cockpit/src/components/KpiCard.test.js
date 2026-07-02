@@ -1,4 +1,28 @@
 /*
+ Update time: 2026-07-02 18:21:53 CST
+ Update content: Require long recovery KPI cards to leave more vertical space before the completion progress block.
+*/
+/*
+ Update time: 2026-07-02 17:57:37 CST
+ Update content: Require desktop recovery target subtitles to sit inline beside the large KPI value.
+*/
+/*
+ Update time: 2026-07-02 17:50:46 CST
+ Update content: Require recovery cards to keep a neutral dark glass base with only restrained accent edges.
+*/
+/*
+ Update time: 2026-07-02 17:39:14 CST
+ Update content: Require recovery card washes to follow completion accent colors instead of fixed lime.
+*/
+/*
+ Update time: 2026-07-02 17:29:43 CST
+ Update content: Guard recovery cards against local pie-only glow and require a subtle full-card lime wash.
+*/
+/*
+ Update time: 2026-07-02 17:09:15 CST
+ Update content: Tune KPI palette assertions for the refined lower-glow neon pass.
+*/
+/*
  更新时间: 2026-07-01 18:37:59 CST
  更新内容: KPI 二级弹窗回归测试改为要求深色无紫色光晕背景。
 */
@@ -86,10 +110,10 @@ test('shows target completion title and target amount at the upper-left of the r
 });
 
 test('adds a transparent unfinished slice at the right edge of the recovery half-donut', () => {
-  assert.match(componentSource, /const INCOMPLETE_PIE_COLOR = 'rgba\(230, 251, 255, \.14\)';/);
+  assert.match(componentSource, /const INCOMPLETE_PIE_COLOR = 'rgba\(230, 251, 255, \.12\)';/);
   assert.match(componentSource, /const targetValue = recoveryTargetValue\(card\);/);
   assert.match(componentSource, /const incompleteValue = Math\.max\(0, targetValue - cardTotal\);/);
-  assert.match(componentSource, /const incompleteSlice = \{[\s\S]*?rawValue:\s*incompleteValue[\s\S]*?targetValue[\s\S]*?name:\s*'未完成'[\s\S]*?isIncomplete:\s*true[\s\S]*?itemStyle:\s*\{[\s\S]*?color:\s*INCOMPLETE_PIE_COLOR[\s\S]*?opacity:\s*\.46/);
+  assert.match(componentSource, /const incompleteSlice = \{[\s\S]*?rawValue:\s*incompleteValue[\s\S]*?targetValue[\s\S]*?name:\s*'未完成'[\s\S]*?isIncomplete:\s*true[\s\S]*?itemStyle:\s*\{[\s\S]*?color:\s*INCOMPLETE_PIE_COLOR[\s\S]*?opacity:\s*\.38[\s\S]*?borderColor:\s*'rgba\(230, 251, 255, \.2\)'/);
   assert.match(componentSource, /percentColor:\s*CHANNEL_PERCENT_COLORS\[index\]/);
   assert.match(componentSource, /percentColor:\s*INCOMPLETE_PERCENT_COLOR/);
   assert.match(componentSource, /return \[[\s\S]*?\.\.\.channelData\.sort\(\(a, b\) => a\.value - b\.value\),[\s\S]*?incompleteSlice,[\s\S]*?\];/);
@@ -113,9 +137,18 @@ test('removes the bottom recovery legend so the half-donut can use the full visu
   assert.doesNotMatch(cssSource, /\.kpi-card__pie-chip/);
 });
 
-test('keeps luminous but quiet glass styling for the recovery half-donut glow', () => {
-  assert.match(cssSource, /color-mix\(in srgb, var\(--kpi-accent\) 24%, transparent\)/);
-  assert.match(cssSource, /filter:\s*drop-shadow\(0 0 20px color-mix\(in srgb, var\(--kpi-accent\) 36%, transparent\)\)/);
+test('uses a neutral dark glass base with only restrained completion accent at the edges', () => {
+  assert.match(cssSource, /\.kpi-card--recovery\s*\{[\s\S]*?background:[\s\S]*?linear-gradient\(112deg, color-mix\(in srgb, var\(--kpi-accent\) 4%, transparent\) 0%, color-mix\(in srgb, var\(--kpi-accent\) 2%, transparent\) 30%, transparent 62%\)/);
+  assert.match(cssSource, /\.kpi-card--recovery\s*\{[\s\S]*?linear-gradient\(180deg, rgba\(255,\s*255,\s*255,\s*\.026\), rgba\(255,\s*255,\s*255,\s*\.006\)\),[\s\S]*?rgba\(4,\s*5,\s*7,\s*\.18\);/);
+  assert.doesNotMatch(cssSource, /var\(--kpi-accent\) (?:13|8\.5|7|4\.5)%, transparent/);
+  assert.doesNotMatch(cssSource, /radial-gradient\(circle at 20% 48%/);
+  assert.doesNotMatch(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?width:\s*330px/);
+  assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?inset:\s*0;[\s\S]*?width:\s*auto;[\s\S]*?border-radius:\s*inherit;[\s\S]*?linear-gradient\(90deg, color-mix\(in srgb, var\(--kpi-accent\) 6%, transparent\) 0%, transparent 18%, transparent 82%, color-mix\(in srgb, var\(--kpi-accent\) 4%, transparent\) 100%\)/);
+  assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?mix-blend-mode:\s*screen;[\s\S]*?opacity:\s*\.48;/);
+  assert.match(cssSource, /filter:\s*drop-shadow\(0 0 10px color-mix\(in srgb, var\(--kpi-accent\) 12%, transparent\)\)/);
+  assert.match(componentSource, /<EChart option=\{progressOption\(card\.progress, tokens\)\} className="kpi-card__progress-chart" style=\{\{ height: 12 \}\} \/>/);
+  assert.match(cssSource, /\.kpi-card--recovery \.kpi-card__progress-chart\s*\{[\s\S]*?opacity:\s*\.82;[\s\S]*?filter:\s*saturate\(\.82\);/);
+  assert.match(cssSource, /\.kpi-card__side-panel \.ch-bar-fill\s*\{[\s\S]*?opacity:\s*\.82;[\s\S]*?filter:\s*saturate\(\.82\);/);
 });
 
 test('keeps recovery half-donut labels readable in the elongated card', () => {
@@ -150,6 +183,18 @@ test('makes the recovery metric block larger and shifts it left inside the long 
   assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__progress-pct\s*\{[\s\S]*?font-size:\s*16px;/);
 });
 
+test('adds more room between recovery value row and completion progress in long cards', () => {
+  assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__progress\s*\{[\s\S]*?margin-top:\s*18px;/);
+  assert.doesNotMatch(cssSource, /\.kpi-card__progress\s*\{[\s\S]*?margin-top:\s*(?:2[4-9]|[3-9]\d)px;/);
+});
+
+test('places the recovery target subtitle beside the large value on desktop only', () => {
+  assert.match(componentSource, /<div className="kpi-card__value-row">[\s\S]*?<div className="kpi-card__value">[\s\S]*?<NumberRoll value=\{displayValue\} suffix=\{suffix\} decimals=\{decimals\} \/>[\s\S]*?<\/div>[\s\S]*?\{card\.sub != null && <div className="kpi-card__sub">\{card\.sub\}<\/div>\}[\s\S]*?<\/div>/);
+  assert.match(cssSource, /@media \(min-width:761px\) \{[\s\S]*?\.kpi-card--recovery \.kpi-card__value-row\s*\{[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*baseline;[\s\S]*?gap:\s*12px;/);
+  assert.match(cssSource, /@media \(min-width:761px\) \{[\s\S]*?\.kpi-card--recovery \.kpi-card__value-row \.kpi-card__sub\s*\{[\s\S]*?white-space:\s*nowrap;[\s\S]*?font-size:\s*15px;/);
+  assert.match(cssSource, /@media \(max-width:760px\) \{[\s\S]*?\.kpi-card--recovery \.kpi-card__value-row\s*\{[\s\S]*?display:\s*block;/);
+});
+
 test('formats recovery pie hover text as name over number instead of inline rows', () => {
   assert.match(componentSource, /class="kpi-pie-tooltip"/);
   assert.match(componentSource, /<div class="kpi-pie-tooltip__name">\$\{params\.seriesName\} · \$\{params\.name\}<\/div>/);
@@ -167,10 +212,10 @@ test('styles the recovery pie mini tooltip with the modal glass frame and a dark
   assert.doesNotMatch(modalCssSource, /\.km-card\s*\{[\s\S]*?background:\s*transparent;/);
   assert.doesNotMatch(modalCssSource, /\.km-card\s*\{[\s\S]*?radial-gradient\(circle at 20% 42%, rgba\(255, 79, 216/);
   assert.doesNotMatch(modalCssSource, /\.km-card\s*\{[\s\S]*?radial-gradient\(circle at 4% 86%, rgba\(96, 0, 255/);
-  assert.match(cssSource, /\.kpi-pie-tooltip\s*\{[\s\S]*?position:\s*relative;[\s\S]*?overflow:\s*hidden;[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?background:\s*rgba\(0,\s*0,\s*0,\s*\.68\);[\s\S]*?backdrop-filter:\s*var\(--glass-blur\);[\s\S]*?box-shadow:\s*0 24px 80px rgba\(0,\s*0,\s*0,\s*0\.58\), inset 0 1px 0 rgba\(255,\s*255,\s*255,\s*0\.18\);/);
+  assert.match(cssSource, /\.kpi-pie-tooltip\s*\{[\s\S]*?position:\s*relative;[\s\S]*?overflow:\s*hidden;[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?background:\s*rgba\(5,\s*6,\s*9,\s*\.74\);[\s\S]*?backdrop-filter:\s*var\(--glass-blur\);[\s\S]*?box-shadow:\s*0 22px 70px rgba\(0,\s*0,\s*0,\s*0\.56\), inset 0 1px 0 rgba\(255,\s*255,\s*255,\s*0\.16\);/);
   assert.match(cssSource, /\.kpi-pie-tooltip::after\s*\{[\s\S]*?animation:\s*kpiTooltipSweep 2\.8s linear infinite;/);
   assert.match(cssSource, /@keyframes kpiTooltipSweep\s*\{[\s\S]*?from\s*\{[\s\S]*?translateX\(-150%\)[\s\S]*?to\s*\{[\s\S]*?translateX\(260%\)/);
-  assert.match(cssSource, /@keyframes kpiTooltipPulse\s*\{[\s\S]*?box-shadow:[\s\S]*?rgba\(0,\s*0,\s*0,\s*\.62\)/);
+  assert.match(cssSource, /@keyframes kpiTooltipPulse\s*\{[\s\S]*?box-shadow:[\s\S]*?rgba\(0,\s*0,\s*0,\s*\.6\)/);
   assert.doesNotMatch(componentSource, /kpi-pie-tooltip--success/);
   assert.doesNotMatch(cssSource, /kpi-pie-tooltip--success/);
   assert.doesNotMatch(cssSource, /\.km-card/);

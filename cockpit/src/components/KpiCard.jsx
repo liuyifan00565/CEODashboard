@@ -1,3 +1,6 @@
+/* Update time: 2026-07-02 18:03:34 CST  Update content: Place recovery card target subtitles beside the large KPI value on desktop. */
+/* Update time: 2026-07-02 17:50:46 CST  Update content: Add a scoped progress chart class so recovery cards can tone down accent saturation. */
+/* Update time: 2026-07-02 17:09:15 CST  Update content: Soften the unfinished recovery slice for the refined neon palette. */
 /* 更新时间: 2026-06-30 19:08:00  更新内容: 回款 KPI 半环扇区增加间隙。 */
 import NumberRoll from './NumberRoll';
 import EChart from './EChart';
@@ -9,7 +12,7 @@ import './KpiCard.css';
 const CHANNEL_PIE_COLORS = ['#e6fbff', '#9eeeff', '#6ea8ff', '#b8ffd9'];
 const CHANNEL_PERCENT_COLORS = ['#ffffff', '#ffffff', '#ffffff', '#ffffff'];
 const CHANNEL_PIE_LABELS = { south: '线下华南', east: '线下华东' };
-const INCOMPLETE_PIE_COLOR = 'rgba(230, 251, 255, .14)';
+const INCOMPLETE_PIE_COLOR = 'rgba(230, 251, 255, .12)';
 const INCOMPLETE_PERCENT_COLOR = '#ffffff';
 const RECOVERY_YEAR_LABEL_SLOTS = {
   '线上': { y: 78 },
@@ -155,8 +158,8 @@ function recoveryPieData(card) {
     percentColor: INCOMPLETE_PERCENT_COLOR,
     itemStyle: {
       color: INCOMPLETE_PIE_COLOR,
-      opacity: .46,
-      borderColor: 'rgba(230, 251, 255, .24)',
+      opacity: .38,
+      borderColor: 'rgba(230, 251, 255, .2)',
       shadowBlur: 0,
     },
   };
@@ -328,11 +331,13 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
     <>
       <div className="kpi-card__title">{card.title}</div>
 
-      <div className="kpi-card__value">
-        <NumberRoll value={displayValue} suffix={suffix} decimals={decimals} />
-      </div>
+      <div className="kpi-card__value-row">
+        <div className="kpi-card__value">
+          <NumberRoll value={displayValue} suffix={suffix} decimals={decimals} />
+        </div>
 
-      {card.sub != null && <div className="kpi-card__sub">{card.sub}</div>}
+        {card.sub != null && <div className="kpi-card__sub">{card.sub}</div>}
+      </div>
 
       {hasProgress && (
         <div className="kpi-card__progress">
@@ -342,7 +347,7 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
               {card.progress}%
             </span>
           </div>
-          <EChart option={progressOption(card.progress, tokens)} style={{ height: 12 }} />
+          <EChart option={progressOption(card.progress, tokens)} className="kpi-card__progress-chart" style={{ height: 12 }} />
         </div>
       )}
 

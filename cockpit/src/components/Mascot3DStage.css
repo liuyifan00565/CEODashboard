@@ -1,11 +1,11 @@
 /*
- 更新时间: 2026-07-01 12:22:42 CST
- 更新内容: 默认闲置状态下缩小福小客尺寸，动作和分析状态继续使用原尺寸。
+ 更新时间: 2026-07-02 16:25:43 CST
+ 更新内容: 保留左下角 AI 小人小尺寸，恢复原亮度、饱和度和发光强度。
 */
 .mascot-3d-stage {
   position: relative;
   display: block;
-  width: 128px;
+  width: 112px;
   aspect-ratio: 1 / 1.36;
   overflow: visible;
   pointer-events: none;
@@ -13,7 +13,7 @@
 }
 
 .mascot-3d-stage--default {
-  width: 116px;
+  width: 96px;
 }
 
 .mascot-3d-stage canvas {
@@ -99,10 +99,10 @@
 
 @media (max-width: 760px) {
   .mascot-3d-stage {
-    width: 112px;
+    width: 96px;
   }
 
   .mascot-3d-stage--default {
-    width: 100px;
+    width: 84px;
   }
 }

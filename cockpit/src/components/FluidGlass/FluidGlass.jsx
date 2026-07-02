@@ -1,3 +1,7 @@
+/*
+ Update time: 2026-07-02 17:13:39 CST
+ Update content: Align the default 3D brand text with 福客经营驾驶舱.
+*/
 /* 更新时间: 2026-06-25 11:12:34
  更新内容: FluidGlass 支持关闭 ScrollControls；
           小型玻璃球可直接渲染 WebGL 背景内容，避免内部滚动条；
@@ -324,7 +328,7 @@ function Typography() {
       anchorX="center"
       anchorY="middle"
     >
-      福客 · CEO 经营驾驶舱
+      福客经营驾驶舱
     </Text>
   );
 }

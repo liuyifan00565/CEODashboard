@@ -1,7 +1,8 @@
-/* 更新时间: 2026-07-01 18:01:30 CST  更新内容: KPI 二级弹窗移除订单类型控件，将年/月/日控件前移到原位置。 */
+/* 更新时间: 2026-07-02 16:52:00 CST  更新内容: KPI 二级弹窗关闭按钮改用统一 AppIcon 线性图标。 */
 import { useEffect, useRef, useState, useMemo } from 'react';
 import * as echarts from 'echarts';
 import gsap from 'gsap';
+import AppIcon from './AppIcon';
 import MultiSegmented from './MultiSegmented';
 import Segmented from './Segmented';
 import { getKpiSeries, getRenewalModalData, VERSIONS } from '../data/mock';
@@ -157,7 +158,9 @@ export default function KpiModal({ card, onClose }) {
       <div className="km-card" ref={cardRef}>
         <div className="km-head">
           <h3 className="km-title">{card.title}</h3>
-          <button type="button" className="km-close" aria-label="关闭" onClick={handleClose}>×</button>
+          <button type="button" className="km-close" aria-label="关闭" onClick={handleClose}>
+            <AppIcon name="close" size={17} />
+          </button>
         </div>
 
         <div className="km-controls">

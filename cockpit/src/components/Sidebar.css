@@ -1,4 +1,4 @@
-/* 更新时间: 2026-06-25 22:53:50  更新内容: Sidebar 激活和悬停颜色改为主题变量，白色主题下不再使用白色文字。 */
+/* 更新时间: 2026-07-02 16:28:00 CST  更新内容: 侧边导航图标样式适配统一 AppIcon 线性 SVG。 */
 .sb-glass {
   align-items: stretch;
   justify-content: stretch;
@@ -77,10 +77,9 @@
 .sb-icon {
   flex: 0 0 auto;
   width: 18px;
-  text-align: center;
-  font-size: 14px;
-  line-height: 1;
-  opacity: .9;
+  height: 18px;
+  display: block;
+  opacity: .92;
 }
 
 .sb-name {

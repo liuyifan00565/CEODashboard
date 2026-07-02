@@ -1,4 +1,24 @@
 /*
+ Update time: 2026-07-02 18:16:13 CST
+ Update content: Restore compute search highlight border to the fluorescent lime palette.
+*/
+/*
+ 更新时间: 2026-07-02 18:10:27 CST
+ 更新内容: 合并 GitHub 算力玻璃背景恢复与本地搜索高亮样式改动。
+*/
+/*
+ Update time: 2026-07-02 17:34:56 CST
+ Update content: Keep current search result styling edge-only without card-wide glow.
+*/
+/*
+ Update time: 2026-07-02 17:18:50 CST
+ Update content: Add current search result glow for compute page cards and panels.
+*/
+/*
+ 更新时间: 2026-07-02 17:09:00 CST
+ 更新内容: 固定算力表格筛选 SVG 图标宽高，避免表头紧缩导致图标过窄。
+*/
+/*
  更新时间: 2026-07-02 17:21:13 CST
  更新内容: 算力用量分析页面卡片背景恢复为透明玻璃，不再使用维护页深色面板背景。
  备注: 表格上移仅作用于客户算力明细排行的表格容器，不影响其它算力分析表格或分页布局。
@@ -62,6 +82,12 @@
 .cpu-panel--match {
   border-color: rgba(255,255,255,.44);
   box-shadow: 0 22px 66px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.24);
+}
+
+.cpu-kpi-slot[data-search-current="true"] .cpu-kpi,
+.cpu-panel[data-search-current="true"] {
+  border-color: rgba(223,255,0,.54);
+  box-shadow: inset 0 0 0 1px rgba(223,255,0,.45), var(--glass-shadow);
 }
 
 .cpu-kpi__label,
@@ -283,25 +309,16 @@
 }
 
 .cpu-sort-header__arrow {
-  width: 0;
-  height: 0;
+  width: 9px;
+  height: 9px;
+  display: block;
+  color: rgba(239,251,255,.78);
   opacity: .28;
-  transition: opacity .18s ease, filter .18s ease;
-}
-
-.cpu-sort-header__arrow--up {
-  border-right: 3.5px solid transparent;
-  border-bottom: 4.5px solid rgba(239,251,255,.78);
-  border-left: 3.5px solid transparent;
-}
-
-.cpu-sort-header__arrow--down {
-  border-top: 4.5px solid rgba(239,251,255,.78);
-  border-right: 3.5px solid transparent;
-  border-left: 3.5px solid transparent;
+  transition: color .18s ease, opacity .18s ease, filter .18s ease;
 }
 
 .cpu-sort-header__arrow--active {
+  color: var(--txt);
   opacity: 1;
   filter: drop-shadow(0 0 6px rgba(239,251,255,.45));
 }
@@ -387,17 +404,20 @@
   box-shadow: 0 0 0 2px rgba(239,251,255,.08);
 }
 
-.cpu-column-filter__chevron {
-  width: 6px;
-  height: 6px;
-  border-right: 1.5px solid rgba(239,251,255,.72);
-  border-bottom: 1.5px solid rgba(239,251,255,.72);
-  transform: translateY(-2px) rotate(45deg);
-  transition: transform .18s ease;
+.cpu-column-filter__icon {
+  flex: 0 0 13px;
+  width: 13px;
+  min-width: 13px;
+  height: 13px;
+  min-height: 13px;
+  color: rgba(239,251,255,.72);
+  transition: color .18s ease, filter .18s ease;
 }
 
-.cpu-column-filter--open .cpu-column-filter__chevron {
-  transform: translateY(1px) rotate(225deg);
+.cpu-column-filter--open .cpu-column-filter__icon,
+.cpu-column-filter--active .cpu-column-filter__icon {
+  color: var(--txt);
+  filter: drop-shadow(0 0 6px rgba(239,251,255,.34));
 }
 
 .cpu-column-filter__menu {
@@ -490,6 +510,8 @@
 .cpu-page-button,
 .cpu-page-go {
   appearance: none;
+  display: inline-grid;
+  place-items: center;
   min-width: 28px;
   height: 28px;
   border: 1px solid rgba(255,255,255,.16);
@@ -566,17 +588,15 @@
 }
 
 .cpu-page-size-select__chevron {
-  width: 7px;
-  height: 7px;
+  width: 14px;
+  height: 14px;
   margin-left: auto;
-  border-top: 1.5px solid rgba(239,251,255,.72);
-  border-left: 1.5px solid rgba(239,251,255,.72);
-  transform: translateY(2px) rotate(45deg);
+  color: rgba(239,251,255,.72);
   transition: transform .18s ease;
 }
 
 .cpu-page-size-select--open .cpu-page-size-select__chevron {
-  transform: translateY(-1px) rotate(225deg);
+  transform: rotate(180deg);
 }
 
 .cpu-page-size-menu {

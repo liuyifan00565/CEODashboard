@@ -1,4 +1,20 @@
 /*
+ Update time: 2026-07-02 18:16:13 CST
+ Update content: Restore the original neon pink, fluorescent lime, and purple dot field palette.
+*/
+/*
+ Update time: 2026-07-02 17:18:50 CST
+ Update content: Add compact right-side search result counter styles for Word-style navigation.
+*/
+/*
+ Update time: 2026-07-02 17:09:15 CST
+ Update content: Refine the dark cockpit palette with softer cyber neon accents and lower ambient noise.
+*/
+/*
+ Update time: 2026-07-02 15:53:58 CST
+ Update content: Size the MetallicPaint brand logo used in the topbar.
+*/
+/*
  更新时间: 2026-06-26 01:06:01
  更新内容: 白天主题背景从 #D8F5D1 调整为更柔和的浅绿色 #E8FBE8。
 */
@@ -17,18 +33,18 @@
   --txt:#ffffff;
   --muted:#ffffff;
   --faint:#ffffff;
-  --up:#ff4fd8;     /* 荧光粉：涨 / 预警 */
-  --down:#dfff00;   /* 荧光绿：跌 */
-  --good:#dfff00;   /* 荧光绿：目标完成优秀 */
-  --warn:#ff4fd8;   /* 预警语义：映射到荧光粉 */
+  --up:#ff4fd8;     /* neon pink: growth / warning */
+  --down:#dfff00;   /* fluorescent lime: decline */
+  --good:#dfff00;   /* fluorescent lime: strong completion */
+  --warn:#ff4fd8;   /* warning semantic mapped to neon pink */
   --up-rgb:255,79,216;
   --down-rgb:223,255,0;
   --good-rgb:223,255,0;
   --warn-rgb:255,79,216;
-  --bg-radial-a:rgba(255,255,255,.08);
-  --bg-radial-b:rgba(255,255,255,.06);
+  --bg-radial-a:rgba(96,0,255,.16);
+  --bg-radial-b:rgba(96,0,255,.1);
   --bg-scrim:linear-gradient(90deg,rgba(12,12,13,.38),rgba(12,12,13,.04) 45%,rgba(12,12,13,.2));
-  --brand-dot-shadow:0 0 12px rgba(255,255,255,.5);
+  --brand-dot-shadow:0 0 10px rgba(255,255,255,.38);
   --control-hover:rgba(255,255,255,.08);
   --theme-toggle-icon:#ffffff;
   --theme-toggle-hover:rgba(255,255,255,.08);
@@ -46,7 +62,7 @@
   --chart-tooltip-border:rgba(255,255,255,.16);
   --chart-pointer:rgba(255,255,255,.05);
   --chart-point-border:#0c0c0d;
-  --progress-mid:#ffffff;
+  --progress-mid:rgba(255,255,255,.92);
   --ai-card-bg:#120F17;
   --ai-orb-text:#ffffff;
   --ai-ring-text:rgba(255,255,255,.9);
@@ -132,10 +148,10 @@ body{
   background:var(--bg-scrim);
   pointer-events:none;
 }
-.bg .dot-field-container{position:absolute;inset:0;width:100%;height:100%;filter:contrast(1.18)}
+.bg .dot-field-container{position:absolute;inset:0;width:100%;height:100%;opacity:.9;filter:contrast(1.08) saturate(1.35)}
 .fluid-glass-layer{
   position:absolute;inset:0;z-index:1;pointer-events:none;
-  opacity:.42;mix-blend-mode:screen;
+  opacity:.32;mix-blend-mode:screen;
 }
 .fluid-glass-layer canvas{
   width:100%!important;height:100%!important;display:block;pointer-events:none!important;
@@ -146,6 +162,17 @@ body{
   padding:18px clamp(16px,4vw,48px);}
 .brand{display:flex;align-items:center;gap:12px}
 .brand-dot{width:9px;height:9px;border-radius:50%;background:var(--txt);box-shadow:var(--brand-dot-shadow)}
+.brand-logo-paint{
+  flex:0 0 44px;
+  width:44px;
+  height:32px;
+  display:block;
+  filter:drop-shadow(0 0 12px rgba(255,255,255,.28));
+}
+.brand-logo-paint .paint-container{
+  width:100%;
+  height:100%;
+}
 .brand b{font-size:15px;letter-spacing:.5px}
 .brand small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
 
@@ -165,6 +192,19 @@ body{
 .search-input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--txt);
   font-size:14px;transition:opacity .25s}
 .search-input::placeholder{color:var(--muted)}
+.search-count{
+  flex:none;display:inline-flex;align-items:center;justify-content:center;
+  min-width:50px;height:28px;padding:0 10px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.22);background:rgba(10,10,12,.46);
+  color:var(--txt);font-size:12px;font-weight:700;line-height:1;cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 8px 20px rgba(0,0,0,.22);
+  transition:background .2s,border-color .2s,box-shadow .2s;
+}
+.search-count:hover,
+.search-count:focus-visible{
+  background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.36);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 18px rgba(96,0,255,.32);
+}
 
 /* 黑白主题切换（包裹 ReactBits GlassSurface） */
 .theme-toggle{

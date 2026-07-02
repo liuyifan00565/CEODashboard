@@ -1,12 +1,42 @@
 /*
+ 更新时间: 2026-07-02 18:10:27 CST
+ 更新内容: 合并 GitHub 数据维护回归测试与本地品牌、搜索和顶部栏测试。
+*/
+/*
+ Update time: 2026-07-02 17:34:56 CST
+ Update content: Guard current search result highlighting against full-card purple glow.
+*/
+/*
+ Update time: 2026-07-02 17:18:50 CST
+ Update content: Add Word-style search navigation and current-result highlight regression tests.
+*/
+/*
+ Update time: 2026-07-02 17:12:03 CST
+ Update content: Add a brand title regression test for 福客经营驾驶舱, compact month label, CEO视角 subtitle, and 3D default text.
+*/
+/*
+ Update time: 2026-07-02 16:41:14 CST
+ Update content: Add a layout regression test that keeps only search in the top toolbar.
+*/
+/*
+ 更新时间: 2026-07-02 15:13:35 CST
+ 更新内容: 增加首页财务卡片区移除续费率、开户数上移和总投入下移的布局回归测试。
+*/
+/*
  更新时间: 2026-07-02 17:32:46 CST
  更新内容: 增加维护页顶部、内容卡片和表格恢复为算力页原透明玻璃样式的回归测试。
+*/
+/*
+ Update time: 2026-07-02 18:16:13 CST
+ Update content: Expect search highlight green to use the restored fluorescent lime RGB.
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const appSource = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
+const mockSource = readFileSync(new URL('./data/mock.js', import.meta.url), 'utf8');
+const fluidGlassSource = readFileSync(new URL('./components/FluidGlass/FluidGlass.jsx', import.meta.url), 'utf8');
 const dashboardCss = readFileSync(new URL('./dashboard.css', import.meta.url), 'utf8');
 const projectAgentGuidance = readFileSync(new URL('../../AGENTS.md', import.meta.url), 'utf8');
 const kpiCardCss = readFileSync(new URL('./components/KpiCard.css', import.meta.url), 'utf8');
@@ -110,21 +140,45 @@ test('keeps only compute usage in the compute trend chart with clear non-fluores
   assert.doesNotMatch(computePageSource, /name:\s*'总容量'[\s\S]*?type:\s*'line'/);
 });
 
-test('uses the same year month day topbar controls for compute and links them to trend dates', () => {
-  assert.match(appSource, /const DIM_OPTS = \[/);
-  assert.match(appSource, /\{ value: 'year', label: '年' \}/);
-  assert.match(appSource, /\{ value: 'month', label: '月' \}/);
-  assert.match(appSource, /\{ value: 'day', label: '日' \}/);
+test('keeps only search in the top toolbar while data keeps default monthly filters', () => {
+  assert.doesNotMatch(appSource, /import ThemeToggle/);
+  assert.doesNotMatch(appSource, /import DateRangePicker/);
+  assert.doesNotMatch(appSource, /import Segmented/);
+  assert.doesNotMatch(appSource, /const DIM_OPTS = \[/);
   assert.doesNotMatch(appSource, /COMPUTE_PERIOD_OPTS/);
   assert.doesNotMatch(appSource, /computePeriod/);
-  assert.match(appSource, /<DateRangePicker value=\{dateRange\} onChange=\{\(dates\) => setDateRange\(dates\?\.length \? \[\.\.\.dates\] : DEFAULT_FILTER_RANGE\)\} \/>/);
-  assert.match(appSource, /<Segmented options=\{DIM_OPTS\} value=\{dim\} onChange=\{setDim\} \/>/);
-  assert.doesNotMatch(appSource, /isComputePage \? \([\s\S]*?<DateRangePicker/);
+  assert.match(appSource, /const dim = 'month';/);
+  assert.match(appSource, /const dateRange = DEFAULT_FILTER_RANGE;/);
+  assert.match(appSource, /<div className="dash-tools">\s*<ExpandableSearch[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
+  assert.doesNotMatch(appSource, /<DateRangePicker/);
+  assert.doesNotMatch(appSource, /<Segmented options=\{DIM_OPTS\}/);
+  assert.doesNotMatch(appSource, /<ThemeToggle/);
   assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim=\{dim\} dateRange=\{dateRange\} \/>/);
   assert.match(computePageSource, /export default function ComputeUsagePage\(\{ searchTerm = '', dim = 'month', dateRange = \[\] \}\)/);
   assert.match(computePageSource, /const periodLabel = DIM_TREND_LABELS\[dim\] \?\? DIM_TREND_LABELS\.month;/);
   assert.match(computePageSource, /const trend = getComputeUsageTrend\(\{ dim, dateRange \}\);/);
-  assert.match(computePageSource, /title=\{`\$\{periodLabel\}算力用量趋势`\}/);
+});
+
+test('counts searchable matches and cycles the current result from the top search field', () => {
+  assert.match(appSource, /const \[searchStats, setSearchStats\] = useState\(\{ current: 0, total: 0 \}\);/);
+  assert.match(appSource, /const \[activeSearchIndex, setActiveSearchIndex\] = useState\(0\);/);
+  assert.match(appSource, /function jumpToNextSearchResult\(\) \{/);
+  assert.match(appSource, /setActiveSearchIndex\(\(index\) => \(index \+ 1\) % Math\.max\(searchStats\.total, 1\)\);/);
+  assert.match(appSource, /querySelectorAll\('\[data-search-match="true"\]'\)/);
+  assert.match(appSource, /node\.dataset\.searchCurrent = index === currentIndex \? 'true' : 'false';/);
+  assert.match(appSource, /scrollIntoView\(\{ behavior: 'smooth', block: 'center', inline: 'nearest' \}\)/);
+});
+
+test('renders the brand title as 福客经营驾驶舱 with CEO monthly perspective', () => {
+  assert.match(mockSource, /monthLabel: '2026年6月'/);
+  assert.doesNotMatch(mockSource, /monthLabel: '2026 年 6 月'/);
+  assert.match(appSource, /<b>福客经营驾驶舱<\/b>/);
+  assert.match(appSource, /const activeContextLabel = maintenanceMode\s*\?\s*'数据维护'\s*:\s*activeMenu === 'overview' \? 'CEO视角' : activeMenuLabel;/);
+  assert.match(appSource, /<small>\{META\.monthLabel\}｜\{activeContextLabel\}<\/small>/);
+  assert.doesNotMatch(appSource, /福客 · CEO 经营驾驶舱/);
+  assert.doesNotMatch(appSource, /\{META\.monthLabel\} · \{activeMenu === 'overview' \? '月度视角' : activeMenuLabel\}/);
+  assert.match(fluidGlassSource, /福客经营驾驶舱/);
+  assert.doesNotMatch(fluidGlassSource, /福客 · CEO 经营驾驶舱/);
 });
 
 test('adds a topbar data maintenance switch that swaps the sidebar navigation', () => {
@@ -550,7 +604,30 @@ test('uses ElectricBorder for search result highlighting instead of HighlightBea
   assert.doesNotMatch(appSource, /import HighlightBeam/);
   assert.doesNotMatch(appSource, /<HighlightBeam/);
   assert.match(appSource, /<SearchResultBorder active=\{hit\(card\.keywords,\s*searchTerm\)\}>/);
+  assert.match(appSource, /data-search-match="true"/);
+  assert.match(appSource, /aria-label="搜索命中结果"/);
   assert.match(appSource, /<ElectricBorder[\s\S]*?color="#6000FF"[\s\S]*?speed=\{1\}[\s\S]*?chaos=\{0\.12\}[\s\S]*?thickness=\{2\}/);
+  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\]/);
+});
+
+test('keeps the current search result highlight edge-only without full-card purple wash', () => {
+  const currentSearchBlock = cssRuleBody(dashboardCss, '.search-result-border[data-search-current="true"]');
+  const currentSearchContentBlock = cssRuleBody(
+    dashboardCss,
+    '.search-result-border[data-search-current="true"] .eb-content'
+  );
+  const currentSearchBackgroundBlock = cssRuleBody(
+    dashboardCss,
+    '.search-result-border[data-search-current="true"] .eb-background-glow'
+  );
+
+  assert.doesNotMatch(currentSearchBlock, /filter:\s*drop-shadow/);
+  assert.doesNotMatch(currentSearchContentBlock, /box-shadow:/);
+  assert.doesNotMatch(currentSearchBackgroundBlock, /transform:\s*scale/);
+  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\] \.eb-glow-1\{[\s\S]*?border-color:rgba\(223,255,0,\.34\);/);
+  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\] \.eb-glow-2\{[\s\S]*?filter:blur\(3px\);/);
+  assert.doesNotMatch(computePageCss, /\.cpu-kpi-slot\[data-search-current="true"\],[\s\S]*?filter:\s*drop-shadow/);
+  assert.doesNotMatch(computePageCss, /\.cpu-panel\[data-search-current="true"\][\s\S]*?box-shadow:[\s\S]*?rgba\(96,0,255/);
 });
 
 test('removes the overview channel ROI card and keeps delivery below the original overview grid', () => {

@@ -1,7 +1,8 @@
-/* 更新时间: 2026-06-30 17:20:08  更新内容: 渠道完成面板支持按回款卡片传入本月/本年标题。 */
+/* 更新时间: 2026-07-02 16:52:00 CST  更新内容: 渠道面板行箭头和弹窗关闭按钮改用统一 AppIcon 线性图标。 */
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import AppIcon from './AppIcon';
 import { getSalesCompletionRows, getSalesMemberRows } from '../data/mock';
 import { fmtPct, fmtWan, progressColor } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
@@ -65,7 +66,7 @@ export default function ChannelPanel({ channelKey = 'all', title = '本月渠道
                 </div>
                 <span className="ch-pct">{fmtPct(pct)}</span>
               </div>
-              <span className="ch-row-arrow" aria-hidden="true" />
+              <AppIcon name="chevronRight" className="ch-row-arrow" size={13} />
             </button>
           );
         })}
@@ -80,7 +81,9 @@ export default function ChannelPanel({ channelKey = 'all', title = '本月渠道
                 <h3>{openRow.name}人员完成明细</h3>
                 <span>数据权限允许时展开 · 按完成率降序排列</span>
               </div>
-              <button type="button" className="ch-modal-close" aria-label="关闭" onClick={() => setOpenKey(null)}>×</button>
+              <button type="button" className="ch-modal-close" aria-label="关闭" onClick={() => setOpenKey(null)}>
+                <AppIcon name="close" size={17} />
+              </button>
             </div>
 
             <div className="ch-member-list">

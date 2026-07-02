@@ -1,3 +1,9 @@
+/* Update time: 2026-07-02 18:21:53 CST  Update content: Increase desktop long recovery card spacing before the completion progress block. */
+/* Update time: 2026-07-02 18:03:34 CST  Update content: Show recovery target subtitles beside the big value on desktop while preserving stacked mobile layout. */
+/* Update time: 2026-07-02 17:50:46 CST  Update content: Return recovery cards to neutral dark glass and keep completion color as restrained edge accents. */
+/* Update time: 2026-07-02 17:39:14 CST  Update content: Drive the recovery card full wash from completion accent colors instead of fixed lime. */
+/* Update time: 2026-07-02 17:29:43 CST  Update content: Replace local recovery pie glow with a subtle full-card lime glass wash. */
+/* Update time: 2026-07-02 17:09:15 CST  Update content: Lower recovery card glow while preserving readable dark glass tooltip styling. */
 /* 更新时间: 2026-07-01 12:26:40  更新内容: KPI 副文案支持换行显示，并保留半环悬浮提示深色可读底色。 */
 .kpi-card {
   position: relative;
@@ -24,9 +30,9 @@
   min-height: 158px;
   padding: 16px 22px 16px 18px;
   background:
-    radial-gradient(circle at 20% 48%, color-mix(in srgb, var(--kpi-accent) 24%, transparent), transparent 40%),
-    linear-gradient(120deg, rgba(230,251,255,.055), transparent 48%),
-    transparent;
+    linear-gradient(112deg, color-mix(in srgb, var(--kpi-accent) 4%, transparent) 0%, color-mix(in srgb, var(--kpi-accent) 2%, transparent) 30%, transparent 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, .026), rgba(255, 255, 255, .006)),
+    rgba(4, 5, 7, .18);
 }
 
 .kpi-card--with-side {
@@ -38,12 +44,15 @@
 .kpi-card--recovery::before {
   content: "";
   position: absolute;
-  inset: 14px auto 14px 10px;
-  width: 330px;
-  border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--kpi-accent) 30%, transparent), transparent 66%);
-  filter: blur(12px);
-  opacity: .86;
+  inset: 0;
+  width: auto;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--kpi-accent) 6%, transparent) 0%, transparent 18%, transparent 82%, color-mix(in srgb, var(--kpi-accent) 4%, transparent) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, .046), transparent 52%);
+  filter: none;
+  mix-blend-mode: screen;
+  opacity: .48;
   pointer-events: none;
 }
 
@@ -122,7 +131,12 @@
   position: relative;
   width: 100%;
   flex: none;
-  filter: drop-shadow(0 0 20px color-mix(in srgb, var(--kpi-accent) 36%, transparent));
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--kpi-accent) 12%, transparent));
+}
+
+.kpi-card--recovery .kpi-card__progress-chart {
+  opacity: .82;
+  filter: saturate(.82);
 }
 
 .kpi-pie-tooltip {
@@ -134,10 +148,10 @@
   overflow: hidden;
   border: 1px solid var(--line-2);
   border-radius: 8px;
-  background: rgba(0, 0, 0, .68);
+  background: rgba(5, 6, 9, .74);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.56), inset 0 1px 0 rgba(255, 255, 255, 0.16);
   text-align: left;
   animation: kpiTooltipPulse 2.6s ease-in-out infinite;
 }
@@ -149,8 +163,8 @@
   bottom: -42%;
   left: -46%;
   width: 42%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .14), transparent);
-  opacity: .5;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .12), transparent);
+  opacity: .38;
   transform: translateX(-150%) rotate(18deg);
   animation: kpiTooltipSweep 2.8s linear infinite;
   pointer-events: none;
@@ -211,14 +225,14 @@
   0%,
   100% {
     box-shadow:
-      0 24px 80px rgba(0, 0, 0, 0.58),
-      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      0 22px 70px rgba(0, 0, 0, 0.56),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
   }
 
   50% {
     box-shadow:
-      0 26px 86px rgba(0, 0, 0, .62),
-      inset 0 1px 0 rgba(255, 255, 255, 0.22);
+      0 24px 76px rgba(0, 0, 0, .6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
 }
 
@@ -254,6 +268,22 @@
   padding: 10px 32px 11px 12px;
 }
 
+.kpi-card__side-panel .ch-row--warn {
+  background: rgba(var(--warn-rgb), 0.045);
+  border-color: rgba(var(--warn-rgb), 0.18);
+}
+
+.kpi-card__side-panel .ch-tag {
+  background: rgba(var(--warn-rgb), 0.08);
+  border-color: rgba(var(--warn-rgb), 0.22);
+  box-shadow: 0 0 10px rgba(var(--warn-rgb), 0.08);
+}
+
+.kpi-card__side-panel .ch-bar-fill {
+  opacity: .82;
+  filter: saturate(.82);
+}
+
 .kpi-card__side-panel .ch-row-top {
   margin-bottom: 8px;
 }
@@ -277,6 +307,10 @@
   font-weight: 500;
   color: var(--muted);
   letter-spacing: .02em;
+}
+
+.kpi-card__value-row {
+  min-width: 0;
 }
 
 .kpi-card__value {
@@ -387,10 +421,50 @@
   color: var(--muted);
 }
 
+@media (min-width:761px) {
+  .kpi-card--recovery .kpi-card__value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .kpi-card--recovery .kpi-card__value-row .kpi-card__value {
+    flex: 0 0 auto;
+  }
+
+  .kpi-card--recovery .kpi-card__value-row .kpi-card__sub {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin-top: 0;
+    white-space: nowrap;
+    font-size: 15px;
+    font-weight: 650;
+    line-height: 1.25;
+    color: rgba(239,251,255,.74);
+  }
+
+  .kpi-card--with-side .kpi-card__value-row {
+    gap: 14px;
+  }
+
+  .kpi-card--with-side .kpi-card__progress {
+    margin-top: 18px;
+  }
+
+  .kpi-card--with-side .kpi-card__value-row .kpi-card__sub {
+    font-size: 15px;
+  }
+}
+
 @media (max-width:760px) {
   .kpi-card--recovery {
     grid-template-columns: minmax(220px, 1fr) minmax(0, 1fr);
     gap: 12px;
+  }
+
+  .kpi-card--recovery .kpi-card__value-row {
+    display: block;
   }
 
   .kpi-card--with-side {

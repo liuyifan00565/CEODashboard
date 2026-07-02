@@ -1,4 +1,20 @@
 /*
+ 更新时间: 2026-07-02 18:27:24 CST
+ 更新内容: 为数据维护导航栏四个入口补充统一 AppIcon 业务图标名称。
+*/
+/*
+ 更新时间: 2026-07-02 18:10:27 CST
+ 更新内容: 合并 GitHub 数据维护演示数据与本地菜单、月份格式改动。
+*/
+/*
+ 更新时间: 2026-07-02 17:13:39 CST
+ 更新内容: 将顶部品牌副标题月份格式改为 2026年6月，匹配 CEO 视角标题。
+*/
+/*
+ 更新时间: 2026-07-02 10:18:00 CST
+ 更新内容: 侧边导航移除销售分析入口，仅保留经营总览和算力用量分析。
+*/
+/*
  更新时间: 2026-07-02 16:25:57 CST
  更新内容: 新增数据维护四个界面的前端演示数据结构。
 */
@@ -7,7 +23,7 @@ import { calculateRenewalOverview, getRenewalChannelBreakdown } from '../lib/ren
 export const META = {
   title: 'AI 客服销售经营驾驶舱',
   company: '成都福客人工智能',
-  monthLabel: '2026 年 6 月',
+  monthLabel: '2026年6月',
   annualTarget: 5800, // 万元
 };
 
@@ -799,10 +815,10 @@ export const MENU = [
 ];
 
 export const MAINTENANCE_MENU = [
-  { key: 'target-maintenance', name: '目标维护' },
-  { key: 'cost-maintenance', name: '成本维护' },
-  { key: 'org-maintenance', name: '组织维护' },
-  { key: 'channel-maintenance', name: '渠道维护' },
+  { key: 'target-maintenance', name: '目标维护', icon: 'target' },
+  { key: 'cost-maintenance', name: '成本维护', icon: 'cost' },
+  { key: 'org-maintenance', name: '组织维护', icon: 'organization' },
+  { key: 'channel-maintenance', name: '渠道维护', icon: 'channel' },
 ];
 
 const MAINTENANCE_MONTH_KEYS = ['m01', 'm02', 'm03', 'm04', 'm05', 'm06', 'm07', 'm08', 'm09', 'm10', 'm11', 'm12'];

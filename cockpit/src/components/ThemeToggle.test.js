@@ -1,4 +1,20 @@
 /*
+ Update time: 2026-07-02 18:16:13 CST
+ Update content: Align light theme assertions with the restored pink and fluorescent lime palette.
+*/
+/*
+ Update time: 2026-07-02 17:18:50 CST
+ Update content: Update toolbar search assertion for Word-style result navigation props.
+*/
+/*
+ Update time: 2026-07-02 17:09:15 CST
+ Update content: Align light theme accent assertions with the refined softer neon palette.
+*/
+/*
+ Update time: 2026-07-02 16:43:57 CST
+ Update content: Update top toolbar assertions after removing the visible theme toggle.
+*/
+/*
  更新时间: 2026-06-26 01:06:01
  更新内容: 将白天主题背景回归测试从 #D8F5D1 调整为更柔和的浅绿色 #E8FBE8。
 */
@@ -35,9 +51,10 @@ test('defines a circular GlassSurface theme toggle with persistent theme state',
   assert.match(componentSource, /aria-label=\{`切换到\$\{nextLabel\}主题`\}/);
 });
 
-test('places the theme toggle immediately before the expandable search', () => {
-  assert.match(appSource, /import ThemeToggle from '\.\/components\/ThemeToggle';/);
-  assert.match(appSource, /<ThemeToggle\s*\/>\s*<ExpandableSearch onChange=\{setSearchTerm\} \/>/);
+test('does not render the theme toggle in the top toolbar', () => {
+  assert.doesNotMatch(appSource, /import ThemeToggle from '\.\/components\/ThemeToggle';/);
+  assert.doesNotMatch(appSource, /<ThemeToggle\s*\/>/);
+  assert.match(appSource, /<div className="dash-tools">\s*<ExpandableSearch[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
 });
 
 test('provides dark and light theme variable contracts', () => {
@@ -65,7 +82,7 @@ test('uses a light green theme background with non-white text and chart variable
   assert.doesNotMatch(block, /--chart-(?:text|muted|grid|bar|bar-muted):\s*(?:#fff|#ffffff|rgba\(255,\s*255,\s*255)/i);
 });
 
-test('keeps neon pink and neon green unchanged in light theme', () => {
+test('keeps original neon pink and fluorescent lime aligned in light theme', () => {
   const block = lightThemeBlock();
 
   assert.match(block, /--up:#ff4fd8;/);

@@ -1,4 +1,28 @@
 /*
+ Update time: 2026-07-02 18:16:13 CST
+ Update content: Restore search result edge highlight to fluorescent lime.
+*/
+/*
+ 更新时间: 2026-07-02 18:10:27 CST
+ 更新内容: 合并 GitHub 数据维护按钮玻璃样式与本地品牌、搜索高亮样式改动。
+*/
+/*
+ Update time: 2026-07-02 17:34:56 CST
+ Update content: Limit search result highlighting to edge-only changes without full-card purple wash.
+*/
+/*
+ Update time: 2026-07-02 17:18:50 CST
+ Update content: Strengthen the current search result's wrapped electric glow for Enter navigation.
+*/
+/*
+ Update time: 2026-07-02 15:53:58 CST
+ Update content: Widen the top brand glass surface for the MetallicPaint logo.
+*/
+/*
+ 更新时间: 2026-07-02 15:13:35 CST
+ 更新内容: 首页财务卡片区改为开户数小卡在上、总投入费比在下，并移除续费率首页卡片。
+*/
+/*
  更新时间: 2026-07-02 16:05:12 CST
  更新内容: 数据维护按钮背景统一为品牌玻璃面，去除按钮自身独立芯片底色。
 */
@@ -28,7 +52,7 @@
   margin:0 calc(clamp(16px,3vw,40px) * -1);
   padding:18px clamp(16px,3vw,40px) 14px;
 }
-.dash-topbar .brand-glass{flex:0 0 254px;min-width:254px}
+.dash-topbar .brand-glass{flex:0 0 306px;min-width:306px}
 .dash-topbar .brand-glass .glass-surface__content{padding:0}
 .dash-topbar .brand{width:100%;height:100%;min-width:0;flex:none;padding:0 14px}
 .dash-topbar .brand-copy{min-width:0}
@@ -105,6 +129,28 @@
 .dash-kpi-item .search-result-border .eb-content,
 .dash-kpi-item .kpi-card{height:100%}
 .search-result-border{width:100%}
+.search-result-border .eb-background-glow{
+  opacity:0;
+  transform:none;
+}
+.search-result-border[data-search-current="true"]{
+  z-index:5;
+}
+.search-result-border[data-search-current="true"] .eb-glow-1{
+  border-color:rgba(223,255,0,.34);
+  filter:blur(.5px);
+}
+.search-result-border[data-search-current="true"] .eb-background-glow{
+  opacity:0;
+  transform:none;
+}
+.search-result-border[data-search-current="true"] .eb-glow-2{
+  border-color:rgba(96,0,255,.68);
+  filter:blur(3px);
+}
+.search-result-border[data-search-current="true"] .eb-content{
+  border-radius:inherit;
+}
 
 /* ===== 主体 grid ===== */
 .dash-grid{

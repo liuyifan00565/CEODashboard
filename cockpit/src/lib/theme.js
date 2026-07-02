@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:09:15 CST
+ Update content: Match fallback progress tokens to the refined dark cockpit palette.
+*/
+/*
  更新时间: 2026-06-25 22:53:50
  更新内容: 新增主题颜色读取 hook，供 ECharts 在黑白主题切换后同步更新画布颜色。
 */
@@ -20,7 +24,7 @@ const FALLBACK_TOKENS = {
   chartTooltipBorder: 'rgba(255,255,255,.16)',
   chartPointer: 'rgba(255,255,255,.05)',
   chartPointBorder: '#0c0c0d',
-  progressMid: '#ffffff',
+  progressMid: 'rgba(255,255,255,.92)',
 };
 
 function cssVar(styles, name, fallback) {
