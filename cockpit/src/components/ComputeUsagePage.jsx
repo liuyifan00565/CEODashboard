@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 11:08:58 CST
- 更新内容: 算力用量分析两个环图扇区边框改为版本情况半环图同款浅色玻璃分隔。
+ 更新时间: 2026-07-02 11:58:09 CST
+ 更新内容: 月度算力用量趋势卡片的柱顶走势线改为粉紫色，并仅在峰值点显示数值。
 */
 import { useMemo, useState } from 'react';
 
@@ -253,19 +253,12 @@ function formatComputePieLabel(params) {
 }
 
 function buildTrendPoints(trend) {
-  return trend.map((point) => {
-    const usage = point.usage;
-    const target = point.target ?? Math.max(usage + 36, usage + (point.addOn ?? 0) + 34);
-
-    return {
-      label: point.day,
-      range: point.range ?? point.day,
-      capacity: point.capacity ?? 0,
-      usage,
-      target,
-      completion: target ? +((usage / target) * 100).toFixed(1) : 0,
-    };
-  });
+  return trend.map((point) => ({
+    label: point.day,
+    range: point.range ?? point.day,
+    capacity: point.capacity ?? 0,
+    usage: point.usage,
+  }));
 }
 
 function getTrendZoomRange(pointCount) {
@@ -281,16 +274,28 @@ function buildTrendOption({ trend, tokens }) {
   const buckets = buildTrendPoints(trend);
   const days = buckets.map((point) => point.label);
   const usage = buckets.map((point) => point.usage);
-  const target = buckets.map((point) => point.target);
-  const completion = buckets.map((point) => point.completion);
   const showSlider = days.length > MAX_VISIBLE_TREND_BARS;
   const { sliderEndValue, minValueSpan, maxValueSpan } = getTrendZoomRange(days.length);
   const txt = tokens.chartText;
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
   const usageColor = tokens.chartBar;
-  const targetColor = tokens.chartBarFaint;
-  const completionColor = '#f472b6';
+  const usagePeakLineColor = '#d946ef';
+  const maxUsage = Math.max(...usage);
+  const usagePeakLineData = usage.map((value) => ({
+    value,
+    symbolSize: value === maxUsage ? 9 : 7,
+    label: value === maxUsage ? {
+      show: true,
+      position: 'top',
+      color: usagePeakLineColor,
+      fontSize: 12,
+      fontWeight: 760,
+      formatter: (params) => formatWan(params.value),
+      textShadowColor: 'rgba(0,0,0,.68)',
+      textShadowBlur: 8,
+    } : { show: false },
+  }));
 
   return {
     backgroundColor: 'transparent',
@@ -309,7 +314,7 @@ function buildTrendOption({ trend, tokens }) {
         textShadowColor: 'rgba(0,0,0,.55)',
         textShadowBlur: 8,
       },
-      data: ['算力用量', '目标用量', '完成率%'],
+      data: ['算力用量'],
     },
     grid: { top: 42, left: 10, right: 12, bottom: showSlider ? 44 : 8, containLabel: true },
     dataZoom: showSlider ? [
@@ -370,8 +375,6 @@ function buildTrendOption({ trend, tokens }) {
         return [
           tooltipHeader(`${bucket?.range || params[0]?.axisValue || ''} 算力用量`),
           tooltipRow({ color: usageColor, label: '算力用量', value: formatWan(params.find((item) => item.seriesName === '算力用量')?.value || 0) }),
-          tooltipRow({ color: targetColor, label: '目标用量', value: formatWan(params.find((item) => item.seriesName === '目标用量')?.value || 0) }),
-          tooltipRow({ color: completionColor, label: '完成率', value: `${params.find((item) => item.seriesName === '完成率%')?.value || 0}%` }),
         ].join('');
       },
     },
@@ -382,46 +385,19 @@ function buildTrendOption({ trend, tokens }) {
       axisTick: { show: false },
       axisLabel: { color: faint, fontSize: 12, interval: 0, hideOverlap: false, margin: 12 },
     },
-    yAxis: [
-      {
-        type: 'value',
-        name: '万点',
-        nameTextStyle: { color: faint, fontSize: 12, padding: [0, 0, 0, 8] },
-        axisLabel: { color: faint, fontSize: 12 },
-        splitLine: { lineStyle: { color: line } },
-        axisLine: { show: false },
-      },
-      {
-        type: 'value',
-        name: '%',
-        min: 0,
-        max: 100,
-        nameTextStyle: { color: faint, fontSize: 12 },
-        axisLabel: { color: faint, fontSize: 12, formatter: '{value}%' },
-        splitLine: { show: false },
-        axisLine: { show: false },
-      },
-    ],
+    yAxis: {
+      type: 'value',
+      name: '万点',
+      nameTextStyle: { color: faint, fontSize: 12, padding: [0, 0, 0, 8] },
+      axisLabel: { color: faint, fontSize: 12 },
+      splitLine: { lineStyle: { color: line } },
+      axisLine: { show: false },
+    },
     series: [
-      {
-        name: '目标用量',
-        type: 'bar',
-        barWidth: 22,
-        barCategoryGap: '42%',
-        itemStyle: {
-          color: tokens.chartBarFaint,
-          borderColor: tokens.chartAxis,
-          borderWidth: 1,
-          borderRadius: [4, 4, 0, 0],
-        },
-        emphasis: { disabled: true },
-        data: target,
-      },
       {
         name: '算力用量',
         type: 'bar',
         barWidth: 22,
-        barGap: '-100%',
         barCategoryGap: '42%',
         itemStyle: {
           color: tokens.chartBar,
@@ -431,23 +407,30 @@ function buildTrendOption({ trend, tokens }) {
         data: usage,
       },
       {
-        name: '完成率%',
+        name: '算力用量',
         type: 'line',
-        yAxisIndex: 1,
         smooth: true,
         symbol: 'circle',
-        symbolSize: 6,
-        lineStyle: { color: completionColor, width: 2 },
-        itemStyle: { color: completionColor, borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
-        label: {
-          show: true,
-          position: 'top',
-          color: completionColor,
-          fontSize: 12,
-          fontWeight: 700,
-          formatter: '{c}%',
+        symbolSize: 7,
+        showSymbol: true,
+        z: 4,
+        lineStyle: { color: usagePeakLineColor, width: 2.2, shadowBlur: 10, shadowColor: 'rgba(217,70,239,.36)' },
+        itemStyle: {
+          color: usagePeakLineColor,
+          borderColor: '#ffffff',
+          borderWidth: 2,
+          shadowBlur: 9,
+          shadowColor: 'rgba(217,70,239,.34)',
         },
-        data: completion,
+        emphasis: {
+          scale: true,
+          itemStyle: {
+            color: usagePeakLineColor,
+            borderColor: '#ffffff',
+            borderWidth: 2.5,
+          },
+        },
+        data: usagePeakLineData,
       },
     ],
     media: [
@@ -997,7 +980,7 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
         <Panel
           className="cpu-panel--trend"
           title={`${periodLabel}算力用量趋势`}
-          sub="基础消耗 + 目标用量 · 完成率"
+          sub="算力用量"
           active={matchesTerm(SEARCH_KEYWORDS.trend, searchTerm)}
         >
           <div className="cpu-trend-chart">

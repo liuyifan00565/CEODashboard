@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 11:08:58 CST
- 更新内容: 增加算力环图扇区边框沿用版本情况半环图浅色分隔的回归测试。
+ 更新时间: 2026-07-02 11:58:09 CST
+ 更新内容: 增加算力用量趋势卡片粉紫色峰值折线与峰值数值标签的回归测试。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -73,19 +73,29 @@ test('removes the compute page inner title and ratio header block', () => {
   assert.match(computePageCss, /\.cpu-page \{[\s\S]*?margin-top:\s*0;/);
 });
 
-test('matches the compute trend chart to the overview target-bar and completion-line language', () => {
-  assert.match(computePageSource, /data:\s*\['算力用量', '目标用量', '完成率%'\]/);
-  assert.match(computePageSource, /sub="基础消耗 \+ 目标用量 · 完成率"/);
+test('keeps only compute usage in the compute trend chart with a peak line', () => {
+  assert.match(computePageSource, /data:\s*\['算力用量'\]/);
+  assert.match(computePageSource, /sub="算力用量"/);
   assert.doesNotMatch(computePageSource, /同步观察总容量/);
   assert.match(computePageSource, /itemWidth:\s*18/);
   assert.match(computePageSource, /itemHeight:\s*12/);
   assert.match(computePageSource, /itemGap:\s*22/);
   assert.match(computePageSource, /textStyle:\s*\{[\s\S]*?color:\s*txt,[\s\S]*?fontSize:\s*18,[\s\S]*?fontWeight:\s*850,[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.55\)',[\s\S]*?textShadowBlur:\s*8,[\s\S]*?\}/);
-  assert.match(computePageSource, /name:\s*'目标用量'[\s\S]*?type:\s*'bar'[\s\S]*?color:\s*tokens\.chartBarFaint/);
-  assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'bar'[\s\S]*?barGap:\s*'-100%'/);
+  assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'bar'/);
+  assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'line'[\s\S]*?smooth:\s*true[\s\S]*?symbol:\s*'circle'[\s\S]*?symbolSize:\s*7/);
+  assert.match(computePageSource, /const usagePeakLineColor = '#d946ef';/);
+  assert.match(computePageSource, /const maxUsage = Math\.max\(\.\.\.usage\);/);
+  assert.match(computePageSource, /const usagePeakLineData = usage\.map\(\(value\) => \(\{/);
+  assert.match(computePageSource, /label:\s*value === maxUsage \? \{[\s\S]*?show:\s*true[\s\S]*?formatter:\s*\(params\) => formatWan\(params\.value\)/);
+  assert.match(computePageSource, /lineStyle:\s*\{ color: usagePeakLineColor, width: 2\.2[\s\S]*?shadowBlur: 10[\s\S]*?shadowColor: 'rgba\(217,70,239,\.36\)'/);
+  assert.match(computePageSource, /itemStyle:\s*\{[\s\S]*?color:\s*usagePeakLineColor,[\s\S]*?borderColor:\s*'#ffffff'/);
   assert.match(computePageSource, /barCategoryGap:\s*'42%'/);
-  assert.match(computePageSource, /name:\s*'完成率%'[\s\S]*?type:\s*'line'[\s\S]*?yAxisIndex:\s*1/);
-  assert.match(computePageSource, /const completionColor = '#f472b6';/);
+  assert.doesNotMatch(computePageSource, /目标用量/);
+  assert.doesNotMatch(computePageSource, /完成率%/);
+  assert.doesNotMatch(computePageSource, /label:\s*'完成率'/);
+  assert.doesNotMatch(computePageSource, /barGap:\s*'-100%'/);
+  assert.doesNotMatch(computePageSource, /yAxisIndex:\s*1/);
+  assert.doesNotMatch(computePageSource, /const completionColor = '#f472b6';/);
   assert.doesNotMatch(computePageSource, /#dfff00/);
   assert.doesNotMatch(computePageSource, /#ff4d5f/);
   assert.match(computePageSource, /axisLabel:\s*\{ color: faint, fontSize: 12, interval: 0, hideOverlap: false, margin: 12 \}/);
