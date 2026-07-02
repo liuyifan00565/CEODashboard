@@ -1,10 +1,12 @@
 /*
- 更新时间: 2026-07-02 18:50:34 CST
- 更新内容: 增强四个维护页可编辑字段框，并将维护页彩色进度条统一为算力用量分析折线图的荧光紫到荧光蓝渐变。
+ 更新时间: 2026-07-02 19:13:36 CST
+ 更新内容: 将维护页进度条拆分为荧光紫和荧光蓝两套独立渐变，并适配百分比单独换行显示。
 */
 .mnt-page {
   --mnt-progress-purple: #f000ff;
+  --mnt-progress-purple-soft: #ff7cff;
   --mnt-progress-blue: #38f5ff;
+  --mnt-progress-blue-soft: #a7fbff;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -499,6 +501,12 @@
   color: var(--txt);
 }
 
+.mnt-mini-line--pct {
+  margin-top: 1px;
+  color: var(--txt);
+  font-weight: 760;
+}
+
 .mnt-period-cell {
   min-width: 108px;
 }
@@ -539,10 +547,25 @@
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--mnt-progress-purple) 0%, var(--mnt-progress-blue) 100%);
+  background: linear-gradient(90deg, var(--mnt-progress-blue) 0%, var(--mnt-progress-blue-soft) 100%);
   box-shadow:
-    0 0 8px color-mix(in srgb, var(--mnt-progress-purple) 42%, transparent),
-    0 0 10px color-mix(in srgb, var(--mnt-progress-blue) 32%, transparent);
+    0 0 8px color-mix(in srgb, var(--mnt-progress-blue) 36%, transparent),
+    0 0 10px color-mix(in srgb, var(--mnt-progress-blue-soft) 24%, transparent);
+}
+
+.mnt-progress--danger span {
+  background: linear-gradient(90deg, var(--mnt-progress-purple) 0%, var(--mnt-progress-purple-soft) 100%);
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--mnt-progress-purple) 38%, transparent),
+    0 0 10px color-mix(in srgb, var(--mnt-progress-purple-soft) 24%, transparent);
+}
+
+.mnt-progress--warning span,
+.mnt-progress--good span {
+  background: linear-gradient(90deg, var(--mnt-progress-blue) 0%, var(--mnt-progress-blue-soft) 100%);
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--mnt-progress-blue) 36%, transparent),
+    0 0 10px color-mix(in srgb, var(--mnt-progress-blue-soft) 24%, transparent);
 }
 
 .mnt-progress--unset span {

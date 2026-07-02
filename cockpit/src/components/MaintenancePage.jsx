@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 17:24:02 CST
- 更新内容: 顶部工具栏和维护内容卡片统一使用原算力用量分析页面的透明玻璃背景。
+ 更新时间: 2026-07-02 19:13:36 CST
+ 更新内容: 去除内容区分隔点，标题分隔点保持原样，并将维护页进度百分比单独换行展示。
 */
 import { useMemo, useState } from 'react';
 
@@ -176,7 +176,8 @@ function ProgressLine({ period }) {
   const width = Math.max(0, Math.min(100, Number(period?.pct || 0)));
   return (
     <>
-      <div className="mnt-mini-line">完成 {formatWan(period?.actual)} · {period?.target ? formatPct(period.pct) : '未设目标'}</div>
+      <div className="mnt-mini-line">完成 {formatWan(period?.actual)}</div>
+      <div className="mnt-mini-line mnt-mini-line--pct">{period?.target ? formatPct(period.pct) : '未设目标'}</div>
       <div className={`mnt-progress mnt-progress--${period?.status || 'unset'}`}>
         <span style={{ width: `${width}%` }} />
       </div>
@@ -408,7 +409,7 @@ function OrgMaintenancePage({ markDirty, status }) {
           ))}
         </div>
       </Panel>
-      <Panel title="BI人员范围" meta={<><span>{ORG_MAINTENANCE_USERS.filter((user) => user.isSales && user.enabled).length} 名销售</span> · <SaveBadge status={status} /></>} className="mnt-main-panel">
+      <Panel title="BI人员范围" meta={<><span>{ORG_MAINTENANCE_USERS.filter((user) => user.isSales && user.enabled).length} 名销售</span> <SaveBadge status={status} /></>} className="mnt-main-panel">
         <MatrixShell>
           <table className="mnt-user-table">
             <thead>
