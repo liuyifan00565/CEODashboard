@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:29:43 CST
+ Update content: Guard recovery cards against local pie-only glow and require a subtle full-card lime wash.
+*/
+/*
  Update time: 2026-07-02 17:09:15 CST
  Update content: Tune KPI palette assertions for the refined lower-glow neon pass.
 */
@@ -117,10 +121,13 @@ test('removes the bottom recovery legend so the half-donut can use the full visu
   assert.doesNotMatch(cssSource, /\.kpi-card__pie-chip/);
 });
 
-test('keeps luminous but quiet glass styling for the recovery half-donut glow', () => {
-  assert.match(cssSource, /color-mix\(in srgb, var\(--kpi-accent\) 14%, transparent\)/);
-  assert.match(cssSource, /color-mix\(in srgb, var\(--kpi-accent\) 16%, transparent\)/);
-  assert.match(cssSource, /opacity:\s*\.52;/);
+test('uses a subtle full-card lime wash instead of local pie-only glow', () => {
+  assert.match(cssSource, /\.kpi-card--recovery\s*\{[\s\S]*?background:[\s\S]*?linear-gradient\(112deg, rgba\(214,\s*248,\s*74,\s*\.13\) 0%, rgba\(156,\s*188,\s*68,\s*\.085\) 36%, rgba\(54,\s*66,\s*42,\s*\.035\) 68%, transparent 92%\)/);
+  assert.match(cssSource, /\.kpi-card--recovery\s*\{[\s\S]*?linear-gradient\(168deg, rgba\(230,\s*251,\s*255,\s*\.04\) 0%, transparent 48%, rgba\(214,\s*248,\s*74,\s*\.045\) 100%\)/);
+  assert.doesNotMatch(cssSource, /radial-gradient\(circle at 20% 48%/);
+  assert.doesNotMatch(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?width:\s*330px/);
+  assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?inset:\s*0;[\s\S]*?width:\s*auto;[\s\S]*?border-radius:\s*inherit;[\s\S]*?linear-gradient\(90deg, transparent, rgba\(214,\s*248,\s*74,\s*\.07\) 46%, transparent\)/);
+  assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?mix-blend-mode:\s*screen;[\s\S]*?opacity:\s*\.58;/);
   assert.match(cssSource, /filter:\s*drop-shadow\(0 0 14px color-mix\(in srgb, var\(--kpi-accent\) 22%, transparent\)\)/);
 });
 
