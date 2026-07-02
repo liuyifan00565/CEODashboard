@@ -1,10 +1,11 @@
-/* 更新时间: 2026-06-24 16:44:50  更新内容: 修复 flatpickr 中文本地化解析，日历弹层月份、星期和范围分隔符改为中文。 */
+/* 更新时间: 2026-07-02 16:28:00 CST  更新内容: 日期选择器日历入口改用统一 AppIcon 线性图标。 */
 import { useEffect, useRef } from 'react'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.min.css'
 import 'flatpickr/dist/themes/dark.css'
 import * as zhMod from 'flatpickr/dist/l10n/zh.js'
 import GlassSurface from './GlassSurface/GlassSurface'
+import AppIcon from './AppIcon';
 import './DateRangePicker.css'
 
 // 健壮地解析中文本地化对象，兼容 CommonJS / ESM 不同的 import 形态
@@ -62,10 +63,7 @@ export default function DateRangePicker({ value, onChange }) {
     >
       <div className="fp-wrap">
         <span className="fp-icon" aria-hidden="true">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="4.5" width="18" height="16" rx="2" />
-            <path d="M3 9h18M8 2.5v4M16 2.5v4" />
-          </svg>
+          <AppIcon name="calendar" size={16} />
         </span>
         <input
           ref={inputRef}

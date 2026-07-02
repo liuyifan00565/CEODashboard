@@ -1,9 +1,10 @@
 /*
- 更新时间: 2026-07-02 12:05:08 CST
- 更新内容: 月度算力用量趋势卡片保留荧光紫折线，顶部数值改为非荧光清晰字体。
+ 更新时间: 2026-07-02 16:52:00 CST
+ 更新内容: 算力用量表格筛选、排序、分页和下拉控制改用统一 AppIcon 线性图标。
 */
 import { useMemo, useState } from 'react';
 
+import AppIcon from './AppIcon';
 import EChart from './EChart';
 import {
   getComputeCustomerRows,
@@ -762,7 +763,7 @@ function CustomerColumnHeader({
               if (event.key === 'Escape') setOpenFilter(null);
             }}
           >
-            <span className="cpu-column-filter__chevron" aria-hidden="true" />
+            <AppIcon name="filter" className="cpu-column-filter__icon" size={13} />
           </button>
           {isOpen && (
             <div className="cpu-column-filter__menu" role="listbox" aria-label={`${label}筛选`}>
@@ -810,8 +811,8 @@ function CustomerSortableHeader({
         >
           <span className="cpu-sort-header__label">{label}</span>
           <span className="cpu-sort-header__arrows" aria-hidden="true">
-            <span className={`cpu-sort-header__arrow cpu-sort-header__arrow--up${isActive && activeSortDirection === 'asc' ? ' cpu-sort-header__arrow--active' : ''}`} />
-            <span className={`cpu-sort-header__arrow cpu-sort-header__arrow--down${isActive && activeSortDirection === 'desc' ? ' cpu-sort-header__arrow--active' : ''}`} />
+            <AppIcon name="sortAsc" className={`cpu-sort-header__arrow cpu-sort-header__arrow--up${isActive && activeSortDirection === 'asc' ? ' cpu-sort-header__arrow--active' : ''}`} size={9} strokeWidth={2.2} />
+            <AppIcon name="sortDesc" className={`cpu-sort-header__arrow cpu-sort-header__arrow--down${isActive && activeSortDirection === 'desc' ? ' cpu-sort-header__arrow--active' : ''}`} size={9} strokeWidth={2.2} />
           </span>
         </button>
       </span>
@@ -1112,10 +1113,11 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
           <button
             type="button"
             className="cpu-page-button"
+            aria-label="上一页"
             disabled={safeCustomerPage === 1}
             onClick={() => updateCustomerPage(safeCustomerPage - 1)}
           >
-            ‹
+            <AppIcon name="chevronLeft" size={14} />
           </button>
           {customerPageNumbers.map((item) => (
             typeof item === 'number' ? (
@@ -1134,10 +1136,11 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
           <button
             type="button"
             className="cpu-page-button"
+            aria-label="下一页"
             disabled={safeCustomerPage === customerPageCount}
             onClick={() => updateCustomerPage(safeCustomerPage + 1)}
           >
-            ›
+            <AppIcon name="chevronRight" size={14} />
           </button>
           <div
             className={`cpu-page-size${customerPageSizeMenuOpen ? ' cpu-page-size--open' : ''}`}
@@ -1175,7 +1178,7 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
               }}
             >
               <span>{customerPageSize}条/页</span>
-              <span className="cpu-page-size-select__chevron" aria-hidden="true" />
+              <AppIcon name="chevronDown" className="cpu-page-size-select__chevron" size={14} />
             </button>
           </div>
           <label className="cpu-page-jump">

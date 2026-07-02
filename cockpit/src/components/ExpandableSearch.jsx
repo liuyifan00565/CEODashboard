@@ -1,9 +1,10 @@
 /*
- 更新时间: 2026-06-25 18:45:25
- 更新内容: 删除展开式搜索框的快捷键提示，并将展开态输入提示改为“请输入关键词”。
+ 更新时间: 2026-07-02 16:28:00 CST
+ 更新内容: 展开式搜索入口改用统一 AppIcon 搜索图标。
 */
 import { useState, useRef } from 'react';
 import GlassSurface from './GlassSurface/GlassSurface';
+import AppIcon from './AppIcon';
 
 export default function ExpandableSearch({ onChange }) {
   const [expanded, setExpanded] = useState(false);
@@ -38,9 +39,7 @@ export default function ExpandableSearch({ onChange }) {
       >
         <div className="search-inner">
           <button className="search-ico" onClick={open} aria-label="搜索" aria-expanded={expanded}>
-            <svg width="18" height="18" viewBox="0 0 16 16">
-              <path d="M11 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm-.7 3.3 3 3" stroke="currentColor" fill="none" strokeWidth="1.5" />
-            </svg>
+            <AppIcon name="search" size={18} />
           </button>
           <input
             ref={inputRef}

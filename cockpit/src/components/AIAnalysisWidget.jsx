@@ -1,10 +1,11 @@
 /*
- 更新时间: 2026-07-01 14:43:35 CST
- 更新内容: 默认状态新增每 10 秒弹出一次、持续 4 秒的福小客闲置气泡，并在悬浮文字时暂停默认气泡。
+ 更新时间: 2026-07-02 16:52:00 CST
+ 更新内容: AI 分析弹窗关闭按钮改用统一 AppIcon 线性图标。
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
 
+import AppIcon from './AppIcon';
 import BorderGlow from './BorderGlow/BorderGlow';
 import Mascot3DStage from './Mascot3DStage';
 import ShinyText from './ShinyText/ShinyText';
@@ -554,7 +555,7 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
                   <p>通义 Qwen3.7 Max · 当前页面数据</p>
                 </div>
                 <button className="ai-close" type="button" aria-label="关闭 AI 分析工具" onClick={closeAiDialog}>
-                  ×
+                  <AppIcon name="close" size={17} />
                 </button>
               </header>
 

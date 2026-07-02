@@ -1,9 +1,10 @@
-/* 更新时间: 2026-07-01 16:00:36 CST  更新内容: 版本情况四个版本小卡片整卡可点击打开对应二级弹窗。 */
+/* 更新时间: 2026-07-02 16:52:00 CST  更新内容: 版本二级弹窗关闭按钮改用统一 AppIcon 线性图标。 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import * as echarts from 'echarts';
 import gsap from 'gsap';
 
+import AppIcon from './AppIcon';
 import EChart from './EChart';
 import MultiSegmented from './MultiSegmented';
 import Segmented from './Segmented';
@@ -344,7 +345,9 @@ function VersionDetailModal({ channelKey, versionKey, onClose }) {
       <div className="km-card vf-detail-card" ref={cardRef}>
         <div className="km-head">
           <h3 className="km-title">{DIM_TITLE[dim]}{versionName}{modeMeta.label}</h3>
-          <button type="button" className="km-close" aria-label="关闭" onClick={handleClose}>×</button>
+          <button type="button" className="km-close" aria-label="关闭" onClick={handleClose}>
+            <AppIcon name="close" size={17} />
+          </button>
         </div>
 
         <div className="km-controls">

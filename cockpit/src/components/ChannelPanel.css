@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 18:37:59 CST  更新内容: 去掉渠道人员二级明细弹窗背景里的紫色光晕。 */
+/* 更新时间: 2026-07-02 16:52:00 CST  更新内容: 渠道行箭头样式适配统一 AppIcon 线性 SVG。 */
 
 .ch-panel {
   position: relative;
@@ -163,13 +163,10 @@
   position: absolute;
   right: 13px;
   bottom: 12px;
-  width: 12px;
-  height: 12px;
-  border-top: 2px solid currentColor;
-  border-right: 2px solid currentColor;
+  width: 13px;
+  height: 13px;
   color: var(--muted);
   opacity: 0.72;
-  transform: rotate(45deg);
   transition: color .2s ease, opacity .2s ease, transform .2s ease;
   pointer-events: none;
 }
@@ -178,7 +175,7 @@
 .ch-row:focus-visible .ch-row-arrow {
   color: var(--txt);
   opacity: 1;
-  transform: translateX(2px) rotate(45deg);
+  transform: translateX(2px);
 }
 
 .ch-zone {
