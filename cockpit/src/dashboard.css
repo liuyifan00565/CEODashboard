@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 15:53:58 CST
+ Update content: Widen the top brand glass surface for the MetallicPaint logo.
+*/
+/*
  更新时间: 2026-07-02 15:13:35 CST
  更新内容: 首页财务卡片区改为开户数小卡在上、总投入费比在下，并移除续费率首页卡片。
 */
@@ -28,7 +32,7 @@
   margin:0 calc(clamp(16px,3vw,40px) * -1);
   padding:18px clamp(16px,3vw,40px) 14px;
 }
-.dash-topbar .brand-glass{flex:0 0 254px;min-width:254px}
+.dash-topbar .brand-glass{flex:0 0 306px;min-width:306px}
 .dash-topbar .brand-glass .glass-surface__content{padding:0}
 .dash-topbar .brand{width:100%;height:100%;min-width:0;flex:none;padding:0 14px}
 .dash-topbar .brand-copy{min-width:0}

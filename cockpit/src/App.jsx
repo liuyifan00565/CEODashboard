@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 15:53:58 CST
+ Update content: Use MetallicPaint with the black PNG logo in the top brand area.
+*/
+/*
  更新时间: 2026-07-02 15:13:35 CST
  更新内容: 首页右侧财务卡片区移除续费率，将开户数上移到原总投入位置，总投入下移到原续费率位置。
 */
@@ -15,6 +19,7 @@ import ExpandableSearch from './components/ExpandableSearch';
 import DateRangePicker from './components/DateRangePicker';
 import Segmented from './components/Segmented';
 import ElectricBorder from './components/ElectricBorder/ElectricBorder';
+import MetallicPaint from './components/MetallicPaint/MetallicPaint';
 import KpiCard from './components/KpiCard';
 import KpiModal from './components/KpiModal';
 import MonthlyTrend from './components/MonthlyTrend';
@@ -193,7 +198,7 @@ export default function App() {
         <div className="dash-main">
           <header className="dash-topbar">
             <GlassSurface
-              width={230}
+              width={286}
               height={52}
               borderRadius={16}
               brightness={58}
@@ -204,7 +209,26 @@ export default function App() {
               className="brand-glass"
             >
               <div className="brand">
-                <span className="brand-dot" />
+                <span className="brand-logo-paint" aria-hidden="true">
+                  <MetallicPaint
+                    imageSrc="/logo-black.png"
+                    seed={64}
+                    scale={3.6}
+                    refraction={0.018}
+                    blur={0.014}
+                    liquid={0.68}
+                    speed={0.28}
+                    brightness={1.75}
+                    contrast={0.8}
+                    fresnel={1.2}
+                    lightColor="#ffffff"
+                    darkColor="#050505"
+                    tintColor="#d7fbff"
+                    chromaticSpread={1.8}
+                    distortion={0.75}
+                    contour={0.28}
+                  />
+                </span>
                 <div className="brand-copy">
                   <b>福客 · CEO 经营驾驶舱</b>
                   <small>{META.monthLabel} · {activeMenu === 'overview' ? '月度视角' : activeMenuLabel}</small>

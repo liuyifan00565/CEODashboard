@@ -1,0 +1,10 @@
+/*
+ Update time: 2026-07-02 15:53:58 CST
+ Update content: Add MetallicPaint canvas sizing for the dashboard brand logo.
+*/
+.paint-container {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}

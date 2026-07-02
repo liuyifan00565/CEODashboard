@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 15:53:58 CST
+ Update content: Size the MetallicPaint brand logo used in the topbar.
+*/
+/*
  更新时间: 2026-06-26 01:06:01
  更新内容: 白天主题背景从 #D8F5D1 调整为更柔和的浅绿色 #E8FBE8。
 */
@@ -146,6 +150,17 @@ body{
   padding:18px clamp(16px,4vw,48px);}
 .brand{display:flex;align-items:center;gap:12px}
 .brand-dot{width:9px;height:9px;border-radius:50%;background:var(--txt);box-shadow:var(--brand-dot-shadow)}
+.brand-logo-paint{
+  flex:0 0 44px;
+  width:44px;
+  height:32px;
+  display:block;
+  filter:drop-shadow(0 0 12px rgba(255,255,255,.28));
+}
+.brand-logo-paint .paint-container{
+  width:100%;
+  height:100%;
+}
 .brand b{font-size:15px;letter-spacing:.5px}
 .brand small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
 
