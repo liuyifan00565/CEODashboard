@@ -1,7 +1,7 @@
 # AGENTS.md
 
-更新时间: 2026-07-02 17:36:08
-更新内容: 增加每次项目修改后必须同时提交并推送到两个 GitHub 仓库的规则
+更新时间: 2026-07-02 17:48:55
+更新内容: 增加维护页卡片、工具栏和表格必须沿用算力用量分析页面原透明玻璃 CSS 样式的规则
 
 This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
@@ -36,4 +36,7 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 ## UI 规则
 
 - 所有卡片和按钮的背景、边框、模糊、阴影与圆角必须优先复用项目既有统一玻璃体系（如 `GlassSurface`、`var(--line-2)`、`var(--glass-blur)`、`var(--glass-shadow)`、透明面板背景等），不要为单个卡片或按钮临时新增不一致的实色底、边框或阴影；确需新增变体时，应先抽象为共享样式或主题变量，保证后续新界面格式风格统一。
+- 四个维护页（目标维护、成本维护、组织维护、渠道维护）的顶部工具栏、内容卡片和表格外壳必须沿用算力用量分析页面原来的透明玻璃卡片 CSS：面板外层使用 `background: transparent`、`border: 1px solid var(--line-2)`、`backdrop-filter: var(--glass-blur)`、`box-shadow: var(--glass-shadow)` 和统一圆角；不要再改成深色实底、紫色渐变、额外径向光斑、流光边框或单独新增的 `--glass-panel-bg` 变体。
+- 维护页顶部工具栏需要保持原来的紧凑高度，工具栏玻璃背景只包裹实际内容高度，不要为了背景效果把标题栏拉高。
+- 维护页表格也必须跟随上述透明玻璃体系：表格滚动外壳保持透明，表头只使用低透明黑色玻璃底（如 `rgba(0,0,0,.16)`）并加 `blur(14px)`，首列固定列使用更轻的透明黑色玻璃底（如 `rgba(0,0,0,.14)`）并加 `blur(14px)`；汇总行不要使用深色实底或高饱和色，行悬浮态统一使用 `var(--glass-cell-hover)`。
 - 半环图扇区鼠标悬浮时显示的迷你提示卡片，必须沿用原 KPI 二级弹窗卡片的玻璃边框、模糊和阴影体系，但底色要足够深以保证文字可读；不要按占比切换紫色、荧光绿或其它高饱和底色，也不要因此修改其它二级卡片。
