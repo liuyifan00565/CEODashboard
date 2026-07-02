@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 18:32:30 CST
- 更新内容: 首页开户数小卡片点击后打开对应开户数二级数据。
+ 更新时间: 2026-07-02 15:13:35 CST
+ 更新内容: 首页右侧财务卡片区移除续费率，将开户数上移到原总投入位置，总投入下移到原续费率位置。
 */
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
@@ -97,7 +97,7 @@ export default function App() {
     [dim, dateRange, activeChannelKey]
   );
   const recoveryKpiCards = filteredKpiCards.filter((card) => ['month', 'year'].includes(card.key));
-  const financeKpiCards = filteredKpiCards.filter((card) => ['cost', 'renewal'].includes(card.key));
+  const financeKpiCards = filteredKpiCards.filter((card) => card.key === 'cost');
   const openCardData = useMemo(
     () => filteredKpiCards.find((card) => card.key === openCard?.key) ?? openCard ?? null,
     [filteredKpiCards, openCard]
@@ -238,10 +238,6 @@ export default function App() {
                   ))}
                 </div>
 
-                {showOpeningMetrics && (
-                  <OpeningMetricCards onOpenSecondary={handleOpenCard} />
-                )}
-
                 <div className={gridClassName}>
                   <div className="dash-cell dash-cell--trend" data-anim>
                     <SearchResultBorder active={hit(PANEL_KEYWORDS.trend, searchTerm)}>
@@ -250,6 +246,11 @@ export default function App() {
                   </div>
                   <div className="dash-cell dash-cell--finance-kpis" data-anim>
                     <div className="dash-finance-kpis">
+                      {showOpeningMetrics && (
+                        <div className="dash-finance-kpi-item dash-finance-kpi-item--openings" data-kpi-key="openings">
+                          <OpeningMetricCards onOpenSecondary={handleOpenCard} />
+                        </div>
+                      )}
                       {financeKpiCards.map((card) => (
                         <div className="dash-finance-kpi-item" data-kpi-key={card.key} key={card.key}>
                           <SearchResultBorder active={hit(card.keywords, searchTerm)}>

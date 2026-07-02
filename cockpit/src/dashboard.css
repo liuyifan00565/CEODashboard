@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 18:44:29 CST
- 更新内容: 去掉首页月度经营趋势和交付看板卡片边框流光，保留安静玻璃边框层次。
+ 更新时间: 2026-07-02 15:13:35 CST
+ 更新内容: 首页财务卡片区改为开户数小卡在上、总投入费比在下，并移除续费率首页卡片。
 */
 
 /* ===== 外层 shell：左侧栏 + 右内容列 ===== */
@@ -98,6 +98,13 @@
 .dash-finance-kpi-item .search-result-border,
 .dash-finance-kpi-item .search-result-border .eb-content,
 .dash-finance-kpi-item .kpi-card{height:100%}
+.dash-finance-kpi-item--openings .opening-metric-cards{
+  height:100%;
+}
+.dash-finance-kpi-item--openings .opening-metric-card{
+  min-height:0;
+  height:100%;
+}
 
 .dash-delivery-row{
   flex:none;
@@ -177,7 +184,7 @@
   .dash-kpis{grid-template-columns:1fr;grid-template-rows:auto auto}
   .dash-kpi-item[data-kpi-key="month"],
   .dash-kpi-item[data-kpi-key="year"]{grid-column:1 / -1;grid-row:auto}
-  .dash-finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto}
+  .dash-finance-kpis{grid-template-columns:1fr;grid-template-rows:auto auto}
 }
 @media (max-width:760px){
   .dash-shell{flex-direction:column}

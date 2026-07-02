@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 12:05:08 CST
- 更新内容: 增加算力用量趋势卡片荧光紫折线和非荧光清晰顶部数值标签的回归测试。
+ 更新时间: 2026-07-02 15:13:35 CST
+ 更新内容: 增加首页财务卡片区移除续费率、开户数上移和总投入下移的布局回归测试。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -363,7 +363,7 @@ test('notifies Fu Xiaoke when a KPI card is opened', () => {
 
 test('builds two long recovery cards that each include a sales completion panel', () => {
   assert.match(appSource, /const recoveryKpiCards = filteredKpiCards\.filter\(\(card\) => \['month', 'year'\]\.includes\(card\.key\)\);/);
-  assert.match(appSource, /const financeKpiCards = filteredKpiCards\.filter\(\(card\) => \['cost', 'renewal'\]\.includes\(card\.key\)\);/);
+  assert.match(appSource, /const financeKpiCards = filteredKpiCards\.filter\(\(card\) => card\.key === 'cost'\);/);
   assert.match(dashboardCss, /\.dash-kpis\{\s*display:grid;grid-template-columns:minmax\(0,1fr\);grid-template-rows:repeat\(2,minmax\(326px,auto\)\);/);
   assert.match(dashboardCss, /\.dash-kpi-item\[data-kpi-key="month"\]\{grid-column:1;grid-row:1\}/);
   assert.match(dashboardCss, /\.dash-kpi-item\[data-kpi-key="year"\]\{grid-column:1;grid-row:2\}/);
@@ -375,13 +375,17 @@ test('builds two long recovery cards that each include a sales completion panel'
   assert.doesNotMatch(dashboardCss, /\.dash-kpi-item\[data-kpi-key="renewal"\]\{grid-column:2;grid-row:2\}/);
 });
 
-test('moves cost and renewal KPI cards into the former sales completion panel slot', () => {
+test('moves opening metrics into the cost slot and cost into the former renewal slot', () => {
   assert.match(appSource, /<div className="dash-cell dash-cell--finance-kpis" data-anim>/);
+  assert.match(appSource, /<div className="dash-finance-kpi-item dash-finance-kpi-item--openings" data-kpi-key="openings">[\s\S]*?<OpeningMetricCards onOpenSecondary=\{handleOpenCard\} \/>[\s\S]*?<\/div>/);
   assert.match(appSource, /financeKpiCards\.map\(\(card\) => \(/);
   assert.match(appSource, /className="dash-finance-kpi-item"/);
+  assert.doesNotMatch(appSource, /\['cost', 'renewal'\]\.includes\(card\.key\)/);
+  assert.doesNotMatch(appSource, /data-kpi-key=\{card\.key\} key=\{card\.key\}[\s\S]*?card=\{card\}[\s\S]*?card\.key === 'renewal'/);
   assert.match(dashboardCss, /grid-template-areas:\s*"trend finance"\s*"version version";/);
   assert.match(dashboardCss, /\.dash-grid--overview \.dash-cell--finance-kpis\{grid-area:finance\}/);
   assert.match(dashboardCss, /\.dash-finance-kpis\{[\s\S]*?display:grid;[\s\S]*?grid-template-rows:repeat\(2,minmax\(0,1fr\)\);[\s\S]*?gap:14px;/);
+  assert.match(dashboardCss, /\.dash-finance-kpi-item--openings \.opening-metric-cards\{[\s\S]*?height:100%;/);
 });
 
 test('uses ElectricBorder for search result highlighting instead of HighlightBeam', () => {

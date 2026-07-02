@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 18:37:59 CST
- 更新内容: 增加开户数小卡片无左上紫色发光及对应二级数据回归测试。
+ 更新时间: 2026-07-02 15:13:35 CST
+ 更新内容: 增加开户数小卡片上移到首页财务卡片区的回归测试。
 */
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
@@ -33,11 +33,12 @@ test('provides matching secondary series for each opening-account metric', () =>
   assert.equal(getKpiSeries(todayMetric.metric, { dim: 'day' }).at(-1).value, todayMetric.value);
 });
 
-test('renders opening-account cards below the homepage recovery KPI stack only', () => {
+test('renders opening-account cards in the homepage finance KPI stack only', () => {
   assert.match(appSource, /import OpeningMetricCards from '\.\/components\/OpeningMetricCards';/);
   assert.match(appSource, /const showOpeningMetrics = activeMenu === 'overview';/);
   assert.match(appSource, /const openCardData = useMemo\(\s*\(\) => filteredKpiCards\.find\(\(card\) => card\.key === openCard\?\.key\) \?\? openCard \?\? null,/);
-  assert.match(appSource, /<div className="dash-kpis">[\s\S]*?<\/div>\s*\{showOpeningMetrics && \(\s*<OpeningMetricCards onOpenSecondary=\{handleOpenCard\} \/>/);
+  assert.match(appSource, /<div className="dash-finance-kpi-item dash-finance-kpi-item--openings" data-kpi-key="openings">[\s\S]*?<OpeningMetricCards onOpenSecondary=\{handleOpenCard\} \/>[\s\S]*?<\/div>/);
+  assert.doesNotMatch(appSource, /<div className="dash-kpis">[\s\S]*?<\/div>\s*\{showOpeningMetrics && \(\s*<OpeningMetricCards onOpenSecondary=\{handleOpenCard\} \/>/);
   assert.doesNotMatch(appSource, /monthRecoveryCard && handleOpenCard\(monthRecoveryCard\)/);
 });
 
