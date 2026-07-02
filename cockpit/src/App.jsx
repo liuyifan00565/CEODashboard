@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 18:49:46 CST
+ Update content: Move the data maintenance switch into the right toolbar before search and match the expanded search pill radius.
+*/
+/*
  更新时间: 2026-07-02 18:10:27 CST
  更新内容: 合并 GitHub 数据维护页面与本地品牌、搜索和顶部栏改动。
 */
@@ -339,28 +343,28 @@ export default function App() {
                 </div>
               </div>
             </GlassSurface>
-            <GlassSurface
-              width={118}
-              height={52}
-              borderRadius={16}
-              brightness={58}
-              blur={12}
-              displace={1}
-              backgroundOpacity={0.06}
-              distortionScale={-130}
-              className="maintenance-glass"
-            >
-              <button
-                type="button"
-                className={`dash-maintenance-switch${maintenanceMode ? ' dash-maintenance-switch--active' : ''}`}
-                onClick={handleMaintenanceModeToggle}
-                aria-pressed={maintenanceMode}
-              >
-                <span className="dash-maintenance-switch__icon" aria-hidden="true">▦</span>
-                <span>{maintenanceMode ? '返回主界面' : '数据维护'}</span>
-              </button>
-            </GlassSurface>
             <div className="dash-tools">
+              <GlassSurface
+                width={150}
+                height={54}
+                borderRadius={27}
+                brightness={58}
+                blur={12}
+                displace={1}
+                backgroundOpacity={0.06}
+                distortionScale={-130}
+                className="maintenance-glass"
+              >
+                <button
+                  type="button"
+                  className={`dash-maintenance-switch${maintenanceMode ? ' dash-maintenance-switch--active' : ''}`}
+                  onClick={handleMaintenanceModeToggle}
+                  aria-pressed={maintenanceMode}
+                >
+                  <span className="dash-maintenance-switch__icon" aria-hidden="true">▦</span>
+                  <span>{maintenanceMode ? '返回主界面' : '数据维护'}</span>
+                </button>
+              </GlassSurface>
               <ExpandableSearch
                 onChange={setSearchTerm}
                 currentIndex={searchStats.current}

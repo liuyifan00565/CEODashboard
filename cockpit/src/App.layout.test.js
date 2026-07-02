@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 18:49:46 CST
+ Update content: Add regression coverage for placing the data maintenance pill inside the right toolbar before search.
+*/
+/*
  更新时间: 2026-07-02 18:10:27 CST
  更新内容: 合并 GitHub 数据维护回归测试与本地品牌、搜索和顶部栏测试。
 */
@@ -140,7 +144,7 @@ test('keeps only compute usage in the compute trend chart with clear non-fluores
   assert.doesNotMatch(computePageSource, /name:\s*'总容量'[\s\S]*?type:\s*'line'/);
 });
 
-test('keeps only search in the top toolbar while data keeps default monthly filters', () => {
+test('keeps the right toolbar focused on data maintenance and search while data keeps default monthly filters', () => {
   assert.doesNotMatch(appSource, /import ThemeToggle/);
   assert.doesNotMatch(appSource, /import DateRangePicker/);
   assert.doesNotMatch(appSource, /import Segmented/);
@@ -149,7 +153,7 @@ test('keeps only search in the top toolbar while data keeps default monthly filt
   assert.doesNotMatch(appSource, /computePeriod/);
   assert.match(appSource, /const dim = 'month';/);
   assert.match(appSource, /const dateRange = DEFAULT_FILTER_RANGE;/);
-  assert.match(appSource, /<div className="dash-tools">\s*<ExpandableSearch[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
+  assert.match(appSource, /<div className="dash-tools">\s*<GlassSurface[\s\S]*?className="maintenance-glass"[\s\S]*?<\/GlassSurface>\s*<ExpandableSearch[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
   assert.doesNotMatch(appSource, /<DateRangePicker/);
   assert.doesNotMatch(appSource, /<Segmented options=\{DIM_OPTS\}/);
   assert.doesNotMatch(appSource, /<ThemeToggle/);
@@ -197,11 +201,12 @@ test('adds a topbar data maintenance switch that swaps the sidebar navigation', 
   assert.match(appSource, /function handleMaintenanceModeToggle\(\) \{[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setMaintenanceMode\(false\);[\s\S]*?setActiveMenu\('overview'\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?setMaintenanceMode\(true\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?\}/);
   assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} \/>/);
   assert.match(appSource, /className="maintenance-glass"/);
-  assert.match(appSource, /<GlassSurface[\s\S]*?width=\{118\}[\s\S]*?height=\{52\}[\s\S]*?borderRadius=\{16\}[\s\S]*?brightness=\{58\}[\s\S]*?blur=\{12\}[\s\S]*?backgroundOpacity=\{0\.06\}[\s\S]*?distortionScale=\{-130\}[\s\S]*?className="maintenance-glass"[\s\S]*?<button/);
+  assert.match(appSource, /<div className="dash-tools">\s*<GlassSurface[\s\S]*?width=\{150\}[\s\S]*?height=\{54\}[\s\S]*?borderRadius=\{27\}[\s\S]*?brightness=\{58\}[\s\S]*?blur=\{12\}[\s\S]*?backgroundOpacity=\{0\.06\}[\s\S]*?distortionScale=\{-130\}[\s\S]*?className="maintenance-glass"[\s\S]*?<button[\s\S]*?<\/GlassSurface>\s*<ExpandableSearch/);
   assert.match(appSource, /className=\{`dash-maintenance-switch\$\{maintenanceMode \? ' dash-maintenance-switch--active' : ''\}`\}/);
   assert.match(appSource, /aria-pressed=\{maintenanceMode\}/);
   assert.match(appSource, /\{maintenanceMode \? '返回主界面' : '数据维护'\}/);
-  assert.match(dashboardCss, /\.dash-topbar \.maintenance-glass\{[\s\S]*?margin-left:auto;/);
+  assert.match(dashboardCss, /\.dash-tools \.maintenance-glass\{[\s\S]*?flex:0 0 auto;/);
+  assert.doesNotMatch(dashboardCss, /\.dash-topbar \.maintenance-glass\{[\s\S]*?margin-left:auto;/);
   assert.match(dashboardCss, /\.dash-topbar \.maintenance-glass \.glass-surface__content\{padding:0\}/);
   assert.match(maintenanceSwitchBlock, /width:100%;/);
   assert.match(maintenanceSwitchBlock, /height:100%;/);
