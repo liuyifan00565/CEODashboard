@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-02 18:27:24 CST
+ 更新内容: 增加数据维护导航栏四个业务图标名称的回归测试。
+*/
+/*
  更新时间: 2026-07-02 16:25:57 CST
  更新内容: 增加数据维护模式四个新界面的数据结构回归测试。
 */
@@ -64,6 +68,10 @@ test('defines the four data maintenance sidebar entries separately from the main
   assert.deepEqual(
     MAINTENANCE_MENU.map((item) => item.key),
     ['target-maintenance', 'cost-maintenance', 'org-maintenance', 'channel-maintenance']
+  );
+  assert.deepEqual(
+    MAINTENANCE_MENU.map((item) => item.icon),
+    ['target', 'cost', 'organization', 'channel']
   );
   assert.deepEqual(
     MENU.map((item) => item.name),
