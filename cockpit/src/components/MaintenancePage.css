@@ -1,8 +1,10 @@
 /*
- 更新时间: 2026-07-02 17:32:10 CST
- 更新内容: 维护页表格外壳、表头、首列和汇总行恢复为算力页原透明玻璃样式。
+ 更新时间: 2026-07-02 18:50:34 CST
+ 更新内容: 增强四个维护页可编辑字段框，并将维护页彩色进度条统一为算力用量分析折线图的荧光紫到荧光蓝渐变。
 */
 .mnt-page {
+  --mnt-progress-purple: #f000ff;
+  --mnt-progress-blue: #38f5ff;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -155,14 +157,45 @@
 .mnt-control {
   width: 100%;
   min-height: 28px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-2);
   border-radius: 10px;
-  background: var(--glass-cell);
+  background: color-mix(in srgb, var(--glass-cell-hover) 48%, transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .08),
+    inset 0 1px 0 rgba(255, 255, 255, .13);
   padding: 0 10px;
   color: var(--txt);
   font: inherit;
   font-size: 13px;
-  font-weight: 680;
+  font-weight: 760;
+  transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.mnt-control:hover {
+  border-color: color-mix(in srgb, var(--txt) 42%, var(--line-2));
+  background: color-mix(in srgb, var(--glass-cell-hover) 68%, transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .14),
+    inset 0 1px 0 rgba(255, 255, 255, .2);
+}
+
+.mnt-control:focus-visible {
+  border-color: color-mix(in srgb, var(--txt) 58%, var(--line-2));
+  background: color-mix(in srgb, var(--glass-cell-hover) 78%, transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .2),
+    inset 0 1px 0 rgba(255, 255, 255, .24),
+    0 0 0 3px var(--focus-outline);
+}
+
+.mnt-control:disabled,
+.mnt-control[readonly] {
+  border-color: var(--line);
+  background: var(--glass-cell);
+  box-shadow: none;
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: .62;
 }
 
 .mnt-toolbar .mnt-control {
@@ -506,22 +539,15 @@
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
-}
-
-.mnt-progress--danger span {
-  background: linear-gradient(90deg, rgba(var(--warn-rgb), .82), rgba(255,255,255,.58));
-}
-
-.mnt-progress--warning span {
-  background: linear-gradient(90deg, rgba(255,255,255,.72), rgba(var(--good-rgb), .42));
-}
-
-.mnt-progress--good span {
-  background: linear-gradient(90deg, rgba(var(--good-rgb), .92), rgba(255,255,255,.78));
+  background: linear-gradient(90deg, var(--mnt-progress-purple) 0%, var(--mnt-progress-blue) 100%);
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--mnt-progress-purple) 42%, transparent),
+    0 0 10px color-mix(in srgb, var(--mnt-progress-blue) 32%, transparent);
 }
 
 .mnt-progress--unset span {
   background: rgba(255, 255, 255, .24);
+  box-shadow: none;
 }
 
 .mnt-local-action {
