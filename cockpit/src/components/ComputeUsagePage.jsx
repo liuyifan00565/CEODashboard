@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 10:52:16 CST
- 更新内容: 客户算力明细排行移除顶部排序卡片，改为数值列表头互斥排序并保持筛选后排序。
+ 更新时间: 2026-07-02 11:08:58 CST
+ 更新内容: 算力用量分析两个环图扇区边框改为版本情况半环图同款浅色玻璃分隔。
 */
 import { useMemo, useState } from 'react';
 
@@ -645,8 +645,10 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
         padAngle: 1,
         itemStyle: {
           borderRadius: 8,
-          borderColor: 'rgba(12,12,13,.72)',
+          borderColor: 'rgba(255, 255, 255, .12)',
           borderWidth: 2,
+          shadowBlur: 22,
+          shadowColor: 'rgba(0, 0, 0, .32)',
         },
         label: {
           show: true,

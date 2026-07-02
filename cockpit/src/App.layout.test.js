@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 10:59:01 CST
- 更新内容: 增加算力客户排行表头互斥排序、筛选后排序联动和表格上移的回归测试。
+ 更新时间: 2026-07-02 11:08:58 CST
+ 更新内容: 增加算力环图扇区边框沿用版本情况半环图浅色分隔的回归测试。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -234,6 +234,8 @@ test('uses the overview half-ring palette for compute donut charts', () => {
   assert.match(computePageSource, /const distributionPieData = useMemo\(\s*\(\) => applyComputeRingPalette\(distribution\),/);
   assert.match(computePageSource, /buildPieOption\(\{ data: versionPieData, tokens, unitLabel: '消耗权重', naturalLabelLayout: true \}\)/);
   assert.match(computePageSource, /buildPieOption\(\{ data: distributionPieData, tokens, unitLabel: '客户占比权重' \}\)/);
+  assert.match(computePageSource, /borderRadius:\s*8,[\s\S]*?borderColor:\s*'rgba\(255, 255, 255, \.12\)'[\s\S]*?borderWidth:\s*2,[\s\S]*?shadowBlur:\s*22,[\s\S]*?shadowColor:\s*'rgba\(0, 0, 0, \.32\)'/);
+  assert.doesNotMatch(computePageSource, /borderColor:\s*'rgba\(12,12,13,\.72\)'/);
 });
 
 test('uses mutually exclusive table-header sorting and pagination in compute customer ranking', () => {
