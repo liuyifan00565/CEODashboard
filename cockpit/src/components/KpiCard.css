@@ -1,3 +1,4 @@
+/* Update time: 2026-07-02 17:39:14 CST  Update content: Drive the recovery card full wash from completion accent colors instead of fixed lime. */
 /* Update time: 2026-07-02 17:29:43 CST  Update content: Replace local recovery pie glow with a subtle full-card lime glass wash. */
 /* Update time: 2026-07-02 17:09:15 CST  Update content: Lower recovery card glow while preserving readable dark glass tooltip styling. */
 /* 更新时间: 2026-07-01 12:26:40  更新内容: KPI 副文案支持换行显示，并保留半环悬浮提示深色可读底色。 */
@@ -26,8 +27,8 @@
   min-height: 158px;
   padding: 16px 22px 16px 18px;
   background:
-    linear-gradient(112deg, rgba(214, 248, 74, .13) 0%, rgba(156, 188, 68, .085) 36%, rgba(54, 66, 42, .035) 68%, transparent 92%),
-    linear-gradient(168deg, rgba(230, 251, 255, .04) 0%, transparent 48%, rgba(214, 248, 74, .045) 100%),
+    linear-gradient(112deg, color-mix(in srgb, var(--kpi-accent) 13%, transparent) 0%, color-mix(in srgb, var(--kpi-accent) 8.5%, transparent) 36%, color-mix(in srgb, var(--kpi-accent) 3.5%, transparent) 68%, transparent 92%),
+    linear-gradient(168deg, rgba(230, 251, 255, .04) 0%, transparent 48%, color-mix(in srgb, var(--kpi-accent) 4.5%, transparent) 100%),
     rgba(255,255,255,.012);
 }
 
@@ -44,7 +45,7 @@
   width: auto;
   border-radius: inherit;
   background:
-    linear-gradient(90deg, transparent, rgba(214, 248, 74, .07) 46%, transparent),
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--kpi-accent) 7%, transparent) 46%, transparent),
     linear-gradient(180deg, rgba(255, 255, 255, .045), transparent 54%);
   filter: none;
   mix-blend-mode: screen;
