@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:12:00 CST
+ Update content: Calm the dark dashboard palette with Apple-inspired neutrals and lower background glow.
+*/
+/*
  Update time: 2026-07-02 15:53:58 CST
  Update content: Size the MetallicPaint brand logo used in the topbar.
 */
@@ -9,56 +13,56 @@
 :root,
 :root[data-theme="dark"]{
   --color-scheme-value:dark;
-  --bg:#0c0c0d;
-  --panel:rgba(36,36,41,.74);
-  --panel-2:rgba(50,50,57,.76);
-  --line:rgba(255,255,255,.14);
-  --line-2:rgba(255,255,255,.24);
+  --bg:#08090D;
+  --panel:rgba(28,30,36,.72);
+  --panel-2:rgba(38,40,48,.72);
+  --line:rgba(255,255,255,.11);
+  --line-2:rgba(255,255,255,.18);
   --glass-cell:transparent;
-  --glass-cell-hover:rgba(255,255,255,.15);
-  --glass-shadow:0 18px 52px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(255,255,255,.06);
-  --glass-blur:blur(22px) saturate(155%);
-  --txt:#ffffff;
-  --muted:#ffffff;
-  --faint:#ffffff;
-  --up:#ff4fd8;     /* 荧光粉：涨 / 预警 */
-  --down:#dfff00;   /* 荧光绿：跌 */
-  --good:#dfff00;   /* 荧光绿：目标完成优秀 */
-  --warn:#ff4fd8;   /* 预警语义：映射到荧光粉 */
-  --up-rgb:255,79,216;
-  --down-rgb:223,255,0;
-  --good-rgb:223,255,0;
-  --warn-rgb:255,79,216;
-  --bg-radial-a:rgba(255,255,255,.08);
-  --bg-radial-b:rgba(255,255,255,.06);
-  --bg-scrim:linear-gradient(90deg,rgba(12,12,13,.38),rgba(12,12,13,.04) 45%,rgba(12,12,13,.2));
-  --brand-dot-shadow:0 0 12px rgba(255,255,255,.5);
-  --control-hover:rgba(255,255,255,.08);
-  --theme-toggle-icon:#ffffff;
-  --theme-toggle-hover:rgba(255,255,255,.08);
-  --focus-outline:rgba(255,255,255,.24);
-  --control-solid:#ffffff;
-  --control-solid-text:#0c0c0d;
-  --chart-text:#ffffff;
-  --chart-muted:#ffffff;
-  --chart-grid:rgba(255,255,255,.08);
-  --chart-axis:rgba(255,255,255,.45);
-  --chart-bar:rgba(255,255,255,.88);
-  --chart-bar-muted:rgba(255,255,255,.38);
-  --chart-bar-faint:rgba(255,255,255,.12);
-  --chart-tooltip-bg:rgba(20,20,22,.92);
-  --chart-tooltip-border:rgba(255,255,255,.16);
-  --chart-pointer:rgba(255,255,255,.05);
-  --chart-point-border:#0c0c0d;
-  --progress-mid:#ffffff;
-  --ai-card-bg:#120F17;
-  --ai-orb-text:#ffffff;
-  --ai-ring-text:rgba(255,255,255,.9);
-  --ai-label-text:rgba(255,255,255,.94);
-  --ai-ring-shadow:0 0 8px rgba(0,0,0,.9),0 0 16px rgba(192,132,252,.35);
-  --ai-label-shadow:0 1px 3px rgba(0,0,0,.8),0 0 18px rgba(255,255,255,.32);
-  --ai-chip-bg:rgba(255,255,255,.055);
-  --ai-chip-hover:rgba(255,255,255,.1);
+  --glass-cell-hover:rgba(255,255,255,.08);
+  --glass-shadow:0 18px 52px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.12), inset 0 -1px 0 rgba(255,255,255,.04);
+  --glass-blur:blur(22px) saturate(128%);
+  --txt:#F5F5F7;
+  --muted:#A1A1A6;
+  --faint:#6E6E73;
+  --up:#FF375F;
+  --down:#64D2FF;
+  --good:#30D158;
+  --warn:#FF375F;
+  --up-rgb:255,55,95;
+  --down-rgb:100,210,255;
+  --good-rgb:48,209,88;
+  --warn-rgb:255,55,95;
+  --bg-radial-a:rgba(100,210,255,.035);
+  --bg-radial-b:rgba(48,209,88,.028);
+  --bg-scrim:linear-gradient(90deg,rgba(8,9,13,.74),rgba(8,9,13,.26) 48%,rgba(8,9,13,.68));
+  --brand-dot-shadow:0 0 8px rgba(245,245,247,.28);
+  --control-hover:rgba(255,255,255,.07);
+  --theme-toggle-icon:#F5F5F7;
+  --theme-toggle-hover:rgba(255,255,255,.07);
+  --focus-outline:rgba(100,210,255,.34);
+  --control-solid:#F5F5F7;
+  --control-solid-text:#08090D;
+  --chart-text:#F5F5F7;
+  --chart-muted:#A1A1A6;
+  --chart-grid:rgba(245,245,247,.08);
+  --chart-axis:rgba(245,245,247,.28);
+  --chart-bar:rgba(245,245,247,.82);
+  --chart-bar-muted:rgba(245,245,247,.32);
+  --chart-bar-faint:rgba(245,245,247,.10);
+  --chart-tooltip-bg:rgba(18,19,24,.92);
+  --chart-tooltip-border:rgba(255,255,255,.12);
+  --chart-pointer:rgba(100,210,255,.06);
+  --chart-point-border:#08090D;
+  --progress-mid:#64D2FF;
+  --ai-card-bg:#111217;
+  --ai-orb-text:#F5F5F7;
+  --ai-ring-text:rgba(245,245,247,.82);
+  --ai-label-text:rgba(245,245,247,.92);
+  --ai-ring-shadow:0 0 8px rgba(0,0,0,.82),0 0 14px rgba(100,210,255,.18);
+  --ai-label-shadow:0 1px 3px rgba(0,0,0,.76),0 0 14px rgba(245,245,247,.16);
+  --ai-chip-bg:rgba(255,255,255,.045);
+  --ai-chip-hover:rgba(255,255,255,.08);
   color-scheme:var(--color-scheme-value);
 }
 :root[data-theme="light"]{
@@ -136,10 +140,10 @@ body{
   background:var(--bg-scrim);
   pointer-events:none;
 }
-.bg .dot-field-container{position:absolute;inset:0;width:100%;height:100%;filter:contrast(1.18)}
+.bg .dot-field-container{position:absolute;inset:0;width:100%;height:100%;opacity:.36;filter:contrast(.86) saturate(.48)}
 .fluid-glass-layer{
   position:absolute;inset:0;z-index:1;pointer-events:none;
-  opacity:.42;mix-blend-mode:screen;
+  opacity:.22;mix-blend-mode:screen;
 }
 .fluid-glass-layer canvas{
   width:100%!important;height:100%!important;display:block;pointer-events:none!important;
