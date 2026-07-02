@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 10:18:00 CST
- 更新内容: 回归测试约束侧边导航仅保留经营总览和算力用量分析。
+ 更新时间: 2026-07-02 15:44:47 CST
+ 更新内容: 增加数据维护模式四个侧边导航入口的回归测试。
 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -8,6 +8,7 @@ import test from 'node:test';
 import {
   CHANNELS,
   DELIVERY_TARGET_COUNT,
+  MAINTENANCE_MENU,
   MENU,
   SALES_GROUPS,
   VERSIONS,
@@ -41,6 +42,21 @@ test('defines only overview and compute usage menu entries in the sidebar', () =
   assert.deepEqual(
     MENU.map((item) => getDashboardChannelKey(item.key)),
     ['all', 'all']
+  );
+});
+
+test('defines the four data maintenance sidebar entries separately from the main dashboard menu', () => {
+  assert.deepEqual(
+    MAINTENANCE_MENU.map((item) => item.name),
+    ['目标维护', '成本维护', '组织维护', '渠道维护']
+  );
+  assert.deepEqual(
+    MAINTENANCE_MENU.map((item) => item.key),
+    ['target-maintenance', 'cost-maintenance', 'org-maintenance', 'channel-maintenance']
+  );
+  assert.deepEqual(
+    MENU.map((item) => item.name),
+    ['经营总览', '算力用量分析']
   );
 });
 

@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 15:13:35 CST
- 更新内容: 增加首页财务卡片区移除续费率、开户数上移和总投入下移的布局回归测试。
+ 更新时间: 2026-07-02 16:00:23 CST
+ 更新内容: 约束数据维护模式顶部副标题仅显示“数据维护”，不追加具体维护项。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -122,6 +122,25 @@ test('uses the same year month day topbar controls for compute and links them to
   assert.match(computePageSource, /const periodLabel = DIM_TREND_LABELS\[dim\] \?\? DIM_TREND_LABELS\.month;/);
   assert.match(computePageSource, /const trend = getComputeUsageTrend\(\{ dim, dateRange \}\);/);
   assert.match(computePageSource, /title=\{`\$\{periodLabel\}算力用量趋势`\}/);
+});
+
+test('adds a topbar data maintenance switch that swaps the sidebar navigation', () => {
+  assert.match(appSource, /import \{ META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel \} from '\.\/data\/mock';/);
+  assert.match(appSource, /const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU\[0\]\?\.key \?\? 'target-maintenance';/);
+  assert.match(appSource, /const \[maintenanceMode,\s*setMaintenanceMode\] = useState\(false\);/);
+  assert.match(appSource, /const \[activeMaintenanceMenu,\s*setActiveMaintenanceMenu\] = useState\(DEFAULT_MAINTENANCE_MENU\);/);
+  assert.match(appSource, /const sidebarItems = maintenanceMode \? MAINTENANCE_MENU : MENU;/);
+  assert.match(appSource, /const sidebarActive = maintenanceMode \? activeMaintenanceMenu : activeMenu;/);
+  assert.match(appSource, /const activeContextLabel = maintenanceMode\s*\?\s*'数据维护'\s*:/);
+  assert.doesNotMatch(appSource, /`数据维护 · \$\{activeMaintenanceLabel\}`/);
+  assert.match(appSource, /function handleSidebarChange\(nextMenu\) \{[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setActiveMaintenanceMenu\(nextMenu\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?handleMenuChange\(nextMenu\);[\s\S]*?\}/);
+  assert.match(appSource, /function handleMaintenanceModeToggle\(\) \{[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setMaintenanceMode\(false\);[\s\S]*?setActiveMenu\('overview'\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?setMaintenanceMode\(true\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?\}/);
+  assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} \/>/);
+  assert.match(appSource, /className=\{`dash-maintenance-switch\$\{maintenanceMode \? ' dash-maintenance-switch--active' : ''\}`\}/);
+  assert.match(appSource, /aria-pressed=\{maintenanceMode\}/);
+  assert.match(appSource, /\{maintenanceMode \? '返回主界面' : '数据维护'\}/);
+  assert.match(dashboardCss, /\.dash-maintenance-switch\{[\s\S]*?margin-left:auto;[\s\S]*?border:1px solid var\(--line-2\);[\s\S]*?background:var\(--ai-chip-bg\);/);
+  assert.match(dashboardCss, /\.dash-maintenance-switch--active\{[\s\S]*?background:var\(--ai-chip-hover\);/);
 });
 
 test('uses full-width compute trend sliders that resize from 3 to 15 bars', () => {
@@ -421,7 +440,7 @@ test('scrolls the dashboard content into view when a sidebar menu item is select
   assert.match(appSource, /const pendingMenuScrollRef = useRef\(false\);/);
   assert.match(appSource, /function handleMenuChange\(nextMenu\)/);
   assert.match(appSource, /pendingMenuScrollRef\.current = true;/);
-  assert.match(appSource, /<Sidebar items=\{MENU\} active=\{activeMenu\} onChange=\{handleMenuChange\} \/>/);
+  assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} \/>/);
   assert.match(appSource, /gridRef\.current\?\.scrollIntoView\(\{\s*behavior:\s*'smooth',\s*block:\s*'start'\s*\}\);/);
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:86px;/);
 });

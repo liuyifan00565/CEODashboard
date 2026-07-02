@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 15:13:35 CST
- 更新内容: 首页右侧财务卡片区移除续费率，将开户数上移到原总投入位置，总投入下移到原续费率位置。
+ 更新时间: 2026-07-02 16:00:23 CST
+ 更新内容: 数据维护模式顶部品牌副标题仅显示“数据维护”，不追加具体维护项名称。
 */
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
@@ -24,7 +24,7 @@ import DeliveryPanel from './components/DeliveryPanel';
 import ComputeUsagePage from './components/ComputeUsagePage';
 import OpeningMetricCards from './components/OpeningMetricCards';
 
-import { META, MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
+import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
 import './dashboard.css';
@@ -34,6 +34,8 @@ const DIM_OPTS = [
   { value: 'month', label: '月' },
   { value: 'day', label: '日' },
 ];
+
+const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance';
 
 // 各主体面板的搜索关键字
 const PANEL_KEYWORDS = {
@@ -77,6 +79,8 @@ function makeCompanionCueId(card) {
 
 export default function App() {
   const [activeMenu, setActiveMenu] = useState('overview');
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [activeMaintenanceMenu, setActiveMaintenanceMenu] = useState(DEFAULT_MAINTENANCE_MENU);
   const [dim, setDim] = useState('month');
   const [dateRange, setDateRange] = useState(DEFAULT_FILTER_RANGE);
   const [searchTerm, setSearchTerm] = useState('');
@@ -89,6 +93,11 @@ export default function App() {
   const showOpeningMetrics = activeMenu === 'overview';
   const activeChannelKey = getDashboardChannelKey(activeMenu);
   const activeMenuLabel = getDashboardMenuLabel(activeMenu);
+  const activeContextLabel = maintenanceMode
+    ? '数据维护'
+    : activeMenu === 'overview' ? '月度视角' : activeMenuLabel;
+  const sidebarItems = maintenanceMode ? MAINTENANCE_MENU : MENU;
+  const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const gridClassName = activeMenu === 'overview'
     ? 'dash-grid dash-grid--overview'
     : `dash-grid dash-grid--overview dash-grid--${activeMenu}`;
@@ -115,6 +124,27 @@ export default function App() {
     if (nextMenu === activeMenu) {
       requestAnimationFrame(scrollDashboardIntoView);
     }
+  }
+
+  function handleSidebarChange(nextMenu) {
+    if (maintenanceMode) {
+      setActiveMaintenanceMenu(nextMenu);
+      return;
+    }
+
+    handleMenuChange(nextMenu);
+  }
+
+  function handleMaintenanceModeToggle() {
+    if (maintenanceMode) {
+      setMaintenanceMode(false);
+      setActiveMenu('overview');
+      setActiveMaintenanceMenu(DEFAULT_MAINTENANCE_MENU);
+      return;
+    }
+
+    setMaintenanceMode(true);
+    setActiveMaintenanceMenu(DEFAULT_MAINTENANCE_MENU);
   }
 
   function handleOpenCard(card) {
@@ -186,7 +216,7 @@ export default function App() {
 
       <div className="dash-shell">
         <aside className="dash-aside">
-          <Sidebar items={MENU} active={activeMenu} onChange={handleMenuChange} />
+          <Sidebar items={sidebarItems} active={sidebarActive} onChange={handleSidebarChange} />
           <AIAnalysisWidget activeMenu={activeMenu} dim={dim} channelKey={activeChannelKey} companionCue={companionCue} />
         </aside>
 
@@ -207,10 +237,19 @@ export default function App() {
                 <span className="brand-dot" />
                 <div className="brand-copy">
                   <b>福客 · CEO 经营驾驶舱</b>
-                  <small>{META.monthLabel} · {activeMenu === 'overview' ? '月度视角' : activeMenuLabel}</small>
+                  <small>{META.monthLabel} · {activeContextLabel}</small>
                 </div>
               </div>
             </GlassSurface>
+            <button
+              type="button"
+              className={`dash-maintenance-switch${maintenanceMode ? ' dash-maintenance-switch--active' : ''}`}
+              onClick={handleMaintenanceModeToggle}
+              aria-pressed={maintenanceMode}
+            >
+              <span className="dash-maintenance-switch__icon" aria-hidden="true">▦</span>
+              <span>{maintenanceMode ? '返回主界面' : '数据维护'}</span>
+            </button>
             <div className="dash-tools">
               <DateRangePicker value={dateRange} onChange={(dates) => setDateRange(dates?.length ? [...dates] : DEFAULT_FILTER_RANGE)} />
               <Segmented options={DIM_OPTS} value={dim} onChange={setDim} />
