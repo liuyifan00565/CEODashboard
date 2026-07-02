@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 18:16:13 CST
+ Update content: Restore compute search highlight border to the fluorescent lime palette.
+*/
+/*
  更新时间: 2026-07-02 18:10:27 CST
  更新内容: 合并 GitHub 算力玻璃背景恢复与本地搜索高亮样式改动。
 */
@@ -82,8 +86,8 @@
 
 .cpu-kpi-slot[data-search-current="true"] .cpu-kpi,
 .cpu-panel[data-search-current="true"] {
-  border-color: rgba(214,248,74,.54);
-  box-shadow: inset 0 0 0 1px rgba(214,248,74,.45), var(--glass-shadow);
+  border-color: rgba(223,255,0,.54);
+  box-shadow: inset 0 0 0 1px rgba(223,255,0,.45), var(--glass-shadow);
 }
 
 .cpu-kpi__label,

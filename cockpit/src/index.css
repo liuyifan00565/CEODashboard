@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 18:16:13 CST
+ Update content: Restore the original neon pink, fluorescent lime, and purple dot field palette.
+*/
+/*
  Update time: 2026-07-02 17:18:50 CST
  Update content: Add compact right-side search result counter styles for Word-style navigation.
 */
@@ -29,16 +33,16 @@
   --txt:#ffffff;
   --muted:#ffffff;
   --faint:#ffffff;
-  --up:#f85bd6;     /* softened neon pink: growth / warning */
-  --down:#d6f84a;   /* softened neon lime: decline */
-  --good:#d6f84a;   /* softened neon lime: strong completion */
-  --warn:#f85bd6;   /* warning semantic mapped to softened neon pink */
-  --up-rgb:248,91,214;
-  --down-rgb:214,248,74;
-  --good-rgb:214,248,74;
-  --warn-rgb:248,91,214;
-  --bg-radial-a:rgba(255,255,255,.06);
-  --bg-radial-b:rgba(255,255,255,.045);
+  --up:#ff4fd8;     /* neon pink: growth / warning */
+  --down:#dfff00;   /* fluorescent lime: decline */
+  --good:#dfff00;   /* fluorescent lime: strong completion */
+  --warn:#ff4fd8;   /* warning semantic mapped to neon pink */
+  --up-rgb:255,79,216;
+  --down-rgb:223,255,0;
+  --good-rgb:223,255,0;
+  --warn-rgb:255,79,216;
+  --bg-radial-a:rgba(96,0,255,.16);
+  --bg-radial-b:rgba(96,0,255,.1);
   --bg-scrim:linear-gradient(90deg,rgba(12,12,13,.38),rgba(12,12,13,.04) 45%,rgba(12,12,13,.2));
   --brand-dot-shadow:0 0 10px rgba(255,255,255,.38);
   --control-hover:rgba(255,255,255,.08);
@@ -83,14 +87,14 @@
   --txt:#111318;
   --muted:#2c333d;
   --faint:#626b77;
-  --up:#f85bd6;
-  --down:#d6f84a;
-  --good:#d6f84a;
-  --warn:#f85bd6;
-  --up-rgb:248,91,214;
-  --down-rgb:214,248,74;
-  --good-rgb:214,248,74;
-  --warn-rgb:248,91,214;
+  --up:#ff4fd8;
+  --down:#dfff00;
+  --good:#dfff00;
+  --warn:#ff4fd8;
+  --up-rgb:255,79,216;
+  --down-rgb:223,255,0;
+  --good-rgb:223,255,0;
+  --warn-rgb:255,79,216;
   --bg-radial-a:rgba(0,0,0,.05);
   --bg-radial-b:rgba(0,0,0,.035);
   --bg-scrim:linear-gradient(90deg,rgba(232,251,232,.86),rgba(232,251,232,.24) 45%,rgba(232,251,232,.6));
@@ -144,7 +148,7 @@ body{
   background:var(--bg-scrim);
   pointer-events:none;
 }
-.bg .dot-field-container{position:absolute;inset:0;width:100%;height:100%;opacity:.72;filter:contrast(1.04) saturate(.82)}
+.bg .dot-field-container{position:absolute;inset:0;width:100%;height:100%;opacity:.9;filter:contrast(1.08) saturate(1.35)}
 .fluid-glass-layer{
   position:absolute;inset:0;z-index:1;pointer-events:none;
   opacity:.32;mix-blend-mode:screen;

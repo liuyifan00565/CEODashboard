@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 18:16:13 CST
+ Update content: Restore palette guardrails to the original pink, fluorescent lime, and purple dot field.
+*/
+/*
  Update time: 2026-07-02 17:09:15 CST
  Update content: Add palette guardrails for the refined cyber neon dashboard pass.
 */
@@ -10,6 +14,7 @@ import { COLOR, progressColor } from './lib/format.js';
 const indexCss = readFileSync(new URL('./index.css', import.meta.url), 'utf8');
 const formatSource = readFileSync(new URL('./lib/format.js', import.meta.url), 'utf8');
 const themeSource = readFileSync(new URL('./lib/theme.js', import.meta.url), 'utf8');
+const appSource = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
 const kpiCss = readFileSync(new URL('./components/KpiCard.css', import.meta.url), 'utf8');
 const kpiSource = readFileSync(new URL('./components/KpiCard.jsx', import.meta.url), 'utf8');
 const channelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
@@ -28,22 +33,22 @@ test('blocks the failed Apple-style system colors from core dashboard styling', 
   }
 });
 
-test('uses softened cyber neon semantic accents instead of the raw acid baseline', () => {
+test('uses the original neon pink and fluorescent lime semantic accents', () => {
   const block = darkThemeBlock();
 
-  assert.match(block, /--up:#f85bd6;/);
-  assert.match(block, /--down:#d6f84a;/);
-  assert.match(block, /--good:#d6f84a;/);
-  assert.match(block, /--warn:#f85bd6;/);
-  assert.match(block, /--up-rgb:248,91,214;/);
-  assert.match(block, /--down-rgb:214,248,74;/);
-  assert.match(block, /--good-rgb:214,248,74;/);
-  assert.match(block, /--warn-rgb:248,91,214;/);
+  assert.match(block, /--up:#ff4fd8;/);
+  assert.match(block, /--down:#dfff00;/);
+  assert.match(block, /--good:#dfff00;/);
+  assert.match(block, /--warn:#ff4fd8;/);
+  assert.match(block, /--up-rgb:255,79,216;/);
+  assert.match(block, /--down-rgb:223,255,0;/);
+  assert.match(block, /--good-rgb:223,255,0;/);
+  assert.match(block, /--warn-rgb:255,79,216;/);
 
-  assert.equal(COLOR.up, '#f85bd6');
-  assert.equal(COLOR.down, '#d6f84a');
-  assert.equal(COLOR.good, '#d6f84a');
-  assert.equal(COLOR.warn, '#f85bd6');
+  assert.equal(COLOR.up, '#ff4fd8');
+  assert.equal(COLOR.down, '#dfff00');
+  assert.equal(COLOR.good, '#dfff00');
+  assert.equal(COLOR.warn, '#ff4fd8');
 });
 
 test('keeps 70 percent warning progress neutral rather than blue', () => {
@@ -55,11 +60,12 @@ test('keeps 70 percent warning progress neutral rather than blue', () => {
   assert.match(kpiSource, /const color = progressColor\(pct, tokens\.progressMid\);[\s\S]*?itemStyle:\s*\{ color, borderRadius: 5 \}/);
 });
 
-test('reduces ambient field and glass wash without flattening the cockpit', () => {
-  assert.match(indexCss, /\.bg \.dot-field-container\{[\s\S]*?opacity:\s*\.72;[\s\S]*?filter:\s*contrast\(1\.04\) saturate\(\.82\)/);
+test('keeps the background dot field visibly purple', () => {
+  assert.match(indexCss, /\.bg \.dot-field-container\{[\s\S]*?opacity:\s*\.9;[\s\S]*?filter:\s*contrast\(1\.08\) saturate\(1\.35\)/);
   assert.match(indexCss, /\.fluid-glass-layer\{[\s\S]*?opacity:\s*\.32;[\s\S]*?mix-blend-mode:\s*screen;/);
-  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(255,255,255,\.06\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(255,255,255,\.045\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(96,0,255,\.16\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(96,0,255,\.1\);/);
+  assert.match(appSource, /<DotField[\s\S]*?gradientFrom="#6000FF"[\s\S]*?gradientTo="#6000FF"[\s\S]*?glowColor="#6000FF"/);
 });
 
 test('keeps warning rows translucent instead of becoming saturated candy blocks', () => {

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 18:16:13 CST
+ Update content: Restore search result edge highlight to fluorescent lime.
+*/
+/*
  更新时间: 2026-07-02 18:10:27 CST
  更新内容: 合并 GitHub 数据维护按钮玻璃样式与本地品牌、搜索高亮样式改动。
 */
@@ -133,7 +137,7 @@
   z-index:5;
 }
 .search-result-border[data-search-current="true"] .eb-glow-1{
-  border-color:rgba(214,248,74,.34);
+  border-color:rgba(223,255,0,.34);
   filter:blur(.5px);
 }
 .search-result-border[data-search-current="true"] .eb-background-glow{

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 18:16:13 CST
+ Update content: Restore KPI semantic color constants to neon pink and fluorescent lime.
+*/
+/*
  Update time: 2026-07-02 17:09:15 CST
  Update content: Align KPI color constants with the refined softer cyber neon palette.
 */
@@ -7,10 +11,10 @@
  更新内容: 完成率中档颜色支持由主题传入，避免白色主题下 60-80 完成率文字不可读。
 */
 export const COLOR = {
-  up: '#f85bd6',
-  down: '#d6f84a',
-  good: '#d6f84a',
-  warn: '#f85bd6',
+  up: '#ff4fd8',
+  down: '#dfff00',
+  good: '#dfff00',
+  warn: '#ff4fd8',
   txt: '#ffffff',
   muted: '#ffffff',
   line: 'rgba(255,255,255,.10)',

@@ -26,6 +26,10 @@
  更新时间: 2026-07-02 16:25:57 CST
  更新内容: 数据维护模式接入目标、成本、组织、渠道四个独立维护界面。
 */
+/*
+ Update time: 2026-07-02 18:16:13 CST
+ Update content: Restore DotField to solid purple background dots.
+*/
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 
@@ -271,7 +275,7 @@ export default function App() {
           cursorForce={0.15}
           bulgeOnly={false}
           gradientFrom="#6000FF"
-          gradientTo="#ffffff"
+          gradientTo="#6000FF"
           glowColor="#6000FF"
         />
         <div className="fluid-glass-layer" aria-hidden="true">

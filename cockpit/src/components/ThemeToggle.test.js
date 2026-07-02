@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 18:16:13 CST
+ Update content: Align light theme assertions with the restored pink and fluorescent lime palette.
+*/
+/*
  Update time: 2026-07-02 17:18:50 CST
  Update content: Update toolbar search assertion for Word-style result navigation props.
 */
@@ -78,17 +82,17 @@ test('uses a light green theme background with non-white text and chart variable
   assert.doesNotMatch(block, /--chart-(?:text|muted|grid|bar|bar-muted):\s*(?:#fff|#ffffff|rgba\(255,\s*255,\s*255)/i);
 });
 
-test('keeps softened neon pink and lime aligned in light theme', () => {
+test('keeps original neon pink and fluorescent lime aligned in light theme', () => {
   const block = lightThemeBlock();
 
-  assert.match(block, /--up:#f85bd6;/);
-  assert.match(block, /--down:#d6f84a;/);
-  assert.match(block, /--good:#d6f84a;/);
-  assert.match(block, /--warn:#f85bd6;/);
-  assert.match(block, /--up-rgb:248,91,214;/);
-  assert.match(block, /--down-rgb:214,248,74;/);
-  assert.match(block, /--good-rgb:214,248,74;/);
-  assert.match(block, /--warn-rgb:248,91,214;/);
+  assert.match(block, /--up:#ff4fd8;/);
+  assert.match(block, /--down:#dfff00;/);
+  assert.match(block, /--good:#dfff00;/);
+  assert.match(block, /--warn:#ff4fd8;/);
+  assert.match(block, /--up-rgb:255,79,216;/);
+  assert.match(block, /--down-rgb:223,255,0;/);
+  assert.match(block, /--good-rgb:223,255,0;/);
+  assert.match(block, /--warn-rgb:255,79,216;/);
 });
 
 test('charts and KPI progress bars read theme tokens instead of hard-coded white colors', () => {
