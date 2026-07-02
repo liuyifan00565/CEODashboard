@@ -1,3 +1,4 @@
+/* Update time: 2026-07-02 18:21:53 CST  Update content: Increase desktop long recovery card spacing before the completion progress block. */
 /* Update time: 2026-07-02 18:03:34 CST  Update content: Show recovery target subtitles beside the big value on desktop while preserving stacked mobile layout. */
 /* Update time: 2026-07-02 17:50:46 CST  Update content: Return recovery cards to neutral dark glass and keep completion color as restrained edge accents. */
 /* Update time: 2026-07-02 17:39:14 CST  Update content: Drive the recovery card full wash from completion accent colors instead of fixed lime. */
@@ -445,6 +446,10 @@
 
   .kpi-card--with-side .kpi-card__value-row {
     gap: 14px;
+  }
+
+  .kpi-card--with-side .kpi-card__progress {
+    margin-top: 18px;
   }
 
   .kpi-card--with-side .kpi-card__value-row .kpi-card__sub {

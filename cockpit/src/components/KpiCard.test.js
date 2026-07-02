@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 18:21:53 CST
+ Update content: Require long recovery KPI cards to leave more vertical space before the completion progress block.
+*/
+/*
  Update time: 2026-07-02 17:57:37 CST
  Update content: Require desktop recovery target subtitles to sit inline beside the large KPI value.
 */
@@ -177,6 +181,11 @@ test('makes the recovery metric block larger and shifts it left inside the long 
   assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__value\s*\{[\s\S]*?font-size:\s*clamp\(38px,\s*3\.2vw,\s*46px\);/);
   assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__sub,[\s\S]*?\.kpi-card--with-side \.kpi-card__progress-head,[\s\S]*?\.kpi-card--with-side \.kpi-card__hint\s*\{[\s\S]*?font-size:\s*15px;/);
   assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__progress-pct\s*\{[\s\S]*?font-size:\s*16px;/);
+});
+
+test('adds more room between recovery value row and completion progress in long cards', () => {
+  assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__progress\s*\{[\s\S]*?margin-top:\s*18px;/);
+  assert.doesNotMatch(cssSource, /\.kpi-card__progress\s*\{[\s\S]*?margin-top:\s*(?:2[4-9]|[3-9]\d)px;/);
 });
 
 test('places the recovery target subtitle beside the large value on desktop only', () => {
