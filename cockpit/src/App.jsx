@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 16:43:06 CST
+ Update content: Remove the top toolbar date, dimension, and theme controls while keeping search.
+*/
+/*
  Update time: 2026-07-02 15:53:58 CST
  Update content: Use MetallicPaint with the black PNG logo in the top brand area.
 */
@@ -14,10 +18,7 @@ import DotField from './components/DotField/DotField';
 import FluidGlass from './components/FluidGlass/FluidGlass';
 import GlassSurface from './components/GlassSurface/GlassSurface';
 import Sidebar from './components/Sidebar';
-import ThemeToggle from './components/ThemeToggle';
 import ExpandableSearch from './components/ExpandableSearch';
-import DateRangePicker from './components/DateRangePicker';
-import Segmented from './components/Segmented';
 import ElectricBorder from './components/ElectricBorder/ElectricBorder';
 import MetallicPaint from './components/MetallicPaint/MetallicPaint';
 import KpiCard from './components/KpiCard';
@@ -33,12 +34,6 @@ import { META, MENU, getDashboardChannelKey, getDashboardMenuLabel } from './dat
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
 import './dashboard.css';
-
-const DIM_OPTS = [
-  { value: 'year', label: '年' },
-  { value: 'month', label: '月' },
-  { value: 'day', label: '日' },
-];
 
 // 各主体面板的搜索关键字
 const PANEL_KEYWORDS = {
@@ -82,8 +77,8 @@ function makeCompanionCueId(card) {
 
 export default function App() {
   const [activeMenu, setActiveMenu] = useState('overview');
-  const [dim, setDim] = useState('month');
-  const [dateRange, setDateRange] = useState(DEFAULT_FILTER_RANGE);
+  const dim = 'month';
+  const dateRange = DEFAULT_FILTER_RANGE;
   const [searchTerm, setSearchTerm] = useState('');
   const [openCard, setOpenCard] = useState(null);
   const [companionCue, setCompanionCue] = useState(null);
@@ -236,9 +231,6 @@ export default function App() {
               </div>
             </GlassSurface>
             <div className="dash-tools">
-              <DateRangePicker value={dateRange} onChange={(dates) => setDateRange(dates?.length ? [...dates] : DEFAULT_FILTER_RANGE)} />
-              <Segmented options={DIM_OPTS} value={dim} onChange={setDim} />
-              <ThemeToggle />
               <ExpandableSearch onChange={setSearchTerm} />
             </div>
           </header>

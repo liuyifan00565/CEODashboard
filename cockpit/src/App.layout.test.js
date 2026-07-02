@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 16:41:14 CST
+ Update content: Add a layout regression test that keeps only search in the top toolbar.
+*/
+/*
  更新时间: 2026-07-02 15:13:35 CST
  更新内容: 增加首页财务卡片区移除续费率、开户数上移和总投入下移的布局回归测试。
 */
@@ -107,21 +111,23 @@ test('keeps only compute usage in the compute trend chart with clear non-fluores
   assert.doesNotMatch(computePageSource, /name:\s*'总容量'[\s\S]*?type:\s*'line'/);
 });
 
-test('uses the same year month day topbar controls for compute and links them to trend dates', () => {
-  assert.match(appSource, /const DIM_OPTS = \[/);
-  assert.match(appSource, /\{ value: 'year', label: '年' \}/);
-  assert.match(appSource, /\{ value: 'month', label: '月' \}/);
-  assert.match(appSource, /\{ value: 'day', label: '日' \}/);
+test('keeps only search in the top toolbar while data keeps default monthly filters', () => {
+  assert.doesNotMatch(appSource, /import ThemeToggle/);
+  assert.doesNotMatch(appSource, /import DateRangePicker/);
+  assert.doesNotMatch(appSource, /import Segmented/);
+  assert.doesNotMatch(appSource, /const DIM_OPTS = \[/);
   assert.doesNotMatch(appSource, /COMPUTE_PERIOD_OPTS/);
   assert.doesNotMatch(appSource, /computePeriod/);
-  assert.match(appSource, /<DateRangePicker value=\{dateRange\} onChange=\{\(dates\) => setDateRange\(dates\?\.length \? \[\.\.\.dates\] : DEFAULT_FILTER_RANGE\)\} \/>/);
-  assert.match(appSource, /<Segmented options=\{DIM_OPTS\} value=\{dim\} onChange=\{setDim\} \/>/);
-  assert.doesNotMatch(appSource, /isComputePage \? \([\s\S]*?<DateRangePicker/);
+  assert.match(appSource, /const dim = 'month';/);
+  assert.match(appSource, /const dateRange = DEFAULT_FILTER_RANGE;/);
+  assert.match(appSource, /<div className="dash-tools">\s*<ExpandableSearch onChange=\{setSearchTerm\} \/>\s*<\/div>/);
+  assert.doesNotMatch(appSource, /<DateRangePicker/);
+  assert.doesNotMatch(appSource, /<Segmented options=\{DIM_OPTS\}/);
+  assert.doesNotMatch(appSource, /<ThemeToggle/);
   assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim=\{dim\} dateRange=\{dateRange\} \/>/);
   assert.match(computePageSource, /export default function ComputeUsagePage\(\{ searchTerm = '', dim = 'month', dateRange = \[\] \}\)/);
   assert.match(computePageSource, /const periodLabel = DIM_TREND_LABELS\[dim\] \?\? DIM_TREND_LABELS\.month;/);
   assert.match(computePageSource, /const trend = getComputeUsageTrend\(\{ dim, dateRange \}\);/);
-  assert.match(computePageSource, /title=\{`\$\{periodLabel\}算力用量趋势`\}/);
 });
 
 test('uses full-width compute trend sliders that resize from 3 to 15 bars', () => {
