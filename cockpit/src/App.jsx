@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:13:39 CST
+ Update content: Change the top brand title to 福客经营驾驶舱 and the overview subtitle to CEO视角.
+*/
+/*
  Update time: 2026-07-02 16:43:06 CST
  Update content: Remove the top toolbar date, dimension, and theme controls while keeping search.
 */
@@ -225,8 +229,8 @@ export default function App() {
                   />
                 </span>
                 <div className="brand-copy">
-                  <b>福客 · CEO 经营驾驶舱</b>
-                  <small>{META.monthLabel} · {activeMenu === 'overview' ? '月度视角' : activeMenuLabel}</small>
+                  <b>福客经营驾驶舱</b>
+                  <small>{META.monthLabel}｜{activeMenu === 'overview' ? 'CEO视角' : activeMenuLabel}</small>
                 </div>
               </div>
             </GlassSurface>

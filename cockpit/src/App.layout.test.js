@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:12:03 CST
+ Update content: Add a brand title regression test for 福客经营驾驶舱, compact month label, CEO视角 subtitle, and 3D default text.
+*/
+/*
  Update time: 2026-07-02 16:41:14 CST
  Update content: Add a layout regression test that keeps only search in the top toolbar.
 */
@@ -11,6 +15,8 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const appSource = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
+const mockSource = readFileSync(new URL('./data/mock.js', import.meta.url), 'utf8');
+const fluidGlassSource = readFileSync(new URL('./components/FluidGlass/FluidGlass.jsx', import.meta.url), 'utf8');
 const dashboardCss = readFileSync(new URL('./dashboard.css', import.meta.url), 'utf8');
 const kpiCardCss = readFileSync(new URL('./components/KpiCard.css', import.meta.url), 'utf8');
 const kpiModalSource = readFileSync(new URL('./components/KpiModal.jsx', import.meta.url), 'utf8');
@@ -128,6 +134,17 @@ test('keeps only search in the top toolbar while data keeps default monthly filt
   assert.match(computePageSource, /export default function ComputeUsagePage\(\{ searchTerm = '', dim = 'month', dateRange = \[\] \}\)/);
   assert.match(computePageSource, /const periodLabel = DIM_TREND_LABELS\[dim\] \?\? DIM_TREND_LABELS\.month;/);
   assert.match(computePageSource, /const trend = getComputeUsageTrend\(\{ dim, dateRange \}\);/);
+});
+
+test('renders the brand title as 福客经营驾驶舱 with CEO monthly perspective', () => {
+  assert.match(mockSource, /monthLabel: '2026年6月'/);
+  assert.doesNotMatch(mockSource, /monthLabel: '2026 年 6 月'/);
+  assert.match(appSource, /<b>福客经营驾驶舱<\/b>/);
+  assert.match(appSource, /<small>\{META\.monthLabel\}｜\{activeMenu === 'overview' \? 'CEO视角' : activeMenuLabel\}<\/small>/);
+  assert.doesNotMatch(appSource, /福客 · CEO 经营驾驶舱/);
+  assert.doesNotMatch(appSource, /\{META\.monthLabel\} · \{activeMenu === 'overview' \? '月度视角' : activeMenuLabel\}/);
+  assert.match(fluidGlassSource, /福客经营驾驶舱/);
+  assert.doesNotMatch(fluidGlassSource, /福客 · CEO 经营驾驶舱/);
 });
 
 test('uses full-width compute trend sliders that resize from 3 to 15 bars', () => {

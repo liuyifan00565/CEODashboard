@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-02 17:13:39 CST
+ 更新内容: 将顶部品牌副标题月份格式改为 2026年6月，匹配 CEO 视角标题。
+*/
+/*
  更新时间: 2026-07-02 10:18:00 CST
  更新内容: 侧边导航移除销售分析入口，仅保留经营总览和算力用量分析。
 */
@@ -7,7 +11,7 @@ import { calculateRenewalOverview, getRenewalChannelBreakdown } from '../lib/ren
 export const META = {
   title: 'AI 客服销售经营驾驶舱',
   company: '成都福客人工智能',
-  monthLabel: '2026 年 6 月',
+  monthLabel: '2026年6月',
   annualTarget: 5800, // 万元
 };
 
