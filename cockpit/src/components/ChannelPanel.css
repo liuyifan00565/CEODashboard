@@ -1,3 +1,4 @@
+/* Update time: 2026-07-02 17:09:15 CST  Update content: Reduce warning row saturation for the refined neon dashboard palette. */
 /* 更新时间: 2026-07-02 16:52:00 CST  更新内容: 渠道行箭头样式适配统一 AppIcon 线性 SVG。 */
 
 .ch-panel {
@@ -58,8 +59,8 @@
 }
 
 .ch-row--warn {
-  background: rgba(var(--warn-rgb), 0.09);
-  border-color: rgba(var(--warn-rgb), 0.26);
+  background: rgba(var(--warn-rgb), 0.07);
+  border-color: rgba(var(--warn-rgb), 0.2);
 }
 
 .ch-row-top {
@@ -94,9 +95,9 @@
   padding: 3px 7px;
   border-radius: 6px;
   color: var(--warn);
-  background: rgba(var(--warn-rgb), 0.14);
-  border: 1px solid rgba(var(--warn-rgb), 0.36);
-  box-shadow: 0 0 14px rgba(var(--warn-rgb), 0.14);
+  background: rgba(var(--warn-rgb), 0.11);
+  border: 1px solid rgba(var(--warn-rgb), 0.28);
+  box-shadow: 0 0 12px rgba(var(--warn-rgb), 0.1);
   white-space: nowrap;
 }
 
