@@ -1,7 +1,7 @@
 # AGENTS.md
 
-更新时间: 2026-07-02 16:05:12
-更新内容: 增加所有卡片和按钮必须优先复用统一玻璃背景与样式体系的规则
+更新时间: 2026-07-02 17:36:08
+更新内容: 增加每次项目修改后必须同时提交并推送到两个 GitHub 仓库的规则
 
 This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
@@ -14,6 +14,7 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 - 每次提交应尽量保持单一目的，只包含本次任务相关文件。
 - Git 提交说明中必须包含用户本次发出的原始提示词，方便回看当时执行的命令和需求。
 - 如果工作区已有未提交改动，提交前必须区分本次修改和既有改动，不要把无关内容混入同一个提交。
+- 每次修改项目文件后，完成校验并提交后必须同时推送到 `origin`（`liuyifan00565/CEODashboard`）和 `ttoswar`（`ttoswar/CEODashboard`）两个 GitHub 远端；推送前后都要确认两个远端分支状态，避免漏推或覆盖他人提交。
 
 ## Docker 服务重启规则
 
