@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 19:06:16 CST
- 更新内容: 客户算力明细排行增加账号类型、销售负责人、客成负责人表头下拉筛选。
+ 更新时间: 2026-07-02 10:52:16 CST
+ 更新内容: 客户算力明细排行移除顶部排序卡片，改为数值列表头互斥排序并保持筛选后排序。
 */
 import { useMemo, useState } from 'react';
 
@@ -31,9 +31,9 @@ const DIM_TREND_LABELS = {
 const MIN_VISIBLE_TREND_BARS = 3;
 const MAX_VISIBLE_TREND_BARS = 15;
 const CUSTOMER_SORT_FIELDS = [
-  { key: 'usage', label: '算力用量 / 全部', getValue: (row) => row.usage },
-  { key: 'balance', label: '算力余额 / 全部', getValue: (row) => row.balance },
-  { key: 'reply', label: '平均回复率 / 全部', getValue: (row) => row.averageReplyRate },
+  { key: 'usage', label: '算力用量', getValue: (row) => row.usage },
+  { key: 'balance', label: '算力余额', getValue: (row) => row.balance },
+  { key: 'reply', label: '平均回复率', getValue: (row) => row.averageReplyRate },
 ];
 const CUSTOMER_SORT_DIRECTIONS = { asc: '升序', desc: '降序' };
 const CUSTOMER_COLUMN_FILTER_ALL = 'all';
@@ -798,6 +798,39 @@ function CustomerColumnHeader({
   );
 }
 
+function CustomerSortableHeader({
+  label,
+  sortFieldKey,
+  activeSortField,
+  activeSortDirection,
+  onSortChange,
+}) {
+  const isActive = activeSortField.key === sortFieldKey;
+  const directionLabel = isActive ? CUSTOMER_SORT_DIRECTIONS[activeSortDirection] : '未排序';
+  const nextDirectionLabel = isActive && activeSortDirection === 'desc' ? '升序' : '降序';
+
+  return (
+    <th>
+      <span className="cpu-sort-header">
+        <button
+          type="button"
+          className={`cpu-sort-header__button${isActive ? ' cpu-sort-header__button--active' : ''}`}
+          aria-pressed={isActive}
+          aria-label={`${label}排序，当前${directionLabel}，点击切换为${nextDirectionLabel}`}
+          title={`${label} · ${isActive ? directionLabel : '点击按降序排序'}`}
+          onClick={() => onSortChange(sortFieldKey)}
+        >
+          <span className="cpu-sort-header__label">{label}</span>
+          <span className="cpu-sort-header__arrows" aria-hidden="true">
+            <span className={`cpu-sort-header__arrow cpu-sort-header__arrow--up${isActive && activeSortDirection === 'asc' ? ' cpu-sort-header__arrow--active' : ''}`} />
+            <span className={`cpu-sort-header__arrow cpu-sort-header__arrow--down${isActive && activeSortDirection === 'desc' ? ' cpu-sort-header__arrow--active' : ''}`} />
+          </span>
+        </button>
+      </span>
+    </th>
+  );
+}
+
 export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateRange = [] }) {
   const tokens = useThemeTokens();
   const [customerSort, setCustomerSort] = useState('usage-desc');
@@ -1009,30 +1042,6 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
         active={matchesTerm(SEARCH_KEYWORDS.customer, searchTerm)}
       >
         <div className="cpu-customer-toolbar">
-          <div className="cpu-customer-filters" aria-label="客户明细排序">
-            {CUSTOMER_SORT_FIELDS.map((field) => {
-              const isActive = activeSortField.key === field.key;
-              const directionLabel = CUSTOMER_SORT_DIRECTIONS[activeSortDirection];
-
-              return (
-                <button
-                  key={field.key}
-                  type="button"
-                  className={`cpu-sort-card${isActive ? ' cpu-sort-card--active' : ''}`}
-                  aria-pressed={isActive}
-                  aria-label={`${field.label}${isActive ? `，当前${directionLabel}` : '，点击按降序排序'}`}
-                  title={`${field.label}${isActive ? ` · ${directionLabel}` : ' · 点击排序'}`}
-                  onClick={() => updateCustomerSort(field.key)}
-                >
-                  <span className="cpu-sort-card__label">{field.label}</span>
-                  <span className="cpu-sort-card__arrows" aria-hidden="true">
-                    <span className={`cpu-sort-card__arrow cpu-sort-card__arrow--up${isActive && activeSortDirection === 'asc' ? ' cpu-sort-card__arrow--active' : ''}`} />
-                    <span className={`cpu-sort-card__arrow cpu-sort-card__arrow--down${isActive && activeSortDirection === 'desc' ? ' cpu-sort-card__arrow--active' : ''}`} />
-                  </span>
-                </button>
-              );
-            })}
-          </div>
           <span className="cpu-customer-range">
             {formatInt(customerRangeStart)}-{formatInt(customerEndIndex)} / {formatInt(customerTotal)}
           </span>
@@ -1071,9 +1080,27 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
                   setOpenFilter={setOpenCustomerColumnFilter}
                   onChange={updateCustomerColumnFilter}
                 />
-                <th>算力用量</th>
-                <th>算力余额</th>
-                <th>平均回复率</th>
+                <CustomerSortableHeader
+                  label="算力用量"
+                  sortFieldKey="usage"
+                  activeSortField={activeSortField}
+                  activeSortDirection={activeSortDirection}
+                  onSortChange={updateCustomerSort}
+                />
+                <CustomerSortableHeader
+                  label="算力余额"
+                  sortFieldKey="balance"
+                  activeSortField={activeSortField}
+                  activeSortDirection={activeSortDirection}
+                  onSortChange={updateCustomerSort}
+                />
+                <CustomerSortableHeader
+                  label="平均回复率"
+                  sortFieldKey="reply"
+                  activeSortField={activeSortField}
+                  activeSortDirection={activeSortDirection}
+                  onSortChange={updateCustomerSort}
+                />
               </tr>
             </thead>
             <tbody>

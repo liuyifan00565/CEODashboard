@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 19:06:16 CST
- 更新内容: 增加算力客户排行账号类型、销售负责人、客成负责人表头下拉筛选的回归测试。
+ 更新时间: 2026-07-02 10:59:01 CST
+ 更新内容: 增加算力客户排行表头互斥排序、筛选后排序联动和表格上移的回归测试。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -236,11 +236,14 @@ test('uses the overview half-ring palette for compute donut charts', () => {
   assert.match(computePageSource, /buildPieOption\(\{ data: distributionPieData, tokens, unitLabel: '客户占比权重' \}\)/);
 });
 
-test('uses metric sort cards and pagination in compute customer ranking', () => {
+test('uses mutually exclusive table-header sorting and pagination in compute customer ranking', () => {
   assert.match(computePageSource, /CUSTOMER_SORT_FIELDS = \[/);
-  assert.match(computePageSource, /key:\s*'usage'[\s\S]*?label:\s*'算力用量 \/ 全部'[\s\S]*?getValue:\s*\(row\) => row\.usage/);
-  assert.match(computePageSource, /key:\s*'balance'[\s\S]*?label:\s*'算力余额 \/ 全部'[\s\S]*?getValue:\s*\(row\) => row\.balance/);
-  assert.match(computePageSource, /key:\s*'reply'[\s\S]*?label:\s*'平均回复率 \/ 全部'[\s\S]*?getValue:\s*\(row\) => row\.averageReplyRate/);
+  assert.match(computePageSource, /key:\s*'usage'[\s\S]*?label:\s*'算力用量'[\s\S]*?getValue:\s*\(row\) => row\.usage/);
+  assert.match(computePageSource, /key:\s*'balance'[\s\S]*?label:\s*'算力余额'[\s\S]*?getValue:\s*\(row\) => row\.balance/);
+  assert.match(computePageSource, /key:\s*'reply'[\s\S]*?label:\s*'平均回复率'[\s\S]*?getValue:\s*\(row\) => row\.averageReplyRate/);
+  assert.doesNotMatch(computePageSource, /算力用量 \/ 全部/);
+  assert.doesNotMatch(computePageSource, /算力余额 \/ 全部/);
+  assert.doesNotMatch(computePageSource, /平均回复率 \/ 全部/);
   assert.match(computePageSource, /CUSTOMER_SORT_DIRECTIONS = \{[\s\S]*?asc:\s*'升序'[\s\S]*?desc:\s*'降序'/);
   assert.match(computePageSource, /CUSTOMER_COLUMN_FILTER_ALL = 'all';/);
   assert.match(computePageSource, /CUSTOMER_COLUMN_FILTERS = \[/);
@@ -255,6 +258,12 @@ test('uses metric sort cards and pagination in compute customer ranking', () => 
   assert.match(computePageSource, /const \[openCustomerColumnFilter,\s*setOpenCustomerColumnFilter\] = useState\(null\);/);
   assert.match(computePageSource, /function getCustomerSortState\(sortKey = 'usage-desc'\)/);
   assert.match(computePageSource, /const sortMultiplier = sortDirection === 'asc' \? 1 : -1;/);
+  assert.match(computePageSource, /const filteredCustomers = useMemo\(\s*\(\) => filterCustomerRowsByColumnFilters\(customerRows, customerColumnFilters\),/);
+  assert.match(computePageSource, /const sortedCustomers = useMemo\(\s*\(\) => sortCustomerRows\(filteredCustomers, customerSort\),/);
+  assert.match(computePageSource, /function CustomerSortableHeader\(/);
+  assert.match(computePageSource, /const isActive = activeSortField\.key === sortFieldKey;/);
+  assert.match(computePageSource, /aria-pressed=\{isActive\}/);
+  assert.match(computePageSource, /onClick=\{\(\) => onSortChange\(sortFieldKey\)\}/);
   assert.doesNotMatch(computePageSource, /CUSTOMER_FILTER_ALL/);
   assert.doesNotMatch(computePageSource, /customerVersionFilter/);
   assert.doesNotMatch(computePageSource, /customerSalesFilter/);
@@ -268,9 +277,9 @@ test('uses metric sort cards and pagination in compute customer ranking', () => 
   assert.match(computePageSource, /customerPageCount = Math\.max\(1, Math\.ceil\(customerTotal \/ customerPageSize\)\);/);
   assert.match(computePageSource, /customerPageRows\.map\(\(customer\) => \(/);
   assert.match(computePageSource, /className="cpu-customer-toolbar"/);
-  assert.match(computePageSource, /className="cpu-customer-filters"/);
-  assert.match(computePageSource, /className=\{`cpu-sort-card/);
-  assert.match(computePageSource, /className="cpu-sort-card__arrows"/);
+  assert.doesNotMatch(computePageSource, /className="cpu-customer-filters"/);
+  assert.doesNotMatch(computePageSource, /className=\{`cpu-sort-card/);
+  assert.doesNotMatch(computePageSource, /className="cpu-sort-card__arrows"/);
   assert.doesNotMatch(computePageSource, /className="cpu-select-field"/);
   assert.doesNotMatch(computePageSource, /className="cpu-select-control"/);
   assert.doesNotMatch(computePageSource, /<span className="cpu-control-label">使用版本:<\/span>/);
@@ -279,6 +288,9 @@ test('uses metric sort cards and pagination in compute customer ranking', () => 
   assert.match(computePageSource, /<CustomerColumnHeader\s+label="账号类型"\s+filterKey="accountType"/);
   assert.match(computePageSource, /<CustomerColumnHeader\s+label="销售负责人"\s+filterKey="salesOwner"/);
   assert.match(computePageSource, /<CustomerColumnHeader\s+label="客成负责人"\s+filterKey="successOwner"/);
+  assert.match(computePageSource, /<CustomerSortableHeader\s+label="算力用量"\s+sortFieldKey="usage"/);
+  assert.match(computePageSource, /<CustomerSortableHeader\s+label="算力余额"\s+sortFieldKey="balance"/);
+  assert.match(computePageSource, /<CustomerSortableHeader\s+label="平均回复率"\s+sortFieldKey="reply"/);
   assert.match(computePageSource, /className="cpu-th-filter"/);
   assert.match(computePageSource, /className=\{`cpu-column-filter/);
   assert.match(computePageSource, /className="cpu-column-filter__menu"/);
@@ -290,10 +302,12 @@ test('uses metric sort cards and pagination in compute customer ranking', () => 
   assert.match(computePageSource, /\{customerPageSize\}条\/页/);
   assert.doesNotMatch(computePageSource, /className=\{`cpu-page-size__button/);
   assert.match(computePageCss, /\.cpu-customer-toolbar \{/);
-  assert.match(computePageCss, /\.cpu-customer-filters \{/);
-  assert.match(computePageCss, /\.cpu-sort-card \{/);
-  assert.match(computePageCss, /\.cpu-sort-card__arrows \{/);
-  assert.match(computePageCss, /\.cpu-sort-card__arrow--active \{/);
+  assert.doesNotMatch(computePageCss, /\.cpu-customer-filters \{/);
+  assert.doesNotMatch(computePageCss, /\.cpu-sort-card \{/);
+  assert.match(computePageCss, /\.cpu-sort-header \{/);
+  assert.match(computePageCss, /\.cpu-sort-header__button \{/);
+  assert.match(computePageCss, /\.cpu-sort-header__button--active \{/);
+  assert.match(computePageCss, /\.cpu-sort-header__arrow--active \{/);
   assert.doesNotMatch(computePageCss, /\.cpu-select-control \{/);
   assert.match(computePageCss, /\.cpu-page-size-select \{/);
   assert.match(computePageCss, /\.cpu-page-size-menu \{/);
@@ -305,6 +319,12 @@ test('uses metric sort cards and pagination in compute customer ranking', () => 
   assert.doesNotMatch(computePageCss, /\.cpu-page-size__button/);
   assert.match(computePageCss, /\.cpu-pagination \{/);
   assert.match(computePageCss, /\.cpu-page-button--active/);
+});
+
+test('moves the whole compute customer ranking table upward', () => {
+  const customerTableWrapBlock = cssRuleBody(computePageCss, '.cpu-panel--customers .cpu-table-wrap');
+
+  assert.match(customerTableWrapBlock, /margin-top:\s*-12px;/);
 });
 
 test('removes compute resource utilization from the compute analysis page', () => {

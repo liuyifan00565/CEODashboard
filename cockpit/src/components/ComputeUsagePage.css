@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 19:06:16 CST  更新内容: 算力客户明细排行增加账号类型、销售负责人、客成负责人表头下拉筛选。 */
+/* 更新时间: 2026-07-02 10:59:01 CST  更新内容: 新增数值列表头互斥排序样式，并将客户排行表格上移 12px。 */
 
 .cpu-page {
   display: flex;
@@ -246,17 +246,9 @@
 .cpu-customer-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: 14px;
-  min-width: 0;
-}
-
-.cpu-customer-filters {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
   min-width: 0;
 }
 
@@ -268,52 +260,46 @@
   white-space: nowrap;
 }
 
-.cpu-sort-card {
+.cpu-sort-header {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  vertical-align: middle;
+}
+
+.cpu-sort-header__button {
   appearance: none;
-  position: relative;
-  display: inline-grid;
-  grid-template-columns: minmax(0, 1fr) 12px;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  min-width: 164px;
-  height: 36px;
-  padding: 0 11px 0 13px;
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: 6px;
-  background:
-    linear-gradient(180deg, rgba(239,251,255,.105), rgba(239,251,255,.045)),
-    rgba(255,255,255,.042);
-  color: var(--txt);
+  gap: 7px;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--faint);
   cursor: pointer;
   font: inherit;
-  font-size: 13px;
-  font-weight: 720;
+  font-size: 12px;
+  font-weight: 700;
   outline: none;
   text-align: left;
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 12px 28px rgba(0,0,0,.16);
-  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, color .18s ease;
+  transition: color .18s ease, filter .18s ease;
 }
 
-.cpu-sort-card:hover,
-.cpu-sort-card:focus-visible {
-  border-color: rgba(255,255,255,.34);
+.cpu-sort-header__button:hover,
+.cpu-sort-header__button:focus-visible,
+.cpu-sort-header__button--active {
   color: var(--txt);
-  background:
-    linear-gradient(180deg, rgba(239,251,255,.15), rgba(239,251,255,.065)),
-    rgba(255,255,255,.058);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 14px 34px rgba(0,0,0,.24);
 }
 
-.cpu-sort-card--active {
-  border-color: rgba(239,251,255,.36);
-  background:
-    linear-gradient(180deg, rgba(239,251,255,.18), rgba(239,251,255,.07)),
-    rgba(255,255,255,.07);
+.cpu-sort-header__button:focus-visible {
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px rgba(239,251,255,.16);
 }
 
-.cpu-sort-card__label {
+.cpu-sort-header__label {
   min-width: 0;
   overflow: hidden;
   color: inherit;
@@ -321,33 +307,34 @@
   white-space: nowrap;
 }
 
-.cpu-sort-card__arrows {
+.cpu-sort-header__arrows {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
+  pointer-events: none;
 }
 
-.cpu-sort-card__arrow {
+.cpu-sort-header__arrow {
   width: 0;
   height: 0;
-  opacity: .36;
+  opacity: .28;
   transition: opacity .18s ease, filter .18s ease;
 }
 
-.cpu-sort-card__arrow--up {
-  border-right: 4px solid transparent;
-  border-bottom: 5px solid rgba(239,251,255,.8);
-  border-left: 4px solid transparent;
+.cpu-sort-header__arrow--up {
+  border-right: 3.5px solid transparent;
+  border-bottom: 4.5px solid rgba(239,251,255,.78);
+  border-left: 3.5px solid transparent;
 }
 
-.cpu-sort-card__arrow--down {
-  border-top: 5px solid rgba(239,251,255,.8);
-  border-right: 4px solid transparent;
-  border-left: 4px solid transparent;
+.cpu-sort-header__arrow--down {
+  border-top: 4.5px solid rgba(239,251,255,.78);
+  border-right: 3.5px solid transparent;
+  border-left: 3.5px solid transparent;
 }
 
-.cpu-sort-card__arrow--active {
+.cpu-sort-header__arrow--active {
   opacity: 1;
   filter: drop-shadow(0 0 6px rgba(239,251,255,.45));
 }
@@ -357,6 +344,10 @@
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 14px;
+}
+
+.cpu-panel--customers .cpu-table-wrap {
+  margin-top: -12px;
 }
 
 .cpu-table {
@@ -799,13 +790,7 @@
     flex-direction: column;
   }
 
-  .cpu-customer-toolbar,
-  .cpu-customer-filters,
-  .cpu-sort-card {
+  .cpu-customer-toolbar {
     width: 100%;
-  }
-
-  .cpu-sort-card {
-    min-width: 0;
   }
 }
