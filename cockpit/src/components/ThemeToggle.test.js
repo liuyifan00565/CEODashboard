@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 18:49:46 CST
+ Update content: Expect the right toolbar to keep data maintenance immediately before expandable search.
+*/
+/*
  Update time: 2026-07-02 18:16:13 CST
  Update content: Align light theme assertions with the restored pink and fluorescent lime palette.
 */
@@ -54,7 +58,7 @@ test('defines a circular GlassSurface theme toggle with persistent theme state',
 test('does not render the theme toggle in the top toolbar', () => {
   assert.doesNotMatch(appSource, /import ThemeToggle from '\.\/components\/ThemeToggle';/);
   assert.doesNotMatch(appSource, /<ThemeToggle\s*\/>/);
-  assert.match(appSource, /<div className="dash-tools">\s*<ExpandableSearch[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
+  assert.match(appSource, /<div className="dash-tools">\s*<GlassSurface[\s\S]*?className="maintenance-glass"[\s\S]*?<\/GlassSurface>\s*<ExpandableSearch[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
 });
 
 test('provides dark and light theme variable contracts', () => {
