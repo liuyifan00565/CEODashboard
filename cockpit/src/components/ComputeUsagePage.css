@@ -1,7 +1,8 @@
 /*
- 更新时间: 2026-07-02 11:03:05 CST
- 更新内容: 为客户排行表格上移 12px 的最新改动补充备注说明。
+ 更新时间: 2026-07-02 11:52:30 CST
+ 更新内容: 去除算力用量分析顶部 KPI 卡片悬浮时的流光边框动画。
  备注: 表格上移仅作用于客户算力明细排行的表格容器，不影响其它算力分析表格或分页布局。
+ 备注: 顶部 KPI 卡片悬浮时仅保留轻微抬升和阴影，不再显示流光边框。
 */
 
 .cpu-page {
@@ -23,15 +24,8 @@
   min-width: 0;
 }
 
-@property --cpu-kpi-flow-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
 .cpu-kpi {
   --cpu-accent: rgba(255,255,255,.78);
-  --cpu-kpi-flow-angle: 0deg;
   position: relative;
   isolation: isolate;
   width: 100%;
@@ -50,37 +44,6 @@
   backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
   transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
-}
-
-.cpu-kpi::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  padding: 1.5px;
-  border-radius: inherit;
-  pointer-events: none;
-  background: conic-gradient(
-    from var(--cpu-kpi-flow-angle),
-    transparent 0deg,
-    transparent 48deg,
-    rgba(255,255,255,.12) 74deg,
-    rgba(255,255,255,.95) 94deg,
-    rgba(244,114,182,.92) 112deg,
-    rgba(192,132,252,.58) 134deg,
-    transparent 166deg,
-    transparent 360deg
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity .26s ease;
 }
 
 .cpu-kpi > * {
@@ -717,24 +680,6 @@
     box-shadow: 0 22px 58px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.24);
   }
 
-  .cpu-kpi:hover::after,
-  .cpu-kpi:focus-within::after {
-    opacity: 1;
-    animation: cpuKpiFlow 2.6s linear infinite;
-  }
-}
-
-@keyframes cpuKpiFlow {
-  to {
-    --cpu-kpi-flow-angle: 360deg;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cpu-kpi:hover::after,
-  .cpu-kpi:focus-within::after {
-    animation: none;
-  }
 }
 
 @media (max-width: 1280px) {
