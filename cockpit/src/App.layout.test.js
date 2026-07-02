@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 16:51:18 CST
- 更新内容: 增加维护页题头范围文本改为同一行点分隔的回归测试。
+ 更新时间: 2026-07-02 17:32:46 CST
+ 更新内容: 增加维护页顶部、内容卡片和表格恢复为算力页原透明玻璃样式的回归测试。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -209,21 +209,30 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   const buttonBlock = cssRuleBody(maintenancePageCss, '.mnt-btn');
   const primaryButtonBlock = cssRuleBody(maintenancePageCss, '.mnt-btn--primary');
   const inputBlock = cssRuleBody(maintenancePageCss, '.mnt-control');
-  const pageBlock = cssRuleBody(maintenancePageCss, '.mnt-page');
   const toolbarBlock = cssRuleBody(maintenancePageCss, '.mnt-toolbar');
   const actionsBlock = cssRuleBody(maintenancePageCss, '.mnt-actions');
   const toolbarControlBlock = cssRuleBody(maintenancePageCss, '.mnt-toolbar .mnt-control');
   const targetLayoutBlock = cssRuleBody(maintenancePageCss, '.mnt-layout--target');
   const matrixWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap');
-  const recoveryCardBlock = cssRuleBody(kpiCardCss, '.kpi-card--recovery');
-  const recoveryGlowBlock = cssRuleBody(kpiCardCss, '.kpi-card--recovery::before');
-  const surfaceGlowBlock = cssRuleBody(maintenancePageCss, '.mnt-surface::before');
+  const computePanelBlock = cssRuleBody(computePageCss, '.cpu-panel');
   const progressBlock = cssRuleBody(maintenancePageCss, '.mnt-progress');
   const progressGoodBlock = cssRuleBody(maintenancePageCss, '.mnt-progress--good span');
 
-  assert.match(maintenancePageSource, /import GlassSurface from '\.\/GlassSurface\/GlassSurface';/);
+  const toolbarSurfaceBlock = cssRuleBody(maintenancePageCss, '.mnt-toolbar-surface');
+
+  assert.doesNotMatch(maintenancePageSource, /import GlassSurface from '\.\/GlassSurface\/GlassSurface';/);
+  assert.match(maintenancePageSource, /function MaintenanceToolbarSurface/);
   assert.match(maintenancePageSource, /function MaintenanceSurface/);
-  assert.match(maintenancePageCss, /\.mnt-glass \.glass-surface__content\{padding:0;display:block\}/);
+  assert.match(maintenancePageSource, /<MaintenanceToolbarSurface className="mnt-toolbar-glass">[\s\S]*?<section className="mnt-toolbar"/);
+  assert.match(maintenancePageSource, /<div className=\{`mnt-toolbar-surface \$\{className\}`\.trim\(\)\}>\{children\}<\/div>/);
+  assert.match(maintenancePageSource, /<div className=\{`mnt-surface-shell \$\{className\}`\.trim\(\)\}>\s*<div className="mnt-surface">\{children\}<\/div>\s*<\/div>/);
+  assert.doesNotMatch(maintenancePageSource, /<MaintenanceSurface className="mnt-toolbar-glass">/);
+  assert.match(toolbarSurfaceBlock, /border:\s*1px solid var\(--line-2\);/);
+  assert.match(toolbarSurfaceBlock, /height:\s*auto;/);
+  assert.match(toolbarSurfaceBlock, /background:\s*transparent;/);
+  assert.match(toolbarSurfaceBlock, /backdrop-filter:\s*var\(--glass-blur\);/);
+  assert.match(toolbarSurfaceBlock, /box-shadow:\s*var\(--glass-shadow\);/);
+  assert.doesNotMatch(toolbarSurfaceBlock, /var\(--glass-panel-bg\);/);
   assert.match(maintenancePageSource, /<h2>\{title\}<span className="mnt-title-scope"> · \{meta\.scope\}<\/span><\/h2>/);
   assert.doesNotMatch(maintenancePageSource, /<h2>\{title\}<\/h2>\s*<span>\{meta\.scope\}<\/span>/);
   assert.match(maintenancePageCss, /\.mnt-title-scope \{[\s\S]*?display:\s*inline;[\s\S]*?font-size:\s*12px;/);
@@ -240,18 +249,20 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.match(targetLayoutBlock, /grid-template-columns:\s*minmax\(190px,\s*230px\) minmax\(0,\s*1fr\);/);
   assert.match(maintenancePageCss, /\.mnt-layout--cost,\s*[\s\S]*?\.mnt-layout--channel \{[\s\S]*?grid-template-columns:\s*minmax\(220px,\s*260px\) minmax\(0,\s*1fr\);/);
   assert.match(maintenancePageCss, /\.mnt-layout--org \{[\s\S]*?grid-template-columns:\s*minmax\(220px,\s*260px\) minmax\(0,\s*1fr\);/);
-  assert.match(pageBlock, /--kpi-accent:\s*var\(--good\);/);
-  assert.match(recoveryCardBlock, /radial-gradient\(circle at 20% 48%,\s*color-mix\(in srgb,\s*var\(--kpi-accent\) 24%,\s*transparent\),\s*transparent 40%\),\s*[\s\S]*?linear-gradient\(120deg,\s*rgba\(230,251,255,\.055\),\s*transparent 48%\),\s*[\s\S]*?transparent;/);
-  assert.match(panelBlock, /radial-gradient\(circle at 20% 48%,\s*color-mix\(in srgb,\s*var\(--kpi-accent\) 24%,\s*transparent\),\s*transparent 40%\),\s*[\s\S]*?linear-gradient\(120deg,\s*rgba\(230,251,255,\.055\),\s*transparent 48%\),\s*[\s\S]*?transparent;/);
+  assert.match(computePanelBlock, /background:\s*transparent;/);
+  assert.match(panelBlock, /background:\s*transparent;/);
   assert.doesNotMatch(panelBlock, /var\(--panel\);/);
-  assert.match(recoveryGlowBlock, /background:\s*radial-gradient\(circle,\s*color-mix\(in srgb,\s*var\(--kpi-accent\) 30%,\s*transparent\),\s*transparent 66%\);/);
-  assert.match(surfaceGlowBlock, /background:\s*radial-gradient\(circle,\s*color-mix\(in srgb,\s*var\(--kpi-accent\) 30%,\s*transparent\),\s*transparent 66%\);/);
-  assert.match(surfaceGlowBlock, /filter:\s*blur\(12px\);/);
-  assert.match(surfaceGlowBlock, /opacity:\s*\.86;/);
+  assert.doesNotMatch(panelBlock, /var\(--glass-panel-bg\);/);
+  assert.doesNotMatch(panelBlock, /radial-gradient\(circle at 20% 48%/);
+  assert.doesNotMatch(maintenancePageCss, /\.mnt-surface::before/);
   assert.match(panelBlock, /border:\s*1px solid var\(--line-2\);/);
   assert.match(panelBlock, /backdrop-filter:\s*var\(--glass-blur\);/);
   assert.match(panelBlock, /box-shadow:\s*var\(--glass-shadow\);/);
-  assert.match(matrixWrapBlock, /background:\s*var\(--panel-2\);/);
+  assert.match(matrixWrapBlock, /background:\s*transparent;/);
+  assert.match(maintenancePageCss, /\.mnt-matrix th,\s*[\s\S]*?\.mnt-user-table th \{[\s\S]*?background:\s*rgba\(0,0,0,\.16\);[\s\S]*?backdrop-filter:\s*blur\(14px\);/);
+  assert.match(maintenancePageCss, /\.mnt-matrix th:first-child,\s*[\s\S]*?\.mnt-matrix td:first-child \{[\s\S]*?background:\s*rgba\(0,0,0,\.14\);[\s\S]*?backdrop-filter:\s*blur\(14px\);/);
+  assert.match(maintenancePageCss, /\.mnt-row--summary td \{[\s\S]*?background:\s*transparent;/);
+  assert.match(maintenancePageCss, /\.mnt-matrix tbody tr:hover td,\s*[\s\S]*?\.mnt-user-table tbody tr:hover td \{[\s\S]*?background:\s*var\(--glass-cell-hover\);/);
   assert.match(maintenancePageSource, /<ProgressLine period=\{period\} \/>/);
   assert.match(progressBlock, /height:\s*7px;/);
   assert.match(progressBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.09\);/);
@@ -265,7 +276,6 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.match(inputBlock, /background:\s*var\(--glass-cell\);/);
   assert.match(maintenancePageCss, /\.mnt-edit-row,\s*[\s\S]*?\.mnt-channel-manage-row \{[\s\S]*?background:\s*var\(--panel-2\);/);
   assert.doesNotMatch(maintenancePageCss, /\.mnt-edit-row,[\s\S]*?background:\s*transparent;/);
-  assert.doesNotMatch(maintenancePageCss, /\.mnt-row--summary td \{[\s\S]*?background:\s*transparent;/);
   assert.doesNotMatch(maintenancePageCss, /\.mnt-row--summary td \{[\s\S]*?background:\s*rgba\(var\(--good-rgb\)/);
   assert.doesNotMatch(maintenancePageCss, /#fff;/);
   assert.doesNotMatch(maintenancePageCss, /box-shadow:\s*0 5px 14px rgba\(216, 58, 215/);

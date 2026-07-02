@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 16:51:18 CST
- 更新内容: 维护页题头范围文本改为跟标题同一行点分隔显示。
+ 更新时间: 2026-07-02 17:24:02 CST
+ 更新内容: 顶部工具栏和维护内容卡片统一使用原算力用量分析页面的透明玻璃背景。
 */
 import { useMemo, useState } from 'react';
 
@@ -17,7 +17,6 @@ import {
   TARGET_MAINTENANCE_ROWS,
   getMaintenancePageMeta,
 } from '../data/mock';
-import GlassSurface from './GlassSurface/GlassSurface';
 import './MaintenancePage.css';
 
 const YEARS = [2024, 2025, 2026, 2027];
@@ -52,21 +51,17 @@ function nowLabel() {
   return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
 }
 
+function MaintenanceToolbarSurface({ className = '', children }) {
+  return (
+    <div className={`mnt-toolbar-surface ${className}`.trim()}>{children}</div>
+  );
+}
+
 function MaintenanceSurface({ className = '', children }) {
   return (
-    <GlassSurface
-      width="100%"
-      height="auto"
-      borderRadius={18}
-      brightness={58}
-      blur={14}
-      displace={1}
-      backgroundOpacity={0.06}
-      distortionScale={-120}
-      className={`mnt-glass ${className}`.trim()}
-    >
+    <div className={`mnt-surface-shell ${className}`.trim()}>
       <div className="mnt-surface">{children}</div>
-    </GlassSurface>
+    </div>
   );
 }
 
@@ -122,7 +117,7 @@ function MaintenanceToolbar({ activePage, status, onBack, onDirty, onSave }) {
   };
 
   return (
-    <MaintenanceSurface className="mnt-toolbar-glass">
+    <MaintenanceToolbarSurface className="mnt-toolbar-glass">
       <section className="mnt-toolbar" aria-label={`${title}工具栏`}>
         <div className="mnt-title-block">
           <h2>{title}<span className="mnt-title-scope"> · {meta.scope}</span></h2>
@@ -133,7 +128,7 @@ function MaintenanceToolbar({ activePage, status, onBack, onDirty, onSave }) {
           <SaveBadge status={status} />
         </div>
       </section>
-    </MaintenanceSurface>
+    </MaintenanceToolbarSurface>
   );
 }
 

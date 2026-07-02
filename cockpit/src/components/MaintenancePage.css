@@ -1,9 +1,8 @@
 /*
- 更新时间: 2026-07-02 16:51:18 CST
- 更新内容: 维护页顶部标题范围改为同一行点分隔显示，并移除题头下方小字。
+ 更新时间: 2026-07-02 17:32:10 CST
+ 更新内容: 维护页表格外壳、表头、首列和汇总行恢复为算力页原透明玻璃样式。
 */
 .mnt-page {
-  --kpi-accent: var(--good);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -11,12 +10,26 @@
   color: var(--txt);
 }
 
-.mnt-glass {
-  align-items: stretch;
-  justify-content: stretch;
+.mnt-toolbar-surface {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  border: 1px solid var(--line-2);
+  border-radius: 18px;
+  background: transparent;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
 }
 
-.mnt-glass .glass-surface__content{padding:0;display:block}
+.mnt-surface-shell {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  border-radius: 18px;
+}
 
 .mnt-surface {
   position: relative;
@@ -26,27 +39,11 @@
   height: 100%;
   border: 1px solid var(--line-2);
   border-radius: inherit;
-  background:
-    radial-gradient(circle at 20% 48%, color-mix(in srgb, var(--kpi-accent) 24%, transparent), transparent 40%),
-    linear-gradient(120deg, rgba(230,251,255,.055), transparent 48%),
-    transparent;
+  background: transparent;
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
   overflow: hidden;
-}
-
-.mnt-surface::before {
-  content: "";
-  position: absolute;
-  inset: 14px auto 14px 10px;
-  width: 330px;
-  border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--kpi-accent) 30%, transparent), transparent 66%);
-  filter: blur(12px);
-  opacity: .86;
-  pointer-events: none;
-  z-index: 0;
 }
 
 .mnt-surface > * {
@@ -330,7 +327,7 @@
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 14px;
-  background: var(--panel-2);
+  background: transparent;
 }
 
 .mnt-matrix-wrap--short {
@@ -374,7 +371,9 @@
   top: 0;
   z-index: 2;
   padding: 10px 9px;
-  background: color-mix(in srgb, var(--panel-2) 92%, var(--bg) 8%);
+  background: rgba(0,0,0,.16);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   color: var(--muted);
   font-size: 12px;
   font-weight: 780;
@@ -393,7 +392,9 @@
   position: sticky;
   left: 0;
   z-index: 3;
-  background: color-mix(in srgb, var(--panel) 92%, var(--bg) 8%);
+  background: rgba(0,0,0,.14);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
 .mnt-matrix th:first-child {
@@ -413,11 +414,18 @@
 }
 
 .mnt-row--summary td {
-  background: var(--panel-2);
+  background: transparent;
 }
 
 .mnt-row--summary td:first-child {
-  background: var(--panel-2);
+  background: rgba(0,0,0,.14);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.mnt-matrix tbody tr:hover td,
+.mnt-user-table tbody tr:hover td {
+  background: var(--glass-cell-hover);
 }
 
 .mnt-row--muted,
