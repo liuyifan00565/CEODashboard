@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 16:42:22 CST
- 更新内容: 增加维护页卡片改用主界面非透明面板背景的回归测试。
+ 更新时间: 2026-07-02 16:47:50 CST
+ 更新内容: 增加维护页年份下拉位置和矮顶部栏布局回归测试。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -209,22 +209,41 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   const buttonBlock = cssRuleBody(maintenancePageCss, '.mnt-btn');
   const primaryButtonBlock = cssRuleBody(maintenancePageCss, '.mnt-btn--primary');
   const inputBlock = cssRuleBody(maintenancePageCss, '.mnt-control');
+  const pageBlock = cssRuleBody(maintenancePageCss, '.mnt-page');
   const toolbarBlock = cssRuleBody(maintenancePageCss, '.mnt-toolbar');
+  const actionsBlock = cssRuleBody(maintenancePageCss, '.mnt-actions');
+  const toolbarControlBlock = cssRuleBody(maintenancePageCss, '.mnt-toolbar .mnt-control');
   const targetLayoutBlock = cssRuleBody(maintenancePageCss, '.mnt-layout--target');
   const matrixWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap');
+  const recoveryCardBlock = cssRuleBody(kpiCardCss, '.kpi-card--recovery');
+  const recoveryGlowBlock = cssRuleBody(kpiCardCss, '.kpi-card--recovery::before');
+  const surfaceGlowBlock = cssRuleBody(maintenancePageCss, '.mnt-surface::before');
   const progressBlock = cssRuleBody(maintenancePageCss, '.mnt-progress');
   const progressGoodBlock = cssRuleBody(maintenancePageCss, '.mnt-progress--good span');
 
   assert.match(maintenancePageSource, /import GlassSurface from '\.\/GlassSurface\/GlassSurface';/);
   assert.match(maintenancePageSource, /function MaintenanceSurface/);
   assert.match(maintenancePageCss, /\.mnt-glass \.glass-surface__content\{padding:0;display:block\}/);
-  assert.match(toolbarBlock, /min-height:\s*48px;/);
-  assert.match(toolbarBlock, /padding:\s*8px 12px;/);
+  assert.match(maintenancePageSource, /aria-label="目标年份"[\s\S]*?<\/select>\s*<button className="mnt-btn" type="button" onClick=\{onDirty\}>下载模板<\/button>/);
+  assert.match(maintenancePageSource, /<div className="mnt-actions">\s*\{actions\[activePage\] \?\? actions\['target-maintenance'\]\}\s*<button className="mnt-btn" type="button" onClick=\{onBack\}>返回看板<\/button>\s*<SaveBadge status=\{status\} \/>/);
+  assert.doesNotMatch(maintenancePageSource, /<div className="mnt-actions">\s*<SaveBadge/);
+  assert.match(toolbarBlock, /min-height:\s*42px;/);
+  assert.match(toolbarBlock, /padding:\s*6px 10px;/);
+  assert.match(actionsBlock, /flex-wrap:\s*nowrap;/);
+  assert.match(actionsBlock, /gap:\s*7px;/);
+  assert.match(toolbarControlBlock, /width:\s*180px;/);
+  assert.match(toolbarControlBlock, /flex:\s*0 0 180px;/);
   assert.match(targetLayoutBlock, /grid-template-columns:\s*minmax\(190px,\s*230px\) minmax\(0,\s*1fr\);/);
   assert.match(maintenancePageCss, /\.mnt-layout--cost,\s*[\s\S]*?\.mnt-layout--channel \{[\s\S]*?grid-template-columns:\s*minmax\(220px,\s*260px\) minmax\(0,\s*1fr\);/);
   assert.match(maintenancePageCss, /\.mnt-layout--org \{[\s\S]*?grid-template-columns:\s*minmax\(220px,\s*260px\) minmax\(0,\s*1fr\);/);
-  assert.match(panelBlock, /linear-gradient\(120deg,\s*rgba\(230,251,255,\.055\),\s*transparent 48%\),\s*[\s\S]*?var\(--panel\);/);
-  assert.doesNotMatch(panelBlock, /,\s*transparent;/);
+  assert.match(pageBlock, /--kpi-accent:\s*var\(--good\);/);
+  assert.match(recoveryCardBlock, /radial-gradient\(circle at 20% 48%,\s*color-mix\(in srgb,\s*var\(--kpi-accent\) 24%,\s*transparent\),\s*transparent 40%\),\s*[\s\S]*?linear-gradient\(120deg,\s*rgba\(230,251,255,\.055\),\s*transparent 48%\),\s*[\s\S]*?transparent;/);
+  assert.match(panelBlock, /radial-gradient\(circle at 20% 48%,\s*color-mix\(in srgb,\s*var\(--kpi-accent\) 24%,\s*transparent\),\s*transparent 40%\),\s*[\s\S]*?linear-gradient\(120deg,\s*rgba\(230,251,255,\.055\),\s*transparent 48%\),\s*[\s\S]*?transparent;/);
+  assert.doesNotMatch(panelBlock, /var\(--panel\);/);
+  assert.match(recoveryGlowBlock, /background:\s*radial-gradient\(circle,\s*color-mix\(in srgb,\s*var\(--kpi-accent\) 30%,\s*transparent\),\s*transparent 66%\);/);
+  assert.match(surfaceGlowBlock, /background:\s*radial-gradient\(circle,\s*color-mix\(in srgb,\s*var\(--kpi-accent\) 30%,\s*transparent\),\s*transparent 66%\);/);
+  assert.match(surfaceGlowBlock, /filter:\s*blur\(12px\);/);
+  assert.match(surfaceGlowBlock, /opacity:\s*\.86;/);
   assert.match(panelBlock, /border:\s*1px solid var\(--line-2\);/);
   assert.match(panelBlock, /backdrop-filter:\s*var\(--glass-blur\);/);
   assert.match(panelBlock, /box-shadow:\s*var\(--glass-shadow\);/);
@@ -233,10 +252,12 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.match(progressBlock, /height:\s*7px;/);
   assert.match(progressBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.09\);/);
   assert.match(progressGoodBlock, /background:\s*linear-gradient\(90deg,\s*rgba\(var\(--good-rgb\),\s*\.92\),\s*rgba\(255,255,255,\.78\)\);/);
+  assert.match(buttonBlock, /min-height:\s*28px;/);
   assert.match(buttonBlock, /background:\s*var\(--glass-cell\);/);
   assert.match(buttonBlock, /border:\s*1px solid var\(--line\);/);
   assert.match(buttonBlock, /border-radius:\s*12px;/);
   assert.match(primaryButtonBlock, /background:\s*var\(--control-solid\);/);
+  assert.match(inputBlock, /min-height:\s*28px;/);
   assert.match(inputBlock, /background:\s*var\(--glass-cell\);/);
   assert.match(maintenancePageCss, /\.mnt-edit-row,\s*[\s\S]*?\.mnt-channel-manage-row \{[\s\S]*?background:\s*var\(--panel-2\);/);
   assert.doesNotMatch(maintenancePageCss, /\.mnt-edit-row,[\s\S]*?background:\s*transparent;/);

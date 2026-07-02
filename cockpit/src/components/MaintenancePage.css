@@ -1,8 +1,9 @@
 /*
- 更新时间: 2026-07-02 16:42:22 CST
- 更新内容: 维护页卡片背景从透明底改为主界面统一面板底色，并保留玻璃边框与进度条。
+ 更新时间: 2026-07-02 16:47:50 CST
+ 更新内容: 压低维护页顶部栏，并让年份下拉框固定在下载模板左侧同一行。
 */
 .mnt-page {
+  --kpi-accent: var(--good);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -18,18 +19,39 @@
 .mnt-glass .glass-surface__content{padding:0;display:block}
 
 .mnt-surface {
+  position: relative;
+  isolation: isolate;
   width: 100%;
   min-width: 0;
   height: 100%;
   border: 1px solid var(--line-2);
   border-radius: inherit;
   background:
+    radial-gradient(circle at 20% 48%, color-mix(in srgb, var(--kpi-accent) 24%, transparent), transparent 40%),
     linear-gradient(120deg, rgba(230,251,255,.055), transparent 48%),
-    var(--panel);
+    transparent;
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
   overflow: hidden;
+}
+
+.mnt-surface::before {
+  content: "";
+  position: absolute;
+  inset: 14px auto 14px 10px;
+  width: 330px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--kpi-accent) 30%, transparent), transparent 66%);
+  filter: blur(12px);
+  opacity: .86;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mnt-surface > * {
+  position: relative;
+  z-index: 1;
 }
 
 .mnt-toolbar {
@@ -37,8 +59,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  min-height: 48px;
-  padding: 8px 12px;
+  min-height: 42px;
+  padding: 6px 10px;
 }
 
 .mnt-title-block {
@@ -51,6 +73,17 @@
   color: var(--txt);
   font-size: 15px;
   font-weight: 760;
+}
+
+.mnt-toolbar .mnt-title-block h2 {
+  font-size: 14px;
+  line-height: 1.1;
+}
+
+.mnt-toolbar .mnt-title-block span {
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.2;
 }
 
 .mnt-title-block span,
@@ -67,17 +100,17 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 7px;
 }
 
 .mnt-btn {
-  min-height: 30px;
+  min-height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  padding: 0 12px;
+  padding: 0 11px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--glass-cell);
@@ -121,7 +154,7 @@
 
 .mnt-control {
   width: 100%;
-  min-height: 30px;
+  min-height: 28px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--glass-cell);
@@ -130,6 +163,11 @@
   font: inherit;
   font-size: 13px;
   font-weight: 680;
+}
+
+.mnt-toolbar .mnt-control {
+  width: 180px;
+  flex: 0 0 180px;
 }
 
 .mnt-number-input {
@@ -566,6 +604,12 @@
 
   .mnt-actions {
     justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .mnt-toolbar .mnt-control {
+    width: 100%;
+    flex: 1 1 180px;
   }
 
   .mnt-panel {

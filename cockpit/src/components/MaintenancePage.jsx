@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 16:25:57 CST
- 更新内容: 新增数据维护模式的目标、成本、组织、渠道四个玻璃风格界面。
+ 更新时间: 2026-07-02 16:47:50 CST
+ 更新内容: 调整维护页顶部栏按钮顺序，让年份下拉紧邻下载模板左侧。
 */
 import { useMemo, useState } from 'react';
 
@@ -129,9 +129,9 @@ function MaintenanceToolbar({ activePage, status, onBack, onDirty, onSave }) {
           <span>{meta.scope}</span>
         </div>
         <div className="mnt-actions">
-          <SaveBadge status={status} />
           {actions[activePage] ?? actions['target-maintenance']}
           <button className="mnt-btn" type="button" onClick={onBack}>返回看板</button>
+          <SaveBadge status={status} />
         </div>
       </section>
     </MaintenanceSurface>
