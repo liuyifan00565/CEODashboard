@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 17:43:10 CST
- 更新内容: KPI 二级弹窗回归测试改为要求深黑实体玻璃背景，避免弹层透明。
+ 更新时间: 2026-07-01 18:37:59 CST
+ 更新内容: KPI 二级弹窗回归测试改为要求深色无紫色光晕背景。
 */
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -162,8 +162,11 @@ test('formats recovery pie hover text as name over number instead of inline rows
 });
 
 test('styles the recovery pie mini tooltip with the modal glass frame and a darker readable fill', () => {
-  assert.match(modalCssSource, /\.km-card\s*\{[\s\S]*?background:\s*[\s\S]*?rgba\(7,\s*7,\s*10,\s*0\.9\);[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?backdrop-filter:\s*var\(--glass-blur\);[\s\S]*?box-shadow:\s*0 24px 80px rgba\(0,\s*0,\s*0,\s*0\.48\), inset 0 1px 0 rgba\(255,\s*255,\s*255,\s*0\.2\);/);
+  assert.match(modalCssSource, /\.km-card\s*\{[\s\S]*?linear-gradient\(90deg, rgba\(9,\s*9,\s*13,\s*0\.96\), rgba\(5,\s*5,\s*8,\s*0\.96\) 52%, rgba\(3,\s*3,\s*6,\s*0\.98\)\)[\s\S]*?rgba\(4,\s*4,\s*7,\s*0\.96\);[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?backdrop-filter:\s*blur\(26px\) saturate\(145%\);[\s\S]*?box-shadow:\s*0 34px 110px rgba\(0,\s*0,\s*0,\s*0\.72\), inset 0 1px 0 rgba\(255,\s*255,\s*255,\s*0\.16\);/);
+  assert.match(modalCssSource, /\.km-mask\s*\{[\s\S]*?background:\s*rgba\(0,\s*0,\s*0,\s*0\.82\);[\s\S]*?backdrop-filter:\s*blur\(14px\) saturate\(120%\);/);
   assert.doesNotMatch(modalCssSource, /\.km-card\s*\{[\s\S]*?background:\s*transparent;/);
+  assert.doesNotMatch(modalCssSource, /\.km-card\s*\{[\s\S]*?radial-gradient\(circle at 20% 42%, rgba\(255, 79, 216/);
+  assert.doesNotMatch(modalCssSource, /\.km-card\s*\{[\s\S]*?radial-gradient\(circle at 4% 86%, rgba\(96, 0, 255/);
   assert.match(cssSource, /\.kpi-pie-tooltip\s*\{[\s\S]*?position:\s*relative;[\s\S]*?overflow:\s*hidden;[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?background:\s*rgba\(0,\s*0,\s*0,\s*\.68\);[\s\S]*?backdrop-filter:\s*var\(--glass-blur\);[\s\S]*?box-shadow:\s*0 24px 80px rgba\(0,\s*0,\s*0,\s*0\.58\), inset 0 1px 0 rgba\(255,\s*255,\s*255,\s*0\.18\);/);
   assert.match(cssSource, /\.kpi-pie-tooltip::after\s*\{[\s\S]*?animation:\s*kpiTooltipSweep 2\.8s linear infinite;/);
   assert.match(cssSource, /@keyframes kpiTooltipSweep\s*\{[\s\S]*?from\s*\{[\s\S]*?translateX\(-150%\)[\s\S]*?to\s*\{[\s\S]*?translateX\(260%\)/);

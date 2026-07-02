@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 17:52:30 CST
- 更新内容: 增加算力顶部 KPI 卡片背景与月度算力用量趋势面板一致的回归测试。
+ 更新时间: 2026-07-01 19:06:16 CST
+ 更新内容: 增加算力客户排行账号类型、销售负责人、客成负责人表头下拉筛选的回归测试。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -8,6 +8,7 @@ import test from 'node:test';
 
 const appSource = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
 const dashboardCss = readFileSync(new URL('./dashboard.css', import.meta.url), 'utf8');
+const kpiCardCss = readFileSync(new URL('./components/KpiCard.css', import.meta.url), 'utf8');
 const kpiModalSource = readFileSync(new URL('./components/KpiModal.jsx', import.meta.url), 'utf8');
 const monthlyTrendSource = readFileSync(new URL('./components/MonthlyTrend.jsx', import.meta.url), 'utf8');
 const deliveryPanelCss = readFileSync(new URL('./components/DeliveryPanel.css', import.meta.url), 'utf8');
@@ -235,34 +236,73 @@ test('uses the overview half-ring palette for compute donut charts', () => {
   assert.match(computePageSource, /buildPieOption\(\{ data: distributionPieData, tokens, unitLabel: '客户占比权重' \}\)/);
 });
 
-test('adds dropdown filters and pagination to compute customer ranking', () => {
-  assert.match(computePageSource, /CUSTOMER_SORT_OPTIONS = \[/);
-  assert.match(computePageSource, /value:\s*'usage-desc'[\s\S]*?label:\s*'算力用量 \/ 全部'/);
-  assert.match(computePageSource, /CUSTOMER_FILTER_ALL = 'all';/);
+test('uses metric sort cards and pagination in compute customer ranking', () => {
+  assert.match(computePageSource, /CUSTOMER_SORT_FIELDS = \[/);
+  assert.match(computePageSource, /key:\s*'usage'[\s\S]*?label:\s*'算力用量 \/ 全部'[\s\S]*?getValue:\s*\(row\) => row\.usage/);
+  assert.match(computePageSource, /key:\s*'balance'[\s\S]*?label:\s*'算力余额 \/ 全部'[\s\S]*?getValue:\s*\(row\) => row\.balance/);
+  assert.match(computePageSource, /key:\s*'reply'[\s\S]*?label:\s*'平均回复率 \/ 全部'[\s\S]*?getValue:\s*\(row\) => row\.averageReplyRate/);
+  assert.match(computePageSource, /CUSTOMER_SORT_DIRECTIONS = \{[\s\S]*?asc:\s*'升序'[\s\S]*?desc:\s*'降序'/);
+  assert.match(computePageSource, /CUSTOMER_COLUMN_FILTER_ALL = 'all';/);
+  assert.match(computePageSource, /CUSTOMER_COLUMN_FILTERS = \[/);
+  assert.match(computePageSource, /key:\s*'accountType'[\s\S]*?label:\s*'账号类型'/);
+  assert.match(computePageSource, /key:\s*'salesOwner'[\s\S]*?label:\s*'销售负责人'/);
+  assert.match(computePageSource, /key:\s*'successOwner'[\s\S]*?label:\s*'客成负责人'/);
+  assert.match(computePageSource, /function buildInitialCustomerColumnFilters\(\)/);
+  assert.match(computePageSource, /function buildCustomerColumnFilterOptions\(rows,\s*field\)/);
+  assert.match(computePageSource, /function filterCustomerRowsByColumnFilters\(rows,\s*filters\)/);
   assert.match(computePageSource, /const \[customerSort,\s*setCustomerSort\] = useState\('usage-desc'\);/);
-  assert.match(computePageSource, /const \[customerVersionFilter,\s*setCustomerVersionFilter\] = useState\(CUSTOMER_FILTER_ALL\);/);
-  assert.match(computePageSource, /const \[customerSalesFilter,\s*setCustomerSalesFilter\] = useState\(CUSTOMER_FILTER_ALL\);/);
-  assert.match(computePageSource, /function buildCustomerFilterOptions\(rows,\s*field\)/);
-  assert.match(computePageSource, /function filterCustomerRows\(rows,\s*\{ versionFilter,\s*salesFilter \}\)/);
-  assert.match(computePageSource, /sort\(\(a,\s*b\) => b\.usage - a\.usage\)/);
+  assert.match(computePageSource, /const \[customerColumnFilters,\s*setCustomerColumnFilters\] = useState\(\(\) => buildInitialCustomerColumnFilters\(\)\);/);
+  assert.match(computePageSource, /const \[openCustomerColumnFilter,\s*setOpenCustomerColumnFilter\] = useState\(null\);/);
+  assert.match(computePageSource, /function getCustomerSortState\(sortKey = 'usage-desc'\)/);
+  assert.match(computePageSource, /const sortMultiplier = sortDirection === 'asc' \? 1 : -1;/);
+  assert.doesNotMatch(computePageSource, /CUSTOMER_FILTER_ALL/);
+  assert.doesNotMatch(computePageSource, /customerVersionFilter/);
+  assert.doesNotMatch(computePageSource, /customerSalesFilter/);
+  assert.doesNotMatch(computePageSource, /function buildCustomerFilterOptions/);
+  assert.doesNotMatch(computePageSource, /function filterCustomerRows\(/);
   assert.match(computePageSource, /const DEFAULT_CUSTOMER_PAGE_SIZE = 20;/);
-  assert.match(computePageSource, /const CUSTOMER_PAGE_SIZE_OPTIONS = \[10, 20, 50\];/);
+  assert.match(computePageSource, /const CUSTOMER_PAGE_SIZE_OPTIONS = \[10, 20, 50, 100, 200, 500\];/);
   assert.match(computePageSource, /const \[customerPage,\s*setCustomerPage\] = useState\(1\);/);
   assert.match(computePageSource, /const \[customerPageSize,\s*setCustomerPageSize\] = useState\(DEFAULT_CUSTOMER_PAGE_SIZE\);/);
+  assert.match(computePageSource, /const \[customerPageSizeMenuOpen,\s*setCustomerPageSizeMenuOpen\] = useState\(false\);/);
   assert.match(computePageSource, /customerPageCount = Math\.max\(1, Math\.ceil\(customerTotal \/ customerPageSize\)\);/);
   assert.match(computePageSource, /customerPageRows\.map\(\(customer\) => \(/);
   assert.match(computePageSource, /className="cpu-customer-toolbar"/);
   assert.match(computePageSource, /className="cpu-customer-filters"/);
-  assert.match(computePageSource, /className="cpu-select-field"/);
-  assert.match(computePageSource, /className="cpu-select-control"/);
-  assert.match(computePageSource, /使用版本/);
-  assert.match(computePageSource, /销售负责人/);
+  assert.match(computePageSource, /className=\{`cpu-sort-card/);
+  assert.match(computePageSource, /className="cpu-sort-card__arrows"/);
+  assert.doesNotMatch(computePageSource, /className="cpu-select-field"/);
+  assert.doesNotMatch(computePageSource, /className="cpu-select-control"/);
+  assert.doesNotMatch(computePageSource, /<span className="cpu-control-label">使用版本:<\/span>/);
+  assert.doesNotMatch(computePageSource, /aria-label="销售负责人"/);
   assert.match(computePageSource, /className="cpu-pagination"/);
+  assert.match(computePageSource, /<CustomerColumnHeader\s+label="账号类型"\s+filterKey="accountType"/);
+  assert.match(computePageSource, /<CustomerColumnHeader\s+label="销售负责人"\s+filterKey="salesOwner"/);
+  assert.match(computePageSource, /<CustomerColumnHeader\s+label="客成负责人"\s+filterKey="successOwner"/);
+  assert.match(computePageSource, /className="cpu-th-filter"/);
+  assert.match(computePageSource, /className=\{`cpu-column-filter/);
+  assert.match(computePageSource, /className="cpu-column-filter__menu"/);
+  assert.match(computePageSource, /className=\{`cpu-column-filter__option/);
   assert.match(computePageSource, /共 \{formatInt\(customerTotal\)\} 条/);
-  assert.match(computePageSource, /\{customerPageSize\} 条\/页/);
+  assert.match(computePageSource, /className=\{`cpu-page-size-select/);
+  assert.match(computePageSource, /className="cpu-page-size-menu"/);
+  assert.match(computePageSource, /className=\{`cpu-page-size-option/);
+  assert.match(computePageSource, /\{customerPageSize\}条\/页/);
+  assert.doesNotMatch(computePageSource, /className=\{`cpu-page-size__button/);
   assert.match(computePageCss, /\.cpu-customer-toolbar \{/);
   assert.match(computePageCss, /\.cpu-customer-filters \{/);
-  assert.match(computePageCss, /\.cpu-select-control \{/);
+  assert.match(computePageCss, /\.cpu-sort-card \{/);
+  assert.match(computePageCss, /\.cpu-sort-card__arrows \{/);
+  assert.match(computePageCss, /\.cpu-sort-card__arrow--active \{/);
+  assert.doesNotMatch(computePageCss, /\.cpu-select-control \{/);
+  assert.match(computePageCss, /\.cpu-page-size-select \{/);
+  assert.match(computePageCss, /\.cpu-page-size-menu \{/);
+  assert.match(computePageCss, /\.cpu-page-size-option--active \{/);
+  assert.match(computePageCss, /\.cpu-th-filter \{/);
+  assert.match(computePageCss, /\.cpu-column-filter__trigger \{/);
+  assert.match(computePageCss, /\.cpu-column-filter__menu \{/);
+  assert.match(computePageCss, /\.cpu-column-filter__option--active \{/);
+  assert.doesNotMatch(computePageCss, /\.cpu-page-size__button/);
   assert.match(computePageCss, /\.cpu-pagination \{/);
   assert.match(computePageCss, /\.cpu-page-button--active/);
 });
@@ -366,40 +406,55 @@ test('uses channel completion wording and connects the delivery dashboard panel'
   assert.doesNotMatch(dashboardCss, /"version delivery"/);
 });
 
-test('uses solid dark glass backgrounds for overview trend and delivery panels', () => {
+test('matches overview trend and delivery panel backgrounds to the homepage renewal KPI card', () => {
+  const kpiCardBlock = cssRuleBody(kpiCardCss, '.kpi-card');
   const trendPanelBlock = cssRuleBody(dashboardCss, '.dash-cell .mt-panel');
   const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-panel');
 
-  assert.match(trendPanelBlock, /background:\s*[\s\S]*?#101012;/);
+  assert.match(kpiCardBlock, /background:\s*transparent;/);
+  assert.match(trendPanelBlock, /background:\s*transparent;/);
   assert.match(trendPanelBlock, /border:1px solid var\(--line-2\);/);
   assert.match(trendPanelBlock, /backdrop-filter:var\(--glass-blur\);/);
-  assert.doesNotMatch(trendPanelBlock, /background:\s*transparent;/);
-  assert.match(deliveryPanelBlock, /background:\s*[\s\S]*?#101012;/);
+  assert.match(trendPanelBlock, /box-shadow:var\(--glass-shadow\);/);
+  assert.doesNotMatch(trendPanelBlock, /#101012/);
+  assert.doesNotMatch(trendPanelBlock, /radial-gradient\(ellipse at 52% 94%/);
+  assert.match(deliveryPanelBlock, /background:\s*transparent;/);
   assert.match(deliveryPanelBlock, /border: 1px solid var\(--line-2\);/);
   assert.match(deliveryPanelBlock, /backdrop-filter: var\(--glass-blur\);/);
-  assert.doesNotMatch(deliveryPanelBlock, /background:\s*transparent;/);
+  assert.match(deliveryPanelBlock, /box-shadow: var\(--glass-shadow\);/);
+  assert.doesNotMatch(deliveryPanelBlock, /#101012/);
+  assert.doesNotMatch(deliveryPanelBlock, /radial-gradient\(ellipse at 52% 94%/);
 });
 
-test('keeps channel secondary detail modal on a solid dark glass background', () => {
+test('keeps channel secondary detail modal on the unified focused glass background without purple glow', () => {
   const channelModalBlock = cssRuleBody(channelPanelCss, '.ch-modal-card');
+  const channelMaskBlock = cssRuleBody(channelPanelCss, '.ch-modal-mask');
 
-  assert.match(channelModalBlock, /background:\s*[\s\S]*?rgba\(7,\s*7,\s*10,\s*0\.9\);/);
+  assert.match(channelModalBlock, /linear-gradient\(90deg, rgba\(9, 9, 13, 0\.96\), rgba\(5, 5, 8, 0\.96\) 52%, rgba\(3, 3, 6, 0\.98\)\)/);
+  assert.match(channelModalBlock, /rgba\(4,\s*4,\s*7,\s*0\.96\);/);
   assert.match(channelModalBlock, /border: 1px solid var\(--line-2\);/);
-  assert.match(channelModalBlock, /backdrop-filter: var\(--glass-blur\);/);
+  assert.match(channelModalBlock, /backdrop-filter: blur\(26px\) saturate\(145%\);/);
+  assert.match(channelMaskBlock, /background: rgba\(0, 0, 0, 0\.82\);/);
+  assert.match(channelMaskBlock, /backdrop-filter: blur\(14px\) saturate\(120%\);/);
   assert.doesNotMatch(channelModalBlock, /background:\s*transparent;/);
+  assert.doesNotMatch(channelModalBlock, /radial-gradient\(circle at 20% 42%, rgba\(255, 79, 216/);
+  assert.doesNotMatch(channelModalBlock, /radial-gradient\(circle at 4% 86%, rgba\(96, 0, 255/);
 });
 
-test('adds hover flow borders to overview trend and delivery panels', () => {
+test('keeps overview trend and delivery panels free of hover flow borders', () => {
   const trendPanelBlock = cssRuleBody(dashboardCss, '.dash-cell .mt-panel');
   const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-panel');
 
-  assert.match(dashboardCss, /@property --dash-flow-angle/);
-  assert.match(dashboardCss, /\.dash-cell \.mt-panel::before,\s*\.dash-delivery-row \.dlv-panel::before\{[\s\S]*?conic-gradient\(\s*from var\(--dash-flow-angle\)/);
-  assert.match(dashboardCss, /\.dash-cell \.mt-panel:hover::before,[\s\S]*?\.dash-delivery-row \.dlv-panel:focus-within::before\{[\s\S]*?animation:dashPanelFlow 2\.6s linear infinite;/);
-  assert.match(dashboardCss, /\.dash-cell \.mt-panel:hover,[\s\S]*?\.dash-delivery-row \.dlv-panel:focus-within\{[\s\S]*?border-color:rgba\(255,255,255,\.34\);/);
+  assert.doesNotMatch(dashboardCss, /@property --dash-flow-angle/);
+  assert.doesNotMatch(dashboardCss, /\.dash-cell \.mt-panel::before/);
+  assert.doesNotMatch(dashboardCss, /\.dash-delivery-row \.dlv-panel::before/);
+  assert.doesNotMatch(dashboardCss, /dashPanelFlow/);
+  assert.doesNotMatch(dashboardCss, /conic-gradient\(\s*from var\(--dash-flow-angle\)/);
+  assert.doesNotMatch(dashboardCss, /rgba\(244,114,182/);
+  assert.doesNotMatch(dashboardCss, /rgba\(192,132,252/);
   assert.match(dashboardCss, /\.dash-delivery-row \.dlv-panel\{[\s\S]*?transition:border-color \.22s ease, box-shadow \.22s ease;/);
-  assert.doesNotMatch(trendPanelBlock, /background:\s*transparent;/);
-  assert.doesNotMatch(deliveryPanelBlock, /background:\s*transparent;/);
+  assert.match(trendPanelBlock, /background:\s*transparent;/);
+  assert.match(deliveryPanelBlock, /background:\s*transparent;/);
 });
 
 test('uses static trend legend and overlapping target versus recovered bars', () => {
@@ -408,11 +463,15 @@ test('uses static trend legend and overlapping target versus recovered bars', ()
   assert.match(monthlyTrendSource, /barCategoryGap:\s*'42%'/);
 });
 
-test('uses multi-select sales filters and order type in the KPI modal', () => {
+test('uses sales filters followed directly by year month day in the KPI modal', () => {
   assert.match(kpiModalSource, /import MultiSegmented from '\.\/MultiSegmented';/);
-  assert.match(kpiModalSource, /ORDER_TYPE_OPTS/);
   assert.match(kpiModalSource, /salesKeys/);
-  assert.match(kpiModalSource, /orderType/);
+  assert.match(kpiModalSource, /<MultiSegmented options=\{SALES_FILTER_OPTS\} value=\{salesKeys\} onChange=\{setSalesKeys\} \/>\s*<Segmented options=\{DIM_OPTS\} value=\{dim\} onChange=\{setDim\} \/>/);
+  assert.doesNotMatch(kpiModalSource, /ORDER_TYPE_OPTS/);
+  assert.doesNotMatch(kpiModalSource, /orderType/);
+  assert.doesNotMatch(kpiModalSource, /新签/);
+  assert.doesNotMatch(kpiModalSource, /续订/);
+  assert.doesNotMatch(kpiModalSource, /km-type-control/);
   assert.doesNotMatch(kpiModalSource, /<span>type<\/span>/);
   assert.doesNotMatch(kpiModalSource, /value:\s*'all',\s*label:\s*'全部'/);
 });

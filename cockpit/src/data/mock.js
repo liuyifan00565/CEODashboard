@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 18:23:22 CST
- 更新内容: 首页新增本月开户数和今日开户数小卡片 mock 数据及涨幅趋势。
+ 更新时间: 2026-07-02 10:18:00 CST
+ 更新内容: 侧边导航移除销售分析入口，仅保留经营总览和算力用量分析。
 */
 import { calculateRenewalOverview, getRenewalChannelBreakdown } from '../lib/renewal.js';
 
@@ -41,8 +41,8 @@ export const KPI_DERIVED = {
 
 // ===== 开户数趋势（经营总览，单位：户）=====
 export const OPENING_ACCOUNT_METRICS = [
-  { key: 'month-openings', title: '本月开户数', value: 126, unit: '户', delta: 8.2, compareLabel: '较上月', keywords: ['开户', '本月开户数', '今日开户数'] },
-  { key: 'today-openings', title: '今日开户数', value: 9, unit: '户', delta: 12.5, compareLabel: '较昨日', keywords: ['开户', '今日开户数'] },
+  { key: 'month-openings', title: '本月开户数', metric: 'monthOpenings', value: 126, unit: '户', delta: 8.2, compareLabel: '较上月', keywords: ['开户', '本月开户数', '今日开户数'] },
+  { key: 'today-openings', title: '今日开户数', metric: 'todayOpenings', value: 9, unit: '户', delta: 12.5, compareLabel: '较昨日', keywords: ['开户', '今日开户数'] },
 ];
 
 // ===== 销售明细（4 个，单位：万元）=====
@@ -552,6 +552,49 @@ const ORDER_TYPE_TRENDS = {
   },
 };
 
+const OPENING_ACCOUNT_TRENDS = {
+  monthOpenings: {
+    month: {
+      online: [34, 38, 42, 46, 44, 48],
+      south: [18, 20, 22, 25, 24, 26],
+      east: [16, 18, 20, 22, 21, 22],
+      agent: [20, 22, 24, 27, 27, 30],
+    },
+    day: {
+      online: [8, 10, 9, 12, 11, 13, 10, 12, 14, 15],
+      south: [4, 5, 5, 6, 5, 7, 6, 6, 7, 8],
+      east: [3, 4, 4, 5, 5, 6, 5, 5, 6, 6],
+      agent: [4, 5, 5, 6, 6, 7, 6, 7, 8, 9],
+    },
+    year: {
+      online: [360, 420, 510, 548],
+      south: [180, 220, 270, 292],
+      east: [160, 200, 235, 252],
+      agent: [200, 240, 285, 328],
+    },
+  },
+  todayOpenings: {
+    month: {
+      online: [3, 3, 4, 4, 4, 4],
+      south: [1, 1, 1, 2, 1, 2],
+      east: [1, 1, 1, 1, 1, 1],
+      agent: [1, 2, 1, 1, 2, 2],
+    },
+    day: {
+      online: [3, 3, 4, 3, 4, 4, 5, 4, 4, 4],
+      south: [1, 1, 1, 2, 1, 2, 2, 1, 2, 2],
+      east: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      agent: [1, 2, 1, 1, 2, 1, 2, 2, 1, 2],
+    },
+    year: {
+      online: [3, 3, 4, 4],
+      south: [1, 1, 2, 2],
+      east: [1, 1, 1, 1],
+      agent: [1, 2, 1, 2],
+    },
+  },
+};
+
 const SALES_KEY_SET = new Set(CHANNELS.map((channel) => channel.key));
 
 function normalizeSalesKeys(salesKeys) {
@@ -581,6 +624,10 @@ function getOrderTypeMonthSeries({ salesKeys, orderType = 'new', metric = 'recov
 }
 
 function getOrderTypeSeries({ metric, salesKeys, orderType, dim }) {
+  if (OPENING_ACCOUNT_TRENDS[metric]) {
+    return getOpeningAccountSeries({ metric, salesKeys, dim });
+  }
+
   const monthSeries = getOrderTypeMonthSeries({ metric, salesKeys, orderType });
   const latest = monthSeries.at(-1)?.value ?? 0;
 
@@ -604,6 +651,29 @@ function getOrderTypeSeries({ metric, salesKeys, orderType, dim }) {
   }
 
   return monthSeries;
+}
+
+function getOpeningAccountSeries({ metric, salesKeys, dim = 'month' }) {
+  const safeKeys = normalizeSalesKeys(salesKeys);
+  const source = OPENING_ACCOUNT_TRENDS[metric] ?? OPENING_ACCOUNT_TRENDS.monthOpenings;
+  const safeDim = source[dim] ? dim : 'month';
+  const labels = safeDim === 'year'
+    ? ['2023', '2024', '2025', '2026']
+    : safeDim === 'day'
+      ? DAY_BASE.map((_, index) => `06-${String(index * 3 + 1).padStart(2, '0')}`)
+      : MONTHLY_TREND.map((month) => month.month);
+  const values = labels.map((_, index) => safeKeys.reduce((sum, key) => sum + (source[safeDim][key]?.[index] ?? 0), 0));
+
+  return values.map((value, index) => {
+    const prev = index === 0 ? Math.round(value * 0.9) : values[index - 1];
+    return {
+      label: labels[index],
+      value,
+      prev: metric === 'monthOpenings' && safeDim === 'month' && index === values.length - 1
+        ? +(value / 1.082).toFixed(1)
+        : prev,
+    };
+  });
 }
 
 export function getChannelTrend(channelKey = 'all') {
@@ -640,6 +710,10 @@ export function getKpiSeries(metric, channelOrOptions = 'all', dim = 'month') {
   }
 
   const channel = channelOrOptions;
+  if (OPENING_ACCOUNT_TRENDS[metric]) {
+    return getOpeningAccountSeries({ metric, salesKeys: channel === 'all' ? undefined : [channel], dim });
+  }
+
   const channelRow = findChannel(channel);
   const chMul = channelRow ? ratioFor(channelRow, 'recovered', KPI.monthRecovered) : 1;
   if (dim === 'year') {
@@ -721,10 +795,6 @@ export function getDeliverySummary() {
 // 侧边菜单
 export const MENU = [
   { key: 'overview', name: '经营总览', channelKey: 'all' },
-  { key: 'online', name: '线上销售分析', channelKey: 'online' },
-  { key: 'south', name: '华南线下销售分析', channelKey: 'south' },
-  { key: 'east', name: '华东线下销售分析', channelKey: 'east' },
-  { key: 'agent', name: '代理销售分析', channelKey: 'agent' },
   { key: 'compute', name: '算力用量分析', channelKey: 'all' },
 ];
 

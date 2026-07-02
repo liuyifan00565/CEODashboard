@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 17:43:10 CST  更新内容: KPI 二级弹窗恢复深黑实体玻璃背景，避免弹层透出首页点阵底。 */
+/* 更新时间: 2026-07-01 18:37:59 CST  更新内容: 去掉 KPI 二级展开界面背景里的紫色光晕，保留深色玻璃底。 */
 
 .km-overlay {
   position: fixed;
@@ -13,9 +13,9 @@
 .km-mask {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.58);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
 }
 
 .km-card {
@@ -26,13 +26,12 @@
   padding: 24px 26px 22px;
   border-radius: 18px;
   background:
-    radial-gradient(circle at 20% 34%, rgba(96, 0, 255, 0.14), rgba(96, 0, 255, 0) 46%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.016)),
-    rgba(7, 7, 10, 0.9);
+    linear-gradient(90deg, rgba(9, 9, 13, 0.96), rgba(5, 5, 8, 0.96) 52%, rgba(3, 3, 6, 0.98)),
+    rgba(4, 4, 7, 0.96);
   border: 1px solid var(--line-2);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(26px) saturate(145%);
+  -webkit-backdrop-filter: blur(26px) saturate(145%);
+  box-shadow: 0 34px 110px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.16);
   transform-style: preserve-3d;
 }
 
@@ -79,13 +78,6 @@
   gap: 12px;
   align-items: center;
   margin-top: 18px;
-}
-
-.km-type-control {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
 }
 
 .km-headline {

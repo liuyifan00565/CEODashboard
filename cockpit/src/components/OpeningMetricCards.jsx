@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 18:28:42 CST
- 更新内容: 首页开户数小卡片增加点击展开二级入口，复用本月目标完成情况弹窗。
+ 更新时间: 2026-07-01 18:32:30 CST
+ 更新内容: 首页开户数小卡片点击时传入自身指标，打开对应开户数二级数据。
 */
 import { OPENING_ACCOUNT_METRICS } from '../data/mock';
 import { deltaColor } from '../lib/format';
@@ -22,7 +22,7 @@ export default function OpeningMetricCards({ onOpenSecondary }) {
           className="opening-metric-card"
           key={metric.key}
           type="button"
-          onClick={onOpenSecondary}
+          onClick={() => onOpenSecondary?.(metric)}
           aria-label={`${metric.title}，点击展开二级`}
         >
           <div className="opening-metric-card__title">{metric.title}</div>

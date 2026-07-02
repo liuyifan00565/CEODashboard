@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 18:04:44 CST  更新内容: 交付看板背景改为非透明实体黑色玻璃底，避免透出点阵背景。 */
+/* 更新时间: 2026-07-01 18:20:15 CST  更新内容: 交付看板背景改为主页续费率 KPI 同款透明玻璃底。 */
 .dlv-panel {
   position: relative;
   height: 100%;
@@ -8,9 +8,7 @@
   gap: 14px;
   padding: 22px 24px 24px;
   border-radius: 18px;
-  background:
-    linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.018) 46%, rgba(255,255,255,.028)),
-    #101012;
+  background: transparent;
   border: 1px solid var(--line-2);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);

@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 18:28:42 CST
- 更新内容: 首页开户数小卡片增加底部展开提示和按钮态样式。
+ 更新时间: 2026-07-01 18:37:59 CST
+ 更新内容: 去掉首页开户数小卡片左上角紫色发光光斑。
 */
 .opening-metric-cards {
   display: grid;
@@ -29,19 +29,6 @@
   box-shadow: var(--glass-shadow);
   cursor: pointer;
   transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
-}
-
-.opening-metric-card::before {
-  content: "";
-  position: absolute;
-  inset: -34px auto auto -18px;
-  width: 132px;
-  height: 132px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(var(--warn-rgb), .24), transparent 68%);
-  filter: blur(8px);
-  opacity: .74;
-  pointer-events: none;
 }
 
 .opening-metric-card > * {

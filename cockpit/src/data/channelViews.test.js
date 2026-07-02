@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 16:29:11 CST
- 更新内容: 回归测试补充算力趋势按年/月/日倒序展示，月/日维度提供超过 30 项用于拖动窗口。
+ 更新时间: 2026-07-02 10:18:00 CST
+ 更新内容: 回归测试约束侧边导航仅保留经营总览和算力用量分析。
 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -33,14 +33,14 @@ function byKey(rows, key) {
   return rows.find((row) => row.key === key);
 }
 
-test('defines CEO overview, channel analysis, and compute usage menu entries', () => {
+test('defines only overview and compute usage menu entries in the sidebar', () => {
   assert.deepEqual(
     MENU.map((item) => item.name),
-    ['经营总览', '线上销售分析', '华南线下销售分析', '华东线下销售分析', '代理销售分析', '算力用量分析']
+    ['经营总览', '算力用量分析']
   );
   assert.deepEqual(
     MENU.map((item) => getDashboardChannelKey(item.key)),
-    ['all', 'online', 'south', 'east', 'agent', 'all']
+    ['all', 'all']
   );
 });
 

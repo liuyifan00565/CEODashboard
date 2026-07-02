@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 16:00:36 CST
- 更新内容: 版本情况回归测试约束整张版本小卡片可点击打开对应二级弹窗。
+ 更新时间: 2026-07-01 18:37:59 CST
+ 更新内容: 版本情况回归测试约束图表和二级弹窗无紫色发光背景。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -87,16 +87,19 @@ test('adds a KPI-style secondary expand entry and version detail modal', () => {
   assert.match(css, /\.vf-detail-card/);
   assert.match(css, /\.vf-detail-card \{[\s\S]*?width: min\(720px, calc\(100vw - 48px\)\);/);
   assert.match(css, /\.vf-detail-card \{[\s\S]*?max-height: calc\(100vh - 48px\);/);
-  assert.match(css, /\.vf-detail-card \{[\s\S]*?rgba\(7, 7, 10, \.78\);/);
-  assert.match(css, /\.vf-detail-card \{[\s\S]*?backdrop-filter: blur\(24px\) saturate\(155%\);/);
+  assert.match(css, /\.vf-detail-card \{[\s\S]*?linear-gradient\(90deg, rgba\(9, 9, 13, \.96\), rgba\(5, 5, 8, \.96\) 52%, rgba\(3, 3, 6, \.98\)\)/);
+  assert.match(css, /\.vf-detail-card \{[\s\S]*?rgba\(4, 4, 7, \.96\);/);
+  assert.doesNotMatch(css, /\.vf-detail-card \{[\s\S]*?radial-gradient\(circle at 20% 42%, rgba\(255, 79, 216/);
+  assert.doesNotMatch(css, /\.vf-detail-card \{[\s\S]*?radial-gradient\(circle at 4% 86%, rgba\(96, 0, 255/);
+  assert.match(css, /\.vf-detail-card \{[\s\S]*?backdrop-filter: blur\(26px\) saturate\(145%\);/);
   assert.match(css, /\.vf-panel \{[\s\S]*?overflow: visible;/);
   assert.match(css, /\.vf-detail-overlay \{[\s\S]*?position: fixed;/);
   assert.match(css, /\.vf-detail-overlay \{[\s\S]*?inset: 0;/);
   assert.match(css, /\.vf-detail-overlay \{[\s\S]*?width: 100vw;/);
   assert.match(css, /\.vf-detail-overlay \{[\s\S]*?height: 100vh;/);
   assert.match(css, /\.vf-detail-overlay \{[\s\S]*?z-index: 1000;/);
-  assert.match(css, /\.vf-detail-mask \{[\s\S]*?background: rgba\(0, 0, 0, \.72\);/);
-  assert.match(css, /\.vf-detail-mask \{[\s\S]*?backdrop-filter: blur\(10px\) saturate\(125%\);/);
+  assert.match(css, /\.vf-detail-mask \{[\s\S]*?background: rgba\(0, 0, 0, \.82\);/);
+  assert.match(css, /\.vf-detail-mask \{[\s\S]*?backdrop-filter: blur\(14px\) saturate\(120%\);/);
 });
 
 test('opens the matching secondary card from any point on a version card', () => {
@@ -115,6 +118,8 @@ test('nudges the enlarged half ring upward and left', () => {
   assert.match(css, /\.vf-ring-pane \{[\s\S]*?align-items: flex-start;/);
   assert.match(css, /\.vf-ring-pane \{[\s\S]*?padding-top: 6px;/);
   assert.match(css, /\.vf-ring-pane \{[\s\S]*?padding-left: 4px;/);
+  assert.match(css, /\.vf-ring-pane::before \{[\s\S]*?content: none;/);
+  assert.doesNotMatch(css, /\.vf-ring\s*\{[\s\S]*?filter: drop-shadow\(0 0 20px rgba\(255, 79, 216/);
   assert.match(css, /\.vf-ring \{[\s\S]*?margin-top: -24px;/);
   assert.match(css, /\.vf-ring \{[\s\S]*?margin-left: -16px;/);
 });

@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 18:04:44 CST
- 更新内容: 首页月度经营趋势背景改为非透明实体黑色玻璃底，避免透出点阵背景。
+ 更新时间: 2026-07-01 18:44:29 CST
+ 更新内容: 去掉首页月度经营趋势和交付看板卡片边框流光，保留安静玻璃边框层次。
 */
 
 /* ===== 外层 shell：左侧栏 + 右内容列 ===== */
@@ -61,12 +61,6 @@
 .dash-kpi-item .kpi-card{height:100%}
 .search-result-border{width:100%}
 
-@property --dash-flow-angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
-
 /* ===== 主体 grid ===== */
 .dash-grid{
   flex:1;min-height:0;display:grid;gap:16px;
@@ -121,9 +115,7 @@
   isolation:isolate;
   display:flex;
   flex-direction:column;
-  background:
-    linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.018) 46%, rgba(255,255,255,.028)),
-    #101012;
+  background:transparent;
   border:1px solid var(--line-2);
   backdrop-filter:var(--glass-blur);
   -webkit-backdrop-filter:var(--glass-blur);
@@ -131,68 +123,22 @@
   overflow:hidden;
   transition:border-color .22s ease, box-shadow .22s ease;
 }
-.dash-cell .mt-panel::before,
-.dash-delivery-row .dlv-panel::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:3;
-  border-radius:inherit;
-  padding:1.5px;
-  pointer-events:none;
-  background:conic-gradient(
-    from var(--dash-flow-angle),
-    transparent 0deg,
-    transparent 48deg,
-    rgba(255,255,255,.12) 74deg,
-    rgba(255,255,255,.95) 94deg,
-    rgba(244,114,182,.92) 112deg,
-    rgba(192,132,252,.58) 134deg,
-    transparent 166deg,
-    transparent 360deg
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite:xor;
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask-composite:exclude;
-  opacity:0;
-  transition:opacity .26s ease;
+.dash-cell .mt-panel > *,
+.dash-delivery-row .dlv-panel > *{
+  position:relative;
+  z-index:1;
 }
 .dash-cell .mt-panel:hover,
 .dash-cell .mt-panel:focus-within,
 .dash-delivery-row .dlv-panel:hover,
 .dash-delivery-row .dlv-panel:focus-within{
   border-color:rgba(255,255,255,.34);
-  box-shadow:var(--glass-shadow), 0 0 28px rgba(244,114,182,.14), 0 0 42px rgba(192,132,252,.08);
-}
-.dash-cell .mt-panel:hover::before,
-.dash-cell .mt-panel:focus-within::before,
-.dash-delivery-row .dlv-panel:hover::before,
-.dash-delivery-row .dlv-panel:focus-within::before{
-  opacity:1;
-  animation:dashPanelFlow 2.6s linear infinite;
+  box-shadow:var(--glass-shadow);
 }
 .dash-cell .mt-title{font-size:16px;color:var(--txt)}
 .dash-cell .mt-sub{font-size:14px;color:var(--txt)}
 .dash-cell .mt-chart{flex:1;min-height:0}
 .dash-cell .mt-chart > div{height:100%!important;min-height:180px}
-
-@keyframes dashPanelFlow{
-  to{--dash-flow-angle:360deg}
-}
-
-@media (prefers-reduced-motion: reduce){
-  .dash-cell .mt-panel:hover::before,
-  .dash-cell .mt-panel:focus-within::before,
-  .dash-delivery-row .dlv-panel:hover::before,
-  .dash-delivery-row .dlv-panel:focus-within::before{
-    animation:none;
-  }
-}
 
 /* 聚焦面板（单独视图时居中收窄，避免过宽失衡） */
 .dash-cell--focus{max-width:1080px;width:100%;margin:0 auto}

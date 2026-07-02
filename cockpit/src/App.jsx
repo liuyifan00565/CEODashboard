@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 18:28:42 CST
- 更新内容: 首页开户数小卡片支持点击展开，复用本月目标完成情况二级弹窗。
+ 更新时间: 2026-07-01 18:32:30 CST
+ 更新内容: 首页开户数小卡片点击后打开对应开户数二级数据。
 */
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
@@ -97,10 +97,9 @@ export default function App() {
     [dim, dateRange, activeChannelKey]
   );
   const recoveryKpiCards = filteredKpiCards.filter((card) => ['month', 'year'].includes(card.key));
-  const monthRecoveryCard = recoveryKpiCards.find((card) => card.key === 'month');
   const financeKpiCards = filteredKpiCards.filter((card) => ['cost', 'renewal'].includes(card.key));
   const openCardData = useMemo(
-    () => filteredKpiCards.find((card) => card.key === openCard?.key) ?? null,
+    () => filteredKpiCards.find((card) => card.key === openCard?.key) ?? openCard ?? null,
     [filteredKpiCards, openCard]
   );
 
@@ -240,7 +239,7 @@ export default function App() {
                 </div>
 
                 {showOpeningMetrics && (
-                  <OpeningMetricCards onOpenSecondary={() => monthRecoveryCard && handleOpenCard(monthRecoveryCard)} />
+                  <OpeningMetricCards onOpenSecondary={handleOpenCard} />
                 )}
 
                 <div className={gridClassName}>

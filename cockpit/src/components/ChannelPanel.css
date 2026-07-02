@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 17:43:10 CST  更新内容: 渠道人员二级明细弹窗恢复深黑实体玻璃背景，避免弹层透明。 */
+/* 更新时间: 2026-07-01 18:37:59 CST  更新内容: 去掉渠道人员二级明细弹窗背景里的紫色光晕。 */
 
 .ch-panel {
   position: relative;
@@ -203,9 +203,9 @@
   inset: 0;
   border: 0;
   padding: 0;
-  background: rgba(0, 0, 0, 0.58);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
   cursor: default;
 }
 
@@ -217,13 +217,12 @@
   padding: 22px 24px 24px;
   border-radius: 18px;
   background:
-    radial-gradient(circle at 20% 34%, rgba(96, 0, 255, 0.14), rgba(96, 0, 255, 0) 46%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.016)),
-    rgba(7, 7, 10, 0.9);
+    linear-gradient(90deg, rgba(9, 9, 13, 0.96), rgba(5, 5, 8, 0.96) 52%, rgba(3, 3, 6, 0.98)),
+    rgba(4, 4, 7, 0.96);
   border: 1px solid var(--line-2);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(26px) saturate(145%);
+  -webkit-backdrop-filter: blur(26px) saturate(145%);
+  box-shadow: 0 34px 110px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
 .ch-modal-head {

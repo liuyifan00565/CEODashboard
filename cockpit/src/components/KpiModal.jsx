@@ -1,4 +1,4 @@
-/* 更新时间: 2026-06-29 11:34:00  更新内容: KPI 二级弹窗保留销售多选和新签/续订切换，移除可见 type 标签。 */
+/* 更新时间: 2026-07-01 18:01:30 CST  更新内容: KPI 二级弹窗移除订单类型控件，将年/月/日控件前移到原位置。 */
 import { useEffect, useRef, useState, useMemo } from 'react';
 import * as echarts from 'echarts';
 import gsap from 'gsap';
@@ -20,10 +20,6 @@ const DIM_OPTS = [
   { value: 'month', label: '月' },
   { value: 'day', label: '日' },
 ];
-const ORDER_TYPE_OPTS = [
-  { value: 'new', label: '新签' },
-  { value: 'renewal', label: '续订' },
-];
 const VERSION_OPTS = [
   { value: 'all', label: '全部版本' },
   ...VERSIONS.map((version) => ({ value: version.key, label: version.name })),
@@ -33,7 +29,6 @@ const MOM_LABEL = { year: '年度环比', month: '月度环比', day: '日度环
 export default function KpiModal({ card, onClose }) {
   const tokens = useThemeTokens();
   const [salesKeys, setSalesKeys] = useState(() => SALES_FILTER_OPTS.map((opt) => opt.value));
-  const [orderType, setOrderType] = useState('new');
   const [version, setVersion] = useState('all');
   const [dim, setDim] = useState('month');
   const isRenewal = card.metric === 'renewalRate';
@@ -53,8 +48,8 @@ export default function KpiModal({ card, onClose }) {
         delta: item.delta,
       }));
     }
-    return getKpiSeries(card.metric, { salesKeys, orderType, dim });
-  }, [card.metric, dim, isRenewal, orderType, renewalData, salesKeys]);
+    return getKpiSeries(card.metric, { salesKeys, dim });
+  }, [card.metric, dim, isRenewal, renewalData, salesKeys]);
   const [selIndex, setSelIndex] = useState(series.length - 1);
 
   const cardRef = useRef(null);
@@ -170,11 +165,6 @@ export default function KpiModal({ card, onClose }) {
             <Segmented options={VERSION_OPTS} value={version} onChange={setVersion} />
           ) : null}
           <MultiSegmented options={SALES_FILTER_OPTS} value={salesKeys} onChange={setSalesKeys} />
-          {!isRenewal && (
-            <div className="km-type-control">
-              <Segmented options={ORDER_TYPE_OPTS} value={orderType} onChange={setOrderType} />
-            </div>
-          )}
           <Segmented options={DIM_OPTS} value={dim} onChange={setDim} />
         </div>
 

@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 17:37:49 CST
- 更新内容: 算力用量和总容量趋势滑动条支持 3 到 15 条缩放，放大到 15 条后拖动延续查看。
+ 更新时间: 2026-07-01 19:06:16 CST
+ 更新内容: 客户算力明细排行增加账号类型、销售负责人、客成负责人表头下拉筛选。
 */
 import { useMemo, useState } from 'react';
 
@@ -30,13 +30,19 @@ const DIM_TREND_LABELS = {
 };
 const MIN_VISIBLE_TREND_BARS = 3;
 const MAX_VISIBLE_TREND_BARS = 15;
-const CUSTOMER_FILTER_ALL = 'all';
-const CUSTOMER_SORT_OPTIONS = [
-  { value: 'usage-desc', label: '算力用量 / 全部' },
-  { value: 'balance-desc', label: '算力余额 / 全部' },
-  { value: 'reply-desc', label: '平均回复率 / 全部' },
+const CUSTOMER_SORT_FIELDS = [
+  { key: 'usage', label: '算力用量 / 全部', getValue: (row) => row.usage },
+  { key: 'balance', label: '算力余额 / 全部', getValue: (row) => row.balance },
+  { key: 'reply', label: '平均回复率 / 全部', getValue: (row) => row.averageReplyRate },
 ];
-const CUSTOMER_PAGE_SIZE_OPTIONS = [10, 20, 50];
+const CUSTOMER_SORT_DIRECTIONS = { asc: '升序', desc: '降序' };
+const CUSTOMER_COLUMN_FILTER_ALL = 'all';
+const CUSTOMER_COLUMN_FILTERS = [
+  { key: 'accountType', label: '账号类型' },
+  { key: 'salesOwner', label: '销售负责人' },
+  { key: 'successOwner', label: '客成负责人' },
+];
+const CUSTOMER_PAGE_SIZE_OPTIONS = [10, 20, 50, 100, 200, 500];
 const DEFAULT_CUSTOMER_PAGE_SIZE = 20;
 const COMPUTE_RING_COLORS = [
   '#e6fbff',
@@ -131,34 +137,54 @@ function buildCustomerTableRows(rows, totalCount) {
   });
 }
 
-function buildCustomerFilterOptions(rows, field) {
+function buildInitialCustomerColumnFilters() {
+  return CUSTOMER_COLUMN_FILTERS.reduce((filters, field) => ({
+    ...filters,
+    [field.key]: CUSTOMER_COLUMN_FILTER_ALL,
+  }), {});
+}
+
+function buildCustomerColumnFilterOptions(rows, field) {
   const values = [...new Set(rows.map((row) => row[field]).filter(Boolean))]
     .sort((a, b) => String(a).localeCompare(String(b), 'zh-CN'));
+
   return [
-    { value: CUSTOMER_FILTER_ALL, label: '全部' },
+    { value: CUSTOMER_COLUMN_FILTER_ALL, label: '全部' },
     ...values.map((value) => ({ value, label: value })),
   ];
 }
 
-function filterCustomerRows(rows, { versionFilter, salesFilter }) {
-  return rows.filter((row) => {
-    const matchesVersion = versionFilter === CUSTOMER_FILTER_ALL || row.accountType === versionFilter;
-    const matchesSales = salesFilter === CUSTOMER_FILTER_ALL || row.salesOwner === salesFilter;
-    return matchesVersion && matchesSales;
-  });
+function filterCustomerRowsByColumnFilters(rows, filters) {
+  return rows.filter((row) => CUSTOMER_COLUMN_FILTERS.every((field) => {
+    const selectedValue = filters[field.key] ?? CUSTOMER_COLUMN_FILTER_ALL;
+    return selectedValue === CUSTOMER_COLUMN_FILTER_ALL || row[field.key] === selectedValue;
+  }));
 }
 
 function sortCustomerRows(rows, sortKey = 'usage-desc') {
-  const normalizedSortKey = CUSTOMER_SORT_OPTIONS.some((option) => option.value === sortKey)
-    ? sortKey
-    : 'usage-desc';
-  if (normalizedSortKey === 'balance-desc') {
-    return [...rows].sort((a, b) => b.balance - a.balance);
-  }
-  if (normalizedSortKey === 'reply-desc') {
-    return [...rows].sort((a, b) => b.averageReplyRate - a.averageReplyRate);
-  }
-  return [...rows].sort((a, b) => b.usage - a.usage);
+  const { sortField, sortDirection } = getCustomerSortState(sortKey);
+  const sortMultiplier = sortDirection === 'asc' ? 1 : -1;
+
+  return [...rows].sort((a, b) => {
+    const primaryDiff = sortField.getValue(a) - sortField.getValue(b);
+    if (primaryDiff !== 0) return primaryDiff * sortMultiplier;
+
+    const usageDiff = b.usage - a.usage;
+    if (usageDiff !== 0) return usageDiff;
+    return String(a.owner).localeCompare(String(b.owner), 'zh-CN');
+  });
+}
+
+function getCustomerSortState(sortKey = 'usage-desc') {
+  const [sortFieldKey, sortDirectionKey] = String(sortKey).split('-');
+  const sortField = CUSTOMER_SORT_FIELDS.find((field) => field.key === sortFieldKey) ?? CUSTOMER_SORT_FIELDS[0];
+  const sortDirection = CUSTOMER_SORT_DIRECTIONS[sortDirectionKey] ? sortDirectionKey : 'desc';
+
+  return {
+    sortField,
+    sortDirection,
+    sortValue: `${sortField.key}-${sortDirection}`,
+  };
 }
 
 function tooltipExtraCss() {
@@ -713,13 +739,73 @@ function Panel({ className = '', title, sub, active, children }) {
   );
 }
 
+function CustomerColumnHeader({
+  label,
+  filterKey,
+  activeValue,
+  options,
+  openFilter,
+  setOpenFilter,
+  onChange,
+}) {
+  const isOpen = openFilter === filterKey;
+  const isFiltered = activeValue !== CUSTOMER_COLUMN_FILTER_ALL;
+
+  return (
+    <th>
+      <div className="cpu-th-filter">
+        <span>{label}</span>
+        <div
+          className={`cpu-column-filter${isOpen ? ' cpu-column-filter--open' : ''}${isFiltered ? ' cpu-column-filter--active' : ''}`}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) {
+              setOpenFilter(null);
+            }
+          }}
+        >
+          <button
+            type="button"
+            className="cpu-column-filter__trigger"
+            aria-haspopup="listbox"
+            aria-expanded={isOpen}
+            aria-label={`${label}筛选${isFiltered ? `，当前${activeValue}` : '，当前全部'}`}
+            onClick={() => setOpenFilter(isOpen ? null : filterKey)}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') setOpenFilter(null);
+            }}
+          >
+            <span className="cpu-column-filter__chevron" aria-hidden="true" />
+          </button>
+          {isOpen && (
+            <div className="cpu-column-filter__menu" role="listbox" aria-label={`${label}筛选`}>
+              {options.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-selected={option.value === activeValue}
+                  className={`cpu-column-filter__option${option.value === activeValue ? ' cpu-column-filter__option--active' : ''}`}
+                  onClick={() => onChange(filterKey, option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </th>
+  );
+}
+
 export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateRange = [] }) {
   const tokens = useThemeTokens();
   const [customerSort, setCustomerSort] = useState('usage-desc');
-  const [customerVersionFilter, setCustomerVersionFilter] = useState(CUSTOMER_FILTER_ALL);
-  const [customerSalesFilter, setCustomerSalesFilter] = useState(CUSTOMER_FILTER_ALL);
+  const [customerColumnFilters, setCustomerColumnFilters] = useState(() => buildInitialCustomerColumnFilters());
+  const [openCustomerColumnFilter, setOpenCustomerColumnFilter] = useState(null);
   const [customerPage, setCustomerPage] = useState(1);
   const [customerPageSize, setCustomerPageSize] = useState(DEFAULT_CUSTOMER_PAGE_SIZE);
+  const [customerPageSizeMenuOpen, setCustomerPageSizeMenuOpen] = useState(false);
   const [customerJumpPage, setCustomerJumpPage] = useState('');
   const periodLabel = DIM_TREND_LABELS[dim] ?? DIM_TREND_LABELS.month;
   const overview = getComputeOverview();
@@ -789,28 +875,26 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
     () => buildCustomerTableRows(customers, overview.totalCustomers),
     [customers, overview.totalCustomers]
   );
-  const customerVersionOptions = useMemo(
-    () => buildCustomerFilterOptions(customerRows, 'accountType'),
-    [customerRows]
-  );
-  const customerSalesOptions = useMemo(
-    () => buildCustomerFilterOptions(customerRows, 'salesOwner'),
+  const customerColumnFilterOptions = useMemo(
+    () => CUSTOMER_COLUMN_FILTERS.reduce((options, field) => ({
+      ...options,
+      [field.key]: buildCustomerColumnFilterOptions(customerRows, field.key),
+    }), {}),
     [customerRows]
   );
   const filteredCustomers = useMemo(
-    () => filterCustomerRows(customerRows, {
-      versionFilter: customerVersionFilter,
-      salesFilter: customerSalesFilter,
-    }),
-    [customerRows, customerVersionFilter, customerSalesFilter]
+    () => filterCustomerRowsByColumnFilters(customerRows, customerColumnFilters),
+    [customerRows, customerColumnFilters]
   );
   const sortedCustomers = useMemo(
     () => sortCustomerRows(filteredCustomers, customerSort),
     [filteredCustomers, customerSort]
   );
+  const activeCustomerSort = getCustomerSortState(customerSort);
+  const activeSortField = activeCustomerSort.sortField;
+  const activeSortDirection = activeCustomerSort.sortDirection;
   const customerTotal = sortedCustomers.length;
-  const selectedSortLabel = CUSTOMER_SORT_OPTIONS.find((option) => option.value === customerSort)?.label
-    ?? CUSTOMER_SORT_OPTIONS[0].label;
+  const selectedSortLabel = `${activeSortField.label} · ${CUSTOMER_SORT_DIRECTIONS[activeSortDirection]}`;
   const customerPageCount = Math.max(1, Math.ceil(customerTotal / customerPageSize));
   const safeCustomerPage = clampCustomerPage(customerPage, customerPageCount);
   const customerStartIndex = customerTotal ? (safeCustomerPage - 1) * customerPageSize : 0;
@@ -824,30 +908,33 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
     setCustomerJumpPage('');
   }
 
-  function updateCustomerSort(nextSort) {
-    setCustomerSort(nextSort);
+  function updateCustomerSort(nextSortFieldKey) {
+    const nextDirection = activeSortField.key === nextSortFieldKey && activeSortDirection === 'desc' ? 'asc' : 'desc';
+    setCustomerSort(`${nextSortFieldKey}-${nextDirection}`);
+    setOpenCustomerColumnFilter(null);
     resetCustomerPage();
   }
 
-  function updateCustomerVersionFilter(nextVersion) {
-    setCustomerVersionFilter(nextVersion);
-    resetCustomerPage();
-  }
-
-  function updateCustomerSalesFilter(nextSales) {
-    setCustomerSalesFilter(nextSales);
+  function updateCustomerColumnFilter(filterKey, nextValue) {
+    setCustomerColumnFilters((filters) => ({
+      ...filters,
+      [filterKey]: nextValue,
+    }));
+    setOpenCustomerColumnFilter(null);
     resetCustomerPage();
   }
 
   function updateCustomerPage(nextPage) {
     setCustomerPage(clampCustomerPage(nextPage, customerPageCount));
     setCustomerJumpPage('');
+    setCustomerPageSizeMenuOpen(false);
   }
 
   function updateCustomerPageSize(nextSize) {
     setCustomerPageSize(nextSize);
     setCustomerPage(1);
     setCustomerJumpPage('');
+    setCustomerPageSizeMenuOpen(false);
   }
 
   function submitCustomerJumpPage() {
@@ -922,52 +1009,29 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
         active={matchesTerm(SEARCH_KEYWORDS.customer, searchTerm)}
       >
         <div className="cpu-customer-toolbar">
-          <div className="cpu-customer-filters" aria-label="客户明细筛选">
-            <label className="cpu-select-field">
-              <span className="cpu-control-label">排序:</span>
-              <span className="cpu-select-shell">
-                <select
-                  className="cpu-select-control"
-                  value={customerSort}
-                  onChange={(event) => updateCustomerSort(event.target.value)}
+          <div className="cpu-customer-filters" aria-label="客户明细排序">
+            {CUSTOMER_SORT_FIELDS.map((field) => {
+              const isActive = activeSortField.key === field.key;
+              const directionLabel = CUSTOMER_SORT_DIRECTIONS[activeSortDirection];
+
+              return (
+                <button
+                  key={field.key}
+                  type="button"
+                  className={`cpu-sort-card${isActive ? ' cpu-sort-card--active' : ''}`}
+                  aria-pressed={isActive}
+                  aria-label={`${field.label}${isActive ? `，当前${directionLabel}` : '，点击按降序排序'}`}
+                  title={`${field.label}${isActive ? ` · ${directionLabel}` : ' · 点击排序'}`}
+                  onClick={() => updateCustomerSort(field.key)}
                 >
-                  {CUSTOMER_SORT_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </span>
-            </label>
-            <label className="cpu-select-field">
-              <span className="cpu-control-label">使用版本:</span>
-              <span className="cpu-select-shell">
-                <select
-                  className="cpu-select-control"
-                  value={customerVersionFilter}
-                  onChange={(event) => updateCustomerVersionFilter(event.target.value)}
-                >
-                  {customerVersionOptions.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </span>
-            </label>
-            <label className="cpu-select-field">
-              <span className="cpu-select-shell">
-                <select
-                  className="cpu-select-control"
-                  aria-label="销售负责人"
-                  value={customerSalesFilter}
-                  onChange={(event) => updateCustomerSalesFilter(event.target.value)}
-                >
-                  <option value={CUSTOMER_FILTER_ALL}>销售负责人</option>
-                  {customerSalesOptions
-                    .filter((option) => option.value !== CUSTOMER_FILTER_ALL)
-                    .map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                </select>
-              </span>
-            </label>
+                  <span className="cpu-sort-card__label">{field.label}</span>
+                  <span className="cpu-sort-card__arrows" aria-hidden="true">
+                    <span className={`cpu-sort-card__arrow cpu-sort-card__arrow--up${isActive && activeSortDirection === 'asc' ? ' cpu-sort-card__arrow--active' : ''}`} />
+                    <span className={`cpu-sort-card__arrow cpu-sort-card__arrow--down${isActive && activeSortDirection === 'desc' ? ' cpu-sort-card__arrow--active' : ''}`} />
+                  </span>
+                </button>
+              );
+            })}
           </div>
           <span className="cpu-customer-range">
             {formatInt(customerRangeStart)}-{formatInt(customerEndIndex)} / {formatInt(customerTotal)}
@@ -980,9 +1044,33 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
               <tr>
                 <th>手机号</th>
                 <th>负责人</th>
-                <th>账号类型</th>
-                <th>销售负责人</th>
-                <th>客成负责人</th>
+                <CustomerColumnHeader
+                  label="账号类型"
+                  filterKey="accountType"
+                  activeValue={customerColumnFilters.accountType}
+                  options={customerColumnFilterOptions.accountType}
+                  openFilter={openCustomerColumnFilter}
+                  setOpenFilter={setOpenCustomerColumnFilter}
+                  onChange={updateCustomerColumnFilter}
+                />
+                <CustomerColumnHeader
+                  label="销售负责人"
+                  filterKey="salesOwner"
+                  activeValue={customerColumnFilters.salesOwner}
+                  options={customerColumnFilterOptions.salesOwner}
+                  openFilter={openCustomerColumnFilter}
+                  setOpenFilter={setOpenCustomerColumnFilter}
+                  onChange={updateCustomerColumnFilter}
+                />
+                <CustomerColumnHeader
+                  label="客成负责人"
+                  filterKey="successOwner"
+                  activeValue={customerColumnFilters.successOwner}
+                  options={customerColumnFilterOptions.successOwner}
+                  openFilter={openCustomerColumnFilter}
+                  setOpenFilter={setOpenCustomerColumnFilter}
+                  onChange={updateCustomerColumnFilter}
+                />
                 <th>算力用量</th>
                 <th>算力余额</th>
                 <th>平均回复率</th>
@@ -1036,17 +1124,44 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
           >
             ›
           </button>
-          <div className="cpu-page-size" aria-label={`${customerPageSize} 条/页`}>
-            {CUSTOMER_PAGE_SIZE_OPTIONS.map((size) => (
-              <button
-                key={size}
-                type="button"
-                className={`cpu-page-size__button${size === customerPageSize ? ' cpu-page-size__button--active' : ''}`}
-                onClick={() => updateCustomerPageSize(size)}
-              >
-                {size} 条/页
-              </button>
-            ))}
+          <div
+            className={`cpu-page-size${customerPageSizeMenuOpen ? ' cpu-page-size--open' : ''}`}
+            aria-label="每页条数"
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) {
+                setCustomerPageSizeMenuOpen(false);
+              }
+            }}
+          >
+            {customerPageSizeMenuOpen && (
+              <div className="cpu-page-size-menu" role="listbox" aria-label="每页条数">
+                {CUSTOMER_PAGE_SIZE_OPTIONS.map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    role="option"
+                    aria-selected={size === customerPageSize}
+                    className={`cpu-page-size-option${size === customerPageSize ? ' cpu-page-size-option--active' : ''}`}
+                    onClick={() => updateCustomerPageSize(size)}
+                  >
+                    {size}条/页
+                  </button>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              className={`cpu-page-size-select${customerPageSizeMenuOpen ? ' cpu-page-size-select--open' : ''}`}
+              aria-haspopup="listbox"
+              aria-expanded={customerPageSizeMenuOpen}
+              onClick={() => setCustomerPageSizeMenuOpen((open) => !open)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') setCustomerPageSizeMenuOpen(false);
+              }}
+            >
+              <span>{customerPageSize}条/页</span>
+              <span className="cpu-page-size-select__chevron" aria-hidden="true" />
+            </button>
           </div>
           <label className="cpu-page-jump">
             <span>前往</span>

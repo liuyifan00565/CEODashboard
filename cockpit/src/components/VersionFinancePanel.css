@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 16:00:36 CST  更新内容: 版本情况四个版本小卡片整卡可点击打开对应二级弹窗。 */
+/* 更新时间: 2026-07-01 18:37:59 CST  更新内容: 去掉版本情况图表和二级展开背景里的紫色发光。 */
 .vf-panel {
   position: relative;
   display: flex;
@@ -8,7 +8,6 @@
   padding: 16px 18px 16px;
   color: var(--txt);
   background:
-    radial-gradient(circle at 18% 52%, rgba(255, 79, 216, .18), transparent 44%),
     linear-gradient(120deg, rgba(230,251,255,.055), transparent 48%),
     transparent;
   border: 1px solid var(--line-2);
@@ -107,14 +106,7 @@
 }
 
 .vf-ring-pane::before {
-  content: "";
-  position: absolute;
-  inset: 42px 9% 6px 4%;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 79, 216, .24), transparent 66%);
-  filter: blur(16px);
-  opacity: .82;
-  pointer-events: none;
+  content: none;
 }
 
 .vf-metric-switch {
@@ -188,7 +180,6 @@
   min-height: 326px;
   margin-top: -24px;
   margin-left: -16px;
-  filter: drop-shadow(0 0 20px rgba(255, 79, 216, .22));
 }
 
 .vf-ring-chart {
@@ -356,11 +347,11 @@
   width: min(720px, calc(100vw - 48px));
   max-height: calc(100vh - 48px);
   background:
-    radial-gradient(circle at 20% 34%, rgba(255, 79, 216, .16), transparent 45%),
-    rgba(7, 7, 10, .78);
-  -webkit-backdrop-filter: blur(24px) saturate(155%);
-  backdrop-filter: blur(24px) saturate(155%);
-  box-shadow: 0 28px 90px rgba(0, 0, 0, .66), inset 0 1px 0 rgba(255, 255, 255, .2);
+    linear-gradient(90deg, rgba(9, 9, 13, .96), rgba(5, 5, 8, .96) 52%, rgba(3, 3, 6, .98)),
+    rgba(4, 4, 7, .96);
+  -webkit-backdrop-filter: blur(26px) saturate(145%);
+  backdrop-filter: blur(26px) saturate(145%);
+  box-shadow: 0 34px 110px rgba(0, 0, 0, .72), inset 0 1px 0 rgba(255, 255, 255, .16);
 }
 
 .vf-detail-overlay {
@@ -375,9 +366,9 @@
 }
 
 .vf-detail-mask {
-  background: rgba(0, 0, 0, .72);
-  -webkit-backdrop-filter: blur(10px) saturate(125%);
-  backdrop-filter: blur(10px) saturate(125%);
+  background: rgba(0, 0, 0, .82);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  backdrop-filter: blur(14px) saturate(120%);
 }
 
 .vf-version-top {
