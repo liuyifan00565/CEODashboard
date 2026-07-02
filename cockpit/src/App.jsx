@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 16:05:12 CST
- 更新内容: 数据维护按钮改为复用品牌玻璃背景，按钮内部不再使用独立芯片底色。
+ 更新时间: 2026-07-02 16:25:57 CST
+ 更新内容: 数据维护模式接入目标、成本、组织、渠道四个独立维护界面。
 */
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
@@ -23,6 +23,7 @@ import VersionFinancePanel from './components/VersionFinancePanel';
 import DeliveryPanel from './components/DeliveryPanel';
 import ComputeUsagePage from './components/ComputeUsagePage';
 import OpeningMetricCards from './components/OpeningMetricCards';
+import MaintenancePage from './components/MaintenancePage';
 
 import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
@@ -89,6 +90,7 @@ export default function App() {
 
   const gridRef = useRef(null);
   const pendingMenuScrollRef = useRef(false);
+  const isMaintenancePage = maintenanceMode;
   const isComputePage = activeMenu === 'compute';
   const showOpeningMetrics = activeMenu === 'overview';
   const activeChannelKey = getDashboardChannelKey(activeMenu);
@@ -98,6 +100,7 @@ export default function App() {
     : activeMenu === 'overview' ? '月度视角' : activeMenuLabel;
   const sidebarItems = maintenanceMode ? MAINTENANCE_MENU : MENU;
   const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
+  const contentKey = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const gridClassName = activeMenu === 'overview'
     ? 'dash-grid dash-grid--overview'
     : `dash-grid dash-grid--overview dash-grid--${activeMenu}`;
@@ -133,6 +136,12 @@ export default function App() {
     }
 
     handleMenuChange(nextMenu);
+  }
+
+  function handleMaintenanceBack() {
+    setMaintenanceMode(false);
+    setActiveMenu('overview');
+    setActiveMaintenanceMenu(DEFAULT_MAINTENANCE_MENU);
   }
 
   function handleMaintenanceModeToggle() {
@@ -180,7 +189,7 @@ export default function App() {
       if (scrollFrame) cancelAnimationFrame(scrollFrame);
       ctx.revert();
     };
-  }, [activeMenu]);
+  }, [contentKey]);
 
   return (
     <div className="app">
@@ -270,8 +279,10 @@ export default function App() {
             </div>
           </header>
 
-          <div className="dash-content" ref={gridRef} key={activeMenu}>
-            {isComputePage ? (
+          <div className="dash-content" ref={gridRef} key={contentKey}>
+            {isMaintenancePage ? (
+              <MaintenancePage activePage={activeMaintenanceMenu} onBack={handleMaintenanceBack} />
+            ) : isComputePage ? (
               <ComputeUsagePage searchTerm={searchTerm} dim={dim} dateRange={dateRange} />
             ) : (
               <>

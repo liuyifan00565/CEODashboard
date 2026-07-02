@@ -1,16 +1,26 @@
 /*
- 更新时间: 2026-07-02 15:44:47 CST
- 更新内容: 增加数据维护模式四个侧边导航入口的回归测试。
+ 更新时间: 2026-07-02 16:25:57 CST
+ 更新内容: 增加数据维护模式四个新界面的数据结构回归测试。
 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
   CHANNELS,
+  CHANNEL_MAINTENANCE_GROUPS,
+  CHANNEL_MAINTENANCE_SOURCES,
+  COST_MAINTENANCE_CHANNELS,
+  COST_MAINTENANCE_ROWS,
   DELIVERY_TARGET_COUNT,
+  LABOR_COST_MAINTENANCE_ROWS,
   MAINTENANCE_MENU,
+  MAINTENANCE_PERIOD_COLUMNS,
   MENU,
+  ORG_MAINTENANCE_DEPARTMENTS,
+  ORG_MAINTENANCE_USERS,
   SALES_GROUPS,
+  TARGET_MAINTENANCE_ORG_TREE,
+  TARGET_MAINTENANCE_ROWS,
   VERSIONS,
   getComputeCustomerRows,
   getComputeOverview,
@@ -24,6 +34,7 @@ import {
   getDeliveryRows,
   getDeliverySummary,
   getKpiSeries,
+  getMaintenancePageMeta,
   getSalesCompletionRows,
   getSalesMemberRows,
   getVersionRows,
@@ -58,6 +69,66 @@ test('defines the four data maintenance sidebar entries separately from the main
     MENU.map((item) => item.name),
     ['经营总览', '算力用量分析']
   );
+});
+
+test('defines maintenance period columns matching the reference yearly matrix', () => {
+  assert.deepEqual(
+    MAINTENANCE_PERIOD_COLUMNS.map((column) => column.label),
+    ['全年', '第一季度', '1月', '2月', '3月', '第二季度', '4月', '5月', '6月', '第三季度', '7月', '8月', '9月', '第四季度', '10月', '11月', '12月']
+  );
+  assert.deepEqual(
+    MAINTENANCE_PERIOD_COLUMNS.filter((column) => column.month).map((column) => column.key),
+    ['m01', 'm02', 'm03', 'm04', 'm05', 'm06', 'm07', 'm08', 'm09', 'm10', 'm11', 'm12']
+  );
+});
+
+test('returns page metadata for all four maintenance screens', () => {
+  assert.deepEqual(
+    MAINTENANCE_MENU.map((item) => getMaintenancePageMeta(item.key).title),
+    ['目标维护', '成本维护', '组织维护', '渠道维护']
+  );
+  assert.equal(getMaintenancePageMeta('target-maintenance').scope, '所有部门');
+  assert.equal(getMaintenancePageMeta('cost-maintenance').scope, '全部渠道');
+  assert.equal(getMaintenancePageMeta('org-maintenance').scope, 'BI销售 21 人 / 卫瓴人员 28 人');
+  assert.equal(getMaintenancePageMeta('channel-maintenance').scope, '卫瓴线索来源字典');
+  assert.equal(getMaintenancePageMeta('unknown').title, '目标维护');
+});
+
+test('provides target maintenance organization tree and editable user rows', () => {
+  assert.equal(TARGET_MAINTENANCE_ORG_TREE.name, '成都福客人工智能');
+  assert.ok(TARGET_MAINTENANCE_ORG_TREE.children.length >= 3);
+  assert.ok(TARGET_MAINTENANCE_ROWS.some((row) => row.type === 'department'));
+  assert.ok(TARGET_MAINTENANCE_ROWS.some((row) => row.type === 'user'));
+  assert.ok(TARGET_MAINTENANCE_ROWS.every((row) => row.periods.year.target >= row.periods.q1.target));
+  assert.ok(TARGET_MAINTENANCE_ROWS.filter((row) => row.type === 'user').every((row) => row.periods.m06.actual >= 0));
+});
+
+test('provides cost maintenance channel rows and labor cost rows', () => {
+  assert.ok(COST_MAINTENANCE_CHANNELS.some((channel) => channel.name === '全部渠道'));
+  assert.ok(COST_MAINTENANCE_CHANNELS.some((channel) => channel.kind === '大类'));
+  assert.ok(COST_MAINTENANCE_ROWS.every((row) => row.periods.m06.cost >= 0));
+  assert.ok(COST_MAINTENANCE_ROWS.every((row) => row.periods.m06.actual >= 0));
+  assert.deepEqual(
+    LABOR_COST_MAINTENANCE_ROWS.map((row) => row.name),
+    ['销售部人力成本', '市场部人力成本']
+  );
+  assert.ok(LABOR_COST_MAINTENANCE_ROWS.every((row) => row.periods.year.cost > row.periods.m06.cost));
+});
+
+test('provides organization maintenance departments and BI users', () => {
+  assert.ok(ORG_MAINTENANCE_DEPARTMENTS.some((dept) => dept.name === '线上销售部'));
+  assert.ok(ORG_MAINTENANCE_DEPARTMENTS.some((dept) => dept.parentId));
+  assert.ok(ORG_MAINTENANCE_USERS.every((user) => user.name && user.sourceUserId));
+  assert.ok(ORG_MAINTENANCE_USERS.some((user) => user.isSales && user.enabled));
+  assert.ok(ORG_MAINTENANCE_USERS.some((user) => !user.enabled));
+});
+
+test('provides channel maintenance groups and source mappings', () => {
+  assert.ok(CHANNEL_MAINTENANCE_GROUPS.some((group) => group.name === '付费流量'));
+  assert.ok(CHANNEL_MAINTENANCE_GROUPS.some((group) => group.parentId));
+  assert.ok(CHANNEL_MAINTENANCE_SOURCES.every((source) => source.code && source.name));
+  assert.ok(CHANNEL_MAINTENANCE_SOURCES.some((source) => source.groupId === 'group_paid_flow'));
+  assert.ok(CHANNEL_MAINTENANCE_SOURCES.some((source) => source.excluded));
 });
 
 test('returns compute dashboard metrics, trend, pie slices, and customer rows from the reference dashboard', () => {

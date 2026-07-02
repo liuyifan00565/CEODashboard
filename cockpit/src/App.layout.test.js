@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 16:05:12 CST
- 更新内容: 约束数据维护按钮复用品牌玻璃背景，并增加卡片按钮统一样式规则回归测试。
+ 更新时间: 2026-07-02 16:42:22 CST
+ 更新内容: 增加维护页卡片改用主界面非透明面板背景的回归测试。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -17,6 +17,8 @@ const channelPanelSource = readFileSync(new URL('./components/ChannelPanel.jsx',
 const channelPanelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
 const computePageSource = readFileSync(new URL('./components/ComputeUsagePage.jsx', import.meta.url), 'utf8');
 const computePageCss = readFileSync(new URL('./components/ComputeUsagePage.css', import.meta.url), 'utf8');
+const maintenancePageSource = readFileSync(new URL('./components/MaintenancePage.jsx', import.meta.url), 'utf8');
+const maintenancePageCss = readFileSync(new URL('./components/MaintenancePage.css', import.meta.url), 'utf8');
 
 function cssRuleBody(source, selector) {
   const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -154,6 +156,94 @@ test('adds a topbar data maintenance switch that swaps the sidebar navigation', 
   assert.doesNotMatch(maintenanceSwitchBlock, /background:var\(--ai-chip-bg\);/);
   assert.doesNotMatch(maintenanceActiveBlock, /background:var\(--ai-chip-hover\);/);
   assert.match(projectAgentGuidance, /所有卡片和按钮的背景、边框、模糊、阴影与圆角必须优先复用项目既有统一玻璃体系/);
+});
+
+test('renders data maintenance as four independent pages instead of the dashboard grid', () => {
+  assert.match(appSource, /import MaintenancePage from '\.\/components\/MaintenancePage';/);
+  assert.match(appSource, /const isMaintenancePage = maintenanceMode;/);
+  assert.match(appSource, /function handleMaintenanceBack\(\) \{[\s\S]*?setMaintenanceMode\(false\);[\s\S]*?setActiveMenu\('overview'\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?\}/);
+  assert.match(appSource, /isMaintenancePage \? \([\s\S]*?<MaintenancePage activePage=\{activeMaintenanceMenu\} onBack=\{handleMaintenanceBack\} \/>[\s\S]*?\) : isComputePage \? \(/);
+  assert.match(maintenancePageSource, /export default function MaintenancePage\(\{ activePage = 'target-maintenance', onBack \}\)/);
+  assert.match(maintenancePageSource, /const PAGE_RENDERERS = \{/);
+  assert.match(maintenancePageSource, /'target-maintenance': TargetMaintenancePage/);
+  assert.match(maintenancePageSource, /'cost-maintenance': CostMaintenancePage/);
+  assert.match(maintenancePageSource, /'org-maintenance': OrgMaintenancePage/);
+  assert.match(maintenancePageSource, /'channel-maintenance': ChannelMaintenancePage/);
+});
+
+test('builds the target and cost maintenance pages from reference matrix content', () => {
+  assert.match(maintenancePageSource, /MAINTENANCE_PERIOD_COLUMNS/);
+  assert.match(maintenancePageSource, /TARGET_MAINTENANCE_ORG_TREE/);
+  assert.match(maintenancePageSource, /TARGET_MAINTENANCE_ROWS/);
+  assert.match(maintenancePageSource, /下载模板/);
+  assert.match(maintenancePageSource, /Excel导入/);
+  assert.match(maintenancePageSource, /保存目标/);
+  assert.match(maintenancePageSource, /年度目标/);
+  assert.match(maintenancePageSource, /目标维护/);
+  assert.match(maintenancePageSource, /COST_MAINTENANCE_CHANNELS/);
+  assert.match(maintenancePageSource, /COST_MAINTENANCE_ROWS/);
+  assert.match(maintenancePageSource, /LABOR_COST_MAINTENANCE_ROWS/);
+  assert.match(maintenancePageSource, /渠道成本维护/);
+  assert.match(maintenancePageSource, /人力成本维护/);
+  assert.match(maintenancePageSource, /保存成本/);
+});
+
+test('builds the org and channel maintenance pages from reference tree and table content', () => {
+  assert.match(maintenancePageSource, /ORG_MAINTENANCE_DEPARTMENTS/);
+  assert.match(maintenancePageSource, /ORG_MAINTENANCE_USERS/);
+  assert.match(maintenancePageSource, /新增组织/);
+  assert.match(maintenancePageSource, /更新 BI 销售人员/);
+  assert.match(maintenancePageSource, /BI组织架构/);
+  assert.match(maintenancePageSource, /BI人员范围/);
+  assert.match(maintenancePageSource, /卫瓴ID/);
+  assert.match(maintenancePageSource, /CHANNEL_MAINTENANCE_GROUPS/);
+  assert.match(maintenancePageSource, /CHANNEL_MAINTENANCE_SOURCES/);
+  assert.match(maintenancePageSource, /补齐默认来源/);
+  assert.match(maintenancePageSource, /新增大类/);
+  assert.match(maintenancePageSource, /新增来源/);
+  assert.match(maintenancePageSource, /卫瓴线索来源/);
+});
+
+test('keeps data maintenance cards buttons and controls on the dashboard glass system', () => {
+  const panelBlock = cssRuleBody(maintenancePageCss, '.mnt-surface');
+  const buttonBlock = cssRuleBody(maintenancePageCss, '.mnt-btn');
+  const primaryButtonBlock = cssRuleBody(maintenancePageCss, '.mnt-btn--primary');
+  const inputBlock = cssRuleBody(maintenancePageCss, '.mnt-control');
+  const toolbarBlock = cssRuleBody(maintenancePageCss, '.mnt-toolbar');
+  const targetLayoutBlock = cssRuleBody(maintenancePageCss, '.mnt-layout--target');
+  const matrixWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap');
+  const progressBlock = cssRuleBody(maintenancePageCss, '.mnt-progress');
+  const progressGoodBlock = cssRuleBody(maintenancePageCss, '.mnt-progress--good span');
+
+  assert.match(maintenancePageSource, /import GlassSurface from '\.\/GlassSurface\/GlassSurface';/);
+  assert.match(maintenancePageSource, /function MaintenanceSurface/);
+  assert.match(maintenancePageCss, /\.mnt-glass \.glass-surface__content\{padding:0;display:block\}/);
+  assert.match(toolbarBlock, /min-height:\s*48px;/);
+  assert.match(toolbarBlock, /padding:\s*8px 12px;/);
+  assert.match(targetLayoutBlock, /grid-template-columns:\s*minmax\(190px,\s*230px\) minmax\(0,\s*1fr\);/);
+  assert.match(maintenancePageCss, /\.mnt-layout--cost,\s*[\s\S]*?\.mnt-layout--channel \{[\s\S]*?grid-template-columns:\s*minmax\(220px,\s*260px\) minmax\(0,\s*1fr\);/);
+  assert.match(maintenancePageCss, /\.mnt-layout--org \{[\s\S]*?grid-template-columns:\s*minmax\(220px,\s*260px\) minmax\(0,\s*1fr\);/);
+  assert.match(panelBlock, /linear-gradient\(120deg,\s*rgba\(230,251,255,\.055\),\s*transparent 48%\),\s*[\s\S]*?var\(--panel\);/);
+  assert.doesNotMatch(panelBlock, /,\s*transparent;/);
+  assert.match(panelBlock, /border:\s*1px solid var\(--line-2\);/);
+  assert.match(panelBlock, /backdrop-filter:\s*var\(--glass-blur\);/);
+  assert.match(panelBlock, /box-shadow:\s*var\(--glass-shadow\);/);
+  assert.match(matrixWrapBlock, /background:\s*var\(--panel-2\);/);
+  assert.match(maintenancePageSource, /<ProgressLine period=\{period\} \/>/);
+  assert.match(progressBlock, /height:\s*7px;/);
+  assert.match(progressBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.09\);/);
+  assert.match(progressGoodBlock, /background:\s*linear-gradient\(90deg,\s*rgba\(var\(--good-rgb\),\s*\.92\),\s*rgba\(255,255,255,\.78\)\);/);
+  assert.match(buttonBlock, /background:\s*var\(--glass-cell\);/);
+  assert.match(buttonBlock, /border:\s*1px solid var\(--line\);/);
+  assert.match(buttonBlock, /border-radius:\s*12px;/);
+  assert.match(primaryButtonBlock, /background:\s*var\(--control-solid\);/);
+  assert.match(inputBlock, /background:\s*var\(--glass-cell\);/);
+  assert.match(maintenancePageCss, /\.mnt-edit-row,\s*[\s\S]*?\.mnt-channel-manage-row \{[\s\S]*?background:\s*var\(--panel-2\);/);
+  assert.doesNotMatch(maintenancePageCss, /\.mnt-edit-row,[\s\S]*?background:\s*transparent;/);
+  assert.doesNotMatch(maintenancePageCss, /\.mnt-row--summary td \{[\s\S]*?background:\s*transparent;/);
+  assert.doesNotMatch(maintenancePageCss, /\.mnt-row--summary td \{[\s\S]*?background:\s*rgba\(var\(--good-rgb\)/);
+  assert.doesNotMatch(maintenancePageCss, /#fff;/);
+  assert.doesNotMatch(maintenancePageCss, /box-shadow:\s*0 5px 14px rgba\(216, 58, 215/);
 });
 
 test('uses full-width compute trend sliders that resize from 3 to 15 bars', () => {
