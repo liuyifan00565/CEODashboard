@@ -1,3 +1,4 @@
+/* Update time: 2026-07-02 18:03:34 CST  Update content: Place recovery card target subtitles beside the large KPI value on desktop. */
 /* Update time: 2026-07-02 17:50:46 CST  Update content: Add a scoped progress chart class so recovery cards can tone down accent saturation. */
 /* Update time: 2026-07-02 17:09:15 CST  Update content: Soften the unfinished recovery slice for the refined neon palette. */
 /* 更新时间: 2026-06-30 19:08:00  更新内容: 回款 KPI 半环扇区增加间隙。 */
@@ -330,11 +331,13 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
     <>
       <div className="kpi-card__title">{card.title}</div>
 
-      <div className="kpi-card__value">
-        <NumberRoll value={displayValue} suffix={suffix} decimals={decimals} />
-      </div>
+      <div className="kpi-card__value-row">
+        <div className="kpi-card__value">
+          <NumberRoll value={displayValue} suffix={suffix} decimals={decimals} />
+        </div>
 
-      {card.sub != null && <div className="kpi-card__sub">{card.sub}</div>}
+        {card.sub != null && <div className="kpi-card__sub">{card.sub}</div>}
+      </div>
 
       {hasProgress && (
         <div className="kpi-card__progress">

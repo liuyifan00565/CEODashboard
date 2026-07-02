@@ -1,3 +1,4 @@
+/* Update time: 2026-07-02 18:03:34 CST  Update content: Show recovery target subtitles beside the big value on desktop while preserving stacked mobile layout. */
 /* Update time: 2026-07-02 17:50:46 CST  Update content: Return recovery cards to neutral dark glass and keep completion color as restrained edge accents. */
 /* Update time: 2026-07-02 17:39:14 CST  Update content: Drive the recovery card full wash from completion accent colors instead of fixed lime. */
 /* Update time: 2026-07-02 17:29:43 CST  Update content: Replace local recovery pie glow with a subtle full-card lime glass wash. */
@@ -307,6 +308,10 @@
   letter-spacing: .02em;
 }
 
+.kpi-card__value-row {
+  min-width: 0;
+}
+
 .kpi-card__value {
   margin: 2px 0;
   font-size: 38px;
@@ -415,10 +420,46 @@
   color: var(--muted);
 }
 
+@media (min-width:761px) {
+  .kpi-card--recovery .kpi-card__value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .kpi-card--recovery .kpi-card__value-row .kpi-card__value {
+    flex: 0 0 auto;
+  }
+
+  .kpi-card--recovery .kpi-card__value-row .kpi-card__sub {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin-top: 0;
+    white-space: nowrap;
+    font-size: 15px;
+    font-weight: 650;
+    line-height: 1.25;
+    color: rgba(239,251,255,.74);
+  }
+
+  .kpi-card--with-side .kpi-card__value-row {
+    gap: 14px;
+  }
+
+  .kpi-card--with-side .kpi-card__value-row .kpi-card__sub {
+    font-size: 15px;
+  }
+}
+
 @media (max-width:760px) {
   .kpi-card--recovery {
     grid-template-columns: minmax(220px, 1fr) minmax(0, 1fr);
     gap: 12px;
+  }
+
+  .kpi-card--recovery .kpi-card__value-row {
+    display: block;
   }
 
   .kpi-card--with-side {

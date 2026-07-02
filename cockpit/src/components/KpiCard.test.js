@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:57:37 CST
+ Update content: Require desktop recovery target subtitles to sit inline beside the large KPI value.
+*/
+/*
  Update time: 2026-07-02 17:50:46 CST
  Update content: Require recovery cards to keep a neutral dark glass base with only restrained accent edges.
 */
@@ -173,6 +177,13 @@ test('makes the recovery metric block larger and shifts it left inside the long 
   assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__value\s*\{[\s\S]*?font-size:\s*clamp\(38px,\s*3\.2vw,\s*46px\);/);
   assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__sub,[\s\S]*?\.kpi-card--with-side \.kpi-card__progress-head,[\s\S]*?\.kpi-card--with-side \.kpi-card__hint\s*\{[\s\S]*?font-size:\s*15px;/);
   assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__progress-pct\s*\{[\s\S]*?font-size:\s*16px;/);
+});
+
+test('places the recovery target subtitle beside the large value on desktop only', () => {
+  assert.match(componentSource, /<div className="kpi-card__value-row">[\s\S]*?<div className="kpi-card__value">[\s\S]*?<NumberRoll value=\{displayValue\} suffix=\{suffix\} decimals=\{decimals\} \/>[\s\S]*?<\/div>[\s\S]*?\{card\.sub != null && <div className="kpi-card__sub">\{card\.sub\}<\/div>\}[\s\S]*?<\/div>/);
+  assert.match(cssSource, /@media \(min-width:761px\) \{[\s\S]*?\.kpi-card--recovery \.kpi-card__value-row\s*\{[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*baseline;[\s\S]*?gap:\s*12px;/);
+  assert.match(cssSource, /@media \(min-width:761px\) \{[\s\S]*?\.kpi-card--recovery \.kpi-card__value-row \.kpi-card__sub\s*\{[\s\S]*?white-space:\s*nowrap;[\s\S]*?font-size:\s*15px;/);
+  assert.match(cssSource, /@media \(max-width:760px\) \{[\s\S]*?\.kpi-card--recovery \.kpi-card__value-row\s*\{[\s\S]*?display:\s*block;/);
 });
 
 test('formats recovery pie hover text as name over number instead of inline rows', () => {
