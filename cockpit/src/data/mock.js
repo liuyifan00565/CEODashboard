@@ -1,10 +1,18 @@
 /*
+ 更新时间: 2026-07-02 18:10:27 CST
+ 更新内容: 合并 GitHub 数据维护演示数据与本地菜单、月份格式改动。
+*/
+/*
  更新时间: 2026-07-02 17:13:39 CST
  更新内容: 将顶部品牌副标题月份格式改为 2026年6月，匹配 CEO 视角标题。
 */
 /*
  更新时间: 2026-07-02 10:18:00 CST
  更新内容: 侧边导航移除销售分析入口，仅保留经营总览和算力用量分析。
+*/
+/*
+ 更新时间: 2026-07-02 16:25:57 CST
+ 更新内容: 新增数据维护四个界面的前端演示数据结构。
 */
 import { calculateRenewalOverview, getRenewalChannelBreakdown } from '../lib/renewal.js';
 
@@ -801,6 +809,217 @@ export const MENU = [
   { key: 'overview', name: '经营总览', channelKey: 'all' },
   { key: 'compute', name: '算力用量分析', channelKey: 'all' },
 ];
+
+export const MAINTENANCE_MENU = [
+  { key: 'target-maintenance', name: '目标维护' },
+  { key: 'cost-maintenance', name: '成本维护' },
+  { key: 'org-maintenance', name: '组织维护' },
+  { key: 'channel-maintenance', name: '渠道维护' },
+];
+
+const MAINTENANCE_MONTH_KEYS = ['m01', 'm02', 'm03', 'm04', 'm05', 'm06', 'm07', 'm08', 'm09', 'm10', 'm11', 'm12'];
+const MAINTENANCE_QUARTERS = {
+  q1: ['m01', 'm02', 'm03'],
+  q2: ['m04', 'm05', 'm06'],
+  q3: ['m07', 'm08', 'm09'],
+  q4: ['m10', 'm11', 'm12'],
+};
+
+export const MAINTENANCE_PERIOD_COLUMNS = [
+  { key: 'year', label: '全年' },
+  { key: 'q1', label: '第一季度' },
+  { key: 'm01', label: '1月', month: 1 },
+  { key: 'm02', label: '2月', month: 2 },
+  { key: 'm03', label: '3月', month: 3 },
+  { key: 'q2', label: '第二季度' },
+  { key: 'm04', label: '4月', month: 4 },
+  { key: 'm05', label: '5月', month: 5 },
+  { key: 'm06', label: '6月', month: 6 },
+  { key: 'q3', label: '第三季度' },
+  { key: 'm07', label: '7月', month: 7 },
+  { key: 'm08', label: '8月', month: 8 },
+  { key: 'm09', label: '9月', month: 9 },
+  { key: 'q4', label: '第四季度' },
+  { key: 'm10', label: '10月', month: 10 },
+  { key: 'm11', label: '11月', month: 11 },
+  { key: 'm12', label: '12月', month: 12 },
+];
+
+function maintenanceStatus(pct) {
+  if (pct >= 90) return 'good';
+  if (pct >= 75) return 'warning';
+  return 'danger';
+}
+
+function targetPeriod(target, actual) {
+  const safeTarget = Math.max(0, Math.round(Number(target || 0)));
+  const safeActual = Math.max(0, Math.round(Number(actual || 0)));
+  const pct = safeTarget ? +((safeActual / safeTarget) * 100).toFixed(1) : 0;
+  return { target: safeTarget, actual: safeActual, pct, status: safeTarget ? maintenanceStatus(pct) : 'unset' };
+}
+
+function costPeriod(cost, actual, deals = 0) {
+  const safeCost = Math.max(0, Math.round(Number(cost || 0)));
+  const safeActual = Math.max(0, Math.round(Number(actual || 0)));
+  const safeDeals = Math.max(0, Math.round(Number(deals || 0)));
+  const roi = safeCost ? +((safeActual - safeCost) / safeCost).toFixed(2) : 0;
+  return { cost: safeCost, actual: safeActual, deals: safeDeals, roi };
+}
+
+function laborPeriod(cost) {
+  return { cost: Math.max(0, Math.round(Number(cost || 0))) };
+}
+
+function sumValues(keys, periods, field) {
+  return keys.reduce((sum, key) => sum + Number(periods[key]?.[field] || 0), 0);
+}
+
+function createTargetPeriods(monthTargets, monthActuals) {
+  const periods = {};
+  MAINTENANCE_MONTH_KEYS.forEach((key, index) => {
+    const target = monthTargets[index] ?? 0;
+    const actual = monthActuals[index] ?? Math.round(target * 0.82);
+    periods[key] = targetPeriod(target, actual);
+  });
+  Object.entries(MAINTENANCE_QUARTERS).forEach(([key, months]) => {
+    periods[key] = targetPeriod(sumValues(months, periods, 'target'), sumValues(months, periods, 'actual'));
+  });
+  periods.year = targetPeriod(sumValues(MAINTENANCE_MONTH_KEYS, periods, 'target'), sumValues(MAINTENANCE_MONTH_KEYS, periods, 'actual'));
+  return periods;
+}
+
+function createCostPeriods(monthCosts, monthActuals, monthDeals) {
+  const periods = {};
+  MAINTENANCE_MONTH_KEYS.forEach((key, index) => {
+    periods[key] = costPeriod(monthCosts[index] ?? 0, monthActuals[index] ?? 0, monthDeals[index] ?? 0);
+  });
+  Object.entries(MAINTENANCE_QUARTERS).forEach(([key, months]) => {
+    periods[key] = costPeriod(
+      sumValues(months, periods, 'cost'),
+      sumValues(months, periods, 'actual'),
+      sumValues(months, periods, 'deals')
+    );
+  });
+  periods.year = costPeriod(
+    sumValues(MAINTENANCE_MONTH_KEYS, periods, 'cost'),
+    sumValues(MAINTENANCE_MONTH_KEYS, periods, 'actual'),
+    sumValues(MAINTENANCE_MONTH_KEYS, periods, 'deals')
+  );
+  return periods;
+}
+
+function createLaborPeriods(monthCosts) {
+  const periods = {};
+  MAINTENANCE_MONTH_KEYS.forEach((key, index) => {
+    periods[key] = laborPeriod(monthCosts[index] ?? 0);
+  });
+  Object.entries(MAINTENANCE_QUARTERS).forEach(([key, months]) => {
+    periods[key] = laborPeriod(sumValues(months, periods, 'cost'));
+  });
+  periods.year = laborPeriod(sumValues(MAINTENANCE_MONTH_KEYS, periods, 'cost'));
+  return periods;
+}
+
+export const TARGET_MAINTENANCE_ORG_TREE = {
+  id: 'all',
+  name: '成都福客人工智能',
+  userCount: 21,
+  children: [
+    { id: 'online-sales', name: '线上销售部', userCount: 10, children: [] },
+    {
+      id: 'offline-sales',
+      name: '线下销售部',
+      userCount: 8,
+      children: [
+        { id: 'south-sales', name: '华南战区', userCount: 4, children: [] },
+        { id: 'east-sales', name: '华东战区', userCount: 4, children: [] },
+      ],
+    },
+    { id: 'agent-sales', name: '代理渠道部', userCount: 5, children: [] },
+  ],
+};
+
+export const TARGET_MAINTENANCE_ROWS = [
+  { id: 'summary-all', type: 'department', name: '所有部门', role: '组织合计', periods: createTargetPeriods([480, 480, 520, 540, 560, 580, 600, 620, 640, 660, 680, 700], [372, 410, 455, 498, 432, 486, 0, 0, 0, 0, 0, 0]) },
+  { id: 'online-sales', type: 'department', name: '线上销售部', role: '组织合计', periods: createTargetPeriods([210, 210, 228, 236, 242, 240, 250, 258, 266, 272, 280, 288], [168, 180, 198, 214, 206, 210, 0, 0, 0, 0, 0, 0]) },
+  { id: 'user-online-01', type: 'user', name: '王丽英', role: '人员', deptId: 'online-sales', periods: createTargetPeriods([26, 26, 28, 29, 30, 30, 31, 32, 33, 34, 35, 36], [22, 24, 26, 27, 29, 29, 0, 0, 0, 0, 0, 0]) },
+  { id: 'user-online-02', type: 'user', name: '李思雨', role: '人员', deptId: 'online-sales', periods: createTargetPeriods([24, 25, 26, 27, 28, 28, 29, 30, 31, 32, 33, 34], [20, 21, 24, 25, 26, 26, 0, 0, 0, 0, 0, 0]) },
+  { id: 'user-south-01', type: 'user', name: '杨磊', role: '人员', deptId: 'south-sales', periods: createTargetPeriods([32, 32, 34, 35, 36, 36, 38, 39, 40, 41, 42, 43], [25, 27, 30, 31, 30, 32, 0, 0, 0, 0, 0, 0]) },
+  { id: 'user-east-01', type: 'user', name: '马骏', role: '人员', deptId: 'east-sales', periods: createTargetPeriods([30, 31, 32, 33, 34, 34, 35, 36, 37, 38, 39, 40], [21, 22, 24, 25, 24, 26, 0, 0, 0, 0, 0, 0]) },
+  { id: 'user-agent-01', type: 'user', name: '南唐代理', role: '人员', deptId: 'agent-sales', periods: createTargetPeriods([22, 22, 24, 25, 26, 26, 27, 28, 29, 30, 31, 32], [18, 20, 21, 23, 24, 25, 0, 0, 0, 0, 0, 0]) },
+];
+
+export const COST_MAINTENANCE_CHANNELS = [
+  { id: 'all', name: '全部渠道', kind: '全部', parentId: '' },
+  { id: 'group_paid_flow', name: '付费流量', kind: '大类', parentId: '' },
+  { id: 'online_ads', name: '线上广告', kind: '明细', parentId: 'group_paid_flow' },
+  { id: 'group_offline', name: '线下获客', kind: '大类', parentId: '' },
+  { id: 'south_events', name: '华南会销', kind: '明细', parentId: 'group_offline' },
+  { id: 'east_events', name: '华东会销', kind: '明细', parentId: 'group_offline' },
+  { id: 'group_agent', name: '代理渠道', kind: '大类', parentId: '' },
+  { id: 'agent_rebate', name: '代理返点', kind: '明细', parentId: 'group_agent' },
+];
+
+export const COST_MAINTENANCE_ROWS = [
+  { id: 'group_paid_flow', type: 'group', name: '付费流量', periods: createCostPeriods([58, 62, 66, 70, 74, 74, 78, 80, 82, 84, 86, 88], [172, 184, 196, 205, 188, 210, 0, 0, 0, 0, 0, 0], [18, 20, 21, 23, 20, 24, 0, 0, 0, 0, 0, 0]) },
+  { id: 'online_ads', type: 'channel', name: '线上广告', parentId: 'group_paid_flow', periods: createCostPeriods([58, 62, 66, 70, 74, 74, 78, 80, 82, 84, 86, 88], [172, 184, 196, 205, 188, 210, 0, 0, 0, 0, 0, 0], [18, 20, 21, 23, 20, 24, 0, 0, 0, 0, 0, 0]) },
+  { id: 'south_events', type: 'channel', name: '华南会销', parentId: 'group_offline', periods: createCostPeriods([22, 24, 26, 28, 28, 28, 30, 31, 32, 33, 34, 35], [72, 78, 88, 92, 84, 96, 0, 0, 0, 0, 0, 0], [7, 8, 9, 10, 8, 10, 0, 0, 0, 0, 0, 0]) },
+  { id: 'east_events', type: 'channel', name: '华东会销', parentId: 'group_offline', periods: createCostPeriods([30, 32, 34, 36, 38, 38, 40, 42, 44, 45, 46, 48], [70, 74, 82, 86, 76, 84, 0, 0, 0, 0, 0, 0], [6, 7, 8, 8, 7, 8, 0, 0, 0, 0, 0, 0]) },
+  { id: 'agent_rebate', type: 'channel', name: '代理返点', parentId: 'group_agent', periods: createCostPeriods([12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21, 22], [62, 68, 74, 82, 88, 96, 0, 0, 0, 0, 0, 0], [6, 7, 8, 8, 9, 10, 0, 0, 0, 0, 0, 0]) },
+];
+
+export const LABOR_COST_MAINTENANCE_ROWS = [
+  { id: 'labor-sales', name: '销售部人力成本', periods: createLaborPeriods([48, 50, 52, 54, 58, 60, 62, 64, 66, 68, 70, 72]) },
+  { id: 'labor-marketing', name: '市场部人力成本', periods: createLaborPeriods([28, 30, 31, 32, 34, 36, 37, 38, 39, 40, 41, 42]) },
+];
+
+export const ORG_MAINTENANCE_DEPARTMENTS = [
+  { id: 'headquarters', name: '成都福客人工智能', parentId: '', enabled: true },
+  { id: 'online-sales', name: '线上销售部', parentId: 'headquarters', enabled: true },
+  { id: 'offline-sales', name: '线下销售部', parentId: 'headquarters', enabled: true },
+  { id: 'south-sales', name: '华南战区', parentId: 'offline-sales', enabled: true },
+  { id: 'east-sales', name: '华东战区', parentId: 'offline-sales', enabled: true },
+  { id: 'agent-sales', name: '代理渠道部', parentId: 'headquarters', enabled: true },
+  { id: 'paused-team', name: '历史停用团队', parentId: 'headquarters', enabled: false },
+];
+
+export const ORG_MAINTENANCE_USERS = [
+  { id: 'u-online-01', name: '王丽英', sourceName: 'BI 销售', deptId: 'online-sales', isSales: true, enabled: true, sourceUserId: 'wl_10086' },
+  { id: 'u-online-02', name: '李思雨', sourceName: 'BI 销售', deptId: 'online-sales', isSales: true, enabled: true, sourceUserId: 'wl_10087' },
+  { id: 'u-south-01', name: '杨磊', sourceName: 'BI 销售', deptId: 'south-sales', isSales: true, enabled: true, sourceUserId: 'wl_10091' },
+  { id: 'u-east-01', name: '马骏', sourceName: 'BI 销售', deptId: 'east-sales', isSales: true, enabled: true, sourceUserId: 'wl_10095' },
+  { id: 'u-agent-01', name: '南唐代理', sourceName: '渠道伙伴', deptId: 'agent-sales', isSales: true, enabled: true, sourceUserId: 'wl_partner_01' },
+  { id: 'u-paused-01', name: '旧账号样本', sourceName: '历史人员', deptId: 'paused-team', isSales: false, enabled: false, sourceUserId: 'wl_archived_01' },
+];
+
+export const CHANNEL_MAINTENANCE_GROUPS = [
+  { id: 'group_paid_flow', name: '付费流量', parentId: '', enabled: true },
+  { id: 'group_offline', name: '线下获客', parentId: '', enabled: true },
+  { id: 'group_private_domain', name: '私域转介绍', parentId: '', enabled: true },
+  { id: 'group_agent', name: '代理渠道', parentId: '', enabled: true },
+  { id: 'group_paid_search', name: '搜索投放', parentId: 'group_paid_flow', enabled: true },
+  { id: 'group_unattributed', name: '未归因', parentId: '', enabled: false },
+];
+
+export const CHANNEL_MAINTENANCE_SOURCES = [
+  { code: '1001', name: '百度搜索', groupId: 'group_paid_flow', enabled: true, excluded: false },
+  { code: '1002', name: '巨量广告', groupId: 'group_paid_flow', enabled: true, excluded: false },
+  { code: '2001', name: '广州会销', groupId: 'group_offline', enabled: true, excluded: false },
+  { code: '2002', name: '杭州会销', groupId: 'group_offline', enabled: true, excluded: false },
+  { code: '3001', name: '老客转介绍', groupId: 'group_private_domain', enabled: true, excluded: false },
+  { code: '4001', name: '代理商报备', groupId: 'group_agent', enabled: true, excluded: false },
+  { code: '9999', name: '测试来源', groupId: '', enabled: false, excluded: true },
+];
+
+export function getMaintenancePageMeta(pageKey = 'target-maintenance') {
+  const meta = {
+    'target-maintenance': { title: '目标维护', scope: '所有部门', saveText: '保存目标' },
+    'cost-maintenance': { title: '成本维护', scope: '全部渠道', saveText: '保存成本' },
+    'org-maintenance': { title: '组织维护', scope: 'BI销售 21 人 / 卫瓴人员 28 人', saveText: '保存组织' },
+    'channel-maintenance': { title: '渠道维护', scope: '卫瓴线索来源字典', saveText: '保存渠道' },
+  };
+  return meta[pageKey] ?? meta['target-maintenance'];
+}
 
 export function getDashboardChannelKey(menuKey = 'overview') {
   return MENU.find((item) => item.key === menuKey)?.channelKey ?? 'all';

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-02 18:10:27 CST
+ 更新内容: 合并 GitHub 数据维护按钮玻璃样式与本地品牌、搜索高亮样式改动。
+*/
+/*
  Update time: 2026-07-02 17:34:56 CST
  Update content: Limit search result highlighting to edge-only changes without full-card purple wash.
 */
@@ -13,6 +17,10 @@
 /*
  更新时间: 2026-07-02 15:13:35 CST
  更新内容: 首页财务卡片区改为开户数小卡在上、总投入费比在下，并移除续费率首页卡片。
+*/
+/*
+ 更新时间: 2026-07-02 16:05:12 CST
+ 更新内容: 数据维护按钮背景统一为品牌玻璃面，去除按钮自身独立芯片底色。
 */
 
 /* ===== 外层 shell：左侧栏 + 右内容列 ===== */
@@ -48,12 +56,57 @@
 .dash-topbar .brand b,
 .dash-topbar .brand small{white-space:nowrap}
 .dash-tools{
-  margin-left:auto;display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0;flex:1 1 600px;
+  margin-left:0;display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0;flex:1 1 600px;
 }
 /* 顶栏内的搜索框无需再 auto 推开（外层已用 margin-left:auto） */
 .dash-tools .search-wrap{margin-left:0}
 .dash-tools .fp-glass{flex:0 0 244px;max-width:244px;min-width:244px}
 .dash-tools .sgm-btn{padding:6px 12px}
+
+.dash-topbar .maintenance-glass{
+  margin-left:auto;
+  flex:0 0 auto;
+}
+.dash-topbar .maintenance-glass .glass-surface__content{padding:0}
+.dash-maintenance-switch{
+  width:100%;
+  height:100%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-width:112px;
+  padding:0 16px;
+  border:none;
+  border-radius:14px;
+  background:transparent;
+  color:var(--txt);
+  font:inherit;
+  font-size:14px;
+  font-weight:700;
+  line-height:1;
+  white-space:nowrap;
+  cursor:pointer;
+  transition:color .22s ease, transform .22s ease;
+}
+.dash-maintenance-switch:hover{
+  color:var(--txt);
+  transform:translateY(-1px);
+}
+.dash-maintenance-switch:focus-visible{
+  outline:2px solid var(--focus-outline);
+  outline-offset:3px;
+}
+.dash-maintenance-switch--active{
+  color:var(--txt);
+}
+.dash-maintenance-switch__icon{
+  width:16px;
+  text-align:center;
+  color:var(--faint);
+  font-size:13px;
+  line-height:1;
+}
 
 /* ===== 内容区 ===== */
 .dash-content{

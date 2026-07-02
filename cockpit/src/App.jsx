@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-02 18:10:27 CST
+ 更新内容: 合并 GitHub 数据维护页面与本地品牌、搜索和顶部栏改动。
+*/
+/*
  Update time: 2026-07-02 17:18:50 CST
  Update content: Add Word-style search result counting, Enter cycling, and current hit marking.
 */
@@ -17,6 +21,10 @@
 /*
  更新时间: 2026-07-02 15:13:35 CST
  更新内容: 首页右侧财务卡片区移除续费率，将开户数上移到原总投入位置，总投入下移到原续费率位置。
+*/
+/*
+ 更新时间: 2026-07-02 16:25:57 CST
+ 更新内容: 数据维护模式接入目标、成本、组织、渠道四个独立维护界面。
 */
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
@@ -37,11 +45,14 @@ import VersionFinancePanel from './components/VersionFinancePanel';
 import DeliveryPanel from './components/DeliveryPanel';
 import ComputeUsagePage from './components/ComputeUsagePage';
 import OpeningMetricCards from './components/OpeningMetricCards';
+import MaintenancePage from './components/MaintenancePage';
 
-import { META, MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
+import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
 import './dashboard.css';
+
+const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance';
 
 // 各主体面板的搜索关键字
 const PANEL_KEYWORDS = {
@@ -88,6 +99,8 @@ function makeCompanionCueId(card) {
 
 export default function App() {
   const [activeMenu, setActiveMenu] = useState('overview');
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [activeMaintenanceMenu, setActiveMaintenanceMenu] = useState(DEFAULT_MAINTENANCE_MENU);
   const dim = 'month';
   const dateRange = DEFAULT_FILTER_RANGE;
   const [searchTerm, setSearchTerm] = useState('');
@@ -99,10 +112,17 @@ export default function App() {
   const gridRef = useRef(null);
   const pendingMenuScrollRef = useRef(false);
   const pendingSearchScrollRef = useRef(false);
+  const isMaintenancePage = maintenanceMode;
   const isComputePage = activeMenu === 'compute';
   const showOpeningMetrics = activeMenu === 'overview';
   const activeChannelKey = getDashboardChannelKey(activeMenu);
   const activeMenuLabel = getDashboardMenuLabel(activeMenu);
+  const activeContextLabel = maintenanceMode
+    ? '数据维护'
+    : activeMenu === 'overview' ? 'CEO视角' : activeMenuLabel;
+  const sidebarItems = maintenanceMode ? MAINTENANCE_MENU : MENU;
+  const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
+  const contentKey = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const gridClassName = activeMenu === 'overview'
     ? 'dash-grid dash-grid--overview'
     : `dash-grid dash-grid--overview dash-grid--${activeMenu}`;
@@ -131,6 +151,33 @@ export default function App() {
     }
   }
 
+  function handleSidebarChange(nextMenu) {
+    if (maintenanceMode) {
+      setActiveMaintenanceMenu(nextMenu);
+      return;
+    }
+
+    handleMenuChange(nextMenu);
+  }
+
+  function handleMaintenanceBack() {
+    setMaintenanceMode(false);
+    setActiveMenu('overview');
+    setActiveMaintenanceMenu(DEFAULT_MAINTENANCE_MENU);
+  }
+
+  function handleMaintenanceModeToggle() {
+    if (maintenanceMode) {
+      setMaintenanceMode(false);
+      setActiveMenu('overview');
+      setActiveMaintenanceMenu(DEFAULT_MAINTENANCE_MENU);
+      return;
+    }
+
+    setMaintenanceMode(true);
+    setActiveMaintenanceMenu(DEFAULT_MAINTENANCE_MENU);
+  }
+
   function handleOpenCard(card) {
     setOpenCard(card);
     setCompanionCue({
@@ -148,7 +195,7 @@ export default function App() {
   useLayoutEffect(() => {
     pendingSearchScrollRef.current = Boolean(searchTerm.trim());
     setActiveSearchIndex(0);
-  }, [searchTerm, activeMenu]);
+  }, [searchTerm, contentKey]);
 
   useLayoutEffect(() => {
     const root = gridRef.current;
@@ -181,7 +228,7 @@ export default function App() {
       matches[currentIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     }
     pendingSearchScrollRef.current = false;
-  }, [searchTerm, activeSearchIndex, activeMenu, isComputePage, filteredKpiCards]);
+  }, [searchTerm, activeSearchIndex, contentKey, isComputePage, filteredKpiCards]);
 
   // GSAP 入场：KPI 卡 + 面板 stagger fade-up（菜单切换时重放）
   useLayoutEffect(() => {
@@ -208,7 +255,7 @@ export default function App() {
       if (scrollFrame) cancelAnimationFrame(scrollFrame);
       ctx.revert();
     };
-  }, [activeMenu]);
+  }, [contentKey]);
 
   return (
     <div className="app">
@@ -244,7 +291,7 @@ export default function App() {
 
       <div className="dash-shell">
         <aside className="dash-aside">
-          <Sidebar items={MENU} active={activeMenu} onChange={handleMenuChange} />
+          <Sidebar items={sidebarItems} active={sidebarActive} onChange={handleSidebarChange} />
           <AIAnalysisWidget activeMenu={activeMenu} dim={dim} channelKey={activeChannelKey} companionCue={companionCue} />
         </aside>
 
@@ -284,9 +331,30 @@ export default function App() {
                 </span>
                 <div className="brand-copy">
                   <b>福客经营驾驶舱</b>
-                  <small>{META.monthLabel}｜{activeMenu === 'overview' ? 'CEO视角' : activeMenuLabel}</small>
+                  <small>{META.monthLabel}｜{activeContextLabel}</small>
                 </div>
               </div>
+            </GlassSurface>
+            <GlassSurface
+              width={118}
+              height={52}
+              borderRadius={16}
+              brightness={58}
+              blur={12}
+              displace={1}
+              backgroundOpacity={0.06}
+              distortionScale={-130}
+              className="maintenance-glass"
+            >
+              <button
+                type="button"
+                className={`dash-maintenance-switch${maintenanceMode ? ' dash-maintenance-switch--active' : ''}`}
+                onClick={handleMaintenanceModeToggle}
+                aria-pressed={maintenanceMode}
+              >
+                <span className="dash-maintenance-switch__icon" aria-hidden="true">▦</span>
+                <span>{maintenanceMode ? '返回主界面' : '数据维护'}</span>
+              </button>
             </GlassSurface>
             <div className="dash-tools">
               <ExpandableSearch
@@ -298,8 +366,10 @@ export default function App() {
             </div>
           </header>
 
-          <div className="dash-content" ref={gridRef} key={activeMenu}>
-            {isComputePage ? (
+          <div className="dash-content" ref={gridRef} key={contentKey}>
+            {isMaintenancePage ? (
+              <MaintenancePage activePage={activeMaintenanceMenu} onBack={handleMaintenanceBack} />
+            ) : isComputePage ? (
               <ComputeUsagePage searchTerm={searchTerm} dim={dim} dateRange={dateRange} />
             ) : (
               <>

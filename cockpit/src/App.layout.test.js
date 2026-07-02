@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-02 18:10:27 CST
+ 更新内容: 合并 GitHub 数据维护回归测试与本地品牌、搜索和顶部栏测试。
+*/
+/*
  Update time: 2026-07-02 17:34:56 CST
  Update content: Guard current search result highlighting against full-card purple glow.
 */
@@ -18,6 +22,10 @@
  更新时间: 2026-07-02 15:13:35 CST
  更新内容: 增加首页财务卡片区移除续费率、开户数上移和总投入下移的布局回归测试。
 */
+/*
+ 更新时间: 2026-07-02 17:32:46 CST
+ 更新内容: 增加维护页顶部、内容卡片和表格恢复为算力页原透明玻璃样式的回归测试。
+*/
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -26,6 +34,7 @@ const appSource = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
 const mockSource = readFileSync(new URL('./data/mock.js', import.meta.url), 'utf8');
 const fluidGlassSource = readFileSync(new URL('./components/FluidGlass/FluidGlass.jsx', import.meta.url), 'utf8');
 const dashboardCss = readFileSync(new URL('./dashboard.css', import.meta.url), 'utf8');
+const projectAgentGuidance = readFileSync(new URL('../../AGENTS.md', import.meta.url), 'utf8');
 const kpiCardCss = readFileSync(new URL('./components/KpiCard.css', import.meta.url), 'utf8');
 const kpiModalSource = readFileSync(new URL('./components/KpiModal.jsx', import.meta.url), 'utf8');
 const monthlyTrendSource = readFileSync(new URL('./components/MonthlyTrend.jsx', import.meta.url), 'utf8');
@@ -34,6 +43,8 @@ const channelPanelSource = readFileSync(new URL('./components/ChannelPanel.jsx',
 const channelPanelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
 const computePageSource = readFileSync(new URL('./components/ComputeUsagePage.jsx', import.meta.url), 'utf8');
 const computePageCss = readFileSync(new URL('./components/ComputeUsagePage.css', import.meta.url), 'utf8');
+const maintenancePageSource = readFileSync(new URL('./components/MaintenancePage.jsx', import.meta.url), 'utf8');
+const maintenancePageCss = readFileSync(new URL('./components/MaintenancePage.css', import.meta.url), 'utf8');
 
 function cssRuleBody(source, selector) {
   const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -158,11 +169,166 @@ test('renders the brand title as 福客经营驾驶舱 with CEO monthly perspect
   assert.match(mockSource, /monthLabel: '2026年6月'/);
   assert.doesNotMatch(mockSource, /monthLabel: '2026 年 6 月'/);
   assert.match(appSource, /<b>福客经营驾驶舱<\/b>/);
-  assert.match(appSource, /<small>\{META\.monthLabel\}｜\{activeMenu === 'overview' \? 'CEO视角' : activeMenuLabel\}<\/small>/);
+  assert.match(appSource, /const activeContextLabel = maintenanceMode\s*\?\s*'数据维护'\s*:\s*activeMenu === 'overview' \? 'CEO视角' : activeMenuLabel;/);
+  assert.match(appSource, /<small>\{META\.monthLabel\}｜\{activeContextLabel\}<\/small>/);
   assert.doesNotMatch(appSource, /福客 · CEO 经营驾驶舱/);
   assert.doesNotMatch(appSource, /\{META\.monthLabel\} · \{activeMenu === 'overview' \? '月度视角' : activeMenuLabel\}/);
   assert.match(fluidGlassSource, /福客经营驾驶舱/);
   assert.doesNotMatch(fluidGlassSource, /福客 · CEO 经营驾驶舱/);
+});
+
+test('adds a topbar data maintenance switch that swaps the sidebar navigation', () => {
+  const maintenanceSwitchBlock = cssRuleBody(dashboardCss, '.dash-maintenance-switch');
+  const maintenanceActiveBlock = cssRuleBody(dashboardCss, '.dash-maintenance-switch--active');
+
+  assert.match(appSource, /import \{ META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel \} from '\.\/data\/mock';/);
+  assert.match(appSource, /const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU\[0\]\?\.key \?\? 'target-maintenance';/);
+  assert.match(appSource, /const \[maintenanceMode,\s*setMaintenanceMode\] = useState\(false\);/);
+  assert.match(appSource, /const \[activeMaintenanceMenu,\s*setActiveMaintenanceMenu\] = useState\(DEFAULT_MAINTENANCE_MENU\);/);
+  assert.match(appSource, /const sidebarItems = maintenanceMode \? MAINTENANCE_MENU : MENU;/);
+  assert.match(appSource, /const sidebarActive = maintenanceMode \? activeMaintenanceMenu : activeMenu;/);
+  assert.match(appSource, /const activeContextLabel = maintenanceMode\s*\?\s*'数据维护'\s*:/);
+  assert.doesNotMatch(appSource, /`数据维护 · \$\{activeMaintenanceLabel\}`/);
+  assert.match(appSource, /function handleSidebarChange\(nextMenu\) \{[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setActiveMaintenanceMenu\(nextMenu\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?handleMenuChange\(nextMenu\);[\s\S]*?\}/);
+  assert.match(appSource, /function handleMaintenanceModeToggle\(\) \{[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setMaintenanceMode\(false\);[\s\S]*?setActiveMenu\('overview'\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?setMaintenanceMode\(true\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?\}/);
+  assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} \/>/);
+  assert.match(appSource, /className="maintenance-glass"/);
+  assert.match(appSource, /<GlassSurface[\s\S]*?width=\{118\}[\s\S]*?height=\{52\}[\s\S]*?borderRadius=\{16\}[\s\S]*?brightness=\{58\}[\s\S]*?blur=\{12\}[\s\S]*?backgroundOpacity=\{0\.06\}[\s\S]*?distortionScale=\{-130\}[\s\S]*?className="maintenance-glass"[\s\S]*?<button/);
+  assert.match(appSource, /className=\{`dash-maintenance-switch\$\{maintenanceMode \? ' dash-maintenance-switch--active' : ''\}`\}/);
+  assert.match(appSource, /aria-pressed=\{maintenanceMode\}/);
+  assert.match(appSource, /\{maintenanceMode \? '返回主界面' : '数据维护'\}/);
+  assert.match(dashboardCss, /\.dash-topbar \.maintenance-glass\{[\s\S]*?margin-left:auto;/);
+  assert.match(dashboardCss, /\.dash-topbar \.maintenance-glass \.glass-surface__content\{padding:0\}/);
+  assert.match(maintenanceSwitchBlock, /width:100%;/);
+  assert.match(maintenanceSwitchBlock, /height:100%;/);
+  assert.match(maintenanceSwitchBlock, /border:none;/);
+  assert.match(maintenanceSwitchBlock, /background:transparent;/);
+  assert.doesNotMatch(maintenanceSwitchBlock, /background:var\(--ai-chip-bg\);/);
+  assert.doesNotMatch(maintenanceActiveBlock, /background:var\(--ai-chip-hover\);/);
+  assert.match(projectAgentGuidance, /所有卡片和按钮的背景、边框、模糊、阴影与圆角必须优先复用项目既有统一玻璃体系/);
+});
+
+test('renders data maintenance as four independent pages instead of the dashboard grid', () => {
+  assert.match(appSource, /import MaintenancePage from '\.\/components\/MaintenancePage';/);
+  assert.match(appSource, /const isMaintenancePage = maintenanceMode;/);
+  assert.match(appSource, /function handleMaintenanceBack\(\) \{[\s\S]*?setMaintenanceMode\(false\);[\s\S]*?setActiveMenu\('overview'\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?\}/);
+  assert.match(appSource, /isMaintenancePage \? \([\s\S]*?<MaintenancePage activePage=\{activeMaintenanceMenu\} onBack=\{handleMaintenanceBack\} \/>[\s\S]*?\) : isComputePage \? \(/);
+  assert.match(maintenancePageSource, /export default function MaintenancePage\(\{ activePage = 'target-maintenance', onBack \}\)/);
+  assert.match(maintenancePageSource, /const PAGE_RENDERERS = \{/);
+  assert.match(maintenancePageSource, /'target-maintenance': TargetMaintenancePage/);
+  assert.match(maintenancePageSource, /'cost-maintenance': CostMaintenancePage/);
+  assert.match(maintenancePageSource, /'org-maintenance': OrgMaintenancePage/);
+  assert.match(maintenancePageSource, /'channel-maintenance': ChannelMaintenancePage/);
+});
+
+test('builds the target and cost maintenance pages from reference matrix content', () => {
+  assert.match(maintenancePageSource, /MAINTENANCE_PERIOD_COLUMNS/);
+  assert.match(maintenancePageSource, /TARGET_MAINTENANCE_ORG_TREE/);
+  assert.match(maintenancePageSource, /TARGET_MAINTENANCE_ROWS/);
+  assert.match(maintenancePageSource, /下载模板/);
+  assert.match(maintenancePageSource, /Excel导入/);
+  assert.match(maintenancePageSource, /保存目标/);
+  assert.match(maintenancePageSource, /年度目标/);
+  assert.match(maintenancePageSource, /目标维护/);
+  assert.match(maintenancePageSource, /COST_MAINTENANCE_CHANNELS/);
+  assert.match(maintenancePageSource, /COST_MAINTENANCE_ROWS/);
+  assert.match(maintenancePageSource, /LABOR_COST_MAINTENANCE_ROWS/);
+  assert.match(maintenancePageSource, /渠道成本维护/);
+  assert.match(maintenancePageSource, /人力成本维护/);
+  assert.match(maintenancePageSource, /保存成本/);
+});
+
+test('builds the org and channel maintenance pages from reference tree and table content', () => {
+  assert.match(maintenancePageSource, /ORG_MAINTENANCE_DEPARTMENTS/);
+  assert.match(maintenancePageSource, /ORG_MAINTENANCE_USERS/);
+  assert.match(maintenancePageSource, /新增组织/);
+  assert.match(maintenancePageSource, /更新 BI 销售人员/);
+  assert.match(maintenancePageSource, /BI组织架构/);
+  assert.match(maintenancePageSource, /BI人员范围/);
+  assert.match(maintenancePageSource, /卫瓴ID/);
+  assert.match(maintenancePageSource, /CHANNEL_MAINTENANCE_GROUPS/);
+  assert.match(maintenancePageSource, /CHANNEL_MAINTENANCE_SOURCES/);
+  assert.match(maintenancePageSource, /补齐默认来源/);
+  assert.match(maintenancePageSource, /新增大类/);
+  assert.match(maintenancePageSource, /新增来源/);
+  assert.match(maintenancePageSource, /卫瓴线索来源/);
+});
+
+test('keeps data maintenance cards buttons and controls on the dashboard glass system', () => {
+  const panelBlock = cssRuleBody(maintenancePageCss, '.mnt-surface');
+  const buttonBlock = cssRuleBody(maintenancePageCss, '.mnt-btn');
+  const primaryButtonBlock = cssRuleBody(maintenancePageCss, '.mnt-btn--primary');
+  const inputBlock = cssRuleBody(maintenancePageCss, '.mnt-control');
+  const toolbarBlock = cssRuleBody(maintenancePageCss, '.mnt-toolbar');
+  const actionsBlock = cssRuleBody(maintenancePageCss, '.mnt-actions');
+  const toolbarControlBlock = cssRuleBody(maintenancePageCss, '.mnt-toolbar .mnt-control');
+  const targetLayoutBlock = cssRuleBody(maintenancePageCss, '.mnt-layout--target');
+  const matrixWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap');
+  const computePanelBlock = cssRuleBody(computePageCss, '.cpu-panel');
+  const progressBlock = cssRuleBody(maintenancePageCss, '.mnt-progress');
+  const progressGoodBlock = cssRuleBody(maintenancePageCss, '.mnt-progress--good span');
+
+  const toolbarSurfaceBlock = cssRuleBody(maintenancePageCss, '.mnt-toolbar-surface');
+
+  assert.doesNotMatch(maintenancePageSource, /import GlassSurface from '\.\/GlassSurface\/GlassSurface';/);
+  assert.match(maintenancePageSource, /function MaintenanceToolbarSurface/);
+  assert.match(maintenancePageSource, /function MaintenanceSurface/);
+  assert.match(maintenancePageSource, /<MaintenanceToolbarSurface className="mnt-toolbar-glass">[\s\S]*?<section className="mnt-toolbar"/);
+  assert.match(maintenancePageSource, /<div className=\{`mnt-toolbar-surface \$\{className\}`\.trim\(\)\}>\{children\}<\/div>/);
+  assert.match(maintenancePageSource, /<div className=\{`mnt-surface-shell \$\{className\}`\.trim\(\)\}>\s*<div className="mnt-surface">\{children\}<\/div>\s*<\/div>/);
+  assert.doesNotMatch(maintenancePageSource, /<MaintenanceSurface className="mnt-toolbar-glass">/);
+  assert.match(toolbarSurfaceBlock, /border:\s*1px solid var\(--line-2\);/);
+  assert.match(toolbarSurfaceBlock, /height:\s*auto;/);
+  assert.match(toolbarSurfaceBlock, /background:\s*transparent;/);
+  assert.match(toolbarSurfaceBlock, /backdrop-filter:\s*var\(--glass-blur\);/);
+  assert.match(toolbarSurfaceBlock, /box-shadow:\s*var\(--glass-shadow\);/);
+  assert.doesNotMatch(toolbarSurfaceBlock, /var\(--glass-panel-bg\);/);
+  assert.match(maintenancePageSource, /<h2>\{title\}<span className="mnt-title-scope"> · \{meta\.scope\}<\/span><\/h2>/);
+  assert.doesNotMatch(maintenancePageSource, /<h2>\{title\}<\/h2>\s*<span>\{meta\.scope\}<\/span>/);
+  assert.match(maintenancePageCss, /\.mnt-title-scope \{[\s\S]*?display:\s*inline;[\s\S]*?font-size:\s*12px;/);
+  assert.doesNotMatch(maintenancePageCss, /\.mnt-toolbar \.mnt-title-block span \{/);
+  assert.match(maintenancePageSource, /aria-label="目标年份"[\s\S]*?<\/select>\s*<button className="mnt-btn" type="button" onClick=\{onDirty\}>下载模板<\/button>/);
+  assert.match(maintenancePageSource, /<div className="mnt-actions">\s*\{actions\[activePage\] \?\? actions\['target-maintenance'\]\}\s*<button className="mnt-btn" type="button" onClick=\{onBack\}>返回看板<\/button>\s*<SaveBadge status=\{status\} \/>/);
+  assert.doesNotMatch(maintenancePageSource, /<div className="mnt-actions">\s*<SaveBadge/);
+  assert.match(toolbarBlock, /min-height:\s*42px;/);
+  assert.match(toolbarBlock, /padding:\s*6px 10px;/);
+  assert.match(actionsBlock, /flex-wrap:\s*nowrap;/);
+  assert.match(actionsBlock, /gap:\s*7px;/);
+  assert.match(toolbarControlBlock, /width:\s*180px;/);
+  assert.match(toolbarControlBlock, /flex:\s*0 0 180px;/);
+  assert.match(targetLayoutBlock, /grid-template-columns:\s*minmax\(190px,\s*230px\) minmax\(0,\s*1fr\);/);
+  assert.match(maintenancePageCss, /\.mnt-layout--cost,\s*[\s\S]*?\.mnt-layout--channel \{[\s\S]*?grid-template-columns:\s*minmax\(220px,\s*260px\) minmax\(0,\s*1fr\);/);
+  assert.match(maintenancePageCss, /\.mnt-layout--org \{[\s\S]*?grid-template-columns:\s*minmax\(220px,\s*260px\) minmax\(0,\s*1fr\);/);
+  assert.match(computePanelBlock, /background:\s*transparent;/);
+  assert.match(panelBlock, /background:\s*transparent;/);
+  assert.doesNotMatch(panelBlock, /var\(--panel\);/);
+  assert.doesNotMatch(panelBlock, /var\(--glass-panel-bg\);/);
+  assert.doesNotMatch(panelBlock, /radial-gradient\(circle at 20% 48%/);
+  assert.doesNotMatch(maintenancePageCss, /\.mnt-surface::before/);
+  assert.match(panelBlock, /border:\s*1px solid var\(--line-2\);/);
+  assert.match(panelBlock, /backdrop-filter:\s*var\(--glass-blur\);/);
+  assert.match(panelBlock, /box-shadow:\s*var\(--glass-shadow\);/);
+  assert.match(matrixWrapBlock, /background:\s*transparent;/);
+  assert.match(maintenancePageCss, /\.mnt-matrix th,\s*[\s\S]*?\.mnt-user-table th \{[\s\S]*?background:\s*rgba\(0,0,0,\.16\);[\s\S]*?backdrop-filter:\s*blur\(14px\);/);
+  assert.match(maintenancePageCss, /\.mnt-matrix th:first-child,\s*[\s\S]*?\.mnt-matrix td:first-child \{[\s\S]*?background:\s*rgba\(0,0,0,\.14\);[\s\S]*?backdrop-filter:\s*blur\(14px\);/);
+  assert.match(maintenancePageCss, /\.mnt-row--summary td \{[\s\S]*?background:\s*transparent;/);
+  assert.match(maintenancePageCss, /\.mnt-matrix tbody tr:hover td,\s*[\s\S]*?\.mnt-user-table tbody tr:hover td \{[\s\S]*?background:\s*var\(--glass-cell-hover\);/);
+  assert.match(maintenancePageSource, /<ProgressLine period=\{period\} \/>/);
+  assert.match(progressBlock, /height:\s*7px;/);
+  assert.match(progressBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.09\);/);
+  assert.match(progressGoodBlock, /background:\s*linear-gradient\(90deg,\s*rgba\(var\(--good-rgb\),\s*\.92\),\s*rgba\(255,255,255,\.78\)\);/);
+  assert.match(buttonBlock, /min-height:\s*28px;/);
+  assert.match(buttonBlock, /background:\s*var\(--glass-cell\);/);
+  assert.match(buttonBlock, /border:\s*1px solid var\(--line\);/);
+  assert.match(buttonBlock, /border-radius:\s*12px;/);
+  assert.match(primaryButtonBlock, /background:\s*var\(--control-solid\);/);
+  assert.match(inputBlock, /min-height:\s*28px;/);
+  assert.match(inputBlock, /background:\s*var\(--glass-cell\);/);
+  assert.match(maintenancePageCss, /\.mnt-edit-row,\s*[\s\S]*?\.mnt-channel-manage-row \{[\s\S]*?background:\s*var\(--panel-2\);/);
+  assert.doesNotMatch(maintenancePageCss, /\.mnt-edit-row,[\s\S]*?background:\s*transparent;/);
+  assert.doesNotMatch(maintenancePageCss, /\.mnt-row--summary td \{[\s\S]*?background:\s*rgba\(var\(--good-rgb\)/);
+  assert.doesNotMatch(maintenancePageCss, /#fff;/);
+  assert.doesNotMatch(maintenancePageCss, /box-shadow:\s*0 5px 14px rgba\(216, 58, 215/);
 });
 
 test('uses full-width compute trend sliders that resize from 3 to 15 bars', () => {
@@ -485,7 +651,7 @@ test('scrolls the dashboard content into view when a sidebar menu item is select
   assert.match(appSource, /const pendingMenuScrollRef = useRef\(false\);/);
   assert.match(appSource, /function handleMenuChange\(nextMenu\)/);
   assert.match(appSource, /pendingMenuScrollRef\.current = true;/);
-  assert.match(appSource, /<Sidebar items=\{MENU\} active=\{activeMenu\} onChange=\{handleMenuChange\} \/>/);
+  assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} \/>/);
   assert.match(appSource, /gridRef\.current\?\.scrollIntoView\(\{\s*behavior:\s*'smooth',\s*block:\s*'start'\s*\}\);/);
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:86px;/);
 });
