@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 11:58:09 CST
- 更新内容: 增加算力用量趋势卡片粉紫色峰值折线与峰值数值标签的回归测试。
+ 更新时间: 2026-07-02 12:05:08 CST
+ 更新内容: 增加算力用量趋势卡片荧光紫折线和非荧光清晰顶部数值标签的回归测试。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -73,7 +73,7 @@ test('removes the compute page inner title and ratio header block', () => {
   assert.match(computePageCss, /\.cpu-page \{[\s\S]*?margin-top:\s*0;/);
 });
 
-test('keeps only compute usage in the compute trend chart with a peak line', () => {
+test('keeps only compute usage in the compute trend chart with clear non-fluorescent value labels', () => {
   assert.match(computePageSource, /data:\s*\['算力用量'\]/);
   assert.match(computePageSource, /sub="算力用量"/);
   assert.doesNotMatch(computePageSource, /同步观察总容量/);
@@ -83,11 +83,14 @@ test('keeps only compute usage in the compute trend chart with a peak line', () 
   assert.match(computePageSource, /textStyle:\s*\{[\s\S]*?color:\s*txt,[\s\S]*?fontSize:\s*18,[\s\S]*?fontWeight:\s*850,[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.55\)',[\s\S]*?textShadowBlur:\s*8,[\s\S]*?\}/);
   assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'bar'/);
   assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'line'[\s\S]*?smooth:\s*true[\s\S]*?symbol:\s*'circle'[\s\S]*?symbolSize:\s*7/);
-  assert.match(computePageSource, /const usagePeakLineColor = '#d946ef';/);
+  assert.match(computePageSource, /const usagePeakLineColor = '#f000ff';/);
+  assert.match(computePageSource, /const usagePeakLabelColor = '#f8f4ff';/);
   assert.match(computePageSource, /const maxUsage = Math\.max\(\.\.\.usage\);/);
   assert.match(computePageSource, /const usagePeakLineData = usage\.map\(\(value\) => \(\{/);
-  assert.match(computePageSource, /label:\s*value === maxUsage \? \{[\s\S]*?show:\s*true[\s\S]*?formatter:\s*\(params\) => formatWan\(params\.value\)/);
-  assert.match(computePageSource, /lineStyle:\s*\{ color: usagePeakLineColor, width: 2\.2[\s\S]*?shadowBlur: 10[\s\S]*?shadowColor: 'rgba\(217,70,239,\.36\)'/);
+  assert.match(computePageSource, /label:\s*\{[\s\S]*?show:\s*true[\s\S]*?color:\s*usagePeakLabelColor,[\s\S]*?fontWeight:\s*780,[\s\S]*?formatter:\s*\(params\) => formatWan\(params\.value\)[\s\S]*?textBorderColor:\s*'rgba\(13,0,22,\.82\)'[\s\S]*?textBorderWidth:\s*2[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.82\)'[\s\S]*?textShadowBlur:\s*6/);
+  assert.doesNotMatch(computePageSource, /label:\s*value === maxUsage \?/);
+  assert.doesNotMatch(computePageSource, /textShadowColor:\s*'rgba\(255,74,255,\.78\)'/);
+  assert.match(computePageSource, /lineStyle:\s*\{ color: usagePeakLineColor, width: 2\.4[\s\S]*?shadowBlur: 14[\s\S]*?shadowColor: 'rgba\(240,0,255,\.5\)'/);
   assert.match(computePageSource, /itemStyle:\s*\{[\s\S]*?color:\s*usagePeakLineColor,[\s\S]*?borderColor:\s*'#ffffff'/);
   assert.match(computePageSource, /barCategoryGap:\s*'42%'/);
   assert.doesNotMatch(computePageSource, /目标用量/);

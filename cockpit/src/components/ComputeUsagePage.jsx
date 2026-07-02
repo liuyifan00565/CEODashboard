@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 11:58:09 CST
- 更新内容: 月度算力用量趋势卡片的柱顶走势线改为粉紫色，并仅在峰值点显示数值。
+ 更新时间: 2026-07-02 12:05:08 CST
+ 更新内容: 月度算力用量趋势卡片保留荧光紫折线，顶部数值改为非荧光清晰字体。
 */
 import { useMemo, useState } from 'react';
 
@@ -280,21 +280,24 @@ function buildTrendOption({ trend, tokens }) {
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
   const usageColor = tokens.chartBar;
-  const usagePeakLineColor = '#d946ef';
+  const usagePeakLineColor = '#f000ff';
+  const usagePeakLabelColor = '#f8f4ff';
   const maxUsage = Math.max(...usage);
   const usagePeakLineData = usage.map((value) => ({
     value,
     symbolSize: value === maxUsage ? 9 : 7,
-    label: value === maxUsage ? {
+    label: {
       show: true,
       position: 'top',
-      color: usagePeakLineColor,
+      color: usagePeakLabelColor,
       fontSize: 12,
-      fontWeight: 760,
+      fontWeight: 780,
       formatter: (params) => formatWan(params.value),
-      textShadowColor: 'rgba(0,0,0,.68)',
-      textShadowBlur: 8,
-    } : { show: false },
+      textBorderColor: 'rgba(13,0,22,.82)',
+      textBorderWidth: 2,
+      textShadowColor: 'rgba(0,0,0,.82)',
+      textShadowBlur: 6,
+    },
   }));
 
   return {
@@ -414,13 +417,13 @@ function buildTrendOption({ trend, tokens }) {
         symbolSize: 7,
         showSymbol: true,
         z: 4,
-        lineStyle: { color: usagePeakLineColor, width: 2.2, shadowBlur: 10, shadowColor: 'rgba(217,70,239,.36)' },
+        lineStyle: { color: usagePeakLineColor, width: 2.4, shadowBlur: 14, shadowColor: 'rgba(240,0,255,.5)' },
         itemStyle: {
           color: usagePeakLineColor,
           borderColor: '#ffffff',
           borderWidth: 2,
-          shadowBlur: 9,
-          shadowColor: 'rgba(217,70,239,.34)',
+          shadowBlur: 12,
+          shadowColor: 'rgba(240,0,255,.48)',
         },
         emphasis: {
           scale: true,
