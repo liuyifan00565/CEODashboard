@@ -1,3 +1,4 @@
+/* Update time: 2026-07-02 17:50:46 CST  Update content: Add a scoped progress chart class so recovery cards can tone down accent saturation. */
 /* Update time: 2026-07-02 17:09:15 CST  Update content: Soften the unfinished recovery slice for the refined neon palette. */
 /* 更新时间: 2026-06-30 19:08:00  更新内容: 回款 KPI 半环扇区增加间隙。 */
 import NumberRoll from './NumberRoll';
@@ -343,7 +344,7 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
               {card.progress}%
             </span>
           </div>
-          <EChart option={progressOption(card.progress, tokens)} style={{ height: 12 }} />
+          <EChart option={progressOption(card.progress, tokens)} className="kpi-card__progress-chart" style={{ height: 12 }} />
         </div>
       )}
 

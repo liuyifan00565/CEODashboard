@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 17:50:46 CST
+ Update content: Require recovery cards to keep a neutral dark glass base with only restrained accent edges.
+*/
+/*
  Update time: 2026-07-02 17:39:14 CST
  Update content: Require recovery card washes to follow completion accent colors instead of fixed lime.
 */
@@ -125,15 +129,18 @@ test('removes the bottom recovery legend so the half-donut can use the full visu
   assert.doesNotMatch(cssSource, /\.kpi-card__pie-chip/);
 });
 
-test('uses a completion-driven full-card wash instead of fixed lime', () => {
-  assert.match(cssSource, /\.kpi-card--recovery\s*\{[\s\S]*?background:[\s\S]*?linear-gradient\(112deg, color-mix\(in srgb, var\(--kpi-accent\) 13%, transparent\) 0%, color-mix\(in srgb, var\(--kpi-accent\) 8\.5%, transparent\) 36%, color-mix\(in srgb, var\(--kpi-accent\) 3\.5%, transparent\) 68%, transparent 92%\)/);
-  assert.match(cssSource, /\.kpi-card--recovery\s*\{[\s\S]*?linear-gradient\(168deg, rgba\(230,\s*251,\s*255,\s*\.04\) 0%, transparent 48%, color-mix\(in srgb, var\(--kpi-accent\) 4\.5%, transparent\) 100%\)/);
-  assert.doesNotMatch(cssSource, /rgba\(214,\s*248,\s*74,\s*\.(?:13|085|07|045)\)/);
+test('uses a neutral dark glass base with only restrained completion accent at the edges', () => {
+  assert.match(cssSource, /\.kpi-card--recovery\s*\{[\s\S]*?background:[\s\S]*?linear-gradient\(112deg, color-mix\(in srgb, var\(--kpi-accent\) 4%, transparent\) 0%, color-mix\(in srgb, var\(--kpi-accent\) 2%, transparent\) 30%, transparent 62%\)/);
+  assert.match(cssSource, /\.kpi-card--recovery\s*\{[\s\S]*?linear-gradient\(180deg, rgba\(255,\s*255,\s*255,\s*\.026\), rgba\(255,\s*255,\s*255,\s*\.006\)\),[\s\S]*?rgba\(4,\s*5,\s*7,\s*\.18\);/);
+  assert.doesNotMatch(cssSource, /var\(--kpi-accent\) (?:13|8\.5|7|4\.5)%, transparent/);
   assert.doesNotMatch(cssSource, /radial-gradient\(circle at 20% 48%/);
   assert.doesNotMatch(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?width:\s*330px/);
-  assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?inset:\s*0;[\s\S]*?width:\s*auto;[\s\S]*?border-radius:\s*inherit;[\s\S]*?linear-gradient\(90deg, transparent, color-mix\(in srgb, var\(--kpi-accent\) 7%, transparent\) 46%, transparent\)/);
-  assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?mix-blend-mode:\s*screen;[\s\S]*?opacity:\s*\.58;/);
-  assert.match(cssSource, /filter:\s*drop-shadow\(0 0 14px color-mix\(in srgb, var\(--kpi-accent\) 22%, transparent\)\)/);
+  assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?inset:\s*0;[\s\S]*?width:\s*auto;[\s\S]*?border-radius:\s*inherit;[\s\S]*?linear-gradient\(90deg, color-mix\(in srgb, var\(--kpi-accent\) 6%, transparent\) 0%, transparent 18%, transparent 82%, color-mix\(in srgb, var\(--kpi-accent\) 4%, transparent\) 100%\)/);
+  assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?mix-blend-mode:\s*screen;[\s\S]*?opacity:\s*\.48;/);
+  assert.match(cssSource, /filter:\s*drop-shadow\(0 0 10px color-mix\(in srgb, var\(--kpi-accent\) 12%, transparent\)\)/);
+  assert.match(componentSource, /<EChart option=\{progressOption\(card\.progress, tokens\)\} className="kpi-card__progress-chart" style=\{\{ height: 12 \}\} \/>/);
+  assert.match(cssSource, /\.kpi-card--recovery \.kpi-card__progress-chart\s*\{[\s\S]*?opacity:\s*\.82;[\s\S]*?filter:\s*saturate\(\.82\);/);
+  assert.match(cssSource, /\.kpi-card__side-panel \.ch-bar-fill\s*\{[\s\S]*?opacity:\s*\.82;[\s\S]*?filter:\s*saturate\(\.82\);/);
 });
 
 test('keeps recovery half-donut labels readable in the elongated card', () => {

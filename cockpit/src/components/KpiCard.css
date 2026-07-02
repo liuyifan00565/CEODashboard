@@ -1,3 +1,4 @@
+/* Update time: 2026-07-02 17:50:46 CST  Update content: Return recovery cards to neutral dark glass and keep completion color as restrained edge accents. */
 /* Update time: 2026-07-02 17:39:14 CST  Update content: Drive the recovery card full wash from completion accent colors instead of fixed lime. */
 /* Update time: 2026-07-02 17:29:43 CST  Update content: Replace local recovery pie glow with a subtle full-card lime glass wash. */
 /* Update time: 2026-07-02 17:09:15 CST  Update content: Lower recovery card glow while preserving readable dark glass tooltip styling. */
@@ -27,9 +28,9 @@
   min-height: 158px;
   padding: 16px 22px 16px 18px;
   background:
-    linear-gradient(112deg, color-mix(in srgb, var(--kpi-accent) 13%, transparent) 0%, color-mix(in srgb, var(--kpi-accent) 8.5%, transparent) 36%, color-mix(in srgb, var(--kpi-accent) 3.5%, transparent) 68%, transparent 92%),
-    linear-gradient(168deg, rgba(230, 251, 255, .04) 0%, transparent 48%, color-mix(in srgb, var(--kpi-accent) 4.5%, transparent) 100%),
-    rgba(255,255,255,.012);
+    linear-gradient(112deg, color-mix(in srgb, var(--kpi-accent) 4%, transparent) 0%, color-mix(in srgb, var(--kpi-accent) 2%, transparent) 30%, transparent 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, .026), rgba(255, 255, 255, .006)),
+    rgba(4, 5, 7, .18);
 }
 
 .kpi-card--with-side {
@@ -45,11 +46,11 @@
   width: auto;
   border-radius: inherit;
   background:
-    linear-gradient(90deg, transparent, color-mix(in srgb, var(--kpi-accent) 7%, transparent) 46%, transparent),
-    linear-gradient(180deg, rgba(255, 255, 255, .045), transparent 54%);
+    linear-gradient(90deg, color-mix(in srgb, var(--kpi-accent) 6%, transparent) 0%, transparent 18%, transparent 82%, color-mix(in srgb, var(--kpi-accent) 4%, transparent) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, .046), transparent 52%);
   filter: none;
   mix-blend-mode: screen;
-  opacity: .58;
+  opacity: .48;
   pointer-events: none;
 }
 
@@ -128,7 +129,12 @@
   position: relative;
   width: 100%;
   flex: none;
-  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--kpi-accent) 22%, transparent));
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--kpi-accent) 12%, transparent));
+}
+
+.kpi-card--recovery .kpi-card__progress-chart {
+  opacity: .82;
+  filter: saturate(.82);
 }
 
 .kpi-pie-tooltip {
@@ -258,6 +264,22 @@
 
 .kpi-card__side-panel .ch-row {
   padding: 10px 32px 11px 12px;
+}
+
+.kpi-card__side-panel .ch-row--warn {
+  background: rgba(var(--warn-rgb), 0.045);
+  border-color: rgba(var(--warn-rgb), 0.18);
+}
+
+.kpi-card__side-panel .ch-tag {
+  background: rgba(var(--warn-rgb), 0.08);
+  border-color: rgba(var(--warn-rgb), 0.22);
+  box-shadow: 0 0 10px rgba(var(--warn-rgb), 0.08);
+}
+
+.kpi-card__side-panel .ch-bar-fill {
+  opacity: .82;
+  filter: saturate(.82);
 }
 
 .kpi-card__side-panel .ch-row-top {
