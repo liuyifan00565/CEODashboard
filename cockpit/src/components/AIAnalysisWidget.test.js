@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 14:43:35 CST
- 更新内容: 约束福小客默认状态每 10 秒弹出闲置气泡并持续 4 秒，悬浮文字时不触发默认气泡。
+ 更新时间: 2026-07-02 16:25:43 CST
+ 更新内容: 约束左下角 AI 小人入口保持小尺寸，同时恢复原亮度与动作发光强度。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -129,11 +129,15 @@ test('uses theme-specific AI dialog card backgrounds', () => {
 });
 
 test('styles the launcher as a transparent 3D mascot and speech bubble', () => {
-  assert.match(componentCss, /\.ai-orb\s*\{[^}]*width:\s*132px;/s);
-  assert.match(componentCss, /\.ai-orb\s*\{[^}]*height:\s*184px;/s);
+  assert.match(componentCss, /\.ai-widget\s*\{[^}]*min-height:\s*206px;/s);
+  assert.match(componentCss, /\.ai-orb\s*\{[^}]*width:\s*116px;/s);
+  assert.match(componentCss, /\.ai-orb\s*\{[^}]*height:\s*160px;/s);
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*background:\s*transparent;/s);
+  assert.match(componentCss, /\.ai-orb--wave \.mascot-3d-stage\s*\{[^}]*filter:\s*drop-shadow\(0 20px 30px rgba\(0, 0, 0, \.42\)\) drop-shadow\(0 0 22px rgba\(56, 189, 248, \.5\)\);/s);
+  assert.match(componentCss, /\.ai-orb--think \.mascot-3d-stage,[\s\S]*?\.ai-orb--talk \.mascot-3d-stage,[\s\S]*?\.ai-orb--click \.mascot-3d-stage\s*\{[^}]*drop-shadow\(0 0 32px rgba\(192, 132, 252, \.3\)\);/s);
+  assert.doesNotMatch(componentCss, /brightness\(\.92\)|saturate\(\.82\)/);
   assert.match(componentCss, /\.ai-bubble\s*\{/);
-  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*bottom:\s*226px;/s);
+  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*bottom:\s*202px;/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*left:\s*50%;/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*width:\s*min\(186px, calc\(100vw - 32px\)\);/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*opacity:\s*0;/s);
@@ -144,6 +148,8 @@ test('styles the launcher as a transparent 3D mascot and speech bubble', () => {
   assert.doesNotMatch(componentCss, /\.ai-bubble-name/);
   assert.match(componentCss, /\.ai-card-wrap\s*\{[^}]*z-index:\s*1000;/s);
   assert.match(componentCss, /\.ai-widget--speaking \.ai-bubble\.ai-bubble--visible/);
+  assert.match(componentCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.ai-orb\s*\{[^}]*width:\s*100px;[\s\S]*?height:\s*138px;/);
+  assert.match(componentCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.ai-bubble\s*\{[^}]*bottom:\s*160px;/);
   assert.doesNotMatch(componentCss, /--mascot-frame-count/);
   assert.doesNotMatch(componentCss, /ai-mascot-frames/);
   assert.doesNotMatch(componentCss, /ai-mascot-sprite/);

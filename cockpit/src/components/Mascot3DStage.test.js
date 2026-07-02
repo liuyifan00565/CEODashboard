@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 12:22:42 CST
- 更新内容: 增加默认闲置状态小尺寸测试，动作和分析状态保持原尺寸。
+ 更新时间: 2026-07-02 16:25:43 CST
+ 更新内容: 约束左下角 AI 小人保持小尺寸，但亮度和发光恢复原视觉强度。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -150,12 +150,15 @@ test('renders with extra headroom so the helmet is not clipped', () => {
   assert.match(stageCss, /overflow:\s*visible;/);
 });
 
-test('keeps the 3D stage compact for the sidebar launcher', () => {
+test('keeps the 3D stage compact while preserving the original bright launcher treatment', () => {
   assert.match(stageCss, /\.mascot-3d-stage\s*\{/);
-  assert.match(stageCss, /\.mascot-3d-stage\s*\{[^}]*width:\s*128px;/s);
-  assert.match(stageCss, /\.mascot-3d-stage--default\s*\{[^}]*width:\s*116px;/s);
-  assert.match(stageCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.mascot-3d-stage\s*\{[^}]*width:\s*112px;[\s\S]*?\.mascot-3d-stage--default\s*\{[^}]*width:\s*100px;/);
+  assert.match(stageCss, /\.mascot-3d-stage\s*\{[^}]*width:\s*112px;/s);
+  assert.match(stageCss, /\.mascot-3d-stage\s*\{[^}]*filter:\s*drop-shadow\(0 18px 28px rgba\(0, 0, 0, \.4\)\) drop-shadow\(0 0 18px rgba\(114, 77, 255, \.34\)\);/s);
+  assert.match(stageCss, /\.mascot-3d-stage--default\s*\{[^}]*width:\s*96px;/s);
+  assert.doesNotMatch(stageCss, /\.mascot-3d-stage--default\s*\{[^}]*opacity:/s);
+  assert.doesNotMatch(stageCss, /\.mascot-3d-stage--default\s*\{[^}]*filter:/s);
+  assert.match(stageCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.mascot-3d-stage\s*\{[^}]*width:\s*96px;[\s\S]*?\.mascot-3d-stage--default\s*\{[^}]*width:\s*84px;/);
   assert.match(stageSource, /const defaultIdle = action === MASCOT_ACTIONS\.idle && !analysisActive;/);
   assert.match(stageSource, /className=\{`mascot-3d-stage\$\{defaultIdle \? ' mascot-3d-stage--default' : ''\}`\}/);
-  assert.match(stageCss, /filter:\s*drop-shadow/);
+  assert.doesNotMatch(stageCss, /brightness\(\.84\)|saturate\(\.68\)/);
 });

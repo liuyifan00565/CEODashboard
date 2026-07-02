@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-01 12:06:57 CST
- 更新内容: 上移福小客头顶提示气泡，避免遮挡小人头部。
+ 更新时间: 2026-07-02 16:25:43 CST
+ 更新内容: 保持左下角 AI 小人入口小尺寸，恢复原亮度和动作发光强度。
 */
 .ai-widget {
   position: relative;
@@ -10,15 +10,15 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 232px;
+  min-height: 206px;
   margin-top: auto;
-  padding: 12px 0 6px;
+  padding: 8px 0 4px;
 }
 
 .ai-orb {
   position: relative;
-  width: 132px;
-  height: 184px;
+  width: 116px;
+  height: 160px;
   padding: 0;
   border: none;
   background: transparent;
@@ -60,7 +60,7 @@
 .ai-bubble {
   position: absolute;
   left: 50%;
-  bottom: 226px;
+  bottom: 202px;
   z-index: 4;
   display: grid;
   gap: 4px;
@@ -345,14 +345,14 @@
   }
 
   .ai-orb {
-    width: 112px;
-    height: 154px;
+    width: 100px;
+    height: 138px;
   }
 
   .ai-bubble {
     right: 10px;
     left: auto;
-    bottom: 174px;
+    bottom: 160px;
     transform: translateY(10px) scale(.96);
   }
 
