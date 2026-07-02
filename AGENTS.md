@@ -1,7 +1,7 @@
 # AGENTS.md
 
-更新时间: 2026-07-01 12:23:05
-更新内容: 加深半环图悬浮迷你卡片底色规则，保证亮色扇区上文字可读
+更新时间: 2026-07-02 16:05:12
+更新内容: 增加所有卡片和按钮必须优先复用统一玻璃背景与样式体系的规则
 
 This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
@@ -34,4 +34,5 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## UI 规则
 
+- 所有卡片和按钮的背景、边框、模糊、阴影与圆角必须优先复用项目既有统一玻璃体系（如 `GlassSurface`、`var(--line-2)`、`var(--glass-blur)`、`var(--glass-shadow)`、透明面板背景等），不要为单个卡片或按钮临时新增不一致的实色底、边框或阴影；确需新增变体时，应先抽象为共享样式或主题变量，保证后续新界面格式风格统一。
 - 半环图扇区鼠标悬浮时显示的迷你提示卡片，必须沿用原 KPI 二级弹窗卡片的玻璃边框、模糊和阴影体系，但底色要足够深以保证文字可读；不要按占比切换紫色、荧光绿或其它高饱和底色，也不要因此修改其它二级卡片。

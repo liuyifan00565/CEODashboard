@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 16:00:23 CST
- 更新内容: 数据维护模式顶部品牌副标题仅显示“数据维护”，不追加具体维护项名称。
+ 更新时间: 2026-07-02 16:05:12 CST
+ 更新内容: 数据维护按钮改为复用品牌玻璃背景，按钮内部不再使用独立芯片底色。
 */
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
@@ -241,15 +241,27 @@ export default function App() {
                 </div>
               </div>
             </GlassSurface>
-            <button
-              type="button"
-              className={`dash-maintenance-switch${maintenanceMode ? ' dash-maintenance-switch--active' : ''}`}
-              onClick={handleMaintenanceModeToggle}
-              aria-pressed={maintenanceMode}
+            <GlassSurface
+              width={118}
+              height={52}
+              borderRadius={16}
+              brightness={58}
+              blur={12}
+              displace={1}
+              backgroundOpacity={0.06}
+              distortionScale={-130}
+              className="maintenance-glass"
             >
-              <span className="dash-maintenance-switch__icon" aria-hidden="true">▦</span>
-              <span>{maintenanceMode ? '返回主界面' : '数据维护'}</span>
-            </button>
+              <button
+                type="button"
+                className={`dash-maintenance-switch${maintenanceMode ? ' dash-maintenance-switch--active' : ''}`}
+                onClick={handleMaintenanceModeToggle}
+                aria-pressed={maintenanceMode}
+              >
+                <span className="dash-maintenance-switch__icon" aria-hidden="true">▦</span>
+                <span>{maintenanceMode ? '返回主界面' : '数据维护'}</span>
+              </button>
+            </GlassSurface>
             <div className="dash-tools">
               <DateRangePicker value={dateRange} onChange={(dates) => setDateRange(dates?.length ? [...dates] : DEFAULT_FILTER_RANGE)} />
               <Segmented options={DIM_OPTS} value={dim} onChange={setDim} />

@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 16:00:23 CST
- 更新内容: 约束数据维护模式顶部副标题仅显示“数据维护”，不追加具体维护项。
+ 更新时间: 2026-07-02 16:05:12 CST
+ 更新内容: 约束数据维护按钮复用品牌玻璃背景，并增加卡片按钮统一样式规则回归测试。
 */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -8,6 +8,7 @@ import test from 'node:test';
 
 const appSource = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
 const dashboardCss = readFileSync(new URL('./dashboard.css', import.meta.url), 'utf8');
+const projectAgentGuidance = readFileSync(new URL('../../AGENTS.md', import.meta.url), 'utf8');
 const kpiCardCss = readFileSync(new URL('./components/KpiCard.css', import.meta.url), 'utf8');
 const kpiModalSource = readFileSync(new URL('./components/KpiModal.jsx', import.meta.url), 'utf8');
 const monthlyTrendSource = readFileSync(new URL('./components/MonthlyTrend.jsx', import.meta.url), 'utf8');
@@ -125,6 +126,9 @@ test('uses the same year month day topbar controls for compute and links them to
 });
 
 test('adds a topbar data maintenance switch that swaps the sidebar navigation', () => {
+  const maintenanceSwitchBlock = cssRuleBody(dashboardCss, '.dash-maintenance-switch');
+  const maintenanceActiveBlock = cssRuleBody(dashboardCss, '.dash-maintenance-switch--active');
+
   assert.match(appSource, /import \{ META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel \} from '\.\/data\/mock';/);
   assert.match(appSource, /const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU\[0\]\?\.key \?\? 'target-maintenance';/);
   assert.match(appSource, /const \[maintenanceMode,\s*setMaintenanceMode\] = useState\(false\);/);
@@ -136,11 +140,20 @@ test('adds a topbar data maintenance switch that swaps the sidebar navigation', 
   assert.match(appSource, /function handleSidebarChange\(nextMenu\) \{[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setActiveMaintenanceMenu\(nextMenu\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?handleMenuChange\(nextMenu\);[\s\S]*?\}/);
   assert.match(appSource, /function handleMaintenanceModeToggle\(\) \{[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setMaintenanceMode\(false\);[\s\S]*?setActiveMenu\('overview'\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?setMaintenanceMode\(true\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?\}/);
   assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} \/>/);
+  assert.match(appSource, /className="maintenance-glass"/);
+  assert.match(appSource, /<GlassSurface[\s\S]*?width=\{118\}[\s\S]*?height=\{52\}[\s\S]*?borderRadius=\{16\}[\s\S]*?brightness=\{58\}[\s\S]*?blur=\{12\}[\s\S]*?backgroundOpacity=\{0\.06\}[\s\S]*?distortionScale=\{-130\}[\s\S]*?className="maintenance-glass"[\s\S]*?<button/);
   assert.match(appSource, /className=\{`dash-maintenance-switch\$\{maintenanceMode \? ' dash-maintenance-switch--active' : ''\}`\}/);
   assert.match(appSource, /aria-pressed=\{maintenanceMode\}/);
   assert.match(appSource, /\{maintenanceMode \? '返回主界面' : '数据维护'\}/);
-  assert.match(dashboardCss, /\.dash-maintenance-switch\{[\s\S]*?margin-left:auto;[\s\S]*?border:1px solid var\(--line-2\);[\s\S]*?background:var\(--ai-chip-bg\);/);
-  assert.match(dashboardCss, /\.dash-maintenance-switch--active\{[\s\S]*?background:var\(--ai-chip-hover\);/);
+  assert.match(dashboardCss, /\.dash-topbar \.maintenance-glass\{[\s\S]*?margin-left:auto;/);
+  assert.match(dashboardCss, /\.dash-topbar \.maintenance-glass \.glass-surface__content\{padding:0\}/);
+  assert.match(maintenanceSwitchBlock, /width:100%;/);
+  assert.match(maintenanceSwitchBlock, /height:100%;/);
+  assert.match(maintenanceSwitchBlock, /border:none;/);
+  assert.match(maintenanceSwitchBlock, /background:transparent;/);
+  assert.doesNotMatch(maintenanceSwitchBlock, /background:var\(--ai-chip-bg\);/);
+  assert.doesNotMatch(maintenanceActiveBlock, /background:var\(--ai-chip-hover\);/);
+  assert.match(projectAgentGuidance, /所有卡片和按钮的背景、边框、模糊、阴影与圆角必须优先复用项目既有统一玻璃体系/);
 });
 
 test('uses full-width compute trend sliders that resize from 3 to 15 bars', () => {

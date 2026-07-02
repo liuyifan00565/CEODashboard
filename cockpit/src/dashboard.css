@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 15:44:47 CST
- 更新内容: 顶部栏新增数据维护/返回主界面按钮，并保持与现有玻璃控件一致的排布和状态样式。
+ 更新时间: 2026-07-02 16:05:12 CST
+ 更新内容: 数据维护按钮背景统一为品牌玻璃面，去除按钮自身独立芯片底色。
 */
 
 /* ===== 外层 shell：左侧栏 + 右内容列 ===== */
@@ -43,34 +43,34 @@
 .dash-tools .fp-glass{flex:0 0 244px;max-width:244px;min-width:244px}
 .dash-tools .sgm-btn{padding:6px 12px}
 
-.dash-maintenance-switch{
+.dash-topbar .maintenance-glass{
   margin-left:auto;
   flex:0 0 auto;
-  min-width:112px;
-  height:44px;
+}
+.dash-topbar .maintenance-glass .glass-surface__content{padding:0}
+.dash-maintenance-switch{
+  width:100%;
+  height:100%;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:8px;
+  min-width:112px;
   padding:0 16px;
-  border:1px solid var(--line-2);
+  border:none;
   border-radius:14px;
-  background:var(--ai-chip-bg);
+  background:transparent;
   color:var(--txt);
-  box-shadow:var(--glass-shadow);
-  backdrop-filter:var(--glass-blur);
-  -webkit-backdrop-filter:var(--glass-blur);
   font:inherit;
   font-size:14px;
   font-weight:700;
   line-height:1;
   white-space:nowrap;
   cursor:pointer;
-  transition:background .22s ease, border-color .22s ease, color .22s ease, transform .22s ease;
+  transition:color .22s ease, transform .22s ease;
 }
 .dash-maintenance-switch:hover{
-  border-color:rgba(255,255,255,.34);
-  background:var(--ai-chip-hover);
+  color:var(--txt);
   transform:translateY(-1px);
 }
 .dash-maintenance-switch:focus-visible{
@@ -78,8 +78,6 @@
   outline-offset:3px;
 }
 .dash-maintenance-switch--active{
-  background:var(--ai-chip-hover);
-  border-color:var(--line-2);
   color:var(--txt);
 }
 .dash-maintenance-switch__icon{
