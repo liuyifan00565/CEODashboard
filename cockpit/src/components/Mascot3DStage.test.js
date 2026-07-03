@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-02 16:25:43 CST
- 更新内容: 约束左下角 AI 小人保持小尺寸，但亮度和发光恢复原视觉强度。
+ 更新时间: 2026-07-03 18:06:34 CST
+ 更新内容: 要求 AI 小人舞台升级为真实 Three.js 分部件 3D 模型，并保留 PNG 作为降级兜底。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -9,90 +9,71 @@ import assert from 'node:assert/strict';
 const stageSource = readFileSync(new URL('./Mascot3DStage.jsx', import.meta.url), 'utf8');
 const stageCss = readFileSync(new URL('./Mascot3DStage.css', import.meta.url), 'utf8');
 const mascotTransparentUrl = new URL('../../public/ai-mascot-transparent.png', import.meta.url);
-const mascotKpiGuideUrl = new URL('../../public/assets/mascot/ceo-mascot-kpi-guide.png', import.meta.url);
-const mascotReportPresenterUrl = new URL('../../public/assets/mascot/ceo-mascot-report-presenter.png', import.meta.url);
-const mascotRiskAlertUrl = new URL('../../public/assets/mascot/ceo-mascot-risk-alert.png', import.meta.url);
-const mascotTargetAchievedUrl = new URL('../../public/assets/mascot/ceo-mascot-target-achieved.png', import.meta.url);
 
-function readPngSize(url) {
-  const png = readFileSync(url);
-  return {
-    width: png.readUInt32BE(16),
-    height: png.readUInt32BE(20),
-  };
-}
+test('renders Fu Xiaoke as articulated Three.js model parts instead of a full-character texture', () => {
+  assert.match(stageSource, /import \{\s*Text\s*\} from '@react-three\/drei';/);
+  assert.match(stageSource, /function MascotModel\(\{ pose, action, analysisActive, time \}\)/);
+  assert.match(stageSource, /function MascotHead\(\{ poseRefs, blink, talkOpen \}\)/);
+  assert.match(stageSource, /function MascotHeadset\(\)/);
+  assert.match(stageSource, /function MascotBody\(\{ poseRefs \}\)/);
+  assert.match(stageSource, /function MascotArm\(\{ side, poseRefs \}\)/);
+  assert.match(stageSource, /function MascotLeg\(\{ side, poseRefs \}\)/);
+  assert.match(stageSource, /function MascotSuitLines\(\)/);
+  assert.match(stageSource, /function MascotGlow\(\{ action \}\)/);
+  assert.match(stageSource, /<sphereGeometry args=\{\[/);
+  assert.match(stageSource, /<capsuleGeometry args=\{\[/);
+  assert.match(stageSource, /<torusGeometry args=\{\[/);
+  assert.match(stageSource, /<cylinderGeometry args=\{\[/);
+  assert.match(stageSource, /<Text[\s\S]*?>AI<\/Text>/);
+  assert.doesNotMatch(stageSource, /function MascotImageStack/);
+  assert.doesNotMatch(stageSource, /mascot-image-stack/);
+  assert.doesNotMatch(stageSource, /Object\.entries\(MASCOT_ACTION_POSES\)\.map/);
+  assert.doesNotMatch(stageSource, /<planeGeometry args=\{\[width, height\]\}/);
+});
 
-test('uses the original Fu Xiaoke PNG and generated action poses as full-character textures', () => {
+test('keeps the transparent Fu Xiaoke PNG only as a WebGL fallback', () => {
   assert.ok(existsSync(mascotTransparentUrl));
-  assert.match(stageSource, /source = '\/ai-mascot-transparent\.png'/);
-  assert.match(stageSource, /MASCOT_ACTION_POSES/);
-  assert.match(stageSource, /const texture = useTexture\(source\);/);
-  assert.match(stageSource, /texture\.colorSpace = THREE\.SRGBColorSpace;/);
-  assert.match(stageSource, /<meshBasicMaterial\s+ref=\{materialRef\}\s+map=\{texture\}\s+transparent\s+toneMapped=\{false\}/s);
-  assert.doesNotMatch(stageSource, /sphereGeometry/);
-  assert.doesNotMatch(stageSource, /capsuleGeometry/);
-  assert.doesNotMatch(stageSource, /function HelmetHead/);
+  assert.match(stageSource, /const FALLBACK_MASCOT_SOURCE = '\/ai-mascot-transparent\.png';/);
+  assert.match(stageSource, /const \[webglFailed, setWebglFailed\] = useState\(false\);/);
+  assert.match(stageSource, /onCreated=\{\(\) => setWebglFailed\(false\)\}/);
+  assert.match(stageSource, /onError=\{\(\) => setWebglFailed\(true\)\}/);
+  assert.match(stageSource, /<img\s+className="mascot-fallback-image"\s+src=\{FALLBACK_MASCOT_SOURCE\}/s);
+  assert.match(stageCss, /\.mascot-fallback-image\s*\{/);
+  assert.match(stageCss, /\.mascot-3d-stage--webgl-failed \.mascot-fallback-image\s*\{/);
+  assert.doesNotMatch(stageSource, /useTexture/);
+  assert.doesNotMatch(stageSource, /MASCOT_ACTION_POSES/);
 });
 
-test('keeps generated action pose canvases close to the original mascot proportions', () => {
-  const originalSize = readPngSize(mascotTransparentUrl);
-  const actionSizes = [
-    readPngSize(mascotKpiGuideUrl),
-    readPngSize(mascotReportPresenterUrl),
-    readPngSize(mascotRiskAlertUrl),
-    readPngSize(mascotTargetAchievedUrl),
-  ];
-
-  actionSizes.forEach((size) => {
-    assert.ok(Math.abs(size.height - originalSize.height) < 40);
-    assert.ok(Math.abs(size.width - originalSize.width) < 40);
-  });
-  assert.match(stageSource, /function getMascotPoseStageWidth\(pose\) \{/);
+test('maps mascot rig bones into named model part refs', () => {
+  assert.match(stageSource, /function createPoseRefs\(\) \{/);
+  assert.match(stageSource, /root: useRef\(null\),/);
+  assert.match(stageSource, /head: useRef\(null\),/);
+  assert.match(stageSource, /leftUpperArm: useRef\(null\),/);
+  assert.match(stageSource, /rightUpperArm: useRef\(null\),/);
+  assert.match(stageSource, /leftUpperLeg: useRef\(null\),/);
+  assert.match(stageSource, /rightUpperLeg: useRef\(null\),/);
+  assert.match(stageSource, /function applyRigPose\(poseRefs, pose\) \{/);
+  assert.match(stageSource, /applyBonePose\(poseRefs\.head\.current, pose\.head\);/);
+  assert.match(stageSource, /applyBonePose\(poseRefs\.rightUpperArm\.current, pose\.rightUpperArm\);/);
+  assert.match(stageSource, /applyBonePose\(poseRefs\.leftUpperLeg\.current, pose\.leftUpperLeg\);/);
 });
 
-test('loads the generated mascot action images for their matching contexts', () => {
-  assert.ok(existsSync(mascotKpiGuideUrl));
-  assert.ok(existsSync(mascotReportPresenterUrl));
-  assert.ok(existsSync(mascotRiskAlertUrl));
-  assert.ok(existsSync(mascotTargetAchievedUrl));
-  assert.match(stageSource, /kpiGuide:\s*\{\s*source:\s*'\/assets\/mascot\/ceo-mascot-kpi-guide\.png'/s);
-  assert.match(stageSource, /reportPresenter:\s*\{\s*source:\s*'\/assets\/mascot\/ceo-mascot-report-presenter\.png'/s);
-  assert.match(stageSource, /riskAlert:\s*\{\s*source:\s*'\/assets\/mascot\/ceo-mascot-risk-alert\.png'/s);
-  assert.match(stageSource, /targetAchieved:\s*\{\s*source:\s*'\/assets\/mascot\/ceo-mascot-target-achieved\.png'/s);
-  assert.match(stageSource, /function getMascotPoseKey\(action = MASCOT_ACTIONS\.idle, analysisActive = false\)/);
-  assert.match(stageSource, /if \(action === MASCOT_ACTIONS\.alert\) return 'riskAlert';/);
-  assert.match(stageSource, /if \(action === MASCOT_ACTIONS\.celebrate\) return 'targetAchieved';/);
-  assert.match(stageSource, /if \(action === MASCOT_ACTIONS\.wave\) return 'kpiGuide';/);
-  assert.match(stageSource, /if \(analysisActive \|\| action === MASCOT_ACTIONS\.think \|\| action === MASCOT_ACTIONS\.talk \|\| action === MASCOT_ACTIONS\.click\) return 'reportPresenter';/);
-});
-
-test('renders a DOM image stack so generated mascot poses are visible in the sidebar', () => {
-  assert.match(stageSource, /function MascotImageStack\(\{ action, pointer, analysisActive \}\)/);
-  assert.match(stageSource, /const activePoseKey = getMascotPoseKey\(action, analysisActive\);/);
-  assert.match(stageSource, /<img\s+className=\{`mascot-pose-image\$\{active \? ' is-active' : ''\}`\}/s);
-  assert.match(stageSource, /src=\{pose\.source\}/);
-  assert.match(stageSource, /aria-hidden="true"/);
-  assert.match(stageCss, /\.mascot-image-stack\s*\{/);
-  assert.match(stageCss, /\.mascot-pose-image\.is-active\s*\{/);
-});
-
-test('keeps one complete original image plane and forbids soft-bone warping', () => {
-  assert.match(stageSource, /function MascotImage\(\{\s*meshRef,\s*materialRef,\s*source = '\/ai-mascot-transparent\.png',\s*width = MASCOT_STAGE_WIDTH,\s*height = MASCOT_STAGE_HEIGHT,\s*z = 0,\s*initialOpacity = 1,\s*\}\)/s);
-  assert.match(stageSource, /<planeGeometry args=\{\[width, height\]\}/);
-  assert.match(stageSource, /<meshBasicMaterial\s+ref=\{materialRef\}\s+map=\{texture\}\s+transparent\s+toneMapped=\{false\}/s);
-  assert.match(stageSource, /function getDesktopPetMotion\(action = MASCOT_ACTIONS\.idle, t = 0, pointer = DEFAULT_POINTER, analysisActive = false\)/);
-  assert.doesNotMatch(stageSource, /const MASCOT_PARTS = \[/);
-  assert.doesNotMatch(stageSource, /function createMascotPartMesh/);
-  assert.doesNotMatch(stageSource, /const MASCOT_GRID_COLUMNS/);
-  assert.doesNotMatch(stageSource, /const MASCOT_GRID_ROWS/);
-  assert.doesNotMatch(stageSource, /SOFT_BONES/);
-  assert.doesNotMatch(stageSource, /applyMascotSoftBones/);
-  assert.doesNotMatch(stageSource, /position\.needsUpdate/);
+test('uses procedural geometry and not a single image plane for the visible mascot', () => {
+  assert.match(stageSource, /const MASCOT_COLORS = \{/);
+  assert.match(stageSource, /helmet:\s*'#724DFF'/);
+  assert.match(stageSource, /ice:\s*'#66D9FF'/);
+  assert.match(stageSource, /glass:\s*'#C9D7FF'/);
+  assert.match(stageSource, /skin:\s*'#FFE7F6'/);
+  assert.match(stageSource, /white:\s*'#F8F7FF'/);
+  assert.match(stageSource, /function MascotMaterials\(\) \{/);
+  assert.match(stageSource, /meshPhysicalMaterial/);
+  assert.match(stageSource, /meshStandardMaterial/);
+  assert.doesNotMatch(stageSource, /function MascotImage\(/);
+  assert.doesNotMatch(stageSource, /meshBasicMaterial[\s\S]*map=\{texture\}/);
   assert.doesNotMatch(stageSource, /CanvasTexture/);
   assert.doesNotMatch(stageSource, /new THREE\.SkinnedMesh/);
   assert.doesNotMatch(stageSource, /skinIndex/);
   assert.doesNotMatch(stageSource, /skinWeight/);
-  assert.doesNotMatch(stageSource, /getVertexSkinning/);
 });
 
 test('follows the mouse like a desktop pet while staying fixed-facing', () => {
@@ -124,23 +105,18 @@ test('gives each companion action a distinct desktop-pet motion while preserving
   assert.doesNotMatch(stageSource, /scale\.set\(motion\.scale,\s*motion\.scale \*/);
 });
 
-test('crossfades to the selected generated action pose and flies upward during analysis', () => {
-  assert.match(stageSource, /function getMascotPoseStageWidth\(pose\) \{/);
-  assert.match(stageSource, /const mascotMaterialRef = useRef\(null\);/);
-  assert.match(stageSource, /const actionPoseRefs = useRef\(\{\}\);/);
-  assert.match(stageSource, /const actionPoseMaterialRefs = useRef\(\{\}\);/);
-  assert.match(stageSource, /const actionPoseOpacity = useRef\(0\);/);
+test('drives the 3D model with mascot rig poses and action-specific expression values', () => {
+  assert.match(stageSource, /import \{ getMascotRigPose \} from '\.\.\/lib\/mascotRig';/);
+  assert.match(stageSource, /const pose = getMascotRigPose\(action, t\);/);
+  assert.match(stageSource, /applyRigPose\(poseRefs, pose\);/);
+  assert.match(stageSource, /const expression = getMascotExpression\(action, t, analysisActive\);/);
+  assert.match(stageSource, /blink=\{expression\.blink\}/);
+  assert.match(stageSource, /talkOpen=\{expression\.talkOpen\}/);
+  assert.match(stageSource, /glowIntensity=\{expression\.glowIntensity\}/);
   assert.match(stageSource, /const isAnalyzing = analysisActive \|\| action === MASCOT_ACTIONS\.think \|\| action === MASCOT_ACTIONS\.talk \|\| action === MASCOT_ACTIONS\.click;/);
-  assert.match(stageSource, /const flyLift = isAnalyzing \? 0\.18 \+ Math\.abs\(Math\.sin\(t \* 2\.4\)\) \* 0\.045 : 0;/);
-  assert.match(stageSource, /actionPoseOpacity:\s*getMascotPoseKey\(action, analysisActive\) \? 1 : 0,/);
-  assert.match(stageSource, /actionPoseOpacity\.current = THREE\.MathUtils\.lerp\(actionPoseOpacity\.current, motion\.actionPoseOpacity, 0\.18\);/);
-  assert.match(stageSource, /mascotMaterialRef\.current\.opacity = 1 - poseOpacity;/);
-  assert.match(stageSource, /Object\.entries\(MASCOT_ACTION_POSES\)\.forEach/);
-  assert.match(stageSource, /material\.opacity = poseKey === selectedPoseKey \? poseOpacity : 0;/);
-  assert.match(stageSource, /mesh\.visible = poseKey === selectedPoseKey && poseOpacity > 0\.02;/);
-  assert.doesNotMatch(stageSource, /source="\/ai-mascot-analysis-laptop\.png"/);
-  assert.doesNotMatch(stageSource, /function AnalysisLaptop/);
-  assert.doesNotMatch(stageSource, /function LaptopBoneArm/);
+  assert.match(stageSource, /const flyLift = isAnalyzing \? 0\.16 \+ Math\.abs\(Math\.sin\(t \* 2\.4\)\) \* 0\.04 : 0;/);
+  assert.doesNotMatch(stageSource, /actionPoseOpacity/);
+  assert.doesNotMatch(stageSource, /material\.opacity = poseKey === selectedPoseKey/);
 });
 
 test('renders with extra headroom so the helmet is not clipped', () => {
@@ -157,6 +133,10 @@ test('keeps the 3D stage compact while preserving the original bright launcher t
   assert.match(stageCss, /\.mascot-3d-stage--default\s*\{[^}]*width:\s*96px;/s);
   assert.doesNotMatch(stageCss, /\.mascot-3d-stage--default\s*\{[^}]*opacity:/s);
   assert.doesNotMatch(stageCss, /\.mascot-3d-stage--default\s*\{[^}]*filter:/s);
+  assert.doesNotMatch(stageCss, /\.mascot-image-stack/);
+  assert.doesNotMatch(stageCss, /\.mascot-pose-image/);
+  assert.match(stageCss, /\.mascot-fallback-image\s*\{[^}]*opacity:\s*0;/s);
+  assert.match(stageCss, /\.mascot-3d-stage--webgl-failed \.mascot-fallback-image\s*\{[^}]*opacity:\s*1;/s);
   assert.match(stageCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.mascot-3d-stage\s*\{[^}]*width:\s*96px;[\s\S]*?\.mascot-3d-stage--default\s*\{[^}]*width:\s*84px;/);
   assert.match(stageSource, /const defaultIdle = action === MASCOT_ACTIONS\.idle && !analysisActive;/);
   assert.match(stageSource, /className=\{`mascot-3d-stage\$\{defaultIdle \? ' mascot-3d-stage--default' : ''\}`\}/);

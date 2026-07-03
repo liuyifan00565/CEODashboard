@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:06:34 CST
+ 更新内容: 补充 AI 弹窗入口不得直接引用 AI 小人 PNG 图片资产的集成断言。
+*/
+/*
  更新时间: 2026-07-03 15:45:00 CST
  更新内容: 同步 AI 弹窗卡片深色主题底色到冷紫深海蓝黑视觉体系。
 */
@@ -41,6 +45,9 @@ test('uses the 3D mascot stage for the AI launcher', () => {
   assert.match(componentSource, /onClick=\{handleMascotClick\}/);
   assert.doesNotMatch(componentSource, /ai-mascot-sprite/);
   assert.doesNotMatch(componentSource, /ai-mascot-stage/);
+  assert.doesNotMatch(componentSource, /ai-mascot-transparent\.png/);
+  assert.doesNotMatch(componentSource, /ceo-mascot-kpi-guide/);
+  assert.doesNotMatch(componentSource, /ceo-mascot-report-presenter/);
 });
 
 test('tracks pointer position for Codex-like desktop pet movement', () => {
