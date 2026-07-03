@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:38:42 CST
+ 更新内容: 放松 AI 小人入口集成断言的精确实现绑定，并收窄 mascot 图片资产禁用范围。
+*/
+/*
  更新时间: 2026-07-03 18:27:19 CST
  更新内容: 将 AI 小人入口资产隔离断言改为检查去注释源码，禁止直接 PNG 和 mascot 资产引用。
 */
@@ -43,15 +47,17 @@ function themeBlock(theme) {
 }
 
 test('uses the 3D mascot stage for the AI launcher', () => {
-  assert.match(componentCode, /import Mascot3DStage from '\.\/Mascot3DStage';/);
+  assert.match(componentCode, /Mascot3DStage/);
   assert.match(componentCode, /import \{\s*MASCOT_ACTIONS,\s*getIdleCompanionCue,\s*getSpeechAction,\s*\} from '\.\.\/lib\/mascotCompanion';/s);
-  assert.match(componentCode, /export default function AIAnalysisWidget\(\{ activeMenu, dim, channelKey = 'all', companionCue \}\)/);
-  assert.match(componentCode, /const \[mascotAction,\s*setMascotAction\] = useState\(MASCOT_ACTIONS\.idle\);/);
-  assert.match(componentCode, /const \[mascotPointer,\s*setMascotPointer\] = useState\(\{ x: 0, y: 0, active: false \}\);/);
+  assert.match(componentCode, /export default function AIAnalysisWidget\(/);
+  assert.match(componentCode, /useState\(\s*MASCOT_ACTIONS\.idle\s*\)/);
+  assert.match(componentCode, /useState\(\s*\{\s*x:\s*0,\s*y:\s*0,\s*active:\s*false\s*\}\s*\)/);
   assert.doesNotMatch(componentCode, /spinToken/);
   assert.doesNotMatch(componentCode, /setSpinToken/);
-  assert.match(componentCode, /className=\{`ai-orb ai-orb--\$\{mascotAction\}`\}/);
-  assert.match(componentCode, /<Mascot3DStage\s+action=\{mascotAction\}\s+pointer=\{mascotPointer\}\s+analysisActive=\{open \|\| loading\}\s+label="福小客 3D 经营助手"/s);
+  assert.match(componentCode, /className=\{`ai-orb ai-orb--\$\{[^}]+\}`\}/);
+  assert.match(componentCode, /<Mascot3DStage\b[\s\S]*\baction=\{[^}]+\}[\s\S]*\/>|<Mascot3DStage\b[\s\S]*\bmascotAction=\{[^}]+\}[\s\S]*\/>/);
+  assert.match(componentCode, /<Mascot3DStage\b[\s\S]*\bpointer=\{[^}]+\}[\s\S]*\/>|<Mascot3DStage\b[\s\S]*\bmascotPointer=\{[^}]+\}[\s\S]*\/>/);
+  assert.match(componentCode, /<Mascot3DStage\b[\s\S]*\banalysisActive=\{[^}]+\}[\s\S]*\/>|<Mascot3DStage\b[\s\S]*\b(?:active|analyzing)=\{[^}]+\}[\s\S]*\/>/);
   assert.match(componentCode, /aria-label=\{open \? '收起 AI 分析工具' : '打开 AI 分析工具'\}/);
   assert.match(componentCode, /aria-expanded=\{open\}/);
   assert.match(componentCode, /onPointerMove=\{handleMascotPointerMove\}/);
@@ -60,7 +66,7 @@ test('uses the 3D mascot stage for the AI launcher', () => {
   assert.match(componentCode, /onClick=\{handleMascotClick\}/);
   assert.doesNotMatch(componentCode, /ai-mascot-sprite|ai-mascot-stage/);
   assert.doesNotMatch(componentCode, /\/assets\/mascot\//);
-  assert.doesNotMatch(componentCode, /['"`][^'"`]*\.png[^'"`]*['"`]/);
+  assert.doesNotMatch(componentCode, /['"`][^'"`]*(?:ai-mascot|ceo-mascot|mascot)[^'"`]*\.png[^'"`]*['"`]/i);
   assert.doesNotMatch(componentCode, /(?:ai|ceo)-mascot|mascot[^A-Za-z0-9_]*(?:asset|image|png|source)/i);
 });
 

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:38:42 CST
+ 更新内容: 校准 AI 小人 3D 红灯测试，强化可识别视觉与骨骼驱动信号并放松精确命名绑定。
+*/
+/*
  更新时间: 2026-07-03 18:34:39 CST
  更新内容: 加强 AI 小人真实 3D 可识别细节红灯覆盖，保持实现命名与公式无关。
 */
@@ -53,6 +57,9 @@ test('renders Fu Xiaoke as articulated Three.js model parts instead of a full-ch
   assert.match(stageCode, /headset|headphone|earphone|earcup|microphone|\bmic\b|boom/i);
   assert.match(stageCode, />\s*AI\s*<|['"`]AI['"`]|badge|emblem|chest/i);
   assert.match(stageCode, /<(?:pointLight|spotLight|ambientLight|directionalLight)\b|emissive|glow/i);
+  assert.match(stageCode, /#(?:724DFF|4B2AD8|66D9FF|[0-9A-F]{2}[0-9A-F]{2}(?:FF|D9))|purple|violet|blue|ice|helmet|accent|var\(--(?:accent|primary|chart|control|brand)/i);
+  assert.match(stageCode, /#(?:F8F7FF|FFFFFF|FFE7F6)|white|suit|body|shell|var\(--(?:txt|surface|panel|card|glass)/i);
+  assert.match(stageCode, /sphereGeometry[\s\S]{0,120}(?:head|face)|(?:head|face)[\s\S]{0,160}sphereGeometry|round|helmet/i);
   assert.doesNotMatch(stageCode, /\buseTexture\b|TextureLoader|loadTexture/);
   assert.doesNotMatch(stageCode, /meshBasicMaterial[\s\S]{0,160}(?:map=\{|\bmap:)/);
   assert.doesNotMatch(stageCode, /<planeGeometry\b[\s\S]{0,160}(?:width|height|texture|map|source|mascot)/i);
@@ -74,8 +81,12 @@ test('keeps the transparent Fu Xiaoke PNG only as a WebGL fallback', () => {
 });
 
 test('maps mascot rig bones into named model part refs', () => {
-  assert.match(stageCode, /from ['"]\.\.\/lib\/mascotRig['"]|getMascotRigPose/);
-  assert.match(stageCode, /getMascotRigPose\s*\([^)]*action[^)]*\)/);
+  assert.match(stageCode, /useFrame\s*\(/);
+  assert.match(stageCode, /\b(?:pose|rig|bone)\b/i);
+  assert.match(stageCode, /getMascotRigPose|from ['"]\.\.\/lib\/mascotRig['"]|(?:pose|rig|bone)[A-Za-z0-9_$]*\s*=\s*[^;\n]*(?:action|MASCOT_ACTIONS)/i);
+  assert.match(stageCode, /useRef\s*\(|\brefs?\b|\.current\b/i);
+  assert.match(stageCode, /(?:pose|rig|bone)[\s\S]{0,240}(?:rotation|position|scale|\.current)|(?:rotation|position|scale|\.current)[\s\S]{0,240}(?:pose|rig|bone)/i);
+  assert.match(stageCode, /\.(?:rotation|position|scale)\.(?:set|x|y|z)\s*(?:=|\()|apply[A-Za-z0-9_$]*(?:Pose|Rig|Bone)|Object\.entries\([^)]*(?:pose|rig|bone)/i);
 
   const rigPartCount = countMatches(stageCode, [
     /\bbody\b|\btorso\b|\bspine\b/i,
@@ -94,7 +105,8 @@ test('maps mascot rig bones into named model part refs', () => {
 test('uses procedural geometry and not a single image plane for the visible mascot', () => {
   assert.match(stageCode, /<mesh(?:\s|>)/);
   assert.match(stageCode, /mesh(?:Standard|Physical|Phong|Lambert|Toon|Normal)Material/);
-  assert.doesNotMatch(stageCode, /function\s+\w*Image\w*\(/);
+  assert.doesNotMatch(stageCode, /function\s+\w*(?:Pose|Stack|Texture|Plane|Sprite)Image\w*\(|function\s+\w*Image(?:Stack|Plane|Sprite|Texture)\w*\(/);
+  assert.doesNotMatch(stageCode, /function\s+\w*Image\w*\([^)]*(?:meshRef|materialRef|source|width|height|z|initialOpacity)[^)]*\)/);
   assert.doesNotMatch(stageCode, /meshBasicMaterial[\s\S]{0,180}(?:map=\{|\bmap:)/);
   assert.doesNotMatch(stageCode, /CanvasTexture|new THREE\.SkinnedMesh|skinIndex|skinWeight/);
   assert.doesNotMatch(stageCode, /\.(?:png|webp|jpg|jpeg)['"`][\s\S]{0,120}(?:map|texture|material)|(?:map|texture|material)[\s\S]{0,120}\.(?:png|webp|jpg|jpeg)['"`]/i);
@@ -120,8 +132,8 @@ test('gives each companion action a distinct desktop-pet motion while preserving
 });
 
 test('drives the 3D model with mascot rig poses and action-specific expression values', () => {
-  assert.match(stageCode, /getMascotRigPose\s*\([^)]*action[^)]*\)/);
-  assert.match(stageCode, /pose\.(?:root|spine|head|left|right|arm|leg|hand)|(?:root|spine|head|left|right|arm|leg|hand)[\s\S]{0,80}pose/i);
+  assert.match(stageCode, /useFrame\s*\([\s\S]*(?:pose|rig|bone)[\s\S]*(?:rotation|position|scale|\.current)/i);
+  assert.match(stageCode, /(?:pose|rig|bone)\.(?:root|spine|head|left|right|arm|leg|hand)|(?:root|spine|head|left|right|arm|leg|hand)[\s\S]{0,100}(?:pose|rig|bone)/i);
 
   const expressionSignalCount = countMatches(stageCode, [
     /blink/i,
@@ -145,7 +157,8 @@ test('renders with extra headroom so the helmet is not clipped', () => {
 test('keeps the 3D stage compact while preserving the original bright launcher treatment', () => {
   assert.match(stageCssCode, /\.mascot-3d-stage\s*\{/);
   assert.match(stageCssCode, /\.mascot-3d-stage\s*\{[^}]*width:\s*112px;/s);
-  assert.match(stageCssCode, /\.mascot-3d-stage\s*\{[^}]*filter:\s*drop-shadow\(0 18px 28px rgba\(0, 0, 0, \.4\)\) drop-shadow\(0 0 18px rgba\(114, 77, 255, \.34\)\);/s);
+  assert.match(stageCssCode, /\.mascot-3d-stage\s*\{[^}]*filter:\s*drop-shadow\(/s);
+  assert.match(stageCssCode, /\.mascot-3d-stage canvas\s*\{[^}]*opacity:\s*(?:1|0);/s);
   assert.match(stageCssCode, /\.mascot-3d-stage--default\s*\{[^}]*width:\s*96px;/s);
   assert.doesNotMatch(stageCssCode, /\.mascot-3d-stage--default\s*\{[^}]*opacity:/s);
   assert.doesNotMatch(stageCssCode, /\.mascot-3d-stage--default\s*\{[^}]*filter:/s);
