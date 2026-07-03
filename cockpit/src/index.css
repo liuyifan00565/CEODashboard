@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 17:55:02 CST
+ Update content: Add neutral dashboard card glass tokens and cap full-page purple background area to accent-only usage.
+*/
+/*
  Update time: 2026-07-03 17:52:15 CST
  Update content: 将全屏背景从亮紫宇宙光束收敛为深黑蓝底、微弱径向紫色光晕、低透明网格/噪声纹理，并加快暗背景漂移。
 */
@@ -81,13 +85,18 @@
   --brand-lavender:#C9C2FF;
   --brand-mist:#E7E2FF;
   --brand-ice:#9EDCFF;
+  --purple-visual-area-max:.15;
+  --dashboard-card-bg:rgba(18, 20, 32, 0.82);
+  --dashboard-card-border:rgba(255, 255, 255, 0.08);
+  --dashboard-card-shadow:0 20px 60px rgba(0, 0, 0, 0.35);
+  --dashboard-card-blur:blur(18px);
   --panel:rgba(255,255,255,.07);
   --panel-2:rgba(255,255,255,.09);
   --line:rgba(255,255,255,.11);
   --line-2:rgba(255,255,255,.13);
   --glass-cell:rgba(255,255,255,.055);
   --glass-cell-hover:rgba(231,226,255,.105);
-  --glass-shadow:0 18px 54px rgba(2,5,14,.32), 0 0 22px rgba(124,108,255,.045), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(255,255,255,.045);
+  --glass-shadow:0 20px 60px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12), inset 0 -1px 0 rgba(255,255,255,.035);
   --glass-blur:blur(24px) saturate(150%);
   --txt:#F8F7FF;
   --muted:#E7E2FF;
@@ -106,14 +115,14 @@
   --bar-good-glow:0 0 16px rgba(170,160,255,.20);
   --bar-warn:linear-gradient(90deg,#E7436D 0%,#FF5F88 58%,#FF86A4 100%);
   --bar-warn-glow:0 0 16px rgba(255,95,136,.20);
-  /* 背景：深黑蓝底；Color Bends 降为弱紫环境光，网格和噪声只做极轻纹理 */
+  /* 背景：深黑蓝底；紫色面积控制在 --purple-visual-area-max 内，只做品牌环境光 */
   --bg-base-1:#050B17;
   --bg-base-2:#030712;
   --bg-base-3:#071120;
-  --bg-radial-a:rgba(118,78,255,.115);
-  --bg-radial-b:rgba(168,118,255,.075);
-  --bg-radial-c:rgba(104,80,210,.085);
-  --bg-radial-d:rgba(88,116,180,.035);
+  --bg-radial-a:rgba(124,108,255,.06);
+  --bg-radial-b:rgba(201,194,255,.045);
+  --bg-radial-c:rgba(143,134,255,.05);
+  --bg-radial-d:rgba(158,220,255,.06);
   --bg-vignette:
     linear-gradient(90deg,rgba(160,142,255,.018),transparent 18%,transparent 82%,rgba(160,142,255,.014)),
     radial-gradient(circle at center,transparent 0%,rgba(0,0,0,.34) 100%);
@@ -249,13 +258,13 @@ body{
     linear-gradient(180deg,rgba(3,7,18,.44) 0%,rgba(3,7,18,.32) 48%,rgba(3,7,18,.50) 100%),
     radial-gradient(circle at center,rgba(4,8,18,.12),rgba(1,3,8,.38) 100%);
 }
-/* Color Bends 材质层：由亮紫光束降级为更快、更暗的模糊紫色环境漂移 */
+/* Color Bends 材质层：只保留少量品牌识别，不再作为大面积紫色背景 */
 .color-bends-layer{
   position:absolute;inset:0;z-index:1;pointer-events:none;
-  opacity:.28;
-  filter:blur(14px) brightness(.42) saturate(.88);
-  mix-blend-mode:screen;
-  transform:scale(1.04);
+  opacity:var(--purple-visual-area-max);
+  filter:brightness(.44) saturate(.7);
+  mix-blend-mode:normal;
+  transform:none;
   transform-origin:center;
 }
 .color-bends-layer canvas{
@@ -275,7 +284,7 @@ body{
     linear-gradient(90deg,var(--bg-grid-line-strong) 1px,transparent 1px),
     var(--bg-vignette);
   background-size:auto,auto,auto,auto,72px 72px,72px 72px,288px 288px,288px 288px,auto,auto;
-  opacity:.72;
+  opacity:.42;
   animation:bgAmbientDrift 18s linear infinite;
 }
 /* 极轻 SVG 噪点，让渐变不塑料化；几乎看不见但质感更细 */

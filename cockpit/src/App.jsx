@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 17:55:10 CST
+ 更新内容: 将 Color Bends 配色从强紫光束改为中性深色带加少量低饱和靛紫强调，落实紫色面积不超过 15% 的规则。
+*/
+/*
  更新时间: 2026-07-03 17:52:15 CST
  更新内容: 将 Color Bends 背景改为更快、更暗的弱紫环境漂移，配合深黑蓝网格噪声背景。
 */
@@ -287,11 +291,11 @@ export default function App() {
   return (
     <div className="app">
       <div className="bg">
-        {/* ReactBits Color Bends 只保留为弱紫动态环境光，前景可读性由遮罩和 CSS 纹理层控制 */}
+        {/* ReactBits Color Bends 只保留少量低饱和品牌强调，前景可读性由遮罩和 CSS 纹理层控制 */}
         {theme === 'dark' && (
           <>
             <ColorBends
-              colors={['#160B3A', '#2B155E', '#5A3C9D']}
+              colors={['#111827', '#263247', '#4E46A5']}
               speed={0.18}
               transparent={true}
               rotation={96}
