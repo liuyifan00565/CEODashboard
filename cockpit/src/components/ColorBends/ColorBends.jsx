@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 16:50:00 CST
+ Update content: Blend overlapping Color Bends bands by weighted purple color instead of additive clamping, preventing white/gray overexposed light.
+*/
+/*
  Update time: 2026-07-03 15:30:00 CST
  Update content: Add the ReactBits Color Bends shader component for a slow cold-purple Apple/Vision Pro environment-light background.
 */
@@ -53,6 +57,7 @@ void main() {
   if (uColorCount > 0) {
     vec2 s = q;
     vec3 sumCol = vec3(0.0);
+    float weightSum = 0.0;
     float cover = 0.0;
     for (int i = 0; i < MAX_COLORS; ++i) {
       if (i >= uColorCount) break;
@@ -68,9 +73,10 @@ void main() {
       float m = mix(m0, m1, kMix);
       float w = 1.0 - exp(-uBandWidth / exp(uBandWidth * m));
       sumCol += uColors[i] * w;
+      weightSum += w;
       cover = max(cover, w);
     }
-    col = clamp(sumCol, 0.0, 1.0);
+    col = clamp((sumCol / max(weightSum, 0.0001)) * cover, 0.0, 1.0);
     a = uTransparent > 0 ? cover : 1.0;
   } else {
     vec2 s = q;

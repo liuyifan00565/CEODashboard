@@ -1,4 +1,16 @@
 /*
+ Update time: 2026-07-03 16:42:00 CST
+ Update content: Preserve the ReactBits ribbon-bend silhouette while dimming only final brightness for dashboard readability.
+*/
+/*
+ Update time: 2026-07-03 16:30:00 CST
+ Update content: Let Color Bends penetrate the glass page again, but lower brightness with preserved purple saturation instead of blocking the data area.
+*/
+/*
+ Update time: 2026-07-03 16:18:00 CST
+ Update content: Add a dashboard-content readability scrim so Color Bends stays visible around the cockpit without washing through data cards.
+*/
+/*
  Update time: 2026-07-03 16:02:00 CST
  Update content: Let ReactBits Color Bends read as a visible bright purple ribbon layer by raising layer opacity and easing the dark overlay.
 */
@@ -208,13 +220,14 @@ body{
 .bg-shade{
   position:absolute;inset:0;z-index:2;pointer-events:none;
   background:
-    linear-gradient(180deg,rgba(7,10,18,.16) 0%,rgba(7,10,18,.06) 48%,rgba(7,10,18,.22) 100%),
-    radial-gradient(circle at center,rgba(7,10,18,0),rgba(3,5,11,.08) 100%);
+    linear-gradient(180deg,rgba(7,10,18,.28) 0%,rgba(7,10,18,.18) 48%,rgba(7,10,18,.34) 100%),
+    radial-gradient(circle at center,rgba(7,10,18,.04),rgba(3,5,11,.18) 100%);
 }
 /* Color Bends 材质层：全屏铺底，保留 ReactBits 组件可识别的亮紫带状流光 */
 .color-bends-layer{
   position:absolute;inset:0;z-index:1;pointer-events:none;
-  opacity:1;
+  opacity:.88;
+  filter:brightness(.62) saturate(1.35);
   mix-blend-mode:normal;
 }
 .color-bends-layer canvas{

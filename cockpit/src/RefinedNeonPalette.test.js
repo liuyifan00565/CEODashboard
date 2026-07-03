@@ -1,4 +1,24 @@
 /*
+ Update time: 2026-07-03 16:58:00 CST
+ Update content: Guard the slightly faster Color Bends flow and thinner purple ribbons.
+*/
+/*
+ Update time: 2026-07-03 16:50:00 CST
+ Update content: Guard Color Bends shader blending so overlapping purple ribbons do not clamp into white light.
+*/
+/*
+ Update time: 2026-07-03 16:42:00 CST
+ Update content: Guard ReactBits-like Color Bends ribbon geometry instead of a diffuse purple mist.
+*/
+/*
+ Update time: 2026-07-03 16:30:00 CST
+ Update content: Guard the revised Color Bends balance: page-wide penetration with reduced brightness and preserved purple saturation.
+*/
+/*
+ Update time: 2026-07-03 16:18:00 CST
+ Update content: Guard that visible Color Bends is kept behind a dashboard data readability scrim instead of washing through cards.
+*/
+/*
  Update time: 2026-07-03 16:02:00 CST
  Update content: Guard the visible high-presence Color Bends ribbon layer after the reference component feedback.
 */
@@ -36,6 +56,7 @@ const themeSource = readFileSync(new URL('./lib/theme.js', import.meta.url), 'ut
 const appSource = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
 const kpiSource = readFileSync(new URL('./components/KpiCard.jsx', import.meta.url), 'utf8');
 const channelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
+const colorBendsSource = readFileSync(new URL('./components/ColorBends/ColorBends.jsx', import.meta.url), 'utf8');
 
 function darkThemeBlock() {
   const match = indexCss.match(/:root,\s*:root\[data-theme="dark"\]\{(?<body>[\s\S]*?)\n\}/);
@@ -100,14 +121,21 @@ test('uses Color Bends as a visible deep blue-black purple ribbon layer', () => 
   assert.match(indexCss, /\.bg::after\{[\s\S]*?feTurbulence[\s\S]*?fractalNoise/);
   assert.match(darkThemeBlock(), /--bg-noise-opacity:\.025;/);
 
-  // Color Bends 材质层 + 轻遮罩：App.jsx 渲染 ColorBends，index.css 保留组件可识别的亮紫带状流光
+  // Color Bends 材质层：允许穿透页面和玻璃卡片，但亮度不能过曝
   assert.match(appSource, /import ColorBends from '\.\/components\/ColorBends\/ColorBends';/);
-  assert.match(appSource, /<ColorBends[\s\S]*?colors=\{\['#4C2BBF', '#7C6CFF', '#A855F7', '#E7E2FF'\]\}/);
+  assert.match(appSource, /<ColorBends[\s\S]*?colors=\{\['#3B1A8F', '#6D28D9', '#A855F7'\]\}/);
+  assert.match(appSource, /speed=\{0\.09\}/);
   assert.match(appSource, /transparent=\{false\}/);
-  assert.match(appSource, /intensity=\{1\.75\}/);
-  assert.match(appSource, /bandWidth=\{7\}/);
+  assert.match(appSource, /iterations=\{1\}/);
+  assert.match(appSource, /intensity=\{1\.2\}/);
+  assert.match(appSource, /bandWidth=\{4\.6\}/);
+  assert.doesNotMatch(appSource, /bg-data-scrim/);
   assert.match(indexCss, /\.bg-shade\{[\s\S]*?z-index:2;[\s\S]*?rgba\(7,10,18,/);
-  assert.match(indexCss, /\.color-bends-layer\{[\s\S]*?z-index:1;[\s\S]*?opacity:\s*1;/);
+  assert.doesNotMatch(indexCss, /\.bg-data-scrim/);
+  assert.match(indexCss, /\.color-bends-layer\{[\s\S]*?z-index:1;[\s\S]*?opacity:\s*\.88;[\s\S]*?filter:brightness\(\.62\) saturate\(1\.35\);/);
+  assert.match(colorBendsSource, /float weightSum = 0\.0;/);
+  assert.match(colorBendsSource, /sumCol \/ max\(weightSum, 0\.0001\)\) \* cover/);
+  assert.doesNotMatch(colorBendsSource, /col = clamp\(sumCol, 0\.0, 1\.0\);/);
 });
 
 test('keeps warning rows translucent instead of becoming saturated candy blocks', () => {

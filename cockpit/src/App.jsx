@@ -1,4 +1,20 @@
 /*
+ 更新时间: 2026-07-03 16:58:00 CST
+ 更新内容: 按反馈略微加快 Color Bends 流动速度，并收细紫色带宽。
+*/
+/*
+ 更新时间: 2026-07-03 16:42:00 CST
+ 更新内容: 将 Color Bends 从雾状紫光调回 ReactBits 官方参考的连续弯曲丝带形态，同时保持页面穿透和亮度受控。
+*/
+/*
+ 更新时间: 2026-07-03 16:30:00 CST
+ 更新内容: 按最新反馈取消数据区遮挡，让 Color Bends 穿透页面，同时降低亮度避免白紫光束过曝。
+*/
+/*
+ 更新时间: 2026-07-03 16:18:00 CST
+ 更新内容: 收回 Color Bends 穿透数据卡片的刺眼白紫光束，新增数据区背景保护层，让流光停留在背景与空区。
+*/
+/*
  更新时间: 2026-07-03 16:02:00 CST
  更新内容: 提高 ReactBits Color Bends 的亮度、饱和感与带状存在感，回应参考组件需要更明显可感知的要求。
 */
@@ -271,20 +287,20 @@ export default function App() {
         {theme === 'dark' && (
           <>
             <ColorBends
-              colors={['#4C2BBF', '#7C6CFF', '#A855F7', '#E7E2FF']}
-              speed={0.055}
+              colors={['#3B1A8F', '#6D28D9', '#A855F7']}
+              speed={0.09}
               transparent={false}
               rotation={92}
-              autoRotate={0.24}
-              scale={0.88}
-              frequency={1.05}
-              warpStrength={1.02}
+              autoRotate={0.18}
+              scale={1}
+              frequency={1}
+              warpStrength={1}
               mouseInfluence={0.04}
               parallax={0.08}
-              noise={0.06}
-              iterations={3}
-              intensity={1.75}
-              bandWidth={7}
+              noise={0.05}
+              iterations={1}
+              intensity={1.2}
+              bandWidth={4.6}
               className="color-bends-layer"
             />
             <div className="bg-shade" aria-hidden="true" />
