@@ -1,3 +1,4 @@
+/* Update time: 2026-07-03 10:24:55 CST  Update content: Remove unused recovery half-donut header subtitle styles. */
 /* Update time: 2026-07-02 18:21:53 CST  Update content: Increase desktop long recovery card spacing before the completion progress block. */
 /* Update time: 2026-07-02 18:03:34 CST  Update content: Show recovery target subtitles beside the big value on desktop while preserving stacked mobile layout. */
 /* Update time: 2026-07-02 17:50:46 CST  Update content: Return recovery cards to neutral dark glass and keep completion color as restrained edge accents. */
@@ -106,25 +107,6 @@
   font-size: 18px;
   font-weight: 800;
   line-height: 1.35;
-}
-
-.kpi-card__pie-sub {
-  background: transparent;
-  box-shadow: none;
-  margin-top: 2px;
-  color: rgba(239,251,255,.66);
-  font-size: 15px;
-  font-weight: 650;
-  line-height: 1.35;
-  font-variant-numeric: tabular-nums;
-}
-
-.kpi-card__pie-sub-value {
-  background: transparent;
-  box-shadow: none;
-  color: rgba(239,251,255,.96);
-  font-size: 17px;
-  font-weight: 850;
 }
 
 .kpi-card__pie-chart {

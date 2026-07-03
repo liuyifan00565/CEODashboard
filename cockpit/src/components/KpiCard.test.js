@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 10:24:55 CST
+ Update content: Require recovery half-donut headers to omit the target and completed subtitle line.
+*/
+/*
  Update time: 2026-07-02 18:21:53 CST
  Update content: Require long recovery KPI cards to leave more vertical space before the completion progress block.
 */
@@ -94,19 +98,20 @@ test('uses four sales source slices in the recovery half-donut chart', () => {
   assert.doesNotMatch(componentSource, /name:\s*'缺口'/);
 });
 
-test('shows target completion title and target amount at the upper-left of the recovery half-donut', () => {
+test('keeps only the target completion title at the upper-left of the recovery half-donut', () => {
   assert.match(componentSource, /function recoveryPieHeading\(card\) \{[\s\S]*?return card\.key === 'year' \? '本年目标完成情况' : '本月目标完成情况';[\s\S]*?\}/);
-  assert.match(componentSource, /function recoveryTargetLabel\(card\) \{[\s\S]*?return card\.key === 'year' \? '年目标' : '月目标';[\s\S]*?\}/);
-  assert.match(componentSource, /function recoveryCompletedLabel\(card\) \{[\s\S]*?return card\.key === 'year' \? '年完成' : '月完成';[\s\S]*?\}/);
   assert.match(componentSource, /function recoveryCompletedValue\(card\) \{[\s\S]*?return Math\.max\(Number\(card\.value\) \|\| 0, 0\);[\s\S]*?\}/);
   assert.match(componentSource, /function recoveryTargetValue\(card\) \{[\s\S]*?return recoveryCompletedValue\(card\) \+ \(Number\(card\.gap\) \|\| 0\);[\s\S]*?\}/);
-  assert.match(componentSource, /<div className="kpi-card__pie-head">[\s\S]*?<div className="kpi-card__pie-title">\{recoveryPieHeading\(card\)\}<\/div>[\s\S]*?<div className="kpi-card__pie-sub">[\s\S]*?<\/div>[\s\S]*?<\/div>[\s\S]*?<EChart option=\{recoveryPieOption\(card, tokens, recoveryAccent\)\}/);
-  assert.match(componentSource, /\{recoveryTargetLabel\(card\)\} <span className="kpi-card__pie-sub-value">\{recoveryTargetValue\(card\)\}<\/span> 万 · \{recoveryCompletedLabel\(card\)\} <span className="kpi-card__pie-sub-value">\{recoveryCompletedValue\(card\)\}<\/span> 万/);
+  assert.match(componentSource, /<div className="kpi-card__pie-head">[\s\S]*?<div className="kpi-card__pie-title">\{recoveryPieHeading\(card\)\}<\/div>[\s\S]*?<\/div>[\s\S]*?<EChart option=\{recoveryPieOption\(card, tokens, recoveryAccent\)\}/);
+  assert.doesNotMatch(componentSource, /function recoveryTargetLabel/);
+  assert.doesNotMatch(componentSource, /function recoveryCompletedLabel/);
+  assert.doesNotMatch(componentSource, /className="kpi-card__pie-sub"/);
+  assert.doesNotMatch(componentSource, /className="kpi-card__pie-sub-value"/);
   assert.match(cssSource, /\.kpi-card__pie-head\s*\{[\s\S]*?align-self:\s*flex-start;[\s\S]*?width:\s*auto;[\s\S]*?text-align:\s*left;[\s\S]*?z-index:\s*2;[\s\S]*?margin-top:\s*14px;[\s\S]*?margin-bottom:\s*-24px;[\s\S]*?margin-left:\s*54px;[\s\S]*?transform:\s*none;/);
   assert.match(cssSource, /\.kpi-card__pie-head\s*\{[\s\S]*?background:\s*transparent;[\s\S]*?box-shadow:\s*none;[\s\S]*?-webkit-user-select:\s*none;[\s\S]*?user-select:\s*none;/);
   assert.match(cssSource, /\.kpi-card__pie-title\s*\{[\s\S]*?background:\s*transparent;[\s\S]*?box-shadow:\s*none;[\s\S]*?font-size:\s*18px;[\s\S]*?font-weight:\s*800;/);
-  assert.match(cssSource, /\.kpi-card__pie-sub\s*\{[\s\S]*?background:\s*transparent;[\s\S]*?box-shadow:\s*none;[\s\S]*?font-size:\s*15px;[\s\S]*?font-weight:\s*650;[\s\S]*?font-variant-numeric:\s*tabular-nums;/);
-  assert.match(cssSource, /\.kpi-card__pie-sub-value\s*\{[\s\S]*?background:\s*transparent;[\s\S]*?box-shadow:\s*none;[\s\S]*?font-size:\s*17px;[\s\S]*?font-weight:\s*850;/);
+  assert.doesNotMatch(cssSource, /\.kpi-card__pie-sub\s*\{/);
+  assert.doesNotMatch(cssSource, /\.kpi-card__pie-sub-value\s*\{/);
 });
 
 test('adds a transparent unfinished slice at the right edge of the recovery half-donut', () => {

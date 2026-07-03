@@ -1,7 +1,7 @@
 # AGENTS.md
 
-更新时间: 2026-07-02 17:48:55
-更新内容: 增加维护页卡片、工具栏和表格必须沿用算力用量分析页面原透明玻璃 CSS 样式的规则
+更新时间: 2026-07-03 10:49:52
+更新内容: 增加每次修改提交推送前后必须自动拉取并确认远端更新同步的 Git 工作规则
 
 This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
@@ -14,7 +14,9 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 - 每次提交应尽量保持单一目的，只包含本次任务相关文件。
 - Git 提交说明中必须包含用户本次发出的原始提示词，方便回看当时执行的命令和需求。
 - 如果工作区已有未提交改动，提交前必须区分本次修改和既有改动，不要把无关内容混入同一个提交。
+- 每次修改项目文件后，在推送到分支前必须先从当前分支对应远端自动拉取最新更新并处理冲突，确认本地分支基于最新远端提交后再推送。
 - 每次修改项目文件后，完成校验并提交后必须同时推送到 `origin`（`liuyifan00565/CEODashboard`）和 `ttoswar`（`ttoswar/CEODashboard`）两个 GitHub 远端；推送前后都要确认两个远端分支状态，避免漏推或覆盖他人提交。
+- 每次完成双远端推送后，必须再次从 `origin` 和 `ttoswar` 当前分支拉取/确认更新，确保本地分支、`origin` 分支和 `ttoswar` 分支三方提交一致后再结束任务。
 
 ## Docker 服务重启规则
 

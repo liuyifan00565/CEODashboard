@@ -1,3 +1,4 @@
+/* Update time: 2026-07-03 10:24:55 CST  Update content: Remove target and completed subtitle text from the recovery half-donut header. */
 /* Update time: 2026-07-02 18:03:34 CST  Update content: Place recovery card target subtitles beside the large KPI value on desktop. */
 /* Update time: 2026-07-02 17:50:46 CST  Update content: Add a scoped progress chart class so recovery cards can tone down accent saturation. */
 /* Update time: 2026-07-02 17:09:15 CST  Update content: Soften the unfinished recovery slice for the refined neon palette. */
@@ -36,14 +37,6 @@ function recoveryTargetValue(card) {
 
 function recoveryPieHeading(card) {
   return card.key === 'year' ? '本年目标完成情况' : '本月目标完成情况';
-}
-
-function recoveryTargetLabel(card) {
-  return card.key === 'year' ? '年目标' : '月目标';
-}
-
-function recoveryCompletedLabel(card) {
-  return card.key === 'year' ? '年完成' : '月完成';
 }
 
 function recoveryPieLabelFormatter(params) {
@@ -390,9 +383,6 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
           <div className="kpi-card__pie" aria-hidden="true">
             <div className="kpi-card__pie-head">
               <div className="kpi-card__pie-title">{recoveryPieHeading(card)}</div>
-              <div className="kpi-card__pie-sub">
-                {recoveryTargetLabel(card)} <span className="kpi-card__pie-sub-value">{recoveryTargetValue(card)}</span> 万 · {recoveryCompletedLabel(card)} <span className="kpi-card__pie-sub-value">{recoveryCompletedValue(card)}</span> 万
-              </div>
             </div>
           <EChart option={recoveryPieOption(card, tokens, recoveryAccent)} className="kpi-card__pie-chart" style={{ height: 326 }} />
           </div>

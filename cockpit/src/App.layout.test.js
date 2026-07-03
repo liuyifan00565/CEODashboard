@@ -3,6 +3,14 @@
  更新内容: 增加顶部数据维护/返回主界面按钮去除左侧图标并收窄宽度的回归测试。
 */
 /*
+ Update time: 2026-07-03 10:29:25 CST
+ Update content: Add regression coverage for current-month scroll alignment using the scroll pane coordinate system.
+*/
+/*
+ Update time: 2026-07-03 10:21:20 CST
+ Update content: Add regression coverage for target maintenance pinning only annual/current-quarter summary columns and aligning the scroll pane to the current month.
+*/
+/*
  Update time: 2026-07-03 10:04:51 CST
  Update content: Add regression coverage for compact maintenance year dropdown width.
 */
@@ -266,37 +274,45 @@ test('builds the target and cost maintenance pages from reference matrix content
   assert.match(maintenancePageSource, /保存成本/);
 });
 
-test('orders target maintenance fixed columns from business month through current month', () => {
+test('pins only annual and current-quarter summary columns on target maintenance', () => {
   assert.match(maintenancePageSource, /import \{[\s\S]*?META,[\s\S]*?MAINTENANCE_PERIOD_COLUMNS/);
   assert.match(maintenancePageSource, /const TARGET_PERIOD_COLUMNS = buildTargetPeriodColumns\(MAINTENANCE_PERIOD_COLUMNS, META\.monthLabel\);/);
+  assert.match(maintenancePageSource, /const TARGET_FIXED_PERIOD_COLUMNS = TARGET_PERIOD_COLUMNS\.filter\(\(column\) => column\.targetPinned\);/);
+  assert.match(maintenancePageSource, /const TARGET_SCROLL_PERIOD_COLUMNS = TARGET_PERIOD_COLUMNS\.filter\(\(column\) => !column\.targetPinned\);/);
   assert.match(maintenancePageSource, /function getMaintenanceCurrentMonth\(monthLabel = ''\) \{/);
-  assert.match(maintenancePageSource, /const quarterStartMonth = Math\.floor\(\(currentMonth - 1\) \/ 3\) \* 3 \+ 1;/);
-  assert.match(maintenancePageSource, /const currentQuarterColumns = periodColumns\.filter\(\(column\) =>/);
-  assert.match(maintenancePageSource, /return \[\s*\.\.\.yearColumns,\s*\.\.\.currentQuarterColumns,\s*\.\.\.restColumns,\s*\]/);
-  assert.match(maintenancePageSource, /className="mnt-matrix mnt-matrix--target"/);
-  assert.match(maintenancePageSource, /TARGET_PERIOD_COLUMNS\.map\(\(column\) => <th key=\{column\.key\} className=\{targetPeriodColumnClassName\(column\)\}>/);
-  assert.match(maintenancePageSource, /TARGET_PERIOD_COLUMNS\.map\(\(column\) => \{/);
-  assert.match(maintenancePageSource, /className=\{targetPeriodColumnClassName\(column, 'mnt-period-cell'\)\}/);
+  assert.match(maintenancePageSource, /const pinnedQuarterColumns = periodColumns\.filter\(\(column\) => column\.key === quarterKey\);/);
+  assert.match(maintenancePageSource, /const fixedKeys = new Set\(\[\.\.\.yearColumns, \.\.\.pinnedQuarterColumns\]\.map\(\(column\) => column\.key\)\);/);
+  assert.match(maintenancePageSource, /targetPinned:\s*fixedKeys\.has\(column\.key\)/);
+  assert.match(maintenancePageSource, /targetCurrentMonth:\s*column\.month === currentMonth/);
+  assert.match(maintenancePageSource, /data-target-current-month=\{column\.targetCurrentMonth \? 'true' : undefined\}/);
+  assert.doesNotMatch(maintenancePageSource, /quarterStartMonth/);
+  assert.doesNotMatch(maintenancePageSource, /column\.month >=/);
 });
 
-test('keeps target maintenance current business columns sticky without leaving glass styling', () => {
-  const targetTableBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target');
-  const targetNameHeaderBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target th:first-child');
-  const targetNameCellBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target td:first-child');
-  const targetStickyBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target .mnt-target-sticky');
-  const targetStickyHeadBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target th.mnt-target-sticky');
-  const targetStickyLastBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target .mnt-target-sticky--5');
+test('separates target maintenance fixed columns from the horizontal scroll pane', () => {
+  const targetWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap--target');
+  const targetGridBlock = cssRuleBody(maintenancePageCss, '.mnt-target-matrix');
+  const targetFixedPaneBlock = cssRuleBody(maintenancePageCss, '.mnt-target-fixed-pane');
+  const targetScrollPaneBlock = cssRuleBody(maintenancePageCss, '.mnt-target-scroll-pane');
+  const targetFixedTableBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target-fixed');
+  const targetScrollTableBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target-scroll');
 
-  assert.match(targetTableBlock, /--mnt-target-name-width:\s*164px;/);
-  assert.match(targetTableBlock, /--mnt-target-period-width:\s*128px;/);
-  assert.match(targetStickyBlock, /position:\s*sticky;/);
-  assert.match(targetNameHeaderBlock, /background:\s*rgba\(0,0,0,\.86\);/);
-  assert.match(targetNameCellBlock, /background:\s*rgba\(0,0,0,\.82\);/);
-  assert.match(targetStickyBlock, /background:\s*rgba\(0,0,0,\.82\);/);
-  assert.match(targetStickyBlock, /backdrop-filter:\s*blur\(14px\);/);
-  assert.match(targetStickyHeadBlock, /background:\s*rgba\(0,0,0,\.86\);/);
-  assert.match(targetStickyLastBlock, /left:\s*calc\(var\(--mnt-target-name-width\) \+ var\(--mnt-target-period-width\) \* 4\);/);
-  assert.doesNotMatch(targetStickyBlock, /var\(--glass-panel-bg\)|radial-gradient|#101012/);
+  assert.match(maintenancePageSource, /function useTargetCurrentMonthAlignment\(\) \{/);
+  assert.match(maintenancePageSource, /const currentMonthHeader = scrollPane\.querySelector\('\[data-target-current-month="true"\]'\);/);
+  assert.match(maintenancePageSource, /currentMonthHeader\.offsetLeft - scrollPane\.offsetLeft \+ currentMonthHeader\.offsetWidth - scrollPane\.clientWidth/);
+  assert.match(maintenancePageSource, /scrollPane\.scrollLeft = Math\.max\(0, Math\.min\(targetScrollLeft, maxScrollLeft\)\);/);
+  assert.match(targetWrapBlock, /overflow-x:\s*hidden;/);
+  assert.match(targetGridBlock, /--mnt-target-name-width:\s*164px;/);
+  assert.match(targetGridBlock, /--mnt-target-period-width:\s*128px;/);
+  assert.match(targetGridBlock, /grid-template-columns:\s*calc\(var\(--mnt-target-name-width\) \+ var\(--mnt-target-period-width\) \* 2\) minmax\(0,\s*1fr\);/);
+  assert.match(targetFixedPaneBlock, /position:\s*sticky;/);
+  assert.match(targetFixedPaneBlock, /left:\s*0;/);
+  assert.match(targetScrollPaneBlock, /overflow-x:\s*auto;/);
+  assert.match(targetScrollPaneBlock, /overscroll-behavior-x:\s*contain;/);
+  assert.match(targetFixedTableBlock, /min-width:\s*calc\(var\(--mnt-target-name-width\) \+ var\(--mnt-target-period-width\) \* 2\);/);
+  assert.match(targetScrollTableBlock, /min-width:\s*calc\(var\(--mnt-target-period-width\) \* 15\);/);
+  assert.doesNotMatch(maintenancePageCss, /mnt-target-sticky--3|mnt-target-sticky--4|mnt-target-sticky--5/);
+  assert.doesNotMatch(maintenancePageCss, /rgba\(0,0,0,\.82\)|rgba\(0,0,0,\.86\)|var\(--glass-panel-bg\)|radial-gradient|#101012/);
 });
 
 test('builds the org and channel maintenance pages from reference tree and table content', () => {

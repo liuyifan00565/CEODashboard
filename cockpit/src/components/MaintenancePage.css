@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 10:22:28 CST
+ Update content: Split target maintenance fixed columns from the month scroll pane while keeping the transparent glass table style.
+*/
+/*
  更新时间: 2026-07-03 10:04:51 CST
  更新内容: 收窄四个维护页顶部工具栏年度下拉框宽度，减少右侧留白。
 */
@@ -390,6 +394,36 @@
   max-height: 270px;
 }
 
+.mnt-matrix-wrap--target {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.mnt-target-matrix {
+  --mnt-target-name-width: 164px;
+  --mnt-target-period-width: 128px;
+  display: grid;
+  grid-template-columns: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2) minmax(0, 1fr);
+  min-width: 0;
+  align-items: start;
+}
+
+.mnt-target-fixed-pane {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2);
+  min-width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2);
+  background: transparent;
+}
+
+.mnt-target-scroll-pane {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+}
+
 .mnt-matrix,
 .mnt-user-table {
   width: 100%;
@@ -399,25 +433,29 @@
   font-size: 13px;
 }
 
-.mnt-matrix--target {
-  --mnt-target-name-width: 164px;
-  --mnt-target-period-width: 128px;
-  min-width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 17);
+.mnt-matrix--target-fixed {
+  width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2);
+  min-width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2);
   table-layout: fixed;
 }
 
-.mnt-matrix--target th:first-child,
-.mnt-matrix--target td:first-child {
+.mnt-matrix--target-scroll {
+  width: max-content;
+  min-width: calc(var(--mnt-target-period-width) * 15);
+  table-layout: fixed;
+}
+
+.mnt-matrix--target-fixed th:first-child,
+.mnt-matrix--target-fixed td:first-child {
   width: var(--mnt-target-name-width);
   min-width: var(--mnt-target-name-width);
   max-width: var(--mnt-target-name-width);
-  background: rgba(0,0,0,.82);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
 }
 
-.mnt-matrix--target th:not(:first-child),
-.mnt-matrix--target .mnt-period-cell {
+.mnt-matrix--target-fixed th:not(:first-child),
+.mnt-matrix--target-fixed .mnt-period-cell,
+.mnt-matrix--target-scroll th,
+.mnt-matrix--target-scroll .mnt-period-cell {
   width: var(--mnt-target-period-width);
   min-width: var(--mnt-target-period-width);
   max-width: var(--mnt-target-period-width);
@@ -481,46 +519,19 @@
   z-index: 4;
 }
 
-.mnt-matrix--target th:first-child {
-  z-index: 6;
-  background: rgba(0,0,0,.86);
+.mnt-matrix--target-scroll th:first-child {
+  left: auto;
+  z-index: 2;
+  background: rgba(0,0,0,.16);
 }
 
-.mnt-matrix--target td:first-child {
-  background: rgba(0,0,0,.82);
-}
-
-.mnt-matrix--target .mnt-target-sticky {
-  position: sticky;
-  z-index: 3;
-  background: rgba(0,0,0,.82);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-}
-
-.mnt-matrix--target th.mnt-target-sticky {
-  z-index: 5;
-  background: rgba(0,0,0,.86);
-}
-
-.mnt-matrix--target .mnt-target-sticky--1 {
-  left: var(--mnt-target-name-width);
-}
-
-.mnt-matrix--target .mnt-target-sticky--2 {
-  left: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width));
-}
-
-.mnt-matrix--target .mnt-target-sticky--3 {
-  left: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2);
-}
-
-.mnt-matrix--target .mnt-target-sticky--4 {
-  left: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 3);
-}
-
-.mnt-matrix--target .mnt-target-sticky--5 {
-  left: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 4);
+.mnt-matrix--target-scroll td:first-child {
+  position: static;
+  left: auto;
+  z-index: auto;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .mnt-matrix th:last-child,
@@ -541,18 +552,6 @@
 
 .mnt-row--summary td:first-child {
   background: rgba(0,0,0,.14);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-}
-
-.mnt-matrix--target .mnt-row--summary .mnt-target-sticky {
-  background: rgba(0,0,0,.82);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-}
-
-.mnt-matrix--target .mnt-row--summary td:first-child {
-  background: rgba(0,0,0,.82);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
