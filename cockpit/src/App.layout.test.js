@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 11:55:42 CST
+ 更新内容: 合并 ttoswar 最新维护页导航、冻结列和选中态回归测试。
+*/
+/*
  更新时间: 2026-07-03 11:45:24 CST
  更新内容: 合并本地与 ttoswar 维护页回归测试，采用远端维护页语义实色进度条预期。
 */
@@ -13,6 +17,14 @@
 /*
  更新时间: 2026-07-03 10:59:56 CST
  更新内容: 增加开户数卡片复用顶部搜索定位边框的布局回归测试。
+*/
+/*
+ Update time: 2026-07-03 11:33:47 CST
+ Update content: Require maintenance selected-row overlays to use pure violet instead of pink-purple.
+*/
+/*
+ Update time: 2026-07-03 11:19:40 CST
+ Update content: Add regression coverage for unified organization-style maintenance side navigation.
 */
 /*
  Update time: 2026-07-03 11:11:56 CST
@@ -370,6 +382,34 @@ test('builds the org and channel maintenance pages from reference tree and table
   assert.match(maintenancePageSource, /卫瓴线索来源/);
 });
 
+test('uses one organization-style side navigation across all maintenance pages', () => {
+  const sideNavBlock = cssRuleBody(maintenancePageCss, '.mnt-side-nav');
+  const sideNavChildListBlock = cssRuleBody(maintenancePageCss, '.mnt-side-nav li ul');
+  const sideNavButtonBlock = cssRuleBody(maintenancePageCss, '.mnt-side-nav__button');
+  const sideNavActiveBlock = cssRuleBody(maintenancePageCss, '.mnt-side-nav__button--active');
+
+  assert.match(maintenancePageSource, /function MaintenanceSideNav\(\{ nodes, activeId, onSelect \}\)/);
+  assert.match(maintenancePageSource, /function MaintenanceSideNavNode\(\{ node, activeId, onSelect \}\)/);
+  assert.match(maintenancePageSource, /function buildMaintenanceNavTree\(items, \{ rootId = 'all', countText = '项' \} = \{\}\) \{/);
+  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{\[TARGET_MAINTENANCE_ORG_TREE\]\} activeId=\{selectedOrg\} onSelect=\{setSelectedOrg\} \/>/);
+  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{costNavNodes\} activeId=\{selectedChannel\} onSelect=\{setSelectedChannel\} \/>/);
+  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{departmentNavNodes\} activeId=\{selectedDepartment\} onSelect=\{setSelectedDepartment\} \/>/);
+  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{channelGroupNavNodes\} activeId=\{selectedGroup\} onSelect=\{setSelectedGroup\} \/>/);
+  assert.doesNotMatch(maintenancePageSource, /className="mnt-channel-tree"/);
+  assert.doesNotMatch(maintenancePageSource, /className="mnt-edit-list"/);
+  assert.doesNotMatch(maintenancePageSource, /className="mnt-tree"/);
+  assert.doesNotMatch(maintenancePageSource, /className="mnt-tree-button/);
+
+  assert.match(sideNavBlock, /overflow:\s*auto;/);
+  assert.match(sideNavChildListBlock, /border-left:\s*1px dashed var\(--line\);/);
+  assert.match(sideNavButtonBlock, /min-height:\s*34px;/);
+  assert.match(sideNavButtonBlock, /border-radius:\s*10px;/);
+  assert.match(sideNavButtonBlock, /background:\s*transparent;/);
+  assert.match(sideNavButtonBlock, /justify-content:\s*space-between;/);
+  assert.match(sideNavActiveBlock, /border-color:\s*var\(--line-2\);/);
+  assert.match(sideNavActiveBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.09\);/);
+});
+
 test('keeps data maintenance cards buttons and controls on the dashboard glass system', () => {
   const panelBlock = cssRuleBody(maintenancePageCss, '.mnt-surface');
   const buttonBlock = cssRuleBody(maintenancePageCss, '.mnt-btn');
@@ -462,8 +502,10 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
 test('uses purple maintenance table row hover overlays and persistent clicked-row highlights', () => {
   const matrixWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap');
 
-  assert.match(matrixWrapBlock, /--glass-cell-hover:\s*rgba\(190,\s*64,\s*255,\s*\.24\);/);
-  assert.match(matrixWrapBlock, /--mnt-row-selected-overlay:\s*rgba\(190,\s*64,\s*255,\s*\.34\);/);
+  assert.match(matrixWrapBlock, /--glass-cell-hover:\s*rgba\(96,\s*0,\s*255,\s*\.18\);/);
+  assert.match(matrixWrapBlock, /--mnt-row-selected-overlay:\s*rgba\(96,\s*0,\s*255,\s*\.24\);/);
+  assert.match(matrixWrapBlock, /--mnt-row-selected-hover-overlay:\s*rgba\(96,\s*0,\s*255,\s*\.3\);/);
+  assert.doesNotMatch(matrixWrapBlock, /190,\s*64,\s*255|210,\s*86,\s*255/);
   assert.match(maintenancePageCss, /\.mnt-matrix tbody tr:hover td,\s*[\s\S]*?\.mnt-user-table tbody tr:hover td \{[\s\S]*?background:\s*var\(--glass-cell-hover\);/);
   assert.match(maintenancePageCss, /\.mnt-matrix tbody tr\.mnt-row--selected td,\s*[\s\S]*?\.mnt-user-table tbody tr\.mnt-row--selected td \{[\s\S]*?background:\s*var\(--mnt-row-selected-overlay\);/);
   assert.match(maintenancePageCss, /\.mnt-matrix tbody tr\.mnt-row--selected:hover td,\s*[\s\S]*?\.mnt-user-table tbody tr\.mnt-row--selected:hover td \{[\s\S]*?background:\s*var\(--mnt-row-selected-hover-overlay\);/);
