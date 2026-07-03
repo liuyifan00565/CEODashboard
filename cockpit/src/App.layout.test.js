@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 17:53:00 CST
+ Update content: Require compute donut charts to follow the unified violet-blue overview half-ring palette.
+*/
+/*
  Update time: 2026-07-03 15:24:00 CST
  Update content: Require search highlight and dashboard background wiring to follow the cold-purple Color Bends visual system.
 */
@@ -652,7 +656,8 @@ test('keeps compute pie labels and tooltip cards readable around donut charts', 
 });
 
 test('uses the overview half-ring palette for compute donut charts', () => {
-  assert.match(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#8F86FF'[\s\S]*?'#C9C2FF'[\s\S]*?'#7C6CFF'[\s\S]*?'#A79CFF'[\s\S]*?'rgba\(160, 170, 210, \.16\)'[\s\S]*?'#9EDCFF'/);
+  assert.match(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#8F95FF'[\s\S]*?'#C8CEFF'[\s\S]*?'#8173FF'[\s\S]*?'#AAA0FF'[\s\S]*?'rgba\(160, 170, 210, \.16\)'[\s\S]*?'#9B94FF'[\s\S]*?'#6D5AD7'[\s\S]*?'#D9D4FF'/);
+  assert.doesNotMatch(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#9EDCFF'[\s\S]*?\];/);
   assert.match(computePageSource, /function applyComputeRingPalette\(data\)/);
   assert.match(computePageSource, /sort\(\(a, b\) => b\.value - a\.value\)/);
   assert.match(computePageSource, /const versionPieData = useMemo\(\s*\(\) => applyComputeRingPalette\(versions\),/);

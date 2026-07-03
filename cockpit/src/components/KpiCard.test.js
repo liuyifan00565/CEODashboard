@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 17:53:00 CST
+ Update content: Require the recovery half-ring palette to use one unified violet-blue family with clear lightness differences.
+*/
+/*
  Update time: 2026-07-03 16:51:07 CST
  Update content: Require KPI warning ECharts progress bars to use a deeper bright rose-red gradient.
 */
@@ -215,8 +219,9 @@ test('adds a transparent unfinished slice at the right edge of the recovery half
   assert.match(componentSource, /目标 \$\{params\.data\?\.targetValue \?\? '-'\} 万 · 完成率 \$\{card\.progress \?\? percent\}%/);
 });
 
-test('uses a differentiated cold purple channel palette instead of rainbow or candy pie colors', () => {
-  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#7C6CFF[\s\S]*?#D7D2FF[\s\S]*?#6ECFFF[\s\S]*?#9EDCFF[\s\S]*?#5F78FF[\s\S]*?#B7AEFF[\s\S]*?#6D28D9[\s\S]*?#C084FC[\s\S]*?\];/);
+test('uses one violet-blue channel palette with distinct lightness steps instead of mixed candy colors', () => {
+  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#8173FF[\s\S]*?#AAA0FF[\s\S]*?#D9D4FF[\s\S]*?#756BEE[\s\S]*?#9B94FF[\s\S]*?#CFCBFF[\s\S]*?#6678F8[\s\S]*?#8F95FF[\s\S]*?#C8CEFF[\s\S]*?#6D5AD7[\s\S]*?#8873EA[\s\S]*?#B5A8FF[\s\S]*?\];/);
+  assert.doesNotMatch(componentSource, /#6ECFFF|#9EDCFF|#C084FC|#6D28D9/);
   assert.doesNotMatch(componentSource, /#A7F3D0/);
   assert.doesNotMatch(componentSource, /#B7F3FF/);
   assert.doesNotMatch(componentSource, /const CHANNEL_PIE_COLORS = \['#d6ccb2', '#a9b3b8', '#808b93', '#5f6975'\];/);

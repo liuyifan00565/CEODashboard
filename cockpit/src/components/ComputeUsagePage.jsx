@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 17:53:00 CST
+ 更新内容: 算力环图色板同步为首页半环图统一紫蓝色阶，保持同类图表视觉语言一致。
+*/
+/*
  Update time: 2026-07-03 15:40:00 CST
  Update content: Align compute pie and donut palettes with the cold-purple Apple/Vision Pro dashboard theme.
 */
@@ -54,14 +58,14 @@ const CUSTOMER_COLUMN_FILTERS = [
 const CUSTOMER_PAGE_SIZE_OPTIONS = [10, 20, 50, 100, 200, 500];
 const DEFAULT_CUSTOMER_PAGE_SIZE = 20;
 const COMPUTE_RING_COLORS = [
-  '#8F86FF',
-  '#C9C2FF',
-  '#7C6CFF',
-  '#A79CFF',
+  '#8F95FF',
+  '#C8CEFF',
+  '#8173FF',
+  '#AAA0FF',
   'rgba(160, 170, 210, .16)',
-  '#9EDCFF',
-  '#6E62D8',
-  '#E7E2FF',
+  '#9B94FF',
+  '#6D5AD7',
+  '#D9D4FF',
 ];
 const COMPUTE_VERSION_RIGHT_LABEL_SLOTS = {
   '试用版': -82,

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 17:53:00 CST  更新内容: 回款半环图改为统一紫蓝色阶，通过明度和深浅区分四个渠道，去除跳脱青色和高饱和糖果紫。 */
 /* Update time: 2026-07-03 16:51:07 CST  Update content: Deepen KPI warning ECharts progress bars from light pink to bright rose red. */
 /* Update time: 2026-07-03 16:46:50 CST  Update content: Brighten KPI ECharts progress bars again for stronger visual contrast. */
 /* Update time: 2026-07-03 16:38:48 CST  Update content: Raise KPI ECharts progress bar brightness one step after visual review. */
@@ -21,12 +22,12 @@ import { fmtDelta, deltaColor, progressColor } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './KpiCard.css';
 
-// Vision Pro 风格分段半环仪表盘：四个渠道拉开色相和明度，但仍收在冷紫/冰蓝体系内
+// Vision Pro 风格分段半环仪表盘：统一紫蓝色阶，靠明度和深浅建立渠道区分。
 const CHANNEL_PIE_GRADIENTS = [
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#7C6CFF' }, { offset: 0.55, color: '#A79CFF' }, { offset: 1, color: '#D7D2FF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6ECFFF' }, { offset: 0.58, color: '#9EDCFF' }, { offset: 1, color: '#C9C2FF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#5F78FF' }, { offset: 0.58, color: '#8F86FF' }, { offset: 1, color: '#B7AEFF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6D28D9' }, { offset: 0.56, color: '#8B5CF6' }, { offset: 1, color: '#C084FC' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8173FF' }, { offset: 0.55, color: '#AAA0FF' }, { offset: 1, color: '#D9D4FF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#756BEE' }, { offset: 0.58, color: '#9B94FF' }, { offset: 1, color: '#CFCBFF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6678F8' }, { offset: 0.58, color: '#8F95FF' }, { offset: 1, color: '#C8CEFF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6D5AD7' }, { offset: 0.56, color: '#8873EA' }, { offset: 1, color: '#B5A8FF' }] },
 ];
 const CHANNEL_PERCENT_COLORS = ['#ffffff', '#ffffff', '#ffffff', '#ffffff'];
 const CHANNEL_PIE_LABELS = { south: '线下华南', east: '线下华东' };
