@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 10:04:51 CST
+ 更新内容: 收窄四个维护页顶部工具栏年度下拉框宽度，减少右侧留白。
+*/
+/*
  更新时间: 2026-07-02 18:56:28 CST
  更新内容: 数据维护页进度条统一为左侧高亮、向右侧颜色衰减的透明玻璃样式。
 */
@@ -211,6 +215,11 @@
 .mnt-toolbar .mnt-control {
   width: 180px;
   flex: 0 0 180px;
+}
+
+.mnt-toolbar .mnt-year-control {
+  width: 116px;
+  flex-basis: 116px;
 }
 
 .mnt-number-input {

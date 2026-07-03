@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 10:04:51 CST
+ Update content: Add regression coverage for compact maintenance year dropdown width.
+*/
+/*
  Update time: 2026-07-02 18:55:52 CST
  Update content: Add regression coverage for maintenance progress bars fading from a highlighted left edge to a softer right edge and sync maintenance input style expectations.
 */
@@ -351,6 +355,15 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.doesNotMatch(maintenancePageCss, /\.mnt-row--summary td \{[\s\S]*?background:\s*rgba\(var\(--good-rgb\)/);
   assert.doesNotMatch(maintenancePageCss, /#fff;/);
   assert.doesNotMatch(maintenancePageCss, /box-shadow:\s*0 5px 14px rgba\(216, 58, 215/);
+});
+
+test('keeps the maintenance year dropdown compact in the toolbar', () => {
+  const yearControlBlock = cssRuleBody(maintenancePageCss, '.mnt-toolbar .mnt-year-control');
+
+  assert.match(maintenancePageSource, /className="mnt-control mnt-year-control" value=\{year\} onChange=\{handleYearChange\} aria-label="目标年份"/);
+  assert.match(maintenancePageSource, /className="mnt-control mnt-year-control" value=\{year\} onChange=\{handleYearChange\} aria-label="成本维护年份"/);
+  assert.match(yearControlBlock, /width:\s*116px;/);
+  assert.match(yearControlBlock, /flex-basis:\s*116px;/);
 });
 
 test('uses full-width compute trend sliders that resize from 3 to 15 bars', () => {

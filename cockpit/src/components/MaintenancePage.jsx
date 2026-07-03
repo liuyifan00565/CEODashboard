@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 10:04:51 CST
+ 更新内容: 为维护页年度下拉框增加紧凑宽度专属类。
+*/
+/*
  更新时间: 2026-07-02 19:13:36 CST
  更新内容: 去除内容区分隔点，标题分隔点保持原样，并将维护页进度百分比单独换行展示。
 */
@@ -83,7 +87,7 @@ function MaintenanceToolbar({ activePage, status, onBack, onDirty, onSave }) {
   const actions = {
     'target-maintenance': (
       <>
-        <select className="mnt-control" value={year} onChange={handleYearChange} aria-label="目标年份">
+        <select className="mnt-control mnt-year-control" value={year} onChange={handleYearChange} aria-label="目标年份">
           {YEARS.map((item) => <option key={item} value={item}>{item}</option>)}
         </select>
         <button className="mnt-btn" type="button" onClick={onDirty}>下载模板</button>
@@ -93,7 +97,7 @@ function MaintenanceToolbar({ activePage, status, onBack, onDirty, onSave }) {
     ),
     'cost-maintenance': (
       <>
-        <select className="mnt-control" value={year} onChange={handleYearChange} aria-label="成本维护年份">
+        <select className="mnt-control mnt-year-control" value={year} onChange={handleYearChange} aria-label="成本维护年份">
           {YEARS.map((item) => <option key={item} value={item}>{item}</option>)}
         </select>
         <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave}>保存成本</button>
