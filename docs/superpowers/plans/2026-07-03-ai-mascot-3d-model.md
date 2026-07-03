@@ -11,6 +11,9 @@
 更新时间: 2026-07-03 18:06:34 CST  
 更新内容: 新增 AI 小人 3D 建模实施计划，按 TDD 拆解测试、模型、动作、降级和验证步骤。
 
+更新时间: 2026-07-03 18:13:20 CST  
+更新内容: 将测试命令修正为项目实际使用的 Node 原生测试入口。
+
 ---
 
 ## File Structure
@@ -230,7 +233,7 @@ Run:
 
 ```bash
 cd cockpit
-npm test -- Mascot3DStage.test.js AIAnalysisWidget.test.js
+node --test src/components/Mascot3DStage.test.js src/components/AIAnalysisWidget.test.js
 ```
 
 Expected: FAIL. The failures should mention missing `MascotModel`, `MascotHead`, `MascotBody`, `createPoseRefs`, `applyRigPose`, `FALLBACK_MASCOT_SOURCE`, or old DOM image-stack code still present. If the tests pass before implementation, stop and tighten the tests.
@@ -843,7 +846,7 @@ Run:
 
 ```bash
 cd cockpit
-npm test -- Mascot3DStage.test.js
+node --test src/components/Mascot3DStage.test.js
 ```
 
 Expected: PASS. If failures mention exact snippets, update implementation or tests so they describe the same intended model.
@@ -873,7 +876,7 @@ Run:
 
 ```bash
 cd cockpit
-npm test -- src/lib/mascotRig.test.js
+node --test src/lib/mascotRig.test.js
 ```
 
 Expected: PASS. The current rig already contains `idle`, `wave`, `talk`, `think`, `alert`, `celebrate`, and `click` poses with fixed front-facing yaw.
@@ -918,7 +921,7 @@ Run:
 
 ```bash
 cd cockpit
-npm test -- src/lib/mascotRig.test.js
+node --test src/lib/mascotRig.test.js
 ```
 
 Expected before changes: PASS if current rig is expressive enough. If it fails for an action, adjust only that action's existing pose values in `mascotRig.js`, then rerun until PASS.
@@ -929,7 +932,7 @@ Run:
 
 ```bash
 cd cockpit
-npm test -- src/components/AIAnalysisWidget.test.js
+node --test src/components/AIAnalysisWidget.test.js
 ```
 
 Expected: PASS. The launcher must still pass `action={mascotAction}`, `pointer={mascotPointer}`, and `analysisActive={open || loading}`.
@@ -957,7 +960,7 @@ Run:
 
 ```bash
 cd cockpit
-npm test -- src/components/Mascot3DStage.test.js src/lib/mascotRig.test.js src/components/AIAnalysisWidget.test.js
+node --test src/components/Mascot3DStage.test.js src/lib/mascotRig.test.js src/components/AIAnalysisWidget.test.js
 ```
 
 Expected: PASS.
