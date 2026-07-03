@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 15:32:00 CST
+ Update content: Replace the Silk/ice-blue pass with a ReactBits Color Bends environment layer and cold-purple Apple/Vision Pro glass tokens.
+*/
+/*
  Update time: 2026-07-03 14:30:00 CST
  Update content: 接入 ReactBits Silk 作为全屏底层材质；基底改为深海蓝黑 #0B1020/#070A12/#050713，
                  叠加 .bg-shade 深色遮罩保证可读；径向环境光移到 ::before 作为 Color Bends 角落补光（opacity ≤ 0.25）。
@@ -34,71 +38,77 @@
 :root,
 :root[data-theme="dark"]{
   --color-scheme-value:dark;
-  --bg:#050711;
-  --panel:rgba(36,36,41,.74);
-  --panel-2:rgba(50,50,57,.76);
-  --line:rgba(255,255,255,.14);
-  --line-2:rgba(255,255,255,.24);
-  --glass-cell:transparent;
-  --glass-cell-hover:rgba(255,255,255,.15);
-  --glass-shadow:0 18px 52px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(255,255,255,.06);
-  --glass-blur:blur(22px) saturate(155%);
-  --txt:#ffffff;
-  --muted:#ffffff;
-  --faint:#ffffff;
-  --up:#F472B6;     /* pink-purple: growth / warning */
-  --down:#6EA8FF;   /* ice blue: decline */
-  --good:#6EA8FF;   /* ice blue: strong completion */
-  --warn:#F472B6;   /* warning semantic mapped to pink-purple */
-  --up-rgb:244,114,182;
-  --down-rgb:110,168,255;
-  --good-rgb:110,168,255;
-  --warn-rgb:244,114,182;
-  --bar-track:rgba(110,130,170,.16);
-  --bar-track-border:rgba(110,130,170,.22);
-  --bar-good:linear-gradient(90deg,#6EA8FF,#8EEAFF);
-  --bar-good-glow:0 0 18px rgba(142,234,255,.18);
-  --bar-warn:linear-gradient(90deg,#F472B6,#FDA4AF);
-  --bar-warn-glow:0 0 18px rgba(244,114,182,.16);
-  /* 背景：深海蓝黑底 #0B1020/#070A12/#050713；径向光作 Color Bends 角落补光（opacity ≤ 0.25） */
+  --bg:#070A12;
+  --brand-purple:#7C6CFF;
+  --brand-purple-2:#8F86FF;
+  --brand-purple-3:#A79CFF;
+  --brand-lavender:#C9C2FF;
+  --brand-mist:#E7E2FF;
+  --brand-ice:#9EDCFF;
+  --panel:rgba(255,255,255,.07);
+  --panel-2:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.11);
+  --line-2:rgba(255,255,255,.13);
+  --glass-cell:rgba(255,255,255,.055);
+  --glass-cell-hover:rgba(231,226,255,.105);
+  --glass-shadow:0 18px 54px rgba(2,5,14,.32), 0 0 22px rgba(124,108,255,.045), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(255,255,255,.045);
+  --glass-blur:blur(24px) saturate(150%);
+  --txt:#F8F7FF;
+  --muted:#E7E2FF;
+  --faint:rgba(231,226,255,.66);
+  --up:#A79CFF;     /* cool lavender: positive movement */
+  --down:#9EDCFF;   /* tiny ice blue: cooling/decline accent */
+  --good:#7C6CFF;   /* brand purple: strong completion */
+  --warn:#F08AC3;   /* muted warning pink, not neon */
+  --up-rgb:167,156,255;
+  --down-rgb:158,220,255;
+  --good-rgb:124,108,255;
+  --warn-rgb:240,138,195;
+  --bar-track:rgba(160,170,210,.16);
+  --bar-track-border:rgba(201,194,255,.18);
+  --bar-good:linear-gradient(90deg,#7C6CFF 0%,#A79CFF 56%,#C9C2FF 88%,#9EDCFF 100%);
+  --bar-good-glow:0 0 16px rgba(167,156,255,.18);
+  --bar-warn:linear-gradient(90deg,#F08AC3,#F5A4CF);
+  --bar-warn-glow:0 0 16px rgba(240,138,195,.14);
+  /* 背景：深海蓝黑底 #0B1020/#070A12/#121933；Color Bends 作为冷紫环境光层 */
   --bg-base-1:#0B1020;
   --bg-base-2:#070A12;
-  --bg-base-3:#050713;
-  --bg-radial-a:rgba(110,168,255,.22);   /* 顶左：冰蓝主光 */
-  --bg-radial-b:rgba(142,234,255,.11);   /* 顶右：青蓝辅光 */
-  --bg-radial-c:rgba(139,124,255,.13);   /* 底右：淡紫环境光 */
-  --bg-radial-d:rgba(110,168,255,.10);   /* 底左：冰蓝 spotlight */
+  --bg-base-3:#121933;
+  --bg-radial-a:rgba(124,108,255,.20);
+  --bg-radial-b:rgba(201,194,255,.14);
+  --bg-radial-c:rgba(143,134,255,.16);
+  --bg-radial-d:rgba(158,220,255,.08);
   --bg-vignette:
-    linear-gradient(90deg,rgba(255,255,255,.035),transparent 18%,transparent 82%,rgba(255,255,255,.025)),
-    radial-gradient(circle at center,transparent 0%,rgba(0,0,0,.18) 100%);
-  --bg-noise-opacity:.035;
-  --brand-dot-shadow:0 0 10px rgba(255,255,255,.38);
-  --control-hover:rgba(255,255,255,.08);
-  --theme-toggle-icon:#ffffff;
-  --theme-toggle-hover:rgba(255,255,255,.08);
-  --focus-outline:rgba(255,255,255,.24);
-  --control-solid:#ffffff;
-  --control-solid-text:#0c0c0d;
-  --chart-text:#ffffff;
-  --chart-muted:#ffffff;
-  --chart-grid:rgba(255,255,255,.08);
-  --chart-axis:rgba(255,255,255,.45);
-  --chart-bar:rgba(255,255,255,.88);
-  --chart-bar-muted:rgba(255,255,255,.38);
-  --chart-bar-faint:rgba(255,255,255,.12);
-  --chart-tooltip-bg:rgba(20,20,22,.92);
-  --chart-tooltip-border:rgba(255,255,255,.16);
-  --chart-pointer:rgba(255,255,255,.05);
-  --chart-point-border:#0c0c0d;
-  --progress-mid:rgba(255,255,255,.92);
-  --ai-card-bg:#120F17;
-  --ai-orb-text:#ffffff;
-  --ai-ring-text:rgba(255,255,255,.9);
-  --ai-label-text:rgba(255,255,255,.94);
-  --ai-ring-shadow:0 0 8px rgba(0,0,0,.9),0 0 16px rgba(192,132,252,.35);
-  --ai-label-shadow:0 1px 3px rgba(0,0,0,.8),0 0 18px rgba(255,255,255,.32);
-  --ai-chip-bg:rgba(255,255,255,.055);
-  --ai-chip-hover:rgba(255,255,255,.1);
+    linear-gradient(90deg,rgba(231,226,255,.028),transparent 18%,transparent 82%,rgba(201,194,255,.022)),
+    radial-gradient(circle at center,transparent 0%,rgba(0,0,0,.24) 100%);
+  --bg-noise-opacity:.025;
+  --brand-dot-shadow:0 0 10px rgba(201,194,255,.30);
+  --control-hover:rgba(231,226,255,.08);
+  --theme-toggle-icon:#E7E2FF;
+  --theme-toggle-hover:rgba(231,226,255,.08);
+  --focus-outline:rgba(201,194,255,.38);
+  --control-solid:#E7E2FF;
+  --control-solid-text:#080B16;
+  --chart-text:#F8F7FF;
+  --chart-muted:#E7E2FF;
+  --chart-grid:rgba(201,194,255,.09);
+  --chart-axis:rgba(231,226,255,.38);
+  --chart-bar:rgba(201,194,255,.9);
+  --chart-bar-muted:rgba(167,156,255,.42);
+  --chart-bar-faint:rgba(160,170,210,.16);
+  --chart-tooltip-bg:rgba(7,10,18,.88);
+  --chart-tooltip-border:rgba(255,255,255,.14);
+  --chart-pointer:rgba(201,194,255,.055);
+  --chart-point-border:#070A12;
+  --progress-mid:#E7E2FF;
+  --ai-card-bg:#0B1020;
+  --ai-orb-text:#F8F7FF;
+  --ai-ring-text:rgba(231,226,255,.86);
+  --ai-label-text:#F8F7FF;
+  --ai-ring-shadow:0 0 8px rgba(0,0,0,.78),0 0 16px rgba(124,108,255,.22);
+  --ai-label-shadow:0 1px 3px rgba(0,0,0,.78),0 0 16px rgba(201,194,255,.22);
+  --ai-chip-bg:rgba(255,255,255,.06);
+  --ai-chip-hover:rgba(231,226,255,.1);
   color-scheme:var(--color-scheme-value);
 }
 :root[data-theme="light"]{
@@ -115,20 +125,26 @@
   --txt:#111318;
   --muted:#2c333d;
   --faint:#626b77;
-  --up:#F472B6;
-  --down:#6EA8FF;
-  --good:#6EA8FF;
-  --warn:#F472B6;
-  --up-rgb:244,114,182;
-  --down-rgb:110,168,255;
-  --good-rgb:110,168,255;
-  --warn-rgb:244,114,182;
+  --brand-purple:#7C6CFF;
+  --brand-purple-2:#8F86FF;
+  --brand-purple-3:#A79CFF;
+  --brand-lavender:#C9C2FF;
+  --brand-mist:#E7E2FF;
+  --brand-ice:#9EDCFF;
+  --up:#A79CFF;
+  --down:#9EDCFF;
+  --good:#7C6CFF;
+  --warn:#F08AC3;
+  --up-rgb:167,156,255;
+  --down-rgb:158,220,255;
+  --good-rgb:124,108,255;
+  --warn-rgb:240,138,195;
   --bar-track:rgba(110,130,170,.18);
   --bar-track-border:rgba(110,130,170,.24);
-  --bar-good:linear-gradient(90deg,#6EA8FF,#8EEAFF);
-  --bar-good-glow:0 0 18px rgba(142,234,255,.18);
-  --bar-warn:linear-gradient(90deg,#F472B6,#FDA4AF);
-  --bar-warn-glow:0 0 18px rgba(244,114,182,.16);
+  --bar-good:linear-gradient(90deg,#7C6CFF 0%,#A79CFF 56%,#C9C2FF 88%,#9EDCFF 100%);
+  --bar-good-glow:0 0 16px rgba(167,156,255,.18);
+  --bar-warn:linear-gradient(90deg,#F08AC3,#F5A4CF);
+  --bar-warn-glow:0 0 16px rgba(240,138,195,.14);
   /* 背景：浅绿底 + 极淡冷色径向光 + 噪点，与暗主题同构 */
   --bg-base-1:#EDFCEE;
   --bg-base-2:#E8FBE8;
@@ -179,26 +195,28 @@ body{
 }
 
 .app{position:relative;min-height:100vh}
-/* .bg 基底：仅深海蓝黑线性渐变；Silk 材质层、深色遮罩、环境光、噪点分别叠在上方 */
+/* .bg 基底：深海蓝黑线性渐变；Color Bends 环境光、深色遮罩、柔和补光、噪点分别叠在上方 */
 .bg{
   position:fixed;inset:0;z-index:0;pointer-events:none;
   background:linear-gradient(180deg,var(--bg-base-1) 0%,var(--bg-base-2) 45%,var(--bg-base-3) 100%);
 }
-/* 深色遮罩：在 Silk 之上压暗，保证文字与卡片可读 */
+/* 深色遮罩：在 Color Bends 之上压暗，保证文字与卡片可读 */
 .bg-shade{
   position:absolute;inset:0;z-index:2;pointer-events:none;
-  background:linear-gradient(180deg,rgba(5,7,19,.42) 0%,rgba(5,7,19,.28) 50%,rgba(5,7,19,.46) 100%);
+  background:
+    linear-gradient(180deg,rgba(7,10,18,.56) 0%,rgba(7,10,18,.38) 48%,rgba(7,10,18,.62) 100%),
+    radial-gradient(circle at center,rgba(7,10,18,.06),rgba(3,5,11,.34) 100%);
 }
-/* Silk 材质层：全屏铺底，opacity 0.65（控制在 0.55~0.75），仅作高级材质层 */
-.silk-layer{
+/* Color Bends 材质层：全屏铺底，opacity 0.58，仅作为低存在感冷紫环境光 */
+.color-bends-layer{
   position:absolute;inset:0;z-index:1;pointer-events:none;
-  opacity:.65;
+  opacity:.58;
   mix-blend-mode:normal;
 }
-.silk-canvas{
+.color-bends-layer canvas{
   display:block;width:100%!important;height:100%!important;pointer-events:none;
 }
-/* 边缘高光 + 中心暗角 + Color Bends 角落环境光（径向，opacity ≤ 0.25），在 Silk 与遮罩之上叠加 */
+/* 边缘高光 + 中心暗角 + 冷紫角落环境光，在 Color Bends 与遮罩之上轻叠加 */
 .bg::before{
   content:"";position:absolute;inset:0;pointer-events:none;z-index:3;
   background:
@@ -207,7 +225,7 @@ body{
     radial-gradient(circle at 56% 88%,var(--bg-radial-c),transparent 38%),
     radial-gradient(circle at 22% 78%,var(--bg-radial-d),transparent 42%),
     var(--bg-vignette);
-  opacity:.8;
+  opacity:.72;
 }
 /* 极轻 SVG 噪点，让渐变不塑料化；几乎看不见但质感更细 */
 .bg::after{
@@ -270,7 +288,7 @@ body{
 .search-count:hover,
 .search-count:focus-visible{
   background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.36);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 18px rgba(96,0,255,.32);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 18px rgba(124,108,255,.20);
 }
 
 /* 黑白主题切换（包裹 ReactBits GlassSurface） */

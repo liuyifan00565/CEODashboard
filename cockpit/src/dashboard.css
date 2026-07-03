@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 15:37:00 CST
+ 更新内容: 搜索当前命中边框改为冷紫/薰衣草环境光，去除旧高饱和纯紫边缘。
+*/
+/*
  更新时间: 2026-07-03 11:41:06 CST
  更新内容: 顶部品牌玻璃胶囊右侧稍微加宽，避免副标题贴近边缘。
 */
@@ -145,7 +149,7 @@
   z-index:5;
 }
 .search-result-border[data-search-current="true"] .eb-glow-1{
-  border-color:rgba(110,168,255,.34);
+  border-color:rgba(167,156,255,.34);
   filter:blur(.5px);
 }
 .search-result-border[data-search-current="true"] .eb-background-glow{
@@ -153,7 +157,7 @@
   transform:none;
 }
 .search-result-border[data-search-current="true"] .eb-glow-2{
-  border-color:rgba(96,0,255,.68);
+  border-color:rgba(124,108,255,.50);
   filter:blur(3px);
 }
 .search-result-border[data-search-current="true"] .eb-content{

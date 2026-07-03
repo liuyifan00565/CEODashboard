@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 15:37:00 CST
+ 更新内容: 搜索命中边框主色改为低饱和品牌紫，避免高饱和电竞紫。
+*/
+/*
  更新时间: 2026-07-03 10:59:56 CST
  更新内容: 抽出顶部搜索命中边框组件，供首页 KPI 卡和开户数卡片复用原定位效果。
 */
@@ -11,7 +15,7 @@ export default function SearchResultBorder({ active, children }) {
       data-search-match="true"
       data-search-current="false"
       aria-label="搜索命中结果"
-      color="#6000FF"
+      color="#7C6CFF"
       speed={1}
       chaos={0.12}
       thickness={2}

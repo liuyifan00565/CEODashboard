@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 15:40:00 CST
+ Update content: Align compute pie and donut palettes with the cold-purple Apple/Vision Pro dashboard theme.
+*/
+/*
  Update time: 2026-07-02 17:18:50 CST
  Update content: Mark compute KPI cards and panels as searchable matches for top search navigation.
 */
@@ -50,14 +54,14 @@ const CUSTOMER_COLUMN_FILTERS = [
 const CUSTOMER_PAGE_SIZE_OPTIONS = [10, 20, 50, 100, 200, 500];
 const DEFAULT_CUSTOMER_PAGE_SIZE = 20;
 const COMPUTE_RING_COLORS = [
-  '#e6fbff',
-  '#9eeeff',
-  '#6ea8ff',
-  '#b8ffd9',
-  'rgba(230, 251, 255, .42)',
-  '#ccf7ff',
-  '#89dfff',
-  '#d7ffe9',
+  '#8F86FF',
+  '#C9C2FF',
+  '#7C6CFF',
+  '#A79CFF',
+  'rgba(160, 170, 210, .16)',
+  '#9EDCFF',
+  '#6E62D8',
+  '#E7E2FF',
 ];
 const COMPUTE_VERSION_RIGHT_LABEL_SLOTS = {
   '试用版': -82,

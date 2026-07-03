@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 15:24:00 CST
+ Update content: Require search highlight and dashboard background wiring to follow the cold-purple Color Bends visual system.
+*/
+/*
  Update time: 2026-07-03 15:03:14 CST
  Update content: Require every maintenance-page side navigation column to use the organization-structure width.
 */
@@ -648,7 +652,7 @@ test('keeps compute pie labels and tooltip cards readable around donut charts', 
 });
 
 test('uses the overview half-ring palette for compute donut charts', () => {
-  assert.match(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#e6fbff'[\s\S]*?'#9eeeff'[\s\S]*?'#6ea8ff'[\s\S]*?'#b8ffd9'[\s\S]*?'rgba\(230, 251, 255, \.42\)'/);
+  assert.match(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#8F86FF'[\s\S]*?'#C9C2FF'[\s\S]*?'#7C6CFF'[\s\S]*?'#A79CFF'[\s\S]*?'rgba\(160, 170, 210, \.16\)'[\s\S]*?'#9EDCFF'/);
   assert.match(computePageSource, /function applyComputeRingPalette\(data\)/);
   assert.match(computePageSource, /sort\(\(a, b\) => b\.value - a\.value\)/);
   assert.match(computePageSource, /const versionPieData = useMemo\(\s*\(\) => applyComputeRingPalette\(versions\),/);
@@ -805,7 +809,7 @@ test('uses ElectricBorder for search result highlighting instead of HighlightBea
   assert.match(appSource, /<SearchResultBorder active=\{matchesSearchTerm\(card\.keywords,\s*searchTerm\)\}>/);
   assert.match(searchResultBorderSource, /data-search-match="true"/);
   assert.match(searchResultBorderSource, /aria-label="搜索命中结果"/);
-  assert.match(searchResultBorderSource, /<ElectricBorder[\s\S]*?color="#6000FF"[\s\S]*?speed=\{1\}[\s\S]*?chaos=\{0\.12\}[\s\S]*?thickness=\{2\}/);
+  assert.match(searchResultBorderSource, /<ElectricBorder[\s\S]*?color="#7C6CFF"[\s\S]*?speed=\{1\}[\s\S]*?chaos=\{0\.12\}[\s\S]*?thickness=\{2\}/);
   assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\]/);
 });
 
@@ -823,7 +827,7 @@ test('keeps the current search result highlight edge-only without full-card purp
   assert.doesNotMatch(currentSearchBlock, /filter:\s*drop-shadow/);
   assert.doesNotMatch(currentSearchContentBlock, /box-shadow:/);
   assert.doesNotMatch(currentSearchBackgroundBlock, /transform:\s*scale/);
-  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\] \.eb-glow-1\{[\s\S]*?border-color:rgba\(110,168,255,\.34\);/);
+  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\] \.eb-glow-1\{[\s\S]*?border-color:rgba\(167,156,255,\.34\);/);
   assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\] \.eb-glow-2\{[\s\S]*?filter:blur\(3px\);/);
   assert.doesNotMatch(computePageCss, /\.cpu-kpi-slot\[data-search-current="true"\],[\s\S]*?filter:\s*drop-shadow/);
   assert.doesNotMatch(computePageCss, /\.cpu-panel\[data-search-current="true"\][\s\S]*?box-shadow:[\s\S]*?rgba\(96,0,255/);
@@ -883,7 +887,7 @@ test('matches overview trend and delivery panel backgrounds to the homepage rene
   const trendPanelBlock = cssRuleBody(dashboardCss, '.dash-cell .mt-panel');
   const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-panel');
 
-  assert.match(kpiCardBlock, /background:\s*transparent;/);
+  assert.match(kpiCardBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.06\);/);
   assert.match(trendPanelBlock, /background:\s*transparent;/);
   assert.match(trendPanelBlock, /border:1px solid var\(--line-2\);/);
   assert.match(trendPanelBlock, /backdrop-filter:var\(--glass-blur\);/);

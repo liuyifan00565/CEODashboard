@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 15:45:00 CST
+ 更新内容: 同步 AI 弹窗卡片深色主题底色到冷紫深海蓝黑视觉体系。
+*/
+/*
  更新时间: 2026-07-02 16:25:43 CST
  更新内容: 约束左下角 AI 小人入口保持小尺寸，同时恢复原亮度与动作发光强度。
 */
@@ -123,7 +127,7 @@ test('uses theme-specific AI dialog card backgrounds', () => {
 
   assert.match(componentSource, /backgroundColor="var\(--ai-card-bg\)"/);
   assert.doesNotMatch(componentSource, /backgroundColor="#120F17"/);
-  assert.match(darkBlock, /--ai-card-bg:#120F17;/);
+  assert.match(darkBlock, /--ai-card-bg:#0B1020;/);
   assert.match(lightBlock, /--ai-card-bg:/);
   assert.doesNotMatch(lightBlock, /--ai-card-bg:\s*#120F17;/);
 });

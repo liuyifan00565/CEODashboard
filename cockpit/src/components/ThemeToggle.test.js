@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 15:42:00 CST
+ Update content: Align light theme guardrails with the cold-purple Apple/Vision Pro brand palette.
+*/
+/*
  Update time: 2026-07-03 13:05:00 CST
  Update content: 亮色主题守卫断言改为冰蓝+粉紫新主题色。
 */
@@ -90,17 +94,23 @@ test('uses a light green theme background with non-white text and chart variable
   assert.doesNotMatch(block, /--chart-(?:text|muted|grid|bar|bar-muted):\s*(?:#fff|#ffffff|rgba\(255,\s*255,\s*255)/i);
 });
 
-test('keeps ice blue and pink purple aligned in light theme', () => {
+test('keeps cold purple brand accents aligned in light theme', () => {
   const block = lightThemeBlock();
 
-  assert.match(block, /--up:#F472B6;/);
-  assert.match(block, /--down:#6EA8FF;/);
-  assert.match(block, /--good:#6EA8FF;/);
-  assert.match(block, /--warn:#F472B6;/);
-  assert.match(block, /--up-rgb:244,114,182;/);
-  assert.match(block, /--down-rgb:110,168,255;/);
-  assert.match(block, /--good-rgb:110,168,255;/);
-  assert.match(block, /--warn-rgb:244,114,182;/);
+  assert.match(block, /--brand-purple:#7C6CFF;/);
+  assert.match(block, /--brand-purple-2:#8F86FF;/);
+  assert.match(block, /--brand-purple-3:#A79CFF;/);
+  assert.match(block, /--brand-lavender:#C9C2FF;/);
+  assert.match(block, /--brand-mist:#E7E2FF;/);
+  assert.match(block, /--brand-ice:#9EDCFF;/);
+  assert.match(block, /--up:#A79CFF;/);
+  assert.match(block, /--down:#9EDCFF;/);
+  assert.match(block, /--good:#7C6CFF;/);
+  assert.match(block, /--warn:#F08AC3;/);
+  assert.match(block, /--up-rgb:167,156,255;/);
+  assert.match(block, /--down-rgb:158,220,255;/);
+  assert.match(block, /--good-rgb:124,108,255;/);
+  assert.match(block, /--warn-rgb:240,138,195;/);
 });
 
 test('charts and KPI progress bars read theme tokens instead of hard-coded white colors', () => {

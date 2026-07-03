@@ -1,0 +1,17 @@
+/*
+ Update time: 2026-07-03 15:30:00 CST
+ Update content: Add ReactBits Color Bends container styles for the full-screen cold-purple environment light layer.
+*/
+.color-bends-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.color-bends-container canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none;
+}

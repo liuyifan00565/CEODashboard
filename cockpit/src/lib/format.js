@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 15:33:00 CST
+ Update content: Update KPI semantic colors and progress gradients to the cold-purple Apple/Vision Pro brand palette.
+*/
+/*
  Update time: 2026-07-03 13:05:00 CST
  Update content: COLOR 语义色从荧光黄绿+霓虹粉改为冰蓝+粉紫；progressColor 在 ≥80 与 <60 档返回低饱和冷色线性渐变字符串以驱动进度条。
 */
@@ -19,25 +23,25 @@
  更新内容: 完成率中档颜色支持由主题传入，避免白色主题下 60-80 完成率文字不可读。
 */
 export const COLOR = {
-  up: '#F472B6',
-  down: '#6EA8FF',
-  good: '#6EA8FF',
-  warn: '#F472B6',
-  txt: '#ffffff',
-  muted: '#ffffff',
+  up: '#A79CFF',
+  down: '#9EDCFF',
+  good: '#7C6CFF',
+  warn: '#F08AC3',
+  txt: '#F8F7FF',
+  muted: '#E7E2FF',
   line: 'rgba(255,255,255,.10)',
   axis: 'rgba(255,255,255,.45)',
-  // 进度条低饱和冷色线性渐变：达标用冰蓝→青蓝，落后用粉紫→粉橙
-  goodGradient: 'linear-gradient(90deg,#6EA8FF,#8EEAFF)',
-  warnGradient: 'linear-gradient(90deg,#F472B6,#FDA4AF)',
+  // 进度条低饱和冷紫线性渐变：达标用品牌紫→薰衣草→少量冰蓝，落后用柔和粉紫。
+  goodGradient: 'linear-gradient(90deg,#7C6CFF 0%,#A79CFF 56%,#C9C2FF 88%,#9EDCFF 100%)',
+  warnGradient: 'linear-gradient(90deg,#F08AC3,#F5A4CF)',
 };
 
 // 环比涨跌颜色：>=0 粉紫，<0 冰蓝
 export const deltaColor = (v) => (v >= 0 ? COLOR.up : COLOR.down);
 export const deltaArrow = (v) => (v >= 0 ? '▲' : '▼');
 export const fmtDelta = (v) => `${deltaArrow(v)} ${v >= 0 ? '+' : ''}${v}%`;
-// progressColor 返回纯色，供 ECharts itemStyle/label.color 和文字 color 使用：达标档冰蓝，落后档粉紫，60-80 中档保持中性色。
-export const progressColor = (pct, midColor = COLOR.txt) => {
+// progressColor 返回纯色，供 ECharts label.color 和文字 color 使用：达标档品牌紫，落后档柔和粉紫，60-80 中档保持冷白紫。
+export const progressColor = (pct, midColor = '#E7E2FF') => {
   const value = Number(pct) || 0;
   if (value >= 80) return COLOR.good;
   if (value >= 60) return midColor;

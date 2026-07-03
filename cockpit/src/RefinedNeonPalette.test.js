@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 15:24:00 CST
+ Update content: Guard the confirmed cold-purple Apple/Vision Pro palette, Color Bends environment layer, and muted glass progress colors.
+*/
+/*
  Update time: 2026-07-03 13:42:00 CST
  Update content: 守卫测试改为断言深海蓝黑玻璃背景（无点阵、多层径向光、SVG 噪点）。
 */
@@ -24,10 +28,8 @@ import assert from 'node:assert/strict';
 import { COLOR, progressColor } from './lib/format.js';
 
 const indexCss = readFileSync(new URL('./index.css', import.meta.url), 'utf8');
-const formatSource = readFileSync(new URL('./lib/format.js', import.meta.url), 'utf8');
 const themeSource = readFileSync(new URL('./lib/theme.js', import.meta.url), 'utf8');
 const appSource = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
-const kpiCss = readFileSync(new URL('./components/KpiCard.css', import.meta.url), 'utf8');
 const kpiSource = readFileSync(new URL('./components/KpiCard.jsx', import.meta.url), 'utf8');
 const channelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
 
@@ -37,62 +39,68 @@ function darkThemeBlock() {
   return match.groups.body;
 }
 
-test('uses the ice blue and pink purple semantic accents', () => {
+test('uses the cold purple Apple Vision Pro semantic accents', () => {
   const block = darkThemeBlock();
 
-  assert.match(block, /--up:#F472B6;/);
-  assert.match(block, /--down:#6EA8FF;/);
-  assert.match(block, /--good:#6EA8FF;/);
-  assert.match(block, /--warn:#F472B6;/);
-  assert.match(block, /--up-rgb:244,114,182;/);
-  assert.match(block, /--down-rgb:110,168,255;/);
-  assert.match(block, /--good-rgb:110,168,255;/);
-  assert.match(block, /--warn-rgb:244,114,182;/);
+  assert.match(block, /--brand-purple:#7C6CFF;/);
+  assert.match(block, /--brand-purple-2:#8F86FF;/);
+  assert.match(block, /--brand-purple-3:#A79CFF;/);
+  assert.match(block, /--brand-lavender:#C9C2FF;/);
+  assert.match(block, /--brand-mist:#E7E2FF;/);
+  assert.match(block, /--brand-ice:#9EDCFF;/);
+  assert.match(block, /--up:#A79CFF;/);
+  assert.match(block, /--down:#9EDCFF;/);
+  assert.match(block, /--good:#7C6CFF;/);
+  assert.match(block, /--warn:#F08AC3;/);
+  assert.match(block, /--up-rgb:167,156,255;/);
+  assert.match(block, /--down-rgb:158,220,255;/);
+  assert.match(block, /--good-rgb:124,108,255;/);
+  assert.match(block, /--warn-rgb:240,138,195;/);
 
-  assert.equal(COLOR.up, '#F472B6');
-  assert.equal(COLOR.down, '#6EA8FF');
-  assert.equal(COLOR.good, '#6EA8FF');
-  assert.equal(COLOR.warn, '#F472B6');
+  assert.equal(COLOR.up, '#A79CFF');
+  assert.equal(COLOR.down, '#9EDCFF');
+  assert.equal(COLOR.good, '#7C6CFF');
+  assert.equal(COLOR.warn, '#F08AC3');
 });
 
-test('keeps 70 percent warning progress neutral rather than blue', () => {
+test('keeps 70 percent progress as cool white lavender instead of saturated blue', () => {
   const block = darkThemeBlock();
 
-  assert.match(block, /--progress-mid:rgba\(255,255,255,\.92\);/);
-  assert.match(themeSource, /progressMid:\s*'rgba\(255,255,255,\.92\)'/);
-  assert.equal(progressColor(70, 'rgba(255,255,255,.92)'), 'rgba(255,255,255,.92)');
-  assert.match(kpiSource, /const color = progressColor\(pct, tokens\.progressMid\);[\s\S]*?itemStyle:\s*\{ color, borderRadius: 5 \}/);
+  assert.match(block, /--progress-mid:#E7E2FF;/);
+  assert.match(themeSource, /progressMid:\s*'#E7E2FF'/);
+  assert.equal(progressColor(70, '#E7E2FF'), '#E7E2FF');
+  assert.match(kpiSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?new echarts\.graphic\.LinearGradient/);
+  assert.match(kpiSource, /const labelColor = progressColor\(pct, tokens\.progressMid\);[\s\S]*?itemStyle:\s*\{ color: progressBarColor\(pct, tokens\), borderRadius: 5, shadowBlur: 6, shadowColor: labelColor \}/);
 });
 
-test('uses a deep blue-black glassmorphism background without dot field', () => {
+test('uses Color Bends as a low-opacity deep blue-black purple environment layer', () => {
   // 不再使用 DotField 点阵：App.jsx 不导入、index.css 不写 .dot-field-container 规则
   assert.doesNotMatch(appSource, /import DotField/);
   assert.doesNotMatch(appSource, /<DotField/);
   assert.doesNotMatch(indexCss, /\.bg \.dot-field-container/);
+  assert.doesNotMatch(appSource, /import Silk/);
+  assert.doesNotMatch(appSource, /<Silk/);
 
-  // 深海蓝黑渐变底：#0B1020 / #070A12 / #050713
+  // 深海蓝黑渐变底：#070A12 / #0B1020 / #121933
   assert.match(darkThemeBlock(), /--bg-base-1:#0B1020;/);
   assert.match(darkThemeBlock(), /--bg-base-2:#070A12;/);
-  assert.match(darkThemeBlock(), /--bg-base-3:#050713;/);
+  assert.match(darkThemeBlock(), /--bg-base-3:#121933;/);
 
-  // 多层冰蓝/青蓝/淡紫径向环境光（Color Bends 角落补光，opacity ≤ 0.25）
-  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(110,168,255,\.22\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(142,234,255,\.11\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-c:rgba\(139,124,255,\.13\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(110,168,255,\.10\);/);
+  // 多层冷紫/薰衣草环境光，冰蓝只做少量边缘提亮
+  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(124,108,255,\.20\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(201,194,255,\.14\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-c:rgba\(143,134,255,\.16\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(158,220,255,\.08\);/);
 
   // SVG 噪点叠加层
   assert.match(indexCss, /\.bg::after\{[\s\S]*?feTurbulence[\s\S]*?fractalNoise/);
-  assert.match(darkThemeBlock(), /--bg-noise-opacity:\.035;/);
+  assert.match(darkThemeBlock(), /--bg-noise-opacity:\.025;/);
 
-  // Silk 材质层 + 深色遮罩：App.jsx 渲染 Silk，index.css 提供遮罩与层叠
-  assert.match(appSource, /import Silk from '\.\/components\/Silk\/Silk';/);
-  assert.match(appSource, /<Silk colors=\{\['#5F6B85', '#6B728A', '#7B7481'\]\}/);
-  assert.match(indexCss, /\.bg-shade\{[\s\S]*?z-index:2;[\s\S]*?rgba\(5,7,19,/);
-  assert.match(indexCss, /\.silk-layer\{[\s\S]*?z-index:1;[\s\S]*?opacity:\s*\.65;/);
-
-  // FluidGlass 材质层规则保留
-  assert.match(indexCss, /\.fluid-glass-layer\{[\s\S]*?opacity:\s*\.32;[\s\S]*?mix-blend-mode:\s*screen;/);
+  // Color Bends 材质层 + 深色遮罩：App.jsx 渲染 ColorBends，index.css 提供遮罩与层叠
+  assert.match(appSource, /import ColorBends from '\.\/components\/ColorBends\/ColorBends';/);
+  assert.match(appSource, /<ColorBends[\s\S]*?colors=\{\['#3B3478', '#7C6CFF', '#A79CFF', '#C9C2FF'\]\}/);
+  assert.match(indexCss, /\.bg-shade\{[\s\S]*?z-index:2;[\s\S]*?rgba\(7,10,18,/);
+  assert.match(indexCss, /\.color-bends-layer\{[\s\S]*?z-index:1;[\s\S]*?opacity:\s*\.58;/);
 });
 
 test('keeps warning rows translucent instead of becoming saturated candy blocks', () => {

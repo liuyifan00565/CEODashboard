@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 15:40:00 CST
+ Update content: Change compute search highlighting and card hover glow from ice-blue/pink-purple to restrained cold-purple glass.
+*/
+/*
  Update time: 2026-07-03 13:05:00 CST
  Update content: 算力用量页搜索高亮边框从荧光黄绿改为冰蓝，匹配全局新主题。
 */
@@ -90,8 +94,8 @@
 
 .cpu-kpi-slot[data-search-current="true"] .cpu-kpi,
 .cpu-panel[data-search-current="true"] {
-  border-color: rgba(110,168,255,.54);
-  box-shadow: inset 0 0 0 1px rgba(110,168,255,.45), var(--glass-shadow);
+  border-color: rgba(167,156,255,.42);
+  box-shadow: inset 0 0 0 1px rgba(167,156,255,.30), var(--glass-shadow);
 }
 
 .cpu-kpi__label,

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 15:33:00 CST
+ Update content: Align fallback chart and progress colors with the cold-purple Apple/Vision Pro palette.
+*/
+/*
  Update time: 2026-07-02 17:09:15 CST
  Update content: Match fallback progress tokens to the refined dark cockpit palette.
 */
@@ -10,21 +14,21 @@ import { useEffect, useState } from 'react';
 
 const FALLBACK_TOKENS = {
   theme: 'dark',
-  text: '#ffffff',
-  muted: '#ffffff',
-  faint: '#ffffff',
-  chartText: '#ffffff',
-  chartMuted: '#ffffff',
-  chartGrid: 'rgba(255,255,255,.08)',
-  chartAxis: 'rgba(255,255,255,.45)',
-  chartBar: 'rgba(255,255,255,.88)',
-  chartBarMuted: 'rgba(255,255,255,.38)',
-  chartBarFaint: 'rgba(255,255,255,.12)',
-  chartTooltipBg: 'rgba(20,20,22,.92)',
-  chartTooltipBorder: 'rgba(255,255,255,.16)',
-  chartPointer: 'rgba(255,255,255,.05)',
-  chartPointBorder: '#0c0c0d',
-  progressMid: 'rgba(255,255,255,.92)',
+  text: '#F8F7FF',
+  muted: '#E7E2FF',
+  faint: 'rgba(231,226,255,.66)',
+  chartText: '#F8F7FF',
+  chartMuted: '#E7E2FF',
+  chartGrid: 'rgba(201,194,255,.09)',
+  chartAxis: 'rgba(231,226,255,.38)',
+  chartBar: 'rgba(201,194,255,.9)',
+  chartBarMuted: 'rgba(167,156,255,.42)',
+  chartBarFaint: 'rgba(160,170,210,.16)',
+  chartTooltipBg: 'rgba(7,10,18,.88)',
+  chartTooltipBorder: 'rgba(255,255,255,.14)',
+  chartPointer: 'rgba(201,194,255,.055)',
+  chartPointBorder: '#070A12',
+  progressMid: '#E7E2FF',
 };
 
 function cssVar(styles, name, fallback) {

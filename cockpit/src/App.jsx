@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 15:31:00 CST
+ 更新内容: 将全屏背景从 ReactBits Silk 切换为低速冷紫 Color Bends 环境光层，并保留深色遮罩保证数据可读性。
+*/
+/*
  更新时间: 2026-07-03 13:42:00 CST
  更新内容: 移除 DotField 紫色点阵背景，背景改为深海蓝黑渐变 + 多层径向光 + SVG 噪点（详见 index.css）。
 */
@@ -54,7 +58,7 @@ import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 
 import AIAnalysisWidget from './components/AIAnalysisWidget';
-import Silk from './components/Silk/Silk';
+import ColorBends from './components/ColorBends/ColorBends';
 import GlassSurface from './components/GlassSurface/GlassSurface';
 import Sidebar from './components/Sidebar';
 import ExpandableSearch from './components/ExpandableSearch';
@@ -259,10 +263,25 @@ export default function App() {
   return (
     <div className="app">
       <div className="bg">
-        {/* Vision Pro 风格 Silk 材质层：仅暗色主题渲染，浅色主题靠 CSS 隐藏 */}
+        {/* ReactBits Color Bends 只做 Vision Pro 风格环境光层，前景可读性由遮罩控制 */}
         {theme === 'dark' && (
           <>
-            <Silk colors={['#5F6B85', '#6B728A', '#7B7481']} speed={1} />
+            <ColorBends
+              colors={['#3B3478', '#7C6CFF', '#A79CFF', '#C9C2FF']}
+              speed={0.045}
+              rotation={92}
+              autoRotate={0.18}
+              scale={1.28}
+              frequency={0.72}
+              warpStrength={0.62}
+              mouseInfluence={0.04}
+              parallax={0.08}
+              noise={0.035}
+              iterations={2}
+              intensity={0.72}
+              bandWidth={4.8}
+              className="color-bends-layer"
+            />
             <div className="bg-shade" aria-hidden="true" />
           </>
         )}
