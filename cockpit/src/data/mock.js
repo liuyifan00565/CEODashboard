@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 10:25:18 CST
+ 更新内容: 将维护页目标完成率进度条变色阈值调整为超过 80% 才高亮。
+*/
+/*
  更新时间: 2026-07-02 18:27:24 CST
  更新内容: 为数据维护导航栏四个入口补充统一 AppIcon 业务图标名称。
 */
@@ -850,8 +854,7 @@ export const MAINTENANCE_PERIOD_COLUMNS = [
 ];
 
 function maintenanceStatus(pct) {
-  if (pct >= 90) return 'good';
-  if (pct >= 75) return 'warning';
+  if (pct > 80) return 'good';
   return 'danger';
 }
 

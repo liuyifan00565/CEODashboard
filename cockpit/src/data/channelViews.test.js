@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 10:25:18 CST
+ 更新内容: 增加维护页目标完成率超过 80% 才变色的回归测试。
+*/
+/*
  更新时间: 2026-07-02 18:27:24 CST
  更新内容: 增加数据维护导航栏四个业务图标名称的回归测试。
 */
@@ -109,6 +113,20 @@ test('provides target maintenance organization tree and editable user rows', () 
   assert.ok(TARGET_MAINTENANCE_ROWS.some((row) => row.type === 'user'));
   assert.ok(TARGET_MAINTENANCE_ROWS.every((row) => row.periods.year.target >= row.periods.q1.target));
   assert.ok(TARGET_MAINTENANCE_ROWS.filter((row) => row.type === 'user').every((row) => row.periods.m06.actual >= 0));
+});
+
+test('highlights target maintenance progress only after completion exceeds 80 percent', () => {
+  const onlineSales = TARGET_MAINTENANCE_ROWS.find((row) => row.id === 'online-sales');
+  const allDepartments = TARGET_MAINTENANCE_ROWS.find((row) => row.id === 'summary-all');
+
+  assert.equal(onlineSales.periods.m01.pct, 80);
+  assert.equal(onlineSales.periods.m01.status, 'danger');
+  assert.equal(onlineSales.periods.m05.pct, 85.1);
+  assert.equal(onlineSales.periods.m05.status, 'good');
+  assert.equal(allDepartments.periods.m05.pct, 77.1);
+  assert.equal(allDepartments.periods.m05.status, 'danger');
+  assert.equal(allDepartments.periods.m06.pct, 83.8);
+  assert.equal(allDepartments.periods.m06.status, 'good');
 });
 
 test('provides cost maintenance channel rows and labor cost rows', () => {
