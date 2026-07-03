@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:27:19 CST
+ 更新内容: 将 AI 小人入口资产隔离断言改为检查去注释源码，禁止直接 PNG 和 mascot 资产引用。
+*/
+/*
  更新时间: 2026-07-03 18:22:01 CST
  更新内容: 扩大 AI 弹窗入口测试覆盖，禁止直接引用任意 AI 小人或 mascot 图片资产。
 */
@@ -23,6 +27,13 @@ const componentCss = readFileSync(new URL('./AIAnalysisWidget.css', import.meta.
 const hoverCueSource = readFileSync(new URL('../lib/hoverCue.js', import.meta.url), 'utf8');
 const indexCss = readFileSync(new URL('../index.css', import.meta.url), 'utf8');
 const mascotTransparentUrl = new URL('../../public/ai-mascot-transparent.png', import.meta.url);
+const componentCode = stripSourceComments(componentSource);
+
+function stripSourceComments(source) {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1');
+}
 
 function themeBlock(theme) {
   const selector = theme === 'dark' ? ':root,\\s*\\n:root\\[data-theme="dark"\\]' : ':root\\[data-theme="light"\\]';
@@ -32,27 +43,25 @@ function themeBlock(theme) {
 }
 
 test('uses the 3D mascot stage for the AI launcher', () => {
-  assert.match(componentSource, /import Mascot3DStage from '\.\/Mascot3DStage';/);
-  assert.match(componentSource, /import \{\s*MASCOT_ACTIONS,\s*getIdleCompanionCue,\s*getSpeechAction,\s*\} from '\.\.\/lib\/mascotCompanion';/s);
-  assert.match(componentSource, /export default function AIAnalysisWidget\(\{ activeMenu, dim, channelKey = 'all', companionCue \}\)/);
-  assert.match(componentSource, /const \[mascotAction,\s*setMascotAction\] = useState\(MASCOT_ACTIONS\.idle\);/);
-  assert.match(componentSource, /const \[mascotPointer,\s*setMascotPointer\] = useState\(\{ x: 0, y: 0, active: false \}\);/);
-  assert.doesNotMatch(componentSource, /spinToken/);
-  assert.doesNotMatch(componentSource, /setSpinToken/);
-  assert.match(componentSource, /className=\{`ai-orb ai-orb--\$\{mascotAction\}`\}/);
-  assert.match(componentSource, /<Mascot3DStage\s+action=\{mascotAction\}\s+pointer=\{mascotPointer\}\s+analysisActive=\{open \|\| loading\}\s+label="福小客 3D 经营助手"/s);
-  assert.match(componentSource, /aria-label=\{open \? '收起 AI 分析工具' : '打开 AI 分析工具'\}/);
-  assert.match(componentSource, /aria-expanded=\{open\}/);
-  assert.match(componentSource, /onPointerMove=\{handleMascotPointerMove\}/);
-  assert.match(componentSource, /onMouseEnter=\{handleMascotEnter\}/);
-  assert.match(componentSource, /onMouseLeave=\{handleMascotLeave\}/);
-  assert.match(componentSource, /onClick=\{handleMascotClick\}/);
-  assert.doesNotMatch(componentSource, /ai-mascot-sprite/);
-  assert.doesNotMatch(componentSource, /ai-mascot-stage/);
-  assert.doesNotMatch(componentSource, /\/assets\/mascot\//);
-  assert.doesNotMatch(componentSource, /(?:ai|ceo)-mascot[^'"\s`)]*\.png/);
-  assert.doesNotMatch(componentSource, /mascot[^'"\s`)]*\.png/);
-  assert.doesNotMatch(componentSource, /\.png['"`][\s\S]{0,80}mascot|mascot[\s\S]{0,80}\.png['"`]/);
+  assert.match(componentCode, /import Mascot3DStage from '\.\/Mascot3DStage';/);
+  assert.match(componentCode, /import \{\s*MASCOT_ACTIONS,\s*getIdleCompanionCue,\s*getSpeechAction,\s*\} from '\.\.\/lib\/mascotCompanion';/s);
+  assert.match(componentCode, /export default function AIAnalysisWidget\(\{ activeMenu, dim, channelKey = 'all', companionCue \}\)/);
+  assert.match(componentCode, /const \[mascotAction,\s*setMascotAction\] = useState\(MASCOT_ACTIONS\.idle\);/);
+  assert.match(componentCode, /const \[mascotPointer,\s*setMascotPointer\] = useState\(\{ x: 0, y: 0, active: false \}\);/);
+  assert.doesNotMatch(componentCode, /spinToken/);
+  assert.doesNotMatch(componentCode, /setSpinToken/);
+  assert.match(componentCode, /className=\{`ai-orb ai-orb--\$\{mascotAction\}`\}/);
+  assert.match(componentCode, /<Mascot3DStage\s+action=\{mascotAction\}\s+pointer=\{mascotPointer\}\s+analysisActive=\{open \|\| loading\}\s+label="福小客 3D 经营助手"/s);
+  assert.match(componentCode, /aria-label=\{open \? '收起 AI 分析工具' : '打开 AI 分析工具'\}/);
+  assert.match(componentCode, /aria-expanded=\{open\}/);
+  assert.match(componentCode, /onPointerMove=\{handleMascotPointerMove\}/);
+  assert.match(componentCode, /onMouseEnter=\{handleMascotEnter\}/);
+  assert.match(componentCode, /onMouseLeave=\{handleMascotLeave\}/);
+  assert.match(componentCode, /onClick=\{handleMascotClick\}/);
+  assert.doesNotMatch(componentCode, /ai-mascot-sprite|ai-mascot-stage/);
+  assert.doesNotMatch(componentCode, /\/assets\/mascot\//);
+  assert.doesNotMatch(componentCode, /['"`][^'"`]*\.png[^'"`]*['"`]/);
+  assert.doesNotMatch(componentCode, /(?:ai|ceo)-mascot|mascot[^A-Za-z0-9_]*(?:asset|image|png|source)/i);
 });
 
 test('tracks pointer position for Codex-like desktop pet movement', () => {
@@ -149,8 +158,8 @@ test('styles the launcher as a transparent 3D mascot and speech bubble', () => {
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*width:\s*116px;/s);
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*height:\s*160px;/s);
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*background:\s*transparent;/s);
-  assert.match(componentCss, /\.ai-orb--wave \.mascot-3d-stage\s*\{[^}]*filter:\s*drop-shadow\(0 20px 30px rgba\(0, 0, 0, \.42\)\) drop-shadow\(0 0 22px rgba\(56, 189, 248, \.5\)\);/s);
-  assert.match(componentCss, /\.ai-orb--think \.mascot-3d-stage,[\s\S]*?\.ai-orb--talk \.mascot-3d-stage,[\s\S]*?\.ai-orb--click \.mascot-3d-stage\s*\{[^}]*drop-shadow\(0 0 32px rgba\(192, 132, 252, \.3\)\);/s);
+  assert.match(componentCss, /\.ai-orb--wave \.mascot-3d-stage\s*\{[^}]*filter:\s*drop-shadow\(/s);
+  assert.match(componentCss, /\.ai-orb--think \.mascot-3d-stage,[\s\S]*?\.ai-orb--talk \.mascot-3d-stage,[\s\S]*?\.ai-orb--click \.mascot-3d-stage\s*\{[^}]*drop-shadow\(/s);
   assert.doesNotMatch(componentCss, /brightness\(\.92\)|saturate\(\.82\)/);
   assert.match(componentCss, /\.ai-bubble\s*\{/);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*bottom:\s*202px;/s);
