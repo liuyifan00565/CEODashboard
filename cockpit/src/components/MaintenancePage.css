@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 11:38:07 CST
+ 更新内容: 维护页进度条恢复为语义玻璃渐变，移除紫色进度变量以满足统一玻璃体系。
+*/
+/*
  Update time: 2026-07-03 10:22:28 CST
  Update content: Split target maintenance fixed columns from the month scroll pane while keeping the transparent glass table style.
 */
@@ -31,10 +35,6 @@
  更新内容: 维护页表格外壳、表头、首列和汇总行恢复为算力页原透明玻璃样式。
 */
 .mnt-page {
-  --mnt-progress-purple: #f000ff;
-  --mnt-progress-purple-soft: #ff7cff;
-  --mnt-progress-yellow: #dfff00;
-  --mnt-progress-yellow-soft: #f6ff65;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -653,17 +653,17 @@
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--mnt-progress-yellow) 0%, var(--mnt-progress-yellow-soft) 100%);
+  background: linear-gradient(90deg, rgba(var(--good-rgb), .92) 0%, rgba(255,255,255,.58) 44%, rgba(255,255,255,0) 100%);
   box-shadow:
-    0 0 8px color-mix(in srgb, var(--mnt-progress-yellow) 36%, transparent),
-    0 0 10px color-mix(in srgb, var(--mnt-progress-yellow-soft) 24%, transparent);
+    0 0 8px rgba(var(--good-rgb), .22),
+    0 0 10px rgba(255,255,255,.12);
 }
 
 .mnt-progress--danger span {
-  background: linear-gradient(90deg, var(--mnt-progress-purple) 0%, var(--mnt-progress-purple-soft) 100%);
+  background: linear-gradient(90deg, rgba(var(--warn-rgb), .9) 0%, rgba(255,255,255,.5) 46%, rgba(255,255,255,0) 100%);
   box-shadow:
-    0 0 8px color-mix(in srgb, var(--mnt-progress-purple) 38%, transparent),
-    0 0 10px color-mix(in srgb, var(--mnt-progress-purple-soft) 24%, transparent);
+    0 0 8px rgba(var(--warn-rgb), .22),
+    0 0 10px rgba(255,255,255,.1);
 }
 
 .mnt-progress--warning span {
@@ -671,10 +671,10 @@
 }
 
 .mnt-progress--good span {
-  background: linear-gradient(90deg, var(--mnt-progress-yellow) 0%, var(--mnt-progress-yellow-soft) 100%);
+  background: linear-gradient(90deg, rgba(var(--good-rgb), .92) 0%, rgba(255,255,255,.58) 44%, rgba(255,255,255,0) 100%);
   box-shadow:
-    0 0 8px color-mix(in srgb, var(--mnt-progress-yellow) 36%, transparent),
-    0 0 10px color-mix(in srgb, var(--mnt-progress-yellow-soft) 24%, transparent);
+    0 0 8px rgba(var(--good-rgb), .22),
+    0 0 10px rgba(255,255,255,.12);
 }
 
 .mnt-progress--unset span {
