@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 17:28:00 CST
+ Update content: Require the left selected-row scroll button to sit inside the frozen name column at the annotated offset.
+*/
+/*
  Update time: 2026-07-03 17:05:00 CST
  Update content: Add regression coverage for selected target-maintenance row buttons that scroll the period table left and right.
 */
@@ -40,6 +44,6 @@ test('adds selected-row buttons that scroll the target maintenance period table'
   assert.match(rowButtonBlock, /backdrop-filter:\s*var\(--glass-blur\);/);
   assert.match(rowButtonBlock, /box-shadow:\s*var\(--glass-shadow\);/);
   assert.match(rowButtonHoverBlock, /background:\s*var\(--glass-cell-hover\);/);
-  assert.match(rowButtonLeftBlock, /left:\s*10px;/);
+  assert.match(rowButtonLeftBlock, /left:\s*22px;/);
   assert.match(rowButtonRightBlock, /right:\s*10px;/);
 });

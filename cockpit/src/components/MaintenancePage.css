@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 17:28:00 CST
+ Update content: Move the selected-row left scroll button further into the frozen name column to match the annotated placement.
+*/
+/*
  Update time: 2026-07-03 17:05:00 CST
  Update content: Add selected target-row glass scroll buttons for moving the period table left and right without the bottom scrollbar.
 */
@@ -648,7 +652,7 @@
 }
 
 .mnt-row-scroll-btn--left {
-  left: 10px;
+  left: 22px;
 }
 
 .mnt-row-scroll-btn--right {
