@@ -3,6 +3,10 @@
  更新内容: 为维护页年度下拉框增加紧凑宽度专属类。
 */
 /*
+ Update time: 2026-07-03 10:31:00 CST
+ Update content: Pin target maintenance annual and current-quarter columns based on the dashboard business month.
+*/
+/*
  更新时间: 2026-07-02 19:13:36 CST
  更新内容: 去除内容区分隔点，标题分隔点保持原样，并将维护页进度百分比单独换行展示。
 */
@@ -14,6 +18,7 @@ import {
   COST_MAINTENANCE_CHANNELS,
   COST_MAINTENANCE_ROWS,
   LABOR_COST_MAINTENANCE_ROWS,
+  META,
   MAINTENANCE_PERIOD_COLUMNS,
   ORG_MAINTENANCE_DEPARTMENTS,
   ORG_MAINTENANCE_USERS,
@@ -38,6 +43,48 @@ const PAGE_RENDERERS = {
   'org-maintenance': OrgMaintenancePage,
   'channel-maintenance': ChannelMaintenancePage,
 };
+
+const TARGET_PERIOD_COLUMNS = buildTargetPeriodColumns(MAINTENANCE_PERIOD_COLUMNS, META.monthLabel);
+
+function getMaintenanceCurrentMonth(monthLabel = '') {
+  const match = String(monthLabel).match(/(\d{1,2})\s*月/);
+  const parsedMonth = match ? Number(match[1]) : 0;
+  if (parsedMonth >= 1 && parsedMonth <= 12) return parsedMonth;
+  return new Date().getMonth() + 1;
+}
+
+function buildTargetPeriodColumns(periodColumns, monthLabel = '') {
+  const currentMonth = getMaintenanceCurrentMonth(monthLabel);
+  const quarterStartMonth = Math.floor((currentMonth - 1) / 3) * 3 + 1;
+  const quarterKey = `q${Math.ceil(currentMonth / 3)}`;
+  const yearColumns = periodColumns.filter((column) => column.key === 'year');
+  const currentQuarterColumns = periodColumns.filter((column) =>
+    column.key === quarterKey || (column.month >= quarterStartMonth && column.month <= currentMonth)
+  );
+  const fixedKeys = new Set([...yearColumns, ...currentQuarterColumns].map((column) => column.key));
+  const restColumns = periodColumns.filter((column) => !fixedKeys.has(column.key));
+
+  return [
+    ...yearColumns,
+    ...currentQuarterColumns,
+    ...restColumns,
+  ].map((column, index) => {
+    const targetSticky = index < yearColumns.length + currentQuarterColumns.length;
+    return {
+      ...column,
+      targetSticky,
+      targetStickyIndex: targetSticky ? index + 1 : undefined,
+    };
+  });
+}
+
+function targetPeriodColumnClassName(column, baseClassName = '') {
+  return [
+    baseClassName,
+    column.targetSticky ? 'mnt-target-sticky' : '',
+    column.targetSticky ? `mnt-target-sticky--${column.targetStickyIndex}` : '',
+  ].filter(Boolean).join(' ');
+}
 
 function formatWan(value) {
   return `${Number(value || 0).toLocaleString('zh-CN')} 万`;
@@ -204,11 +251,11 @@ function TargetMaintenancePage({ markDirty, status }) {
       </Panel>
       <Panel title="年度目标" meta={<SaveBadge status={status} />} className="mnt-main-panel">
         <MatrixShell>
-          <table className="mnt-matrix">
+          <table className="mnt-matrix mnt-matrix--target">
             <thead>
               <tr>
                 <th>部门/人员</th>
-                {MAINTENANCE_PERIOD_COLUMNS.map((column) => <th key={column.key}>{column.label}</th>)}
+                {TARGET_PERIOD_COLUMNS.map((column) => <th key={column.key} className={targetPeriodColumnClassName(column)}>{column.label}</th>)}
               </tr>
             </thead>
             <tbody>
@@ -218,11 +265,11 @@ function TargetMaintenancePage({ markDirty, status }) {
                     <strong>{row.name}</strong>
                     <span>{row.role}</span>
                   </td>
-                  {MAINTENANCE_PERIOD_COLUMNS.map((column) => {
+                  {TARGET_PERIOD_COLUMNS.map((column) => {
                     const period = row.periods[column.key];
                     const editable = row.type === 'user' && column.month;
                     return (
-                      <td key={column.key} className="mnt-period-cell">
+                      <td key={column.key} className={targetPeriodColumnClassName(column, 'mnt-period-cell')}>
                         {editable ? (
                           <input
                             className="mnt-control mnt-number-input"
