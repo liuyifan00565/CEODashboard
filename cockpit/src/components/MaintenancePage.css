@@ -15,6 +15,18 @@
  Update content: Add unified organization-style side navigation for all data maintenance pages.
 */
 /*
+ 更新时间: 2026-07-03 11:45:57 CST
+ 更新内容: 合并远端维护页样式更新，并将维护页进度条统一为语义实色。
+*/
+/*
+ 更新时间: 2026-07-03 11:45:24 CST
+ 更新内容: 合并 ttoswar 维护页选中态、滚动条和可编辑目标值改动，同时采用维护页语义实色进度条。
+*/
+/*
+ 更新时间: 2026-07-03 11:38:07 CST
+ 更新内容: 维护页进度条恢复为语义玻璃渐变，移除紫色进度变量以满足统一玻璃体系。
+*/
+/*
  Update time: 2026-07-03 11:11:56 CST
  Update content: Change maintenance table row hover to a bright purple overlay and add persistent selected-row styling.
 */
@@ -53,6 +65,10 @@
 /*
  更新时间: 2026-07-02 18:56:28 CST
  更新内容: 数据维护页进度条统一为左侧高亮、向右侧颜色衰减的透明玻璃样式。
+*/
+/*
+ 更新时间: 2026-07-02 19:23:04 CST
+ 更新内容: 将维护页中高完成率进度条由荧光蓝改为荧光黄色，低完成率继续使用荧光紫。
 */
 /*
  更新时间: 2026-07-02 19:13:36 CST
@@ -954,6 +970,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
+  background: var(--good);
 }
 
 .mnt-progress--danger span {

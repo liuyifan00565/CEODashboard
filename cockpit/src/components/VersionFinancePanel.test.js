@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-03 11:28:32 CST
+ 更新内容: 要求版本情况半环图对称轴精准对齐数量/金额切换按钮。
+*/
+/*
+ 更新时间: 2026-07-03 11:17:34 CST
+ 更新内容: 要求版本情况半环图右移并保持数量/金额切换位置不变。
+*/
+/*
  更新时间: 2026-07-01 18:37:59 CST
  更新内容: 版本情况回归测试约束图表和二级弹窗无紫色发光背景。
 */
@@ -113,11 +121,12 @@ test('opens the matching secondary card from any point on a version card', () =>
   assert.match(css, /\.vf-expand-hint \{[\s\S]*?pointer-events: none;/);
 });
 
-test('nudges the enlarged half ring upward and left', () => {
-  assert.match(source, /center: \['46%', '70%'\]/);
+test('nudges the version half ring right while keeping the mode switch fixed', () => {
+  assert.match(source, /center: \['49\.5%', '70%'\]/);
   assert.match(css, /\.vf-ring-pane \{[\s\S]*?align-items: flex-start;/);
   assert.match(css, /\.vf-ring-pane \{[\s\S]*?padding-top: 6px;/);
   assert.match(css, /\.vf-ring-pane \{[\s\S]*?padding-left: 4px;/);
+  assert.match(css, /\.vf-metric-switch \{[\s\S]*?align-self: center;[\s\S]*?margin-left: -28px;/);
   assert.match(css, /\.vf-ring-pane::before \{[\s\S]*?content: none;/);
   assert.doesNotMatch(css, /\.vf-ring\s*\{[\s\S]*?filter: drop-shadow\(0 0 20px rgba\(255, 79, 216/);
   assert.match(css, /\.vf-ring \{[\s\S]*?margin-top: -24px;/);

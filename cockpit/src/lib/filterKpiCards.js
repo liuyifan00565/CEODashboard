@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-03 11:28:32 CST
+ 更新内容: 将首页本年目标和本年渠道模块标题加入 KPI 搜索关键词，支持按“本年”定位年度卡片。
+*/
+/*
+ 更新时间: 2026-07-03 11:09:47 CST
+ 更新内容: 将 KPI 卡片可见标题和副文案并入搜索关键词，支持按“总投入”等页面文本定位卡片。
+*/
+/*
  更新时间: 2026-07-02 17:39:16 CST
  更新内容: 主 KPI 卡副文案移除日期区间显示，保留日期范围对指标数值的筛选影响。
 */
@@ -202,6 +210,19 @@ function targetSub(targetLabel, target) {
   return `${targetLabel} ${target} 万`;
 }
 
+function withVisibleKeywords(baseKeywords, ...visibleTerms) {
+  return Array.from(new Set([
+    ...(baseKeywords ?? []),
+    ...visibleTerms,
+  ].filter((term) => String(term ?? '').trim()).map(String)));
+}
+
+function recoverySectionKeywords(cardKey) {
+  if (cardKey === 'year') return ['本年', '本年目标完成情况', '本年渠道完成情况'];
+  if (cardKey === 'month') return ['本月', '本月目标完成情况', '本月渠道完成情况'];
+  return [];
+}
+
 export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_RANGE, channel = 'all' } = {}) {
   const safeDim = DIM_CONFIG[dim] ? dim : 'month';
   const channelContext = getChannelContext(channel);
@@ -237,32 +258,42 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
   const costCard = cardsByKey.get('cost');
   const renewalCard = cardsByKey.get('renewal');
 
+  const monthTitle = safeDim === 'month' ? monthCard?.title : `${config.label}回款`;
+  const monthSub = targetSub(`${config.label}目标`, target);
+  const monthProgressLabel = `${config.label}目标完成率`;
+  const yearTitle = safeDim === 'month' ? yearCard?.title : `${config.label}累计回款`;
+  const yearSub = targetSub(safeDim === 'month' ? '年度目标' : `${config.label}目标`, cumulativeTarget);
+  const yearProgressLabel = `${config.label}累计完成率`;
+  const costTitle = safeDim === 'month' ? costCard?.title : `${config.label}投入 · 费比`;
+
   return [
     {
       ...monthCard,
-      title: safeDim === 'month' ? monthCard.title : `${config.label}回款`,
+      title: monthTitle,
       value: recovered,
-      sub: targetSub(`${config.label}目标`, target),
+      sub: monthSub,
       progress: completion(recovered, target),
-      progressLabel: `${config.label}目标完成率`,
+      progressLabel: monthProgressLabel,
       gap: Math.max(target - recovered, 0),
       delta: delta(recovered, previous),
       channelKey: channelContext.channelKey,
+      keywords: withVisibleKeywords(monthCard.keywords, ...recoverySectionKeywords('month'), monthTitle, monthSub, monthProgressLabel),
     },
     {
       ...yearCard,
-      title: safeDim === 'month' ? yearCard.title : `${config.label}累计回款`,
+      title: yearTitle,
       value: cumulativeRecovered,
-      sub: targetSub(safeDim === 'month' ? '年度目标' : `${config.label}目标`, cumulativeTarget),
+      sub: yearSub,
       progress: completion(cumulativeRecovered, cumulativeTarget),
-      progressLabel: `${config.label}累计完成率`,
+      progressLabel: yearProgressLabel,
       gap: Math.max(cumulativeTarget - cumulativeRecovered, 0),
       delta: delta(cumulativeRecovered, cumulativePrevious),
       channelKey: channelContext.channelKey,
+      keywords: withVisibleKeywords(yearCard.keywords, ...recoverySectionKeywords('year'), yearTitle, yearSub, yearProgressLabel),
     },
     {
       ...costCard,
-      title: safeDim === 'month' ? costCard.title : `${config.label}投入 · 费比`,
+      title: costTitle,
       value: cost,
       unit: '万',
       displayValue: costRatio,
@@ -270,6 +301,7 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
       displayDecimals: 1,
       sub: costSub,
       channelKey: channelContext.channelKey,
+      keywords: withVisibleKeywords(costCard.keywords, costTitle, costSub, `${cost} 万`, `${costRatio}%`),
     },
     createRenewalCard(renewalCard, safeDim, factor, channelContext.channelKey),
   ];

@@ -3,6 +3,10 @@
  更新内容: 移除 DotField 紫色点阵背景，背景改为深海蓝黑渐变 + 多层径向光 + SVG 噪点（详见 index.css）。
 */
 /*
+ 更新时间: 2026-07-03 10:59:56 CST
+ 更新内容: 顶部搜索支持定位首页开户数卡片，并复用原搜索命中边框效果。
+*/
+/*
  更新时间: 2026-07-03 10:47:37 CST
  更新内容: 去除顶部数据维护/返回主界面按钮左侧图标，并收窄按钮玻璃宽度。
 */
@@ -54,7 +58,7 @@ import FluidGlass from './components/FluidGlass/FluidGlass';
 import GlassSurface from './components/GlassSurface/GlassSurface';
 import Sidebar from './components/Sidebar';
 import ExpandableSearch from './components/ExpandableSearch';
-import ElectricBorder from './components/ElectricBorder/ElectricBorder';
+import SearchResultBorder from './components/SearchResultBorder';
 import MetallicPaint from './components/MetallicPaint/MetallicPaint';
 import KpiCard from './components/KpiCard';
 import KpiModal from './components/KpiModal';
@@ -69,6 +73,7 @@ import MaintenancePage from './components/MaintenancePage';
 import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
+import { matchesSearchTerm } from './lib/searchMatch';
 import './dashboard.css';
 
 const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance';
@@ -80,33 +85,6 @@ const PANEL_KEYWORDS = {
   version: ['版本', '启航', '卓越', '至尊', '财务', '健康', '应收', '广告', '缺口', '续费'],
   delivery: ['交付', '实施', '配置', '知识库', '人效'],
 };
-
-function hit(keywords, term) {
-  if (!term) return false;
-  const normalized = term.trim().toLowerCase();
-  if (!normalized) return false;
-  return keywords.some((keyword) => String(keyword).toLowerCase().includes(normalized));
-}
-
-function SearchResultBorder({ active, children }) {
-  if (!active) return children;
-  return (
-    <ElectricBorder
-      data-search-match="true"
-      data-search-current="false"
-      aria-label="搜索命中结果"
-      color="#6000FF"
-      speed={1}
-      chaos={0.12}
-      thickness={2}
-      borderRadius={16}
-      className="search-result-border"
-      style={{ borderRadius: 16 }}
-    >
-      {children}
-    </ElectricBorder>
-  );
-}
 
 function recoveryChannelTitle(card) {
   return card.key === 'year' ? '本年渠道完成情况' : '本月渠道完成情况';
@@ -380,7 +358,7 @@ export default function App() {
                 <div className="dash-kpis">
                   {recoveryKpiCards.map((card) => (
                     <div className="dash-kpi-item" data-anim data-kpi-key={card.key} key={card.key}>
-                      <SearchResultBorder active={hit(card.keywords, searchTerm)}>
+                      <SearchResultBorder active={matchesSearchTerm(card.keywords, searchTerm)}>
                         <KpiCard
                           card={card}
                           onOpen={handleOpenCard}
@@ -393,7 +371,7 @@ export default function App() {
 
                 <div className={gridClassName}>
                   <div className="dash-cell dash-cell--trend" data-anim>
-                    <SearchResultBorder active={hit(PANEL_KEYWORDS.trend, searchTerm)}>
+                    <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.trend, searchTerm)}>
                       <MonthlyTrend channelKey={activeChannelKey} />
                     </SearchResultBorder>
                   </div>
@@ -401,12 +379,12 @@ export default function App() {
                     <div className="dash-finance-kpis">
                       {showOpeningMetrics && (
                         <div className="dash-finance-kpi-item dash-finance-kpi-item--openings" data-kpi-key="openings">
-                          <OpeningMetricCards onOpenSecondary={handleOpenCard} />
+                          <OpeningMetricCards searchTerm={searchTerm} onOpenSecondary={handleOpenCard} />
                         </div>
                       )}
                       {financeKpiCards.map((card) => (
                         <div className="dash-finance-kpi-item" data-kpi-key={card.key} key={card.key}>
-                          <SearchResultBorder active={hit(card.keywords, searchTerm)}>
+                          <SearchResultBorder active={matchesSearchTerm(card.keywords, searchTerm)}>
                             <KpiCard card={card} onOpen={handleOpenCard} />
                           </SearchResultBorder>
                         </div>
@@ -414,14 +392,14 @@ export default function App() {
                     </div>
                   </div>
                   <div className="dash-cell dash-cell--version" data-anim>
-                    <SearchResultBorder active={hit(PANEL_KEYWORDS.version, searchTerm)}>
+                    <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.version, searchTerm)}>
                       <VersionFinancePanel channelKey={activeChannelKey} />
                     </SearchResultBorder>
                   </div>
                 </div>
 
                 <div className="dash-delivery-row" data-anim>
-                  <SearchResultBorder active={hit(PANEL_KEYWORDS.delivery, searchTerm)}>
+                  <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.delivery, searchTerm)}>
                     <DeliveryPanel />
                   </SearchResultBorder>
                 </div>

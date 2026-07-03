@@ -3,6 +3,54 @@
  Update content: Assert the Vision Pro segmented semi-donut gauge redesign — thinner ring, larger pad gap, rounder caps, cold glass gradients, muted incomplete slice, restrained label weights and softer outer glow.
 */
 /*
+ 更新时间: 2026-07-03 11:34:16 CST
+ 更新内容: 要求主页回款卡目标名称与金额上下两行展示，符合首页换行需求。
+*/
+/*
+ 更新时间: 2026-07-03 11:30:51 CST
+ 更新内容: 要求主页回款卡目标名称与金额强制单行不换行。
+*/
+/*
+ 更新时间: 2026-07-03 11:34:48 CST
+ 更新内容: 要求主页回款卡目标数据保持单行不换行。
+*/
+/*
+ 更新时间: 2026-07-03 11:28:32 CST
+ 更新内容: 要求主页回款卡目标名称与金额恢复上下两行展示，防止被横排样式覆盖。
+*/
+/*
+ 更新时间: 2026-07-03 11:26:48 CST
+ 更新内容: 要求主页回款长卡完成率进度条收窄。
+*/
+/*
+ 更新时间: 2026-07-03 11:22:57 CST
+ 更新内容: 要求主页回款半环图背景恢复随完成率变色的柔光。
+*/
+/*
+ 更新时间: 2026-07-03 11:20:28 CST
+ 更新内容: 要求主页回款卡目标名称与金额单行展示，并保持文字块左移。
+*/
+/*
+ 更新时间: 2026-07-03 11:14:24 CST
+ 更新内容: 要求主页回款卡目标信息单行显示，并继续左移文字块。
+*/
+/*
+ 更新时间: 2026-07-03 11:13:02 CST
+ 更新内容: 要求主页回款卡月度/年度目标位于大数字下方，并突出目标金额字号。
+*/
+/*
+ 更新时间: 2026-07-03 11:11:42 CST
+ 更新内容: 要求主页回款长卡文字块左移，缩小半环图与文字间距。
+*/
+/*
+ 更新时间: 2026-07-03 11:17:34 CST
+ 更新内容: 要求主页回款目标名称与金额上下两行展示。
+*/
+/*
+ 更新时间: 2026-07-03 11:00:00 CST
+ 更新内容: 要求主页回款卡的月度/年度目标名称和金额分两行展示。
+*/
+/*
  Update time: 2026-07-03 10:24:55 CST
  Update content: Require recovery half-donut headers to omit the target and completed subtitle line.
 */
@@ -172,6 +220,8 @@ test('keeps recovery half-donut labels readable in the elongated card', () => {
   assert.match(cssSource, /justify-self:\s*start;/);
   assert.match(cssSource, /margin-left:\s*-18px;/);
   assert.match(cssSource, /min-height:\s*342px/);
+  assert.match(cssSource, /\.kpi-card__pie::before\s*\{[\s\S]*?radial-gradient\(ellipse at 50% 56%, color-mix\(in srgb, var\(--kpi-accent\) 42%, transparent\)[\s\S]*?filter:\s*blur\(22px\) saturate\(1\.18\);[\s\S]*?opacity:\s*\.74;/);
+  assert.match(cssSource, /\.kpi-card__pie-chart\s*\{[\s\S]*?z-index:\s*1;/);
   assert.match(cssSource, /@media \(max-width:760px\) \{[\s\S]*?\.kpi-card__pie\s*\{[\s\S]*?justify-self:\s*center;[\s\S]*?margin-left:\s*0;[\s\S]*?\}[\s\S]*?\.kpi-card__pie-head\s*\{[\s\S]*?transform:\s*none;/);
 });
 
@@ -185,7 +235,7 @@ test('allows the month recovery card to host the sales completion panel in the s
 });
 
 test('makes the recovery metric block larger and shifts it left inside the long card', () => {
-  assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__body\s*\{[\s\S]*?margin-left:\s*-24px;[\s\S]*?gap:\s*8px;/);
+  assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__body\s*\{[\s\S]*?margin-left:\s*-56px;[\s\S]*?gap:\s*8px;/);
   assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__title\s*\{[\s\S]*?font-size:\s*15px;[\s\S]*?font-weight:\s*600;/);
   assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__value\s*\{[\s\S]*?font-size:\s*clamp\(38px,\s*3\.2vw,\s*46px\);/);
   assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__sub,[\s\S]*?\.kpi-card--with-side \.kpi-card__progress-head,[\s\S]*?\.kpi-card--with-side \.kpi-card__hint\s*\{[\s\S]*?font-size:\s*15px;/);
@@ -193,14 +243,20 @@ test('makes the recovery metric block larger and shifts it left inside the long 
 });
 
 test('adds more room between recovery value row and completion progress in long cards', () => {
-  assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__progress\s*\{[\s\S]*?margin-top:\s*18px;/);
+  assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__progress\s*\{[\s\S]*?margin-top:\s*18px;[\s\S]*?width:\s*88%;/);
   assert.doesNotMatch(cssSource, /\.kpi-card__progress\s*\{[\s\S]*?margin-top:\s*(?:2[4-9]|[3-9]\d)px;/);
 });
 
-test('places the recovery target subtitle beside the large value on desktop only', () => {
-  assert.match(componentSource, /<div className="kpi-card__value-row">[\s\S]*?<div className="kpi-card__value">[\s\S]*?<NumberRoll value=\{displayValue\} suffix=\{suffix\} decimals=\{decimals\} \/>[\s\S]*?<\/div>[\s\S]*?\{card\.sub != null && <div className="kpi-card__sub">\{card\.sub\}<\/div>\}[\s\S]*?<\/div>/);
-  assert.match(cssSource, /@media \(min-width:761px\) \{[\s\S]*?\.kpi-card--recovery \.kpi-card__value-row\s*\{[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*baseline;[\s\S]*?gap:\s*12px;/);
-  assert.match(cssSource, /@media \(min-width:761px\) \{[\s\S]*?\.kpi-card--recovery \.kpi-card__value-row \.kpi-card__sub\s*\{[\s\S]*?white-space:\s*nowrap;[\s\S]*?font-size:\s*15px;/);
+test('places the recovery target label and amount on one unwrapped line below the large value', () => {
+  assert.match(componentSource, /function splitRecoveryTargetSub\(card\) \{[\s\S]*?const match = card\.sub\.match\(\/\^\(\\S\+目标\)\\s\+\(\.\+\)\$\/\);[\s\S]*?return match \? \{ label: match\[1\], value: match\[2\] \} : null;[\s\S]*?\}/);
+  assert.match(componentSource, /const recoveryTargetSub = splitRecoveryTargetSub\(card\);/);
+  assert.match(componentSource, /className=\{`kpi-card__sub\$\{recoveryTargetSub \? ' kpi-card__sub--target' : ''\}`\}/);
+  assert.match(componentSource, /<span className="kpi-card__sub-label">\{recoveryTargetSub\.label\}<\/span>[\s\S]*?<span className="kpi-card__sub-value">\{recoveryTargetSub\.value\}<\/span>/);
+  assert.match(cssSource, /@media \(min-width:761px\) \{[\s\S]*?\.kpi-card--recovery \.kpi-card__value-row\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;[\s\S]*?align-items:\s*flex-start;[\s\S]*?gap:\s*6px;/);
+  assert.match(cssSource, /\.kpi-card__sub--target\s*\{[\s\S]*?display:\s*inline-flex;[\s\S]*?flex:\s*0 0 auto;[\s\S]*?flex-direction:\s*row;[\s\S]*?flex-wrap:\s*nowrap;[\s\S]*?align-items:\s*baseline;[\s\S]*?gap:\s*5px;[\s\S]*?width:\s*max-content;[\s\S]*?max-width:\s*none;[\s\S]*?white-space:\s*nowrap;[\s\S]*?word-break:\s*keep-all;/);
+  assert.match(cssSource, /\.kpi-card__sub-label,\s*[\s\S]*?\.kpi-card__sub-value\s*\{[\s\S]*?display:\s*block;/);
+  assert.match(cssSource, /\.kpi-card__sub-value\s*\{[\s\S]*?font-size:\s*1\.1em;[\s\S]*?font-weight:\s*760;/);
+  assert.match(cssSource, /@media \(min-width:761px\) \{[\s\S]*?\.kpi-card--recovery \.kpi-card__value-row \.kpi-card__sub--target\s*\{[\s\S]*?line-height:\s*1\.18;/);
   assert.match(cssSource, /@media \(max-width:760px\) \{[\s\S]*?\.kpi-card--recovery \.kpi-card__value-row\s*\{[\s\S]*?display:\s*block;/);
 });
 
