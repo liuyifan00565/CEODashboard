@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:31:29 CST
+ Update content: Lock KPI progress bars to the graphite violet good gradient and rose risk gradient.
+*/
+/*
  Update time: 2026-07-03 17:54:12 CST
  Update content: Require KPI cards to use neutral dark glass and keep purple as chart/accent-only rather than broad card wash.
 */
@@ -224,7 +228,7 @@ test('adds a transparent unfinished slice at the right edge of the recovery half
 });
 
 test('uses muted chart accents without turning every recovery slice strong purple', () => {
-  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#6F66D8[\s\S]*?#9A93EA[\s\S]*?#C9C5F4[\s\S]*?#6EBBDA[\s\S]*?#95D1E7[\s\S]*?#C7D5E2[\s\S]*?#6172C8[\s\S]*?#8996D8[\s\S]*?#BBC4EA[\s\S]*?#6655B8[\s\S]*?#8D7DD2[\s\S]*?#B7ADE8[\s\S]*?\];/);
+  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#6F62D8[\s\S]*?#8B7CFF[\s\S]*?#D8D4FF[\s\S]*?#4E78C8[\s\S]*?#74A7FF[\s\S]*?#C8D9FF[\s\S]*?#4FA7A4[\s\S]*?#6DD6D2[\s\S]*?#BFEDEC[\s\S]*?#9B7A36[\s\S]*?#D7B56D[\s\S]*?#F0D99A[\s\S]*?\];/);
   assert.doesNotMatch(componentSource, /#6D28D9|#8B5CF6|#C084FC|#A855F7/);
   assert.doesNotMatch(componentSource, /#A7F3D0/);
   assert.doesNotMatch(componentSource, /#B7F3FF/);
@@ -256,7 +260,7 @@ test('uses the neutral dark glass card recipe without broad purple wash', () => 
 });
 
 test('uses darker completion progress gradients in the KPI ECharts bars', () => {
-  assert.match(componentSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?#E7436D[\s\S]*?#FF5F88[\s\S]*?#FF86A4[\s\S]*?#8173FF[\s\S]*?#AAA0FF[\s\S]*?#D4CEFF[\s\S]*?#A8E4FF[\s\S]*?\}/);
+  assert.match(componentSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?#B8334B[\s\S]*?#E85D75[\s\S]*?#FF8A9A[\s\S]*?#8B7CFF[\s\S]*?#AFA6FF[\s\S]*?#D8D4FF[\s\S]*?#8BD7FF[\s\S]*?\}/);
 });
 
 test('keeps recovery half-donut labels readable in the elongated card', () => {

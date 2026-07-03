@@ -3,6 +3,10 @@
  更新内容: 移除全屏 Color Bends 动态背景，改由 CSS 静态深石墨网格/点阵/噪声背景承载驾驶舱。
 */
 /*
+ 更新时间: 2026-07-03 18:19:59 CST
+ 更新内容: 将 Color Bends 与品牌 logo 高光同步为黑曜石月光紫配色，配合全站高级配色落地。
+*/
+/*
  更新时间: 2026-07-03 17:55:10 CST
  更新内容: 将 Color Bends 配色从强紫光束改为中性深色带加少量低饱和靛紫强调，落实紫色面积不超过 15% 的规则。
 */
@@ -327,7 +331,7 @@ export default function App() {
                     fresnel={1.2}
                     lightColor="#ffffff"
                     darkColor="#050505"
-                    tintColor="#d7fbff"
+                    tintColor="#f0d99a"
                     chromaticSpread={1.8}
                     distortion={0.75}
                     contour={0.28}

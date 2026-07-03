@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:19:59 CST
+ 更新内容: 算力页图表色板收敛到月光紫、冷蓝、青玉、香槟金与风险玫红，移除强霓虹青/洋红。
+*/
+/*
  更新时间: 2026-07-03 17:53:00 CST
  更新内容: 算力环图色板同步为首页半环图统一紫蓝色阶，保持同类图表视觉语言一致。
 */
@@ -58,14 +62,14 @@ const CUSTOMER_COLUMN_FILTERS = [
 const CUSTOMER_PAGE_SIZE_OPTIONS = [10, 20, 50, 100, 200, 500];
 const DEFAULT_CUSTOMER_PAGE_SIZE = 20;
 const COMPUTE_RING_COLORS = [
-  '#8F95FF',
-  '#C8CEFF',
-  '#8173FF',
-  '#AAA0FF',
-  'rgba(160, 170, 210, .16)',
-  '#9B94FF',
-  '#6D5AD7',
-  '#D9D4FF',
+  '#8B7CFF',
+  '#74A7FF',
+  '#6DD6D2',
+  '#D7B56D',
+  'rgba(148, 163, 184, .18)',
+  '#AFA6FF',
+  '#6F62D8',
+  '#D8D4FF',
 ];
 const COMPUTE_VERSION_RIGHT_LABEL_SLOTS = {
   '试用版': -82,
@@ -293,8 +297,8 @@ function buildTrendOption({ trend, tokens }) {
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
   const usageColor = tokens.chartBar;
-  const usagePeakLineColor = '#f000ff';
-  const usagePeakLabelColor = '#f8f4ff';
+  const usagePeakLineColor = '#D7B56D';
+  const usagePeakLabelColor = '#F7F8FC';
   const maxUsage = Math.max(...usage);
   const usagePeakLineData = usage.map((value) => ({
     value,
@@ -355,22 +359,22 @@ function buildTrendOption({ trend, tokens }) {
         maxValueSpan,
         zoomLock: false,
         realtime: true,
-        borderColor: 'rgba(192,132,252,.32)',
+        borderColor: 'rgba(139,124,255,.32)',
         backgroundColor: 'rgba(255,255,255,.045)',
-        fillerColor: 'rgba(244,114,182,.26)',
+        fillerColor: 'rgba(215,181,109,.22)',
         handleStyle: {
-          color: 'rgba(252,231,243,.88)',
-          borderColor: 'rgba(244,114,182,.8)',
+          color: 'rgba(240,217,154,.9)',
+          borderColor: 'rgba(215,181,109,.82)',
           shadowBlur: 16,
-          shadowColor: 'rgba(192,132,252,.56)',
+          shadowColor: 'rgba(215,181,109,.45)',
         },
         dataBackground: {
           lineStyle: { color: 'rgba(255,255,255,.16)' },
           areaStyle: { color: 'rgba(255,255,255,.04)' },
         },
         selectedDataBackground: {
-          lineStyle: { color: 'rgba(244,114,182,.46)' },
-          areaStyle: { color: 'rgba(192,132,252,.1)' },
+          lineStyle: { color: 'rgba(215,181,109,.44)' },
+          areaStyle: { color: 'rgba(139,124,255,.09)' },
         },
         showDetail: false,
         brushSelect: false,
@@ -430,13 +434,13 @@ function buildTrendOption({ trend, tokens }) {
         symbolSize: 7,
         showSymbol: true,
         z: 4,
-        lineStyle: { color: usagePeakLineColor, width: 2.4, shadowBlur: 14, shadowColor: 'rgba(240,0,255,.5)' },
+        lineStyle: { color: usagePeakLineColor, width: 2.4, shadowBlur: 14, shadowColor: 'rgba(215,181,109,.38)' },
         itemStyle: {
           color: usagePeakLineColor,
           borderColor: '#ffffff',
           borderWidth: 2,
           shadowBlur: 12,
-          shadowColor: 'rgba(240,0,255,.48)',
+          shadowColor: 'rgba(215,181,109,.38)',
         },
         emphasis: {
           scale: true,
@@ -473,7 +477,7 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
   const txt = tokens.chartText;
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
-  const capacityColor = '#38f5ff';
+  const capacityColor = '#74A7FF';
 
   return {
     backgroundColor: 'transparent',
@@ -517,22 +521,22 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
         maxValueSpan,
         zoomLock: false,
         realtime: true,
-        borderColor: 'rgba(56,245,255,.34)',
+        borderColor: 'rgba(116,167,255,.34)',
         backgroundColor: 'rgba(255,255,255,.045)',
-        fillerColor: 'rgba(56,245,255,.24)',
+        fillerColor: 'rgba(116,167,255,.22)',
         handleStyle: {
-          color: 'rgba(224,252,255,.9)',
-          borderColor: 'rgba(56,245,255,.82)',
+          color: 'rgba(200,217,255,.9)',
+          borderColor: 'rgba(116,167,255,.82)',
           shadowBlur: 16,
-          shadowColor: 'rgba(56,245,255,.5)',
+          shadowColor: 'rgba(116,167,255,.42)',
         },
         dataBackground: {
           lineStyle: { color: 'rgba(255,255,255,.16)' },
           areaStyle: { color: 'rgba(255,255,255,.04)' },
         },
         selectedDataBackground: {
-          lineStyle: { color: 'rgba(56,245,255,.45)' },
-          areaStyle: { color: 'rgba(56,245,255,.08)' },
+          lineStyle: { color: 'rgba(116,167,255,.45)' },
+          areaStyle: { color: 'rgba(116,167,255,.08)' },
         },
         showDetail: false,
         brushSelect: false,
@@ -540,7 +544,7 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
     ] : [],
     tooltip: {
       trigger: 'axis',
-      axisPointer: { type: 'line', lineStyle: { color: 'rgba(56,245,255,.34)', width: 1 } },
+      axisPointer: { type: 'line', lineStyle: { color: 'rgba(116,167,255,.34)', width: 1 } },
       appendToBody: true,
       confine: true,
       backgroundColor: 'rgba(0,0,0,.72)',
@@ -580,7 +584,7 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
         smooth: true,
         symbol: 'circle',
         symbolSize: 7,
-        lineStyle: { color: capacityColor, width: 2.4, shadowBlur: 10, shadowColor: 'rgba(56,245,255,.36)' },
+        lineStyle: { color: capacityColor, width: 2.4, shadowBlur: 10, shadowColor: 'rgba(116,167,255,.34)' },
         itemStyle: { color: capacityColor, borderColor: 'rgba(239,251,255,.88)', borderWidth: 1.5 },
         areaStyle: {
           color: {
@@ -590,9 +594,9 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
             x2: 0,
             y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(56,245,255,.32)' },
-              { offset: .55, color: 'rgba(56,245,255,.12)' },
-              { offset: 1, color: 'rgba(56,245,255,.015)' },
+              { offset: 0, color: 'rgba(116,167,255,.30)' },
+              { offset: .55, color: 'rgba(116,167,255,.11)' },
+              { offset: 1, color: 'rgba(116,167,255,.015)' },
             ],
           },
         },

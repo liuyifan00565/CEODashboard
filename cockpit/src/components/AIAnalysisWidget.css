@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:19:59 CST
+ 更新内容: AI 小人和气泡发光同步为月光紫、冷蓝与香槟金弱光，去除旧粉蓝霓虹。
+*/
+/*
  更新时间: 2026-07-02 16:25:43 CST
  更新内容: 保持左下角 AI 小人入口小尺寸，恢复原亮度和动作发光强度。
 */
@@ -36,17 +40,17 @@
 }
 
 .ai-orb:focus-visible .mascot-3d-stage {
-  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, .4)) drop-shadow(0 0 26px rgba(192, 132, 252, .62));
+  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, .4)) drop-shadow(0 0 26px rgba(139, 124, 255, .56));
 }
 
 .ai-orb--wave .mascot-3d-stage {
-  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, .42)) drop-shadow(0 0 22px rgba(56, 189, 248, .5));
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, .42)) drop-shadow(0 0 22px rgba(116, 167, 255, .44));
 }
 
 .ai-orb--think .mascot-3d-stage,
 .ai-orb--talk .mascot-3d-stage,
 .ai-orb--click .mascot-3d-stage {
-  filter: drop-shadow(0 22px 34px rgba(0, 0, 0, .42)) drop-shadow(0 0 24px rgba(56, 189, 248, .42)) drop-shadow(0 0 32px rgba(192, 132, 252, .3));
+  filter: drop-shadow(0 22px 34px rgba(0, 0, 0, .42)) drop-shadow(0 0 24px rgba(116, 167, 255, .38)) drop-shadow(0 0 32px rgba(139, 124, 255, .28));
 }
 
 .ai-orb--alert .mascot-3d-stage {
@@ -54,7 +58,7 @@
 }
 
 .ai-orb--celebrate .mascot-3d-stage {
-  filter: drop-shadow(0 22px 32px rgba(0, 0, 0, .44)) drop-shadow(0 0 28px rgba(244, 114, 182, .5));
+  filter: drop-shadow(0 22px 32px rgba(0, 0, 0, .44)) drop-shadow(0 0 28px rgba(215, 181, 109, .42));
 }
 
 .ai-bubble {
@@ -117,7 +121,7 @@
   }
 
   50% {
-    box-shadow: 0 20px 38px rgba(0, 0, 0, .3), 0 0 24px rgba(114, 77, 255, .18), inset 0 1px 0 rgba(255, 255, 255, .16);
+    box-shadow: 0 20px 38px rgba(0, 0, 0, .3), 0 0 24px rgba(139, 124, 255, .18), inset 0 1px 0 rgba(255, 255, 255, .16);
   }
 }
 

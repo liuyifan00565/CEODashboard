@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:19:59 CST
+ 更新内容: 边缘流光默认色同步为月光紫、香槟金与冷蓝高级配色。
+*/
+/*
  更新时间: 2026-06-24 22:42:00
  更新内容: 新增 ReactBits BorderGlow 组件，用于 AI 对话卡片边缘辉光。
 */
@@ -76,7 +80,7 @@ const BorderGlow = ({
   glowIntensity = 1,
   coneSpread = 25,
   animated = false,
-  colors = ['#c084fc', '#f472b6', '#38bdf8'],
+  colors = ['#8B7CFF', '#D7B56D', '#74A7FF'],
   fillOpacity = 0.5,
 }) => {
   const cardRef = useRef(null);

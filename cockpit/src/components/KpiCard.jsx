@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 将 KPI 完成率 80% 以下、缺口与趋势芯片统一接入风险色语义，并同步高级紫蓝图表色板。 */
 /* 更新时间: 2026-07-03 17:55:26 CST  更新内容: 回款半环图渠道色改为低饱和紫/蓝/灰蓝组合，避免四个扇区全部占用强紫视觉面积。 */
 /* 更新时间: 2026-07-03 17:53:00 CST  更新内容: 回款半环图改为统一紫蓝色阶，通过明度和深浅区分四个渠道，去除跳脱青色和高饱和糖果紫。 */
 /* Update time: 2026-07-03 16:51:07 CST  Update content: Deepen KPI warning ECharts progress bars from light pink to bright rose red. */
@@ -19,16 +20,16 @@ import * as echarts from 'echarts';
 import NumberRoll from './NumberRoll';
 import EChart from './EChart';
 import { CHANNELS } from '../data/mock';
-import { fmtDelta, deltaColor, progressColor } from '../lib/format';
+import { fmtDelta, deltaColor, progressColor, riskAdjustedDelta, isRiskCompletion } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './KpiCard.css';
 
 // 分段半环仪表盘：保留低饱和品牌强调，避免四个渠道全部成为强紫色块。
 const CHANNEL_PIE_GRADIENTS = [
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6F66D8' }, { offset: 0.55, color: '#9A93EA' }, { offset: 1, color: '#C9C5F4' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6EBBDA' }, { offset: 0.58, color: '#95D1E7' }, { offset: 1, color: '#C7D5E2' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6172C8' }, { offset: 0.58, color: '#8996D8' }, { offset: 1, color: '#BBC4EA' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6655B8' }, { offset: 0.56, color: '#8D7DD2' }, { offset: 1, color: '#B7ADE8' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6F62D8' }, { offset: 0.55, color: '#8B7CFF' }, { offset: 1, color: '#D8D4FF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#4E78C8' }, { offset: 0.58, color: '#74A7FF' }, { offset: 1, color: '#C8D9FF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#4FA7A4' }, { offset: 0.58, color: '#6DD6D2' }, { offset: 1, color: '#BFEDEC' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#9B7A36' }, { offset: 0.56, color: '#D7B56D' }, { offset: 1, color: '#F0D99A' }] },
 ];
 const CHANNEL_PERCENT_COLORS = ['#ffffff', '#ffffff', '#ffffff', '#ffffff'];
 const CHANNEL_PIE_LABELS = { south: '线下华南', east: '线下华东' };
@@ -125,27 +126,21 @@ function recoveryPieTooltipPosition(point, params, dom, rect, size) {
 }
 
 function progressBarColor(pct, tokens) {
+  void tokens;
   const value = Number(pct) || 0;
-  if (value < 60) {
-    return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-      { offset: 0, color: '#E7436D' },
-      { offset: 0.58, color: '#FF5F88' },
-      { offset: 1, color: '#FF86A4' },
-    ]);
-  }
-
   if (value < 80) {
     return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-      { offset: 0, color: tokens.progressMid },
-      { offset: 1, color: '#C9C2FF' },
+      { offset: 0, color: '#B8334B' },
+      { offset: 0.58, color: '#E85D75' },
+      { offset: 1, color: '#FF8A9A' },
     ]);
   }
 
   return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-    { offset: 0, color: '#8173FF' },
-    { offset: 0.56, color: '#AAA0FF' },
-    { offset: 0.88, color: '#D4CEFF' },
-    { offset: 1, color: '#A8E4FF' },
+    { offset: 0, color: '#8B7CFF' },
+    { offset: 0.56, color: '#AFA6FF' },
+    { offset: 0.88, color: '#D8D4FF' },
+    { offset: 1, color: '#8BD7FF' },
   ]);
 }
 
@@ -355,6 +350,7 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
   const hasProgress = card.progress != null;
   const recoveryAccent = hasProgress ? progressColor(card.progress, tokens.progressMid) : tokens.chartBar;
   const recoveryTargetSub = splitRecoveryTargetSub(card);
+  const metaDelta = riskAdjustedDelta(card);
 
   const cardContent = (
     <>
@@ -390,16 +386,16 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
       )}
 
       <div className="kpi-card__meta">
-        {card.delta != null && (
+        {metaDelta != null && (
           <span
             className="kpi-card__chip"
-            style={{ color: deltaColor(card.delta), borderColor: deltaColor(card.delta) }}
+            style={{ color: deltaColor(metaDelta), borderColor: deltaColor(metaDelta) }}
           >
-            {fmtDelta(card.delta)}
+            {fmtDelta(metaDelta)}
           </span>
         )}
         {card.gap != null && (
-          <span className="kpi-card__gap">缺口 {card.gap} 万</span>
+          <span className={`kpi-card__gap${isRiskCompletion(card.progress) ? ' kpi-card__gap--risk' : ''}`}>缺口 {card.gap} 万</span>
         )}
       </div>
 

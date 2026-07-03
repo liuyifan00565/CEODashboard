@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:19:59 CST
+ Update content: Align fallback chart tokens with the obsidian violet/champagne palette and risk color semantics.
+*/
+/*
  Update time: 2026-07-03 15:33:00 CST
  Update content: Align fallback chart and progress colors with the cold-purple Apple/Vision Pro palette.
 */
@@ -14,21 +18,21 @@ import { useEffect, useState } from 'react';
 
 const FALLBACK_TOKENS = {
   theme: 'dark',
-  text: '#F8F7FF',
-  muted: '#E7E2FF',
-  faint: 'rgba(231,226,255,.66)',
-  chartText: '#F8F7FF',
-  chartMuted: '#E7E2FF',
-  chartGrid: 'rgba(201,194,255,.09)',
-  chartAxis: 'rgba(231,226,255,.38)',
-  chartBar: 'rgba(201,194,255,.9)',
-  chartBarMuted: 'rgba(167,156,255,.42)',
-  chartBarFaint: 'rgba(160,170,210,.16)',
-  chartTooltipBg: 'rgba(7,10,18,.88)',
-  chartTooltipBorder: 'rgba(255,255,255,.14)',
-  chartPointer: 'rgba(201,194,255,.055)',
-  chartPointBorder: '#070A12',
-  progressMid: '#E7E2FF',
+  text: '#F7F8FC',
+  muted: '#B9C2D4',
+  faint: 'rgba(185,194,212,.62)',
+  chartText: '#F7F8FC',
+  chartMuted: '#B9C2D4',
+  chartGrid: 'rgba(218,226,255,.085)',
+  chartAxis: 'rgba(218,226,255,.34)',
+  chartBar: 'rgba(139,124,255,.88)',
+  chartBarMuted: 'rgba(175,166,255,.38)',
+  chartBarFaint: 'rgba(148,163,184,.18)',
+  chartTooltipBg: 'rgba(6,9,20,.9)',
+  chartTooltipBorder: 'rgba(218,226,255,.16)',
+  chartPointer: 'rgba(139,124,255,.07)',
+  chartPointBorder: '#060914',
+  progressMid: '#E85D75',
 };
 
 function cssVar(styles, name, fallback) {

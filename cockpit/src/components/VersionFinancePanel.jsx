@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 版本情况半环同步黑曜石月光紫色板，加入冷蓝、青玉、香槟层级。 */
 /* 更新时间: 2026-07-03 15:39:00 CST  更新内容: 版本情况半环图表改为低饱和冷紫品牌渐变，去除旧青蓝/薄荷混色。 */
 /* 更新时间: 2026-07-03 11:28:32 CST  更新内容: 精准调整版本情况半环图水平中心，使图形对称轴对齐数量/金额切换按钮。 */
 /* 更新时间: 2026-07-03 11:17:34 CST  更新内容: 版本情况半环图右移，使图形对称轴靠近数量/金额切换按钮。 */
@@ -27,10 +28,10 @@ const VERSION_DETAIL_MODES = [
   { value: 'count', label: '套数', field: 'units', unit: '套' },
 ];
 const VERSION_RING_COLORS = [
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8F86FF' }, { offset: 1, color: '#C9C2FF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#7C6CFF' }, { offset: 1, color: '#A79CFF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#9EDCFF' }, { offset: 1, color: '#C9C2FF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6E62D8' }, { offset: 1, color: '#A79CFF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8B7CFF' }, { offset: 1, color: '#D8D4FF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#74A7FF' }, { offset: 1, color: '#C8D9FF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6DD6D2' }, { offset: 1, color: '#BFEDEC' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#D7B56D' }, { offset: 1, color: '#F0D99A' }] },
 ];
 const SALES_FILTER_OPTS = [
   { value: 'online', label: '线上' },

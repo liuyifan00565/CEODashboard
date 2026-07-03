@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:31:29 CST
+ Update content: Align compute and search-highlight visual guardrails with the graphite violet champagne palette.
+*/
+/*
  Update time: 2026-07-03 17:54:18 CST
  Update content: Require dashboard and compute cards to use the neutral dark glass recipe instead of transparent purple glass.
 */
@@ -204,14 +208,14 @@ test('keeps only compute usage in the compute trend chart with clear non-fluores
   assert.match(computePageSource, /textStyle:\s*\{[\s\S]*?color:\s*txt,[\s\S]*?fontSize:\s*18,[\s\S]*?fontWeight:\s*850,[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.55\)',[\s\S]*?textShadowBlur:\s*8,[\s\S]*?\}/);
   assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'bar'/);
   assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'line'[\s\S]*?smooth:\s*true[\s\S]*?symbol:\s*'circle'[\s\S]*?symbolSize:\s*7/);
-  assert.match(computePageSource, /const usagePeakLineColor = '#f000ff';/);
-  assert.match(computePageSource, /const usagePeakLabelColor = '#f8f4ff';/);
+  assert.match(computePageSource, /const usagePeakLineColor = '#D7B56D';/);
+  assert.match(computePageSource, /const usagePeakLabelColor = '#F7F8FC';/);
   assert.match(computePageSource, /const maxUsage = Math\.max\(\.\.\.usage\);/);
   assert.match(computePageSource, /const usagePeakLineData = usage\.map\(\(value\) => \(\{/);
   assert.match(computePageSource, /label:\s*\{[\s\S]*?show:\s*true[\s\S]*?color:\s*usagePeakLabelColor,[\s\S]*?fontWeight:\s*780,[\s\S]*?formatter:\s*\(params\) => formatWan\(params\.value\)[\s\S]*?textBorderColor:\s*'rgba\(13,0,22,\.82\)'[\s\S]*?textBorderWidth:\s*2[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.82\)'[\s\S]*?textShadowBlur:\s*6/);
   assert.doesNotMatch(computePageSource, /label:\s*value === maxUsage \?/);
   assert.doesNotMatch(computePageSource, /textShadowColor:\s*'rgba\(255,74,255,\.78\)'/);
-  assert.match(computePageSource, /lineStyle:\s*\{ color: usagePeakLineColor, width: 2\.4[\s\S]*?shadowBlur: 14[\s\S]*?shadowColor: 'rgba\(240,0,255,\.5\)'/);
+  assert.match(computePageSource, /lineStyle:\s*\{ color: usagePeakLineColor, width: 2\.4[\s\S]*?shadowBlur: 14[\s\S]*?shadowColor: 'rgba\(215,181,109,\.38\)'/);
   assert.match(computePageSource, /itemStyle:\s*\{[\s\S]*?color:\s*usagePeakLineColor,[\s\S]*?borderColor:\s*'#ffffff'/);
   assert.match(computePageSource, /barCategoryGap:\s*'42%'/);
   assert.doesNotMatch(computePageSource, /目标用量/);
@@ -563,9 +567,9 @@ test('uses full-width compute trend sliders that resize from 3 to 15 bars', () =
   assert.doesNotMatch(computePageSource, /sliderWindowSpan/);
   assert.doesNotMatch(computePageSource, /zoomLock:\s*true/);
   assert.match(computePageSource, /realtime:\s*true/);
-  assert.match(computePageSource, /borderColor:\s*'rgba\(192,132,252,\.32\)'/);
-  assert.match(computePageSource, /fillerColor:\s*'rgba\(244,114,182,\.26\)'/);
-  assert.match(computePageSource, /shadowColor:\s*'rgba\(192,132,252,\.56\)'/);
+  assert.match(computePageSource, /borderColor:\s*'rgba\(139,124,255,\.32\)'/);
+  assert.match(computePageSource, /fillerColor:\s*'rgba\(215,181,109,\.22\)'/);
+  assert.match(computePageSource, /shadowColor:\s*'rgba\(215,181,109,\.45\)'/);
   assert.match(computePageSource, /shadowBlur:\s*16/);
   assert.match(computePageSource, /className="cpu-trend-echart"/);
   assert.match(computePageCss, /\.cpu-trend-chart \{[\s\S]*?position:\s*relative;/);
@@ -584,7 +588,7 @@ test('uses full-width compute trend sliders that resize from 3 to 15 bars', () =
 
 test('adds a linked full-width compute capacity trend card below usage trend', () => {
   assert.match(computePageSource, /function buildCapacityTrendOption\(\{ trend, tokens, totalCapacity \}\)/);
-  assert.match(computePageSource, /const capacityColor = '#38f5ff';/);
+  assert.match(computePageSource, /const capacityColor = '#74A7FF';/);
   assert.match(computePageSource, /capacity:\s*point\.capacity \?\? 0/);
   assert.match(computePageSource, /const latestCapacityBase = buckets\[0\]\?\.capacity \|\| 1;/);
   assert.match(computePageSource, /const capacityScale = totalCapacity \/ latestCapacityBase;/);
@@ -598,9 +602,9 @@ test('adds a linked full-width compute capacity trend card below usage trend', (
   assert.match(computePageSource, /className="cpu-capacity-echart"/);
   assert.match(computePageSource, /option=\{capacityTrendOption\}/);
   assert.match(computePageSource, /name:\s*'算力总容量'[\s\S]*?type:\s*'line'[\s\S]*?smooth:\s*true[\s\S]*?areaStyle:/);
-  assert.match(computePageSource, /fillerColor:\s*'rgba\(56,245,255,\.24\)'/);
-  assert.match(computePageSource, /borderColor:\s*'rgba\(56,245,255,\.34\)'/);
-  assert.match(computePageSource, /shadowColor:\s*'rgba\(56,245,255,\.5\)'/);
+  assert.match(computePageSource, /fillerColor:\s*'rgba\(116,167,255,\.22\)'/);
+  assert.match(computePageSource, /borderColor:\s*'rgba\(116,167,255,\.34\)'/);
+  assert.match(computePageSource, /shadowColor:\s*'rgba\(116,167,255,\.42\)'/);
   assert.match(computePageCss, /\.cpu-panel--capacity-trend \{[\s\S]*?grid-area:\s*capacity;[\s\S]*?min-height:\s*430px;/);
   assert.match(computePageCss, /\.cpu-capacity-chart \{[\s\S]*?min-height:\s*300px;/);
   assert.match(computePageCss, /\.cpu-capacity-echart \{[\s\S]*?height:\s*100% !important;/);
@@ -661,7 +665,7 @@ test('keeps compute pie labels and tooltip cards readable around donut charts', 
 });
 
 test('uses the overview half-ring palette for compute donut charts', () => {
-  assert.match(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#8F95FF'[\s\S]*?'#C8CEFF'[\s\S]*?'#8173FF'[\s\S]*?'#AAA0FF'[\s\S]*?'rgba\(160, 170, 210, \.16\)'[\s\S]*?'#9B94FF'[\s\S]*?'#6D5AD7'[\s\S]*?'#D9D4FF'/);
+  assert.match(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#8B7CFF'[\s\S]*?'#74A7FF'[\s\S]*?'#6DD6D2'[\s\S]*?'#D7B56D'[\s\S]*?'rgba\(148, 163, 184, \.18\)'[\s\S]*?'#AFA6FF'[\s\S]*?'#6F62D8'[\s\S]*?'#D8D4FF'/);
   assert.doesNotMatch(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#9EDCFF'[\s\S]*?\];/);
   assert.match(computePageSource, /function applyComputeRingPalette\(data\)/);
   assert.match(computePageSource, /sort\(\(a, b\) => b\.value - a\.value\)/);
@@ -819,7 +823,7 @@ test('uses ElectricBorder for search result highlighting instead of HighlightBea
   assert.match(appSource, /<SearchResultBorder active=\{matchesSearchTerm\(card\.keywords,\s*searchTerm\)\}>/);
   assert.match(searchResultBorderSource, /data-search-match="true"/);
   assert.match(searchResultBorderSource, /aria-label="搜索命中结果"/);
-  assert.match(searchResultBorderSource, /<ElectricBorder[\s\S]*?color="#7C6CFF"[\s\S]*?speed=\{1\}[\s\S]*?chaos=\{0\.12\}[\s\S]*?thickness=\{2\}/);
+  assert.match(searchResultBorderSource, /<ElectricBorder[\s\S]*?color="#8B7CFF"[\s\S]*?speed=\{1\}[\s\S]*?chaos=\{0\.12\}[\s\S]*?thickness=\{2\}/);
   assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\]/);
 });
 

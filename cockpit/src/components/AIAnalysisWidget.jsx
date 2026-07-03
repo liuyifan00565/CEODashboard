@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:19:59 CST
+ 更新内容: AI 分析弹窗边缘流光同步为月光紫、香槟金与冷蓝配色，移除粉紫/天蓝霓虹感。
+*/
+/*
  更新时间: 2026-07-02 16:52:00 CST
  更新内容: AI 分析弹窗关闭按钮改用统一 AppIcon 线性图标。
 */
@@ -546,7 +550,7 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
             glowIntensity={2.2}
             coneSpread={25}
             animated
-            colors={['#c084fc', '#f472b6', '#38bdf8']}
+            colors={['#8B7CFF', '#D7B56D', '#74A7FF']}
           >
             <section className="ai-card-inner" aria-label="AI 分析对话框">
               <header className="ai-card-head">
@@ -577,7 +581,7 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
                           text="正在分析页面经营数据..."
                           speed={2}
                           delay={0}
-                          color="#8a8892"
+                          color="#B9C2D4"
                           shineColor="#ffffff"
                           spread={120}
                           direction="left"

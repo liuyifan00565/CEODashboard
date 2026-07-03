@@ -1,3 +1,4 @@
+/* Update time: 2026-07-03 18:19:59 CST  Update content: Add explicit risk styling for KPI gaps when completion is below 80 percent. */
 /* Update time: 2026-07-03 17:55:18 CST  Update content: Replace strong purple KPI glass with neutral dark card glass and reduce recovery accent glow area. */
 /* Update time: 2026-07-03 15:36:00 CST  Update content: Tune KPI cards to cold-purple translucent glass, softer hover lift, and restrained Vision Pro environment glow. */
 /* 更新时间: 2026-07-03 11:34:48 CST  更新内容: 按最新要求保持回款卡目标数据单行不换行。 */
@@ -438,6 +439,11 @@
   font-weight: 600;
   color: var(--warn);
   text-shadow: 0 0 12px rgba(var(--warn-rgb), .32);
+}
+
+.kpi-card__gap--risk {
+  color: var(--warn);
+  text-shadow: 0 0 14px rgba(var(--warn-rgb), .38);
 }
 
 .kpi-card--with-side .kpi-card__chip,

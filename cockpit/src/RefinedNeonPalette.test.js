@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:31:29 CST
+ Update content: Align palette guardrails with the graphite violet champagne theme and the 80 percent risk-color rule.
+*/
+/*
  Update time: 2026-07-03 18:24:14 CST
  Update content: Require the dashboard background to use a restrained graphite grid/dot/noise system instead of Color Bends.
 */
@@ -87,38 +91,39 @@ function darkThemeBlock() {
   return match.groups.body;
 }
 
-test('uses the cold purple Apple Vision Pro semantic accents', () => {
+test('uses the graphite violet champagne semantic accents', () => {
   const block = darkThemeBlock();
 
-  assert.match(block, /--brand-purple:#7C6CFF;/);
-  assert.match(block, /--brand-purple-2:#8F86FF;/);
-  assert.match(block, /--brand-purple-3:#A79CFF;/);
-  assert.match(block, /--brand-lavender:#C9C2FF;/);
-  assert.match(block, /--brand-mist:#E7E2FF;/);
-  assert.match(block, /--brand-ice:#9EDCFF;/);
-  assert.match(block, /--up:#A79CFF;/);
-  assert.match(block, /--down:#9EDCFF;/);
-  assert.match(block, /--good:#8173FF;/);
-  assert.match(block, /--warn:#FF5F88;/);
-  assert.match(block, /--up-rgb:167,156,255;/);
-  assert.match(block, /--down-rgb:158,220,255;/);
-  assert.match(block, /--good-rgb:129,115,255;/);
-  assert.match(block, /--warn-rgb:255,95,136;/);
-  assert.match(block, /--bar-good:linear-gradient\(90deg,#8173FF 0%,#AAA0FF 56%,#D4CEFF 88%,#A8E4FF 100%\);/);
-  assert.match(block, /--bar-warn:linear-gradient\(90deg,#E7436D 0%,#FF5F88 58%,#FF86A4 100%\);/);
+  assert.match(block, /--brand-purple:#8B7CFF;/);
+  assert.match(block, /--brand-purple-2:#AFA6FF;/);
+  assert.match(block, /--brand-purple-3:#D8D4FF;/);
+  assert.match(block, /--brand-lavender:#D8D4FF;/);
+  assert.match(block, /--brand-mist:#F7F8FC;/);
+  assert.match(block, /--brand-ice:#8BD7FF;/);
+  assert.match(block, /--accent-gold:#D7B56D;/);
+  assert.match(block, /--up:#AFA6FF;/);
+  assert.match(block, /--down:#E85D75;/);
+  assert.match(block, /--good:#8B7CFF;/);
+  assert.match(block, /--warn:#E85D75;/);
+  assert.match(block, /--up-rgb:175,166,255;/);
+  assert.match(block, /--down-rgb:232,93,117;/);
+  assert.match(block, /--good-rgb:139,124,255;/);
+  assert.match(block, /--warn-rgb:232,93,117;/);
+  assert.match(block, /--bar-good:linear-gradient\(90deg,#8B7CFF 0%,#AFA6FF 54%,#D8D4FF 82%,#8BD7FF 100%\);/);
+  assert.match(block, /--bar-warn:linear-gradient\(90deg,#B8334B 0%,#E85D75 58%,#FF8A9A 100%\);/);
 
-  assert.equal(COLOR.up, '#A79CFF');
-  assert.equal(COLOR.down, '#9EDCFF');
-  assert.equal(COLOR.good, '#8173FF');
-  assert.equal(COLOR.warn, '#FF5F88');
+  assert.equal(COLOR.up, '#AFA6FF');
+  assert.equal(COLOR.down, '#E85D75');
+  assert.equal(COLOR.good, '#8B7CFF');
+  assert.equal(COLOR.warn, '#E85D75');
 });
 
-test('keeps 70 percent progress as cool white lavender instead of saturated blue', () => {
+test('treats 70 percent progress as risk rose instead of mid-tone lavender', () => {
   const block = darkThemeBlock();
 
-  assert.match(block, /--progress-mid:#E7E2FF;/);
-  assert.match(themeSource, /progressMid:\s*'#E7E2FF'/);
-  assert.equal(progressColor(70, '#E7E2FF'), '#E7E2FF');
+  assert.match(block, /--progress-mid:#E85D75;/);
+  assert.match(themeSource, /progressMid:\s*'#E85D75'/);
+  assert.equal(progressColor(70, '#E85D75'), '#E85D75');
   assert.match(kpiSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?new echarts\.graphic\.LinearGradient/);
   assert.match(kpiSource, /const labelColor = progressColor\(pct, tokens\.progressMid\);[\s\S]*?itemStyle:\s*\{ color: progressBarColor\(pct, tokens\), borderRadius: 5, shadowBlur: 6, shadowColor: labelColor \}/);
 });

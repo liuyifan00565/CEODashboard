@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:19:59 CST
+ 更新内容: 电流边框默认色同步为月光紫主品牌色，避免旧高饱和紫回落。
+*/
+/*
  Update time: 2026-07-02 17:18:50 CST
  Update content: Allow ElectricBorder to pass search navigation data and aria attributes to its root node.
 */
@@ -11,7 +15,7 @@ import './ElectricBorder.css';
 
 const ElectricBorder = ({
   children,
-  color = '#5227FF',
+  color = '#8B7CFF',
   speed = 1,
   chaos = 0.12,
   thickness = 2,

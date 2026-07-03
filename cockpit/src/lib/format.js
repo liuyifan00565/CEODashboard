@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:19:59 CST
+ Update content: Rebase dashboard semantic colors on obsidian violet/champagne and make sub-80 completion, gaps, and falling deltas use risk styling.
+*/
+/*
  Update time: 2026-07-03 16:51:07 CST
  Update content: Deepen KPI warning completion colors from light pink to bright rose red.
 */
@@ -39,35 +43,43 @@
  更新内容: 完成率中档颜色支持由主题传入，避免白色主题下 60-80 完成率文字不可读。
 */
 export const COLOR = {
-  up: '#A79CFF',
-  down: '#9EDCFF',
-  good: '#8173FF',
-  warn: '#FF5F88',
-  txt: '#F8F7FF',
-  muted: '#E7E2FF',
-  line: 'rgba(255,255,255,.10)',
-  axis: 'rgba(255,255,255,.45)',
-  // 进度条低饱和冷紫线性渐变：达标用品牌紫→薰衣草→少量冰蓝，落后用柔和粉紫。
-  goodGradient: 'linear-gradient(90deg,#8173FF 0%,#AAA0FF 56%,#D4CEFF 88%,#A8E4FF 100%)',
-  warnGradient: 'linear-gradient(90deg,#E7436D 0%,#FF5F88 58%,#FF86A4 100%)',
+  up: '#AFA6FF',
+  down: '#E85D75',
+  good: '#8B7CFF',
+  warn: '#E85D75',
+  txt: '#F7F8FC',
+  muted: '#B9C2D4',
+  line: 'rgba(218,226,255,.10)',
+  axis: 'rgba(218,226,255,.34)',
+  // 进度条统一语义：80% 及以上用品牌月光紫，80% 以下一律进入风险玫红。
+  goodGradient: 'linear-gradient(90deg,#8B7CFF 0%,#AFA6FF 54%,#D8D4FF 82%,#8BD7FF 100%)',
+  warnGradient: 'linear-gradient(90deg,#B8334B 0%,#E85D75 58%,#FF8A9A 100%)',
 };
 
-// 环比涨跌颜色：>=0 粉紫，<0 冰蓝
-export const deltaColor = (v) => (v >= 0 ? COLOR.up : COLOR.down);
-export const deltaArrow = (v) => (v >= 0 ? '▲' : '▼');
-export const fmtDelta = (v) => `${deltaArrow(v)} ${v >= 0 ? '+' : ''}${v}%`;
-// progressColor 返回纯色，供 ECharts label.color 和文字 color 使用：达标档品牌紫，落后档柔和粉紫，60-80 中档保持冷白紫。
+export const isRiskCompletion = (pct) => (Number(pct) || 0) < 80;
+
+// 环比涨跌颜色：上涨用品牌月光紫，下降统一进入风险色。
+export const deltaColor = (v) => (v >= 0 ? COLOR.up : COLOR.warn);
+export const deltaArrow = (v) => (v >= 0 ? '↑' : '↓');
+export const fmtDelta = (v) => `${deltaArrow(v)}${Math.abs(Number(v) || 0)}%`;
+export const riskAdjustedDelta = ({ progress, gap, delta } = {}) => {
+  if (delta == null) return null;
+  const value = Number(delta) || 0;
+  return isRiskCompletion(progress) && Number(gap) > 0 ? -Math.abs(value) : value;
+};
+
+// progressColor 返回纯色，供 ECharts label.color 和文字 color 使用：80% 以下一律风险色。
 export const progressColor = (pct, midColor = '#E7E2FF') => {
+  void midColor;
   const value = Number(pct) || 0;
   if (value >= 80) return COLOR.good;
-  if (value >= 60) return midColor;
   return COLOR.warn;
 };
-// progressGradient 返回 CSS background 可直接使用的渐变字符串，仅供进度条 fill 元素使用：达标档冰蓝渐变，落后档粉紫渐变，60-80 中档保持中性色。
+// progressGradient 返回 CSS background 可直接使用的渐变字符串，仅供进度条 fill 元素使用。
 export const progressGradient = (pct, midColor = COLOR.txt) => {
+  void midColor;
   const value = Number(pct) || 0;
   if (value >= 80) return COLOR.goodGradient;
-  if (value >= 60) return midColor;
   return COLOR.warnGradient;
 };
 

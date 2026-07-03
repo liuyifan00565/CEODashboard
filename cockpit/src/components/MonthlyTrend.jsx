@@ -1,9 +1,14 @@
+/* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 月度经营趋势回款柱按完成率 80% 风险线分色，危险月份直接使用风险色。 */
 /* 更新时间: 2026-06-29 10:45:53  更新内容: 月度经营趋势图例改为静态说明，并将目标与回款柱重叠展示。 */
 import EChart from './EChart';
 import { getChannelTrend } from '../data/mock';
-import { COLOR, progressColor } from '../lib/format';
+import { COLOR, progressColor, isRiskCompletion } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './MonthlyTrend.css';
+
+function recoveredBarColor(completionValue, tokens) {
+  return isRiskCompletion(completionValue) ? COLOR.warn : tokens.chartBar;
+}
 
 export default function MonthlyTrend({ channelKey = 'all' }) {
   const tokens = useThemeTokens();
@@ -106,7 +111,13 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
           borderRadius: [3, 3, 0, 0],
         },
         emphasis: { itemStyle: { color: tokens.chartText } },
-        data: recovered,
+        data: recovered.map((value, index) => ({
+          value,
+          itemStyle: {
+            color: recoveredBarColor(completion[index], tokens),
+            borderRadius: [3, 3, 0, 0],
+          },
+        })),
       },
       {
         name: '完成率%',

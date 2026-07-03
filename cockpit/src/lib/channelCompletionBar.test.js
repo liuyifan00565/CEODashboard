@@ -1,4 +1,6 @@
 /*
+ 更新时间: 2026-07-03 18:31:29 CST
+ 更新内容: 渠道完成进度条统一改为 80% 以下风险色，不再豁免四个区域行。
  更新时间: 2026-07-03 17:51:20 CST
  更新内容: 补充四区域渠道完成进度条不挂红色 warning fill class 的回归测试，避免统一紫色时残留红色外发光。
  更新时间: 2026-07-03 17:50:16 CST
@@ -12,7 +14,7 @@ import {
   shouldUseChannelCompletionWarnFill,
 } from './channelCompletionBar.js';
 
-test('uses the unified theme purple gradient for the four regional channel rows', () => {
+test('uses the same 80 percent risk gradient rule for the four regional channel rows', () => {
   assert.equal(
     channelCompletionBarBackground({ key: 'online', completion: 87.5 }, '#E7E2FF'),
     COLOR.goodGradient
@@ -23,18 +25,18 @@ test('uses the unified theme purple gradient for the four regional channel rows'
   );
   assert.equal(
     channelCompletionBarBackground({ key: 'east', completion: 70 }, '#E7E2FF'),
-    COLOR.goodGradient
+    COLOR.warnGradient
   );
   assert.equal(
     channelCompletionBarBackground({ key: 'agent', completion: 55 }, '#E7E2FF'),
-    COLOR.goodGradient
+    COLOR.warnGradient
   );
 });
 
 test('keeps non-four-region rows on the original progress gradient rule', () => {
   assert.equal(
     channelCompletionBarBackground({ key: 'online-01', completion: 70 }, '#E7E2FF'),
-    '#E7E2FF'
+    COLOR.warnGradient
   );
   assert.equal(
     channelCompletionBarBackground({ key: 'delivery-01', completion: 56 }, '#E7E2FF'),
@@ -42,7 +44,9 @@ test('keeps non-four-region rows on the original progress gradient rule', () => 
   );
 });
 
-test('does not keep the red warning fill class on four regional channel bars', () => {
-  assert.equal(shouldUseChannelCompletionWarnFill({ key: 'east', warn: true }), false);
+test('uses the red warning fill class whenever a channel row is under target', () => {
+  assert.equal(shouldUseChannelCompletionWarnFill({ key: 'south', completion: 80 }), false);
+  assert.equal(shouldUseChannelCompletionWarnFill({ key: 'east', completion: 70 }), true);
+  assert.equal(shouldUseChannelCompletionWarnFill({ key: 'east', warn: true }), true);
   assert.equal(shouldUseChannelCompletionWarnFill({ key: 'delivery-01', warn: true }), true);
 });

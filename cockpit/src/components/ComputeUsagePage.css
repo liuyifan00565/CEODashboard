@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:19:59 CST
+ Update content: Align compute table controls with the obsidian violet/champagne palette.
+*/
+/*
  Update time: 2026-07-03 17:56:04 CST
  Update content: Move compute KPI and panel cards to the neutral dark glass recipe and remove purple hover glow.
 */
@@ -577,7 +581,7 @@
   width: 112px;
   height: 32px;
   padding: 0 10px 0 13px;
-  border: 1px solid rgba(125, 181, 255, .72);
+  border: 1px solid rgba(139, 124, 255, .56);
   border-radius: 6px;
   background: rgba(255,255,255,.08);
   color: var(--txt);
@@ -594,9 +598,9 @@
 .cpu-page-size-select:hover,
 .cpu-page-size-select:focus-visible,
 .cpu-page-size-select--open {
-  border-color: rgba(147,197,253,.95);
+  border-color: rgba(215,181,109,.84);
   background: rgba(255,255,255,.11);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 0 0 2px rgba(96,165,250,.16), 0 16px 34px rgba(0,0,0,.28);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 0 0 2px rgba(215,181,109,.14), 0 16px 34px rgba(0,0,0,.28);
 }
 
 .cpu-page-size-select__chevron {

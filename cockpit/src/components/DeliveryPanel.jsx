@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 交付看板完成率 80% 以下时进度条、百分比和预警态统一使用风险色。 */
 /* 更新时间: 2026-07-03 13:05:00  更新内容: 交付看板进度条 fill 改用 progressGradient 返回的低饱和冷色线性渐变。 */
 /* 更新时间: 2026-06-29 10:45:53  更新内容: 新增交付看板，展示实施工程师交付人效、单价、金额价值和目标完成情况。 */
 import { getDeliveryRows, getDeliverySummary } from '../data/mock';
@@ -63,7 +64,7 @@ export default function DeliveryPanel() {
                     }}
                   />
                 </div>
-                <b>{pct}%</b>
+                <b className={`dlv-progress-pct${pct < 80 ? ' dlv-progress-pct--warn' : ''}`}>{pct}%</b>
               </div>
             </div>
           );

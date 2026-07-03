@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:31:29 CST
+ Update content: Align light theme guardrails with the graphite violet champagne palette and rose risk accents.
+*/
+/*
  Update time: 2026-07-03 16:51:07 CST
  Update content: Require light theme KPI warning accents to shift from light pink to deeper bright rose red.
 */
@@ -93,12 +97,12 @@ test('provides dark and light theme variable contracts', () => {
   assert.match(indexCss, /--color-scheme-value:/);
 });
 
-test('uses a light green theme background with non-white text and chart variables', () => {
+test('uses a fog white-blue light theme background with non-white text and chart variables', () => {
   const block = lightThemeBlock();
 
-  assert.match(block, /--bg:#E8FBE8;/);
+  assert.match(block, /--bg:#F3F6FA;/);
   assert.match(block, /--bg-noise-opacity:\.025;/);
-  assert.match(block, /--chart-point-border:#E8FBE8;/);
+  assert.match(block, /--chart-point-border:#F3F6FA;/);
   assert.doesNotMatch(block, /--txt:\s*#(?:fff|ffffff)\b/i);
   assert.doesNotMatch(block, /--muted:\s*#(?:fff|ffffff)\b/i);
   assert.doesNotMatch(block, /--faint:\s*#(?:fff|ffffff)\b/i);
@@ -110,25 +114,26 @@ test('uses a light green theme background with non-white text and chart variable
   assert.doesNotMatch(block, /--chart-(?:text|muted|grid|bar|bar-muted):\s*(?:#fff|#ffffff|rgba\(255,\s*255,\s*255)/i);
 });
 
-test('keeps cold purple brand accents aligned in light theme', () => {
+test('keeps graphite violet brand accents aligned in light theme', () => {
   const block = lightThemeBlock();
 
-  assert.match(block, /--brand-purple:#7C6CFF;/);
-  assert.match(block, /--brand-purple-2:#8F86FF;/);
-  assert.match(block, /--brand-purple-3:#A79CFF;/);
-  assert.match(block, /--brand-lavender:#C9C2FF;/);
-  assert.match(block, /--brand-mist:#E7E2FF;/);
-  assert.match(block, /--brand-ice:#9EDCFF;/);
-  assert.match(block, /--up:#A79CFF;/);
-  assert.match(block, /--down:#9EDCFF;/);
-  assert.match(block, /--good:#8173FF;/);
-  assert.match(block, /--warn:#FF5F88;/);
-  assert.match(block, /--up-rgb:167,156,255;/);
-  assert.match(block, /--down-rgb:158,220,255;/);
-  assert.match(block, /--good-rgb:129,115,255;/);
-  assert.match(block, /--warn-rgb:255,95,136;/);
-  assert.match(block, /--bar-good:linear-gradient\(90deg,#8173FF 0%,#AAA0FF 56%,#D4CEFF 88%,#A8E4FF 100%\);/);
-  assert.match(block, /--bar-warn:linear-gradient\(90deg,#E7436D 0%,#FF5F88 58%,#FF86A4 100%\);/);
+  assert.match(block, /--brand-purple:#8B7CFF;/);
+  assert.match(block, /--brand-purple-2:#AFA6FF;/);
+  assert.match(block, /--brand-purple-3:#D8D4FF;/);
+  assert.match(block, /--brand-lavender:#D8D4FF;/);
+  assert.match(block, /--brand-mist:#F7F8FC;/);
+  assert.match(block, /--brand-ice:#8BD7FF;/);
+  assert.match(block, /--accent-gold:#B78C32;/);
+  assert.match(block, /--up:#6F62D8;/);
+  assert.match(block, /--down:#D94D66;/);
+  assert.match(block, /--good:#6F62D8;/);
+  assert.match(block, /--warn:#D94D66;/);
+  assert.match(block, /--up-rgb:111,98,216;/);
+  assert.match(block, /--down-rgb:217,77,102;/);
+  assert.match(block, /--good-rgb:111,98,216;/);
+  assert.match(block, /--warn-rgb:217,77,102;/);
+  assert.match(block, /--bar-good:linear-gradient\(90deg,#6F62D8 0%,#8B7CFF 56%,#C9C3FF 88%,#8BD7FF 100%\);/);
+  assert.match(block, /--bar-warn:linear-gradient\(90deg,#AA2F45 0%,#D94D66 58%,#F07C8E 100%\);/);
 });
 
 test('charts and KPI progress bars read theme tokens instead of hard-coded white colors', () => {
