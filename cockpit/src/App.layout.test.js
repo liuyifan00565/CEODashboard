@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-02 18:55:52 CST
+ Update content: Add regression coverage for maintenance progress bars fading from a highlighted left edge to a softer right edge and sync maintenance input style expectations.
+*/
+/*
  Update time: 2026-07-02 18:49:46 CST
  Update content: Add regression coverage for placing the data maintenance pill inside the right toolbar before search.
 */
@@ -275,7 +279,10 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   const matrixWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap');
   const computePanelBlock = cssRuleBody(computePageCss, '.cpu-panel');
   const progressBlock = cssRuleBody(maintenancePageCss, '.mnt-progress');
+  const progressDangerBlock = cssRuleBody(maintenancePageCss, '.mnt-progress--danger span');
+  const progressWarningBlock = cssRuleBody(maintenancePageCss, '.mnt-progress--warning span');
   const progressGoodBlock = cssRuleBody(maintenancePageCss, '.mnt-progress--good span');
+  const progressUnsetBlock = cssRuleBody(maintenancePageCss, '.mnt-progress--unset span');
 
   const toolbarSurfaceBlock = cssRuleBody(maintenancePageCss, '.mnt-toolbar-surface');
 
@@ -325,14 +332,20 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.match(maintenancePageSource, /<ProgressLine period=\{period\} \/>/);
   assert.match(progressBlock, /height:\s*7px;/);
   assert.match(progressBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.09\);/);
-  assert.match(progressGoodBlock, /background:\s*linear-gradient\(90deg,\s*rgba\(var\(--good-rgb\),\s*\.92\),\s*rgba\(255,255,255,\.78\)\);/);
+  assert.doesNotMatch(maintenancePageCss, /<<<<<<<|=======|>>>>>>>/);
+  assert.doesNotMatch(maintenancePageCss, /--mnt-progress-purple|--mnt-progress-blue/);
+  assert.doesNotMatch(maintenancePageCss, /linear-gradient\(90deg,\s*var\(--mnt-progress-purple\)\s*0%,\s*var\(--mnt-progress-blue\)\s*100%\)/);
+  assert.match(progressDangerBlock, /background:\s*linear-gradient\(90deg,\s*rgba\(var\(--warn-rgb\),\s*\.9\)\s*0%,\s*rgba\(255,255,255,\.5\)\s*46%,\s*rgba\(255,255,255,0\)\s*100%\);/);
+  assert.match(progressWarningBlock, /background:\s*linear-gradient\(90deg,\s*rgba\(255,255,255,\.86\)\s*0%,\s*rgba\(var\(--good-rgb\),\s*\.42\)\s*42%,\s*rgba\(var\(--good-rgb\),0\)\s*100%\);/);
+  assert.match(progressGoodBlock, /background:\s*linear-gradient\(90deg,\s*rgba\(var\(--good-rgb\),\s*\.92\)\s*0%,\s*rgba\(255,255,255,\.58\)\s*44%,\s*rgba\(255,255,255,0\)\s*100%\);/);
+  assert.match(progressUnsetBlock, /background:\s*linear-gradient\(90deg,\s*rgba\(255,255,255,\.34\)\s*0%,\s*rgba\(255,255,255,\.16\)\s*46%,\s*rgba\(255,255,255,0\)\s*100%\);/);
   assert.match(buttonBlock, /min-height:\s*28px;/);
   assert.match(buttonBlock, /background:\s*var\(--glass-cell\);/);
   assert.match(buttonBlock, /border:\s*1px solid var\(--line\);/);
   assert.match(buttonBlock, /border-radius:\s*12px;/);
   assert.match(primaryButtonBlock, /background:\s*var\(--control-solid\);/);
   assert.match(inputBlock, /min-height:\s*28px;/);
-  assert.match(inputBlock, /background:\s*var\(--glass-cell\);/);
+  assert.match(inputBlock, /background:\s*color-mix\(in srgb,\s*var\(--glass-cell-hover\)\s*48%,\s*transparent\);/);
   assert.match(maintenancePageCss, /\.mnt-edit-row,\s*[\s\S]*?\.mnt-channel-manage-row \{[\s\S]*?background:\s*var\(--panel-2\);/);
   assert.doesNotMatch(maintenancePageCss, /\.mnt-edit-row,[\s\S]*?background:\s*transparent;/);
   assert.doesNotMatch(maintenancePageCss, /\.mnt-row--summary td \{[\s\S]*?background:\s*rgba\(var\(--good-rgb\)/);
