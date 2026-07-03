@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 11:09:47 CST
+ 更新内容: 修正开户数搜索关键词，避免“今日”误命中本月开户数。
+*/
+/*
  更新时间: 2026-07-03 10:25:18 CST
  更新内容: 将维护页目标完成率进度条变色阈值调整为超过 80% 才高亮。
 */
@@ -61,7 +65,7 @@ export const KPI_DERIVED = {
 
 // ===== 开户数趋势（经营总览，单位：户）=====
 export const OPENING_ACCOUNT_METRICS = [
-  { key: 'month-openings', title: '本月开户数', metric: 'monthOpenings', value: 126, unit: '户', delta: 8.2, compareLabel: '较上月', keywords: ['开户', '本月开户数', '今日开户数'] },
+  { key: 'month-openings', title: '本月开户数', metric: 'monthOpenings', value: 126, unit: '户', delta: 8.2, compareLabel: '较上月', keywords: ['开户', '本月开户数'] },
   { key: 'today-openings', title: '今日开户数', metric: 'todayOpenings', value: 9, unit: '户', delta: 12.5, compareLabel: '较昨日', keywords: ['开户', '今日开户数'] },
 ];
 

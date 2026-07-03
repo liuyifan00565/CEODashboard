@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-03 11:28:32 CST  更新内容: 精准调整版本情况半环图水平中心，使图形对称轴对齐数量/金额切换按钮。 */
+/* 更新时间: 2026-07-03 11:17:34 CST  更新内容: 版本情况半环图右移，使图形对称轴靠近数量/金额切换按钮。 */
 /* 更新时间: 2026-07-02 16:52:00 CST  更新内容: 版本二级弹窗关闭按钮改用统一 AppIcon 线性图标。 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -169,7 +171,7 @@ function versionHalfRingOption(versions, mode, tokens) {
         type: 'pie',
         name: `版本${modeMeta.label}`,
         radius: ['45%', '76%'],
-        center: ['46%', '70%'],
+        center: ['49.5%', '70%'],
         startAngle: 180,
         endAngle: 360,
         minShowLabelAngle: 1,

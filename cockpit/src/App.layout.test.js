@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 10:59:56 CST
+ 更新内容: 增加开户数卡片复用顶部搜索定位边框的布局回归测试。
+*/
+/*
  更新时间: 2026-07-03 10:47:37 CST
  更新内容: 增加顶部数据维护/返回主界面按钮去除左侧图标并收窄宽度的回归测试。
 */
@@ -77,6 +81,7 @@ const computePageSource = readFileSync(new URL('./components/ComputeUsagePage.js
 const computePageCss = readFileSync(new URL('./components/ComputeUsagePage.css', import.meta.url), 'utf8');
 const maintenancePageSource = readFileSync(new URL('./components/MaintenancePage.jsx', import.meta.url), 'utf8');
 const maintenancePageCss = readFileSync(new URL('./components/MaintenancePage.css', import.meta.url), 'utf8');
+const searchResultBorderSource = readFileSync(new URL('./components/SearchResultBorder.jsx', import.meta.url), 'utf8');
 
 function cssRuleBody(source, selector) {
   const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -679,7 +684,7 @@ test('builds two long recovery cards that each include a sales completion panel'
 
 test('moves opening metrics into the cost slot and cost into the former renewal slot', () => {
   assert.match(appSource, /<div className="dash-cell dash-cell--finance-kpis" data-anim>/);
-  assert.match(appSource, /<div className="dash-finance-kpi-item dash-finance-kpi-item--openings" data-kpi-key="openings">[\s\S]*?<OpeningMetricCards onOpenSecondary=\{handleOpenCard\} \/>[\s\S]*?<\/div>/);
+  assert.match(appSource, /<div className="dash-finance-kpi-item dash-finance-kpi-item--openings" data-kpi-key="openings">[\s\S]*?<OpeningMetricCards searchTerm=\{searchTerm\} onOpenSecondary=\{handleOpenCard\} \/>[\s\S]*?<\/div>/);
   assert.match(appSource, /financeKpiCards\.map\(\(card\) => \(/);
   assert.match(appSource, /className="dash-finance-kpi-item"/);
   assert.doesNotMatch(appSource, /\['cost', 'renewal'\]\.includes\(card\.key\)/);
@@ -691,13 +696,15 @@ test('moves opening metrics into the cost slot and cost into the former renewal 
 });
 
 test('uses ElectricBorder for search result highlighting instead of HighlightBeam', () => {
-  assert.match(appSource, /import ElectricBorder from '\.\/components\/ElectricBorder\/ElectricBorder';/);
+  assert.match(appSource, /import SearchResultBorder from '\.\/components\/SearchResultBorder';/);
+  assert.match(appSource, /import \{ matchesSearchTerm \} from '\.\/lib\/searchMatch';/);
+  assert.match(searchResultBorderSource, /import ElectricBorder from '\.\/ElectricBorder\/ElectricBorder';/);
   assert.doesNotMatch(appSource, /import HighlightBeam/);
   assert.doesNotMatch(appSource, /<HighlightBeam/);
-  assert.match(appSource, /<SearchResultBorder active=\{hit\(card\.keywords,\s*searchTerm\)\}>/);
-  assert.match(appSource, /data-search-match="true"/);
-  assert.match(appSource, /aria-label="搜索命中结果"/);
-  assert.match(appSource, /<ElectricBorder[\s\S]*?color="#6000FF"[\s\S]*?speed=\{1\}[\s\S]*?chaos=\{0\.12\}[\s\S]*?thickness=\{2\}/);
+  assert.match(appSource, /<SearchResultBorder active=\{matchesSearchTerm\(card\.keywords,\s*searchTerm\)\}>/);
+  assert.match(searchResultBorderSource, /data-search-match="true"/);
+  assert.match(searchResultBorderSource, /aria-label="搜索命中结果"/);
+  assert.match(searchResultBorderSource, /<ElectricBorder[\s\S]*?color="#6000FF"[\s\S]*?speed=\{1\}[\s\S]*?chaos=\{0\.12\}[\s\S]*?thickness=\{2\}/);
   assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\]/);
 });
 

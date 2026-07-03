@@ -15,6 +15,10 @@
  更新内容: 数据维护页进度条统一为左侧高亮、向右侧颜色衰减的透明玻璃样式。
 */
 /*
+ 更新时间: 2026-07-02 19:23:04 CST
+ 更新内容: 将维护页中高完成率进度条由荧光蓝改为荧光黄色，低完成率继续使用荧光紫。
+*/
+/*
  更新时间: 2026-07-02 19:13:36 CST
  更新内容: 适配维护页百分比单独换行显示。
 */
@@ -27,6 +31,10 @@
  更新内容: 维护页表格外壳、表头、首列和汇总行恢复为算力页原透明玻璃样式。
 */
 .mnt-page {
+  --mnt-progress-purple: #f000ff;
+  --mnt-progress-purple-soft: #ff7cff;
+  --mnt-progress-yellow: #dfff00;
+  --mnt-progress-yellow-soft: #f6ff65;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -645,10 +653,17 @@
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
+  background: linear-gradient(90deg, var(--mnt-progress-yellow) 0%, var(--mnt-progress-yellow-soft) 100%);
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--mnt-progress-yellow) 36%, transparent),
+    0 0 10px color-mix(in srgb, var(--mnt-progress-yellow-soft) 24%, transparent);
 }
 
 .mnt-progress--danger span {
-  background: linear-gradient(90deg, rgba(var(--warn-rgb), .9) 0%, rgba(255,255,255,.5) 46%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(90deg, var(--mnt-progress-purple) 0%, var(--mnt-progress-purple-soft) 100%);
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--mnt-progress-purple) 38%, transparent),
+    0 0 10px color-mix(in srgb, var(--mnt-progress-purple-soft) 24%, transparent);
 }
 
 .mnt-progress--warning span {
@@ -656,7 +671,10 @@
 }
 
 .mnt-progress--good span {
-  background: linear-gradient(90deg, rgba(var(--good-rgb), .92) 0%, rgba(255,255,255,.58) 44%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(90deg, var(--mnt-progress-yellow) 0%, var(--mnt-progress-yellow-soft) 100%);
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--mnt-progress-yellow) 36%, transparent),
+    0 0 10px color-mix(in srgb, var(--mnt-progress-yellow-soft) 24%, transparent);
 }
 
 .mnt-progress--unset span {

@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-03 11:28:32 CST
+ 更新内容: 增加“本年”可通过首页年度模块标题命中年度回款卡的回归测试。
+*/
+/*
+ 更新时间: 2026-07-03 11:09:47 CST
+ 更新内容: 增加“总投入”可通过主页可见卡片文本命中费比卡的回归测试。
+*/
+/*
  更新时间: 2026-07-02 17:38:31 CST
  更新内容: 增加主 KPI 卡副文案不显示日期区间的回归测试。
 */
@@ -55,6 +63,23 @@ test('shows the cost ratio percentage as the main value on the cost card', () =>
   assert.equal(cost.displayDecimals, 1);
   assert.match(cost.sub, /总投入 156 万/);
   assert.match(cost.sub, /广告 96 万 \+ 人力 60 万/);
+});
+
+test('adds visible card text to KPI search keywords so total investment can be located', () => {
+  const cards = getFilteredKpiCards({ dim: 'month', dateRange: ['2026-06-01', '2026-06-30'] });
+  const cost = byKey(cards, 'cost');
+
+  assert.ok(cost.keywords.some((keyword) => String(keyword).includes('总投入')));
+  assert.ok(cost.keywords.some((keyword) => String(keyword).includes('总投入 156 万')));
+});
+
+test('adds homepage annual section text to KPI search keywords so current year can be located', () => {
+  const cards = getFilteredKpiCards({ dim: 'month', dateRange: ['2026-06-01', '2026-06-30'] });
+  const annual = byKey(cards, 'year');
+
+  assert.ok(annual.keywords.includes('本年'));
+  assert.ok(annual.keywords.includes('本年目标完成情况'));
+  assert.ok(annual.keywords.includes('本年渠道完成情况'));
 });
 
 test('changes KPI card values when the calendar range changes', () => {
