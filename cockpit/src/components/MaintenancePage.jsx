@@ -1,4 +1,20 @@
 /*
+ Update time: 2026-07-03 11:12:08 CST
+ Update content: Separate editable target maintenance inputs from readonly target summary values.
+*/
+/*
+ Update time: 2026-07-03 11:11:56 CST
+ Update content: Add selectable maintenance table rows with persistent purple clicked-row highlights.
+*/
+/*
+ Update time: 2026-07-03 11:02:59 CST
+ Update content: Collapse target maintenance completed amount and completion percent into one compact progress line.
+*/
+/*
+ Update time: 2026-07-03 10:54:19 CST
+ Update content: Use one wide scrolling target maintenance table and remove pinned annual/current-quarter columns.
+*/
+/*
  Update time: 2026-07-03 10:29:25 CST
  Update content: Correct target maintenance current-month alignment to use the scroll pane coordinate system.
 */
@@ -53,8 +69,6 @@ const PAGE_RENDERERS = {
 };
 
 const TARGET_PERIOD_COLUMNS = buildTargetPeriodColumns(MAINTENANCE_PERIOD_COLUMNS, META.monthLabel);
-const TARGET_FIXED_PERIOD_COLUMNS = TARGET_PERIOD_COLUMNS.filter((column) => column.targetPinned);
-const TARGET_SCROLL_PERIOD_COLUMNS = TARGET_PERIOD_COLUMNS.filter((column) => !column.targetPinned);
 
 function getMaintenanceCurrentMonth(monthLabel = '') {
   const match = String(monthLabel).match(/(\d{1,2})\s*月/);
@@ -65,25 +79,18 @@ function getMaintenanceCurrentMonth(monthLabel = '') {
 
 function buildTargetPeriodColumns(periodColumns, monthLabel = '') {
   const currentMonth = getMaintenanceCurrentMonth(monthLabel);
-  const quarterKey = `q${Math.ceil(currentMonth / 3)}`;
-  const yearColumns = periodColumns.filter((column) => column.key === 'year');
-  const pinnedQuarterColumns = periodColumns.filter((column) => column.key === quarterKey);
-  const fixedKeys = new Set([...yearColumns, ...pinnedQuarterColumns].map((column) => column.key));
-  const restColumns = periodColumns.filter((column) => !fixedKeys.has(column.key));
-
-  return [
-    ...yearColumns,
-    ...pinnedQuarterColumns,
-    ...restColumns,
-  ].map((column) => ({
+  return periodColumns.map((column) => ({
     ...column,
-    targetPinned: fixedKeys.has(column.key),
     targetCurrentMonth: column.month === currentMonth,
   }));
 }
 
 function formatWan(value) {
   return `${Number(value || 0).toLocaleString('zh-CN')} 万`;
+}
+
+function formatWanCompact(value) {
+  return formatWan(value).replace(/\s+/g, '');
 }
 
 function formatPct(value) {
@@ -96,6 +103,24 @@ function formatRoi(value) {
 
 function nowLabel() {
   return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function handleSelectableRowKeyDown(event, rowKey, onSelect) {
+  if (event.target !== event.currentTarget) return;
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  onSelect(rowKey);
+}
+
+function getSelectableRowProps(rowKey, selectedRowKey, onSelect, className = '') {
+  const selected = selectedRowKey === rowKey;
+  return {
+    className: `${className}${selected ? ' mnt-row--selected' : ''}`.trim(),
+    'data-maintenance-row-selected': selected ? 'true' : undefined,
+    tabIndex: 0,
+    onClick: () => onSelect(rowKey),
+    onKeyDown: (event) => handleSelectableRowKeyDown(event, rowKey, onSelect),
+  };
 }
 
 function MaintenanceToolbarSurface({ className = '', children }) {
@@ -221,10 +246,10 @@ function TargetTreeNode({ node, activeId, onSelect }) {
 
 function ProgressLine({ period }) {
   const width = Math.max(0, Math.min(100, Number(period?.pct || 0)));
+  const progressText = period?.target ? formatPct(period.pct) : '未设目标';
   return (
     <>
-      <div className="mnt-mini-line">完成 {formatWan(period?.actual)}</div>
-      <div className="mnt-mini-line mnt-mini-line--pct">{period?.target ? formatPct(period.pct) : '未设目标'}</div>
+      <div className="mnt-mini-line">完成{formatWanCompact(period?.actual)} · {progressText}</div>
       <div className={`mnt-progress mnt-progress--${period?.status || 'unset'}`}>
         <span style={{ width: `${width}%` }} />
       </div>
@@ -243,7 +268,7 @@ function useTargetCurrentMonthAlignment() {
     if (!currentMonthHeader) return;
 
     const maxScrollLeft = Math.max(0, scrollPane.scrollWidth - scrollPane.clientWidth);
-    const targetScrollLeft = currentMonthHeader.offsetLeft - scrollPane.offsetLeft + currentMonthHeader.offsetWidth - scrollPane.clientWidth;
+    const targetScrollLeft = currentMonthHeader.offsetLeft + currentMonthHeader.offsetWidth - scrollPane.clientWidth;
     scrollPane.scrollLeft = Math.max(0, Math.min(targetScrollLeft, maxScrollLeft));
   }, []);
 
@@ -263,18 +288,23 @@ function TargetPeriodCell({ row, column, markDirty }) {
   const editable = row.type === 'user' && column.month;
 
   return (
-    <td className="mnt-period-cell">
+    <td className={`mnt-period-cell ${editable ? 'mnt-period-cell--editable' : 'mnt-period-cell--readonly'}`}>
       {editable ? (
-        <input
-          className="mnt-control mnt-number-input"
-          type="number"
-          min="0"
-          defaultValue={period.target}
-          onChange={markDirty}
-          aria-label={`${row.name}${column.label}目标`}
-        />
+        <div className="mnt-target-input-wrap">
+          <input
+            className="mnt-number-input mnt-target-input"
+            type="number"
+            min="0"
+            defaultValue={period.target}
+            onChange={markDirty}
+            aria-label={`${row.name}${column.label}目标`}
+          />
+          <span className="mnt-target-input-unit">万</span>
+        </div>
       ) : (
-        <strong>{formatWan(period.target)}</strong>
+        <div className="mnt-target-readonly-value">
+          <strong>{formatWan(period.target)}</strong>
+        </div>
       )}
       <ProgressLine period={period} />
     </td>
@@ -283,6 +313,7 @@ function TargetPeriodCell({ row, column, markDirty }) {
 
 function TargetMaintenancePage({ markDirty, status }) {
   const [selectedOrg, setSelectedOrg] = useState('all');
+  const [selectedTargetRow, setSelectedTargetRow] = useState(null);
   const targetScrollPaneRef = useTargetCurrentMonthAlignment();
   const rows = TARGET_MAINTENANCE_ROWS;
 
@@ -297,48 +328,28 @@ function TargetMaintenancePage({ markDirty, status }) {
       </Panel>
       <Panel title="年度目标" meta={<SaveBadge status={status} />} className="mnt-main-panel">
         <MatrixShell className="mnt-matrix-wrap--target">
-          <div className="mnt-target-matrix">
-            <div className="mnt-target-fixed-pane">
-              <table className="mnt-matrix mnt-matrix--target-fixed">
-                <thead>
-                  <tr>
-                    <th>部门/人员</th>
-                    {TARGET_FIXED_PERIOD_COLUMNS.map((column) => <TargetPeriodHeader key={column.key} column={column} />)}
+          <div className="mnt-target-scroll-pane" ref={targetScrollPaneRef}>
+            <table className="mnt-matrix mnt-matrix--target">
+              <thead>
+                <tr>
+                  <th>部门/人员</th>
+                  {TARGET_PERIOD_COLUMNS.map((column) => <TargetPeriodHeader key={column.key} column={column} />)}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id} {...getSelectableRowProps(`target:${row.id}`, selectedTargetRow, setSelectedTargetRow, row.type === 'department' ? 'mnt-row--summary' : '')}>
+                    <td className="mnt-name-cell">
+                      <strong>{row.name}</strong>
+                      <span>{row.role}</span>
+                    </td>
+                    {TARGET_PERIOD_COLUMNS.map((column) => (
+                      <TargetPeriodCell key={column.key} row={row} column={column} markDirty={markDirty} />
+                    ))}
                   </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <tr key={row.id} className={row.type === 'department' ? 'mnt-row--summary' : ''}>
-                      <td className="mnt-name-cell">
-                        <strong>{row.name}</strong>
-                        <span>{row.role}</span>
-                      </td>
-                      {TARGET_FIXED_PERIOD_COLUMNS.map((column) => (
-                        <TargetPeriodCell key={column.key} row={row} column={column} markDirty={markDirty} />
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="mnt-target-scroll-pane" ref={targetScrollPaneRef}>
-              <table className="mnt-matrix mnt-matrix--target-scroll">
-                <thead>
-                  <tr>
-                    {TARGET_SCROLL_PERIOD_COLUMNS.map((column) => <TargetPeriodHeader key={column.key} column={column} />)}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <tr key={row.id} className={row.type === 'department' ? 'mnt-row--summary' : ''}>
-                      {TARGET_SCROLL_PERIOD_COLUMNS.map((column) => (
-                        <TargetPeriodCell key={column.key} row={row} column={column} markDirty={markDirty} />
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
         </MatrixShell>
       </Panel>
@@ -358,6 +369,7 @@ function channelDepth(channelId, channels = COST_MAINTENANCE_CHANNELS) {
 
 function CostMaintenancePage({ markDirty, status }) {
   const [selectedChannel, setSelectedChannel] = useState('all');
+  const [selectedCostRow, setSelectedCostRow] = useState(null);
   const selectedIds = useMemo(() => {
     if (selectedChannel === 'all') return new Set(COST_MAINTENANCE_ROWS.map((row) => row.id));
     return new Set([
@@ -401,7 +413,7 @@ function CostMaintenancePage({ markDirty, status }) {
               </thead>
               <tbody>
                 {visibleRows.map((row) => (
-                  <tr key={row.id} className={row.type === 'group' ? 'mnt-row--summary' : ''}>
+                  <tr key={row.id} {...getSelectableRowProps(`cost:${row.id}`, selectedCostRow, setSelectedCostRow, row.type === 'group' ? 'mnt-row--summary' : '')}>
                     <td className="mnt-name-cell">
                       <strong>{row.name}</strong>
                       <span>{row.type === 'group' ? '渠道合计' : '明细渠道'}</span>
@@ -442,7 +454,7 @@ function CostMaintenancePage({ markDirty, status }) {
               </thead>
               <tbody>
                 {LABOR_COST_MAINTENANCE_ROWS.map((row) => (
-                  <tr key={row.id}>
+                  <tr key={row.id} {...getSelectableRowProps(`labor:${row.id}`, selectedCostRow, setSelectedCostRow)}>
                     <td className="mnt-name-cell">
                       <strong>{row.name}</strong>
                       <span>部门月度固定成本</span>
@@ -480,6 +492,7 @@ function departmentOptions(currentId = '') {
 
 function OrgMaintenancePage({ markDirty, status }) {
   const [departments, setDepartments] = useState(ORG_MAINTENANCE_DEPARTMENTS);
+  const [selectedOrgRow, setSelectedOrgRow] = useState(null);
 
   function addDepartment() {
     const nextIndex = departments.length + 1;
@@ -524,7 +537,7 @@ function OrgMaintenancePage({ markDirty, status }) {
             </thead>
             <tbody>
               {ORG_MAINTENANCE_USERS.map((user) => (
-                <tr key={user.id} className={user.enabled && user.isSales ? '' : 'mnt-row--muted'}>
+                <tr key={user.id} {...getSelectableRowProps(`org:${user.id}`, selectedOrgRow, setSelectedOrgRow, user.enabled && user.isSales ? '' : 'mnt-row--muted')}>
                   <td className="mnt-name-cell">
                     <strong>{user.name}</strong>
                     <span>{user.sourceName}</span>
@@ -569,6 +582,7 @@ function groupOptions(groups) {
 function ChannelMaintenancePage({ markDirty, status }) {
   const [groups, setGroups] = useState(CHANNEL_MAINTENANCE_GROUPS);
   const [sources, setSources] = useState(CHANNEL_MAINTENANCE_SOURCES);
+  const [selectedSourceRow, setSelectedSourceRow] = useState(null);
 
   function addGroup(parentId = '') {
     const nextIndex = groups.length + 1;
@@ -627,7 +641,7 @@ function ChannelMaintenancePage({ markDirty, status }) {
             </thead>
             <tbody>
               {sources.map((source) => (
-                <tr key={source.code} className={source.excluded ? 'mnt-row--muted' : ''}>
+                <tr key={source.code} {...getSelectableRowProps(`source:${source.code}`, selectedSourceRow, setSelectedSourceRow, source.excluded ? 'mnt-row--muted' : '')}>
                   <td><input className="mnt-control" defaultValue={source.code} onChange={markDirty} aria-label={`${source.name}来源编码`} /></td>
                   <td><input className="mnt-control" defaultValue={source.name} onChange={markDirty} aria-label={`${source.name}来源名称`} /></td>
                   <td>

@@ -1,6 +1,34 @@
 /*
+ 更新时间: 2026-07-03 11:45:57 CST
+ 更新内容: 合并远端维护页样式更新，并将维护页进度条统一为语义实色。
+*/
+/*
+ 更新时间: 2026-07-03 11:45:24 CST
+ 更新内容: 合并 ttoswar 维护页选中态、滚动条和可编辑目标值改动，同时采用维护页语义实色进度条。
+*/
+/*
  更新时间: 2026-07-03 11:38:07 CST
  更新内容: 维护页进度条恢复为语义玻璃渐变，移除紫色进度变量以满足统一玻璃体系。
+*/
+/*
+ Update time: 2026-07-03 11:11:56 CST
+ Update content: Change maintenance table row hover to a bright purple overlay and add persistent selected-row styling.
+*/
+/*
+ Update time: 2026-07-03 11:12:08 CST
+ Update content: Separate editable target maintenance inputs from readonly target summary values.
+*/
+/*
+ Update time: 2026-07-03 11:10:18 CST
+ Update content: Narrow maintenance page scrollbars while keeping transparent glass track styling.
+*/
+/*
+ Update time: 2026-07-03 11:02:59 CST
+ Update content: Keep target maintenance completed amount and percent on one compact mini line.
+*/
+/*
+ Update time: 2026-07-03 10:54:19 CST
+ Update content: Widen maintenance matrix cells and switch progress bars from gradients to solid good/warn colors.
 */
 /*
  Update time: 2026-07-03 10:22:28 CST
@@ -239,7 +267,7 @@
 }
 
 .mnt-number-input {
-  width: 96px;
+  width: 118px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -390,6 +418,10 @@
 }
 
 .mnt-matrix-wrap {
+  --glass-cell-hover: rgba(190, 64, 255, .24);
+  --mnt-row-selected-overlay: rgba(190, 64, 255, .34);
+  --mnt-row-selected-hover-overlay: rgba(210, 86, 255, .42);
+  --mnt-maintenance-period-width: 172px;
   flex: 1;
   min-height: 0;
   overflow: auto;
@@ -403,33 +435,62 @@
 }
 
 .mnt-matrix-wrap--target {
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-.mnt-target-matrix {
-  --mnt-target-name-width: 164px;
-  --mnt-target-period-width: 128px;
-  display: grid;
-  grid-template-columns: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2) minmax(0, 1fr);
-  min-width: 0;
-  align-items: start;
-}
-
-.mnt-target-fixed-pane {
-  position: sticky;
-  left: 0;
-  z-index: 4;
-  width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2);
-  min-width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2);
-  background: transparent;
+  --mnt-target-name-width: 186px;
+  --mnt-target-period-width: 172px;
+  overflow: hidden;
 }
 
 .mnt-target-scroll-pane {
   min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
+  height: 100%;
+  overflow: auto;
   overscroll-behavior-x: contain;
+}
+
+.mnt-matrix-wrap,
+.mnt-target-scroll-pane,
+.mnt-tree,
+.mnt-channel-tree,
+.mnt-edit-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, .36) transparent;
+}
+
+.mnt-matrix-wrap::-webkit-scrollbar,
+.mnt-target-scroll-pane::-webkit-scrollbar,
+.mnt-tree::-webkit-scrollbar,
+.mnt-channel-tree::-webkit-scrollbar,
+.mnt-edit-list::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.mnt-matrix-wrap::-webkit-scrollbar-track,
+.mnt-target-scroll-pane::-webkit-scrollbar-track,
+.mnt-tree::-webkit-scrollbar-track,
+.mnt-channel-tree::-webkit-scrollbar-track,
+.mnt-edit-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mnt-matrix-wrap::-webkit-scrollbar-thumb,
+.mnt-target-scroll-pane::-webkit-scrollbar-thumb,
+.mnt-tree::-webkit-scrollbar-thumb,
+.mnt-channel-tree::-webkit-scrollbar-thumb,
+.mnt-edit-list::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .36);
+  background-clip: padding-box;
+}
+
+.mnt-matrix-wrap::-webkit-scrollbar-thumb:hover,
+.mnt-target-scroll-pane::-webkit-scrollbar-thumb:hover,
+.mnt-tree::-webkit-scrollbar-thumb:hover,
+.mnt-channel-tree::-webkit-scrollbar-thumb:hover,
+.mnt-edit-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, .5);
+  background-clip: padding-box;
 }
 
 .mnt-matrix,
@@ -441,29 +502,20 @@
   font-size: 13px;
 }
 
-.mnt-matrix--target-fixed {
-  width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2);
-  min-width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2);
+.mnt-matrix--target {
+  min-width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 17);
   table-layout: fixed;
 }
 
-.mnt-matrix--target-scroll {
-  width: max-content;
-  min-width: calc(var(--mnt-target-period-width) * 15);
-  table-layout: fixed;
-}
-
-.mnt-matrix--target-fixed th:first-child,
-.mnt-matrix--target-fixed td:first-child {
+.mnt-matrix--target th:first-child,
+.mnt-matrix--target td:first-child {
   width: var(--mnt-target-name-width);
   min-width: var(--mnt-target-name-width);
   max-width: var(--mnt-target-name-width);
 }
 
-.mnt-matrix--target-fixed th:not(:first-child),
-.mnt-matrix--target-fixed .mnt-period-cell,
-.mnt-matrix--target-scroll th,
-.mnt-matrix--target-scroll .mnt-period-cell {
+.mnt-matrix--target th:not(:first-child),
+.mnt-matrix--target .mnt-period-cell {
   width: var(--mnt-target-period-width);
   min-width: var(--mnt-target-period-width);
   max-width: var(--mnt-target-period-width);
@@ -479,7 +531,7 @@
 
 .mnt-matrix--cost,
 .mnt-matrix--labor {
-  min-width: 2100px;
+  min-width: 3000px;
 }
 
 .mnt-matrix th,
@@ -513,6 +565,11 @@
   color: var(--txt);
 }
 
+.mnt-matrix th:not(:first-child),
+.mnt-matrix .mnt-period-cell {
+  min-width: var(--mnt-maintenance-period-width);
+}
+
 .mnt-matrix th:first-child,
 .mnt-matrix td:first-child {
   position: sticky;
@@ -525,21 +582,6 @@
 
 .mnt-matrix th:first-child {
   z-index: 4;
-}
-
-.mnt-matrix--target-scroll th:first-child {
-  left: auto;
-  z-index: 2;
-  background: rgba(0,0,0,.16);
-}
-
-.mnt-matrix--target-scroll td:first-child {
-  position: static;
-  left: auto;
-  z-index: auto;
-  background: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
 }
 
 .mnt-matrix th:last-child,
@@ -564,9 +606,31 @@
   backdrop-filter: blur(14px);
 }
 
+.mnt-matrix tbody tr,
+.mnt-user-table tbody tr {
+  cursor: pointer;
+}
+
+.mnt-matrix tbody tr:focus-visible td,
+.mnt-user-table tbody tr:focus-visible td {
+  outline: 2px solid rgba(190, 64, 255, .52);
+  outline-offset: -2px;
+}
+
 .mnt-matrix tbody tr:hover td,
 .mnt-user-table tbody tr:hover td {
   background: var(--glass-cell-hover);
+}
+
+.mnt-matrix tbody tr.mnt-row--selected td,
+.mnt-user-table tbody tr.mnt-row--selected td {
+  background: var(--mnt-row-selected-overlay);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+}
+
+.mnt-matrix tbody tr.mnt-row--selected:hover td,
+.mnt-user-table tbody tr.mnt-row--selected:hover td {
+  background: var(--mnt-row-selected-hover-overlay);
 }
 
 .mnt-row--muted,
@@ -601,16 +665,11 @@
   font-size: 12px;
   font-weight: 650;
   line-height: 1.25;
+  white-space: nowrap;
 }
 
 .mnt-mini-line--strong {
   color: var(--txt);
-}
-
-.mnt-mini-line--pct {
-  margin-top: 1px;
-  color: var(--txt);
-  font-weight: 760;
 }
 
 .mnt-period-cell {
@@ -639,6 +698,80 @@
   font-weight: 700;
 }
 
+.mnt-period-cell--readonly {
+  vertical-align: top;
+}
+
+.mnt-period-cell--editable {
+  vertical-align: top;
+}
+
+.mnt-target-input-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  width: 118px;
+  min-height: 28px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--glass-cell-hover) 54%, transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .1),
+    inset 0 1px 0 rgba(255, 255, 255, .16);
+  padding: 0 9px 0 10px;
+  transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.mnt-target-input-wrap:hover {
+  border-color: color-mix(in srgb, var(--txt) 42%, var(--line-2));
+  background: color-mix(in srgb, var(--glass-cell-hover) 70%, transparent);
+}
+
+.mnt-target-input-wrap:focus-within {
+  border-color: color-mix(in srgb, var(--txt) 58%, var(--line-2));
+  background: color-mix(in srgb, var(--glass-cell-hover) 78%, transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .2),
+    inset 0 1px 0 rgba(255, 255, 255, .24),
+    0 0 0 3px var(--focus-outline);
+}
+
+.mnt-target-input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  color: var(--txt);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.mnt-target-input-unit {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1;
+}
+
+.mnt-target-readonly-value {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+}
+
+.mnt-target-readonly-value strong {
+  color: inherit;
+}
+
 .mnt-progress {
   position: relative;
   height: 7px;
@@ -653,32 +786,23 @@
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, rgba(var(--good-rgb), .92) 0%, rgba(255,255,255,.58) 44%, rgba(255,255,255,0) 100%);
-  box-shadow:
-    0 0 8px rgba(var(--good-rgb), .22),
-    0 0 10px rgba(255,255,255,.12);
+  background: var(--good);
 }
 
 .mnt-progress--danger span {
-  background: linear-gradient(90deg, rgba(var(--warn-rgb), .9) 0%, rgba(255,255,255,.5) 46%, rgba(255,255,255,0) 100%);
-  box-shadow:
-    0 0 8px rgba(var(--warn-rgb), .22),
-    0 0 10px rgba(255,255,255,.1);
+  background: var(--warn);
 }
 
 .mnt-progress--warning span {
-  background: linear-gradient(90deg, rgba(255,255,255,.86) 0%, rgba(var(--good-rgb), .42) 42%, rgba(var(--good-rgb),0) 100%);
+  background: var(--warn);
 }
 
 .mnt-progress--good span {
-  background: linear-gradient(90deg, rgba(var(--good-rgb), .92) 0%, rgba(255,255,255,.58) 44%, rgba(255,255,255,0) 100%);
-  box-shadow:
-    0 0 8px rgba(var(--good-rgb), .22),
-    0 0 10px rgba(255,255,255,.12);
+  background: var(--good);
 }
 
 .mnt-progress--unset span {
-  background: linear-gradient(90deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.16) 46%, rgba(255,255,255,0) 100%);
+  background: rgba(255, 255, 255, .24);
 }
 
 .mnt-local-action {
