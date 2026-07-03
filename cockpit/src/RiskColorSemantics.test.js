@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 23:32:47 CST
+ 更新内容: 增加交付看板超额行背景、标签和百分比必须使用金色完成态的回归测试。
+*/
+/*
  更新时间: 2026-07-03 23:27:28 CST
  更新内容: 调整交付看板超额完成语义，要求保留金色完成态并显示超额交付标签。
 */
@@ -106,7 +110,7 @@ test('keeps channel and delivery progress bars on the same risk rule', () => {
   assert.equal(shouldUseChannelCompletionWarnFill({ key: 'east', completion: 70, warn: true }), true);
   assert.match(deliverySource, /const isUnderDelivery = row\.warn;/);
   assert.match(deliverySource, /const isRiskDelivery = isUnderDelivery;/);
-  assert.match(deliverySource, /const deliveryProgressPctClassName = `dlv-progress-pct\$\{isRiskDelivery \? ' dlv-progress-pct--warn' : ''\}`;/);
+  assert.match(deliverySource, /const deliveryProgressPctClassName = `dlv-progress-pct\$\{isRiskDelivery \? ' dlv-progress-pct--warn' : ''\}\$\{isOverDelivery \? ' dlv-progress-pct--over' : ''\}`;/);
   assert.match(deliveryCss, /\.dlv-progress-pct--warn\s*\{[\s\S]*?color:\s*var\(--warn\);/);
 });
 
@@ -114,10 +118,15 @@ test('keeps over-target delivery rows gold and labels them as excess delivery', 
   assert.match(deliverySource, /import \{ progressGradient \} from '\.\.\/lib\/format';/);
   assert.match(deliverySource, /const isOverDelivery = pct > 100;/);
   assert.match(deliverySource, /const deliveryTag = isOverDelivery \? '超额交付' : isUnderDelivery \? '交付预警' : null;/);
-  assert.match(deliverySource, /const deliveryRowClassName = `dlv-row\$\{isRiskDelivery \? ' dlv-row--warn' : ''\}`;/);
+  assert.match(deliverySource, /const deliveryRowClassName = `dlv-row\$\{isRiskDelivery \? ' dlv-row--warn' : ''\}\$\{isOverDelivery \? ' dlv-row--over' : ''\}`;/);
+  assert.match(deliverySource, /const deliveryTagClassName = `dlv-tag\$\{isOverDelivery \? ' dlv-tag--over' : ''\}`;/);
+  assert.match(deliverySource, /const deliveryProgressPctClassName = `dlv-progress-pct\$\{isRiskDelivery \? ' dlv-progress-pct--warn' : ''\}\$\{isOverDelivery \? ' dlv-progress-pct--over' : ''\}`;/);
   assert.match(deliverySource, /const deliveryProgressBackground = progressGradient\(pct, tokens\.progressMid\);/);
-  assert.match(deliverySource, /\{deliveryTag && <span className="dlv-tag">\{deliveryTag\}<\/span>\}/);
+  assert.match(deliverySource, /\{deliveryTag && <span className=\{deliveryTagClassName\}>\{deliveryTag\}<\/span>\}/);
   assert.doesNotMatch(deliverySource, /COLOR\.warnGradient/);
+  assert.match(deliveryCss, /\.dlv-row--over\s*\{[\s\S]*?var\(--accent-gold\)[\s\S]*?\}/);
+  assert.match(deliveryCss, /\.dlv-tag--over\s*\{[\s\S]*?color:\s*var\(--accent-gold-soft\);[\s\S]*?\}/);
+  assert.match(deliveryCss, /\.dlv-progress-pct--over\s*\{[\s\S]*?color:\s*var\(--accent-gold-soft\);[\s\S]*?\}/);
 });
 
 test('uses shared delta formatting in opening-account cards instead of a hardcoded up arrow', () => {
