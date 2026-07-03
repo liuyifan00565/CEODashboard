@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:02:59 CST
+ Update content: Collapse target maintenance completed amount and completion percent into one compact progress line.
+*/
+/*
  Update time: 2026-07-03 10:54:19 CST
  Update content: Use one wide scrolling target maintenance table and remove pinned annual/current-quarter columns.
 */
@@ -75,6 +79,10 @@ function buildTargetPeriodColumns(periodColumns, monthLabel = '') {
 
 function formatWan(value) {
   return `${Number(value || 0).toLocaleString('zh-CN')} 万`;
+}
+
+function formatWanCompact(value) {
+  return formatWan(value).replace(/\s+/g, '');
 }
 
 function formatPct(value) {
@@ -212,10 +220,10 @@ function TargetTreeNode({ node, activeId, onSelect }) {
 
 function ProgressLine({ period }) {
   const width = Math.max(0, Math.min(100, Number(period?.pct || 0)));
+  const progressText = period?.target ? formatPct(period.pct) : '未设目标';
   return (
     <>
-      <div className="mnt-mini-line">完成 {formatWan(period?.actual)}</div>
-      <div className="mnt-mini-line mnt-mini-line--pct">{period?.target ? formatPct(period.pct) : '未设目标'}</div>
+      <div className="mnt-mini-line">完成{formatWanCompact(period?.actual)} · {progressText}</div>
       <div className={`mnt-progress mnt-progress--${period?.status || 'unset'}`}>
         <span style={{ width: `${width}%` }} />
       </div>

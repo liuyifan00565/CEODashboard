@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:02:59 CST
+ Update content: Require target maintenance progress text to show completed amount and percent on one line.
+*/
+/*
  Update time: 2026-07-03 10:54:19 CST
  Update content: Require target maintenance to use one wide scrolling table without pinned annual/current-quarter columns and solid progress colors.
 */
@@ -276,6 +280,13 @@ test('builds the target and cost maintenance pages from reference matrix content
   assert.match(maintenancePageSource, /渠道成本维护/);
   assert.match(maintenancePageSource, /人力成本维护/);
   assert.match(maintenancePageSource, /保存成本/);
+});
+
+test('keeps target maintenance completed amount and percent on one line', () => {
+  assert.match(maintenancePageSource, /function formatWanCompact\(value\) \{[\s\S]*?return formatWan\(value\)\.replace\(\/\\s\+\/g, ''\);[\s\S]*?\}/);
+  assert.match(maintenancePageSource, /function ProgressLine\(\{ period \}\) \{[\s\S]*?const progressText = period\?\.target \? formatPct\(period\.pct\) : '未设目标';[\s\S]*?<div className="mnt-mini-line">完成\{formatWanCompact\(period\?\.actual\)\} · \{progressText\}<\/div>/);
+  assert.doesNotMatch(maintenancePageSource, /mnt-mini-line--pct/);
+  assert.doesNotMatch(maintenancePageCss, /\.mnt-mini-line--pct/);
 });
 
 test('keeps target maintenance periods in one scrollable table without pinned summary columns', () => {

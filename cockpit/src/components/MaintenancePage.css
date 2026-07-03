@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:02:59 CST
+ Update content: Keep target maintenance completed amount and percent on one compact mini line.
+*/
+/*
  Update time: 2026-07-03 10:54:19 CST
  Update content: Widen maintenance matrix cells and switch progress bars from gradients to solid good/warn colors.
 */
@@ -562,16 +566,11 @@
   font-size: 12px;
   font-weight: 650;
   line-height: 1.25;
+  white-space: nowrap;
 }
 
 .mnt-mini-line--strong {
   color: var(--txt);
-}
-
-.mnt-mini-line--pct {
-  margin-top: 1px;
-  color: var(--txt);
-  font-weight: 760;
 }
 
 .mnt-period-cell {
