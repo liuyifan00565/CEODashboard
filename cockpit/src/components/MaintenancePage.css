@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 17:05:00 CST
+ Update content: Add selected target-row glass scroll buttons for moving the period table left and right without the bottom scrollbar.
+*/
+/*
  Update time: 2026-07-03 15:03:14 CST
  Update content: Align target maintenance side navigation column width with the organization maintenance layout.
 */
@@ -556,6 +560,7 @@
 }
 
 .mnt-target-matrix {
+  position: relative;
   display: grid;
   grid-template-columns: var(--mnt-target-name-width) minmax(0, 1fr);
   min-width: 0;
@@ -590,6 +595,64 @@
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
+}
+
+.mnt-row-scroll-controls {
+  position: absolute;
+  top: calc(54px + var(--mnt-selected-row-index) * 100px + 50px);
+  left: 0;
+  right: 0;
+  z-index: 8;
+  height: 0;
+  pointer-events: none;
+}
+
+.mnt-row-scroll-btn {
+  pointer-events: auto;
+  position: absolute;
+  top: 0;
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  transform: translateY(-50%);
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: var(--glass-cell);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  color: var(--txt);
+  font: inherit;
+  font-size: 25px;
+  font-weight: 780;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.mnt-row-scroll-btn:hover {
+  transform: translateY(-50%) scale(1.05);
+  border-color: color-mix(in srgb, var(--txt) 36%, var(--line-2));
+  background: var(--glass-cell-hover);
+}
+
+.mnt-row-scroll-btn:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.mnt-row-scroll-btn span {
+  display: block;
+  margin-top: -2px;
+}
+
+.mnt-row-scroll-btn--left {
+  left: 10px;
+}
+
+.mnt-row-scroll-btn--right {
+  right: 10px;
 }
 
 .mnt-matrix-wrap,

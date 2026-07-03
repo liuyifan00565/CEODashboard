@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 17:05:00 CST
+ 更新内容: 目标维护选中行新增左右横向滚动按钮，便于不用底部滚动条即可移动月份表格。
+*/
+/*
  Update time: 2026-07-03 11:24:05 CST
  Update content: Freeze target maintenance department/person names outside the horizontal period scroller to prevent glass bleed-through.
 */
@@ -345,6 +349,39 @@ function useTargetCurrentMonthAlignment() {
   return scrollPaneRef;
 }
 
+function scrollTargetPeriods(scrollPaneRef, direction) {
+  const scrollPane = scrollPaneRef.current;
+  if (!scrollPane) return;
+
+  const scrollDistance = Math.max(172, Math.round(scrollPane.clientWidth * 0.72));
+  scrollPane.scrollBy({
+    left: direction === 'left' ? -scrollDistance : scrollDistance,
+    behavior: 'smooth',
+  });
+}
+
+function TargetRowScrollButton({ direction, scrollPaneRef }) {
+  const isLeft = direction === 'left';
+  const label = isLeft ? '向左移动目标月份表格' : '向右移动目标月份表格';
+
+  function handleClick(event) {
+    event.stopPropagation();
+    scrollTargetPeriods(scrollPaneRef, direction);
+  }
+
+  return (
+    <button
+      className={`mnt-row-scroll-btn mnt-row-scroll-btn--${direction}`}
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={handleClick}
+    >
+      <span aria-hidden="true">{isLeft ? '‹' : '›'}</span>
+    </button>
+  );
+}
+
 function TargetPeriodHeader({ column }) {
   return (
     <th data-target-current-month={column.targetCurrentMonth ? 'true' : undefined}>
@@ -386,6 +423,7 @@ function TargetMaintenancePage({ markDirty, status }) {
   const [selectedTargetRow, setSelectedTargetRow] = useState(null);
   const targetScrollPaneRef = useTargetCurrentMonthAlignment();
   const rows = TARGET_MAINTENANCE_ROWS;
+  const selectedTargetRowIndex = rows.findIndex((row) => `target:${row.id}` === selectedTargetRow);
 
   return (
     <section className="mnt-layout mnt-layout--target">
@@ -414,6 +452,12 @@ function TargetMaintenancePage({ markDirty, status }) {
                 </tbody>
               </table>
             </div>
+            {selectedTargetRowIndex >= 0 && (
+              <div className="mnt-row-scroll-controls" style={{ '--mnt-selected-row-index': selectedTargetRowIndex }}>
+                <TargetRowScrollButton direction="left" scrollPaneRef={targetScrollPaneRef} />
+                <TargetRowScrollButton direction="right" scrollPaneRef={targetScrollPaneRef} />
+              </div>
+            )}
             <div className="mnt-target-scroll-pane" ref={targetScrollPaneRef}>
               <table className="mnt-matrix mnt-matrix--target">
                 <thead>
