@@ -1,4 +1,5 @@
-/* Update time: 2026-07-03 15:14:10 CST  Update content: Restore the recovery half-donut to the previous segmented Vision Pro style after rejecting the chunky pie version. */
+/* Update time: 2026-07-03 15:34:00 CST  Update content: Shift recovery half-ring slices and ECharts progress bars to the cold-purple Apple/Vision Pro brand palette. */
+/* Update time: 2026-07-03 15:31:20 CST  Update content: Restore the recovery chart to the chunky rounded semi-donut pie style shown in the reference screenshot. */
 /* Update time: 2026-07-03 11:42:00 CST  Update content: Redesign the recovery pie as an Apple Vision Pro style segmented semi-donut gauge — thinner ring, rounded caps, larger gaps, low-saturation cold glass gradients, muted incomplete slice, subtle glass highlight and soft outer glow that only intensifies on the hovered segment. */
 /* 更新时间: 2026-07-03 11:05:35 CST  更新内容: 主页回款卡月度/年度目标拆成名称和金额两行展示。 */
 /* Update time: 2026-07-03 10:24:55 CST  Update content: Remove target and completed subtitle text from the recovery half-donut header. */
@@ -6,6 +7,7 @@
 /* Update time: 2026-07-02 17:50:46 CST  Update content: Add a scoped progress chart class so recovery cards can tone down accent saturation. */
 /* Update time: 2026-07-02 17:09:15 CST  Update content: Soften the unfinished recovery slice for the refined neon palette. */
 /* 更新时间: 2026-06-30 19:08:00  更新内容: 回款 KPI 半环扇区增加间隙。 */
+import * as echarts from 'echarts';
 import NumberRoll from './NumberRoll';
 import EChart from './EChart';
 import { CHANNELS } from '../data/mock';
@@ -13,13 +15,12 @@ import { fmtDelta, deltaColor, progressColor } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './KpiCard.css';
 
-// Vision Pro 风格分段半环仪表盘：每个渠道一段低饱和冷色玻璃渐变
-// 线上 → 冰蓝, 线下华南 → 青蓝, 线下华东 → 淡紫蓝, 代理 → 薄荷青
+// Vision Pro 风格分段半环仪表盘：每个渠道一段低饱和冷紫玻璃渐变
 const CHANNEL_PIE_GRADIENTS = [
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8EEAFF' }, { offset: 1, color: '#B7F3FF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6EA8FF' }, { offset: 1, color: '#8EEAFF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8B7CFF' }, { offset: 1, color: '#6EA8FF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#A7F3D0' }, { offset: 1, color: '#8EEAFF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8F86FF' }, { offset: 1, color: '#C9C2FF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#7C6CFF' }, { offset: 1, color: '#A79CFF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#9EDCFF' }, { offset: 1, color: '#C9C2FF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6E62D8' }, { offset: 1, color: '#A79CFF' }] },
 ];
 const CHANNEL_PERCENT_COLORS = ['#ffffff', '#ffffff', '#ffffff', '#ffffff'];
 const CHANNEL_PIE_LABELS = { south: '线下华南', east: '线下华东' };
@@ -27,8 +28,8 @@ const CHANNEL_PIE_LABELS = { south: '线下华南', east: '线下华东' };
 const INCOMPLETE_PIE_COLOR = {
   type: 'linear', x: 0, y: 0, x2: 1, y2: 1,
   colorStops: [
-    { offset: 0, color: 'rgba(148, 163, 184, 0.16)' },
-    { offset: 1, color: 'rgba(139, 124, 255, 0.12)' },
+    { offset: 0, color: 'rgba(160, 170, 210, 0.16)' },
+    { offset: 1, color: 'rgba(124, 108, 255, 0.10)' },
   ],
 };
 const INCOMPLETE_PERCENT_COLOR = '#ffffff';
@@ -215,13 +216,14 @@ function recoveryPieOption(card, tokens, accentColor) {
         const value = params.data?.rawValue ?? params.value;
         const isIncomplete = params.data?.isIncomplete;
         const valueLabel = `${isIncomplete ? '缺口' : '回款'} ${value} 万`;
+        const percent = params.data?.percent ?? params.percent ?? 0;
 
         return `
           <div class="kpi-pie-tooltip" aria-label="${valueLabel}">
             <div class="kpi-pie-tooltip__name">${params.seriesName} · ${params.name}</div>
             <div class="kpi-pie-tooltip__value">${isIncomplete ? '缺口' : '回款'} <strong>${value}</strong> 万</div>
-            <div class="kpi-pie-tooltip__meta">目标 ${params.data?.targetValue ?? '-'} 万 · 完成率 ${card.progress ?? params.percent}%</div>
-            <div class="kpi-pie-tooltip__meta">占比 <strong>${params.percent}%</strong></div>
+            <div class="kpi-pie-tooltip__meta">目标 ${params.data?.targetValue ?? '-'} 万 · 完成率 ${card.progress ?? percent}%</div>
+            <div class="kpi-pie-tooltip__meta">占比 <strong>${percent}%</strong></div>
           </div>
         `;
       },
@@ -244,31 +246,25 @@ function recoveryPieOption(card, tokens, accentColor) {
       {
         type: 'pie',
         name: card.title,
-        // 厚度从 30% 收窄到 22%，整体更轻盈
-        radius: ['48%', '70%'],
+        radius: ['43%', '70%'],
         center: ['46%', '70%'],
         startAngle: 180,
         endAngle: 360,
         minShowLabelAngle: 1,
-        // 弧段间留 6° 间距，制造分段空气感
-        padAngle: 6,
+        padAngle: 5,
         itemStyle: {
-          // 两端圆角 + 玻璃高光描边
-          borderRadius: 20,
-          borderColor: 'rgba(255, 255, 255, .10)',
-          borderWidth: 1,
-          // 默认只留极淡外发光，hover 时再强化
-          shadowBlur: 6,
-          shadowColor: 'rgba(142, 234, 255, .10)',
+          borderRadius: 12,
+          borderColor: 'rgba(8, 10, 16, .5)',
+          borderWidth: 2,
+          shadowBlur: 7,
+          shadowColor: 'rgba(142, 234, 255, .14)',
         },
-        // 仅当前 hover 弧段轻微亮起 + 柔和外发光
         emphasis: {
-          scale: true,
-          scaleSize: 5,
+          scale: false,
           itemStyle: {
-            shadowBlur: 18,
-            shadowColor: 'rgba(142, 234, 255, .26)',
-            borderColor: 'rgba(255, 255, 255, .18)',
+            shadowBlur: 13,
+            shadowColor: 'rgba(142, 234, 255, .24)',
+            borderColor: 'rgba(255, 255, 255, .16)',
           },
         },
         label: {
