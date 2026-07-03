@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:42:00 CST
+ Update content: Assert the Vision Pro segmented semi-donut gauge redesign — thinner ring, larger pad gap, rounder caps, cold glass gradients, muted incomplete slice, restrained label weights and softer outer glow.
+*/
+/*
  Update time: 2026-07-03 10:24:55 CST
  Update content: Require recovery half-donut headers to omit the target and completed subtitle line.
 */
@@ -56,11 +60,11 @@ test('renders month and year recovery cards with the ECharts half-donut layout',
   assert.match(componentSource, /extraCssText:\s*'padding:0;border:0;background:transparent;box-shadow:none;pointer-events:none;'/);
   assert.doesNotMatch(componentSource, /position:\s*\['58%',\s*'2%'\]/);
   assert.match(componentSource, /legend:\s*\{\s*top:\s*'5%',\s*left:\s*'center'/);
-  assert.match(componentSource, /radius:\s*\['40%',\s*'70%'\]/);
+  assert.match(componentSource, /radius:\s*\['48%',\s*'70%'\]/);
   assert.match(componentSource, /center:\s*\['46%',\s*'70%'\]/);
   assert.match(componentSource, /startAngle:\s*180/);
   assert.match(componentSource, /endAngle:\s*360/);
-  assert.match(componentSource, /padAngle:\s*3/);
+  assert.match(componentSource, /padAngle:\s*6/);
   assert.doesNotMatch(componentSource, /roseType:/);
   assert.match(componentSource, /\.sort\(\(a, b\) => a\.value - b\.value\)/);
   assert.doesNotMatch(componentSource, /function recoveryPieLabelNameLines/);
@@ -74,14 +78,14 @@ test('renders month and year recovery cards with the ECharts half-donut layout',
   assert.match(componentSource, /function recoveryPieLabelSlot\(params\) \{[\s\S]*?if \(text\.includes\('华东'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['线下华东'\];[\s\S]*?if \(text\.includes\('华南'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['线下华南'\];[\s\S]*?if \(text\.includes\('代理'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['代理'\];[\s\S]*?if \(text\.includes\('未完成'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['未完成'\];[\s\S]*?if \(text\.includes\('线上'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['线上'\];[\s\S]*?\}/);
   assert.match(componentSource, /function recoveryPieLabelLayout\(params, cardKey\) \{[\s\S]*?if \(cardKey !== 'year'\) return undefined;[\s\S]*?const slot = recoveryPieLabelSlot\(params\);[\s\S]*?return \{[\s\S]*?y: slot\.y,[\s\S]*?hideOverlap: false,[\s\S]*?\};[\s\S]*?\}/);
   assert.match(componentSource, /label:\s*\{[\s\S]*?position:\s*'outside'[\s\S]*?distanceToLabelLine:\s*0/);
-  assert.match(componentSource, /rich:\s*\{[\s\S]*?name:\s*\{[\s\S]*?fontSize:\s*15[\s\S]*?fontWeight:\s*900[\s\S]*?lineHeight:\s*19[\s\S]*?percentOnline:\s*\{[\s\S]*?color:\s*'#ffffff'[\s\S]*?fontSize:\s*13[\s\S]*?fontWeight:\s*900[\s\S]*?percentSouth:\s*\{[\s\S]*?color:\s*'#ffffff'[\s\S]*?fontSize:\s*13[\s\S]*?fontWeight:\s*900[\s\S]*?percentEast:\s*\{[\s\S]*?color:\s*'#ffffff'[\s\S]*?fontSize:\s*13[\s\S]*?fontWeight:\s*900[\s\S]*?percentAgent:\s*\{[\s\S]*?color:\s*'#ffffff'[\s\S]*?fontSize:\s*13[\s\S]*?fontWeight:\s*900[\s\S]*?percentIncomplete:\s*\{[\s\S]*?color:\s*'#ffffff'[\s\S]*?fontSize:\s*13[\s\S]*?fontWeight:\s*900/);
+  assert.match(componentSource, /rich:\s*\{[\s\S]*?name:\s*\{[\s\S]*?fontSize:\s*13[\s\S]*?fontWeight:\s*500[\s\S]*?lineHeight:\s*17[\s\S]*?percentOnline:\s*\{[\s\S]*?color:\s*'rgba\(248, 250, 252, \.96\)'[\s\S]*?fontSize:\s*12[\s\S]*?fontWeight:\s*600[\s\S]*?percentSouth:\s*\{[\s\S]*?color:\s*'rgba\(248, 250, 252, \.96\)'[\s\S]*?fontSize:\s*12[\s\S]*?fontWeight:\s*600[\s\S]*?percentEast:\s*\{[\s\S]*?color:\s*'rgba\(248, 250, 252, \.96\)'[\s\S]*?fontSize:\s*12[\s\S]*?fontWeight:\s*600[\s\S]*?percentAgent:\s*\{[\s\S]*?color:\s*'rgba\(248, 250, 252, \.96\)'[\s\S]*?fontSize:\s*12[\s\S]*?fontWeight:\s*600[\s\S]*?percentIncomplete:\s*\{[\s\S]*?color:\s*'rgba\(248, 250, 252, \.72\)'[\s\S]*?fontSize:\s*12[\s\S]*?fontWeight:\s*600/);
   assert.doesNotMatch(componentSource, /name:\s*`\$\{card\.title\}占比`/);
   assert.doesNotMatch(componentSource, /position:\s*'inside'/);
   assert.doesNotMatch(componentSource, /color:\s*'rgba\(0, 0, 0, 0\)'/);
-  assert.match(componentSource, /labelLine:\s*\{[\s\S]*?show:\s*true[\s\S]*?lineStyle:\s*\{[\s\S]*?color:\s*'rgba\(239,251,255,\.74\)'[\s\S]*?width:\s*2[\s\S]*?\}[\s\S]*?smooth:\s*0\.18[\s\S]*?length:\s*12[\s\S]*?length2:\s*20/);
+  assert.match(componentSource, /labelLine:\s*\{[\s\S]*?show:\s*true[\s\S]*?lineStyle:\s*\{[\s\S]*?color:\s*'rgba\(239, 251, 255, \.42\)'[\s\S]*?width:\s*1[\s\S]*?\}[\s\S]*?smooth:\s*0\.18[\s\S]*?length:\s*12[\s\S]*?length2:\s*20/);
   assert.match(componentSource, /labelLayout:\s*\(params\) => recoveryPieLabelLayout\(params, card\.key\)/);
-  assert.match(componentSource, /borderRadius:\s*8/);
-  assert.match(componentSource, /shadowBlur:\s*22/);
+  assert.match(componentSource, /borderRadius:\s*20/);
+  assert.match(componentSource, /shadowBlur:\s*6/);
   assert.match(componentSource, /animationType:\s*'scale'/);
   assert.match(componentSource, /animationEasing:\s*'elasticOut'/);
 });
@@ -115,10 +119,10 @@ test('keeps only the target completion title at the upper-left of the recovery h
 });
 
 test('adds a transparent unfinished slice at the right edge of the recovery half-donut', () => {
-  assert.match(componentSource, /const INCOMPLETE_PIE_COLOR = 'rgba\(230, 251, 255, \.12\)';/);
+  assert.match(componentSource, /const INCOMPLETE_PIE_COLOR = \{[\s\S]*?type:\s*'linear'[\s\S]*?colorStops:\s*\[[\s\S]*?'rgba\(148, 163, 184, 0\.16\)'[\s\S]*?'rgba\(139, 124, 255, 0\.12\)'[\s\S]*?\]/);
   assert.match(componentSource, /const targetValue = recoveryTargetValue\(card\);/);
   assert.match(componentSource, /const incompleteValue = Math\.max\(0, targetValue - cardTotal\);/);
-  assert.match(componentSource, /const incompleteSlice = \{[\s\S]*?rawValue:\s*incompleteValue[\s\S]*?targetValue[\s\S]*?name:\s*'未完成'[\s\S]*?isIncomplete:\s*true[\s\S]*?itemStyle:\s*\{[\s\S]*?color:\s*INCOMPLETE_PIE_COLOR[\s\S]*?opacity:\s*\.38[\s\S]*?borderColor:\s*'rgba\(230, 251, 255, \.2\)'/);
+  assert.match(componentSource, /const incompleteSlice = \{[\s\S]*?rawValue:\s*incompleteValue[\s\S]*?targetValue[\s\S]*?name:\s*'未完成'[\s\S]*?isIncomplete:\s*true[\s\S]*?itemStyle:\s*\{[\s\S]*?color:\s*INCOMPLETE_PIE_COLOR[\s\S]*?opacity:\s*\.55[\s\S]*?borderColor:\s*'rgba\(148, 163, 184, \.22\)'/);
   assert.match(componentSource, /percentColor:\s*CHANNEL_PERCENT_COLORS\[index\]/);
   assert.match(componentSource, /percentColor:\s*INCOMPLETE_PERCENT_COLOR/);
   assert.match(componentSource, /return \[[\s\S]*?\.\.\.channelData\.sort\(\(a, b\) => a\.value - b\.value\),[\s\S]*?incompleteSlice,[\s\S]*?\];/);
@@ -128,7 +132,7 @@ test('adds a transparent unfinished slice at the right edge of the recovery half
 });
 
 test('uses a bright premium tech palette instead of dull silver or candy pie colors', () => {
-  assert.match(componentSource, /const CHANNEL_PIE_COLORS = \['#e6fbff', '#9eeeff', '#6ea8ff', '#b8ffd9'\];/);
+  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#8EEAFF[\s\S]*?#B7F3FF[\s\S]*?#6EA8FF[\s\S]*?#8B7CFF[\s\S]*?#A7F3D0[\s\S]*?\];/);
   assert.doesNotMatch(componentSource, /const CHANNEL_PIE_COLORS = \['#d6ccb2', '#a9b3b8', '#808b93', '#5f6975'\];/);
   assert.doesNotMatch(componentSource, /const CHANNEL_PIE_COLORS = \['#dfff00', '#79f7ff', '#ff4fd8', '#a78bfa'\];/);
   assert.doesNotMatch(componentSource, /const CHANNEL_PIE_COLORS = \['#c8c7a7', '#7fa0a6', '#b98da2', '#8d88a8'\];/);

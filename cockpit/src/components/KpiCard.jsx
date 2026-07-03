@@ -1,3 +1,4 @@
+/* Update time: 2026-07-03 11:42:00 CST  Update content: Redesign the recovery pie as an Apple Vision Pro style segmented semi-donut gauge — thinner ring, rounded caps, larger gaps, low-saturation cold glass gradients, muted incomplete slice, subtle glass highlight and soft outer glow that only intensifies on the hovered segment. */
 /* Update time: 2026-07-03 10:24:55 CST  Update content: Remove target and completed subtitle text from the recovery half-donut header. */
 /* Update time: 2026-07-02 18:03:34 CST  Update content: Place recovery card target subtitles beside the large KPI value on desktop. */
 /* Update time: 2026-07-02 17:50:46 CST  Update content: Add a scoped progress chart class so recovery cards can tone down accent saturation. */
@@ -10,10 +11,24 @@ import { fmtDelta, deltaColor, progressColor } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './KpiCard.css';
 
-const CHANNEL_PIE_COLORS = ['#e6fbff', '#9eeeff', '#6ea8ff', '#b8ffd9'];
+// Vision Pro 风格分段半环仪表盘：每个渠道一段低饱和冷色玻璃渐变
+// 线上 → 冰蓝, 线下华南 → 青蓝, 线下华东 → 淡紫蓝, 代理 → 薄荷青
+const CHANNEL_PIE_GRADIENTS = [
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8EEAFF' }, { offset: 1, color: '#B7F3FF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6EA8FF' }, { offset: 1, color: '#8EEAFF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8B7CFF' }, { offset: 1, color: '#6EA8FF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#A7F3D0' }, { offset: 1, color: '#8EEAFF' }] },
+];
 const CHANNEL_PERCENT_COLORS = ['#ffffff', '#ffffff', '#ffffff', '#ffffff'];
 const CHANNEL_PIE_LABELS = { south: '线下华南', east: '线下华东' };
-const INCOMPLETE_PIE_COLOR = 'rgba(230, 251, 255, .12)';
+// 未完成段：半透明灰蓝 + 灰紫双层，退到背景里
+const INCOMPLETE_PIE_COLOR = {
+  type: 'linear', x: 0, y: 0, x2: 1, y2: 1,
+  colorStops: [
+    { offset: 0, color: 'rgba(148, 163, 184, 0.16)' },
+    { offset: 1, color: 'rgba(139, 124, 255, 0.12)' },
+  ],
+};
 const INCOMPLETE_PERCENT_COLOR = '#ffffff';
 const RECOVERY_YEAR_LABEL_SLOTS = {
   '线上': { y: 78 },
@@ -138,7 +153,7 @@ function recoveryPieData(card) {
       targetValue,
       name: channelPieName(channel),
       percentColor: CHANNEL_PERCENT_COLORS[index],
-      itemStyle: { color: CHANNEL_PIE_COLORS[index] },
+      itemStyle: { color: CHANNEL_PIE_GRADIENTS[index] },
     };
   });
 
@@ -151,8 +166,9 @@ function recoveryPieData(card) {
     percentColor: INCOMPLETE_PERCENT_COLOR,
     itemStyle: {
       color: INCOMPLETE_PIE_COLOR,
-      opacity: .38,
-      borderColor: 'rgba(230, 251, 255, .2)',
+      opacity: .55,
+      borderColor: 'rgba(148, 163, 184, .22)',
+      borderWidth: 1,
       shadowBlur: 0,
     },
   };
@@ -168,12 +184,12 @@ function recoveryPieOption(card, tokens, accentColor) {
     ...item,
     itemStyle: {
       ...item.itemStyle,
-      color: item.itemStyle.color ?? accentColor ?? CHANNEL_PIE_COLORS[index],
+      color: item.itemStyle.color ?? accentColor ?? CHANNEL_PIE_GRADIENTS[index],
     },
   }));
 
   return {
-    color: CHANNEL_PIE_COLORS,
+    color: CHANNEL_PIE_GRADIENTS,
     tooltip: {
       trigger: 'item',
       confine: true,
@@ -220,69 +236,81 @@ function recoveryPieOption(card, tokens, accentColor) {
       {
         type: 'pie',
         name: card.title,
-        radius: ['40%', '70%'],
+        // 厚度从 30% 收窄到 22%，整体更轻盈
+        radius: ['48%', '70%'],
         center: ['46%', '70%'],
         startAngle: 180,
         endAngle: 360,
         minShowLabelAngle: 1,
-        padAngle: 3,
+        // 弧段间留 6° 间距，制造分段空气感
+        padAngle: 6,
         itemStyle: {
-          borderRadius: 8,
-          borderColor: 'rgba(255, 255, 255, .12)',
-          borderWidth: 2,
-          shadowBlur: 22,
-          shadowColor: 'rgba(0, 0, 0, .32)',
+          // 两端圆角 + 玻璃高光描边
+          borderRadius: 20,
+          borderColor: 'rgba(255, 255, 255, .10)',
+          borderWidth: 1,
+          // 默认只留极淡外发光，hover 时再强化
+          shadowBlur: 6,
+          shadowColor: 'rgba(142, 234, 255, .10)',
+        },
+        // 仅当前 hover 弧段轻微亮起 + 柔和外发光
+        emphasis: {
+          scale: true,
+          scaleSize: 5,
+          itemStyle: {
+            shadowBlur: 18,
+            shadowColor: 'rgba(142, 234, 255, .26)',
+            borderColor: 'rgba(255, 255, 255, .18)',
+          },
         },
         label: {
           show: true,
           formatter: recoveryPieLabelFormatter,
           position: 'outside',
-          color: 'rgba(239,251,255,.96)',
+          color: 'rgba(248, 250, 252, .86)',
           bleedMargin: 0,
           distanceToLabelLine: 0,
           rich: {
             name: {
-              color: 'rgba(239,251,255,.96)',
-              fontSize: 15,
-              fontWeight: 900,
-              lineHeight: 19,
+              color: 'rgba(248, 250, 252, .86)',
+              fontSize: 13,
+              fontWeight: 500,
+              lineHeight: 17,
               align: 'center',
-              textShadowColor: 'rgba(0,0,0,.38)',
-              textShadowBlur: 10,
             },
             percentOnline: {
-              color: '#ffffff',
-              fontSize: 13,
-              fontWeight: 900,
-              lineHeight: 16,
+              color: 'rgba(248, 250, 252, .96)',
+              fontSize: 12,
+              fontWeight: 600,
+              lineHeight: 15,
               align: 'center',
             },
             percentSouth: {
-              color: '#ffffff',
-              fontSize: 13,
-              fontWeight: 900,
-              lineHeight: 16,
+              color: 'rgba(248, 250, 252, .96)',
+              fontSize: 12,
+              fontWeight: 600,
+              lineHeight: 15,
               align: 'center',
             },
             percentEast: {
-              color: '#ffffff',
-              fontSize: 13,
-              fontWeight: 900,
-              lineHeight: 16,
+              color: 'rgba(248, 250, 252, .96)',
+              fontSize: 12,
+              fontWeight: 600,
+              lineHeight: 15,
               align: 'center',
             },
             percentAgent: {
-              color: '#ffffff',
-              fontSize: 13,
-              fontWeight: 900,
-              lineHeight: 16,
+              color: 'rgba(248, 250, 252, .96)',
+              fontSize: 12,
+              fontWeight: 600,
+              lineHeight: 15,
               align: 'center',
             },
             percentIncomplete: {
-              color: '#ffffff',
-              fontSize: 13,
-              fontWeight: 900,
-              lineHeight: 16,
+              color: 'rgba(248, 250, 252, .72)',
+              fontSize: 12,
+              fontWeight: 600,
+              lineHeight: 15,
               align: 'center',
             },
           },
@@ -290,8 +318,8 @@ function recoveryPieOption(card, tokens, accentColor) {
         labelLine: {
           show: true,
           lineStyle: {
-            color: 'rgba(239,251,255,.74)',
-            width: 2,
+            color: 'rgba(239, 251, 255, .42)',
+            width: 1,
           },
           smooth: 0.18,
           length: 12,
