@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-03 17:51:36 CST  更新内容: 四区域渠道进度条统一紫色时同步移除 warning fill class，避免低于 80% 残留红色外发光。 */
+/* 更新时间: 2026-07-03 17:50:36 CST  更新内容: 四区域渠道完成进度条回退为统一主题紫色渐变，不再按饼图分色或低于 80% 切红。 */
 /* 更新时间: 2026-07-03 16:57:57 CST  更新内容: 四区域渠道完成进度条达标时改用半环图渠道色，低于 80% 时改用红色预警渐变。 */
 /* 更新时间: 2026-07-03 13:05:00 CST  更新内容: 渠道面板进度条 fill 改用 progressGradient 返回的低饱和冷色线性渐变，匹配全局冰蓝/粉紫主题。 */
 /* 更新时间: 2026-07-02 16:52:00 CST  更新内容: 渠道面板行箭头和弹窗关闭按钮改用统一 AppIcon 线性图标。 */
@@ -7,7 +9,7 @@ import { createPortal } from 'react-dom';
 import AppIcon from './AppIcon';
 import { getSalesCompletionRows, getSalesMemberRows } from '../data/mock';
 import { fmtPct, fmtWan, progressGradient } from '../lib/format';
-import { channelCompletionBarBackground } from '../lib/channelCompletionBar';
+import { channelCompletionBarBackground, shouldUseChannelCompletionWarnFill } from '../lib/channelCompletionBar';
 import { useThemeTokens } from '../lib/theme';
 import './ChannelPanel.css';
 
@@ -59,7 +61,7 @@ export default function ChannelPanel({ channelKey = 'all', title = '本月渠道
               <div className="ch-bar-row">
                 <div className="ch-bar">
                   <div
-                    className={`ch-bar-fill${c.warn ? ' ch-bar-fill--warn' : ''}`}
+                    className={`ch-bar-fill${shouldUseChannelCompletionWarnFill(c) ? ' ch-bar-fill--warn' : ''}`}
                     style={{
                       width: barW,
                       transitionDelay: `${i * 80}ms`,
