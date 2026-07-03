@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:22:01 CST
+ 更新内容: 扩大 AI 弹窗入口测试覆盖，禁止直接引用任意 AI 小人或 mascot 图片资产。
+*/
+/*
  更新时间: 2026-07-03 18:06:34 CST
  更新内容: 补充 AI 弹窗入口不得直接引用 AI 小人 PNG 图片资产的集成断言。
 */
@@ -45,9 +49,10 @@ test('uses the 3D mascot stage for the AI launcher', () => {
   assert.match(componentSource, /onClick=\{handleMascotClick\}/);
   assert.doesNotMatch(componentSource, /ai-mascot-sprite/);
   assert.doesNotMatch(componentSource, /ai-mascot-stage/);
-  assert.doesNotMatch(componentSource, /ai-mascot-transparent\.png/);
-  assert.doesNotMatch(componentSource, /ceo-mascot-kpi-guide/);
-  assert.doesNotMatch(componentSource, /ceo-mascot-report-presenter/);
+  assert.doesNotMatch(componentSource, /\/assets\/mascot\//);
+  assert.doesNotMatch(componentSource, /(?:ai|ceo)-mascot[^'"\s`)]*\.png/);
+  assert.doesNotMatch(componentSource, /mascot[^'"\s`)]*\.png/);
+  assert.doesNotMatch(componentSource, /\.png['"`][\s\S]{0,80}mascot|mascot[\s\S]{0,80}\.png['"`]/);
 });
 
 test('tracks pointer position for Codex-like desktop pet movement', () => {
