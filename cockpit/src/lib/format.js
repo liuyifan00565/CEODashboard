@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-03 16:51:07 CST
+ Update content: Deepen KPI warning completion colors from light pink to bright rose red.
+*/
+/*
+ Update time: 2026-07-03 16:46:50 CST
+ Update content: Brighten KPI completion progress good and warning colors again after visual review.
+*/
+/*
  Update time: 2026-07-03 16:38:48 CST
  Update content: Raise KPI completion progress brightness one step while retaining the cold-purple balance.
 */
@@ -33,15 +41,15 @@
 export const COLOR = {
   up: '#A79CFF',
   down: '#9EDCFF',
-  good: '#6E62F2',
-  warn: '#E17CB6',
+  good: '#8173FF',
+  warn: '#FF5F88',
   txt: '#F8F7FF',
   muted: '#E7E2FF',
   line: 'rgba(255,255,255,.10)',
   axis: 'rgba(255,255,255,.45)',
   // 进度条低饱和冷紫线性渐变：达标用品牌紫→薰衣草→少量冰蓝，落后用柔和粉紫。
-  goodGradient: 'linear-gradient(90deg,#6E62F2 0%,#8E82F8 56%,#B8AFFB 88%,#88CDF2 100%)',
-  warnGradient: 'linear-gradient(90deg,#E17CB6,#EC95C5)',
+  goodGradient: 'linear-gradient(90deg,#8173FF 0%,#AAA0FF 56%,#D4CEFF 88%,#A8E4FF 100%)',
+  warnGradient: 'linear-gradient(90deg,#E7436D 0%,#FF5F88 58%,#FF86A4 100%)',
 };
 
 // 环比涨跌颜色：>=0 粉紫，<0 冰蓝

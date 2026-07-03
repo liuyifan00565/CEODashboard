@@ -1,3 +1,5 @@
+/* Update time: 2026-07-03 16:51:07 CST  Update content: Deepen KPI warning ECharts progress bars from light pink to bright rose red. */
+/* Update time: 2026-07-03 16:46:50 CST  Update content: Brighten KPI ECharts progress bars again for stronger visual contrast. */
 /* Update time: 2026-07-03 16:38:48 CST  Update content: Raise KPI ECharts progress bar brightness one step after visual review. */
 /* Update time: 2026-07-03 16:32:08 CST  Update content: Darken KPI ECharts progress bars for both strong completion and warning states. */
 /* Update time: 2026-07-03 17:08:00 CST  Update content: Redesign recovery half-ring channel colors with higher distinction across online, south, east, and agent while staying in the premium cold-purple system. */
@@ -124,8 +126,9 @@ function progressBarColor(pct, tokens) {
   const value = Number(pct) || 0;
   if (value < 60) {
     return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-      { offset: 0, color: '#E17CB6' },
-      { offset: 1, color: '#EC95C5' },
+      { offset: 0, color: '#E7436D' },
+      { offset: 0.58, color: '#FF5F88' },
+      { offset: 1, color: '#FF86A4' },
     ]);
   }
 
@@ -137,10 +140,10 @@ function progressBarColor(pct, tokens) {
   }
 
   return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-    { offset: 0, color: '#6E62F2' },
-    { offset: 0.56, color: '#8E82F8' },
-    { offset: 0.88, color: '#B8AFFB' },
-    { offset: 1, color: '#88CDF2' },
+    { offset: 0, color: '#8173FF' },
+    { offset: 0.56, color: '#AAA0FF' },
+    { offset: 0.88, color: '#D4CEFF' },
+    { offset: 1, color: '#A8E4FF' },
   ]);
 }
 

@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-03 16:51:07 CST
+ Update content: Require light theme KPI warning accents to shift from light pink to deeper bright rose red.
+*/
+/*
+ Update time: 2026-07-03 16:46:50 CST
+ Update content: Require light theme KPI completion accents to use the brighter vivid progress tones.
+*/
+/*
  Update time: 2026-07-03 16:38:48 CST
  Update content: Require light theme KPI completion accents to use the brighter balanced progress tones.
 */
@@ -113,14 +121,14 @@ test('keeps cold purple brand accents aligned in light theme', () => {
   assert.match(block, /--brand-ice:#9EDCFF;/);
   assert.match(block, /--up:#A79CFF;/);
   assert.match(block, /--down:#9EDCFF;/);
-  assert.match(block, /--good:#6E62F2;/);
-  assert.match(block, /--warn:#E17CB6;/);
+  assert.match(block, /--good:#8173FF;/);
+  assert.match(block, /--warn:#FF5F88;/);
   assert.match(block, /--up-rgb:167,156,255;/);
   assert.match(block, /--down-rgb:158,220,255;/);
-  assert.match(block, /--good-rgb:110,98,242;/);
-  assert.match(block, /--warn-rgb:225,124,182;/);
-  assert.match(block, /--bar-good:linear-gradient\(90deg,#6E62F2 0%,#8E82F8 56%,#B8AFFB 88%,#88CDF2 100%\);/);
-  assert.match(block, /--bar-warn:linear-gradient\(90deg,#E17CB6,#EC95C5\);/);
+  assert.match(block, /--good-rgb:129,115,255;/);
+  assert.match(block, /--warn-rgb:255,95,136;/);
+  assert.match(block, /--bar-good:linear-gradient\(90deg,#8173FF 0%,#AAA0FF 56%,#D4CEFF 88%,#A8E4FF 100%\);/);
+  assert.match(block, /--bar-warn:linear-gradient\(90deg,#E7436D 0%,#FF5F88 58%,#FF86A4 100%\);/);
 });
 
 test('charts and KPI progress bars read theme tokens instead of hard-coded white colors', () => {

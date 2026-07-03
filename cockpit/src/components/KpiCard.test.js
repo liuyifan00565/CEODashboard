@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-03 16:51:07 CST
+ Update content: Require KPI warning ECharts progress bars to use a deeper bright rose-red gradient.
+*/
+/*
+ Update time: 2026-07-03 16:46:50 CST
+ Update content: Require KPI ECharts progress bars to use the brighter vivid completion gradients.
+*/
+/*
  Update time: 2026-07-03 16:38:48 CST
  Update content: Require KPI ECharts progress bars to use the brighter balanced completion gradients.
 */
@@ -239,7 +247,7 @@ test('uses a neutral dark glass base with only restrained completion accent at t
 });
 
 test('uses darker completion progress gradients in the KPI ECharts bars', () => {
-  assert.match(componentSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?#E17CB6[\s\S]*?#EC95C5[\s\S]*?#6E62F2[\s\S]*?#8E82F8[\s\S]*?#B8AFFB[\s\S]*?#88CDF2[\s\S]*?\}/);
+  assert.match(componentSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?#E7436D[\s\S]*?#FF5F88[\s\S]*?#FF86A4[\s\S]*?#8173FF[\s\S]*?#AAA0FF[\s\S]*?#D4CEFF[\s\S]*?#A8E4FF[\s\S]*?\}/);
 });
 
 test('keeps recovery half-donut labels readable in the elongated card', () => {
