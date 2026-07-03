@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:10:18 CST
+ Update content: Narrow maintenance page scrollbars while keeping transparent glass track styling.
+*/
+/*
  Update time: 2026-07-03 11:02:59 CST
  Update content: Keep target maintenance completed amount and percent on one compact mini line.
 */
@@ -414,6 +418,52 @@
   height: 100%;
   overflow: auto;
   overscroll-behavior-x: contain;
+}
+
+.mnt-matrix-wrap,
+.mnt-target-scroll-pane,
+.mnt-tree,
+.mnt-channel-tree,
+.mnt-edit-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, .36) transparent;
+}
+
+.mnt-matrix-wrap::-webkit-scrollbar,
+.mnt-target-scroll-pane::-webkit-scrollbar,
+.mnt-tree::-webkit-scrollbar,
+.mnt-channel-tree::-webkit-scrollbar,
+.mnt-edit-list::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.mnt-matrix-wrap::-webkit-scrollbar-track,
+.mnt-target-scroll-pane::-webkit-scrollbar-track,
+.mnt-tree::-webkit-scrollbar-track,
+.mnt-channel-tree::-webkit-scrollbar-track,
+.mnt-edit-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mnt-matrix-wrap::-webkit-scrollbar-thumb,
+.mnt-target-scroll-pane::-webkit-scrollbar-thumb,
+.mnt-tree::-webkit-scrollbar-thumb,
+.mnt-channel-tree::-webkit-scrollbar-thumb,
+.mnt-edit-list::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .36);
+  background-clip: padding-box;
+}
+
+.mnt-matrix-wrap::-webkit-scrollbar-thumb:hover,
+.mnt-target-scroll-pane::-webkit-scrollbar-thumb:hover,
+.mnt-tree::-webkit-scrollbar-thumb:hover,
+.mnt-channel-tree::-webkit-scrollbar-thumb:hover,
+.mnt-edit-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, .5);
+  background-clip: padding-box;
 }
 
 .mnt-matrix,
