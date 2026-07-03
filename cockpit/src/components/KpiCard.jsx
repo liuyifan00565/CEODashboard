@@ -1,3 +1,5 @@
+/* Update time: 2026-07-03 16:38:48 CST  Update content: Raise KPI ECharts progress bar brightness one step after visual review. */
+/* Update time: 2026-07-03 16:32:08 CST  Update content: Darken KPI ECharts progress bars for both strong completion and warning states. */
 /* Update time: 2026-07-03 17:08:00 CST  Update content: Redesign recovery half-ring channel colors with higher distinction across online, south, east, and agent while staying in the premium cold-purple system. */
 /* Update time: 2026-07-03 15:48:00 CST  Update content: Align the recovery half-ring chart geometry, gaps, rounded arcs, labels, and glow with the VersionFinancePanel semi-donut style. */
 /* Update time: 2026-07-03 15:34:00 CST  Update content: Shift recovery half-ring slices and ECharts progress bars to the cold-purple Apple/Vision Pro brand palette. */
@@ -122,8 +124,8 @@ function progressBarColor(pct, tokens) {
   const value = Number(pct) || 0;
   if (value < 60) {
     return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-      { offset: 0, color: '#F08AC3' },
-      { offset: 1, color: '#F5A4CF' },
+      { offset: 0, color: '#E17CB6' },
+      { offset: 1, color: '#EC95C5' },
     ]);
   }
 
@@ -135,10 +137,10 @@ function progressBarColor(pct, tokens) {
   }
 
   return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-    { offset: 0, color: '#7C6CFF' },
-    { offset: 0.56, color: '#A79CFF' },
-    { offset: 0.88, color: '#C9C2FF' },
-    { offset: 1, color: '#9EDCFF' },
+    { offset: 0, color: '#6E62F2' },
+    { offset: 0.56, color: '#8E82F8' },
+    { offset: 0.88, color: '#B8AFFB' },
+    { offset: 1, color: '#88CDF2' },
   ]);
 }
 

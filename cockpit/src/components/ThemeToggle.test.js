@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-03 16:38:48 CST
+ Update content: Require light theme KPI completion accents to use the brighter balanced progress tones.
+*/
+/*
+ Update time: 2026-07-03 16:32:08 CST
+ Update content: Require light theme KPI completion accents to use the deeper purple-blue and rose progress tones.
+*/
+/*
  Update time: 2026-07-03 15:42:00 CST
  Update content: Align light theme guardrails with the cold-purple Apple/Vision Pro brand palette.
 */
@@ -105,12 +113,14 @@ test('keeps cold purple brand accents aligned in light theme', () => {
   assert.match(block, /--brand-ice:#9EDCFF;/);
   assert.match(block, /--up:#A79CFF;/);
   assert.match(block, /--down:#9EDCFF;/);
-  assert.match(block, /--good:#7C6CFF;/);
-  assert.match(block, /--warn:#F08AC3;/);
+  assert.match(block, /--good:#6E62F2;/);
+  assert.match(block, /--warn:#E17CB6;/);
   assert.match(block, /--up-rgb:167,156,255;/);
   assert.match(block, /--down-rgb:158,220,255;/);
-  assert.match(block, /--good-rgb:124,108,255;/);
-  assert.match(block, /--warn-rgb:240,138,195;/);
+  assert.match(block, /--good-rgb:110,98,242;/);
+  assert.match(block, /--warn-rgb:225,124,182;/);
+  assert.match(block, /--bar-good:linear-gradient\(90deg,#6E62F2 0%,#8E82F8 56%,#B8AFFB 88%,#88CDF2 100%\);/);
+  assert.match(block, /--bar-warn:linear-gradient\(90deg,#E17CB6,#EC95C5\);/);
 });
 
 test('charts and KPI progress bars read theme tokens instead of hard-coded white colors', () => {

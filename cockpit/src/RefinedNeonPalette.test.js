@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-03 16:38:48 CST
+ Update content: Raise KPI completion progress accent brightness one step while keeping the balanced purple-blue and rose tones.
+*/
+/*
+ Update time: 2026-07-03 16:32:08 CST
+ Update content: Require KPI completion progress accents to use deeper purple-blue and rose tones.
+*/
+/*
  Update time: 2026-07-03 16:58:00 CST
  Update content: Guard the slightly faster Color Bends flow and thinner purple ribbons.
 */
@@ -75,17 +83,19 @@ test('uses the cold purple Apple Vision Pro semantic accents', () => {
   assert.match(block, /--brand-ice:#9EDCFF;/);
   assert.match(block, /--up:#A79CFF;/);
   assert.match(block, /--down:#9EDCFF;/);
-  assert.match(block, /--good:#7C6CFF;/);
-  assert.match(block, /--warn:#F08AC3;/);
+  assert.match(block, /--good:#6E62F2;/);
+  assert.match(block, /--warn:#E17CB6;/);
   assert.match(block, /--up-rgb:167,156,255;/);
   assert.match(block, /--down-rgb:158,220,255;/);
-  assert.match(block, /--good-rgb:124,108,255;/);
-  assert.match(block, /--warn-rgb:240,138,195;/);
+  assert.match(block, /--good-rgb:110,98,242;/);
+  assert.match(block, /--warn-rgb:225,124,182;/);
+  assert.match(block, /--bar-good:linear-gradient\(90deg,#6E62F2 0%,#8E82F8 56%,#B8AFFB 88%,#88CDF2 100%\);/);
+  assert.match(block, /--bar-warn:linear-gradient\(90deg,#E17CB6,#EC95C5\);/);
 
   assert.equal(COLOR.up, '#A79CFF');
   assert.equal(COLOR.down, '#9EDCFF');
-  assert.equal(COLOR.good, '#7C6CFF');
-  assert.equal(COLOR.warn, '#F08AC3');
+  assert.equal(COLOR.good, '#6E62F2');
+  assert.equal(COLOR.warn, '#E17CB6');
 });
 
 test('keeps 70 percent progress as cool white lavender instead of saturated blue', () => {

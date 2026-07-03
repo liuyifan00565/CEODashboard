@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-03 16:38:48 CST
+ Update content: Raise KPI completion progress brightness one step while retaining the cold-purple balance.
+*/
+/*
+ Update time: 2026-07-03 16:32:08 CST
+ Update content: Darken KPI completion progress good and warning colors while keeping the cold-purple palette.
+*/
+/*
  Update time: 2026-07-03 15:33:00 CST
  Update content: Update KPI semantic colors and progress gradients to the cold-purple Apple/Vision Pro brand palette.
 */
@@ -25,15 +33,15 @@
 export const COLOR = {
   up: '#A79CFF',
   down: '#9EDCFF',
-  good: '#7C6CFF',
-  warn: '#F08AC3',
+  good: '#6E62F2',
+  warn: '#E17CB6',
   txt: '#F8F7FF',
   muted: '#E7E2FF',
   line: 'rgba(255,255,255,.10)',
   axis: 'rgba(255,255,255,.45)',
   // 进度条低饱和冷紫线性渐变：达标用品牌紫→薰衣草→少量冰蓝，落后用柔和粉紫。
-  goodGradient: 'linear-gradient(90deg,#7C6CFF 0%,#A79CFF 56%,#C9C2FF 88%,#9EDCFF 100%)',
-  warnGradient: 'linear-gradient(90deg,#F08AC3,#F5A4CF)',
+  goodGradient: 'linear-gradient(90deg,#6E62F2 0%,#8E82F8 56%,#B8AFFB 88%,#88CDF2 100%)',
+  warnGradient: 'linear-gradient(90deg,#E17CB6,#EC95C5)',
 };
 
 // 环比涨跌颜色：>=0 粉紫，<0 冰蓝

@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-03 16:38:48 CST
+ Update content: Require KPI ECharts progress bars to use the brighter balanced completion gradients.
+*/
+/*
+ Update time: 2026-07-03 16:32:08 CST
+ Update content: Require KPI ECharts progress bars to use the deeper completion purple-blue and rose gradients.
+*/
+/*
  Update time: 2026-07-03 17:08:00 CST
  Update content: Require the recovery half-ring channel palette to distinguish the four regions/channels without leaving the cold-purple system.
 */
@@ -228,6 +236,10 @@ test('uses a neutral dark glass base with only restrained completion accent at t
   assert.match(componentSource, /<EChart option=\{progressOption\(card\.progress, tokens\)\} className="kpi-card__progress-chart" style=\{\{ height: 12 \}\} \/>/);
   assert.match(cssSource, /\.kpi-card--recovery \.kpi-card__progress-chart\s*\{[\s\S]*?opacity:\s*\.82;[\s\S]*?filter:\s*saturate\(\.82\);/);
   assert.match(cssSource, /\.kpi-card__side-panel \.ch-bar-fill\s*\{[\s\S]*?opacity:\s*\.82;[\s\S]*?filter:\s*saturate\(\.82\);/);
+});
+
+test('uses darker completion progress gradients in the KPI ECharts bars', () => {
+  assert.match(componentSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?#E17CB6[\s\S]*?#EC95C5[\s\S]*?#6E62F2[\s\S]*?#8E82F8[\s\S]*?#B8AFFB[\s\S]*?#88CDF2[\s\S]*?\}/);
 });
 
 test('keeps recovery half-donut labels readable in the elongated card', () => {

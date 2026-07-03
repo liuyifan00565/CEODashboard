@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-03 16:38:48 CST
+ Update content: Raise KPI completion progress accent brightness while preserving the balanced purple-blue and rose palette.
+*/
+/*
+ Update time: 2026-07-03 16:32:08 CST
+ Update content: Darken KPI completion progress purple-blue and warning rose accents for better depth.
+*/
+/*
  Update time: 2026-07-03 16:42:00 CST
  Update content: Preserve the ReactBits ribbon-bend silhouette while dimming only final brightness for dashboard readability.
 */
@@ -74,18 +82,18 @@
   --faint:rgba(231,226,255,.66);
   --up:#A79CFF;     /* cool lavender: positive movement */
   --down:#9EDCFF;   /* tiny ice blue: cooling/decline accent */
-  --good:#7C6CFF;   /* brand purple: strong completion */
-  --warn:#F08AC3;   /* muted warning pink, not neon */
+  --good:#6E62F2;   /* brighter balanced brand purple: strong completion */
+  --warn:#E17CB6;   /* brighter warning rose, not neon */
   --up-rgb:167,156,255;
   --down-rgb:158,220,255;
-  --good-rgb:124,108,255;
-  --warn-rgb:240,138,195;
+  --good-rgb:110,98,242;
+  --warn-rgb:225,124,182;
   --bar-track:rgba(160,170,210,.16);
   --bar-track-border:rgba(201,194,255,.18);
-  --bar-good:linear-gradient(90deg,#7C6CFF 0%,#A79CFF 56%,#C9C2FF 88%,#9EDCFF 100%);
-  --bar-good-glow:0 0 16px rgba(167,156,255,.18);
-  --bar-warn:linear-gradient(90deg,#F08AC3,#F5A4CF);
-  --bar-warn-glow:0 0 16px rgba(240,138,195,.14);
+  --bar-good:linear-gradient(90deg,#6E62F2 0%,#8E82F8 56%,#B8AFFB 88%,#88CDF2 100%);
+  --bar-good-glow:0 0 16px rgba(142,130,248,.17);
+  --bar-warn:linear-gradient(90deg,#E17CB6,#EC95C5);
+  --bar-warn-glow:0 0 16px rgba(225,124,182,.14);
   /* 背景：深海蓝黑底 #0B1020/#070A12/#121933；Color Bends 作为冷紫环境光层 */
   --bg-base-1:#0B1020;
   --bg-base-2:#070A12;
@@ -149,18 +157,18 @@
   --brand-ice:#9EDCFF;
   --up:#A79CFF;
   --down:#9EDCFF;
-  --good:#7C6CFF;
-  --warn:#F08AC3;
+  --good:#6E62F2;
+  --warn:#E17CB6;
   --up-rgb:167,156,255;
   --down-rgb:158,220,255;
-  --good-rgb:124,108,255;
-  --warn-rgb:240,138,195;
+  --good-rgb:110,98,242;
+  --warn-rgb:225,124,182;
   --bar-track:rgba(110,130,170,.18);
   --bar-track-border:rgba(110,130,170,.24);
-  --bar-good:linear-gradient(90deg,#7C6CFF 0%,#A79CFF 56%,#C9C2FF 88%,#9EDCFF 100%);
-  --bar-good-glow:0 0 16px rgba(167,156,255,.18);
-  --bar-warn:linear-gradient(90deg,#F08AC3,#F5A4CF);
-  --bar-warn-glow:0 0 16px rgba(240,138,195,.14);
+  --bar-good:linear-gradient(90deg,#6E62F2 0%,#8E82F8 56%,#B8AFFB 88%,#88CDF2 100%);
+  --bar-good-glow:0 0 16px rgba(142,130,248,.17);
+  --bar-warn:linear-gradient(90deg,#E17CB6,#EC95C5);
+  --bar-warn-glow:0 0 16px rgba(225,124,182,.14);
   /* 背景：浅绿底 + 极淡冷色径向光 + 噪点，与暗主题同构 */
   --bg-base-1:#EDFCEE;
   --bg-base-2:#E8FBE8;
