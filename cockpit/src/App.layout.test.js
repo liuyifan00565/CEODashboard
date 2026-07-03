@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 15:03:14 CST
+ Update content: Require every maintenance-page side navigation column to use the organization-structure width.
+*/
+/*
  Update time: 2026-07-03 13:05:00 CST
  Update content: 搜索高亮边框断言改为冰蓝新色 rgba(110,168,255,.34)。
 */
@@ -418,7 +422,6 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   const toolbarBlock = cssRuleBody(maintenancePageCss, '.mnt-toolbar');
   const actionsBlock = cssRuleBody(maintenancePageCss, '.mnt-actions');
   const toolbarControlBlock = cssRuleBody(maintenancePageCss, '.mnt-toolbar .mnt-control');
-  const targetLayoutBlock = cssRuleBody(maintenancePageCss, '.mnt-layout--target');
   const matrixWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap');
   const computePanelBlock = cssRuleBody(computePageCss, '.cpu-panel');
   const progressBlock = cssRuleBody(maintenancePageCss, '.mnt-progress');
@@ -455,7 +458,8 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.match(actionsBlock, /gap:\s*7px;/);
   assert.match(toolbarControlBlock, /width:\s*180px;/);
   assert.match(toolbarControlBlock, /flex:\s*0 0 180px;/);
-  assert.match(targetLayoutBlock, /grid-template-columns:\s*minmax\(190px,\s*230px\) minmax\(0,\s*1fr\);/);
+  assert.doesNotMatch(maintenancePageCss, /grid-template-columns:\s*minmax\(190px,\s*230px\) minmax\(0,\s*1fr\);/);
+  assert.match(maintenancePageCss, /\.mnt-layout--target \{[\s\S]*?grid-template-columns:\s*minmax\(220px,\s*260px\) minmax\(0,\s*1fr\);/);
   assert.match(maintenancePageCss, /\.mnt-layout--cost,\s*[\s\S]*?\.mnt-layout--channel \{[\s\S]*?grid-template-columns:\s*minmax\(220px,\s*260px\) minmax\(0,\s*1fr\);/);
   assert.match(maintenancePageCss, /\.mnt-layout--org \{[\s\S]*?grid-template-columns:\s*minmax\(220px,\s*260px\) minmax\(0,\s*1fr\);/);
   assert.match(computePanelBlock, /background:\s*transparent;/);

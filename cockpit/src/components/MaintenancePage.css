@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 15:03:14 CST
+ Update content: Align target maintenance side navigation column width with the organization maintenance layout.
+*/
+/*
  Update time: 2026-07-03 11:33:47 CST
  Update content: Use lower-opacity pure violet maintenance row overlays instead of pink-purple selected fills.
 */
@@ -319,7 +323,7 @@
 }
 
 .mnt-layout--target {
-  grid-template-columns: minmax(190px, 230px) minmax(0, 1fr);
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
 }
 
 .mnt-layout--cost,
