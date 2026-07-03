@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-03 11:30:51 CST
+ 更新内容: 要求主页回款卡目标名称与金额强制单行不换行。
+*/
+/*
+ 更新时间: 2026-07-03 11:28:32 CST
+ 更新内容: 要求主页回款卡目标名称与金额恢复上下两行展示，防止被横排样式覆盖。
+*/
+/*
  更新时间: 2026-07-03 11:26:48 CST
  更新内容: 要求主页回款长卡完成率进度条收窄。
 */
@@ -227,13 +235,13 @@ test('adds more room between recovery value row and completion progress in long 
   assert.doesNotMatch(cssSource, /\.kpi-card__progress\s*\{[\s\S]*?margin-top:\s*(?:2[4-9]|[3-9]\d)px;/);
 });
 
-test('places the recovery target label and amount on one line below the large value', () => {
+test('places the recovery target label and amount on one unwrapped line below the large value', () => {
   assert.match(componentSource, /function splitRecoveryTargetSub\(card\) \{[\s\S]*?const match = card\.sub\.match\(\/\^\(\\S\+目标\)\\s\+\(\.\+\)\$\/\);[\s\S]*?return match \? \{ label: match\[1\], value: match\[2\] \} : null;[\s\S]*?\}/);
   assert.match(componentSource, /const recoveryTargetSub = splitRecoveryTargetSub\(card\);/);
   assert.match(componentSource, /className=\{`kpi-card__sub\$\{recoveryTargetSub \? ' kpi-card__sub--target' : ''\}`\}/);
   assert.match(componentSource, /<span className="kpi-card__sub-label">\{recoveryTargetSub\.label\}<\/span>[\s\S]*?<span className="kpi-card__sub-value">\{recoveryTargetSub\.value\}<\/span>/);
   assert.match(cssSource, /@media \(min-width:761px\) \{[\s\S]*?\.kpi-card--recovery \.kpi-card__value-row\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;[\s\S]*?align-items:\s*flex-start;[\s\S]*?gap:\s*6px;/);
-  assert.match(cssSource, /\.kpi-card__sub--target\s*\{[\s\S]*?display:\s*inline-flex;[\s\S]*?flex-direction:\s*row;[\s\S]*?align-items:\s*baseline;[\s\S]*?gap:\s*5px;[\s\S]*?white-space:\s*nowrap;/);
+  assert.match(cssSource, /\.kpi-card__sub--target\s*\{[\s\S]*?display:\s*inline-flex;[\s\S]*?flex:\s*0 0 auto;[\s\S]*?flex-direction:\s*row;[\s\S]*?flex-wrap:\s*nowrap;[\s\S]*?align-items:\s*baseline;[\s\S]*?gap:\s*5px;[\s\S]*?width:\s*max-content;[\s\S]*?max-width:\s*none;[\s\S]*?white-space:\s*nowrap;[\s\S]*?word-break:\s*keep-all;/);
   assert.match(cssSource, /\.kpi-card__sub-label,\s*[\s\S]*?\.kpi-card__sub-value\s*\{[\s\S]*?display:\s*block;/);
   assert.match(cssSource, /\.kpi-card__sub-value\s*\{[\s\S]*?font-size:\s*1\.1em;[\s\S]*?font-weight:\s*760;/);
   assert.match(cssSource, /@media \(min-width:761px\) \{[\s\S]*?\.kpi-card--recovery \.kpi-card__value-row \.kpi-card__sub--target\s*\{[\s\S]*?line-height:\s*1\.18;/);
