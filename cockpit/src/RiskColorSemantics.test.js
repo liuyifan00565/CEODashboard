@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:50:43 CST
+ 更新内容: 增加目标缺口仍存在时趋势箭头必须按缺口下降语义展示的回归测试。
+*/
+/*
  更新时间: 2026-07-03 18:19:59 CST
  更新内容: 增加整体高级配色与风险色语义回归测试，锁定 80% 以下、缺口与下降指标使用统一风险色。
 */
@@ -48,7 +52,8 @@ test('formats falling values and under-target gaps as risk deltas', () => {
   assert.equal(format.fmtDelta(12.5), '↑12.5%');
   assert.equal(typeof format.riskAdjustedDelta, 'function');
   assert.equal(format.riskAdjustedDelta({ progress: 53.8, gap: 2680, delta: 13 }), -13);
-  assert.equal(format.riskAdjustedDelta({ progress: 83.8, gap: 94, delta: 12.5 }), 12.5);
+  assert.equal(format.riskAdjustedDelta({ progress: 83.8, gap: 94, delta: 12.5 }), -12.5);
+  assert.equal(format.riskAdjustedDelta({ progress: 100, gap: 0, delta: 12.5 }), 12.5);
 });
 
 test('renders recovery gap chip and its left trend chip with risk semantics', () => {

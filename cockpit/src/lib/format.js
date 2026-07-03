@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:50:43 CST
+ Update content: Treat any remaining KPI target gap as a downward risk delta so gap chips never show an upward arrow.
+*/
+/*
  Update time: 2026-07-03 18:19:59 CST
  Update content: Rebase dashboard semantic colors on obsidian violet/champagne and make sub-80 completion, gaps, and falling deltas use risk styling.
 */
@@ -64,8 +68,9 @@ export const deltaArrow = (v) => (v >= 0 ? '↑' : '↓');
 export const fmtDelta = (v) => `${deltaArrow(v)}${Math.abs(Number(v) || 0)}%`;
 export const riskAdjustedDelta = ({ progress, gap, delta } = {}) => {
   if (delta == null) return null;
+  void progress;
   const value = Number(delta) || 0;
-  return isRiskCompletion(progress) && Number(gap) > 0 ? -Math.abs(value) : value;
+  return Number(gap) > 0 ? -Math.abs(value) : value;
 };
 
 // progressColor 返回纯色，供 ECharts label.color 和文字 color 使用：80% 以下一律风险色。
