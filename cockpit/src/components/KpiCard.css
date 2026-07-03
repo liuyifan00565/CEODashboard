@@ -1,3 +1,4 @@
+/* Update time: 2026-07-03 15:36:00 CST  Update content: Tune KPI cards to cold-purple translucent glass, softer hover lift, and restrained Vision Pro environment glow. */
 /* 更新时间: 2026-07-03 11:34:48 CST  更新内容: 按最新要求保持回款卡目标数据单行不换行。 */
 /* 更新时间: 2026-07-03 11:34:16 CST  更新内容: 按主页需求恢复回款卡目标名称与金额上下两行展示。 */
 /* 更新时间: 2026-07-03 11:30:51 CST  更新内容: 主页回款卡目标名称与金额强制单行不换行。 */
@@ -26,7 +27,7 @@
   padding: 18px;
   border: 1px solid var(--line-2);
   border-radius: 16px;
-  background: transparent;
+  background: rgba(255, 255, 255, .06);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
@@ -45,7 +46,7 @@
   background:
     linear-gradient(112deg, color-mix(in srgb, var(--kpi-accent) 4%, transparent) 0%, color-mix(in srgb, var(--kpi-accent) 2%, transparent) 30%, transparent 62%),
     linear-gradient(180deg, rgba(255, 255, 255, .026), rgba(255, 255, 255, .006)),
-    rgba(4, 5, 7, .18);
+    rgba(255, 255, 255, .055);
 }
 
 .kpi-card--with-side {
@@ -142,7 +143,7 @@
   z-index: 1;
   width: 100%;
   flex: none;
-  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--kpi-accent) 12%, transparent));
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--kpi-accent) 10%, transparent));
 }
 
 .kpi-card--recovery .kpi-card__progress-chart {
@@ -307,9 +308,9 @@
 
 .kpi-card:hover,
 .kpi-card:focus-visible {
-  transform: translateY(-4px);
-  border-color: var(--line-2);
-  box-shadow: 0 22px 58px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255, 255, 255, .24);
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, .18);
+  box-shadow: 0 20px 54px rgba(2, 5, 14, .34), 0 0 22px rgba(124, 108, 255, .08), inset 0 1px 0 rgba(255, 255, 255, .2);
   outline: none;
 }
 

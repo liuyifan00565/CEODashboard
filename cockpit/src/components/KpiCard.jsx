@@ -1,3 +1,4 @@
+/* Update time: 2026-07-03 15:48:00 CST  Update content: Align the recovery half-ring chart geometry, gaps, rounded arcs, labels, and glow with the VersionFinancePanel semi-donut style. */
 /* Update time: 2026-07-03 15:34:00 CST  Update content: Shift recovery half-ring slices and ECharts progress bars to the cold-purple Apple/Vision Pro brand palette. */
 /* Update time: 2026-07-03 15:31:20 CST  Update content: Restore the recovery chart to the chunky rounded semi-donut pie style shown in the reference screenshot. */
 /* Update time: 2026-07-03 11:42:00 CST  Update content: Redesign the recovery pie as an Apple Vision Pro style segmented semi-donut gauge — thinner ring, rounded caps, larger gaps, low-saturation cold glass gradients, muted incomplete slice, subtle glass highlight and soft outer glow that only intensifies on the hovered segment. */
@@ -64,16 +65,7 @@ function splitRecoveryTargetSub(card) {
 }
 
 function recoveryPieLabelFormatter(params) {
-  return `{name|${params.name}}\n{${recoveryPiePercentRichKey(params)}|${params.percent}%}`;
-}
-
-function recoveryPiePercentRichKey(params) {
-  const name = String(params.name ?? params.data?.name ?? '');
-  if (name.includes('华东')) return 'percentEast';
-  if (name.includes('华南')) return 'percentSouth';
-  if (name.includes('代理')) return 'percentAgent';
-  if (name.includes('未完成')) return 'percentIncomplete';
-  return 'percentOnline';
+  return `{name|${params.name}}\n{percent|${params.percent}%}`;
 }
 
 function recoveryPieLabelSlot(params) {
@@ -125,8 +117,32 @@ function recoveryPieTooltipPosition(point, params, dom, rect, size) {
   return [left, top];
 }
 
+function progressBarColor(pct, tokens) {
+  const value = Number(pct) || 0;
+  if (value < 60) {
+    return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+      { offset: 0, color: '#F08AC3' },
+      { offset: 1, color: '#F5A4CF' },
+    ]);
+  }
+
+  if (value < 80) {
+    return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+      { offset: 0, color: tokens.progressMid },
+      { offset: 1, color: '#C9C2FF' },
+    ]);
+  }
+
+  return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+    { offset: 0, color: '#7C6CFF' },
+    { offset: 0.56, color: '#A79CFF' },
+    { offset: 0.88, color: '#C9C2FF' },
+    { offset: 1, color: '#9EDCFF' },
+  ]);
+}
+
 function progressOption(pct, tokens) {
-  const color = progressColor(pct, tokens.progressMid);
+  const labelColor = progressColor(pct, tokens.progressMid);
   return {
     grid: { left: 0, right: 0, top: 0, bottom: 0 },
     xAxis: { type: 'value', min: 0, max: 100, show: false },
@@ -139,9 +155,10 @@ function progressOption(pct, tokens) {
       barWidth: 9,
       showBackground: true,
       backgroundStyle: { color: tokens.chartBarFaint, borderRadius: 5 },
-      itemStyle: { color, borderRadius: 5 },
+      itemStyle: { color: progressBarColor(pct, tokens), borderRadius: 5, shadowBlur: 6, shadowColor: labelColor },
       label: { show: false },
       silent: true,
+      emphasis: { disabled: true },
     }],
   };
 }
@@ -176,7 +193,7 @@ function recoveryPieData(card) {
     itemStyle: {
       color: INCOMPLETE_PIE_COLOR,
       opacity: .55,
-      borderColor: 'rgba(148, 163, 184, .22)',
+      borderColor: 'rgba(160, 170, 210, .18)',
       borderWidth: 1,
       shadowBlur: 0,
     },
@@ -240,30 +257,31 @@ function recoveryPieOption(card, tokens, accentColor) {
         fontSize: 11,
       },
     },
-    animationDuration: 1000,
-    animationEasing: 'elasticOut',
+    animationDuration: 900,
+    animationEasing: 'cubicOut',
     series: [
       {
         type: 'pie',
         name: card.title,
-        radius: ['43%', '70%'],
-        center: ['46%', '70%'],
+        radius: ['45%', '76%'],
+        center: ['49.5%', '70%'],
         startAngle: 180,
         endAngle: 360,
         minShowLabelAngle: 1,
-        padAngle: 5,
+        padAngle: 3,
+        avoidLabelOverlap: true,
         itemStyle: {
-          borderRadius: 12,
-          borderColor: 'rgba(8, 10, 16, .5)',
-          borderWidth: 2,
-          shadowBlur: 7,
-          shadowColor: 'rgba(142, 234, 255, .14)',
+          borderRadius: 8,
+          borderColor: 'rgba(255, 255, 255, .11)',
+          borderWidth: 1,
+          shadowBlur: 10,
+          shadowColor: 'rgba(167, 156, 255, .14)',
         },
         emphasis: {
           scale: false,
           itemStyle: {
-            shadowBlur: 13,
-            shadowColor: 'rgba(142, 234, 255, .24)',
+            shadowBlur: 14,
+            shadowColor: 'rgba(167, 156, 255, .18)',
             borderColor: 'rgba(255, 255, 255, .16)',
           },
         },
@@ -271,63 +289,40 @@ function recoveryPieOption(card, tokens, accentColor) {
           show: true,
           formatter: recoveryPieLabelFormatter,
           position: 'outside',
-          color: 'rgba(248, 250, 252, .86)',
+          color: tokens.chartText,
           bleedMargin: 0,
           distanceToLabelLine: 0,
           rich: {
             name: {
-              color: 'rgba(248, 250, 252, .86)',
+              color: tokens.chartText,
               fontSize: 13,
-              fontWeight: 500,
+              fontWeight: 850,
               lineHeight: 17,
               align: 'center',
+              textShadowColor: 'rgba(0,0,0,.44)',
+              textShadowBlur: 10,
             },
-            percentOnline: {
-              color: 'rgba(248, 250, 252, .96)',
+            percent: {
+              color: tokens.chartText,
               fontSize: 12,
-              fontWeight: 600,
+              fontWeight: 850,
               lineHeight: 15,
               align: 'center',
-            },
-            percentSouth: {
-              color: 'rgba(248, 250, 252, .96)',
-              fontSize: 12,
-              fontWeight: 600,
-              lineHeight: 15,
-              align: 'center',
-            },
-            percentEast: {
-              color: 'rgba(248, 250, 252, .96)',
-              fontSize: 12,
-              fontWeight: 600,
-              lineHeight: 15,
-              align: 'center',
-            },
-            percentAgent: {
-              color: 'rgba(248, 250, 252, .96)',
-              fontSize: 12,
-              fontWeight: 600,
-              lineHeight: 15,
-              align: 'center',
-            },
-            percentIncomplete: {
-              color: 'rgba(248, 250, 252, .72)',
-              fontSize: 12,
-              fontWeight: 600,
-              lineHeight: 15,
-              align: 'center',
+              textShadowColor: 'rgba(0,0,0,.48)',
+              textShadowBlur: 10,
             },
           },
         },
         labelLine: {
           show: true,
           lineStyle: {
-            color: 'rgba(239, 251, 255, .42)',
-            width: 1,
+            color: tokens.chartText,
+            opacity: 0.72,
+            width: 2,
           },
           smooth: 0.18,
-          length: 12,
-          length2: 20,
+          length: 10,
+          length2: 16,
         },
         labelLayout: (params) => recoveryPieLabelLayout(params, card.key),
         animationType: 'scale',

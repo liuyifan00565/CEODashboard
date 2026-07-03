@@ -1,6 +1,14 @@
 /*
+ Update time: 2026-07-03 15:48:00 CST
+ Update content: Require the recovery half-ring to reuse the VersionFinancePanel semi-donut geometry and label styling.
+*/
+/*
  Update time: 2026-07-03 15:14:10 CST
  Update content: Require restoring the recovery half-donut to the previous segmented Vision Pro style.
+*/
+/*
+ Update time: 2026-07-03 15:24:00 CST
+ Update content: Require recovery half-ring colors to use the confirmed cold-purple brand system with only a tiny ice-blue accent.
 */
 /*
  Update time: 2026-07-03 11:42:00 CST
@@ -108,38 +116,42 @@ test('renders month and year recovery cards with the ECharts half-donut layout',
   assert.match(componentSource, /<div className="kpi-card__pie" aria-hidden="true">/);
   assert.match(componentSource, /<EChart option=\{recoveryPieOption\(card, tokens, recoveryAccent\)\}/);
   assert.match(componentSource, /function recoveryPieTooltipPosition\(point, params, dom, rect, size\) \{[\s\S]*?const gap = 14;[\s\S]*?const contentWidth = size\.contentSize\[0\];[\s\S]*?const viewWidth = size\.viewSize\[0\];[\s\S]*?return \[left, top\];[\s\S]*?\}/);
-  assert.match(componentSource, /tooltip:\s*\{[\s\S]*?trigger:\s*'item'[\s\S]*?position:\s*recoveryPieTooltipPosition[\s\S]*?formatter:\s*\(params\) => \{[\s\S]*?const value = params\.data\?\.rawValue \?\? params\.value;[\s\S]*?const isIncomplete = params\.data\?\.isIncomplete;[\s\S]*?return `[\s\S]*?kpi-pie-tooltip__name[\s\S]*?\$\{params\.seriesName\} · \$\{params\.name\}[\s\S]*?kpi-pie-tooltip__value[\s\S]*?\$\{isIncomplete \? '缺口' : '回款'\} <strong>\$\{value\}<\/strong> 万[\s\S]*?kpi-pie-tooltip__meta[\s\S]*?目标 \$\{params\.data\?\.targetValue \?\? '-'\} 万[\s\S]*?占比 <strong>\$\{params\.percent\}%<\/strong>[\s\S]*?`/);
+  assert.match(componentSource, /tooltip:\s*\{[\s\S]*?trigger:\s*'item'[\s\S]*?position:\s*recoveryPieTooltipPosition[\s\S]*?formatter:\s*\(params\) => \{[\s\S]*?const value = params\.data\?\.rawValue \?\? params\.value;[\s\S]*?const isIncomplete = params\.data\?\.isIncomplete;[\s\S]*?const percent = params\.data\?\.percent \?\? params\.percent \?\? 0;[\s\S]*?return `[\s\S]*?kpi-pie-tooltip__name[\s\S]*?\$\{params\.seriesName\} · \$\{params\.name\}[\s\S]*?kpi-pie-tooltip__value[\s\S]*?\$\{isIncomplete \? '缺口' : '回款'\} <strong>\$\{value\}<\/strong> 万[\s\S]*?kpi-pie-tooltip__meta[\s\S]*?目标 \$\{params\.data\?\.targetValue \?\? '-'\} 万[\s\S]*?占比 <strong>\$\{percent\}%<\/strong>[\s\S]*?`/);
   assert.match(componentSource, /extraCssText:\s*'padding:0;border:0;background:transparent;box-shadow:none;pointer-events:none;'/);
   assert.doesNotMatch(componentSource, /position:\s*\['58%',\s*'2%'\]/);
   assert.match(componentSource, /legend:\s*\{\s*top:\s*'5%',\s*left:\s*'center'/);
-  assert.match(componentSource, /radius:\s*\['48%',\s*'70%'\]/);
-  assert.match(componentSource, /center:\s*\['46%',\s*'70%'\]/);
+  assert.match(componentSource, /radius:\s*\['45%',\s*'76%'\]/);
+  assert.match(componentSource, /center:\s*\['49\.5%',\s*'70%'\]/);
   assert.match(componentSource, /startAngle:\s*180/);
   assert.match(componentSource, /endAngle:\s*360/);
-  assert.match(componentSource, /padAngle:\s*6/);
+  assert.match(componentSource, /padAngle:\s*3/);
+  assert.match(componentSource, /avoidLabelOverlap:\s*true/);
   assert.doesNotMatch(componentSource, /roseType:/);
   assert.match(componentSource, /\.sort\(\(a, b\) => a\.value - b\.value\)/);
   assert.doesNotMatch(componentSource, /function recoveryPieLabelNameLines/);
-  assert.match(componentSource, /function recoveryPieLabelFormatter\(params\) \{[\s\S]*?return `\{name\|\$\{params\.name\}\}\\n\{\$\{recoveryPiePercentRichKey\(params\)\}\|\$\{params\.percent\}%\}`;[\s\S]*?\}/);
+  assert.match(componentSource, /function recoveryPieLabelFormatter\(params\) \{[\s\S]*?return `\{name\|\$\{params\.name\}\}\\n\{percent\|\$\{params\.percent\}%\}`;[\s\S]*?\}/);
   assert.doesNotMatch(componentSource, /label\.startsWith\('线下'\)/);
   assert.match(componentSource, /const CHANNEL_PERCENT_COLORS = \['#ffffff', '#ffffff', '#ffffff', '#ffffff'\];/);
   assert.match(componentSource, /const INCOMPLETE_PERCENT_COLOR = '#ffffff';/);
-  assert.match(componentSource, /function recoveryPiePercentRichKey\(params\) \{[\s\S]*?if \(name\.includes\('华东'\)\) return 'percentEast';[\s\S]*?if \(name\.includes\('华南'\)\) return 'percentSouth';[\s\S]*?if \(name\.includes\('代理'\)\) return 'percentAgent';[\s\S]*?if \(name\.includes\('未完成'\)\) return 'percentIncomplete';[\s\S]*?return 'percentOnline';[\s\S]*?\}/);
+  assert.doesNotMatch(componentSource, /function recoveryPiePercentRichKey/);
   assert.doesNotMatch(componentSource, /function recoveryPiePercentLabelFormatter/);
   assert.match(componentSource, /const RECOVERY_YEAR_LABEL_SLOTS = \{[\s\S]*?'线上': \{ y: 78 \},[\s\S]*?'代理': \{ y: 118 \},[\s\S]*?'线下华南': \{ y: 158 \},[\s\S]*?'线下华东': \{ y: 198 \},[\s\S]*?'未完成': \{ y: 156 \},[\s\S]*?\};/);
   assert.match(componentSource, /function recoveryPieLabelSlot\(params\) \{[\s\S]*?if \(text\.includes\('华东'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['线下华东'\];[\s\S]*?if \(text\.includes\('华南'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['线下华南'\];[\s\S]*?if \(text\.includes\('代理'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['代理'\];[\s\S]*?if \(text\.includes\('未完成'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['未完成'\];[\s\S]*?if \(text\.includes\('线上'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['线上'\];[\s\S]*?\}/);
   assert.match(componentSource, /function recoveryPieLabelLayout\(params, cardKey\) \{[\s\S]*?if \(cardKey !== 'year'\) return undefined;[\s\S]*?const slot = recoveryPieLabelSlot\(params\);[\s\S]*?return \{[\s\S]*?y: slot\.y,[\s\S]*?hideOverlap: false,[\s\S]*?\};[\s\S]*?\}/);
   assert.match(componentSource, /label:\s*\{[\s\S]*?position:\s*'outside'[\s\S]*?distanceToLabelLine:\s*0/);
-  assert.match(componentSource, /rich:\s*\{[\s\S]*?name:\s*\{[\s\S]*?fontSize:\s*13[\s\S]*?fontWeight:\s*500[\s\S]*?lineHeight:\s*17[\s\S]*?percentOnline:\s*\{[\s\S]*?color:\s*'rgba\(248, 250, 252, \.96\)'[\s\S]*?fontSize:\s*12[\s\S]*?fontWeight:\s*600[\s\S]*?percentSouth:\s*\{[\s\S]*?color:\s*'rgba\(248, 250, 252, \.96\)'[\s\S]*?fontSize:\s*12[\s\S]*?fontWeight:\s*600[\s\S]*?percentEast:\s*\{[\s\S]*?color:\s*'rgba\(248, 250, 252, \.96\)'[\s\S]*?fontSize:\s*12[\s\S]*?fontWeight:\s*600[\s\S]*?percentAgent:\s*\{[\s\S]*?color:\s*'rgba\(248, 250, 252, \.96\)'[\s\S]*?fontSize:\s*12[\s\S]*?fontWeight:\s*600[\s\S]*?percentIncomplete:\s*\{[\s\S]*?color:\s*'rgba\(248, 250, 252, \.72\)'[\s\S]*?fontSize:\s*12[\s\S]*?fontWeight:\s*600/);
+  assert.match(componentSource, /rich:\s*\{[\s\S]*?name:\s*\{[\s\S]*?color:\s*tokens\.chartText[\s\S]*?fontSize:\s*13[\s\S]*?fontWeight:\s*850[\s\S]*?lineHeight:\s*17[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.44\)'[\s\S]*?textShadowBlur:\s*10[\s\S]*?percent:\s*\{[\s\S]*?color:\s*tokens\.chartText[\s\S]*?fontSize:\s*12[\s\S]*?fontWeight:\s*850[\s\S]*?lineHeight:\s*15[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.48\)'[\s\S]*?textShadowBlur:\s*10/);
   assert.doesNotMatch(componentSource, /name:\s*`\$\{card\.title\}占比`/);
   assert.doesNotMatch(componentSource, /position:\s*'inside'/);
   assert.doesNotMatch(componentSource, /color:\s*'rgba\(0, 0, 0, 0\)'/);
-  assert.match(componentSource, /labelLine:\s*\{[\s\S]*?show:\s*true[\s\S]*?lineStyle:\s*\{[\s\S]*?color:\s*'rgba\(239, 251, 255, \.42\)'[\s\S]*?width:\s*1[\s\S]*?\}[\s\S]*?smooth:\s*0\.18[\s\S]*?length:\s*12[\s\S]*?length2:\s*20/);
+  assert.match(componentSource, /labelLine:\s*\{[\s\S]*?show:\s*true[\s\S]*?lineStyle:\s*\{[\s\S]*?color:\s*tokens\.chartText[\s\S]*?opacity:\s*0\.72[\s\S]*?width:\s*2[\s\S]*?\}[\s\S]*?smooth:\s*0\.18[\s\S]*?length:\s*10[\s\S]*?length2:\s*16/);
   assert.match(componentSource, /labelLayout:\s*\(params\) => recoveryPieLabelLayout\(params, card\.key\)/);
-  assert.match(componentSource, /borderRadius:\s*20/);
-  assert.match(componentSource, /shadowBlur:\s*6/);
+  assert.match(componentSource, /borderRadius:\s*8/);
+  assert.match(componentSource, /borderColor:\s*'rgba\(255, 255, 255, \.11\)'/);
+  assert.match(componentSource, /shadowBlur:\s*10/);
+  assert.match(componentSource, /emphasis:\s*\{[\s\S]*?scale:\s*false/);
   assert.match(componentSource, /animationType:\s*'scale'/);
-  assert.match(componentSource, /animationEasing:\s*'elasticOut'/);
+  assert.match(componentSource, /animationDuration:\s*900/);
+  assert.match(componentSource, /animationEasing:\s*'cubicOut'/);
 });
 
 test('uses four sales source slices in the recovery half-donut chart', () => {
@@ -171,20 +183,22 @@ test('keeps only the target completion title at the upper-left of the recovery h
 });
 
 test('adds a transparent unfinished slice at the right edge of the recovery half-donut', () => {
-  assert.match(componentSource, /const INCOMPLETE_PIE_COLOR = \{[\s\S]*?type:\s*'linear'[\s\S]*?colorStops:\s*\[[\s\S]*?'rgba\(148, 163, 184, 0\.16\)'[\s\S]*?'rgba\(139, 124, 255, 0\.12\)'[\s\S]*?\]/);
+  assert.match(componentSource, /const INCOMPLETE_PIE_COLOR = \{[\s\S]*?type:\s*'linear'[\s\S]*?colorStops:\s*\[[\s\S]*?'rgba\(160, 170, 210, 0\.16\)'[\s\S]*?'rgba\(124, 108, 255, 0\.10\)'[\s\S]*?\]/);
   assert.match(componentSource, /const targetValue = recoveryTargetValue\(card\);/);
   assert.match(componentSource, /const incompleteValue = Math\.max\(0, targetValue - cardTotal\);/);
-  assert.match(componentSource, /const incompleteSlice = \{[\s\S]*?rawValue:\s*incompleteValue[\s\S]*?targetValue[\s\S]*?name:\s*'未完成'[\s\S]*?isIncomplete:\s*true[\s\S]*?itemStyle:\s*\{[\s\S]*?color:\s*INCOMPLETE_PIE_COLOR[\s\S]*?opacity:\s*\.55[\s\S]*?borderColor:\s*'rgba\(148, 163, 184, \.22\)'/);
+  assert.match(componentSource, /const incompleteSlice = \{[\s\S]*?rawValue:\s*incompleteValue[\s\S]*?targetValue[\s\S]*?name:\s*'未完成'[\s\S]*?isIncomplete:\s*true[\s\S]*?itemStyle:\s*\{[\s\S]*?color:\s*INCOMPLETE_PIE_COLOR[\s\S]*?opacity:\s*\.55[\s\S]*?borderColor:\s*'rgba\(160, 170, 210, \.18\)'/);
   assert.match(componentSource, /percentColor:\s*CHANNEL_PERCENT_COLORS\[index\]/);
   assert.match(componentSource, /percentColor:\s*INCOMPLETE_PERCENT_COLOR/);
   assert.match(componentSource, /return \[[\s\S]*?\.\.\.channelData\.sort\(\(a, b\) => a\.value - b\.value\),[\s\S]*?incompleteSlice,[\s\S]*?\];/);
   assert.match(componentSource, /const isIncomplete = params\.data\?\.isIncomplete;/);
   assert.match(componentSource, /\$\{isIncomplete \? '缺口' : '回款'\} \$\{value\} 万/);
-  assert.match(componentSource, /目标 \$\{params\.data\?\.targetValue \?\? '-'\} 万 · 完成率 \$\{card\.progress \?\? params\.percent\}%/);
+  assert.match(componentSource, /目标 \$\{params\.data\?\.targetValue \?\? '-'\} 万 · 完成率 \$\{card\.progress \?\? percent\}%/);
 });
 
-test('uses a bright premium tech palette instead of dull silver or candy pie colors', () => {
-  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#8EEAFF[\s\S]*?#B7F3FF[\s\S]*?#6EA8FF[\s\S]*?#8B7CFF[\s\S]*?#A7F3D0[\s\S]*?\];/);
+test('uses a restrained cold purple brand palette instead of rainbow or candy pie colors', () => {
+  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#8F86FF[\s\S]*?#C9C2FF[\s\S]*?#7C6CFF[\s\S]*?#A79CFF[\s\S]*?#9EDCFF[\s\S]*?\];/);
+  assert.doesNotMatch(componentSource, /#A7F3D0/);
+  assert.doesNotMatch(componentSource, /#B7F3FF/);
   assert.doesNotMatch(componentSource, /const CHANNEL_PIE_COLORS = \['#d6ccb2', '#a9b3b8', '#808b93', '#5f6975'\];/);
   assert.doesNotMatch(componentSource, /const CHANNEL_PIE_COLORS = \['#dfff00', '#79f7ff', '#ff4fd8', '#a78bfa'\];/);
   assert.doesNotMatch(componentSource, /const CHANNEL_PIE_COLORS = \['#c8c7a7', '#7fa0a6', '#b98da2', '#8d88a8'\];/);
@@ -200,13 +214,13 @@ test('removes the bottom recovery legend so the half-donut can use the full visu
 
 test('uses a neutral dark glass base with only restrained completion accent at the edges', () => {
   assert.match(cssSource, /\.kpi-card--recovery\s*\{[\s\S]*?background:[\s\S]*?linear-gradient\(112deg, color-mix\(in srgb, var\(--kpi-accent\) 4%, transparent\) 0%, color-mix\(in srgb, var\(--kpi-accent\) 2%, transparent\) 30%, transparent 62%\)/);
-  assert.match(cssSource, /\.kpi-card--recovery\s*\{[\s\S]*?linear-gradient\(180deg, rgba\(255,\s*255,\s*255,\s*\.026\), rgba\(255,\s*255,\s*255,\s*\.006\)\),[\s\S]*?rgba\(4,\s*5,\s*7,\s*\.18\);/);
+  assert.match(cssSource, /\.kpi-card--recovery\s*\{[\s\S]*?linear-gradient\(180deg, rgba\(255,\s*255,\s*255,\s*\.026\), rgba\(255,\s*255,\s*255,\s*\.006\)\),[\s\S]*?rgba\(255,\s*255,\s*255,\s*\.055\);/);
   assert.doesNotMatch(cssSource, /var\(--kpi-accent\) (?:13|8\.5|7|4\.5)%, transparent/);
   assert.doesNotMatch(cssSource, /radial-gradient\(circle at 20% 48%/);
   assert.doesNotMatch(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?width:\s*330px/);
   assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?inset:\s*0;[\s\S]*?width:\s*auto;[\s\S]*?border-radius:\s*inherit;[\s\S]*?linear-gradient\(90deg, color-mix\(in srgb, var\(--kpi-accent\) 6%, transparent\) 0%, transparent 18%, transparent 82%, color-mix\(in srgb, var\(--kpi-accent\) 4%, transparent\) 100%\)/);
   assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?mix-blend-mode:\s*screen;[\s\S]*?opacity:\s*\.48;/);
-  assert.match(cssSource, /filter:\s*drop-shadow\(0 0 10px color-mix\(in srgb, var\(--kpi-accent\) 12%, transparent\)\)/);
+  assert.match(cssSource, /filter:\s*drop-shadow\(0 0 10px color-mix\(in srgb, var\(--kpi-accent\) 10%, transparent\)\)/);
   assert.match(componentSource, /<EChart option=\{progressOption\(card\.progress, tokens\)\} className="kpi-card__progress-chart" style=\{\{ height: 12 \}\} \/>/);
   assert.match(cssSource, /\.kpi-card--recovery \.kpi-card__progress-chart\s*\{[\s\S]*?opacity:\s*\.82;[\s\S]*?filter:\s*saturate\(\.82\);/);
   assert.match(cssSource, /\.kpi-card__side-panel \.ch-bar-fill\s*\{[\s\S]*?opacity:\s*\.82;[\s\S]*?filter:\s*saturate\(\.82\);/);
@@ -268,8 +282,8 @@ test('formats recovery pie hover text as name over number instead of inline rows
   assert.match(componentSource, /class="kpi-pie-tooltip"/);
   assert.match(componentSource, /<div class="kpi-pie-tooltip__name">\$\{params\.seriesName\} · \$\{params\.name\}<\/div>/);
   assert.match(componentSource, /<div class="kpi-pie-tooltip__value">\$\{isIncomplete \? '缺口' : '回款'\} <strong>\$\{value\}<\/strong> 万<\/div>/);
-  assert.match(componentSource, /<div class="kpi-pie-tooltip__meta">目标 \$\{params\.data\?\.targetValue \?\? '-'\} 万 · 完成率 \$\{card\.progress \?\? params\.percent\}%<\/div>/);
-  assert.match(componentSource, /<div class="kpi-pie-tooltip__meta">占比 <strong>\$\{params\.percent\}%<\/strong><\/div>/);
+  assert.match(componentSource, /<div class="kpi-pie-tooltip__meta">目标 \$\{params\.data\?\.targetValue \?\? '-'\} 万 · 完成率 \$\{card\.progress \?\? percent\}%<\/div>/);
+  assert.match(componentSource, /<div class="kpi-pie-tooltip__meta">占比 <strong>\$\{percent\}%<\/strong><\/div>/);
   assert.doesNotMatch(componentSource, /word-break:break-all/);
   assert.doesNotMatch(componentSource, /formatter:\s*'\{b\|{b}\}\\n\{d\|{d}%\}'/);
   assert.doesNotMatch(componentSource, /formatter:\s*\(params\) => `\{name\|\$\{params\.name\}\}\\n\{percent\|\$\{params\.percent\}%\}`/);

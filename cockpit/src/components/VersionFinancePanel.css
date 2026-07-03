@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 15:39:00 CST  更新内容: 版本情况面板玻璃底与 hover 柔光改为冷紫 Vision Pro 风格。 */
 /* 更新时间: 2026-07-01 18:37:59 CST  更新内容: 去掉版本情况图表和二级展开背景里的紫色发光。 */
 .vf-panel {
   position: relative;
@@ -8,8 +9,8 @@
   padding: 16px 18px 16px;
   color: var(--txt);
   background:
-    linear-gradient(120deg, rgba(230,251,255,.055), transparent 48%),
-    transparent;
+    linear-gradient(120deg, rgba(201,194,255,.055), transparent 48%),
+    rgba(255,255,255,.055);
   border: 1px solid var(--line-2);
   border-radius: 16px;
   -webkit-backdrop-filter: var(--glass-blur);
@@ -296,7 +297,7 @@
   padding: 13px 14px 12px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: rgba(8, 8, 12, .2);
+  background: rgba(255, 255, 255, .055);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
   cursor: pointer;
   transition: background .22s ease, border-color .22s ease, transform .22s ease;
