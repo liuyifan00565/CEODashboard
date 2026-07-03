@@ -70,12 +70,12 @@ test('uses a deep blue-black glassmorphism background without dot field', () => 
   assert.doesNotMatch(appSource, /<DotField/);
   assert.doesNotMatch(indexCss, /\.bg \.dot-field-container/);
 
-  // 深海蓝黑渐变底
-  assert.match(darkThemeBlock(), /--bg-base-1:#0b1020;/);
-  assert.match(darkThemeBlock(), /--bg-base-2:#080b16;/);
-  assert.match(darkThemeBlock(), /--bg-base-3:#050711;/);
+  // 深海蓝黑渐变底：#0B1020 / #070A12 / #050713
+  assert.match(darkThemeBlock(), /--bg-base-1:#0B1020;/);
+  assert.match(darkThemeBlock(), /--bg-base-2:#070A12;/);
+  assert.match(darkThemeBlock(), /--bg-base-3:#050713;/);
 
-  // 多层冰蓝/青蓝/淡紫径向环境光
+  // 多层冰蓝/青蓝/淡紫径向环境光（Color Bends 角落补光，opacity ≤ 0.25）
   assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(110,168,255,\.22\);/);
   assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(142,234,255,\.11\);/);
   assert.match(darkThemeBlock(), /--bg-radial-c:rgba\(139,124,255,\.13\);/);
@@ -85,7 +85,13 @@ test('uses a deep blue-black glassmorphism background without dot field', () => 
   assert.match(indexCss, /\.bg::after\{[\s\S]*?feTurbulence[\s\S]*?fractalNoise/);
   assert.match(darkThemeBlock(), /--bg-noise-opacity:\.035;/);
 
-  // FluidGlass 材质层保留
+  // Silk 材质层 + 深色遮罩：App.jsx 渲染 Silk，index.css 提供遮罩与层叠
+  assert.match(appSource, /import Silk from '\.\/components\/Silk\/Silk';/);
+  assert.match(appSource, /<Silk colors=\{\['#5F6B85', '#6B728A', '#7B7481'\]\}/);
+  assert.match(indexCss, /\.bg-shade\{[\s\S]*?z-index:2;[\s\S]*?rgba\(5,7,19,/);
+  assert.match(indexCss, /\.silk-layer\{[\s\S]*?z-index:1;[\s\S]*?opacity:\s*\.65;/);
+
+  // FluidGlass 材质层规则保留
   assert.match(indexCss, /\.fluid-glass-layer\{[\s\S]*?opacity:\s*\.32;[\s\S]*?mix-blend-mode:\s*screen;/);
 });
 

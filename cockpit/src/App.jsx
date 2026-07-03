@@ -54,7 +54,7 @@ import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 
 import AIAnalysisWidget from './components/AIAnalysisWidget';
-import FluidGlass from './components/FluidGlass/FluidGlass';
+import Silk from './components/Silk/Silk';
 import GlassSurface from './components/GlassSurface/GlassSurface';
 import Sidebar from './components/Sidebar';
 import ExpandableSearch from './components/ExpandableSearch';
@@ -74,6 +74,7 @@ import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuL
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
 import { matchesSearchTerm } from './lib/searchMatch';
+import { useThemeTokens } from './lib/theme';
 import './dashboard.css';
 
 const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance';
@@ -95,6 +96,7 @@ function makeCompanionCueId(card) {
 }
 
 export default function App() {
+  const { theme } = useThemeTokens();
   const [activeMenu, setActiveMenu] = useState('overview');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [activeMaintenanceMenu, setActiveMaintenanceMenu] = useState(DEFAULT_MAINTENANCE_MENU);
@@ -257,19 +259,13 @@ export default function App() {
   return (
     <div className="app">
       <div className="bg">
-        <div className="fluid-glass-layer" aria-hidden="true">
-          <FluidGlass
-            mode="bar"
-            scale={0.15}
-            ior={1.15}
-            thickness={10}
-            transmission={1}
-            roughness={0}
-            chromaticAberration={0.05}
-            anisotropy={0.01}
-            navItems={[]}
-          />
-        </div>
+        {/* Vision Pro 风格 Silk 材质层：仅暗色主题渲染，浅色主题靠 CSS 隐藏 */}
+        {theme === 'dark' && (
+          <>
+            <Silk colors={['#5F6B85', '#6B728A', '#7B7481']} speed={1} />
+            <div className="bg-shade" aria-hidden="true" />
+          </>
+        )}
       </div>
 
       <div className="dash-shell">

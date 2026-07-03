@@ -1,0 +1,11 @@
+/*
+ 更新时间: 2026-07-03 14:30:00 CST
+ 更新内容: Silk 画布尺寸；层定位与 opacity 由 index.css 统一管理，保证背景层叠集中可维护。
+*/
+
+.silk-canvas{
+  display:block;
+  width:100% !important;
+  height:100% !important;
+  pointer-events:none;
+}

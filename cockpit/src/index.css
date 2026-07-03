@@ -1,4 +1,9 @@
 /*
+ Update time: 2026-07-03 14:30:00 CST
+ Update content: 接入 ReactBits Silk 作为全屏底层材质；基底改为深海蓝黑 #0B1020/#070A12/#050713，
+                 叠加 .bg-shade 深色遮罩保证可读；径向环境光移到 ::before 作为 Color Bends 角落补光（opacity ≤ 0.25）。
+*/
+/*
  Update time: 2026-07-03 13:42:00 CST
  Update content: 删除紫色点阵背景，改用深海蓝黑渐变 + 多层冰蓝/青蓝/淡紫径向光 + SVG 噪点 + 边缘 vignette，走 Apple/Vision Pro 风格的玻璃环境背景。
 */
@@ -55,10 +60,10 @@
   --bar-good-glow:0 0 18px rgba(142,234,255,.18);
   --bar-warn:linear-gradient(90deg,#F472B6,#FDA4AF);
   --bar-warn-glow:0 0 18px rgba(244,114,182,.16);
-  /* 背景：深海蓝黑底 + 多层冰蓝/青蓝/淡紫径向环境光 + 局部 spotlight */
-  --bg-base-1:#0b1020;
-  --bg-base-2:#080b16;
-  --bg-base-3:#050711;
+  /* 背景：深海蓝黑底 #0B1020/#070A12/#050713；径向光作 Color Bends 角落补光（opacity ≤ 0.25） */
+  --bg-base-1:#0B1020;
+  --bg-base-2:#070A12;
+  --bg-base-3:#050713;
   --bg-radial-a:rgba(110,168,255,.22);   /* 顶左：冰蓝主光 */
   --bg-radial-b:rgba(142,234,255,.11);   /* 顶右：青蓝辅光 */
   --bg-radial-c:rgba(139,124,255,.13);   /* 底右：淡紫环境光 */
@@ -174,24 +179,39 @@ body{
 }
 
 .app{position:relative;min-height:100vh}
+/* .bg 基底：仅深海蓝黑线性渐变；Silk 材质层、深色遮罩、环境光、噪点分别叠在上方 */
 .bg{
   position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(180deg,var(--bg-base-1) 0%,var(--bg-base-2) 45%,var(--bg-base-3) 100%);
+}
+/* 深色遮罩：在 Silk 之上压暗，保证文字与卡片可读 */
+.bg-shade{
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:linear-gradient(180deg,rgba(5,7,19,.42) 0%,rgba(5,7,19,.28) 50%,rgba(5,7,19,.46) 100%);
+}
+/* Silk 材质层：全屏铺底，opacity 0.65（控制在 0.55~0.75），仅作高级材质层 */
+.silk-layer{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  opacity:.65;
+  mix-blend-mode:normal;
+}
+.silk-canvas{
+  display:block;width:100%!important;height:100%!important;pointer-events:none;
+}
+/* 边缘高光 + 中心暗角 + Color Bends 角落环境光（径向，opacity ≤ 0.25），在 Silk 与遮罩之上叠加 */
+.bg::before{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:3;
   background:
     radial-gradient(circle at 24% 6%,var(--bg-radial-a),transparent 32%),
     radial-gradient(circle at 82% 12%,var(--bg-radial-b),transparent 28%),
     radial-gradient(circle at 56% 88%,var(--bg-radial-c),transparent 38%),
     radial-gradient(circle at 22% 78%,var(--bg-radial-d),transparent 42%),
-    linear-gradient(180deg,var(--bg-base-1) 0%,var(--bg-base-2) 45%,var(--bg-base-3) 100%);
-}
-/* 边缘高光 + 中心暗角，给大面积渐变加空间感 */
-.bg::before{
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:var(--bg-vignette);
+    var(--bg-vignette);
   opacity:.8;
 }
 /* 极轻 SVG 噪点，让渐变不塑料化；几乎看不见但质感更细 */
 .bg::after{
-  content:"";position:absolute;inset:0;pointer-events:none;
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:4;
   opacity:var(--bg-noise-opacity);
   mix-blend-mode:soft-light;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.45'/%3E%3C/svg%3E");
