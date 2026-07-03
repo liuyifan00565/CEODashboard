@@ -1,12 +1,20 @@
 /*
+ 更新时间: 2026-07-02 18:56:28 CST
+ 更新内容: 数据维护页进度条统一为左侧高亮、向右侧颜色衰减的透明玻璃样式。
+*/
+/*
  更新时间: 2026-07-02 19:13:36 CST
- 更新内容: 将维护页进度条拆分为荧光紫和荧光蓝两套独立渐变，并适配百分比单独换行显示。
+ 更新内容: 适配维护页百分比单独换行显示。
+*/
+/*
+ 更新时间: 2026-07-02 18:50:34 CST
+ 更新内容: 增强四个维护页可编辑字段框。
+*/
+/*
+ 更新时间: 2026-07-02 17:32:10 CST
+ 更新内容: 维护页表格外壳、表头、首列和汇总行恢复为算力页原透明玻璃样式。
 */
 .mnt-page {
-  --mnt-progress-purple: #f000ff;
-  --mnt-progress-purple-soft: #ff7cff;
-  --mnt-progress-blue: #38f5ff;
-  --mnt-progress-blue-soft: #a7fbff;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -547,30 +555,22 @@
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--mnt-progress-blue) 0%, var(--mnt-progress-blue-soft) 100%);
-  box-shadow:
-    0 0 8px color-mix(in srgb, var(--mnt-progress-blue) 36%, transparent),
-    0 0 10px color-mix(in srgb, var(--mnt-progress-blue-soft) 24%, transparent);
 }
 
 .mnt-progress--danger span {
-  background: linear-gradient(90deg, var(--mnt-progress-purple) 0%, var(--mnt-progress-purple-soft) 100%);
-  box-shadow:
-    0 0 8px color-mix(in srgb, var(--mnt-progress-purple) 38%, transparent),
-    0 0 10px color-mix(in srgb, var(--mnt-progress-purple-soft) 24%, transparent);
+  background: linear-gradient(90deg, rgba(var(--warn-rgb), .9) 0%, rgba(255,255,255,.5) 46%, rgba(255,255,255,0) 100%);
 }
 
-.mnt-progress--warning span,
+.mnt-progress--warning span {
+  background: linear-gradient(90deg, rgba(255,255,255,.86) 0%, rgba(var(--good-rgb), .42) 42%, rgba(var(--good-rgb),0) 100%);
+}
+
 .mnt-progress--good span {
-  background: linear-gradient(90deg, var(--mnt-progress-blue) 0%, var(--mnt-progress-blue-soft) 100%);
-  box-shadow:
-    0 0 8px color-mix(in srgb, var(--mnt-progress-blue) 36%, transparent),
-    0 0 10px color-mix(in srgb, var(--mnt-progress-blue-soft) 24%, transparent);
+  background: linear-gradient(90deg, rgba(var(--good-rgb), .92) 0%, rgba(255,255,255,.58) 44%, rgba(255,255,255,0) 100%);
 }
 
 .mnt-progress--unset span {
-  background: rgba(255, 255, 255, .24);
-  box-shadow: none;
+  background: linear-gradient(90deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.16) 46%, rgba(255,255,255,0) 100%);
 }
 
 .mnt-local-action {
