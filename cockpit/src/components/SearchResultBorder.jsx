@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-04 00:23:37 CST
+ 更新内容: 搜索命中反馈改为一次性柔光高亮，移除持续电流边框动画。
+*/
+/*
  更新时间: 2026-07-03 15:37:00 CST
  更新内容: 搜索命中边框主色改为低饱和品牌紫，避免高饱和电竞紫。
 */
@@ -10,24 +14,17 @@
  更新时间: 2026-07-03 18:19:59 CST
  更新内容: 搜索命中边框同步为黑曜石月光紫主品牌色。
 */
-import ElectricBorder from './ElectricBorder/ElectricBorder';
 
 export default function SearchResultBorder({ active, children }) {
   if (!active) return children;
   return (
-    <ElectricBorder
+    <div
       data-search-match="true"
       data-search-current="false"
       aria-label="搜索命中结果"
-      color="#8B7CFF"
-      speed={1}
-      chaos={0.12}
-      thickness={2}
-      borderRadius={16}
       className="search-result-border"
-      style={{ borderRadius: 16 }}
     >
-      {children}
-    </ElectricBorder>
+      <div className="search-result-border__content">{children}</div>
+    </div>
   );
 }

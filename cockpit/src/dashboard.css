@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-04 00:23:37 CST
+ 更新内容: 搜索当前命中区域改为 960ms 一次性淡紫柔光高亮，移除电流颤动边框。
+*/
+/*
  更新时间: 2026-07-03 17:55:34 CST
  更新内容: 首页趋势和通用面板改用统一中性深色卡片玻璃变量，避免大面积强紫玻璃底。
 */
@@ -142,30 +146,60 @@
 .dash-kpi-item[data-kpi-key="month"]{grid-column:1;grid-row:1}
 .dash-kpi-item[data-kpi-key="year"]{grid-column:1;grid-row:2}
 .dash-kpi-item .search-result-border,
-.dash-kpi-item .search-result-border .eb-content,
+.dash-kpi-item .search-result-border .search-result-border__content,
 .dash-kpi-item .kpi-card{height:100%}
-.search-result-border{width:100%}
-.search-result-border .eb-background-glow{
+.search-result-border{
+  position:relative;
+  width:100%;
+  border-radius:16px;
+  isolation:isolate;
+  overflow:visible;
+}
+.search-result-border__content{
+  position:relative;
+  z-index:1;
+  border-radius:inherit;
+}
+.search-result-border::before,
+.search-result-border::after{
+  content:'';
+  position:absolute;
+  pointer-events:none;
+  border-radius:inherit;
   opacity:0;
+}
+.search-result-border::before{
+  inset:-2px;
+  z-index:2;
+  border:1px solid rgba(167,156,255,.42);
+  box-shadow:0 0 0 1px rgba(167,156,255,.08),0 0 18px rgba(139,124,255,.22),0 0 34px rgba(139,124,255,.10);
+}
+.search-result-border::after{
+  inset:0;
+  z-index:0;
+  background:rgba(167,156,255,.055);
   transform:none;
 }
 .search-result-border[data-search-current="true"]{
   z-index:5;
 }
-.search-result-border[data-search-current="true"] .eb-glow-1{
-  border-color:rgba(167,156,255,.34);
-  filter:blur(.5px);
+.search-result-border[data-search-current="true"]::before{
+  animation:searchResultSoftGlow 960ms cubic-bezier(.22,1,.36,1) both;
 }
-.search-result-border[data-search-current="true"] .eb-background-glow{
-  opacity:0;
-  transform:none;
+.search-result-border[data-search-current="true"]::after{
+  animation:searchResultSoftFill 960ms cubic-bezier(.22,1,.36,1) both;
 }
-.search-result-border[data-search-current="true"] .eb-glow-2{
-  border-color:rgba(124,108,255,.50);
-  filter:blur(3px);
+@keyframes searchResultSoftGlow{
+  0%{opacity:0;box-shadow:0 0 0 1px rgba(167,156,255,0),0 0 0 rgba(139,124,255,0)}
+  18%{opacity:1;box-shadow:0 0 0 1px rgba(167,156,255,.10),0 0 18px rgba(139,124,255,.24),0 0 34px rgba(139,124,255,.12)}
+  62%{opacity:.82;box-shadow:0 0 0 1px rgba(167,156,255,.08),0 0 16px rgba(139,124,255,.20),0 0 28px rgba(139,124,255,.08)}
+  100%{opacity:0;box-shadow:0 0 0 1px rgba(167,156,255,0),0 0 0 rgba(139,124,255,0)}
 }
-.search-result-border[data-search-current="true"] .eb-content{
-  border-radius:inherit;
+@keyframes searchResultSoftFill{
+  0%{opacity:0}
+  18%{opacity:1}
+  72%{opacity:.38}
+  100%{opacity:0}
 }
 
 /* ===== 主体 grid ===== */
@@ -194,7 +228,7 @@
 .dash-cell{min-width:0;min-height:0}
 /* 让玻璃面板撑满网格单元 */
 .dash-cell .search-result-border,
-.dash-cell .search-result-border .eb-content{height:100%}
+.dash-cell .search-result-border .search-result-border__content{height:100%}
 .dash-cell .mt-panel,
 .dash-cell .vf-panel{height:100%}
 
@@ -203,7 +237,7 @@
 }
 .dash-finance-kpi-item{min-width:0;min-height:0}
 .dash-finance-kpi-item .search-result-border,
-.dash-finance-kpi-item .search-result-border .eb-content,
+.dash-finance-kpi-item .search-result-border .search-result-border__content,
 .dash-finance-kpi-item .kpi-card{height:100%}
 .dash-finance-kpi-item--openings .opening-metric-cards{
   height:100%;
@@ -217,7 +251,7 @@
   flex:none;
 }
 .dash-delivery-row .search-result-border,
-.dash-delivery-row .search-result-border .eb-content{height:100%}
+.dash-delivery-row .search-result-border .search-result-border__content{height:100%}
 
 .dash-delivery-row .dlv-panel{
   isolation:isolate;

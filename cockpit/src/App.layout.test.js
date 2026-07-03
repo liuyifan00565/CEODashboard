@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-04 00:23:37 CST
+ Update content: Require search result feedback to use a one-shot soft purple glow instead of the electric border animation.
+*/
+/*
  Update time: 2026-07-03 23:39:28 CST
  Update content: Add regression coverage for calmer shared glass controls in the topbar, search, and sidebar.
 */
@@ -833,35 +837,41 @@ test('moves opening metrics into the cost slot and cost into the former renewal 
   assert.match(dashboardCss, /\.dash-finance-kpi-item--openings \.opening-metric-cards\{[\s\S]*?height:100%;/);
 });
 
-test('uses ElectricBorder for search result highlighting instead of HighlightBeam', () => {
+test('uses one-shot soft glow for search result highlighting instead of electric borders', () => {
   assert.match(appSource, /import SearchResultBorder from '\.\/components\/SearchResultBorder';/);
   assert.match(appSource, /import \{ matchesSearchTerm \} from '\.\/lib\/searchMatch';/);
-  assert.match(searchResultBorderSource, /import ElectricBorder from '\.\/ElectricBorder\/ElectricBorder';/);
+  assert.doesNotMatch(searchResultBorderSource, /ElectricBorder/);
+  assert.doesNotMatch(searchResultBorderSource, /<canvas/);
   assert.doesNotMatch(appSource, /import HighlightBeam/);
   assert.doesNotMatch(appSource, /<HighlightBeam/);
   assert.match(appSource, /<SearchResultBorder active=\{matchesSearchTerm\(card\.keywords,\s*searchTerm\)\}>/);
   assert.match(searchResultBorderSource, /data-search-match="true"/);
   assert.match(searchResultBorderSource, /aria-label="搜索命中结果"/);
-  assert.match(searchResultBorderSource, /<ElectricBorder[\s\S]*?color="#8B7CFF"[\s\S]*?speed=\{1\}[\s\S]*?chaos=\{0\.12\}[\s\S]*?thickness=\{2\}/);
-  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\]/);
+  assert.match(searchResultBorderSource, /className="search-result-border__content"/);
+  assert.match(dashboardCss, /@keyframes searchResultSoftGlow/);
+  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\]::before\{[\s\S]*?animation:searchResultSoftGlow 960ms cubic-bezier\(\.22,1,\.36,1\) both;/);
+  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\]::after\{[\s\S]*?animation:searchResultSoftFill 960ms cubic-bezier\(\.22,1,\.36,1\) both;/);
+  assert.doesNotMatch(dashboardCss, /searchResultSoftGlow[\s\S]*?infinite/);
+  assert.doesNotMatch(dashboardCss, /\.eb-/);
+  assert.doesNotMatch(dashboardCss, /jitter|zigzag/i);
 });
 
 test('keeps the current search result highlight edge-only without full-card purple wash', () => {
   const currentSearchBlock = cssRuleBody(dashboardCss, '.search-result-border[data-search-current="true"]');
   const currentSearchContentBlock = cssRuleBody(
     dashboardCss,
-    '.search-result-border[data-search-current="true"] .eb-content'
+    '.search-result-border[data-search-current="true"] .search-result-border__content'
   );
   const currentSearchBackgroundBlock = cssRuleBody(
     dashboardCss,
-    '.search-result-border[data-search-current="true"] .eb-background-glow'
+    '.search-result-border::after'
   );
 
   assert.doesNotMatch(currentSearchBlock, /filter:\s*drop-shadow/);
   assert.doesNotMatch(currentSearchContentBlock, /box-shadow:/);
   assert.doesNotMatch(currentSearchBackgroundBlock, /transform:\s*scale/);
-  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\] \.eb-glow-1\{[\s\S]*?border-color:rgba\(167,156,255,\.34\);/);
-  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\] \.eb-glow-2\{[\s\S]*?filter:blur\(3px\);/);
+  assert.match(dashboardCss, /\.search-result-border::before\{[\s\S]*?border:1px solid rgba\(167,156,255,\.42\);/);
+  assert.match(dashboardCss, /\.search-result-border::after\{[\s\S]*?background:rgba\(167,156,255,\.055\);/);
   assert.doesNotMatch(computePageCss, /\.cpu-kpi-slot\[data-search-current="true"\],[\s\S]*?filter:\s*drop-shadow/);
   assert.doesNotMatch(computePageCss, /\.cpu-panel\[data-search-current="true"\][\s\S]*?box-shadow:[\s\S]*?rgba\(96,0,255/);
 });
