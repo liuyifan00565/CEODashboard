@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 11:05:35 CST  更新内容: 主页回款卡月度/年度目标拆成名称和金额两行展示。 */
 /* Update time: 2026-07-03 10:24:55 CST  Update content: Remove target and completed subtitle text from the recovery half-donut header. */
 /* Update time: 2026-07-02 18:03:34 CST  Update content: Place recovery card target subtitles beside the large KPI value on desktop. */
 /* Update time: 2026-07-02 17:50:46 CST  Update content: Add a scoped progress chart class so recovery cards can tone down accent saturation. */
@@ -37,6 +38,12 @@ function recoveryTargetValue(card) {
 
 function recoveryPieHeading(card) {
   return card.key === 'year' ? '本年目标完成情况' : '本月目标完成情况';
+}
+
+function splitRecoveryTargetSub(card) {
+  if (!['month', 'year'].includes(card?.key) || typeof card?.sub !== 'string') return null;
+  const match = card.sub.match(/^(\S+目标)\s+(.+)$/);
+  return match ? { label: match[1], value: match[2] } : null;
 }
 
 function recoveryPieLabelFormatter(params) {
@@ -319,6 +326,7 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
   const decimals = displayDecimals ?? (isX ? 2 : 0);
   const hasProgress = card.progress != null;
   const recoveryAccent = hasProgress ? progressColor(card.progress, tokens.progressMid) : tokens.chartBar;
+  const recoveryTargetSub = splitRecoveryTargetSub(card);
 
   const cardContent = (
     <>
@@ -329,7 +337,16 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
           <NumberRoll value={displayValue} suffix={suffix} decimals={decimals} />
         </div>
 
-        {card.sub != null && <div className="kpi-card__sub">{card.sub}</div>}
+        {card.sub != null && (
+          <div className={`kpi-card__sub${recoveryTargetSub ? ' kpi-card__sub--target' : ''}`}>
+            {recoveryTargetSub ? (
+              <>
+                <span className="kpi-card__sub-label">{recoveryTargetSub.label}</span>
+                <span className="kpi-card__sub-value">{recoveryTargetSub.value}</span>
+              </>
+            ) : card.sub}
+          </div>
+        )}
       </div>
 
       {hasProgress && (

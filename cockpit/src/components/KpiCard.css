@@ -1,3 +1,12 @@
+/* 更新时间: 2026-07-03 11:28:32 CST  更新内容: 恢复主页回款卡目标名称与金额上下两行展示，避免后续样式覆盖成横排。 */
+/* 更新时间: 2026-07-03 11:26:48 CST  更新内容: 收窄主页回款长卡完成率进度条宽度。 */
+/* 更新时间: 2026-07-03 11:22:57 CST  更新内容: 恢复主页回款半环图背景随完成率变色的柔光。 */
+/* 更新时间: 2026-07-03 11:20:28 CST  更新内容: 主页回款卡目标名称与金额单行展示，并保持文字块左移。 */
+/* 更新时间: 2026-07-03 11:17:34 CST  更新内容: 主页回款卡目标名称与金额恢复上下两行展示。 */
+/* 更新时间: 2026-07-03 11:14:24 CST  更新内容: 主页回款卡目标信息单行显示，并继续左移文字块。 */
+/* 更新时间: 2026-07-03 11:13:02 CST  更新内容: 主页回款卡月度/年度目标移到大数字下方，并突出目标金额字号。 */
+/* 更新时间: 2026-07-03 11:11:42 CST  更新内容: 主页回款长卡文字块左移，缩小半环图与文字间距。 */
+/* 更新时间: 2026-07-03 11:05:35 CST  更新内容: 主页回款卡月度/年度目标拆成名称和金额两行展示。 */
 /* Update time: 2026-07-03 10:24:55 CST  Update content: Remove unused recovery half-donut header subtitle styles. */
 /* Update time: 2026-07-02 18:21:53 CST  Update content: Increase desktop long recovery card spacing before the completion progress block. */
 /* Update time: 2026-07-02 18:03:34 CST  Update content: Show recovery target subtitles beside the big value on desktop while preserving stacked mobile layout. */
@@ -67,7 +76,7 @@
 }
 
 .kpi-card--with-side .kpi-card__body {
-  margin-left: -24px;
+  margin-left: -56px;
   gap: 8px;
 }
 
@@ -82,6 +91,22 @@
   justify-content: flex-start;
   justify-self: start;
   margin-left: -18px;
+}
+
+.kpi-card__pie::before {
+  content: "";
+  position: absolute;
+  left: 9%;
+  right: 7%;
+  top: 31%;
+  bottom: 12%;
+  z-index: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 50% 56%, color-mix(in srgb, var(--kpi-accent) 42%, transparent) 0%, color-mix(in srgb, var(--kpi-accent) 24%, transparent) 34%, transparent 72%);
+  filter: blur(22px) saturate(1.18);
+  opacity: .74;
+  pointer-events: none;
 }
 
 .kpi-card__pie-head {
@@ -111,6 +136,7 @@
 
 .kpi-card__pie-chart {
   position: relative;
+  z-index: 1;
   width: 100%;
   flex: none;
   filter: drop-shadow(0 0 10px color-mix(in srgb, var(--kpi-accent) 12%, transparent));
@@ -323,6 +349,29 @@
   white-space: pre-line;
 }
 
+.kpi-card__sub--target {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  white-space: normal;
+}
+
+.kpi-card__sub-label,
+.kpi-card__sub-value {
+  display: block;
+}
+
+.kpi-card__sub-label {
+  font-size: .94em;
+}
+
+.kpi-card__sub-value {
+  color: rgba(239,251,255,.86);
+  font-size: 1.1em;
+  font-weight: 760;
+}
+
 .kpi-card--with-side .kpi-card__sub,
 .kpi-card--with-side .kpi-card__progress-head,
 .kpi-card--with-side .kpi-card__hint {
@@ -406,8 +455,9 @@
 @media (min-width:761px) {
   .kpi-card--recovery .kpi-card__value-row {
     display: flex;
-    align-items: baseline;
-    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
     min-width: 0;
   }
 
@@ -419,19 +469,23 @@
     flex: 0 1 auto;
     min-width: 0;
     margin-top: 0;
-    white-space: nowrap;
     font-size: 15px;
     font-weight: 650;
     line-height: 1.25;
     color: rgba(239,251,255,.74);
   }
 
+  .kpi-card--recovery .kpi-card__value-row .kpi-card__sub--target {
+    line-height: 1.18;
+  }
+
   .kpi-card--with-side .kpi-card__value-row {
-    gap: 14px;
+    gap: 5px;
   }
 
   .kpi-card--with-side .kpi-card__progress {
     margin-top: 18px;
+    width: 88%;
   }
 
   .kpi-card--with-side .kpi-card__value-row .kpi-card__sub {
