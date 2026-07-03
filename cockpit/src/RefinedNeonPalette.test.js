@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:24:14 CST
+ Update content: Require the dashboard background to use a restrained graphite grid/dot/noise system instead of Color Bends.
+*/
+/*
  Update time: 2026-07-03 17:54:24 CST
  Update content: Cap full-page purple visual area at 15% and require Color Bends to read as a muted accent layer.
 */
@@ -76,7 +80,6 @@ const themeSource = readFileSync(new URL('./lib/theme.js', import.meta.url), 'ut
 const appSource = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
 const kpiSource = readFileSync(new URL('./components/KpiCard.jsx', import.meta.url), 'utf8');
 const channelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
-const colorBendsSource = readFileSync(new URL('./components/ColorBends/ColorBends.jsx', import.meta.url), 'utf8');
 
 function darkThemeBlock() {
   const match = indexCss.match(/:root,\s*:root\[data-theme="dark"\]\{(?<body>[\s\S]*?)\n\}/);
@@ -120,47 +123,39 @@ test('keeps 70 percent progress as cool white lavender instead of saturated blue
   assert.match(kpiSource, /const labelColor = progressColor\(pct, tokens\.progressMid\);[\s\S]*?itemStyle:\s*\{ color: progressBarColor\(pct, tokens\), borderRadius: 5, shadowBlur: 6, shadowColor: labelColor \}/);
 });
 
-test('keeps Color Bends as a restrained accent layer under the 15 percent purple rule', () => {
-  // 不再使用 DotField 点阵：App.jsx 不导入、index.css 不写 .dot-field-container 规则
+test('uses a static graphite grid and dot background instead of Color Bends', () => {
+  // 不再使用动态渐变背景：Color Bends/Aurora 退场，回到克制网格与点阵。
+  assert.doesNotMatch(appSource, /import ColorBends/);
+  assert.doesNotMatch(appSource, /<ColorBends/);
+  assert.doesNotMatch(appSource, /className="color-bends-layer"/);
+  assert.doesNotMatch(appSource, /className="bg-shade"/);
   assert.doesNotMatch(appSource, /import DotField/);
   assert.doesNotMatch(appSource, /<DotField/);
   assert.doesNotMatch(indexCss, /\.bg \.dot-field-container/);
   assert.doesNotMatch(appSource, /import Silk/);
   assert.doesNotMatch(appSource, /<Silk/);
+  assert.doesNotMatch(indexCss, /\n\.color-bends-layer/);
+  assert.doesNotMatch(indexCss, /\n\.bg-shade/);
 
-  // 深黑蓝渐变底：#050B17 / #030712 / #071120
-  assert.match(darkThemeBlock(), /--bg-base-1:#050B17;/);
-  assert.match(darkThemeBlock(), /--bg-base-2:#030712;/);
-  assert.match(darkThemeBlock(), /--bg-base-3:#071120;/);
-  assert.match(darkThemeBlock(), /--purple-visual-area-max:\.15;/);
+  // 深石墨黑蓝底：不能是纯黑，也不能让紫色成为主视觉。
+  assert.match(darkThemeBlock(), /--bg:#050812;/);
+  assert.match(darkThemeBlock(), /--bg-base-1:#050812;/);
+  assert.match(darkThemeBlock(), /--bg-base-2:#080D18;/);
+  assert.match(darkThemeBlock(), /--bg-base-3:#0B1020;/);
 
-  // 大面积背景只保留深色基底，紫色环境光降到低透明辅助层
-  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(124,108,255,\.06\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(201,194,255,\.045\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-c:rgba\(143,134,255,\.05\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(158,220,255,\.06\);/);
+  // 紫色只做远处环境光，透明度上限控制在 0.16 内。
+  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(139,124,255,\.14\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(127,212,246,\.08\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-c:rgba\(95,75,180,\.08\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(139,124,255,\.10\);/);
 
-  // SVG 噪点叠加层
-  assert.match(indexCss, /\.bg::after\{[\s\S]*?feTurbulence[\s\S]*?fractalNoise/);
-  assert.match(darkThemeBlock(), /--bg-noise-opacity:\.018;/);
-
-  // Color Bends 材质层：保留一点品牌识别，不再成为大面积紫色背景
-  assert.match(appSource, /import ColorBends from '\.\/components\/ColorBends\/ColorBends';/);
-  assert.match(appSource, /<ColorBends[\s\S]*?colors=\{\['#111827', '#263247', '#4E46A5'\]\}/);
-  assert.match(appSource, /speed=\{0\.18\}/);
-  assert.match(appSource, /transparent=\{true\}/);
-  assert.match(appSource, /iterations=\{1\}/);
-  assert.match(appSource, /intensity=\{0\.45\}/);
-  assert.match(appSource, /bandWidth=\{2\.4\}/);
-  assert.doesNotMatch(appSource, /'#3B1A8F', '#6D28D9', '#A855F7'/);
-  assert.doesNotMatch(appSource, /bg-data-scrim/);
-  assert.match(indexCss, /\.bg-shade\{[\s\S]*?z-index:2;[\s\S]*?rgba\(3,7,18,/);
-  assert.doesNotMatch(indexCss, /\.bg-data-scrim/);
-  assert.match(indexCss, /\.color-bends-layer\{[\s\S]*?z-index:1;[\s\S]*?opacity:\s*var\(--purple-visual-area-max\);[\s\S]*?filter:brightness\(\.44\) saturate\(\.7\);/);
-  assert.doesNotMatch(indexCss, /opacity:\s*\.88;[\s\S]*?filter:brightness\(\.62\) saturate\(1\.35\);/);
-  assert.match(colorBendsSource, /float weightSum = 0\.0;/);
-  assert.match(colorBendsSource, /sumCol \/ max\(weightSum, 0\.0001\)\) \* cover/);
-  assert.doesNotMatch(colorBendsSource, /col = clamp\(sumCol, 0\.0, 1\.0\);/);
+  assert.match(indexCss, /\.bg\{[\s\S]*?linear-gradient\(135deg,var\(--bg-base-1\) 0%,var\(--bg-base-2\) 48%,var\(--bg-base-3\) 100%\);/);
+  assert.match(indexCss, /\.bg::before\{[\s\S]*?linear-gradient\(var\(--bg-grid-line\) 1px,transparent 1px\)[\s\S]*?radial-gradient\(var\(--bg-dot\) 1px,transparent 1\.4px\)[\s\S]*?background-size:56px 56px,56px 56px,28px 28px;/);
+  assert.match(indexCss, /\.bg::before\{[\s\S]*?mask-image:radial-gradient\(circle at center,#000 0%,transparent 78%\);/);
+  assert.match(darkThemeBlock(), /--bg-grid-line:rgba\(255,255,255,\.035\);/);
+  assert.match(darkThemeBlock(), /--bg-dot:rgba\(255,255,255,\.032\);/);
+  assert.match(darkThemeBlock(), /--bg-noise-opacity:\.035;/);
+  assert.match(indexCss, /\.bg::after\{[\s\S]*?feTurbulence[\s\S]*?fractalNoise[\s\S]*?mix-blend-mode:overlay;/);
 });
 
 test('keeps warning rows translucent instead of becoming saturated candy blocks', () => {

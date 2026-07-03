@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:24:14 CST
+ Update content: Replace the Color Bends layer with a restrained graphite blue-black grid, dot, and noise dashboard background.
+*/
+/*
  Update time: 2026-07-03 17:55:02 CST
  Update content: Add neutral dashboard card glass tokens and cap full-page purple background area to accent-only usage.
 */
@@ -78,14 +82,13 @@
 :root,
 :root[data-theme="dark"]{
   --color-scheme-value:dark;
-  --bg:#070A12;
+  --bg:#050812;
   --brand-purple:#7C6CFF;
   --brand-purple-2:#8F86FF;
   --brand-purple-3:#A79CFF;
   --brand-lavender:#C9C2FF;
   --brand-mist:#E7E2FF;
   --brand-ice:#9EDCFF;
-  --purple-visual-area-max:.15;
   --dashboard-card-bg:rgba(18, 20, 32, 0.82);
   --dashboard-card-border:rgba(255, 255, 255, 0.08);
   --dashboard-card-shadow:0 20px 60px rgba(0, 0, 0, 0.35);
@@ -115,20 +118,18 @@
   --bar-good-glow:0 0 16px rgba(170,160,255,.20);
   --bar-warn:linear-gradient(90deg,#E7436D 0%,#FF5F88 58%,#FF86A4 100%);
   --bar-warn-glow:0 0 16px rgba(255,95,136,.20);
-  /* 背景：深黑蓝底；紫色面积控制在 --purple-visual-area-max 内，只做品牌环境光 */
-  --bg-base-1:#050B17;
-  --bg-base-2:#030712;
-  --bg-base-3:#071120;
-  --bg-radial-a:rgba(124,108,255,.06);
-  --bg-radial-b:rgba(201,194,255,.045);
-  --bg-radial-c:rgba(143,134,255,.05);
-  --bg-radial-d:rgba(158,220,255,.06);
-  --bg-vignette:
-    linear-gradient(90deg,rgba(160,142,255,.018),transparent 18%,transparent 82%,rgba(160,142,255,.014)),
-    radial-gradient(circle at center,transparent 0%,rgba(0,0,0,.34) 100%);
-  --bg-grid-line:rgba(186,178,255,.028);
-  --bg-grid-line-strong:rgba(186,178,255,.018);
-  --bg-noise-opacity:.018;
+  /* 背景：深石墨黑蓝底；紫色只做远处环境光，网格/点阵提供秩序感。 */
+  --bg-base-1:#050812;
+  --bg-base-2:#080D18;
+  --bg-base-3:#0B1020;
+  --bg-radial-a:rgba(139,124,255,.14);
+  --bg-radial-b:rgba(127,212,246,.08);
+  --bg-radial-c:rgba(95,75,180,.08);
+  --bg-radial-d:rgba(139,124,255,.10);
+  --bg-vignette:radial-gradient(circle at center,transparent 0%,rgba(0,0,0,.34) 100%);
+  --bg-grid-line:rgba(255,255,255,.035);
+  --bg-dot:rgba(255,255,255,.032);
+  --bg-noise-opacity:.035;
   --brand-dot-shadow:0 0 10px rgba(201,194,255,.30);
   --control-hover:rgba(231,226,255,.08);
   --theme-toggle-icon:#E7E2FF;
@@ -205,6 +206,7 @@
     radial-gradient(circle at center,transparent 0%,rgba(10,15,24,.04) 100%);
   --bg-grid-line:rgba(10,15,24,.026);
   --bg-grid-line-strong:rgba(10,15,24,.018);
+  --bg-dot:rgba(10,15,24,.022);
   --bg-noise-opacity:.025;
   --brand-dot-shadow:0 0 12px rgba(0,0,0,.22);
   --control-hover:rgba(10,15,24,.08);
@@ -244,75 +246,37 @@ body{
 }
 
 .app{position:relative;min-height:100vh}
-/* .bg 基底：深黑蓝线性渐变；弱紫环境光、深色遮罩、低透明网格和噪点分别叠在上方 */
+/* .bg 基底：深石墨黑蓝线性渐变；弱紫环境光、低透明网格/点阵和噪点托住数据卡片。 */
 .bg{
   position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(circle at 50% -18%,rgba(35,50,92,.24),transparent 42%),
-    linear-gradient(180deg,var(--bg-base-1) 0%,var(--bg-base-2) 46%,var(--bg-base-3) 100%);
+    radial-gradient(circle at 24% 18%,var(--bg-radial-a),transparent 28%),
+    radial-gradient(circle at 78% 8%,var(--bg-radial-b),transparent 24%),
+    radial-gradient(circle at 50% 92%,var(--bg-radial-c),transparent 30%),
+    linear-gradient(135deg,var(--bg-base-1) 0%,var(--bg-base-2) 48%,var(--bg-base-3) 100%);
 }
-/* 深色遮罩：保护数据可读性，同时把动态层压回暗背景里 */
-.bg-shade{
-  position:absolute;inset:0;z-index:2;pointer-events:none;
-  background:
-    linear-gradient(180deg,rgba(3,7,18,.44) 0%,rgba(3,7,18,.32) 48%,rgba(3,7,18,.50) 100%),
-    radial-gradient(circle at center,rgba(4,8,18,.12),rgba(1,3,8,.38) 100%);
-}
-/* Color Bends 材质层：只保留少量品牌识别，不再作为大面积紫色背景 */
-.color-bends-layer{
-  position:absolute;inset:0;z-index:1;pointer-events:none;
-  opacity:var(--purple-visual-area-max);
-  filter:brightness(.44) saturate(.7);
-  mix-blend-mode:normal;
-  transform:none;
-  transform-origin:center;
-}
-.color-bends-layer canvas{
-  display:block;width:100%!important;height:100%!important;pointer-events:none;
-}
-/* 弱紫径向光晕 + 极低透明度网格，在 Color Bends 与遮罩之上轻叠加 */
+/* Magic UI Grid/Dot Pattern 思路：低透明网格和点阵只提供精度感，不抢数据。 */
 .bg::before{
-  content:"";position:absolute;inset:-8%;pointer-events:none;z-index:3;
-  background:
-    radial-gradient(circle at 24% 8%,var(--bg-radial-a),transparent 31%),
-    radial-gradient(circle at 80% 16%,var(--bg-radial-b),transparent 30%),
-    radial-gradient(circle at 56% 86%,var(--bg-radial-c),transparent 42%),
-    radial-gradient(circle at 18% 74%,var(--bg-radial-d),transparent 45%),
+  content:"";position:fixed;inset:0;pointer-events:none;
+  background-image:
     linear-gradient(var(--bg-grid-line) 1px,transparent 1px),
     linear-gradient(90deg,var(--bg-grid-line) 1px,transparent 1px),
-    linear-gradient(var(--bg-grid-line-strong) 1px,transparent 1px),
-    linear-gradient(90deg,var(--bg-grid-line-strong) 1px,transparent 1px),
-    var(--bg-vignette);
-  background-size:auto,auto,auto,auto,72px 72px,72px 72px,288px 288px,288px 288px,auto,auto;
-  opacity:.42;
-  animation:bgAmbientDrift 18s linear infinite;
+    radial-gradient(var(--bg-dot) 1px,transparent 1.4px);
+  background-size:56px 56px,56px 56px,28px 28px;
+  mask-image:radial-gradient(circle at center,#000 0%,transparent 78%);
+  -webkit-mask-image:radial-gradient(circle at center,#000 0%,transparent 78%);
+  opacity:.65;
 }
-/* 极轻 SVG 噪点，让渐变不塑料化；几乎看不见但质感更细 */
+/* 极轻 SVG 噪点和边缘暗角，让深色背景少一点塑料感。 */
 .bg::after{
-  content:"";position:absolute;inset:0;pointer-events:none;z-index:4;
+  content:"";position:fixed;inset:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 12% 76%,var(--bg-radial-d),transparent 22%),
+    var(--bg-vignette),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.45'/%3E%3C/svg%3E");
+  background-size:auto,auto,256px 256px;
   opacity:var(--bg-noise-opacity);
-  mix-blend-mode:soft-light;
-  background-size:256px 256px;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.45'/%3E%3C/svg%3E");
-  animation:bgNoiseDrift 7s steps(5,end) infinite;
-}
-@keyframes bgAmbientDrift{
-  0%{
-    transform:translate3d(0,0,0);
-    background-position:0 0,0 0,0 0,0 0,0 0,0 0,0 0,0 0,0 0,0 0;
-  }
-  100%{
-    transform:translate3d(-34px,24px,0);
-    background-position:0 0,0 0,0 0,0 0,72px 72px,72px 72px,144px 144px,144px 144px,0 0,0 0;
-  }
-}
-@keyframes bgNoiseDrift{
-  0%{background-position:0 0}
-  100%{background-position:48px -36px}
-}
-@media (prefers-reduced-motion: reduce){
-  .bg::before,
-  .bg::after{animation:none}
+  mix-blend-mode:overlay;
 }
 .fluid-glass-layer{
   position:absolute;inset:0;z-index:1;pointer-events:none;

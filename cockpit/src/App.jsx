@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:24:14 CST
+ 更新内容: 移除全屏 Color Bends 动态背景，改由 CSS 静态深石墨网格/点阵/噪声背景承载驾驶舱。
+*/
+/*
  更新时间: 2026-07-03 17:55:10 CST
  更新内容: 将 Color Bends 配色从强紫光束改为中性深色带加少量低饱和靛紫强调，落实紫色面积不超过 15% 的规则。
 */
@@ -86,7 +90,6 @@ import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 
 import AIAnalysisWidget from './components/AIAnalysisWidget';
-import ColorBends from './components/ColorBends/ColorBends';
 import GlassSurface from './components/GlassSurface/GlassSurface';
 import Sidebar from './components/Sidebar';
 import ExpandableSearch from './components/ExpandableSearch';
@@ -106,7 +109,6 @@ import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuL
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
 import { matchesSearchTerm } from './lib/searchMatch';
-import { useThemeTokens } from './lib/theme';
 import './dashboard.css';
 
 const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance';
@@ -128,7 +130,6 @@ function makeCompanionCueId(card) {
 }
 
 export default function App() {
-  const { theme } = useThemeTokens();
   const [activeMenu, setActiveMenu] = useState('overview');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [activeMaintenanceMenu, setActiveMaintenanceMenu] = useState(DEFAULT_MAINTENANCE_MENU);
@@ -290,31 +291,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <div className="bg">
-        {/* ReactBits Color Bends 只保留少量低饱和品牌强调，前景可读性由遮罩和 CSS 纹理层控制 */}
-        {theme === 'dark' && (
-          <>
-            <ColorBends
-              colors={['#111827', '#263247', '#4E46A5']}
-              speed={0.18}
-              transparent={true}
-              rotation={96}
-              autoRotate={0.42}
-              scale={1.18}
-              frequency={0.78}
-              warpStrength={0.42}
-              mouseInfluence={0.02}
-              parallax={0.04}
-              noise={0.015}
-              iterations={1}
-              intensity={0.45}
-              bandWidth={2.4}
-              className="color-bends-layer"
-            />
-            <div className="bg-shade" aria-hidden="true" />
-          </>
-        )}
-      </div>
+      <div className="bg" aria-hidden="true" />
 
       <div className="dash-shell">
         <aside className="dash-aside">
