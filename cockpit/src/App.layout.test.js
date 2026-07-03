@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:33:47 CST
+ Update content: Require maintenance selected-row overlays to use pure violet instead of pink-purple.
+*/
+/*
  Update time: 2026-07-03 11:19:40 CST
  Update content: Add regression coverage for unified organization-style maintenance side navigation.
 */
@@ -476,8 +480,10 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
 test('uses purple maintenance table row hover overlays and persistent clicked-row highlights', () => {
   const matrixWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap');
 
-  assert.match(matrixWrapBlock, /--glass-cell-hover:\s*rgba\(190,\s*64,\s*255,\s*\.24\);/);
-  assert.match(matrixWrapBlock, /--mnt-row-selected-overlay:\s*rgba\(190,\s*64,\s*255,\s*\.34\);/);
+  assert.match(matrixWrapBlock, /--glass-cell-hover:\s*rgba\(96,\s*0,\s*255,\s*\.18\);/);
+  assert.match(matrixWrapBlock, /--mnt-row-selected-overlay:\s*rgba\(96,\s*0,\s*255,\s*\.24\);/);
+  assert.match(matrixWrapBlock, /--mnt-row-selected-hover-overlay:\s*rgba\(96,\s*0,\s*255,\s*\.3\);/);
+  assert.doesNotMatch(matrixWrapBlock, /190,\s*64,\s*255|210,\s*86,\s*255/);
   assert.match(maintenancePageCss, /\.mnt-matrix tbody tr:hover td,\s*[\s\S]*?\.mnt-user-table tbody tr:hover td \{[\s\S]*?background:\s*var\(--glass-cell-hover\);/);
   assert.match(maintenancePageCss, /\.mnt-matrix tbody tr\.mnt-row--selected td,\s*[\s\S]*?\.mnt-user-table tbody tr\.mnt-row--selected td \{[\s\S]*?background:\s*var\(--mnt-row-selected-overlay\);/);
   assert.match(maintenancePageCss, /\.mnt-matrix tbody tr\.mnt-row--selected:hover td,\s*[\s\S]*?\.mnt-user-table tbody tr\.mnt-row--selected:hover td \{[\s\S]*?background:\s*var\(--mnt-row-selected-hover-overlay\);/);

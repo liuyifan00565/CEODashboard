@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:33:47 CST
+ Update content: Use lower-opacity pure violet maintenance row overlays instead of pink-purple selected fills.
+*/
+/*
  Update time: 2026-07-03 11:24:05 CST
  Update content: Keep target maintenance department/person names in a separate frozen pane so transparent glass cells do not reveal scrolled period text.
 */
@@ -500,9 +504,9 @@
 }
 
 .mnt-matrix-wrap {
-  --glass-cell-hover: rgba(190, 64, 255, .24);
-  --mnt-row-selected-overlay: rgba(190, 64, 255, .34);
-  --mnt-row-selected-hover-overlay: rgba(210, 86, 255, .42);
+  --glass-cell-hover: rgba(96, 0, 255, .18);
+  --mnt-row-selected-overlay: rgba(96, 0, 255, .24);
+  --mnt-row-selected-hover-overlay: rgba(96, 0, 255, .3);
   --mnt-maintenance-period-width: 172px;
   flex: 1;
   min-height: 0;
@@ -757,7 +761,7 @@
 
 .mnt-matrix tbody tr:focus-visible td,
 .mnt-user-table tbody tr:focus-visible td {
-  outline: 2px solid rgba(190, 64, 255, .52);
+  outline: 2px solid rgba(96, 0, 255, .48);
   outline-offset: -2px;
 }
 
