@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-04 00:21:24 CST  更新内容: 版本情况控制器归位右上并改紫色选中态，半环和表格视觉层级降噪。 */
 /* 更新时间: 2026-07-03 23:48:36 CST  更新内容: 版本情况右侧四卡改为列表型表格，复用玻璃表格底、轻表头和行悬浮态。 */
 /* 更新时间: 2026-07-03 17:55:58 CST  更新内容: 版本情况主面板改为中性深色卡片玻璃底，不再使用大面积薰衣草/紫色背景渐变。 */
 /* 更新时间: 2026-07-03 15:39:00 CST  更新内容: 版本情况面板玻璃底与 hover 柔光改为冷紫 Vision Pro 风格。 */
@@ -22,6 +23,7 @@
   position: absolute;
   top: 16px;
   left: 18px;
+  right: 18px;
   z-index: 4;
   display: flex;
   align-items: flex-start;
@@ -93,6 +95,7 @@
   grid-template-columns: minmax(430px, .95fr) minmax(0, 1.05fr);
   align-items: stretch;
   gap: 16px;
+  padding-top: 44px;
 }
 
 .vf-ring-pane {
@@ -102,7 +105,7 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  padding-top: 6px;
+  padding-top: 0;
   padding-left: 4px;
 }
 
@@ -113,8 +116,8 @@
 .vf-metric-switch {
   position: relative;
   z-index: 3;
-  align-self: center;
-  margin-left: -28px;
+  align-self: flex-start;
+  margin-left: 0;
   display: inline-grid;
   grid-template-columns: repeat(2, 1fr);
   width: 128px;
@@ -122,7 +125,7 @@
   padding: 4px;
   border: 1px solid var(--line-2);
   border-radius: 10px;
-  background: rgba(18, 17, 27, .42);
+  background: rgba(18, 17, 27, .34);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 12px 34px rgba(0,0,0,.22);
@@ -137,8 +140,8 @@
   width: calc((100% - 8px) / 2);
   height: calc(100% - 8px);
   border-radius: 7px;
-  background: var(--control-solid);
-  box-shadow: 0 0 18px color-mix(in srgb,var(--control-solid),transparent 76%), 0 1px 8px rgba(0, 0, 0, 0.28);
+  background: rgba(143, 124, 255, .78);
+  box-shadow: 0 0 16px rgba(143, 124, 255, .22), 0 1px 8px rgba(0, 0, 0, 0.28);
   transition: transform .34s cubic-bezier(.34, 1.56, .64, 1);
   pointer-events: none;
 }
@@ -166,7 +169,7 @@
 
 .vf-metric-switch__btn--active,
 .vf-metric-switch__btn--active:hover {
-  color: var(--control-solid-text);
+  color: #fff;
 }
 
 .vf-metric-switch__btn:focus-visible {
@@ -179,7 +182,7 @@
   z-index: 1;
   width: clamp(430px, 34vw, 560px);
   min-height: 326px;
-  margin-top: -24px;
+  margin-top: -10px;
   margin-left: -16px;
 }
 
@@ -300,7 +303,7 @@
 
 .vf-version-table th,
 .vf-version-table td {
-  padding: 12px 11px;
+  padding: 14px 11px;
   border-bottom: 1px solid rgba(218, 226, 255, .08);
   text-align: right;
   white-space: nowrap;
@@ -315,8 +318,8 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  background: rgba(0, 0, 0, .16);
-  color: var(--faint);
+  background: rgba(0, 0, 0, .08);
+  color: rgba(239,251,255,.48);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   font-size: 12px;
@@ -349,8 +352,22 @@
   font-weight: 850;
 }
 
+.vf-version-table__name-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.vf-version-table__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
 .vf-version-table__price {
-  color: var(--muted);
+  color: rgba(255,255,255,.65);
   font-weight: 680;
 }
 
@@ -362,8 +379,9 @@
 }
 
 .vf-version-table__mom {
+  opacity: .86;
   font-weight: 850;
-  text-shadow: 0 0 12px color-mix(in srgb, currentColor 38%, transparent);
+  text-shadow: none;
 }
 
 .vf-detail-card {
@@ -413,6 +431,7 @@
     position: relative;
     top: auto;
     left: auto;
+    right: auto;
     margin-bottom: 10px;
   }
 

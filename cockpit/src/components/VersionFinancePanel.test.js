@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-04 01:03:12 CST
+ 更新内容: 约束版本情况补充经营洞察，并继续弱化表头、分割线与环比列对齐。
+*/
+/*
+ 更新时间: 2026-07-04 00:21:24 CST
+ 更新内容: 约束版本情况控制器移到右上、半环只标前两项、表格增加版本色点并弱化表头与环比亮度。
+*/
+/*
  更新时间: 2026-07-03 23:48:36 CST
  更新内容: 版本情况右侧展示从四张卡片改为六列表格，并要求每行继续打开版本二级弹窗。
 */
@@ -47,6 +55,14 @@ test('renders the large overview layout with half ring and amount/count switch',
   assert.match(css, /\.vf-version-table-wrap/);
 });
 
+test('places the amount/count switch in the top-right toolbar aligned with the table', () => {
+  assert.match(source, /<header className="vf-head">[\s\S]*?<div className="vf-metric-switch" role="tablist" aria-label="版本情况统计口径">/);
+  assert.doesNotMatch(source, /<div className="vf-ring-pane">[\s\S]*?<div className="vf-metric-switch" role="tablist" aria-label="版本情况统计口径">/);
+  assert.match(css, /\.vf-head \{[\s\S]*?right: 18px;[\s\S]*?justify-content: space-between;/);
+  assert.match(css, /\.vf-metric-switch \{[\s\S]*?align-self: flex-start;[\s\S]*?margin-left: 0;/);
+  assert.match(css, /\.vf-overview \{[\s\S]*?padding-top: 44px;/);
+});
+
 test('matches the version half ring size to the recovery half ring', () => {
   assert.match(source, /className="vf-ring-chart" style=\{\{ height: 326 \}\}/);
   assert.match(css, /\.vf-ring \{[\s\S]*?width: clamp\(430px, 34vw, 560px\);/);
@@ -67,7 +83,9 @@ test('places both totals under the version title instead of inside the ring', ()
 test('renders a scannable six-column table for the four right-side versions', () => {
   assert.match(css, /\.vf-card-zone \{[\s\S]*?align-self: start;/);
   assert.match(source, /function versionShare\(version, totalUnits\)/);
-  assert.match(source, /const tableRows = versions\.map\(\(version\) => \(\{[\s\S]*?share: versionShare\(version, countTotal\),/);
+  assert.match(source, /function versionDotColor\(index\)/);
+  assert.match(source, /const tableRows = versions\.map\(\(version, index\) => \(\{[\s\S]*?share: versionShare\(version, countTotal\),/);
+  assert.match(source, /dotColor: versionDotColor\(index\),/);
   assert.match(source, /<table className="vf-version-table"/);
   assert.match(source, /<th scope="col">版本<\/th>/);
   assert.match(source, /<th scope="col">单价<\/th>/);
@@ -75,14 +93,26 @@ test('renders a scannable six-column table for the four right-side versions', ()
   assert.match(source, /<th scope="col">占比<\/th>/);
   assert.match(source, /<th scope="col">回款<\/th>/);
   assert.match(source, /<th scope="col">环比<\/th>/);
+  assert.match(source, /<span className="vf-version-table__dot" style=\{\{ background: row\.dotColor \}\} aria-hidden="true" \/>/);
   assert.match(source, /<td className="vf-version-table__share">\{row\.share\}%<\/td>/);
   assert.match(css, /\.vf-version-table-wrap\s*\{[\s\S]*?overflow-x:\s*auto;/);
   assert.match(css, /\.vf-version-table\s*\{[\s\S]*?width:\s*100%;[\s\S]*?border-collapse:\s*separate;/);
-  assert.match(css, /\.vf-version-table thead th\s*\{[\s\S]*?background:\s*rgba\(0, 0, 0, \.16\);/);
+  assert.match(css, /\.vf-version-table th,[\s\S]*?\.vf-version-table td\s*\{[\s\S]*?padding: 13px 12px;[\s\S]*?border-bottom: 1px solid rgba\(218, 226, 255, \.055\);/);
+  assert.match(css, /\.vf-version-table thead th\s*\{[\s\S]*?background:\s*rgba\(0, 0, 0, \.055\);[\s\S]*?color: rgba\(239,251,255,\.42\);/);
   assert.match(css, /\.vf-version-table__row:hover,[\s\S]*?\.vf-version-table__row:focus-visible\s*\{[\s\S]*?background:\s*var\(--glass-cell-hover\);/);
+  assert.match(css, /\.vf-version-table__name-inner\s*\{[\s\S]*?display:\s*inline-flex;[\s\S]*?gap:\s*12px;/);
+  assert.match(css, /\.vf-version-table__dot\s*\{[\s\S]*?width:\s*8px;[\s\S]*?border-radius:\s*999px;/);
+  assert.match(css, /\.vf-version-table__mom\s*\{[\s\S]*?display: block;[\s\S]*?min-width: 52px;[\s\S]*?text-align: right;/);
   assert.doesNotMatch(source, /className="vf-version-card"/);
   assert.doesNotMatch(css, /\.vf-card-grid/);
   assert.doesNotMatch(css, /\.vf-version-card/);
+});
+
+test('adds a concise operating insight under the version half ring', () => {
+  assert.match(source, /<p className="vf-insight">/);
+  assert.match(source, /启航版贡献主要销量，卓越版贡献最高回款，定制版保持高客单补充。/);
+  assert.match(css, /\.vf-insight \{[\s\S]*?max-width: 430px;[\s\S]*?margin: -18px 0 0 6px;[\s\S]*?color: rgba\(239,251,255,\.62\);/);
+  assert.doesNotMatch(css, /\.vf-insight \{[\s\S]*?box-shadow:/);
 });
 
 test('adds a KPI-style secondary expand entry and version detail modal', () => {
@@ -132,16 +162,28 @@ test('opens the matching secondary modal from any point on a version table row',
   assert.match(css, /\.vf-version-table__row:hover,[\s\S]*?\.vf-version-table__row:focus-visible \{/);
 });
 
-test('nudges the version half ring right while keeping the mode switch fixed', () => {
-  assert.match(source, /center: \['49\.5%', '70%'\]/);
+test('keeps the version half ring calm and labels only the two largest versions', () => {
+  assert.match(source, /const isMajorLabel = index < 2;/);
+  assert.match(source, /label:\s*\{[\s\S]*?show: isMajorLabel,/);
+  assert.match(source, /labelLine:\s*\{[\s\S]*?show: isMajorLabel,/);
+  assert.match(source, /center: \['49\.5%', '68%'\]/);
+  assert.match(source, /shadowBlur: 5,/);
+  assert.match(source, /shadowColor: 'rgba\(167, 156, 255, \.08\)'/);
   assert.match(css, /\.vf-ring-pane \{[\s\S]*?align-items: flex-start;/);
-  assert.match(css, /\.vf-ring-pane \{[\s\S]*?padding-top: 6px;/);
+  assert.match(css, /\.vf-ring-pane \{[\s\S]*?padding-top: 0;/);
   assert.match(css, /\.vf-ring-pane \{[\s\S]*?padding-left: 4px;/);
-  assert.match(css, /\.vf-metric-switch \{[\s\S]*?align-self: center;[\s\S]*?margin-left: -28px;/);
   assert.match(css, /\.vf-ring-pane::before \{[\s\S]*?content: none;/);
   assert.doesNotMatch(css, /\.vf-ring\s*\{[\s\S]*?filter: drop-shadow\(0 0 20px rgba\(255, 79, 216/);
-  assert.match(css, /\.vf-ring \{[\s\S]*?margin-top: -24px;/);
+  assert.match(css, /\.vf-ring \{[\s\S]*?margin-top: -10px;/);
   assert.match(css, /\.vf-ring \{[\s\S]*?margin-left: -16px;/);
+});
+
+test('uses restrained purple selected state and softer table deltas', () => {
+  assert.match(css, /\.vf-metric-switch__thumb \{[\s\S]*?background: rgba\(143, 124, 255, \.78\);/);
+  assert.match(css, /\.vf-metric-switch__btn \{[\s\S]*?color: rgba\(255,255,255,\.65\);/);
+  assert.match(css, /\.vf-metric-switch__btn--active,[\s\S]*?\.vf-metric-switch__btn--active:hover \{[\s\S]*?color: #fff;/);
+  assert.doesNotMatch(css, /\.vf-metric-switch__thumb \{[\s\S]*?background: var\(--control-solid\);/);
+  assert.match(css, /\.vf-version-table__mom \{[\s\S]*?opacity: \.82;[\s\S]*?text-shadow: none;/);
 });
 
 test('keeps the overview version row aligned to the large recovery card height', () => {

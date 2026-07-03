@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-04 00:21:24 CST  更新内容: 版本情况控制器移至右上，半环仅标前两项并降低光晕，表格增加版本色点。 */
 /* 更新时间: 2026-07-03 23:48:36 CST  更新内容: 版本情况右侧由四张展示卡改为六列表格，并保留行点击打开版本二级弹窗。 */
 /* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 版本情况半环同步黑曜石月光紫色板，加入冷蓝、青玉、香槟层级。 */
 /* 更新时间: 2026-07-03 15:39:00 CST  更新内容: 版本情况半环图表改为低饱和冷紫品牌渐变，去除旧青蓝/薄荷混色。 */
@@ -34,6 +35,7 @@ const VERSION_RING_COLORS = [
   { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6DD6D2' }, { offset: 1, color: '#BFEDEC' }] },
   { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#D7B56D' }, { offset: 1, color: '#F0D99A' }] },
 ];
+const VERSION_DOT_COLORS = ['#8B7CFF', '#74A7FF', '#6DD6D2', '#D7B56D'];
 const SALES_FILTER_OPTS = [
   { value: 'online', label: '线上' },
   { value: 'south', label: '华南线下' },
@@ -136,6 +138,10 @@ function versionShare(version, totalUnits) {
   return totalUnits ? +(units / totalUnits * 100).toFixed(2) : 0;
 }
 
+function versionDotColor(index) {
+  return VERSION_DOT_COLORS[index] ?? VERSION_DOT_COLORS[0];
+}
+
 function versionHalfRingOption(versions, mode, tokens) {
   const modeMeta = getModeMeta(mode);
   const total = versions.reduce((sum, version) => sum + (Number(version[modeMeta.field]) || 0), 0);
@@ -175,7 +181,7 @@ function versionHalfRingOption(versions, mode, tokens) {
         type: 'pie',
         name: `版本${modeMeta.label}`,
         radius: ['45%', '76%'],
-        center: ['49.5%', '70%'],
+        center: ['49.5%', '68%'],
         startAngle: 180,
         endAngle: 360,
         minShowLabelAngle: 1,
@@ -185,11 +191,11 @@ function versionHalfRingOption(versions, mode, tokens) {
           borderRadius: 8,
           borderColor: 'rgba(255, 255, 255, .11)',
           borderWidth: 1,
-          shadowBlur: 10,
-          shadowColor: 'rgba(167, 156, 255, .14)',
+          shadowBlur: 5,
+          shadowColor: 'rgba(167, 156, 255, .08)',
         },
         label: {
-          show: true,
+          show: false,
           position: 'outside',
           formatter: (params) => `{name|${params.name}}\n{percent|${params.percent}%}`,
           bleedMargin: 0,
@@ -202,8 +208,8 @@ function versionHalfRingOption(versions, mode, tokens) {
               fontWeight: 850,
               lineHeight: 17,
               align: 'center',
-              textShadowColor: 'rgba(0,0,0,.44)',
-              textShadowBlur: 10,
+              textShadowColor: 'rgba(0,0,0,.36)',
+              textShadowBlur: 7,
             },
             percent: {
               color: tokens.chartText,
@@ -211,17 +217,17 @@ function versionHalfRingOption(versions, mode, tokens) {
               fontWeight: 850,
               lineHeight: 15,
               align: 'center',
-              textShadowColor: 'rgba(0,0,0,.48)',
-              textShadowBlur: 10,
+              textShadowColor: 'rgba(0,0,0,.38)',
+              textShadowBlur: 7,
             },
           },
         },
         labelLine: {
-          show: true,
+          show: false,
           lineStyle: {
             color: tokens.chartText,
-            opacity: 0.72,
-            width: 2,
+            opacity: 0.58,
+            width: 1.5,
           },
           smooth: 0.18,
           length: 10,
@@ -229,11 +235,18 @@ function versionHalfRingOption(versions, mode, tokens) {
         },
         data: versions.map((version, index) => {
           const value = Math.max(Number(version[modeMeta.field]) || 0, 0.01);
+          const isMajorLabel = index < 2;
           return {
             value,
             rawValue: Number(version[modeMeta.field]) || 0,
             name: version.name,
             itemStyle: { color: VERSION_RING_COLORS[index] },
+            label: {
+              show: isMajorLabel,
+            },
+            labelLine: {
+              show: isMajorLabel,
+            },
           };
         }),
       },
@@ -390,9 +403,10 @@ export default function VersionFinancePanel({ channelKey = 'all' }) {
   const versions = getDisplayVersions(getVersionRows(channelKey));
   const countTotal = versions.reduce((sum, version) => sum + (Number(version.units) || 0), 0);
   const amountTotal = versions.reduce((sum, version) => sum + (Number(version.recovered) || 0), 0);
-  const tableRows = versions.map((version) => ({
+  const tableRows = versions.map((version, index) => ({
     ...version,
     share: versionShare(version, countTotal),
+    dotColor: versionDotColor(index),
   }));
   const channelName = channelKey === 'all' ? '' : getChannelRows(channelKey)[0]?.name;
 
@@ -415,30 +429,29 @@ export default function VersionFinancePanel({ channelKey = 'all' }) {
           </div>
           {channelName && <span className="vf-head-sub">{channelName} · 四个主版本</span>}
         </div>
+        <div className="vf-metric-switch" role="tablist" aria-label="版本情况统计口径">
+          <span
+            className="vf-metric-switch__thumb"
+            style={{ transform: `translateX(${mode === 'amount' ? '100%' : '0'})` }}
+            aria-hidden="true"
+          />
+          {VERSION_MODES.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              role="tab"
+              aria-selected={mode === item.value}
+              className={`vf-metric-switch__btn${mode === item.value ? ' vf-metric-switch__btn--active' : ''}`}
+              onClick={() => setMode(item.value)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </header>
 
       <div className="vf-overview">
         <div className="vf-ring-pane">
-          <div className="vf-metric-switch" role="tablist" aria-label="版本情况统计口径">
-            <span
-              className="vf-metric-switch__thumb"
-              style={{ transform: `translateX(${mode === 'amount' ? '100%' : '0'})` }}
-              aria-hidden="true"
-            />
-            {VERSION_MODES.map((item) => (
-              <button
-                key={item.value}
-                type="button"
-                role="tab"
-                aria-selected={mode === item.value}
-                className={`vf-metric-switch__btn${mode === item.value ? ' vf-metric-switch__btn--active' : ''}`}
-                onClick={() => setMode(item.value)}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
           <div className="vf-ring">
             <EChart option={versionHalfRingOption(versions, mode, tokens)} className="vf-ring-chart" style={{ height: 326 }} />
           </div>
@@ -473,7 +486,12 @@ export default function VersionFinancePanel({ channelKey = 'all' }) {
                       }
                     }}
                   >
-                    <th scope="row" className="vf-version-table__name">{row.name}</th>
+                    <th scope="row" className="vf-version-table__name">
+                      <span className="vf-version-table__name-inner">
+                        <span className="vf-version-table__dot" style={{ background: row.dotColor }} aria-hidden="true" />
+                        <span>{row.name}</span>
+                      </span>
+                    </th>
                     <td className="vf-version-table__price">{fmtMoney(row.price)}</td>
                     <td className="vf-version-table__units">{row.units.toLocaleString('zh-CN')}</td>
                     <td className="vf-version-table__share">{row.share}%</td>
