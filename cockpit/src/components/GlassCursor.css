@@ -1,25 +1,70 @@
 /*
+ 更新时间: 2026-07-03 16:18:43 CST
+ 更新内容: 提高纯紫散光的可见度，扩大范围并增强中段紫光。
+*/
+/*
+ 更新时间: 2026-07-03 16:18:43 CST
+ 更新内容: 光标效果简化为单层紫色散光，移除白色亮芯和玻璃感。
+*/
+/*
+ 更新时间: 2026-07-03 16:18:43 CST
+ 更新内容: 将光标光晕提升到最前层，并增加柔和前景亮芯，避免像藏在玻璃面板后方。
+*/
+/*
+ 更新时间: 2026-07-03 16:11:57 CST
+ 更新内容: 加强光标周围紫色散光的可见度，扩大柔光范围并移除混合模式导致的压暗。
+*/
+/*
+ 更新时间: 2026-07-03 16:11:57 CST
+ 更新内容: 将光标紫色光晕改成大范围柔和散光，消除清晰圆形边界。
+*/
+/*
+ 更新时间: 2026-07-03 16:09:10 CST
+ 更新内容: 保留系统光标可见，移除黑色玻璃球隐藏光标规则，并把紫色光晕居中包围光标。
+*/
+/*
+ 更新时间: 2026-07-03 16:05:19 CST
+ 更新内容: 为玻璃指针新增偏移紫色小光晕样式，保持固定覆盖层透明且不阻断点击。
+*/
+/*
  更新时间: 2026-06-24
  更新内容: 玻璃球指针容器 —— 全屏透明覆盖层，玻璃球跟随鼠标，页面透过显示；显式禁止 Canvas 拦截页面点击。
 */
 .glass-cursor-fixed {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 2147483647;
   pointer-events: none !important;
 }
 .glass-cursor-fixed * {
   pointer-events: none !important;
 }
-.glass-cursor-fixed canvas {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-  pointer-events: none !important;
+.glass-cursor-halo {
+  --glass-cursor-x: -100px;
+  --glass-cursor-y: -100px;
+  position: fixed;
+  left: var(--glass-cursor-x);
+  top: var(--glass-cursor-y);
+  width: 300px;
+  height: 300px;
+  border-radius: 999px;
+  isolation: isolate;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  transition: opacity .18s ease;
+  will-change: transform, opacity;
+  pointer-events: none;
 }
-
-/* 开启玻璃球时隐藏系统光标 */
-body.glass-cursor-on,
-body.glass-cursor-on * {
-  cursor: none !important;
+.glass-cursor-halo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle, rgba(168,85,247,.92) 0%, rgba(147,51,234,.58) 26%, rgba(109,40,217,.34) 55%, rgba(91,45,225,.12) 78%, rgba(124,108,255,0) 100%);
+  box-shadow: 0 0 110px rgba(168,85,247,.52), 0 0 220px rgba(124,58,237,.36), 0 0 320px rgba(91,45,225,.22);
+  filter: blur(18px) saturate(1.45);
+  pointer-events: none;
+}
+.glass-cursor-halo--visible {
+  opacity: 1;
 }
