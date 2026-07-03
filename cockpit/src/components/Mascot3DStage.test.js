@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-03 18:27:19 CST
- 更新内容: 改为检查去注释后的 AI 小人舞台源码，减少对具体实现名称和公式的绑定。
+ 更新时间: 2026-07-03 18:34:39 CST
+ 更新内容: 加强 AI 小人真实 3D 可识别细节红灯覆盖，保持实现命名与公式无关。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -40,8 +40,19 @@ function jsxGeometryTypes(source) {
 
 test('renders Fu Xiaoke as articulated Three.js model parts instead of a full-character texture', () => {
   const geometryTypes = jsxGeometryTypes(stageCode).filter((type) => type !== 'planeGeometry');
+  const bodyPartSignals = [
+    /\bhead\b/i,
+    /\bbody\b|\btorso\b|\bspine\b|\bchest\b/i,
+    /\barm\b|\bupperArm\b|\bforearm\b/i,
+    /\bhand\b/i,
+    /\bleg\b|\bfoot\b|\bhip\b/i,
+  ];
 
-  assert.ok(geometryTypes.length >= 3, 'visible mascot should use diverse procedural geometry types');
+  assert.ok(geometryTypes.length >= 4, 'visible mascot should use at least four non-plane procedural geometry types');
+  assert.equal(countMatches(stageCode, bodyPartSignals), bodyPartSignals.length, 'mascot should expose recognizable head, body, arms, hands, and legs');
+  assert.match(stageCode, /headset|headphone|earphone|earcup|microphone|\bmic\b|boom/i);
+  assert.match(stageCode, />\s*AI\s*<|['"`]AI['"`]|badge|emblem|chest/i);
+  assert.match(stageCode, /<(?:pointLight|spotLight|ambientLight|directionalLight)\b|emissive|glow/i);
   assert.doesNotMatch(stageCode, /\buseTexture\b|TextureLoader|loadTexture/);
   assert.doesNotMatch(stageCode, /meshBasicMaterial[\s\S]{0,160}(?:map=\{|\bmap:)/);
   assert.doesNotMatch(stageCode, /<planeGeometry\b[\s\S]{0,160}(?:width|height|texture|map|source|mascot)/i);
@@ -55,6 +66,7 @@ test('keeps the transparent Fu Xiaoke PNG only as a WebGL fallback', () => {
 
   assert.deepEqual(pngLiterals, ['/ai-mascot-transparent.png']);
   assert.match(stageCode, /mascot-fallback-image/);
+  assert.match(stageCode, /mascot-3d-stage--[\w-]*(?:fallback|failed)[\w-]*|(?:fallback|failed)[\s\S]{0,160}\?\s*['"`][^'"`]*mascot-3d-stage--/i);
   assert.match(stageCssCode, /\.mascot-fallback-image\s*\{/);
   assert.match(stageCssCode, /\.mascot-3d-stage--[\w-]*(?:fallback|failed)[\w-]*\s+\.mascot-fallback-image\s*\{/);
   assert.doesNotMatch(stageCode, /\buseTexture\b|TextureLoader|loadTexture|MASCOT_ACTION_POSES/);
