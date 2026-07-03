@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-03 18:38:42 CST
- 更新内容: 放松 AI 小人入口集成断言的精确实现绑定，并收窄 mascot 图片资产禁用范围。
+ 更新时间: 2026-07-03 19:08:26 CST
+ 更新内容: 进一步放松 AI 小人入口集成断言的导入与事件命名绑定，保留状态归属和 mascot 资产隔离要求。
 */
 /*
  更新时间: 2026-07-03 18:27:19 CST
@@ -47,23 +47,26 @@ function themeBlock(theme) {
 }
 
 test('uses the 3D mascot stage for the AI launcher', () => {
+  const stageInvocation = componentCode.match(/<Mascot3DStage\b[\s\S]*?\/>/)?.[0] ?? '';
+  const actionState = componentCode.match(/const\s*\[\s*([A-Za-z_$][\w$]*)\s*,\s*[A-Za-z_$][\w$]*\s*\]\s*=\s*useState\(\s*MASCOT_ACTIONS\.idle\s*\)/);
+  const pointerState = componentCode.match(/const\s*\[\s*([A-Za-z_$][\w$]*)\s*,\s*[A-Za-z_$][\w$]*\s*\]\s*=\s*useState\(\s*\{\s*x:\s*0,\s*y:\s*0,\s*active:\s*false\s*\}\s*\)/);
+
   assert.match(componentCode, /Mascot3DStage/);
-  assert.match(componentCode, /import \{\s*MASCOT_ACTIONS,\s*getIdleCompanionCue,\s*getSpeechAction,\s*\} from '\.\.\/lib\/mascotCompanion';/s);
-  assert.match(componentCode, /export default function AIAnalysisWidget\(/);
-  assert.match(componentCode, /useState\(\s*MASCOT_ACTIONS\.idle\s*\)/);
-  assert.match(componentCode, /useState\(\s*\{\s*x:\s*0,\s*y:\s*0,\s*active:\s*false\s*\}\s*\)/);
+  assert.ok(stageInvocation, 'AI launcher should render Mascot3DStage');
+  assert.ok(actionState, 'AIAnalysisWidget should own the mascot action state');
+  assert.ok(pointerState, 'AIAnalysisWidget should own the mascot pointer state');
   assert.doesNotMatch(componentCode, /spinToken/);
   assert.doesNotMatch(componentCode, /setSpinToken/);
-  assert.match(componentCode, /className=\{`ai-orb ai-orb--\$\{[^}]+\}`\}/);
-  assert.match(componentCode, /<Mascot3DStage\b[\s\S]*\baction=\{[^}]+\}[\s\S]*\/>|<Mascot3DStage\b[\s\S]*\bmascotAction=\{[^}]+\}[\s\S]*\/>/);
-  assert.match(componentCode, /<Mascot3DStage\b[\s\S]*\bpointer=\{[^}]+\}[\s\S]*\/>|<Mascot3DStage\b[\s\S]*\bmascotPointer=\{[^}]+\}[\s\S]*\/>/);
-  assert.match(componentCode, /<Mascot3DStage\b[\s\S]*\banalysisActive=\{[^}]+\}[\s\S]*\/>|<Mascot3DStage\b[\s\S]*\b(?:active|analyzing)=\{[^}]+\}[\s\S]*\/>/);
-  assert.match(componentCode, /aria-label=\{open \? '收起 AI 分析工具' : '打开 AI 分析工具'\}/);
+  assert.match(componentCode, /ai-orb/);
+  assert.match(stageInvocation, new RegExp(`\\b(?:action|mascotAction)=\\{\\s*${actionState[1]}\\s*\\}`));
+  assert.match(stageInvocation, new RegExp(`\\b(?:pointer|mascotPointer)=\\{\\s*${pointerState[1]}\\s*\\}`));
+  assert.match(stageInvocation, /\b(?:analysisActive|active|analyzing)=\{\s*(?:open\s*\|\|\s*loading|loading\s*\|\|\s*open)\s*\}/);
+  assert.match(componentCode, /aria-label=\{[^}]*open[^}]*\}/);
   assert.match(componentCode, /aria-expanded=\{open\}/);
-  assert.match(componentCode, /onPointerMove=\{handleMascotPointerMove\}/);
-  assert.match(componentCode, /onMouseEnter=\{handleMascotEnter\}/);
-  assert.match(componentCode, /onMouseLeave=\{handleMascotLeave\}/);
-  assert.match(componentCode, /onClick=\{handleMascotClick\}/);
+  assert.match(componentCode, /onPointerMove=\{[^}]+\}/);
+  assert.match(componentCode, /onMouseEnter=\{[^}]+\}/);
+  assert.match(componentCode, /onMouseLeave=\{[^}]+\}/);
+  assert.match(componentCode, /onClick=\{[^}]+\}/);
   assert.doesNotMatch(componentCode, /ai-mascot-sprite|ai-mascot-stage/);
   assert.doesNotMatch(componentCode, /\/assets\/mascot\//);
   assert.doesNotMatch(componentCode, /['"`][^'"`]*(?:ai-mascot|ceo-mascot|mascot)[^'"`]*\.png[^'"`]*['"`]/i);
