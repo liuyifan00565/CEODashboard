@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-03 16:24:00 CST
+ 更新内容: 将紫色散光范围收小到光标附近，避免大面积铺满面板。
+*/
+/*
+ 更新时间: 2026-07-03 16:22:00 CST
+ 更新内容: 按参考图将光标散光改为大面积饱和紫色面光，中心浓郁、边缘柔散。
+*/
+/*
  更新时间: 2026-07-03 16:18:43 CST
  更新内容: 提高纯紫散光的可见度，扩大范围并增强中段紫光。
 */
@@ -45,8 +53,8 @@
   position: fixed;
   left: var(--glass-cursor-x);
   top: var(--glass-cursor-y);
-  width: 300px;
-  height: 300px;
+  width: 190px;
+  height: 190px;
   border-radius: 999px;
   isolation: isolate;
   opacity: 0;
@@ -60,9 +68,9 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(circle, rgba(168,85,247,.92) 0%, rgba(147,51,234,.58) 26%, rgba(109,40,217,.34) 55%, rgba(91,45,225,.12) 78%, rgba(124,108,255,0) 100%);
-  box-shadow: 0 0 110px rgba(168,85,247,.52), 0 0 220px rgba(124,58,237,.36), 0 0 320px rgba(91,45,225,.22);
-  filter: blur(18px) saturate(1.45);
+  background: radial-gradient(circle, rgba(168,85,247,.8) 0%, rgba(124,58,237,.44) 32%, rgba(91,45,225,.18) 68%, rgba(124,108,255,0) 100%);
+  box-shadow: 0 0 70px rgba(168,85,247,.42), 0 0 140px rgba(124,58,237,.28);
+  filter: blur(16px) saturate(1.36);
   pointer-events: none;
 }
 .glass-cursor-halo--visible {

@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-03 16:24:00 CST
+ Update content: Guard that the purple diffused glow stays compact near the cursor instead of flooding the panel.
+*/
+/*
+ Update time: 2026-07-03 16:22:00 CST
+ Update content: Guard that the cursor glow uses a large saturated purple light field like the latest reference.
+*/
+/*
  Update time: 2026-07-03 16:18:43 CST
  Update content: Guard that the cursor effect is a direct purple diffused glow without a glass ball or white foreground core.
 */
@@ -47,11 +55,12 @@ test('renders a purple halo around the visible native cursor without catching cl
   assert.doesNotMatch(cursorSource, /<Canvas/);
   assert.match(haloBlock, /position:\s*fixed;/);
   assert.match(fixedBlock, /z-index:\s*2147483647;/);
-  assert.match(haloBlock, /width:\s*300px;/);
+  assert.match(haloBlock, /width:\s*190px;/);
+  assert.match(haloBlock, /height:\s*190px;/);
   assert.doesNotMatch(haloBlock, /filter:/);
-  assert.match(haloGlowBlock, /background:\s*radial-gradient\(circle, rgba\(168,85,247,\.92\)/);
+  assert.match(haloGlowBlock, /background:\s*radial-gradient\(circle, rgba\(168,85,247,\.8\)/);
   assert.match(haloGlowBlock, /rgba\(124,108,255,0\) 100%\);/);
-  assert.match(haloGlowBlock, /filter:\s*blur\(18px\) saturate\(1\.45\);/);
+  assert.match(haloGlowBlock, /filter:\s*blur\(16px\) saturate\(1\.36\);/);
   assert.doesNotMatch(cursorCss, /\.glass-cursor-halo::after/);
   assert.doesNotMatch(cursorCss, /mix-blend-mode/);
   assert.match(haloBlock, /transform:\s*translate\(-50%,\s*-50%\);/);
