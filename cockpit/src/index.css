@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 17:52:15 CST
+ Update content: 将全屏背景从亮紫宇宙光束收敛为深黑蓝底、微弱径向紫色光晕、低透明网格/噪声纹理，并加快暗背景漂移。
+*/
+/*
  Update time: 2026-07-03 16:51:07 CST
  Update content: Deepen KPI warning completion progress accents from light pink to bright rose red.
 */
@@ -102,18 +106,20 @@
   --bar-good-glow:0 0 16px rgba(170,160,255,.20);
   --bar-warn:linear-gradient(90deg,#E7436D 0%,#FF5F88 58%,#FF86A4 100%);
   --bar-warn-glow:0 0 16px rgba(255,95,136,.20);
-  /* 背景：深海蓝黑底 #0B1020/#070A12/#121933；Color Bends 作为冷紫环境光层 */
-  --bg-base-1:#0B1020;
-  --bg-base-2:#070A12;
-  --bg-base-3:#121933;
-  --bg-radial-a:rgba(124,108,255,.20);
-  --bg-radial-b:rgba(201,194,255,.14);
-  --bg-radial-c:rgba(143,134,255,.16);
-  --bg-radial-d:rgba(158,220,255,.08);
+  /* 背景：深黑蓝底；Color Bends 降为弱紫环境光，网格和噪声只做极轻纹理 */
+  --bg-base-1:#050B17;
+  --bg-base-2:#030712;
+  --bg-base-3:#071120;
+  --bg-radial-a:rgba(118,78,255,.115);
+  --bg-radial-b:rgba(168,118,255,.075);
+  --bg-radial-c:rgba(104,80,210,.085);
+  --bg-radial-d:rgba(88,116,180,.035);
   --bg-vignette:
-    linear-gradient(90deg,rgba(231,226,255,.028),transparent 18%,transparent 82%,rgba(201,194,255,.022)),
-    radial-gradient(circle at center,transparent 0%,rgba(0,0,0,.24) 100%);
-  --bg-noise-opacity:.025;
+    linear-gradient(90deg,rgba(160,142,255,.018),transparent 18%,transparent 82%,rgba(160,142,255,.014)),
+    radial-gradient(circle at center,transparent 0%,rgba(0,0,0,.34) 100%);
+  --bg-grid-line:rgba(186,178,255,.028);
+  --bg-grid-line-strong:rgba(186,178,255,.018);
+  --bg-noise-opacity:.018;
   --brand-dot-shadow:0 0 10px rgba(201,194,255,.30);
   --control-hover:rgba(231,226,255,.08);
   --theme-toggle-icon:#E7E2FF;
@@ -188,6 +194,8 @@
   --bg-vignette:
     linear-gradient(90deg,rgba(255,255,255,.45),transparent 18%,transparent 82%,rgba(255,255,255,.35)),
     radial-gradient(circle at center,transparent 0%,rgba(10,15,24,.04) 100%);
+  --bg-grid-line:rgba(10,15,24,.026);
+  --bg-grid-line-strong:rgba(10,15,24,.018);
   --bg-noise-opacity:.025;
   --brand-dot-shadow:0 0 12px rgba(0,0,0,.22);
   --control-hover:rgba(10,15,24,.08);
@@ -227,45 +235,75 @@ body{
 }
 
 .app{position:relative;min-height:100vh}
-/* .bg 基底：深海蓝黑线性渐变；Color Bends 环境光、深色遮罩、柔和补光、噪点分别叠在上方 */
+/* .bg 基底：深黑蓝线性渐变；弱紫环境光、深色遮罩、低透明网格和噪点分别叠在上方 */
 .bg{
   position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:linear-gradient(180deg,var(--bg-base-1) 0%,var(--bg-base-2) 45%,var(--bg-base-3) 100%);
+  background:
+    radial-gradient(circle at 50% -18%,rgba(35,50,92,.24),transparent 42%),
+    linear-gradient(180deg,var(--bg-base-1) 0%,var(--bg-base-2) 46%,var(--bg-base-3) 100%);
 }
-/* 深色遮罩：只做可读性保护，不再压低 Color Bends 本身的亮度与饱和感 */
+/* 深色遮罩：保护数据可读性，同时把动态层压回暗背景里 */
 .bg-shade{
   position:absolute;inset:0;z-index:2;pointer-events:none;
   background:
-    linear-gradient(180deg,rgba(7,10,18,.28) 0%,rgba(7,10,18,.18) 48%,rgba(7,10,18,.34) 100%),
-    radial-gradient(circle at center,rgba(7,10,18,.04),rgba(3,5,11,.18) 100%);
+    linear-gradient(180deg,rgba(3,7,18,.44) 0%,rgba(3,7,18,.32) 48%,rgba(3,7,18,.50) 100%),
+    radial-gradient(circle at center,rgba(4,8,18,.12),rgba(1,3,8,.38) 100%);
 }
-/* Color Bends 材质层：全屏铺底，保留 ReactBits 组件可识别的亮紫带状流光 */
+/* Color Bends 材质层：由亮紫光束降级为更快、更暗的模糊紫色环境漂移 */
 .color-bends-layer{
   position:absolute;inset:0;z-index:1;pointer-events:none;
-  opacity:.88;
-  filter:brightness(.62) saturate(1.35);
-  mix-blend-mode:normal;
+  opacity:.28;
+  filter:blur(14px) brightness(.42) saturate(.88);
+  mix-blend-mode:screen;
+  transform:scale(1.04);
+  transform-origin:center;
 }
 .color-bends-layer canvas{
   display:block;width:100%!important;height:100%!important;pointer-events:none;
 }
-/* 边缘高光 + 中心暗角 + 冷紫角落环境光，在 Color Bends 与遮罩之上轻叠加 */
+/* 弱紫径向光晕 + 极低透明度网格，在 Color Bends 与遮罩之上轻叠加 */
 .bg::before{
-  content:"";position:absolute;inset:0;pointer-events:none;z-index:3;
+  content:"";position:absolute;inset:-8%;pointer-events:none;z-index:3;
   background:
-    radial-gradient(circle at 24% 6%,var(--bg-radial-a),transparent 32%),
-    radial-gradient(circle at 82% 12%,var(--bg-radial-b),transparent 28%),
-    radial-gradient(circle at 56% 88%,var(--bg-radial-c),transparent 38%),
-    radial-gradient(circle at 22% 78%,var(--bg-radial-d),transparent 42%),
+    radial-gradient(circle at 24% 8%,var(--bg-radial-a),transparent 31%),
+    radial-gradient(circle at 80% 16%,var(--bg-radial-b),transparent 30%),
+    radial-gradient(circle at 56% 86%,var(--bg-radial-c),transparent 42%),
+    radial-gradient(circle at 18% 74%,var(--bg-radial-d),transparent 45%),
+    linear-gradient(var(--bg-grid-line) 1px,transparent 1px),
+    linear-gradient(90deg,var(--bg-grid-line) 1px,transparent 1px),
+    linear-gradient(var(--bg-grid-line-strong) 1px,transparent 1px),
+    linear-gradient(90deg,var(--bg-grid-line-strong) 1px,transparent 1px),
     var(--bg-vignette);
-  opacity:.28;
+  background-size:auto,auto,auto,auto,72px 72px,72px 72px,288px 288px,288px 288px,auto,auto;
+  opacity:.72;
+  animation:bgAmbientDrift 18s linear infinite;
 }
 /* 极轻 SVG 噪点，让渐变不塑料化；几乎看不见但质感更细 */
 .bg::after{
   content:"";position:absolute;inset:0;pointer-events:none;z-index:4;
   opacity:var(--bg-noise-opacity);
   mix-blend-mode:soft-light;
+  background-size:256px 256px;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.45'/%3E%3C/svg%3E");
+  animation:bgNoiseDrift 7s steps(5,end) infinite;
+}
+@keyframes bgAmbientDrift{
+  0%{
+    transform:translate3d(0,0,0);
+    background-position:0 0,0 0,0 0,0 0,0 0,0 0,0 0,0 0,0 0,0 0;
+  }
+  100%{
+    transform:translate3d(-34px,24px,0);
+    background-position:0 0,0 0,0 0,0 0,72px 72px,72px 72px,144px 144px,144px 144px,0 0,0 0;
+  }
+}
+@keyframes bgNoiseDrift{
+  0%{background-position:0 0}
+  100%{background-position:48px -36px}
+}
+@media (prefers-reduced-motion: reduce){
+  .bg::before,
+  .bg::after{animation:none}
 }
 .fluid-glass-layer{
   position:absolute;inset:0;z-index:1;pointer-events:none;

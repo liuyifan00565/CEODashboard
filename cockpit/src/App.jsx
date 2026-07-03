@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 17:52:15 CST
+ 更新内容: 将 Color Bends 背景改为更快、更暗的弱紫环境漂移，配合深黑蓝网格噪声背景。
+*/
+/*
  更新时间: 2026-07-03 16:58:00 CST
  更新内容: 按反馈略微加快 Color Bends 流动速度，并收细紫色带宽。
 */
@@ -283,24 +287,24 @@ export default function App() {
   return (
     <div className="app">
       <div className="bg">
-        {/* ReactBits Color Bends 只做 Vision Pro 风格环境光层，前景可读性由遮罩控制 */}
+        {/* ReactBits Color Bends 只保留为弱紫动态环境光，前景可读性由遮罩和 CSS 纹理层控制 */}
         {theme === 'dark' && (
           <>
             <ColorBends
-              colors={['#3B1A8F', '#6D28D9', '#A855F7']}
-              speed={0.09}
-              transparent={false}
-              rotation={92}
-              autoRotate={0.18}
-              scale={1}
-              frequency={1}
-              warpStrength={1}
-              mouseInfluence={0.04}
-              parallax={0.08}
-              noise={0.05}
+              colors={['#160B3A', '#2B155E', '#5A3C9D']}
+              speed={0.18}
+              transparent={true}
+              rotation={96}
+              autoRotate={0.42}
+              scale={1.18}
+              frequency={0.78}
+              warpStrength={0.42}
+              mouseInfluence={0.02}
+              parallax={0.04}
+              noise={0.015}
               iterations={1}
-              intensity={1.2}
-              bandWidth={4.6}
+              intensity={0.45}
+              bandWidth={2.4}
               className="color-bends-layer"
             />
             <div className="bg-shade" aria-hidden="true" />
