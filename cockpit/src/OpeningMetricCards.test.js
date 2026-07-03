@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 17:56:30 CST
+ 更新内容: 开户数小卡片样式回归测试改为要求统一中性深色卡片玻璃变量。
+*/
+/*
  更新时间: 2026-07-03 11:09:47 CST
  更新内容: 增加“今日”搜索只定位今日开户数、不误命中本月开户数的回归测试。
 */
@@ -74,7 +78,7 @@ test('implements compact horizontal opening-account cards', () => {
   assert.match(componentSource, /<div className="opening-metric-card__hint">点击展开二级 ▸<\/div>/);
   assert.match(componentSource, /▲ \{formatDelta\(metric\.delta\)\}/);
   assert.match(cssSource, /\.opening-metric-cards\s*\{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/);
-  assert.match(cssSource, /\.opening-metric-card\s*\{[\s\S]*?min-height:\s*118px;[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?background:\s*transparent;/);
+  assert.match(cssSource, /\.opening-metric-card\s*\{[\s\S]*?min-height:\s*118px;[\s\S]*?border:\s*1px solid var\(--dashboard-card-border\);[\s\S]*?background:\s*var\(--dashboard-card-bg\);[\s\S]*?backdrop-filter:\s*var\(--dashboard-card-blur\);[\s\S]*?box-shadow:\s*var\(--dashboard-card-shadow\);/);
   assert.match(cssSource, /\.opening-metric-card__hint\s*\{[\s\S]*?grid-column:\s*1 \/ -1;[\s\S]*?color:\s*var\(--faint\);/);
   assert.doesNotMatch(cssSource, /\.opening-metric-card::before/);
   assert.doesNotMatch(cssSource, /rgba\(var\(--warn-rgb\), \.24\)/);

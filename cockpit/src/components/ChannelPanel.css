@@ -1,17 +1,18 @@
+/* Update time: 2026-07-03 17:55:40 CST  Update content: Move channel panels onto the neutral dark dashboard card glass recipe instead of transparent purple-tinted glass. */
 /* Update time: 2026-07-03 13:05:00 CST  Update content: 渠道进度条 fill 改用冰蓝/粉紫低饱和冷色线性渐变并加轻外发光，轨道改半透明蓝灰。 */
 /* Update time: 2026-07-02 17:09:15 CST  Update content: Reduce warning row saturation for the refined neon dashboard palette. */
 /* 更新时间: 2026-07-02 16:52:00 CST  更新内容: 渠道行箭头样式适配统一 AppIcon 线性 SVG。 */
 
 .ch-panel {
   position: relative;
-  background: transparent;
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--line-2);
+  background: var(--dashboard-card-bg);
+  backdrop-filter: var(--dashboard-card-blur);
+  -webkit-backdrop-filter: var(--dashboard-card-blur);
+  border: 1px solid var(--dashboard-card-border);
   border-radius: 18px;
   padding: 22px 24px 24px;
   overflow: hidden;
-  box-shadow: var(--glass-shadow);
+  box-shadow: var(--dashboard-card-shadow);
 }
 
 .ch-head {

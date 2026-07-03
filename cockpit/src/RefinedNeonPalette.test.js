@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 17:54:24 CST
+ Update content: Cap full-page purple visual area at 15% and require Color Bends to read as a muted accent layer.
+*/
+/*
  Update time: 2026-07-03 16:51:07 CST
  Update content: Require KPI warning completion progress accents to shift from light pink to deeper bright rose red.
 */
@@ -116,7 +120,7 @@ test('keeps 70 percent progress as cool white lavender instead of saturated blue
   assert.match(kpiSource, /const labelColor = progressColor\(pct, tokens\.progressMid\);[\s\S]*?itemStyle:\s*\{ color: progressBarColor\(pct, tokens\), borderRadius: 5, shadowBlur: 6, shadowColor: labelColor \}/);
 });
 
-test('uses Color Bends as a visible deep blue-black purple ribbon layer', () => {
+test('keeps Color Bends as a restrained accent layer under the 15 percent purple rule', () => {
   // 不再使用 DotField 点阵：App.jsx 不导入、index.css 不写 .dot-field-container 规则
   assert.doesNotMatch(appSource, /import DotField/);
   assert.doesNotMatch(appSource, /<DotField/);
@@ -124,33 +128,36 @@ test('uses Color Bends as a visible deep blue-black purple ribbon layer', () => 
   assert.doesNotMatch(appSource, /import Silk/);
   assert.doesNotMatch(appSource, /<Silk/);
 
-  // 深海蓝黑渐变底：#070A12 / #0B1020 / #121933
-  assert.match(darkThemeBlock(), /--bg-base-1:#0B1020;/);
-  assert.match(darkThemeBlock(), /--bg-base-2:#070A12;/);
-  assert.match(darkThemeBlock(), /--bg-base-3:#121933;/);
+  // 深黑蓝渐变底：#050B17 / #030712 / #071120
+  assert.match(darkThemeBlock(), /--bg-base-1:#050B17;/);
+  assert.match(darkThemeBlock(), /--bg-base-2:#030712;/);
+  assert.match(darkThemeBlock(), /--bg-base-3:#071120;/);
+  assert.match(darkThemeBlock(), /--purple-visual-area-max:\.15;/);
 
-  // 多层冷紫/薰衣草环境光，冰蓝只做少量边缘提亮
-  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(124,108,255,\.20\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(201,194,255,\.14\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-c:rgba\(143,134,255,\.16\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(158,220,255,\.08\);/);
+  // 大面积背景只保留深色基底，紫色环境光降到低透明辅助层
+  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(124,108,255,\.06\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(201,194,255,\.045\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-c:rgba\(143,134,255,\.05\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(158,220,255,\.06\);/);
 
   // SVG 噪点叠加层
   assert.match(indexCss, /\.bg::after\{[\s\S]*?feTurbulence[\s\S]*?fractalNoise/);
-  assert.match(darkThemeBlock(), /--bg-noise-opacity:\.025;/);
+  assert.match(darkThemeBlock(), /--bg-noise-opacity:\.018;/);
 
-  // Color Bends 材质层：允许穿透页面和玻璃卡片，但亮度不能过曝
+  // Color Bends 材质层：保留一点品牌识别，不再成为大面积紫色背景
   assert.match(appSource, /import ColorBends from '\.\/components\/ColorBends\/ColorBends';/);
-  assert.match(appSource, /<ColorBends[\s\S]*?colors=\{\['#3B1A8F', '#6D28D9', '#A855F7'\]\}/);
-  assert.match(appSource, /speed=\{0\.09\}/);
-  assert.match(appSource, /transparent=\{false\}/);
+  assert.match(appSource, /<ColorBends[\s\S]*?colors=\{\['#111827', '#263247', '#4E46A5'\]\}/);
+  assert.match(appSource, /speed=\{0\.18\}/);
+  assert.match(appSource, /transparent=\{true\}/);
   assert.match(appSource, /iterations=\{1\}/);
-  assert.match(appSource, /intensity=\{1\.2\}/);
-  assert.match(appSource, /bandWidth=\{4\.6\}/);
+  assert.match(appSource, /intensity=\{0\.45\}/);
+  assert.match(appSource, /bandWidth=\{2\.4\}/);
+  assert.doesNotMatch(appSource, /'#3B1A8F', '#6D28D9', '#A855F7'/);
   assert.doesNotMatch(appSource, /bg-data-scrim/);
-  assert.match(indexCss, /\.bg-shade\{[\s\S]*?z-index:2;[\s\S]*?rgba\(7,10,18,/);
+  assert.match(indexCss, /\.bg-shade\{[\s\S]*?z-index:2;[\s\S]*?rgba\(3,7,18,/);
   assert.doesNotMatch(indexCss, /\.bg-data-scrim/);
-  assert.match(indexCss, /\.color-bends-layer\{[\s\S]*?z-index:1;[\s\S]*?opacity:\s*\.88;[\s\S]*?filter:brightness\(\.62\) saturate\(1\.35\);/);
+  assert.match(indexCss, /\.color-bends-layer\{[\s\S]*?z-index:1;[\s\S]*?opacity:\s*var\(--purple-visual-area-max\);[\s\S]*?filter:brightness\(\.44\) saturate\(\.7\);/);
+  assert.doesNotMatch(indexCss, /opacity:\s*\.88;[\s\S]*?filter:brightness\(\.62\) saturate\(1\.35\);/);
   assert.match(colorBendsSource, /float weightSum = 0\.0;/);
   assert.match(colorBendsSource, /sumCol \/ max\(weightSum, 0\.0001\)\) \* cover/);
   assert.doesNotMatch(colorBendsSource, /col = clamp\(sumCol, 0\.0, 1\.0\);/);

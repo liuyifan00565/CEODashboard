@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 17:55:34 CST
+ 更新内容: 首页趋势和通用面板改用统一中性深色卡片玻璃变量，避免大面积强紫玻璃底。
+*/
+/*
  更新时间: 2026-07-03 15:37:00 CST
  更新内容: 搜索当前命中边框改为冷紫/薰衣草环境光，去除旧高饱和纯紫边缘。
 */
@@ -225,11 +229,11 @@
   isolation:isolate;
   display:flex;
   flex-direction:column;
-  background:transparent;
-  border:1px solid var(--line-2);
-  backdrop-filter:var(--glass-blur);
-  -webkit-backdrop-filter:var(--glass-blur);
-  box-shadow:var(--glass-shadow);
+  background: var(--dashboard-card-bg);
+  border: 1px solid var(--dashboard-card-border);
+  backdrop-filter: var(--dashboard-card-blur);
+  -webkit-backdrop-filter: var(--dashboard-card-blur);
+  box-shadow: var(--dashboard-card-shadow);
   overflow:hidden;
   transition:border-color .22s ease, box-shadow .22s ease;
 }
@@ -257,10 +261,10 @@
 .dash-token{
   flex:1;min-height:0;display:flex;flex-direction:column;gap:18px;
   padding:22px 24px;border-radius:16px;
-  background: transparent;
-  border:1px solid var(--line-2);
-  backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
-  box-shadow:var(--glass-shadow);
+  background: var(--dashboard-card-bg);
+  border: 1px solid var(--dashboard-card-border);
+  backdrop-filter: var(--dashboard-card-blur);-webkit-backdrop-filter:var(--dashboard-card-blur);
+  box-shadow: var(--dashboard-card-shadow);
 }
 .dash-token-head{display:flex;align-items:baseline;gap:14px}
 .dash-token-head h3{margin:0;font-size:16px;letter-spacing:.5px}

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 17:55:26 CST  更新内容: 回款半环图渠道色改为低饱和紫/蓝/灰蓝组合，避免四个扇区全部占用强紫视觉面积。 */
 /* 更新时间: 2026-07-03 17:53:00 CST  更新内容: 回款半环图改为统一紫蓝色阶，通过明度和深浅区分四个渠道，去除跳脱青色和高饱和糖果紫。 */
 /* Update time: 2026-07-03 16:51:07 CST  Update content: Deepen KPI warning ECharts progress bars from light pink to bright rose red. */
 /* Update time: 2026-07-03 16:46:50 CST  Update content: Brighten KPI ECharts progress bars again for stronger visual contrast. */
@@ -22,21 +23,21 @@ import { fmtDelta, deltaColor, progressColor } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './KpiCard.css';
 
-// Vision Pro 风格分段半环仪表盘：统一紫蓝色阶，靠明度和深浅建立渠道区分。
+// 分段半环仪表盘：保留低饱和品牌强调，避免四个渠道全部成为强紫色块。
 const CHANNEL_PIE_GRADIENTS = [
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8173FF' }, { offset: 0.55, color: '#AAA0FF' }, { offset: 1, color: '#D9D4FF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#756BEE' }, { offset: 0.58, color: '#9B94FF' }, { offset: 1, color: '#CFCBFF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6678F8' }, { offset: 0.58, color: '#8F95FF' }, { offset: 1, color: '#C8CEFF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6D5AD7' }, { offset: 0.56, color: '#8873EA' }, { offset: 1, color: '#B5A8FF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6F66D8' }, { offset: 0.55, color: '#9A93EA' }, { offset: 1, color: '#C9C5F4' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6EBBDA' }, { offset: 0.58, color: '#95D1E7' }, { offset: 1, color: '#C7D5E2' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6172C8' }, { offset: 0.58, color: '#8996D8' }, { offset: 1, color: '#BBC4EA' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6655B8' }, { offset: 0.56, color: '#8D7DD2' }, { offset: 1, color: '#B7ADE8' }] },
 ];
 const CHANNEL_PERCENT_COLORS = ['#ffffff', '#ffffff', '#ffffff', '#ffffff'];
 const CHANNEL_PIE_LABELS = { south: '线下华南', east: '线下华东' };
-// 未完成段：半透明灰蓝 + 灰紫双层，退到背景里
+// 未完成段：半透明灰蓝双层，退到背景里
 const INCOMPLETE_PIE_COLOR = {
   type: 'linear', x: 0, y: 0, x2: 1, y2: 1,
   colorStops: [
     { offset: 0, color: 'rgba(160, 170, 210, 0.16)' },
-    { offset: 1, color: 'rgba(124, 108, 255, 0.10)' },
+    { offset: 1, color: 'rgba(160, 170, 210, 0.10)' },
   ],
 };
 const INCOMPLETE_PERCENT_COLOR = '#ffffff';

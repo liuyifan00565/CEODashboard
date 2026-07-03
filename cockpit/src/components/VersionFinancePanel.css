@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 17:55:58 CST  更新内容: 版本情况主面板改为中性深色卡片玻璃底，不再使用大面积薰衣草/紫色背景渐变。 */
 /* 更新时间: 2026-07-03 15:39:00 CST  更新内容: 版本情况面板玻璃底与 hover 柔光改为冷紫 Vision Pro 风格。 */
 /* 更新时间: 2026-07-01 18:37:59 CST  更新内容: 去掉版本情况图表和二级展开背景里的紫色发光。 */
 .vf-panel {
@@ -8,14 +9,12 @@
   overflow: visible;
   padding: 16px 18px 16px;
   color: var(--txt);
-  background:
-    linear-gradient(120deg, rgba(201,194,255,.055), transparent 48%),
-    rgba(255,255,255,.055);
-  border: 1px solid var(--line-2);
+  background: var(--dashboard-card-bg);
+  border: 1px solid var(--dashboard-card-border);
   border-radius: 16px;
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--dashboard-card-blur);
+  backdrop-filter: var(--dashboard-card-blur);
+  box-shadow: var(--dashboard-card-shadow);
 }
 
 .vf-head {

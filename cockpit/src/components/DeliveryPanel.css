@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 17:55:46 CST  更新内容: 交付看板外层卡片改用中性深色玻璃变量，去除透明强紫背景观感。 */
 /* 更新时间: 2026-07-03 13:05:00 CST  更新内容: 交付看板进度条轨道改半透明蓝灰，fill 渐变由 progressGradient 内联驱动。 */
 /* 更新时间: 2026-07-01 18:20:15 CST  更新内容: 交付看板背景改为主页续费率 KPI 同款透明玻璃底。 */
 .dlv-panel {
@@ -9,11 +10,11 @@
   gap: 14px;
   padding: 22px 24px 24px;
   border-radius: 18px;
-  background: transparent;
-  border: 1px solid var(--line-2);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-shadow);
+  background: var(--dashboard-card-bg);
+  border: 1px solid var(--dashboard-card-border);
+  backdrop-filter: var(--dashboard-card-blur);
+  -webkit-backdrop-filter: var(--dashboard-card-blur);
+  box-shadow: var(--dashboard-card-shadow);
   overflow: hidden;
 }
 

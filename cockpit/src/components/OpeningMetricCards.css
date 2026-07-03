@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 17:55:52 CST
+ 更新内容: 开户数小卡片改用统一中性深色卡片玻璃变量，保持紫色仅作为指标强调。
+*/
+/*
  更新时间: 2026-07-01 18:37:59 CST
  更新内容: 去掉首页开户数小卡片左上角紫色发光光斑。
 */
@@ -21,12 +25,12 @@
   overflow: hidden;
   text-align: left;
   appearance: none;
-  border: 1px solid var(--line-2);
+  border: 1px solid var(--dashboard-card-border);
   border-radius: 14px;
-  background: transparent;
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-shadow);
+  background: var(--dashboard-card-bg);
+  -webkit-backdrop-filter: var(--dashboard-card-blur);
+  backdrop-filter: var(--dashboard-card-blur);
+  box-shadow: var(--dashboard-card-shadow);
   cursor: pointer;
   transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
 }

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 17:56:04 CST
+ Update content: Move compute KPI and panel cards to the neutral dark glass recipe and remove purple hover glow.
+*/
+/*
  Update time: 2026-07-03 15:40:00 CST
  Update content: Change compute search highlighting and card hover glow from ice-blue/pink-purple to restrained cold-purple glass.
 */
@@ -65,12 +69,12 @@
   min-height: 142px;
   padding: 17px 18px;
   overflow: hidden;
-  border: 1px solid var(--line-2);
+  background: var(--dashboard-card-bg);
+  border: 1px solid var(--dashboard-card-border);
   border-radius: 16px;
-  background: transparent;
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--dashboard-card-blur);
+  backdrop-filter: var(--dashboard-card-blur);
+  box-shadow: var(--dashboard-card-shadow);
   transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
 }
 
@@ -139,12 +143,12 @@
   gap: 14px;
   padding: 20px 22px 22px;
   overflow: hidden;
-  border: 1px solid var(--line-2);
+  background: var(--dashboard-card-bg);
+  border: 1px solid var(--dashboard-card-border);
   border-radius: 18px;
-  background: transparent;
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--dashboard-card-blur);
+  backdrop-filter: var(--dashboard-card-blur);
+  box-shadow: var(--dashboard-card-shadow);
 }
 
 .cpu-panel__head {
@@ -699,7 +703,7 @@
   .cpu-kpi:focus-within {
     transform: translateY(-3px);
     border-color: rgba(255,255,255,.34);
-    box-shadow: 0 22px 58px rgba(0,0,0,.42), 0 0 28px rgba(244,114,182,.14), 0 0 42px rgba(192,132,252,.08), inset 0 1px 0 rgba(255,255,255,.24);
+    box-shadow: 0 22px 58px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.18);
   }
 
   .cpu-panel:hover {

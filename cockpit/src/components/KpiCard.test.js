@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 17:54:12 CST
+ Update content: Require KPI cards to use neutral dark glass and keep purple as chart/accent-only rather than broad card wash.
+*/
+/*
  Update time: 2026-07-03 17:53:00 CST
  Update content: Require the recovery half-ring palette to use one unified violet-blue family with clear lightness differences.
 */
@@ -207,7 +211,7 @@ test('keeps only the target completion title at the upper-left of the recovery h
 });
 
 test('adds a transparent unfinished slice at the right edge of the recovery half-donut', () => {
-  assert.match(componentSource, /const INCOMPLETE_PIE_COLOR = \{[\s\S]*?type:\s*'linear'[\s\S]*?colorStops:\s*\[[\s\S]*?'rgba\(160, 170, 210, 0\.16\)'[\s\S]*?'rgba\(124, 108, 255, 0\.10\)'[\s\S]*?\]/);
+  assert.match(componentSource, /const INCOMPLETE_PIE_COLOR = \{[\s\S]*?type:\s*'linear'[\s\S]*?colorStops:\s*\[[\s\S]*?'rgba\(160, 170, 210, 0\.16\)'[\s\S]*?'rgba\(160, 170, 210, 0\.10\)'[\s\S]*?\]/);
   assert.match(componentSource, /const targetValue = recoveryTargetValue\(card\);/);
   assert.match(componentSource, /const incompleteValue = Math\.max\(0, targetValue - cardTotal\);/);
   assert.match(componentSource, /const incompleteSlice = \{[\s\S]*?rawValue:\s*incompleteValue[\s\S]*?targetValue[\s\S]*?name:\s*'未完成'[\s\S]*?isIncomplete:\s*true[\s\S]*?itemStyle:\s*\{[\s\S]*?color:\s*INCOMPLETE_PIE_COLOR[\s\S]*?opacity:\s*\.55[\s\S]*?borderColor:\s*'rgba\(160, 170, 210, \.18\)'/);
@@ -219,9 +223,9 @@ test('adds a transparent unfinished slice at the right edge of the recovery half
   assert.match(componentSource, /目标 \$\{params\.data\?\.targetValue \?\? '-'\} 万 · 完成率 \$\{card\.progress \?\? percent\}%/);
 });
 
-test('uses one violet-blue channel palette with distinct lightness steps instead of mixed candy colors', () => {
-  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#8173FF[\s\S]*?#AAA0FF[\s\S]*?#D9D4FF[\s\S]*?#756BEE[\s\S]*?#9B94FF[\s\S]*?#CFCBFF[\s\S]*?#6678F8[\s\S]*?#8F95FF[\s\S]*?#C8CEFF[\s\S]*?#6D5AD7[\s\S]*?#8873EA[\s\S]*?#B5A8FF[\s\S]*?\];/);
-  assert.doesNotMatch(componentSource, /#6ECFFF|#9EDCFF|#C084FC|#6D28D9/);
+test('uses muted chart accents without turning every recovery slice strong purple', () => {
+  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#6F66D8[\s\S]*?#9A93EA[\s\S]*?#C9C5F4[\s\S]*?#6EBBDA[\s\S]*?#95D1E7[\s\S]*?#C7D5E2[\s\S]*?#6172C8[\s\S]*?#8996D8[\s\S]*?#BBC4EA[\s\S]*?#6655B8[\s\S]*?#8D7DD2[\s\S]*?#B7ADE8[\s\S]*?\];/);
+  assert.doesNotMatch(componentSource, /#6D28D9|#8B5CF6|#C084FC|#A855F7/);
   assert.doesNotMatch(componentSource, /#A7F3D0/);
   assert.doesNotMatch(componentSource, /#B7F3FF/);
   assert.doesNotMatch(componentSource, /const CHANNEL_PIE_COLORS = \['#d6ccb2', '#a9b3b8', '#808b93', '#5f6975'\];/);
@@ -237,15 +241,15 @@ test('removes the bottom recovery legend so the half-donut can use the full visu
   assert.doesNotMatch(cssSource, /\.kpi-card__pie-chip/);
 });
 
-test('uses a neutral dark glass base with only restrained completion accent at the edges', () => {
-  assert.match(cssSource, /\.kpi-card--recovery\s*\{[\s\S]*?background:[\s\S]*?linear-gradient\(112deg, color-mix\(in srgb, var\(--kpi-accent\) 4%, transparent\) 0%, color-mix\(in srgb, var\(--kpi-accent\) 2%, transparent\) 30%, transparent 62%\)/);
-  assert.match(cssSource, /\.kpi-card--recovery\s*\{[\s\S]*?linear-gradient\(180deg, rgba\(255,\s*255,\s*255,\s*\.026\), rgba\(255,\s*255,\s*255,\s*\.006\)\),[\s\S]*?rgba\(255,\s*255,\s*255,\s*\.055\);/);
-  assert.doesNotMatch(cssSource, /var\(--kpi-accent\) (?:13|8\.5|7|4\.5)%, transparent/);
+test('uses the neutral dark glass card recipe without broad purple wash', () => {
+  assert.match(cssSource, /\.kpi-card\s*\{[\s\S]*?background:\s*var\(--dashboard-card-bg\);[\s\S]*?border:\s*1px solid var\(--dashboard-card-border\);[\s\S]*?backdrop-filter:\s*var\(--dashboard-card-blur\);[\s\S]*?box-shadow:\s*var\(--dashboard-card-shadow\);/);
+  assert.match(cssSource, /\.kpi-card--recovery\s*\{[\s\S]*?background:\s*var\(--dashboard-card-bg\);/);
+  assert.doesNotMatch(cssSource, /\.kpi-card--recovery\s*\{[^}]*color-mix\(in srgb, var\(--kpi-accent\)/);
   assert.doesNotMatch(cssSource, /radial-gradient\(circle at 20% 48%/);
   assert.doesNotMatch(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?width:\s*330px/);
-  assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?inset:\s*0;[\s\S]*?width:\s*auto;[\s\S]*?border-radius:\s*inherit;[\s\S]*?linear-gradient\(90deg, color-mix\(in srgb, var\(--kpi-accent\) 6%, transparent\) 0%, transparent 18%, transparent 82%, color-mix\(in srgb, var\(--kpi-accent\) 4%, transparent\) 100%\)/);
-  assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?mix-blend-mode:\s*screen;[\s\S]*?opacity:\s*\.48;/);
-  assert.match(cssSource, /filter:\s*drop-shadow\(0 0 10px color-mix\(in srgb, var\(--kpi-accent\) 10%, transparent\)\)/);
+  assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?inset:\s*0;[\s\S]*?width:\s*auto;[\s\S]*?border-radius:\s*inherit;[\s\S]*?linear-gradient\(180deg, rgba\(255,\s*255,\s*255,\s*\.045\), transparent 58%\)/);
+  assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?mix-blend-mode:\s*screen;[\s\S]*?opacity:\s*\.32;/);
+  assert.match(cssSource, /filter:\s*drop-shadow\(0 0 8px color-mix\(in srgb, var\(--kpi-accent\) 6%, transparent\)\)/);
   assert.match(componentSource, /<EChart option=\{progressOption\(card\.progress, tokens\)\} className="kpi-card__progress-chart" style=\{\{ height: 12 \}\} \/>/);
   assert.match(cssSource, /\.kpi-card--recovery \.kpi-card__progress-chart\s*\{[\s\S]*?opacity:\s*\.82;[\s\S]*?filter:\s*saturate\(\.82\);/);
   assert.match(cssSource, /\.kpi-card__side-panel \.ch-bar-fill\s*\{[\s\S]*?opacity:\s*\.82;[\s\S]*?filter:\s*saturate\(\.82\);/);
@@ -267,7 +271,7 @@ test('keeps recovery half-donut labels readable in the elongated card', () => {
   assert.match(cssSource, /justify-self:\s*start;/);
   assert.match(cssSource, /margin-left:\s*-18px;/);
   assert.match(cssSource, /min-height:\s*342px/);
-  assert.match(cssSource, /\.kpi-card__pie::before\s*\{[\s\S]*?radial-gradient\(ellipse at 50% 56%, color-mix\(in srgb, var\(--kpi-accent\) 42%, transparent\)[\s\S]*?filter:\s*blur\(22px\) saturate\(1\.18\);[\s\S]*?opacity:\s*\.74;/);
+  assert.match(cssSource, /\.kpi-card__pie::before\s*\{[\s\S]*?radial-gradient\(ellipse at 50% 56%, color-mix\(in srgb, var\(--kpi-accent\) 14%, transparent\)[\s\S]*?filter:\s*blur\(18px\) saturate\(\.92\);[\s\S]*?opacity:\s*\.42;/);
   assert.match(cssSource, /\.kpi-card__pie-chart\s*\{[\s\S]*?z-index:\s*1;/);
   assert.match(cssSource, /@media \(max-width:760px\) \{[\s\S]*?\.kpi-card__pie\s*\{[\s\S]*?justify-self:\s*center;[\s\S]*?margin-left:\s*0;[\s\S]*?\}[\s\S]*?\.kpi-card__pie-head\s*\{[\s\S]*?transform:\s*none;/);
 });

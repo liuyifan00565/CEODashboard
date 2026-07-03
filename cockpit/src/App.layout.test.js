@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 17:54:18 CST
+ Update content: Require dashboard and compute cards to use the neutral dark glass recipe instead of transparent purple glass.
+*/
+/*
  Update time: 2026-07-03 17:53:00 CST
  Update content: Require compute donut charts to follow the unified violet-blue overview half-ring palette.
 */
@@ -125,6 +129,8 @@ const monthlyTrendSource = readFileSync(new URL('./components/MonthlyTrend.jsx',
 const deliveryPanelCss = readFileSync(new URL('./components/DeliveryPanel.css', import.meta.url), 'utf8');
 const channelPanelSource = readFileSync(new URL('./components/ChannelPanel.jsx', import.meta.url), 'utf8');
 const channelPanelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
+const versionFinancePanelCss = readFileSync(new URL('./components/VersionFinancePanel.css', import.meta.url), 'utf8');
+const openingMetricCardsCss = readFileSync(new URL('./components/OpeningMetricCards.css', import.meta.url), 'utf8');
 const computePageSource = readFileSync(new URL('./components/ComputeUsagePage.jsx', import.meta.url), 'utf8');
 const computePageCss = readFileSync(new URL('./components/ComputeUsagePage.css', import.meta.url), 'utf8');
 const maintenancePageSource = readFileSync(new URL('./components/MaintenancePage.jsx', import.meta.url), 'utf8');
@@ -153,16 +159,17 @@ test('renders compute usage analysis as an independent dashboard page', () => {
   assert.match(appSource, /: \(\s*<>\s*<div className="dash-kpis">/);
 });
 
-test('uses trend-panel glass backgrounds without BorderGlow sweep for top compute KPI cards', () => {
+test('uses neutral dark glass backgrounds without BorderGlow sweep for top compute KPI cards', () => {
   const computeKpiBlock = cssRuleBody(computePageCss, '.cpu-kpi');
   const computeTrendPanelBlock = cssRuleBody(computePageCss, '.cpu-panel');
 
   assert.doesNotMatch(computePageSource, /import BorderGlow from '\.\/BorderGlow\/BorderGlow';/);
   assert.doesNotMatch(computePageSource, /<BorderGlow/);
   assert.match(computePageSource, /<article className=\{`cpu-kpi cpu-kpi--\$\{tone\}\$\{active \? ' cpu-kpi--match' : ''\}`\}>/);
-  assert.match(computePageCss, /\.cpu-kpi \{[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?border-radius:\s*16px;[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
-  assert.match(computeKpiBlock, /background:\s*transparent;/);
-  assert.match(computeTrendPanelBlock, /background:\s*transparent;/);
+  assert.match(computePageCss, /\.cpu-kpi \{[\s\S]*?background:\s*var\(--dashboard-card-bg\);[\s\S]*?border:\s*1px solid var\(--dashboard-card-border\);[\s\S]*?border-radius:\s*16px;[\s\S]*?box-shadow:\s*var\(--dashboard-card-shadow\);/);
+  assert.match(computeKpiBlock, /backdrop-filter:\s*var\(--dashboard-card-blur\);/);
+  assert.match(computeTrendPanelBlock, /background:\s*var\(--dashboard-card-bg\);/);
+  assert.match(computeTrendPanelBlock, /border:\s*1px solid var\(--dashboard-card-border\);/);
   assert.doesNotMatch(computeKpiBlock, /#101012/);
   assert.doesNotMatch(computeKpiBlock, /radial-gradient\(circle at 82% 12%/);
   assert.doesNotMatch(computePageCss, /\.cpu-kpi::before/);
@@ -431,7 +438,6 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   const actionsBlock = cssRuleBody(maintenancePageCss, '.mnt-actions');
   const toolbarControlBlock = cssRuleBody(maintenancePageCss, '.mnt-toolbar .mnt-control');
   const matrixWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap');
-  const computePanelBlock = cssRuleBody(computePageCss, '.cpu-panel');
   const progressBlock = cssRuleBody(maintenancePageCss, '.mnt-progress');
   const progressDangerBlock = cssRuleBody(maintenancePageCss, '.mnt-progress--danger span');
   const progressWarningBlock = cssRuleBody(maintenancePageCss, '.mnt-progress--warning span');
@@ -470,7 +476,6 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.match(maintenancePageCss, /\.mnt-layout--target \{[\s\S]*?grid-template-columns:\s*minmax\(220px,\s*260px\) minmax\(0,\s*1fr\);/);
   assert.match(maintenancePageCss, /\.mnt-layout--cost,\s*[\s\S]*?\.mnt-layout--channel \{[\s\S]*?grid-template-columns:\s*minmax\(220px,\s*260px\) minmax\(0,\s*1fr\);/);
   assert.match(maintenancePageCss, /\.mnt-layout--org \{[\s\S]*?grid-template-columns:\s*minmax\(220px,\s*260px\) minmax\(0,\s*1fr\);/);
-  assert.match(computePanelBlock, /background:\s*transparent;/);
   assert.match(panelBlock, /background:\s*transparent;/);
   assert.doesNotMatch(panelBlock, /var\(--panel\);/);
   assert.doesNotMatch(panelBlock, /var\(--glass-panel-bg\);/);
@@ -887,24 +892,25 @@ test('uses channel completion wording and connects the delivery dashboard panel'
   assert.doesNotMatch(dashboardCss, /"version delivery"/);
 });
 
-test('matches overview trend and delivery panel backgrounds to the homepage renewal KPI card', () => {
+test('matches overview cards to the neutral dark glass recipe', () => {
   const kpiCardBlock = cssRuleBody(kpiCardCss, '.kpi-card');
   const trendPanelBlock = cssRuleBody(dashboardCss, '.dash-cell .mt-panel');
   const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-panel');
+  const channelPanelBlock = cssRuleBody(channelPanelCss, '.ch-panel');
+  const versionPanelBlock = cssRuleBody(versionFinancePanelCss, '.vf-panel');
+  const openingCardBlock = cssRuleBody(openingMetricCardsCss, '.opening-metric-card');
 
-  assert.match(kpiCardBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.06\);/);
-  assert.match(trendPanelBlock, /background:\s*transparent;/);
-  assert.match(trendPanelBlock, /border:1px solid var\(--line-2\);/);
-  assert.match(trendPanelBlock, /backdrop-filter:var\(--glass-blur\);/);
-  assert.match(trendPanelBlock, /box-shadow:var\(--glass-shadow\);/);
+  [kpiCardBlock, trendPanelBlock, deliveryPanelBlock, channelPanelBlock, versionPanelBlock, openingCardBlock].forEach((block) => {
+    assert.match(block, /background:\s*var\(--dashboard-card-bg\);/);
+    assert.match(block, /border:\s*1px solid var\(--dashboard-card-border\);/);
+    assert.match(block, /backdrop-filter:\s*var\(--dashboard-card-blur\);/);
+    assert.match(block, /box-shadow:\s*var\(--dashboard-card-shadow\);/);
+  });
   assert.doesNotMatch(trendPanelBlock, /#101012/);
   assert.doesNotMatch(trendPanelBlock, /radial-gradient\(ellipse at 52% 94%/);
-  assert.match(deliveryPanelBlock, /background:\s*transparent;/);
-  assert.match(deliveryPanelBlock, /border: 1px solid var\(--line-2\);/);
-  assert.match(deliveryPanelBlock, /backdrop-filter: var\(--glass-blur\);/);
-  assert.match(deliveryPanelBlock, /box-shadow: var\(--glass-shadow\);/);
   assert.doesNotMatch(deliveryPanelBlock, /#101012/);
   assert.doesNotMatch(deliveryPanelBlock, /radial-gradient\(ellipse at 52% 94%/);
+  assert.doesNotMatch(versionPanelBlock, /rgba\(201,194,255,\.055\)|linear-gradient\(120deg/);
 });
 
 test('keeps channel secondary detail modal on the unified focused glass background without purple glow', () => {
@@ -934,8 +940,8 @@ test('keeps overview trend and delivery panels free of hover flow borders', () =
   assert.doesNotMatch(dashboardCss, /rgba\(244,114,182/);
   assert.doesNotMatch(dashboardCss, /rgba\(192,132,252/);
   assert.match(dashboardCss, /\.dash-delivery-row \.dlv-panel\{[\s\S]*?transition:border-color \.22s ease, box-shadow \.22s ease;/);
-  assert.match(trendPanelBlock, /background:\s*transparent;/);
-  assert.match(deliveryPanelBlock, /background:\s*transparent;/);
+  assert.match(trendPanelBlock, /background:\s*var\(--dashboard-card-bg\);/);
+  assert.match(deliveryPanelBlock, /background:\s*var\(--dashboard-card-bg\);/);
 });
 
 test('uses static trend legend and overlapping target versus recovered bars', () => {
