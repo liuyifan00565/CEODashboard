@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 10:47:37 CST
+ 更新内容: 增加顶部数据维护/返回主界面按钮去除左侧图标并收窄宽度的回归测试。
+*/
+/*
  Update time: 2026-07-03 10:04:51 CST
  Update content: Add regression coverage for compact maintenance year dropdown width.
 */
@@ -213,15 +217,18 @@ test('adds a topbar data maintenance switch that swaps the sidebar navigation', 
   assert.match(appSource, /function handleMaintenanceModeToggle\(\) \{[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setMaintenanceMode\(false\);[\s\S]*?setActiveMenu\('overview'\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?setMaintenanceMode\(true\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?\}/);
   assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} \/>/);
   assert.match(appSource, /className="maintenance-glass"/);
-  assert.match(appSource, /<div className="dash-tools">\s*<GlassSurface[\s\S]*?width=\{150\}[\s\S]*?height=\{54\}[\s\S]*?borderRadius=\{27\}[\s\S]*?brightness=\{58\}[\s\S]*?blur=\{12\}[\s\S]*?backgroundOpacity=\{0\.06\}[\s\S]*?distortionScale=\{-130\}[\s\S]*?className="maintenance-glass"[\s\S]*?<button[\s\S]*?<\/GlassSurface>\s*<ExpandableSearch/);
+  assert.match(appSource, /<div className="dash-tools">\s*<GlassSurface[\s\S]*?width=\{126\}[\s\S]*?height=\{54\}[\s\S]*?borderRadius=\{27\}[\s\S]*?brightness=\{58\}[\s\S]*?blur=\{12\}[\s\S]*?backgroundOpacity=\{0\.06\}[\s\S]*?distortionScale=\{-130\}[\s\S]*?className="maintenance-glass"[\s\S]*?<button[\s\S]*?<\/GlassSurface>\s*<ExpandableSearch/);
   assert.match(appSource, /className=\{`dash-maintenance-switch\$\{maintenanceMode \? ' dash-maintenance-switch--active' : ''\}`\}/);
   assert.match(appSource, /aria-pressed=\{maintenanceMode\}/);
   assert.match(appSource, /\{maintenanceMode \? '返回主界面' : '数据维护'\}/);
+  assert.doesNotMatch(appSource, /dash-maintenance-switch__icon/);
   assert.match(dashboardCss, /\.dash-tools \.maintenance-glass\{[\s\S]*?flex:0 0 auto;/);
   assert.doesNotMatch(dashboardCss, /\.dash-topbar \.maintenance-glass\{[\s\S]*?margin-left:auto;/);
   assert.match(dashboardCss, /\.dash-topbar \.maintenance-glass \.glass-surface__content\{padding:0\}/);
   assert.match(maintenanceSwitchBlock, /width:100%;/);
   assert.match(maintenanceSwitchBlock, /height:100%;/);
+  assert.match(maintenanceSwitchBlock, /gap:0;/);
+  assert.match(maintenanceSwitchBlock, /min-width:96px;/);
   assert.match(maintenanceSwitchBlock, /border:none;/);
   assert.match(maintenanceSwitchBlock, /background:transparent;/);
   assert.doesNotMatch(maintenanceSwitchBlock, /background:var\(--ai-chip-bg\);/);

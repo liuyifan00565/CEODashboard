@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 10:47:37 CST
+ 更新内容: 去除顶部数据维护/返回主界面按钮左侧图标，并收窄按钮玻璃宽度。
+*/
+/*
  更新时间: 2026-07-03 09:48:16 CST
  更新内容: 收窄顶部品牌玻璃胶囊宽度，减少右侧留白。
 */
@@ -349,7 +353,7 @@ export default function App() {
             </GlassSurface>
             <div className="dash-tools">
               <GlassSurface
-                width={150}
+                width={126}
                 height={54}
                 borderRadius={27}
                 brightness={58}
@@ -365,7 +369,6 @@ export default function App() {
                   onClick={handleMaintenanceModeToggle}
                   aria-pressed={maintenanceMode}
                 >
-                  <span className="dash-maintenance-switch__icon" aria-hidden="true">▦</span>
                   <span>{maintenanceMode ? '返回主界面' : '数据维护'}</span>
                 </button>
               </GlassSurface>
