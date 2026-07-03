@@ -1,3 +1,4 @@
+/* Update time: 2026-07-03 12:23:18 CST  Update content: Switch the recovery chart back to chunky rounded semi-donut pie slices matching the provided reference. */
 /* Update time: 2026-07-03 11:42:00 CST  Update content: Redesign the recovery pie as an Apple Vision Pro style segmented semi-donut gauge — thinner ring, rounded caps, larger gaps, low-saturation cold glass gradients, muted incomplete slice, subtle glass highlight and soft outer glow that only intensifies on the hovered segment. */
 /* 更新时间: 2026-07-03 11:05:35 CST  更新内容: 主页回款卡月度/年度目标拆成名称和金额两行展示。 */
 /* Update time: 2026-07-03 10:24:55 CST  Update content: Remove target and completed subtitle text from the recovery half-donut header. */
@@ -214,13 +215,14 @@ function recoveryPieOption(card, tokens, accentColor) {
         const value = params.data?.rawValue ?? params.value;
         const isIncomplete = params.data?.isIncomplete;
         const valueLabel = `${isIncomplete ? '缺口' : '回款'} ${value} 万`;
+        const percent = params.data?.percent ?? params.percent ?? 0;
 
         return `
           <div class="kpi-pie-tooltip" aria-label="${valueLabel}">
             <div class="kpi-pie-tooltip__name">${params.seriesName} · ${params.name}</div>
             <div class="kpi-pie-tooltip__value">${isIncomplete ? '缺口' : '回款'} <strong>${value}</strong> 万</div>
-            <div class="kpi-pie-tooltip__meta">目标 ${params.data?.targetValue ?? '-'} 万 · 完成率 ${card.progress ?? params.percent}%</div>
-            <div class="kpi-pie-tooltip__meta">占比 <strong>${params.percent}%</strong></div>
+            <div class="kpi-pie-tooltip__meta">目标 ${params.data?.targetValue ?? '-'} 万 · 完成率 ${card.progress ?? percent}%</div>
+            <div class="kpi-pie-tooltip__meta">占比 <strong>${percent}%</strong></div>
           </div>
         `;
       },
@@ -243,31 +245,25 @@ function recoveryPieOption(card, tokens, accentColor) {
       {
         type: 'pie',
         name: card.title,
-        // 厚度从 30% 收窄到 22%，整体更轻盈
-        radius: ['48%', '70%'],
+        radius: ['43%', '70%'],
         center: ['46%', '70%'],
         startAngle: 180,
         endAngle: 360,
         minShowLabelAngle: 1,
-        // 弧段间留 6° 间距，制造分段空气感
-        padAngle: 6,
+        padAngle: 5,
         itemStyle: {
-          // 两端圆角 + 玻璃高光描边
-          borderRadius: 20,
-          borderColor: 'rgba(255, 255, 255, .10)',
-          borderWidth: 1,
-          // 默认只留极淡外发光，hover 时再强化
-          shadowBlur: 6,
-          shadowColor: 'rgba(142, 234, 255, .10)',
+          borderRadius: 12,
+          borderColor: 'rgba(8, 10, 16, .5)',
+          borderWidth: 2,
+          shadowBlur: 7,
+          shadowColor: 'rgba(142, 234, 255, .14)',
         },
-        // 仅当前 hover 弧段轻微亮起 + 柔和外发光
         emphasis: {
-          scale: true,
-          scaleSize: 5,
+          scale: false,
           itemStyle: {
-            shadowBlur: 18,
-            shadowColor: 'rgba(142, 234, 255, .26)',
-            borderColor: 'rgba(255, 255, 255, .18)',
+            shadowBlur: 13,
+            shadowColor: 'rgba(142, 234, 255, .24)',
+            borderColor: 'rgba(255, 255, 255, .16)',
           },
         },
         label: {
