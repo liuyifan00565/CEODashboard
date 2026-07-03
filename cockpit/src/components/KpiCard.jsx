@@ -1,3 +1,4 @@
+/* Update time: 2026-07-03 17:08:00 CST  Update content: Redesign recovery half-ring channel colors with higher distinction across online, south, east, and agent while staying in the premium cold-purple system. */
 /* Update time: 2026-07-03 15:48:00 CST  Update content: Align the recovery half-ring chart geometry, gaps, rounded arcs, labels, and glow with the VersionFinancePanel semi-donut style. */
 /* Update time: 2026-07-03 15:34:00 CST  Update content: Shift recovery half-ring slices and ECharts progress bars to the cold-purple Apple/Vision Pro brand palette. */
 /* Update time: 2026-07-03 15:31:20 CST  Update content: Restore the recovery chart to the chunky rounded semi-donut pie style shown in the reference screenshot. */
@@ -16,12 +17,12 @@ import { fmtDelta, deltaColor, progressColor } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './KpiCard.css';
 
-// Vision Pro 风格分段半环仪表盘：每个渠道一段低饱和冷紫玻璃渐变
+// Vision Pro 风格分段半环仪表盘：四个渠道拉开色相和明度，但仍收在冷紫/冰蓝体系内
 const CHANNEL_PIE_GRADIENTS = [
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8F86FF' }, { offset: 1, color: '#C9C2FF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#7C6CFF' }, { offset: 1, color: '#A79CFF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#9EDCFF' }, { offset: 1, color: '#C9C2FF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6E62D8' }, { offset: 1, color: '#A79CFF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#7C6CFF' }, { offset: 0.55, color: '#A79CFF' }, { offset: 1, color: '#D7D2FF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6ECFFF' }, { offset: 0.58, color: '#9EDCFF' }, { offset: 1, color: '#C9C2FF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#5F78FF' }, { offset: 0.58, color: '#8F86FF' }, { offset: 1, color: '#B7AEFF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6D28D9' }, { offset: 0.56, color: '#8B5CF6' }, { offset: 1, color: '#C084FC' }] },
 ];
 const CHANNEL_PERCENT_COLORS = ['#ffffff', '#ffffff', '#ffffff', '#ffffff'];
 const CHANNEL_PIE_LABELS = { south: '线下华南', east: '线下华东' };

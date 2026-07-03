@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 17:08:00 CST
+ Update content: Require the recovery half-ring channel palette to distinguish the four regions/channels without leaving the cold-purple system.
+*/
+/*
  Update time: 2026-07-03 15:48:00 CST
  Update content: Require the recovery half-ring to reuse the VersionFinancePanel semi-donut geometry and label styling.
 */
@@ -195,8 +199,8 @@ test('adds a transparent unfinished slice at the right edge of the recovery half
   assert.match(componentSource, /目标 \$\{params\.data\?\.targetValue \?\? '-'\} 万 · 完成率 \$\{card\.progress \?\? percent\}%/);
 });
 
-test('uses a restrained cold purple brand palette instead of rainbow or candy pie colors', () => {
-  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#8F86FF[\s\S]*?#C9C2FF[\s\S]*?#7C6CFF[\s\S]*?#A79CFF[\s\S]*?#9EDCFF[\s\S]*?\];/);
+test('uses a differentiated cold purple channel palette instead of rainbow or candy pie colors', () => {
+  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#7C6CFF[\s\S]*?#D7D2FF[\s\S]*?#6ECFFF[\s\S]*?#9EDCFF[\s\S]*?#5F78FF[\s\S]*?#B7AEFF[\s\S]*?#6D28D9[\s\S]*?#C084FC[\s\S]*?\];/);
   assert.doesNotMatch(componentSource, /#A7F3D0/);
   assert.doesNotMatch(componentSource, /#B7F3FF/);
   assert.doesNotMatch(componentSource, /const CHANNEL_PIE_COLORS = \['#d6ccb2', '#a9b3b8', '#808b93', '#5f6975'\];/);
