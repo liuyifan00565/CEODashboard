@@ -1,10 +1,11 @@
+/* 更新时间: 2026-07-03 13:05:00 CST  更新内容: 渠道面板进度条 fill 改用 progressGradient 返回的低饱和冷色线性渐变，匹配全局冰蓝/粉紫主题。 */
 /* 更新时间: 2026-07-02 16:52:00 CST  更新内容: 渠道面板行箭头和弹窗关闭按钮改用统一 AppIcon 线性图标。 */
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import AppIcon from './AppIcon';
 import { getSalesCompletionRows, getSalesMemberRows } from '../data/mock';
-import { fmtPct, fmtWan, progressColor } from '../lib/format';
+import { fmtPct, fmtWan, progressGradient } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './ChannelPanel.css';
 
@@ -60,7 +61,7 @@ export default function ChannelPanel({ channelKey = 'all', title = '本月渠道
                     style={{
                       width: barW,
                       transitionDelay: `${i * 80}ms`,
-                      background: progressColor(pct, tokens.progressMid),
+                      background: progressGradient(pct, tokens.progressMid),
                     }}
                   />
                 </div>
@@ -102,7 +103,7 @@ export default function ChannelPanel({ channelKey = 'all', title = '本月渠道
                         <span
                           style={{
                             width: `${Math.min(pct, 100)}%`,
-                            background: progressColor(pct, tokens.progressMid),
+                            background: progressGradient(pct, tokens.progressMid),
                           }}
                         />
                       </div>

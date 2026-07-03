@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-03 13:42:00 CST
+ Update content: 守卫测试改为断言深海蓝黑玻璃背景（无点阵、多层径向光、SVG 噪点）。
+*/
+/*
+ Update time: 2026-07-03 13:05:00 CST
+ Update content: 将守卫测试从荧光黄绿+霓虹粉改为冰蓝+粉紫新主题；移除对 Apple 系统蓝 #64D2FF 的封禁（新主题方向即 Apple 风格冰蓝）。
+*/
+/*
  Update time: 2026-07-03 11:35:31 CST
  Update content: Remove yellow-tier completion progress guardrail after restoring the original 80 plus fluorescent yellow rule.
 */
@@ -29,30 +37,22 @@ function darkThemeBlock() {
   return match.groups.body;
 }
 
-test('blocks the failed Apple-style system colors from core dashboard styling', () => {
-  const coreSources = [indexCss, formatSource, themeSource, kpiCss, kpiSource, channelCss].join('\n');
-
-  for (const color of ['#30D158', '#FF375F', '#64D2FF']) {
-    assert.doesNotMatch(coreSources, new RegExp(color, 'i'));
-  }
-});
-
-test('uses the original neon pink and fluorescent lime semantic accents', () => {
+test('uses the ice blue and pink purple semantic accents', () => {
   const block = darkThemeBlock();
 
-  assert.match(block, /--up:#ff4fd8;/);
-  assert.match(block, /--down:#dfff00;/);
-  assert.match(block, /--good:#dfff00;/);
-  assert.match(block, /--warn:#ff4fd8;/);
-  assert.match(block, /--up-rgb:255,79,216;/);
-  assert.match(block, /--down-rgb:223,255,0;/);
-  assert.match(block, /--good-rgb:223,255,0;/);
-  assert.match(block, /--warn-rgb:255,79,216;/);
+  assert.match(block, /--up:#F472B6;/);
+  assert.match(block, /--down:#6EA8FF;/);
+  assert.match(block, /--good:#6EA8FF;/);
+  assert.match(block, /--warn:#F472B6;/);
+  assert.match(block, /--up-rgb:244,114,182;/);
+  assert.match(block, /--down-rgb:110,168,255;/);
+  assert.match(block, /--good-rgb:110,168,255;/);
+  assert.match(block, /--warn-rgb:244,114,182;/);
 
-  assert.equal(COLOR.up, '#ff4fd8');
-  assert.equal(COLOR.down, '#dfff00');
-  assert.equal(COLOR.good, '#dfff00');
-  assert.equal(COLOR.warn, '#ff4fd8');
+  assert.equal(COLOR.up, '#F472B6');
+  assert.equal(COLOR.down, '#6EA8FF');
+  assert.equal(COLOR.good, '#6EA8FF');
+  assert.equal(COLOR.warn, '#F472B6');
 });
 
 test('keeps 70 percent warning progress neutral rather than blue', () => {
@@ -64,12 +64,29 @@ test('keeps 70 percent warning progress neutral rather than blue', () => {
   assert.match(kpiSource, /const color = progressColor\(pct, tokens\.progressMid\);[\s\S]*?itemStyle:\s*\{ color, borderRadius: 5 \}/);
 });
 
-test('keeps the background dot field visibly purple', () => {
-  assert.match(indexCss, /\.bg \.dot-field-container\{[\s\S]*?opacity:\s*\.9;[\s\S]*?filter:\s*contrast\(1\.08\) saturate\(1\.35\)/);
+test('uses a deep blue-black glassmorphism background without dot field', () => {
+  // 不再使用 DotField 点阵：App.jsx 不导入、index.css 不写 .dot-field-container 规则
+  assert.doesNotMatch(appSource, /import DotField/);
+  assert.doesNotMatch(appSource, /<DotField/);
+  assert.doesNotMatch(indexCss, /\.bg \.dot-field-container/);
+
+  // 深海蓝黑渐变底
+  assert.match(darkThemeBlock(), /--bg-base-1:#0b1020;/);
+  assert.match(darkThemeBlock(), /--bg-base-2:#080b16;/);
+  assert.match(darkThemeBlock(), /--bg-base-3:#050711;/);
+
+  // 多层冰蓝/青蓝/淡紫径向环境光
+  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(110,168,255,\.22\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(142,234,255,\.11\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-c:rgba\(139,124,255,\.13\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(110,168,255,\.10\);/);
+
+  // SVG 噪点叠加层
+  assert.match(indexCss, /\.bg::after\{[\s\S]*?feTurbulence[\s\S]*?fractalNoise/);
+  assert.match(darkThemeBlock(), /--bg-noise-opacity:\.035;/);
+
+  // FluidGlass 材质层保留
   assert.match(indexCss, /\.fluid-glass-layer\{[\s\S]*?opacity:\s*\.32;[\s\S]*?mix-blend-mode:\s*screen;/);
-  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(96,0,255,\.16\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(96,0,255,\.1\);/);
-  assert.match(appSource, /<DotField[\s\S]*?gradientFrom="#6000FF"[\s\S]*?gradientTo="#6000FF"[\s\S]*?glowColor="#6000FF"/);
 });
 
 test('keeps warning rows translucent instead of becoming saturated candy blocks', () => {

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 13:42:00 CST
+ 更新内容: 移除 DotField 紫色点阵背景，背景改为深海蓝黑渐变 + 多层径向光 + SVG 噪点（详见 index.css）。
+*/
+/*
  更新时间: 2026-07-03 10:47:37 CST
  更新内容: 去除顶部数据维护/返回主界面按钮左侧图标，并收窄按钮玻璃宽度。
 */
@@ -46,7 +50,6 @@ import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 
 import AIAnalysisWidget from './components/AIAnalysisWidget';
-import DotField from './components/DotField/DotField';
 import FluidGlass from './components/FluidGlass/FluidGlass';
 import GlassSurface from './components/GlassSurface/GlassSurface';
 import Sidebar from './components/Sidebar';
@@ -276,20 +279,6 @@ export default function App() {
   return (
     <div className="app">
       <div className="bg">
-        <DotField
-          dotRadius={2.5}
-          dotSpacing={14}
-          bulgeStrength={150}
-          glowRadius={300}
-          sparkle={false}
-          waveAmplitude={3}
-          cursorRadius={300}
-          cursorForce={0.15}
-          bulgeOnly={false}
-          gradientFrom="#6000FF"
-          gradientTo="#6000FF"
-          glowColor="#6000FF"
-        />
         <div className="fluid-glass-layer" aria-hidden="true">
           <FluidGlass
             mode="bar"

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 13:05:00 CST
+ Update content: 亮色主题守卫断言改为冰蓝+粉紫新主题色。
+*/
+/*
  Update time: 2026-07-02 18:49:46 CST
  Update content: Expect the right toolbar to keep data maintenance immediately before expandable search.
 */
@@ -73,7 +77,7 @@ test('uses a light green theme background with non-white text and chart variable
   const block = lightThemeBlock();
 
   assert.match(block, /--bg:#E8FBE8;/);
-  assert.match(block, /--bg-scrim:linear-gradient\(90deg,rgba\(232,251,232,/);
+  assert.match(block, /--bg-noise-opacity:\.025;/);
   assert.match(block, /--chart-point-border:#E8FBE8;/);
   assert.doesNotMatch(block, /--txt:\s*#(?:fff|ffffff)\b/i);
   assert.doesNotMatch(block, /--muted:\s*#(?:fff|ffffff)\b/i);
@@ -86,17 +90,17 @@ test('uses a light green theme background with non-white text and chart variable
   assert.doesNotMatch(block, /--chart-(?:text|muted|grid|bar|bar-muted):\s*(?:#fff|#ffffff|rgba\(255,\s*255,\s*255)/i);
 });
 
-test('keeps original neon pink and fluorescent lime aligned in light theme', () => {
+test('keeps ice blue and pink purple aligned in light theme', () => {
   const block = lightThemeBlock();
 
-  assert.match(block, /--up:#ff4fd8;/);
-  assert.match(block, /--down:#dfff00;/);
-  assert.match(block, /--good:#dfff00;/);
-  assert.match(block, /--warn:#ff4fd8;/);
-  assert.match(block, /--up-rgb:255,79,216;/);
-  assert.match(block, /--down-rgb:223,255,0;/);
-  assert.match(block, /--good-rgb:223,255,0;/);
-  assert.match(block, /--warn-rgb:255,79,216;/);
+  assert.match(block, /--up:#F472B6;/);
+  assert.match(block, /--down:#6EA8FF;/);
+  assert.match(block, /--good:#6EA8FF;/);
+  assert.match(block, /--warn:#F472B6;/);
+  assert.match(block, /--up-rgb:244,114,182;/);
+  assert.match(block, /--down-rgb:110,168,255;/);
+  assert.match(block, /--good-rgb:110,168,255;/);
+  assert.match(block, /--warn-rgb:244,114,182;/);
 });
 
 test('charts and KPI progress bars read theme tokens instead of hard-coded white colors', () => {

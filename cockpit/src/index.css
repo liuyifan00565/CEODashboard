@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-03 13:42:00 CST
+ Update content: 删除紫色点阵背景，改用深海蓝黑渐变 + 多层冰蓝/青蓝/淡紫径向光 + SVG 噪点 + 边缘 vignette，走 Apple/Vision Pro 风格的玻璃环境背景。
+*/
+/*
+ Update time: 2026-07-03 13:05:00 CST
+ Update content: 将 good/warn/up/down 四个语义色从荧光黄绿+霓虹粉改为冰蓝+粉紫，进度条改用低饱和冷色线性渐变并加轻外发光，轨道改半透明蓝灰。
+*/
+/*
  Update time: 2026-07-02 18:16:13 CST
  Update content: Restore the original neon pink, fluorescent lime, and purple dot field palette.
 */
@@ -21,7 +29,7 @@
 :root,
 :root[data-theme="dark"]{
   --color-scheme-value:dark;
-  --bg:#0c0c0d;
+  --bg:#050711;
   --panel:rgba(36,36,41,.74);
   --panel-2:rgba(50,50,57,.76);
   --line:rgba(255,255,255,.14);
@@ -33,17 +41,32 @@
   --txt:#ffffff;
   --muted:#ffffff;
   --faint:#ffffff;
-  --up:#ff4fd8;     /* neon pink: growth / warning */
-  --down:#dfff00;   /* fluorescent lime: decline */
-  --good:#dfff00;   /* fluorescent lime: strong completion */
-  --warn:#ff4fd8;   /* warning semantic mapped to neon pink */
-  --up-rgb:255,79,216;
-  --down-rgb:223,255,0;
-  --good-rgb:223,255,0;
-  --warn-rgb:255,79,216;
-  --bg-radial-a:rgba(96,0,255,.16);
-  --bg-radial-b:rgba(96,0,255,.1);
-  --bg-scrim:linear-gradient(90deg,rgba(12,12,13,.38),rgba(12,12,13,.04) 45%,rgba(12,12,13,.2));
+  --up:#F472B6;     /* pink-purple: growth / warning */
+  --down:#6EA8FF;   /* ice blue: decline */
+  --good:#6EA8FF;   /* ice blue: strong completion */
+  --warn:#F472B6;   /* warning semantic mapped to pink-purple */
+  --up-rgb:244,114,182;
+  --down-rgb:110,168,255;
+  --good-rgb:110,168,255;
+  --warn-rgb:244,114,182;
+  --bar-track:rgba(110,130,170,.16);
+  --bar-track-border:rgba(110,130,170,.22);
+  --bar-good:linear-gradient(90deg,#6EA8FF,#8EEAFF);
+  --bar-good-glow:0 0 18px rgba(142,234,255,.18);
+  --bar-warn:linear-gradient(90deg,#F472B6,#FDA4AF);
+  --bar-warn-glow:0 0 18px rgba(244,114,182,.16);
+  /* 背景：深海蓝黑底 + 多层冰蓝/青蓝/淡紫径向环境光 + 局部 spotlight */
+  --bg-base-1:#0b1020;
+  --bg-base-2:#080b16;
+  --bg-base-3:#050711;
+  --bg-radial-a:rgba(110,168,255,.22);   /* 顶左：冰蓝主光 */
+  --bg-radial-b:rgba(142,234,255,.11);   /* 顶右：青蓝辅光 */
+  --bg-radial-c:rgba(139,124,255,.13);   /* 底右：淡紫环境光 */
+  --bg-radial-d:rgba(110,168,255,.10);   /* 底左：冰蓝 spotlight */
+  --bg-vignette:
+    linear-gradient(90deg,rgba(255,255,255,.035),transparent 18%,transparent 82%,rgba(255,255,255,.025)),
+    radial-gradient(circle at center,transparent 0%,rgba(0,0,0,.18) 100%);
+  --bg-noise-opacity:.035;
   --brand-dot-shadow:0 0 10px rgba(255,255,255,.38);
   --control-hover:rgba(255,255,255,.08);
   --theme-toggle-icon:#ffffff;
@@ -87,17 +110,32 @@
   --txt:#111318;
   --muted:#2c333d;
   --faint:#626b77;
-  --up:#ff4fd8;
-  --down:#dfff00;
-  --good:#dfff00;
-  --warn:#ff4fd8;
-  --up-rgb:255,79,216;
-  --down-rgb:223,255,0;
-  --good-rgb:223,255,0;
-  --warn-rgb:255,79,216;
-  --bg-radial-a:rgba(0,0,0,.05);
-  --bg-radial-b:rgba(0,0,0,.035);
-  --bg-scrim:linear-gradient(90deg,rgba(232,251,232,.86),rgba(232,251,232,.24) 45%,rgba(232,251,232,.6));
+  --up:#F472B6;
+  --down:#6EA8FF;
+  --good:#6EA8FF;
+  --warn:#F472B6;
+  --up-rgb:244,114,182;
+  --down-rgb:110,168,255;
+  --good-rgb:110,168,255;
+  --warn-rgb:244,114,182;
+  --bar-track:rgba(110,130,170,.18);
+  --bar-track-border:rgba(110,130,170,.24);
+  --bar-good:linear-gradient(90deg,#6EA8FF,#8EEAFF);
+  --bar-good-glow:0 0 18px rgba(142,234,255,.18);
+  --bar-warn:linear-gradient(90deg,#F472B6,#FDA4AF);
+  --bar-warn-glow:0 0 18px rgba(244,114,182,.16);
+  /* 背景：浅绿底 + 极淡冷色径向光 + 噪点，与暗主题同构 */
+  --bg-base-1:#EDFCEE;
+  --bg-base-2:#E8FBE8;
+  --bg-base-3:#DFF1DF;
+  --bg-radial-a:rgba(10,15,24,.05);
+  --bg-radial-b:rgba(10,15,24,.035);
+  --bg-radial-c:rgba(10,15,24,.04);
+  --bg-radial-d:rgba(10,15,24,.03);
+  --bg-vignette:
+    linear-gradient(90deg,rgba(255,255,255,.45),transparent 18%,transparent 82%,rgba(255,255,255,.35)),
+    radial-gradient(circle at center,transparent 0%,rgba(10,15,24,.04) 100%);
+  --bg-noise-opacity:.025;
   --brand-dot-shadow:0 0 12px rgba(0,0,0,.22);
   --control-hover:rgba(10,15,24,.08);
   --theme-toggle-icon:#111318;
@@ -139,16 +177,25 @@ body{
 .bg{
   position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(circle at 72% 12%,var(--bg-radial-a),transparent 32%),
-    radial-gradient(circle at 22% 82%,var(--bg-radial-b),transparent 34%),
-    var(--bg);
+    radial-gradient(circle at 24% 6%,var(--bg-radial-a),transparent 32%),
+    radial-gradient(circle at 82% 12%,var(--bg-radial-b),transparent 28%),
+    radial-gradient(circle at 56% 88%,var(--bg-radial-c),transparent 38%),
+    radial-gradient(circle at 22% 78%,var(--bg-radial-d),transparent 42%),
+    linear-gradient(180deg,var(--bg-base-1) 0%,var(--bg-base-2) 45%,var(--bg-base-3) 100%);
 }
+/* 边缘高光 + 中心暗角，给大面积渐变加空间感 */
+.bg::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:var(--bg-vignette);
+  opacity:.8;
+}
+/* 极轻 SVG 噪点，让渐变不塑料化；几乎看不见但质感更细 */
 .bg::after{
-  content:"";position:absolute;inset:0;
-  background:var(--bg-scrim);
-  pointer-events:none;
+  content:"";position:absolute;inset:0;pointer-events:none;
+  opacity:var(--bg-noise-opacity);
+  mix-blend-mode:soft-light;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.45'/%3E%3C/svg%3E");
 }
-.bg .dot-field-container{position:absolute;inset:0;width:100%;height:100%;opacity:.9;filter:contrast(1.08) saturate(1.35)}
 .fluid-glass-layer{
   position:absolute;inset:0;z-index:1;pointer-events:none;
   opacity:.32;mix-blend-mode:screen;

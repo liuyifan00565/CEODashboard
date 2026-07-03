@@ -1,6 +1,7 @@
+/* 更新时间: 2026-07-03 13:05:00  更新内容: 交付看板进度条 fill 改用 progressGradient 返回的低饱和冷色线性渐变。 */
 /* 更新时间: 2026-06-29 10:45:53  更新内容: 新增交付看板，展示实施工程师交付人效、单价、金额价值和目标完成情况。 */
 import { getDeliveryRows, getDeliverySummary } from '../data/mock';
-import { progressColor } from '../lib/format';
+import { progressGradient } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './DeliveryPanel.css';
 
@@ -58,7 +59,7 @@ export default function DeliveryPanel() {
                   <span
                     style={{
                       width: `${Math.min(pct, 100)}%`,
-                      background: progressColor(pct, tokens.progressMid),
+                      background: progressGradient(pct, tokens.progressMid),
                     }}
                   />
                 </div>

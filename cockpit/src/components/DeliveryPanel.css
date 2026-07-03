@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 13:05:00 CST  更新内容: 交付看板进度条轨道改半透明蓝灰，fill 渐变由 progressGradient 内联驱动。 */
 /* 更新时间: 2026-07-01 18:20:15 CST  更新内容: 交付看板背景改为主页续费率 KPI 同款透明玻璃底。 */
 .dlv-panel {
   position: relative;
@@ -160,7 +161,7 @@
   flex: 1;
   height: 8px;
   border-radius: 99px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--bar-track);
   overflow: hidden;
 }
 

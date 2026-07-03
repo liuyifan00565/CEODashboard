@@ -27,6 +27,10 @@
  Update content: Narrow maintenance page scrollbars while keeping transparent glass track styling.
 */
 /*
+ Update time: 2026-07-03 13:05:00 CST
+ Update content: 维护页进度条改用冰蓝/粉紫低饱和冷色线性渐变并加轻外发光，轨道改半透明蓝灰。
+*/
+/*
  Update time: 2026-07-03 11:02:59 CST
  Update content: Keep target maintenance completed amount and percent on one compact mini line.
 */
@@ -942,8 +946,8 @@
   margin-top: 6px;
   overflow: hidden;
   border-radius: 99px;
-  background: rgba(255, 255, 255, .09);
-  border: 1px solid rgba(255,255,255,.08);
+  background: var(--bar-track);
+  border: 1px solid var(--bar-track-border);
 }
 
 .mnt-progress span {
@@ -953,15 +957,18 @@
 }
 
 .mnt-progress--danger span {
-  background: var(--warn);
+  background: var(--bar-warn);
+  box-shadow: var(--bar-warn-glow);
 }
 
 .mnt-progress--warning span {
-  background: var(--warn);
+  background: var(--bar-warn);
+  box-shadow: var(--bar-warn-glow);
 }
 
 .mnt-progress--good span {
-  background: var(--good);
+  background: var(--bar-good);
+  box-shadow: var(--bar-good-glow);
 }
 
 .mnt-progress--unset span {

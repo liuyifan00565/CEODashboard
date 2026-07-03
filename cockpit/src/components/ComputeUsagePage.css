@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 13:05:00 CST
+ Update content: 算力用量页搜索高亮边框从荧光黄绿改为冰蓝，匹配全局新主题。
+*/
+/*
  Update time: 2026-07-02 18:16:13 CST
  Update content: Restore compute search highlight border to the fluorescent lime palette.
 */
@@ -86,8 +90,8 @@
 
 .cpu-kpi-slot[data-search-current="true"] .cpu-kpi,
 .cpu-panel[data-search-current="true"] {
-  border-color: rgba(223,255,0,.54);
-  box-shadow: inset 0 0 0 1px rgba(223,255,0,.45), var(--glass-shadow);
+  border-color: rgba(110,168,255,.54);
+  box-shadow: inset 0 0 0 1px rgba(110,168,255,.45), var(--glass-shadow);
 }
 
 .cpu-kpi__label,

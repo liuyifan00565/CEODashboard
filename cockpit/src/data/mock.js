@@ -353,7 +353,7 @@ export const COMPUTE_CUSTOMER_ROWS = [
 
 export const COMPUTE_RESOURCE_HEALTH = [
   { key: 'reply', name: '自动回复', usage: 57.4, trend: '+6.8%', state: '高频稳定', tone: 'good', color: '#8e2de2' },
-  { key: 'sync', name: '商品同步', usage: 18.9, trend: '+2.1%', state: '增长可控', tone: 'neutral', color: '#ff4fd8' },
+  { key: 'sync', name: '商品同步', usage: 18.9, trend: '+2.1%', state: '增长可控', tone: 'neutral', color: '#F472B6' },
   { key: 'smart-eye', name: '会眼智宝', usage: 10.8, trend: '+1.6%', state: '稳态调用', tone: 'neutral', color: '#ff6aa2' },
   { key: 'vision', name: '视频识别', usage: 9.6, trend: '-1.4%', state: '低峰运行', tone: 'neutral', color: '#f5c12e' },
   { key: 'guard', name: '后置回复拦截', usage: 6.8, trend: '+0.9%', state: '需关注', tone: 'warn', color: '#ff8a2a' },

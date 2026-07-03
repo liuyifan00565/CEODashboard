@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 13:05:00 CST
+ Update content: 搜索高亮边框断言改为冰蓝新色 rgba(110,168,255,.34)。
+*/
+/*
  Update time: 2026-07-03 11:33:47 CST
  Update content: Require maintenance selected-row overlays to use pure violet instead of pink-purple.
 */
@@ -452,16 +456,12 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.match(maintenancePageCss, /\.mnt-matrix tbody tr:hover td,\s*[\s\S]*?\.mnt-user-table tbody tr:hover td \{[\s\S]*?background:\s*var\(--glass-cell-hover\);/);
   assert.match(maintenancePageSource, /<ProgressLine period=\{period\} \/>/);
   assert.match(progressBlock, /height:\s*7px;/);
-  assert.match(progressBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.09\);/);
+  assert.match(progressBlock, /background:\s*var\(--bar-track\);/);
   assert.doesNotMatch(maintenancePageCss, /<<<<<<<|=======|>>>>>>>/);
   assert.doesNotMatch(maintenancePageCss, /--mnt-progress-purple|--mnt-progress-blue/);
-  assert.doesNotMatch(progressDangerBlock, /linear-gradient/);
-  assert.doesNotMatch(progressWarningBlock, /linear-gradient/);
-  assert.doesNotMatch(progressGoodBlock, /linear-gradient/);
-  assert.doesNotMatch(progressUnsetBlock, /linear-gradient/);
-  assert.match(progressDangerBlock, /background:\s*var\(--warn\);/);
-  assert.match(progressWarningBlock, /background:\s*var\(--warn\);/);
-  assert.match(progressGoodBlock, /background:\s*var\(--good\);/);
+  assert.match(progressDangerBlock, /background:\s*var\(--bar-warn\);/);
+  assert.match(progressWarningBlock, /background:\s*var\(--bar-warn\);/);
+  assert.match(progressGoodBlock, /background:\s*var\(--bar-good\);/);
   assert.match(progressUnsetBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.24\);/);
   assert.match(buttonBlock, /min-height:\s*28px;/);
   assert.match(buttonBlock, /background:\s*var\(--glass-cell\);/);
@@ -799,7 +799,7 @@ test('keeps the current search result highlight edge-only without full-card purp
   assert.doesNotMatch(currentSearchBlock, /filter:\s*drop-shadow/);
   assert.doesNotMatch(currentSearchContentBlock, /box-shadow:/);
   assert.doesNotMatch(currentSearchBackgroundBlock, /transform:\s*scale/);
-  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\] \.eb-glow-1\{[\s\S]*?border-color:rgba\(223,255,0,\.34\);/);
+  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\] \.eb-glow-1\{[\s\S]*?border-color:rgba\(110,168,255,\.34\);/);
   assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\] \.eb-glow-2\{[\s\S]*?filter:blur\(3px\);/);
   assert.doesNotMatch(computePageCss, /\.cpu-kpi-slot\[data-search-current="true"\],[\s\S]*?filter:\s*drop-shadow/);
   assert.doesNotMatch(computePageCss, /\.cpu-panel\[data-search-current="true"\][\s\S]*?box-shadow:[\s\S]*?rgba\(96,0,255/);
