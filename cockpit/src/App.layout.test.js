@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 11:41:06 CST
+ 更新内容: 增加顶部品牌玻璃胶囊加宽到 256px 的回归测试。
+*/
+/*
  更新时间: 2026-07-03 10:59:56 CST
  更新内容: 增加开户数卡片复用顶部搜索定位边框的布局回归测试。
 */
@@ -206,6 +210,7 @@ test('renders the brand title as 福客经营驾驶舱 with CEO monthly perspect
   assert.match(mockSource, /monthLabel: '2026年6月'/);
   assert.doesNotMatch(mockSource, /monthLabel: '2026 年 6 月'/);
   assert.match(appSource, /<b>福客经营驾驶舱<\/b>/);
+  assert.match(dashboardCss, /\.dash-topbar \.brand-glass\{flex:0 0 256px;min-width:256px\}/);
   assert.match(appSource, /const activeContextLabel = maintenanceMode\s*\?\s*'数据维护'\s*:\s*activeMenu === 'overview' \? 'CEO视角' : activeMenuLabel;/);
   assert.match(appSource, /<small>\{META\.monthLabel\}｜\{activeContextLabel\}<\/small>/);
   assert.doesNotMatch(appSource, /福客 · CEO 经营驾驶舱/);

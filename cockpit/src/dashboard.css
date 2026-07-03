@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 11:41:06 CST
+ 更新内容: 顶部品牌玻璃胶囊右侧稍微加宽，避免副标题贴近边缘。
+*/
+/*
  更新时间: 2026-07-03 10:47:37 CST
  更新内容: 去除顶部数据维护/返回主界面按钮图标后，收窄纯文字按钮宽度与内部间距。
 */
@@ -64,7 +68,7 @@
   margin:0 calc(clamp(16px,3vw,40px) * -1);
   padding:18px clamp(16px,3vw,40px) 14px;
 }
-.dash-topbar .brand-glass{flex:0 0 240px;min-width:240px}
+.dash-topbar .brand-glass{flex:0 0 256px;min-width:256px}
 .dash-topbar .brand-glass .glass-surface__content{padding:0}
 .dash-topbar .brand{width:100%;height:100%;min-width:0;flex:none;padding:0 14px}
 .dash-topbar .brand-copy{min-width:0}
