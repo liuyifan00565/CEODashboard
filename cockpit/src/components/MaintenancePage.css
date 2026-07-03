@@ -3,6 +3,10 @@
  Update content: Change maintenance table row hover to a bright purple overlay and add persistent selected-row styling.
 */
 /*
+ Update time: 2026-07-03 11:12:08 CST
+ Update content: Separate editable target maintenance inputs from readonly target summary values.
+*/
+/*
  Update time: 2026-07-03 11:10:18 CST
  Update content: Narrow maintenance page scrollbars while keeping transparent glass track styling.
 */
@@ -676,6 +680,80 @@
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
+}
+
+.mnt-period-cell--readonly {
+  vertical-align: top;
+}
+
+.mnt-period-cell--editable {
+  vertical-align: top;
+}
+
+.mnt-target-input-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  width: 118px;
+  min-height: 28px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--glass-cell-hover) 54%, transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .1),
+    inset 0 1px 0 rgba(255, 255, 255, .16);
+  padding: 0 9px 0 10px;
+  transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.mnt-target-input-wrap:hover {
+  border-color: color-mix(in srgb, var(--txt) 42%, var(--line-2));
+  background: color-mix(in srgb, var(--glass-cell-hover) 70%, transparent);
+}
+
+.mnt-target-input-wrap:focus-within {
+  border-color: color-mix(in srgb, var(--txt) 58%, var(--line-2));
+  background: color-mix(in srgb, var(--glass-cell-hover) 78%, transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .2),
+    inset 0 1px 0 rgba(255, 255, 255, .24),
+    0 0 0 3px var(--focus-outline);
+}
+
+.mnt-target-input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  color: var(--txt);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.mnt-target-input-unit {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1;
+}
+
+.mnt-target-readonly-value {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+}
+
+.mnt-target-readonly-value strong {
+  color: inherit;
 }
 
 .mnt-progress {

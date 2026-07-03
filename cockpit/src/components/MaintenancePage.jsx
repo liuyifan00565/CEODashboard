@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:12:08 CST
+ Update content: Separate editable target maintenance inputs from readonly target summary values.
+*/
+/*
  Update time: 2026-07-03 11:11:56 CST
  Update content: Add selectable maintenance table rows with persistent purple clicked-row highlights.
 */
@@ -284,18 +288,23 @@ function TargetPeriodCell({ row, column, markDirty }) {
   const editable = row.type === 'user' && column.month;
 
   return (
-    <td className="mnt-period-cell">
+    <td className={`mnt-period-cell ${editable ? 'mnt-period-cell--editable' : 'mnt-period-cell--readonly'}`}>
       {editable ? (
-        <input
-          className="mnt-control mnt-number-input"
-          type="number"
-          min="0"
-          defaultValue={period.target}
-          onChange={markDirty}
-          aria-label={`${row.name}${column.label}目标`}
-        />
+        <div className="mnt-target-input-wrap">
+          <input
+            className="mnt-number-input mnt-target-input"
+            type="number"
+            min="0"
+            defaultValue={period.target}
+            onChange={markDirty}
+            aria-label={`${row.name}${column.label}目标`}
+          />
+          <span className="mnt-target-input-unit">万</span>
+        </div>
       ) : (
-        <strong>{formatWan(period.target)}</strong>
+        <div className="mnt-target-readonly-value">
+          <strong>{formatWan(period.target)}</strong>
+        </div>
       )}
       <ProgressLine period={period} />
     </td>
