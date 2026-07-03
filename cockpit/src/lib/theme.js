@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:54:17 CST
+ Update content: Expose progressGold theme token and restore progressMid to the purple completion tier.
+*/
+/*
  Update time: 2026-07-03 18:19:59 CST
  Update content: Align fallback chart tokens with the obsidian violet/champagne palette and risk color semantics.
 */
@@ -32,7 +36,8 @@ const FALLBACK_TOKENS = {
   chartTooltipBorder: 'rgba(218,226,255,.16)',
   chartPointer: 'rgba(139,124,255,.07)',
   chartPointBorder: '#060914',
-  progressMid: '#E85D75',
+  progressMid: '#8B7CFF',
+  progressGold: '#D7B56D',
 };
 
 function cssVar(styles, name, fallback) {
@@ -62,6 +67,7 @@ export function readThemeTokens() {
     chartPointer: cssVar(styles, '--chart-pointer', FALLBACK_TOKENS.chartPointer),
     chartPointBorder: cssVar(styles, '--chart-point-border', FALLBACK_TOKENS.chartPointBorder),
     progressMid: cssVar(styles, '--progress-mid', FALLBACK_TOKENS.progressMid),
+    progressGold: cssVar(styles, '--progress-gold', FALLBACK_TOKENS.progressGold),
   };
 }
 

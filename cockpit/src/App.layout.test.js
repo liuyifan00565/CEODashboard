@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:54:17 CST
+ Update content: Require maintenance progress colors to use red below 80, purple below target, and gold at target.
+*/
+/*
  Update time: 2026-07-03 18:31:29 CST
  Update content: Align compute and search-highlight visual guardrails with the graphite violet champagne palette.
 */
@@ -499,8 +503,8 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.doesNotMatch(maintenancePageCss, /<<<<<<<|=======|>>>>>>>/);
   assert.doesNotMatch(maintenancePageCss, /--mnt-progress-purple|--mnt-progress-blue/);
   assert.match(progressDangerBlock, /background:\s*var\(--bar-warn\);/);
-  assert.match(progressWarningBlock, /background:\s*var\(--bar-warn\);/);
-  assert.match(progressGoodBlock, /background:\s*var\(--bar-good\);/);
+  assert.match(progressWarningBlock, /background:\s*var\(--bar-good\);/);
+  assert.match(progressGoodBlock, /background:\s*var\(--bar-gold\);/);
   assert.match(progressUnsetBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.24\);/);
   assert.match(buttonBlock, /min-height:\s*28px;/);
   assert.match(buttonBlock, /background:\s*var\(--glass-cell\);/);

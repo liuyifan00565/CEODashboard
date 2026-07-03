@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:54:17 CST
+ Update content: Split completion colors into red below 80, purple from 80 to 99, and gold at 100 percent or above.
+*/
+/*
  Update time: 2026-07-03 18:50:43 CST
  Update content: Treat any remaining KPI target gap as a downward risk delta so gap chips never show an upward arrow.
 */
@@ -51,13 +55,15 @@ export const COLOR = {
   down: '#E85D75',
   good: '#8B7CFF',
   warn: '#E85D75',
+  gold: '#D7B56D',
   txt: '#F7F8FC',
   muted: '#B9C2D4',
   line: 'rgba(218,226,255,.10)',
   axis: 'rgba(218,226,255,.34)',
-  // 进度条统一语义：80% 及以上用品牌月光紫，80% 以下一律进入风险玫红。
+  // 进度条统一语义：80% 以下风险玫红，80-99% 品牌月光紫，100% 及以上香槟金。
   goodGradient: 'linear-gradient(90deg,#8B7CFF 0%,#AFA6FF 54%,#D8D4FF 82%,#8BD7FF 100%)',
   warnGradient: 'linear-gradient(90deg,#B8334B 0%,#E85D75 58%,#FF8A9A 100%)',
+  goldGradient: 'linear-gradient(90deg,#9B7A36 0%,#D7B56D 58%,#F0D99A 100%)',
 };
 
 export const isRiskCompletion = (pct) => (Number(pct) || 0) < 80;
@@ -73,17 +79,18 @@ export const riskAdjustedDelta = ({ progress, gap, delta } = {}) => {
   return Number(gap) > 0 ? -Math.abs(value) : value;
 };
 
-// progressColor 返回纯色，供 ECharts label.color 和文字 color 使用：80% 以下一律风险色。
-export const progressColor = (pct, midColor = '#E7E2FF') => {
-  void midColor;
+// progressColor 返回纯色，供 ECharts label.color 和文字 color 使用。
+export const progressColor = (pct, midColor = COLOR.good, goldColor = COLOR.gold, warnColor = COLOR.warn) => {
   const value = Number(pct) || 0;
-  if (value >= 80) return COLOR.good;
-  return COLOR.warn;
+  if (value >= 100) return goldColor || COLOR.gold;
+  if (value >= 80) return midColor || COLOR.good;
+  return warnColor || COLOR.warn;
 };
 // progressGradient 返回 CSS background 可直接使用的渐变字符串，仅供进度条 fill 元素使用。
 export const progressGradient = (pct, midColor = COLOR.txt) => {
   void midColor;
   const value = Number(pct) || 0;
+  if (value >= 100) return COLOR.goldGradient;
   if (value >= 80) return COLOR.goodGradient;
   return COLOR.warnGradient;
 };

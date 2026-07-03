@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:54:17 CST
+ 更新内容: 将维护页目标完成率状态断言调整为 80 以下 danger、80-99 warning、100 及以上 good。
+*/
+/*
  更新时间: 2026-07-03 10:25:18 CST
  更新内容: 增加维护页目标完成率超过 80% 才变色的回归测试。
 */
@@ -115,18 +119,18 @@ test('provides target maintenance organization tree and editable user rows', () 
   assert.ok(TARGET_MAINTENANCE_ROWS.filter((row) => row.type === 'user').every((row) => row.periods.m06.actual >= 0));
 });
 
-test('highlights target maintenance progress only after completion exceeds 80 percent', () => {
+test('classifies target maintenance progress as red, purple, or gold by completion tier', () => {
   const onlineSales = TARGET_MAINTENANCE_ROWS.find((row) => row.id === 'online-sales');
   const allDepartments = TARGET_MAINTENANCE_ROWS.find((row) => row.id === 'summary-all');
 
   assert.equal(onlineSales.periods.m01.pct, 80);
-  assert.equal(onlineSales.periods.m01.status, 'danger');
+  assert.equal(onlineSales.periods.m01.status, 'warning');
   assert.equal(onlineSales.periods.m05.pct, 85.1);
-  assert.equal(onlineSales.periods.m05.status, 'good');
+  assert.equal(onlineSales.periods.m05.status, 'warning');
   assert.equal(allDepartments.periods.m05.pct, 77.1);
   assert.equal(allDepartments.periods.m05.status, 'danger');
   assert.equal(allDepartments.periods.m06.pct, 83.8);
-  assert.equal(allDepartments.periods.m06.status, 'good');
+  assert.equal(allDepartments.periods.m06.status, 'warning');
 });
 
 test('provides cost maintenance channel rows and labor cost rows', () => {

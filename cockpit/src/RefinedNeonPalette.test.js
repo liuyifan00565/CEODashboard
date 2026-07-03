@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:54:17 CST
+ Update content: Guard the red, purple, and gold completion color tiers.
+*/
+/*
  Update time: 2026-07-03 18:31:29 CST
  Update content: Align palette guardrails with the graphite violet champagne theme and the 80 percent risk-color rule.
 */
@@ -111,21 +115,28 @@ test('uses the graphite violet champagne semantic accents', () => {
   assert.match(block, /--warn-rgb:232,93,117;/);
   assert.match(block, /--bar-good:linear-gradient\(90deg,#8B7CFF 0%,#AFA6FF 54%,#D8D4FF 82%,#8BD7FF 100%\);/);
   assert.match(block, /--bar-warn:linear-gradient\(90deg,#B8334B 0%,#E85D75 58%,#FF8A9A 100%\);/);
+  assert.match(block, /--bar-gold:linear-gradient\(90deg,#9B7A36 0%,#D7B56D 58%,#F0D99A 100%\);/);
 
   assert.equal(COLOR.up, '#AFA6FF');
   assert.equal(COLOR.down, '#E85D75');
   assert.equal(COLOR.good, '#8B7CFF');
   assert.equal(COLOR.warn, '#E85D75');
+  assert.equal(COLOR.gold, '#D7B56D');
 });
 
-test('treats 70 percent progress as risk rose instead of mid-tone lavender', () => {
+test('maps completion progress to red below 80, purple through 99, and gold at target', () => {
   const block = darkThemeBlock();
 
-  assert.match(block, /--progress-mid:#E85D75;/);
-  assert.match(themeSource, /progressMid:\s*'#E85D75'/);
-  assert.equal(progressColor(70, '#E85D75'), '#E85D75');
+  assert.match(block, /--progress-mid:#8B7CFF;/);
+  assert.match(block, /--progress-gold:#D7B56D;/);
+  assert.match(themeSource, /progressMid:\s*'#8B7CFF'/);
+  assert.match(themeSource, /progressGold:\s*'#D7B56D'/);
+  assert.equal(progressColor(70, '#8B7CFF', '#D7B56D'), '#E85D75');
+  assert.equal(progressColor(80, '#8B7CFF', '#D7B56D'), '#8B7CFF');
+  assert.equal(progressColor(99.9, '#8B7CFF', '#D7B56D'), '#8B7CFF');
+  assert.equal(progressColor(100, '#8B7CFF', '#D7B56D'), '#D7B56D');
   assert.match(kpiSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?new echarts\.graphic\.LinearGradient/);
-  assert.match(kpiSource, /const labelColor = progressColor\(pct, tokens\.progressMid\);[\s\S]*?itemStyle:\s*\{ color: progressBarColor\(pct, tokens\), borderRadius: 5, shadowBlur: 6, shadowColor: labelColor \}/);
+  assert.match(kpiSource, /const labelColor = progressColor\(pct, tokens\.progressMid, tokens\.progressGold\);[\s\S]*?itemStyle:\s*\{ color: progressBarColor\(pct, tokens\), borderRadius: 5, shadowBlur: 6, shadowColor: labelColor \}/);
 });
 
 test('uses a static graphite grid and dot background instead of Color Bends', () => {

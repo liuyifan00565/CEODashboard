@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:54:17 CST
+ Update content: Add gold target-achieved progress tokens and make mid-tier completion purple in both themes.
+*/
+/*
  Update time: 2026-07-03 18:24:14 CST
  Update content: Replace the Color Bends layer with a restrained graphite blue-black grid, dot, and noise dashboard background.
 */
@@ -124,6 +128,8 @@
   --bar-good-glow:0 0 16px rgba(139,124,255,.22);
   --bar-warn:linear-gradient(90deg,#B8334B 0%,#E85D75 58%,#FF8A9A 100%);
   --bar-warn-glow:0 0 16px rgba(232,93,117,.22);
+  --bar-gold:linear-gradient(90deg,#9B7A36 0%,#D7B56D 58%,#F0D99A 100%);
+  --bar-gold-glow:0 0 18px rgba(215,181,109,.26);
   /* 背景：深石墨黑蓝底；紫色只做远处环境光，网格/点阵提供秩序感。 */
   --bg-base-1:#050812;
   --bg-base-2:#080D18;
@@ -154,7 +160,8 @@
   --chart-tooltip-border:rgba(218,226,255,.16);
   --chart-pointer:rgba(139,124,255,.07);
   --chart-point-border:#060914;
-  --progress-mid:#E85D75;
+  --progress-mid:#8B7CFF;
+  --progress-gold:#D7B56D;
   --ai-card-bg:#0B1020;
   --ai-orb-text:#F7F8FC;
   --ai-ring-text:rgba(247,248,252,.84);
@@ -201,6 +208,8 @@
   --bar-good-glow:0 0 16px rgba(111,98,216,.18);
   --bar-warn:linear-gradient(90deg,#AA2F45 0%,#D94D66 58%,#F07C8E 100%);
   --bar-warn-glow:0 0 16px rgba(217,77,102,.18);
+  --bar-gold:linear-gradient(90deg,#8C6726 0%,#B78C32 58%,#D7B56D 100%);
+  --bar-gold-glow:0 0 16px rgba(183,140,50,.2);
   /* 背景：雾白蓝灰底 + 极淡月光紫/香槟补光，与暗主题同构 */
   --bg-base-1:#F8FAFD;
   --bg-base-2:#F3F6FA;
@@ -234,7 +243,8 @@
   --chart-tooltip-border:rgba(31,42,68,.18);
   --chart-pointer:rgba(139,124,255,.09);
   --chart-point-border:#F3F6FA;
-  --progress-mid:#D94D66;
+  --progress-mid:#6F62D8;
+  --progress-gold:#B78C32;
   --ai-card-bg:#F8FAFD;
   --ai-orb-text:#111318;
   --ai-ring-text:rgba(17,19,24,.76);

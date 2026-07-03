@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 18:54:17 CST  更新内容: KPI 完成率颜色改为 80 以下红色、80-99 紫色、100 及以上金色三档。 */
 /* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 将 KPI 完成率 80% 以下、缺口与趋势芯片统一接入风险色语义，并同步高级紫蓝图表色板。 */
 /* 更新时间: 2026-07-03 17:55:26 CST  更新内容: 回款半环图渠道色改为低饱和紫/蓝/灰蓝组合，避免四个扇区全部占用强紫视觉面积。 */
 /* 更新时间: 2026-07-03 17:53:00 CST  更新内容: 回款半环图改为统一紫蓝色阶，通过明度和深浅区分四个渠道，去除跳脱青色和高饱和糖果紫。 */
@@ -136,6 +137,14 @@ function progressBarColor(pct, tokens) {
     ]);
   }
 
+  if (value >= 100) {
+    return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+      { offset: 0, color: '#9B7A36' },
+      { offset: 0.58, color: '#D7B56D' },
+      { offset: 1, color: '#F0D99A' },
+    ]);
+  }
+
   return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
     { offset: 0, color: '#8B7CFF' },
     { offset: 0.56, color: '#AFA6FF' },
@@ -145,7 +154,7 @@ function progressBarColor(pct, tokens) {
 }
 
 function progressOption(pct, tokens) {
-  const labelColor = progressColor(pct, tokens.progressMid);
+  const labelColor = progressColor(pct, tokens.progressMid, tokens.progressGold);
   return {
     grid: { left: 0, right: 0, top: 0, bottom: 0 },
     xAxis: { type: 'value', min: 0, max: 100, show: false },
@@ -348,7 +357,7 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
   const suffix = displayUnit === '%' || isX ? displayUnit : ' ' + (displayUnit || '');
   const decimals = displayDecimals ?? (isX ? 2 : 0);
   const hasProgress = card.progress != null;
-  const recoveryAccent = hasProgress ? progressColor(card.progress, tokens.progressMid) : tokens.chartBar;
+  const recoveryAccent = hasProgress ? progressColor(card.progress, tokens.progressMid, tokens.progressGold) : tokens.chartBar;
   const recoveryTargetSub = splitRecoveryTargetSub(card);
   const metaDelta = riskAdjustedDelta(card);
 
@@ -377,7 +386,7 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
         <div className="kpi-card__progress">
           <div className="kpi-card__progress-head">
             <span>{card.progressLabel || '目标完成率'}</span>
-            <span className="kpi-card__progress-pct" style={{ color: progressColor(card.progress, tokens.progressMid) }}>
+            <span className="kpi-card__progress-pct" style={{ color: progressColor(card.progress, tokens.progressMid, tokens.progressGold) }}>
               {card.progress}%
             </span>
           </div>

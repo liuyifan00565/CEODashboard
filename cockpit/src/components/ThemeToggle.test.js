@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:54:17 CST
+ Update content: Require light theme progress tokens to expose purple mid-tier and gold target-tier colors.
+*/
+/*
  Update time: 2026-07-03 18:31:29 CST
  Update content: Align light theme guardrails with the graphite violet champagne palette and rose risk accents.
 */
@@ -134,6 +138,9 @@ test('keeps graphite violet brand accents aligned in light theme', () => {
   assert.match(block, /--warn-rgb:217,77,102;/);
   assert.match(block, /--bar-good:linear-gradient\(90deg,#6F62D8 0%,#8B7CFF 56%,#C9C3FF 88%,#8BD7FF 100%\);/);
   assert.match(block, /--bar-warn:linear-gradient\(90deg,#AA2F45 0%,#D94D66 58%,#F07C8E 100%\);/);
+  assert.match(block, /--bar-gold:linear-gradient\(90deg,#8C6726 0%,#B78C32 58%,#D7B56D 100%\);/);
+  assert.match(block, /--progress-mid:#6F62D8;/);
+  assert.match(block, /--progress-gold:#B78C32;/);
 });
 
 test('charts and KPI progress bars read theme tokens instead of hard-coded white colors', () => {

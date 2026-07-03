@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:54:17 CST
+ Update content: Map maintenance progress bars to red danger, purple warning, and gold achieved tiers.
+*/
+/*
  Update time: 2026-07-03 17:20:28 CST
  Update content: Strengthen target maintenance editable input affordance while softening readonly summary values.
 */
@@ -1081,13 +1085,13 @@
 }
 
 .mnt-progress--warning span {
-  background: var(--bar-warn);
-  box-shadow: var(--bar-warn-glow);
+  background: var(--bar-good);
+  box-shadow: var(--bar-good-glow);
 }
 
 .mnt-progress--good span {
-  background: var(--bar-good);
-  box-shadow: var(--bar-good-glow);
+  background: var(--bar-gold);
+  box-shadow: var(--bar-gold-glow);
 }
 
 .mnt-progress--unset span {

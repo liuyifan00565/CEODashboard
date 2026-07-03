@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 18:54:17 CST
+ Update content: Require KPI completion progress bars to add a gold target-achieved tier above the purple mid tier.
+*/
+/*
  Update time: 2026-07-03 18:31:29 CST
  Update content: Lock KPI progress bars to the graphite violet good gradient and rose risk gradient.
 */
@@ -259,8 +263,8 @@ test('uses the neutral dark glass card recipe without broad purple wash', () => 
   assert.match(cssSource, /\.kpi-card__side-panel \.ch-bar-fill\s*\{[\s\S]*?opacity:\s*\.82;[\s\S]*?filter:\s*saturate\(\.82\);/);
 });
 
-test('uses darker completion progress gradients in the KPI ECharts bars', () => {
-  assert.match(componentSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?#B8334B[\s\S]*?#E85D75[\s\S]*?#FF8A9A[\s\S]*?#8B7CFF[\s\S]*?#AFA6FF[\s\S]*?#D8D4FF[\s\S]*?#8BD7FF[\s\S]*?\}/);
+test('uses red, purple, and gold completion progress gradients in the KPI ECharts bars', () => {
+  assert.match(componentSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?#B8334B[\s\S]*?#E85D75[\s\S]*?#FF8A9A[\s\S]*?#9B7A36[\s\S]*?#D7B56D[\s\S]*?#F0D99A[\s\S]*?#8B7CFF[\s\S]*?#AFA6FF[\s\S]*?#D8D4FF[\s\S]*?#8BD7FF[\s\S]*?\}/);
 });
 
 test('keeps recovery half-donut labels readable in the elongated card', () => {

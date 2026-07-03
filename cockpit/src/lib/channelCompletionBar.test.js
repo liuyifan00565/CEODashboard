@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:54:17 CST
+ 更新内容: 补充渠道完成进度条 80 以下红色、80-99 紫色、100 及以上金色三档断言。
+*/
+/*
  更新时间: 2026-07-03 18:31:29 CST
  更新内容: 渠道完成进度条统一改为 80% 以下风险色，不再豁免四个区域行。
  更新时间: 2026-07-03 17:51:20 CST
@@ -14,7 +18,11 @@ import {
   shouldUseChannelCompletionWarnFill,
 } from './channelCompletionBar.js';
 
-test('uses the same 80 percent risk gradient rule for the four regional channel rows', () => {
+test('uses red below 80, purple from 80 to 99, and gold at 100 percent or above', () => {
+  assert.equal(
+    channelCompletionBarBackground({ key: 'online', completion: 112 }, '#E7E2FF'),
+    COLOR.goldGradient
+  );
   assert.equal(
     channelCompletionBarBackground({ key: 'online', completion: 87.5 }, '#E7E2FF'),
     COLOR.goodGradient
@@ -45,6 +53,7 @@ test('keeps non-four-region rows on the original progress gradient rule', () => 
 });
 
 test('uses the red warning fill class whenever a channel row is under target', () => {
+  assert.equal(shouldUseChannelCompletionWarnFill({ key: 'online', completion: 100 }), false);
   assert.equal(shouldUseChannelCompletionWarnFill({ key: 'south', completion: 80 }), false);
   assert.equal(shouldUseChannelCompletionWarnFill({ key: 'east', completion: 70 }), true);
   assert.equal(shouldUseChannelCompletionWarnFill({ key: 'east', warn: true }), true);

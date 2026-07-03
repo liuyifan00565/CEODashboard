@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 18:54:17 CST
+ 更新内容: 维护页目标完成率状态改为 80 以下 danger、80-99 warning、100 及以上 good。
+*/
+/*
  更新时间: 2026-07-03 18:19:59 CST
  更新内容: 将算力与资源 mock 图表色同步为黑曜石月光紫高级配色，移除旧黄橙红蓝散色。
 */
@@ -866,7 +870,8 @@ export const MAINTENANCE_PERIOD_COLUMNS = [
 ];
 
 function maintenanceStatus(pct) {
-  if (pct > 80) return 'good';
+  if (pct >= 100) return 'good';
+  if (pct >= 80) return 'warning';
   return 'danger';
 }
 
