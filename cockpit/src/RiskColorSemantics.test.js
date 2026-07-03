@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 23:21:43 CST
+ 更新内容: 增加交付看板超额完成时复用红色预警视觉并显示超额交付标签的回归测试。
+*/
+/*
  更新时间: 2026-07-03 18:54:17 CST
  更新内容: 将完成率颜色回归测试调整为 80 以下红色、80-99 紫色、100 及以上金色三档。
 */
@@ -96,8 +100,19 @@ test('keeps channel and delivery progress bars on the same risk rule', () => {
     format.COLOR.goldGradient
   );
   assert.equal(shouldUseChannelCompletionWarnFill({ key: 'east', completion: 70, warn: true }), true);
-  assert.match(deliverySource, /className=\{`dlv-progress-pct\$\{pct < 80 \? ' dlv-progress-pct--warn' : ''\}`\}/);
+  assert.match(deliverySource, /const isUnderDelivery = row\.warn;/);
+  assert.match(deliverySource, /const isRiskDelivery = isUnderDelivery \|\| isOverDelivery;/);
+  assert.match(deliverySource, /const deliveryProgressPctClassName = `dlv-progress-pct\$\{isRiskDelivery \? ' dlv-progress-pct--warn' : ''\}`;/);
   assert.match(deliveryCss, /\.dlv-progress-pct--warn\s*\{[\s\S]*?color:\s*var\(--warn\);/);
+});
+
+test('colors over-target delivery rows red and labels them as excess delivery', () => {
+  assert.match(deliverySource, /import \{ COLOR, progressGradient \} from '\.\.\/lib\/format';/);
+  assert.match(deliverySource, /const isOverDelivery = pct > 100;/);
+  assert.match(deliverySource, /const deliveryTag = isOverDelivery \? '超额交付' : isUnderDelivery \? '交付预警' : null;/);
+  assert.match(deliverySource, /const deliveryRowClassName = `dlv-row\$\{isRiskDelivery \? ' dlv-row--warn' : ''\}`;/);
+  assert.match(deliverySource, /const deliveryProgressBackground = isOverDelivery\s*\?\s*COLOR\.warnGradient\s*:\s*progressGradient\(pct, tokens\.progressMid\);/);
+  assert.match(deliverySource, /\{deliveryTag && <span className="dlv-tag">\{deliveryTag\}<\/span>\}/);
 });
 
 test('uses shared delta formatting in opening-account cards instead of a hardcoded up arrow', () => {
