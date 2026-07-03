@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 10:24:00 CST
+ Update content: Add regression coverage for target maintenance current-quarter fixed columns.
+*/
+/*
  Update time: 2026-07-02 18:55:52 CST
  Update content: Add regression coverage for maintenance progress bars fading from a highlighted left edge to a softer right edge and sync maintenance input style expectations.
 */
@@ -249,6 +253,39 @@ test('builds the target and cost maintenance pages from reference matrix content
   assert.match(maintenancePageSource, /渠道成本维护/);
   assert.match(maintenancePageSource, /人力成本维护/);
   assert.match(maintenancePageSource, /保存成本/);
+});
+
+test('orders target maintenance fixed columns from business month through current month', () => {
+  assert.match(maintenancePageSource, /import \{[\s\S]*?META,[\s\S]*?MAINTENANCE_PERIOD_COLUMNS/);
+  assert.match(maintenancePageSource, /const TARGET_PERIOD_COLUMNS = buildTargetPeriodColumns\(MAINTENANCE_PERIOD_COLUMNS, META\.monthLabel\);/);
+  assert.match(maintenancePageSource, /function getMaintenanceCurrentMonth\(monthLabel = ''\) \{/);
+  assert.match(maintenancePageSource, /const quarterStartMonth = Math\.floor\(\(currentMonth - 1\) \/ 3\) \* 3 \+ 1;/);
+  assert.match(maintenancePageSource, /const currentQuarterColumns = periodColumns\.filter\(\(column\) =>/);
+  assert.match(maintenancePageSource, /return \[\s*\.\.\.yearColumns,\s*\.\.\.currentQuarterColumns,\s*\.\.\.restColumns,\s*\]/);
+  assert.match(maintenancePageSource, /className="mnt-matrix mnt-matrix--target"/);
+  assert.match(maintenancePageSource, /TARGET_PERIOD_COLUMNS\.map\(\(column\) => <th key=\{column\.key\} className=\{targetPeriodColumnClassName\(column\)\}>/);
+  assert.match(maintenancePageSource, /TARGET_PERIOD_COLUMNS\.map\(\(column\) => \{/);
+  assert.match(maintenancePageSource, /className=\{targetPeriodColumnClassName\(column, 'mnt-period-cell'\)\}/);
+});
+
+test('keeps target maintenance current business columns sticky without leaving glass styling', () => {
+  const targetTableBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target');
+  const targetNameHeaderBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target th:first-child');
+  const targetNameCellBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target td:first-child');
+  const targetStickyBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target .mnt-target-sticky');
+  const targetStickyHeadBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target th.mnt-target-sticky');
+  const targetStickyLastBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target .mnt-target-sticky--5');
+
+  assert.match(targetTableBlock, /--mnt-target-name-width:\s*164px;/);
+  assert.match(targetTableBlock, /--mnt-target-period-width:\s*128px;/);
+  assert.match(targetStickyBlock, /position:\s*sticky;/);
+  assert.match(targetNameHeaderBlock, /background:\s*rgba\(0,0,0,\.86\);/);
+  assert.match(targetNameCellBlock, /background:\s*rgba\(0,0,0,\.82\);/);
+  assert.match(targetStickyBlock, /background:\s*rgba\(0,0,0,\.82\);/);
+  assert.match(targetStickyBlock, /backdrop-filter:\s*blur\(14px\);/);
+  assert.match(targetStickyHeadBlock, /background:\s*rgba\(0,0,0,\.86\);/);
+  assert.match(targetStickyLastBlock, /left:\s*calc\(var\(--mnt-target-name-width\) \+ var\(--mnt-target-period-width\) \* 4\);/);
+  assert.doesNotMatch(targetStickyBlock, /var\(--glass-panel-bg\)|radial-gradient|#101012/);
 });
 
 test('builds the org and channel maintenance pages from reference tree and table content', () => {
