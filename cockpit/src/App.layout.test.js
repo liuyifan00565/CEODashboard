@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 23:39:28 CST
+ Update content: Add regression coverage for calmer shared glass controls in the topbar, search, and sidebar.
+*/
+/*
  Update time: 2026-07-03 18:54:17 CST
  Update content: Require maintenance progress colors to use red below 80, purple below target, and gold at target.
 */
@@ -144,6 +148,9 @@ const computePageCss = readFileSync(new URL('./components/ComputeUsagePage.css',
 const maintenancePageSource = readFileSync(new URL('./components/MaintenancePage.jsx', import.meta.url), 'utf8');
 const maintenancePageCss = readFileSync(new URL('./components/MaintenancePage.css', import.meta.url), 'utf8');
 const searchResultBorderSource = readFileSync(new URL('./components/SearchResultBorder.jsx', import.meta.url), 'utf8');
+const sidebarSource = readFileSync(new URL('./components/Sidebar.jsx', import.meta.url), 'utf8');
+const expandableSearchSource = readFileSync(new URL('./components/ExpandableSearch.jsx', import.meta.url), 'utf8');
+const glassSurfaceCss = readFileSync(new URL('./components/GlassSurface/GlassSurface.css', import.meta.url), 'utf8');
 
 function cssRuleBody(source, selector) {
   const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -294,7 +301,7 @@ test('adds a topbar data maintenance switch that swaps the sidebar navigation', 
   assert.match(appSource, /function handleMaintenanceModeToggle\(\) \{[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setMaintenanceMode\(false\);[\s\S]*?setActiveMenu\('overview'\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?setMaintenanceMode\(true\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?\}/);
   assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} \/>/);
   assert.match(appSource, /className="maintenance-glass"/);
-  assert.match(appSource, /<div className="dash-tools">\s*<GlassSurface[\s\S]*?width=\{126\}[\s\S]*?height=\{54\}[\s\S]*?borderRadius=\{27\}[\s\S]*?brightness=\{58\}[\s\S]*?blur=\{12\}[\s\S]*?backgroundOpacity=\{0\.06\}[\s\S]*?distortionScale=\{-130\}[\s\S]*?className="maintenance-glass"[\s\S]*?<button[\s\S]*?<\/GlassSurface>\s*<ExpandableSearch/);
+  assert.match(appSource, /<div className="dash-tools">\s*<GlassSurface[\s\S]*?width=\{126\}[\s\S]*?height=\{54\}[\s\S]*?borderRadius=\{27\}[\s\S]*?brightness=\{46\}[\s\S]*?blur=\{7\}[\s\S]*?displace=\{0\.35\}[\s\S]*?backgroundOpacity=\{0\.035\}[\s\S]*?distortionScale=\{-55\}[\s\S]*?className="maintenance-glass"[\s\S]*?<button[\s\S]*?<\/GlassSurface>\s*<ExpandableSearch/);
   assert.match(appSource, /className=\{`dash-maintenance-switch\$\{maintenanceMode \? ' dash-maintenance-switch--active' : ''\}`\}/);
   assert.match(appSource, /aria-pressed=\{maintenanceMode\}/);
   assert.match(appSource, /\{maintenanceMode \? '返回主界面' : '数据维护'\}/);
@@ -311,6 +318,14 @@ test('adds a topbar data maintenance switch that swaps the sidebar navigation', 
   assert.doesNotMatch(maintenanceSwitchBlock, /background:var\(--ai-chip-bg\);/);
   assert.doesNotMatch(maintenanceActiveBlock, /background:var\(--ai-chip-hover\);/);
   assert.match(projectAgentGuidance, /所有卡片和按钮的背景、边框、模糊、阴影与圆角必须优先复用项目既有统一玻璃体系/);
+});
+
+test('softens the shared glass controls so navigation and top tools stay restrained', () => {
+  assert.match(appSource, /<GlassSurface[\s\S]*?brightness=\{46\}[\s\S]*?blur=\{7\}[\s\S]*?displace=\{0\.35\}[\s\S]*?backgroundOpacity=\{0\.035\}[\s\S]*?distortionScale=\{-55\}[\s\S]*?className="brand-glass"/);
+  assert.match(sidebarSource, /<GlassSurface[\s\S]*?brightness=\{46\}[\s\S]*?blur=\{8\}[\s\S]*?displace=\{0\.35\}[\s\S]*?backgroundOpacity=\{0\.035\}[\s\S]*?distortionScale=\{-55\}[\s\S]*?className="sb-glass"/);
+  assert.match(expandableSearchSource, /brightness=\{48\}[\s\S]*?blur=\{7\}[\s\S]*?displace=\{0\.35\}[\s\S]*?backgroundOpacity=\{0\.035\}[\s\S]*?distortionScale=\{-60\}/);
+  assert.match(glassSurfaceCss, /\.glass-surface--svg\s*\{[\s\S]*?box-shadow:[\s\S]*?inset 0 0 0 1px[\s\S]*?inset 0 1px 0 rgba\(255, 255, 255, 0\.10\)[\s\S]*?0px 10px 30px rgba\(17, 17, 26, 0\.08\);/);
+  assert.doesNotMatch(glassSurfaceCss, /0px 16px 56px rgba\(17, 17, 26, 0\.05\) inset/);
 });
 
 test('renders data maintenance as four independent pages instead of the dashboard grid', () => {

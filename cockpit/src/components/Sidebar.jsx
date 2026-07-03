@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 23:39:28 CST  更新内容: 降低左侧导航玻璃容器的高光、模糊和折射强度。 */
 /* 更新时间: 2026-07-02 16:28:00 CST  更新内容: 侧边导航改用统一 AppIcon 线性图标体系，移除字符占位图标。 */
 import GlassSurface from './GlassSurface/GlassSurface'
 import AppIcon from './AppIcon';
@@ -9,11 +10,11 @@ export default function Sidebar({ items = [], active, onChange }) {
       width="100%"
       height="auto"
       borderRadius={16}
-      brightness={58}
-      blur={14}
-      displace={1}
-      backgroundOpacity={0.06}
-      distortionScale={-120}
+      brightness={46}
+      blur={8}
+      displace={0.35}
+      backgroundOpacity={0.035}
+      distortionScale={-55}
       className="sb-glass"
     >
       <nav className="sb-root">

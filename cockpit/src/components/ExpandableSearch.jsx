@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 23:39:28 CST
+ Update content: Reduce expandable search GlassSurface brightness, blur, and distortion for a calmer B-side toolbar.
+*/
+/*
  Update time: 2026-07-02 17:18:50 CST
  Update content: Add Word-style result counter and Enter-to-next search navigation.
 */
@@ -43,11 +47,11 @@ export default function ExpandableSearch({ onChange, currentIndex = 0, totalResu
         width={expanded ? 318 : 54}
         height={54}
         borderRadius={27}
-        brightness={62}
-        blur={12}
-        displace={1}
-        backgroundOpacity={0.06}
-        distortionScale={-150}
+        brightness={48}
+        blur={7}
+        displace={0.35}
+        backgroundOpacity={0.035}
+        distortionScale={-60}
       >
         <div className="search-inner">
           <button className="search-ico" onClick={open} aria-label="搜索" aria-expanded={expanded}>

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 23:39:28 CST
+ 更新内容: 增加年度回款卡累计完成率文案必须显示“年度累计完成率”的回归测试。
+*/
+/*
  更新时间: 2026-07-03 11:28:32 CST
  更新内容: 增加“本年”可通过首页年度模块标题命中年度回款卡的回归测试。
 */
@@ -48,6 +52,8 @@ test('places monthly and annual target labels on the same subtitle line as their
 
   assert.equal(recovered.sub, '月度目标 580 万');
   assert.equal(annual.sub, '年度目标 5800 万');
+  assert.equal(annual.progressLabel, '年度累计完成率');
+  assert.notEqual(annual.progressLabel, '月度累计完成率');
   assert.doesNotMatch(recovered.sub, / · /);
   assert.doesNotMatch(annual.sub, / · /);
 });

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 23:39:28 CST  更新内容: 收敛回款半环图未完成扇区、标签与阴影，让主 KPI 数字更主导。 */
 /* 更新时间: 2026-07-03 18:54:17 CST  更新内容: KPI 完成率颜色改为 80 以下红色、80-99 紫色、100 及以上金色三档。 */
 /* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 将 KPI 完成率 80% 以下、缺口与趋势芯片统一接入风险色语义，并同步高级紫蓝图表色板。 */
 /* 更新时间: 2026-07-03 17:55:26 CST  更新内容: 回款半环图渠道色改为低饱和紫/蓝/灰蓝组合，避免四个扇区全部占用强紫视觉面积。 */
@@ -38,8 +39,8 @@ const CHANNEL_PIE_LABELS = { south: '线下华南', east: '线下华东' };
 const INCOMPLETE_PIE_COLOR = {
   type: 'linear', x: 0, y: 0, x2: 1, y2: 1,
   colorStops: [
-    { offset: 0, color: 'rgba(160, 170, 210, 0.16)' },
-    { offset: 1, color: 'rgba(160, 170, 210, 0.10)' },
+    { offset: 0, color: 'rgba(160, 170, 210, 0.08)' },
+    { offset: 1, color: 'rgba(160, 170, 210, 0.045)' },
   ],
 };
 const INCOMPLETE_PERCENT_COLOR = '#ffffff';
@@ -204,8 +205,8 @@ function recoveryPieData(card) {
     percentColor: INCOMPLETE_PERCENT_COLOR,
     itemStyle: {
       color: INCOMPLETE_PIE_COLOR,
-      opacity: .55,
-      borderColor: 'rgba(160, 170, 210, .18)',
+      opacity: .26,
+      borderColor: 'rgba(160, 170, 210, .10)',
       borderWidth: 1,
       shadowBlur: 0,
     },
@@ -275,26 +276,26 @@ function recoveryPieOption(card, tokens, accentColor) {
       {
         type: 'pie',
         name: card.title,
-        radius: ['45%', '76%'],
-        center: ['49.5%', '70%'],
+        radius: ['52%', '70%'],
+        center: ['50%', '70%'],
         startAngle: 180,
         endAngle: 360,
         minShowLabelAngle: 1,
         padAngle: 3,
         avoidLabelOverlap: true,
         itemStyle: {
-          borderRadius: 8,
-          borderColor: 'rgba(255, 255, 255, .11)',
+          borderRadius: 6,
+          borderColor: 'rgba(255, 255, 255, .08)',
           borderWidth: 1,
-          shadowBlur: 10,
-          shadowColor: 'rgba(167, 156, 255, .14)',
+          shadowBlur: 3,
+          shadowColor: 'rgba(167, 156, 255, .08)',
         },
         emphasis: {
           scale: false,
           itemStyle: {
-            shadowBlur: 14,
-            shadowColor: 'rgba(167, 156, 255, .18)',
-            borderColor: 'rgba(255, 255, 255, .16)',
+            shadowBlur: 6,
+            shadowColor: 'rgba(167, 156, 255, .12)',
+            borderColor: 'rgba(255, 255, 255, .12)',
           },
         },
         label: {
@@ -303,25 +304,25 @@ function recoveryPieOption(card, tokens, accentColor) {
           position: 'outside',
           color: tokens.chartText,
           bleedMargin: 0,
-          distanceToLabelLine: 0,
+          distanceToLabelLine: 4,
           rich: {
             name: {
               color: tokens.chartText,
-              fontSize: 13,
-              fontWeight: 850,
-              lineHeight: 17,
+              fontSize: 12,
+              fontWeight: 760,
+              lineHeight: 16,
               align: 'center',
-              textShadowColor: 'rgba(0,0,0,.44)',
-              textShadowBlur: 10,
+              textShadowColor: 'rgba(0,0,0,.34)',
+              textShadowBlur: 4,
             },
             percent: {
               color: tokens.chartText,
-              fontSize: 12,
-              fontWeight: 850,
-              lineHeight: 15,
+              fontSize: 11,
+              fontWeight: 720,
+              lineHeight: 14,
               align: 'center',
-              textShadowColor: 'rgba(0,0,0,.48)',
-              textShadowBlur: 10,
+              textShadowColor: 'rgba(0,0,0,.34)',
+              textShadowBlur: 4,
             },
           },
         },
@@ -329,12 +330,12 @@ function recoveryPieOption(card, tokens, accentColor) {
           show: true,
           lineStyle: {
             color: tokens.chartText,
-            opacity: 0.72,
-            width: 2,
+            opacity: 0.42,
+            width: 1.2,
           },
           smooth: 0.18,
-          length: 10,
-          length2: 16,
+          length: 14,
+          length2: 24,
         },
         labelLayout: (params) => recoveryPieLabelLayout(params, card.key),
         animationType: 'scale',

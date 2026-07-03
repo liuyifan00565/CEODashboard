@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 23:39:28 CST
+ Update content: Require recovery half-rings to use a quieter remaining track, lighter labels, and a stronger KPI number hierarchy.
+*/
+/*
  Update time: 2026-07-03 18:54:17 CST
  Update content: Require KPI completion progress bars to add a gold target-achieved tier above the purple mid tier.
 */
@@ -156,8 +160,8 @@ test('renders month and year recovery cards with the ECharts half-donut layout',
   assert.match(componentSource, /extraCssText:\s*'padding:0;border:0;background:transparent;box-shadow:none;pointer-events:none;'/);
   assert.doesNotMatch(componentSource, /position:\s*\['58%',\s*'2%'\]/);
   assert.match(componentSource, /legend:\s*\{\s*top:\s*'5%',\s*left:\s*'center'/);
-  assert.match(componentSource, /radius:\s*\['45%',\s*'76%'\]/);
-  assert.match(componentSource, /center:\s*\['49\.5%',\s*'70%'\]/);
+  assert.match(componentSource, /radius:\s*\['52%',\s*'70%'\]/);
+  assert.match(componentSource, /center:\s*\['50%',\s*'70%'\]/);
   assert.match(componentSource, /startAngle:\s*180/);
   assert.match(componentSource, /endAngle:\s*360/);
   assert.match(componentSource, /padAngle:\s*3/);
@@ -174,16 +178,16 @@ test('renders month and year recovery cards with the ECharts half-donut layout',
   assert.match(componentSource, /const RECOVERY_YEAR_LABEL_SLOTS = \{[\s\S]*?'线上': \{ y: 78 \},[\s\S]*?'代理': \{ y: 118 \},[\s\S]*?'线下华南': \{ y: 158 \},[\s\S]*?'线下华东': \{ y: 198 \},[\s\S]*?'未完成': \{ y: 156 \},[\s\S]*?\};/);
   assert.match(componentSource, /function recoveryPieLabelSlot\(params\) \{[\s\S]*?if \(text\.includes\('华东'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['线下华东'\];[\s\S]*?if \(text\.includes\('华南'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['线下华南'\];[\s\S]*?if \(text\.includes\('代理'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['代理'\];[\s\S]*?if \(text\.includes\('未完成'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['未完成'\];[\s\S]*?if \(text\.includes\('线上'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['线上'\];[\s\S]*?\}/);
   assert.match(componentSource, /function recoveryPieLabelLayout\(params, cardKey\) \{[\s\S]*?if \(cardKey !== 'year'\) return undefined;[\s\S]*?const slot = recoveryPieLabelSlot\(params\);[\s\S]*?return \{[\s\S]*?y: slot\.y,[\s\S]*?hideOverlap: false,[\s\S]*?\};[\s\S]*?\}/);
-  assert.match(componentSource, /label:\s*\{[\s\S]*?position:\s*'outside'[\s\S]*?distanceToLabelLine:\s*0/);
-  assert.match(componentSource, /rich:\s*\{[\s\S]*?name:\s*\{[\s\S]*?color:\s*tokens\.chartText[\s\S]*?fontSize:\s*13[\s\S]*?fontWeight:\s*850[\s\S]*?lineHeight:\s*17[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.44\)'[\s\S]*?textShadowBlur:\s*10[\s\S]*?percent:\s*\{[\s\S]*?color:\s*tokens\.chartText[\s\S]*?fontSize:\s*12[\s\S]*?fontWeight:\s*850[\s\S]*?lineHeight:\s*15[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.48\)'[\s\S]*?textShadowBlur:\s*10/);
+  assert.match(componentSource, /label:\s*\{[\s\S]*?position:\s*'outside'[\s\S]*?distanceToLabelLine:\s*4/);
+  assert.match(componentSource, /rich:\s*\{[\s\S]*?name:\s*\{[\s\S]*?color:\s*tokens\.chartText[\s\S]*?fontSize:\s*12[\s\S]*?fontWeight:\s*760[\s\S]*?lineHeight:\s*16[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.34\)'[\s\S]*?textShadowBlur:\s*4[\s\S]*?percent:\s*\{[\s\S]*?color:\s*tokens\.chartText[\s\S]*?fontSize:\s*11[\s\S]*?fontWeight:\s*720[\s\S]*?lineHeight:\s*14[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.34\)'[\s\S]*?textShadowBlur:\s*4/);
   assert.doesNotMatch(componentSource, /name:\s*`\$\{card\.title\}占比`/);
   assert.doesNotMatch(componentSource, /position:\s*'inside'/);
   assert.doesNotMatch(componentSource, /color:\s*'rgba\(0, 0, 0, 0\)'/);
-  assert.match(componentSource, /labelLine:\s*\{[\s\S]*?show:\s*true[\s\S]*?lineStyle:\s*\{[\s\S]*?color:\s*tokens\.chartText[\s\S]*?opacity:\s*0\.72[\s\S]*?width:\s*2[\s\S]*?\}[\s\S]*?smooth:\s*0\.18[\s\S]*?length:\s*10[\s\S]*?length2:\s*16/);
+  assert.match(componentSource, /labelLine:\s*\{[\s\S]*?show:\s*true[\s\S]*?lineStyle:\s*\{[\s\S]*?color:\s*tokens\.chartText[\s\S]*?opacity:\s*0\.42[\s\S]*?width:\s*1\.2[\s\S]*?\}[\s\S]*?smooth:\s*0\.18[\s\S]*?length:\s*14[\s\S]*?length2:\s*24/);
   assert.match(componentSource, /labelLayout:\s*\(params\) => recoveryPieLabelLayout\(params, card\.key\)/);
-  assert.match(componentSource, /borderRadius:\s*8/);
-  assert.match(componentSource, /borderColor:\s*'rgba\(255, 255, 255, \.11\)'/);
-  assert.match(componentSource, /shadowBlur:\s*10/);
+  assert.match(componentSource, /borderRadius:\s*6/);
+  assert.match(componentSource, /borderColor:\s*'rgba\(255, 255, 255, \.08\)'/);
+  assert.match(componentSource, /shadowBlur:\s*3/);
   assert.match(componentSource, /emphasis:\s*\{[\s\S]*?scale:\s*false/);
   assert.match(componentSource, /animationType:\s*'scale'/);
   assert.match(componentSource, /animationDuration:\s*900/);
@@ -219,10 +223,10 @@ test('keeps only the target completion title at the upper-left of the recovery h
 });
 
 test('adds a transparent unfinished slice at the right edge of the recovery half-donut', () => {
-  assert.match(componentSource, /const INCOMPLETE_PIE_COLOR = \{[\s\S]*?type:\s*'linear'[\s\S]*?colorStops:\s*\[[\s\S]*?'rgba\(160, 170, 210, 0\.16\)'[\s\S]*?'rgba\(160, 170, 210, 0\.10\)'[\s\S]*?\]/);
+  assert.match(componentSource, /const INCOMPLETE_PIE_COLOR = \{[\s\S]*?type:\s*'linear'[\s\S]*?colorStops:\s*\[[\s\S]*?'rgba\(160, 170, 210, 0\.08\)'[\s\S]*?'rgba\(160, 170, 210, 0\.045\)'[\s\S]*?\]/);
   assert.match(componentSource, /const targetValue = recoveryTargetValue\(card\);/);
   assert.match(componentSource, /const incompleteValue = Math\.max\(0, targetValue - cardTotal\);/);
-  assert.match(componentSource, /const incompleteSlice = \{[\s\S]*?rawValue:\s*incompleteValue[\s\S]*?targetValue[\s\S]*?name:\s*'未完成'[\s\S]*?isIncomplete:\s*true[\s\S]*?itemStyle:\s*\{[\s\S]*?color:\s*INCOMPLETE_PIE_COLOR[\s\S]*?opacity:\s*\.55[\s\S]*?borderColor:\s*'rgba\(160, 170, 210, \.18\)'/);
+  assert.match(componentSource, /const incompleteSlice = \{[\s\S]*?rawValue:\s*incompleteValue[\s\S]*?targetValue[\s\S]*?name:\s*'未完成'[\s\S]*?isIncomplete:\s*true[\s\S]*?itemStyle:\s*\{[\s\S]*?color:\s*INCOMPLETE_PIE_COLOR[\s\S]*?opacity:\s*\.26[\s\S]*?borderColor:\s*'rgba\(160, 170, 210, \.10\)'/);
   assert.match(componentSource, /percentColor:\s*CHANNEL_PERCENT_COLORS\[index\]/);
   assert.match(componentSource, /percentColor:\s*INCOMPLETE_PERCENT_COLOR/);
   assert.match(componentSource, /return \[[\s\S]*?\.\.\.channelData\.sort\(\(a, b\) => a\.value - b\.value\),[\s\S]*?incompleteSlice,[\s\S]*?\];/);
@@ -257,9 +261,9 @@ test('uses the neutral dark glass card recipe without broad purple wash', () => 
   assert.doesNotMatch(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?width:\s*330px/);
   assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?inset:\s*0;[\s\S]*?width:\s*auto;[\s\S]*?border-radius:\s*inherit;[\s\S]*?linear-gradient\(180deg, rgba\(255,\s*255,\s*255,\s*\.045\), transparent 58%\)/);
   assert.match(cssSource, /\.kpi-card--recovery::before\s*\{[\s\S]*?mix-blend-mode:\s*screen;[\s\S]*?opacity:\s*\.32;/);
-  assert.match(cssSource, /filter:\s*drop-shadow\(0 0 8px color-mix\(in srgb, var\(--kpi-accent\) 6%, transparent\)\)/);
+  assert.match(cssSource, /filter:\s*drop-shadow\(0 0 4px color-mix\(in srgb, var\(--kpi-accent\) 4%, transparent\)\)/);
   assert.match(componentSource, /<EChart option=\{progressOption\(card\.progress, tokens\)\} className="kpi-card__progress-chart" style=\{\{ height: 12 \}\} \/>/);
-  assert.match(cssSource, /\.kpi-card--recovery \.kpi-card__progress-chart\s*\{[\s\S]*?opacity:\s*\.82;[\s\S]*?filter:\s*saturate\(\.82\);/);
+  assert.match(cssSource, /\.kpi-card--recovery \.kpi-card__progress-chart\s*\{[\s\S]*?opacity:\s*\.92;[\s\S]*?filter:\s*saturate\(\.9\);/);
   assert.match(cssSource, /\.kpi-card__side-panel \.ch-bar-fill\s*\{[\s\S]*?opacity:\s*\.82;[\s\S]*?filter:\s*saturate\(\.82\);/);
 });
 
@@ -275,11 +279,11 @@ test('keeps recovery half-donut labels readable in the elongated card', () => {
   assert.match(componentSource, /labelLayout:\s*\(params\) => recoveryPieLabelLayout\(params, card\.key\)/);
   assert.doesNotMatch(componentSource, /avoidLabelOverlap:\s*false/);
   assert.match(cssSource, /grid-template-columns:\s*minmax\(340px,\s*460px\) minmax\(0,\s*1fr\)/);
-  assert.match(cssSource, /width:\s*clamp\(430px,\s*34vw,\s*560px\)/);
+  assert.match(cssSource, /width:\s*clamp\(410px,\s*31vw,\s*520px\)/);
   assert.match(cssSource, /justify-self:\s*start;/);
-  assert.match(cssSource, /margin-left:\s*-18px;/);
+  assert.match(cssSource, /margin-left:\s*-8px;/);
   assert.match(cssSource, /min-height:\s*342px/);
-  assert.match(cssSource, /\.kpi-card__pie::before\s*\{[\s\S]*?radial-gradient\(ellipse at 50% 56%, color-mix\(in srgb, var\(--kpi-accent\) 14%, transparent\)[\s\S]*?filter:\s*blur\(18px\) saturate\(\.92\);[\s\S]*?opacity:\s*\.42;/);
+  assert.match(cssSource, /\.kpi-card__pie::before\s*\{[\s\S]*?radial-gradient\(ellipse at 50% 56%, color-mix\(in srgb, var\(--kpi-accent\) 9%, transparent\)[\s\S]*?filter:\s*blur\(16px\) saturate\(\.86\);[\s\S]*?opacity:\s*\.24;/);
   assert.match(cssSource, /\.kpi-card__pie-chart\s*\{[\s\S]*?z-index:\s*1;/);
   assert.match(cssSource, /@media \(max-width:760px\) \{[\s\S]*?\.kpi-card__pie\s*\{[\s\S]*?justify-self:\s*center;[\s\S]*?margin-left:\s*0;[\s\S]*?\}[\s\S]*?\.kpi-card__pie-head\s*\{[\s\S]*?transform:\s*none;/);
 });
@@ -294,9 +298,9 @@ test('allows the month recovery card to host the sales completion panel in the s
 });
 
 test('makes the recovery metric block larger and shifts it left inside the long card', () => {
-  assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__body\s*\{[\s\S]*?margin-left:\s*-56px;[\s\S]*?gap:\s*8px;/);
+  assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__body\s*\{[\s\S]*?margin-left:\s*-64px;[\s\S]*?gap:\s*10px;/);
   assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__title\s*\{[\s\S]*?font-size:\s*15px;[\s\S]*?font-weight:\s*600;/);
-  assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__value\s*\{[\s\S]*?font-size:\s*clamp\(38px,\s*3\.2vw,\s*46px\);/);
+  assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__value\s*\{[\s\S]*?font-size:\s*clamp\(42px,\s*3\.6vw,\s*52px\);/);
   assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__sub,[\s\S]*?\.kpi-card--with-side \.kpi-card__progress-head,[\s\S]*?\.kpi-card--with-side \.kpi-card__hint\s*\{[\s\S]*?font-size:\s*15px;/);
   assert.match(cssSource, /\.kpi-card--with-side \.kpi-card__progress-pct\s*\{[\s\S]*?font-size:\s*16px;/);
 });

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 23:39:28 CST
+ 更新内容: 修正年度回款卡累计完成率文案，避免在默认月度视角显示为“月度累计完成率”。
+*/
+/*
  更新时间: 2026-07-03 11:28:32 CST
  更新内容: 将首页本年目标和本年渠道模块标题加入 KPI 搜索关键词，支持按“本年”定位年度卡片。
 */
@@ -263,7 +267,7 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
   const monthProgressLabel = `${config.label}目标完成率`;
   const yearTitle = safeDim === 'month' ? yearCard?.title : `${config.label}累计回款`;
   const yearSub = targetSub(safeDim === 'month' ? '年度目标' : `${config.label}目标`, cumulativeTarget);
-  const yearProgressLabel = `${config.label}累计完成率`;
+  const yearProgressLabel = '年度累计完成率';
   const costTitle = safeDim === 'month' ? costCard?.title : `${config.label}投入 · 费比`;
 
   return [

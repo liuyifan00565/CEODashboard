@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 23:39:28 CST
+ 更新内容: 降低顶部船舶信息卡与数据维护按钮的 GlassSurface 高光、模糊和折射强度。
+*/
+/*
  更新时间: 2026-07-03 18:24:14 CST
  更新内容: 移除全屏 Color Bends 动态背景，改由 CSS 静态深石墨网格/点阵/噪声背景承载驾驶舱。
 */
@@ -309,11 +313,11 @@ export default function App() {
               width={240}
               height={52}
               borderRadius={16}
-              brightness={58}
-              blur={12}
-              displace={1}
-              backgroundOpacity={0.06}
-              distortionScale={-130}
+              brightness={46}
+              blur={7}
+              displace={0.35}
+              backgroundOpacity={0.035}
+              distortionScale={-55}
               className="brand-glass"
             >
               <div className="brand">
@@ -348,11 +352,11 @@ export default function App() {
                 width={126}
                 height={54}
                 borderRadius={27}
-                brightness={58}
-                blur={12}
-                displace={1}
-                backgroundOpacity={0.06}
-                distortionScale={-130}
+                brightness={46}
+                blur={7}
+                displace={0.35}
+                backgroundOpacity={0.035}
+                distortionScale={-55}
                 className="maintenance-glass"
               >
                 <button
