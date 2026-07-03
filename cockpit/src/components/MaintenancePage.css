@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:11:56 CST
+ Update content: Change maintenance table row hover to a bright purple overlay and add persistent selected-row styling.
+*/
+/*
  Update time: 2026-07-03 11:10:18 CST
  Update content: Narrow maintenance page scrollbars while keeping transparent glass track styling.
 */
@@ -394,6 +398,9 @@
 }
 
 .mnt-matrix-wrap {
+  --glass-cell-hover: rgba(190, 64, 255, .24);
+  --mnt-row-selected-overlay: rgba(190, 64, 255, .34);
+  --mnt-row-selected-hover-overlay: rgba(210, 86, 255, .42);
   --mnt-maintenance-period-width: 172px;
   flex: 1;
   min-height: 0;
@@ -579,9 +586,31 @@
   backdrop-filter: blur(14px);
 }
 
+.mnt-matrix tbody tr,
+.mnt-user-table tbody tr {
+  cursor: pointer;
+}
+
+.mnt-matrix tbody tr:focus-visible td,
+.mnt-user-table tbody tr:focus-visible td {
+  outline: 2px solid rgba(190, 64, 255, .52);
+  outline-offset: -2px;
+}
+
 .mnt-matrix tbody tr:hover td,
 .mnt-user-table tbody tr:hover td {
   background: var(--glass-cell-hover);
+}
+
+.mnt-matrix tbody tr.mnt-row--selected td,
+.mnt-user-table tbody tr.mnt-row--selected td {
+  background: var(--mnt-row-selected-overlay);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+}
+
+.mnt-matrix tbody tr.mnt-row--selected:hover td,
+.mnt-user-table tbody tr.mnt-row--selected:hover td {
+  background: var(--mnt-row-selected-hover-overlay);
 }
 
 .mnt-row--muted,

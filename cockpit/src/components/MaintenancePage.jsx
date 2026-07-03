@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:11:56 CST
+ Update content: Add selectable maintenance table rows with persistent purple clicked-row highlights.
+*/
+/*
  Update time: 2026-07-03 11:02:59 CST
  Update content: Collapse target maintenance completed amount and completion percent into one compact progress line.
 */
@@ -95,6 +99,24 @@ function formatRoi(value) {
 
 function nowLabel() {
   return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function handleSelectableRowKeyDown(event, rowKey, onSelect) {
+  if (event.target !== event.currentTarget) return;
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  onSelect(rowKey);
+}
+
+function getSelectableRowProps(rowKey, selectedRowKey, onSelect, className = '') {
+  const selected = selectedRowKey === rowKey;
+  return {
+    className: `${className}${selected ? ' mnt-row--selected' : ''}`.trim(),
+    'data-maintenance-row-selected': selected ? 'true' : undefined,
+    tabIndex: 0,
+    onClick: () => onSelect(rowKey),
+    onKeyDown: (event) => handleSelectableRowKeyDown(event, rowKey, onSelect),
+  };
 }
 
 function MaintenanceToolbarSurface({ className = '', children }) {
@@ -282,6 +304,7 @@ function TargetPeriodCell({ row, column, markDirty }) {
 
 function TargetMaintenancePage({ markDirty, status }) {
   const [selectedOrg, setSelectedOrg] = useState('all');
+  const [selectedTargetRow, setSelectedTargetRow] = useState(null);
   const targetScrollPaneRef = useTargetCurrentMonthAlignment();
   const rows = TARGET_MAINTENANCE_ROWS;
 
@@ -306,7 +329,7 @@ function TargetMaintenancePage({ markDirty, status }) {
               </thead>
               <tbody>
                 {rows.map((row) => (
-                  <tr key={row.id} className={row.type === 'department' ? 'mnt-row--summary' : ''}>
+                  <tr key={row.id} {...getSelectableRowProps(`target:${row.id}`, selectedTargetRow, setSelectedTargetRow, row.type === 'department' ? 'mnt-row--summary' : '')}>
                     <td className="mnt-name-cell">
                       <strong>{row.name}</strong>
                       <span>{row.role}</span>
@@ -337,6 +360,7 @@ function channelDepth(channelId, channels = COST_MAINTENANCE_CHANNELS) {
 
 function CostMaintenancePage({ markDirty, status }) {
   const [selectedChannel, setSelectedChannel] = useState('all');
+  const [selectedCostRow, setSelectedCostRow] = useState(null);
   const selectedIds = useMemo(() => {
     if (selectedChannel === 'all') return new Set(COST_MAINTENANCE_ROWS.map((row) => row.id));
     return new Set([
@@ -380,7 +404,7 @@ function CostMaintenancePage({ markDirty, status }) {
               </thead>
               <tbody>
                 {visibleRows.map((row) => (
-                  <tr key={row.id} className={row.type === 'group' ? 'mnt-row--summary' : ''}>
+                  <tr key={row.id} {...getSelectableRowProps(`cost:${row.id}`, selectedCostRow, setSelectedCostRow, row.type === 'group' ? 'mnt-row--summary' : '')}>
                     <td className="mnt-name-cell">
                       <strong>{row.name}</strong>
                       <span>{row.type === 'group' ? '渠道合计' : '明细渠道'}</span>
@@ -421,7 +445,7 @@ function CostMaintenancePage({ markDirty, status }) {
               </thead>
               <tbody>
                 {LABOR_COST_MAINTENANCE_ROWS.map((row) => (
-                  <tr key={row.id}>
+                  <tr key={row.id} {...getSelectableRowProps(`labor:${row.id}`, selectedCostRow, setSelectedCostRow)}>
                     <td className="mnt-name-cell">
                       <strong>{row.name}</strong>
                       <span>部门月度固定成本</span>
@@ -459,6 +483,7 @@ function departmentOptions(currentId = '') {
 
 function OrgMaintenancePage({ markDirty, status }) {
   const [departments, setDepartments] = useState(ORG_MAINTENANCE_DEPARTMENTS);
+  const [selectedOrgRow, setSelectedOrgRow] = useState(null);
 
   function addDepartment() {
     const nextIndex = departments.length + 1;
@@ -503,7 +528,7 @@ function OrgMaintenancePage({ markDirty, status }) {
             </thead>
             <tbody>
               {ORG_MAINTENANCE_USERS.map((user) => (
-                <tr key={user.id} className={user.enabled && user.isSales ? '' : 'mnt-row--muted'}>
+                <tr key={user.id} {...getSelectableRowProps(`org:${user.id}`, selectedOrgRow, setSelectedOrgRow, user.enabled && user.isSales ? '' : 'mnt-row--muted')}>
                   <td className="mnt-name-cell">
                     <strong>{user.name}</strong>
                     <span>{user.sourceName}</span>
@@ -548,6 +573,7 @@ function groupOptions(groups) {
 function ChannelMaintenancePage({ markDirty, status }) {
   const [groups, setGroups] = useState(CHANNEL_MAINTENANCE_GROUPS);
   const [sources, setSources] = useState(CHANNEL_MAINTENANCE_SOURCES);
+  const [selectedSourceRow, setSelectedSourceRow] = useState(null);
 
   function addGroup(parentId = '') {
     const nextIndex = groups.length + 1;
@@ -606,7 +632,7 @@ function ChannelMaintenancePage({ markDirty, status }) {
             </thead>
             <tbody>
               {sources.map((source) => (
-                <tr key={source.code} className={source.excluded ? 'mnt-row--muted' : ''}>
+                <tr key={source.code} {...getSelectableRowProps(`source:${source.code}`, selectedSourceRow, setSelectedSourceRow, source.excluded ? 'mnt-row--muted' : '')}>
                   <td><input className="mnt-control" defaultValue={source.code} onChange={markDirty} aria-label={`${source.name}来源编码`} /></td>
                   <td><input className="mnt-control" defaultValue={source.name} onChange={markDirty} aria-label={`${source.name}来源名称`} /></td>
                   <td>

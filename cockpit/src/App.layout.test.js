@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:11:56 CST
+ Update content: Add regression coverage for purple maintenance row hover overlays and persistent clicked-row highlights.
+*/
+/*
  Update time: 2026-07-03 11:02:59 CST
  Update content: Require target maintenance progress text to show completed amount and percent on one line.
 */
@@ -435,6 +439,28 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.doesNotMatch(maintenancePageCss, /\.mnt-row--summary td \{[\s\S]*?background:\s*rgba\(var\(--good-rgb\)/);
   assert.doesNotMatch(maintenancePageCss, /#fff;/);
   assert.doesNotMatch(maintenancePageCss, /box-shadow:\s*0 5px 14px rgba\(216, 58, 215/);
+});
+
+test('uses purple maintenance table row hover overlays and persistent clicked-row highlights', () => {
+  const matrixWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap');
+
+  assert.match(matrixWrapBlock, /--glass-cell-hover:\s*rgba\(190,\s*64,\s*255,\s*\.24\);/);
+  assert.match(matrixWrapBlock, /--mnt-row-selected-overlay:\s*rgba\(190,\s*64,\s*255,\s*\.34\);/);
+  assert.match(maintenancePageCss, /\.mnt-matrix tbody tr:hover td,\s*[\s\S]*?\.mnt-user-table tbody tr:hover td \{[\s\S]*?background:\s*var\(--glass-cell-hover\);/);
+  assert.match(maintenancePageCss, /\.mnt-matrix tbody tr\.mnt-row--selected td,\s*[\s\S]*?\.mnt-user-table tbody tr\.mnt-row--selected td \{[\s\S]*?background:\s*var\(--mnt-row-selected-overlay\);/);
+  assert.match(maintenancePageCss, /\.mnt-matrix tbody tr\.mnt-row--selected:hover td,\s*[\s\S]*?\.mnt-user-table tbody tr\.mnt-row--selected:hover td \{[\s\S]*?background:\s*var\(--mnt-row-selected-hover-overlay\);/);
+  assert.match(maintenancePageSource, /function getSelectableRowProps\(rowKey, selectedRowKey, onSelect, className = ''\) \{/);
+  assert.match(maintenancePageSource, /'data-maintenance-row-selected': selected \? 'true' : undefined,/);
+  assert.match(maintenancePageSource, /className: `\$\{className\}\$\{selected \? ' mnt-row--selected' : ''\}`\.trim\(\),/);
+  assert.match(maintenancePageSource, /const \[selectedTargetRow,\s*setSelectedTargetRow\] = useState\(null\);/);
+  assert.match(maintenancePageSource, /const \[selectedCostRow,\s*setSelectedCostRow\] = useState\(null\);/);
+  assert.match(maintenancePageSource, /const \[selectedOrgRow,\s*setSelectedOrgRow\] = useState\(null\);/);
+  assert.match(maintenancePageSource, /const \[selectedSourceRow,\s*setSelectedSourceRow\] = useState\(null\);/);
+  assert.match(maintenancePageSource, /getSelectableRowProps\(`target:\$\{row\.id\}`, selectedTargetRow, setSelectedTargetRow/);
+  assert.match(maintenancePageSource, /getSelectableRowProps\(`cost:\$\{row\.id\}`, selectedCostRow, setSelectedCostRow/);
+  assert.match(maintenancePageSource, /getSelectableRowProps\(`labor:\$\{row\.id\}`, selectedCostRow, setSelectedCostRow/);
+  assert.match(maintenancePageSource, /getSelectableRowProps\(`org:\$\{user\.id\}`, selectedOrgRow, setSelectedOrgRow/);
+  assert.match(maintenancePageSource, /getSelectableRowProps\(`source:\$\{source\.code\}`, selectedSourceRow, setSelectedSourceRow/);
 });
 
 test('keeps the maintenance year dropdown compact in the toolbar', () => {
