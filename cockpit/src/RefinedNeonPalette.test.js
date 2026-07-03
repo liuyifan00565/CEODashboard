@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 16:02:00 CST
+ Update content: Guard the visible high-presence Color Bends ribbon layer after the reference component feedback.
+*/
+/*
  Update time: 2026-07-03 15:24:00 CST
  Update content: Guard the confirmed cold-purple Apple/Vision Pro palette, Color Bends environment layer, and muted glass progress colors.
 */
@@ -73,7 +77,7 @@ test('keeps 70 percent progress as cool white lavender instead of saturated blue
   assert.match(kpiSource, /const labelColor = progressColor\(pct, tokens\.progressMid\);[\s\S]*?itemStyle:\s*\{ color: progressBarColor\(pct, tokens\), borderRadius: 5, shadowBlur: 6, shadowColor: labelColor \}/);
 });
 
-test('uses Color Bends as a low-opacity deep blue-black purple environment layer', () => {
+test('uses Color Bends as a visible deep blue-black purple ribbon layer', () => {
   // 不再使用 DotField 点阵：App.jsx 不导入、index.css 不写 .dot-field-container 规则
   assert.doesNotMatch(appSource, /import DotField/);
   assert.doesNotMatch(appSource, /<DotField/);
@@ -96,11 +100,14 @@ test('uses Color Bends as a low-opacity deep blue-black purple environment layer
   assert.match(indexCss, /\.bg::after\{[\s\S]*?feTurbulence[\s\S]*?fractalNoise/);
   assert.match(darkThemeBlock(), /--bg-noise-opacity:\.025;/);
 
-  // Color Bends 材质层 + 深色遮罩：App.jsx 渲染 ColorBends，index.css 提供遮罩与层叠
+  // Color Bends 材质层 + 轻遮罩：App.jsx 渲染 ColorBends，index.css 保留组件可识别的亮紫带状流光
   assert.match(appSource, /import ColorBends from '\.\/components\/ColorBends\/ColorBends';/);
-  assert.match(appSource, /<ColorBends[\s\S]*?colors=\{\['#3B3478', '#7C6CFF', '#A79CFF', '#C9C2FF'\]\}/);
+  assert.match(appSource, /<ColorBends[\s\S]*?colors=\{\['#4C2BBF', '#7C6CFF', '#A855F7', '#E7E2FF'\]\}/);
+  assert.match(appSource, /transparent=\{false\}/);
+  assert.match(appSource, /intensity=\{1\.75\}/);
+  assert.match(appSource, /bandWidth=\{7\}/);
   assert.match(indexCss, /\.bg-shade\{[\s\S]*?z-index:2;[\s\S]*?rgba\(7,10,18,/);
-  assert.match(indexCss, /\.color-bends-layer\{[\s\S]*?z-index:1;[\s\S]*?opacity:\s*\.58;/);
+  assert.match(indexCss, /\.color-bends-layer\{[\s\S]*?z-index:1;[\s\S]*?opacity:\s*1;/);
 });
 
 test('keeps warning rows translucent instead of becoming saturated candy blocks', () => {

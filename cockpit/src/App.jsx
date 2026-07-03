@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 16:02:00 CST
+ 更新内容: 提高 ReactBits Color Bends 的亮度、饱和感与带状存在感，回应参考组件需要更明显可感知的要求。
+*/
+/*
  更新时间: 2026-07-03 15:31:00 CST
  更新内容: 将全屏背景从 ReactBits Silk 切换为低速冷紫 Color Bends 环境光层，并保留深色遮罩保证数据可读性。
 */
@@ -267,19 +271,20 @@ export default function App() {
         {theme === 'dark' && (
           <>
             <ColorBends
-              colors={['#3B3478', '#7C6CFF', '#A79CFF', '#C9C2FF']}
-              speed={0.045}
+              colors={['#4C2BBF', '#7C6CFF', '#A855F7', '#E7E2FF']}
+              speed={0.055}
+              transparent={false}
               rotation={92}
-              autoRotate={0.18}
-              scale={1.28}
-              frequency={0.72}
-              warpStrength={0.62}
+              autoRotate={0.24}
+              scale={0.88}
+              frequency={1.05}
+              warpStrength={1.02}
               mouseInfluence={0.04}
               parallax={0.08}
-              noise={0.035}
-              iterations={2}
-              intensity={0.72}
-              bandWidth={4.8}
+              noise={0.06}
+              iterations={3}
+              intensity={1.75}
+              bandWidth={7}
               className="color-bends-layer"
             />
             <div className="bg-shade" aria-hidden="true" />

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 16:02:00 CST
+ Update content: Let ReactBits Color Bends read as a visible bright purple ribbon layer by raising layer opacity and easing the dark overlay.
+*/
+/*
  Update time: 2026-07-03 15:32:00 CST
  Update content: Replace the Silk/ice-blue pass with a ReactBits Color Bends environment layer and cold-purple Apple/Vision Pro glass tokens.
 */
@@ -200,17 +204,17 @@ body{
   position:fixed;inset:0;z-index:0;pointer-events:none;
   background:linear-gradient(180deg,var(--bg-base-1) 0%,var(--bg-base-2) 45%,var(--bg-base-3) 100%);
 }
-/* 深色遮罩：在 Color Bends 之上压暗，保证文字与卡片可读 */
+/* 深色遮罩：只做可读性保护，不再压低 Color Bends 本身的亮度与饱和感 */
 .bg-shade{
   position:absolute;inset:0;z-index:2;pointer-events:none;
   background:
-    linear-gradient(180deg,rgba(7,10,18,.56) 0%,rgba(7,10,18,.38) 48%,rgba(7,10,18,.62) 100%),
-    radial-gradient(circle at center,rgba(7,10,18,.06),rgba(3,5,11,.34) 100%);
+    linear-gradient(180deg,rgba(7,10,18,.16) 0%,rgba(7,10,18,.06) 48%,rgba(7,10,18,.22) 100%),
+    radial-gradient(circle at center,rgba(7,10,18,0),rgba(3,5,11,.08) 100%);
 }
-/* Color Bends 材质层：全屏铺底，opacity 0.58，仅作为低存在感冷紫环境光 */
+/* Color Bends 材质层：全屏铺底，保留 ReactBits 组件可识别的亮紫带状流光 */
 .color-bends-layer{
   position:absolute;inset:0;z-index:1;pointer-events:none;
-  opacity:.58;
+  opacity:1;
   mix-blend-mode:normal;
 }
 .color-bends-layer canvas{
@@ -225,7 +229,7 @@ body{
     radial-gradient(circle at 56% 88%,var(--bg-radial-c),transparent 38%),
     radial-gradient(circle at 22% 78%,var(--bg-radial-d),transparent 42%),
     var(--bg-vignette);
-  opacity:.72;
+  opacity:.28;
 }
 /* 极轻 SVG 噪点，让渐变不塑料化；几乎看不见但质感更细 */
 .bg::after{
