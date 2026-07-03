@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 23:48:36 CST
+ 更新内容: 月度趋势风险语义改为回款柱统一低饱和紫色，低完成率仅在点位和标签使用风险色。
+*/
+/*
  更新时间: 2026-07-03 23:32:47 CST
  更新内容: 增加交付看板超额行背景、标签和百分比必须使用金色完成态的回归测试。
 */
@@ -86,12 +90,17 @@ test('renders recovery gap chip and its left trend chip with risk semantics', ()
   assert.match(kpiCardSource, /className=\{`kpi-card__gap\$\{isRiskCompletion\(card\.progress\) \? ' kpi-card__gap--risk' : ''\}`\}/);
 });
 
-test('colors monthly trend recovered bars by completion tier', () => {
-  assert.match(monthlyTrendSource, /import \{ COLOR, progressColor \} from '\.\.\/lib\/format';/);
-  assert.match(monthlyTrendSource, /function recoveredBarColor\(completionValue, tokens\)/);
-  assert.match(monthlyTrendSource, /return progressColor\(completionValue, tokens\.progressMid, tokens\.progressGold\);/);
-  assert.match(monthlyTrendSource, /data:\s*recovered\.map\(\(value, index\) => \(\{[\s\S]*?value,[\s\S]*?itemStyle:\s*\{[\s\S]*?color:\s*recoveredBarColor\(completion\[index\], tokens\)/);
-  assert.doesNotMatch(monthlyTrendSource, /data:\s*recovered,\s*\n\s*\}/);
+test('keeps monthly trend recovered bars calm and moves risk to completion points and labels', () => {
+  assert.match(monthlyTrendSource, /import \{ COLOR, isRiskCompletion \} from '\.\.\/lib\/format';/);
+  assert.doesNotMatch(monthlyTrendSource, /function recoveredBarColor/);
+  assert.doesNotMatch(monthlyTrendSource, /color:\s*recoveredBarColor\(completion\[index\], tokens\)/);
+  assert.match(monthlyTrendSource, /name:\s*'目标'[\s\S]*?itemStyle:\s*\{[\s\S]*?color:\s*tokens\.chartBarFaint,[\s\S]*?borderRadius:/);
+  assert.doesNotMatch(monthlyTrendSource, /name:\s*'目标'[\s\S]*?borderColor:\s*tokens\.chartAxis/);
+  assert.match(monthlyTrendSource, /name:\s*'回款'[\s\S]*?itemStyle:\s*\{[\s\S]*?color:\s*tokens\.chartBarMuted,[\s\S]*?borderRadius:/);
+  assert.match(monthlyTrendSource, /function completionPointColor\(value, tokens\)/);
+  assert.match(monthlyTrendSource, /isRiskCompletion\(value\) \? COLOR\.warn/);
+  assert.match(monthlyTrendSource, /itemStyle:\s*\{ color: \(\{ value \}\) => completionPointColor\(value, tokens\)/);
+  assert.match(monthlyTrendSource, /label:\s*\{[\s\S]*?color: \(\{ value \}\) => completionPointColor\(value, tokens\)/);
 });
 
 test('keeps channel and delivery progress bars on the same risk rule', () => {

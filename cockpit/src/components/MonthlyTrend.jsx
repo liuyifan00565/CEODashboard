@@ -1,14 +1,15 @@
+/* 更新时间: 2026-07-03 23:48:36 CST  更新内容: 月度趋势回款柱统一低饱和紫色，低完成率仅在完成率点位和标签使用风险色。 */
 /* 更新时间: 2026-07-03 18:54:17 CST  更新内容: 月度趋势回款柱与完成率标签按 80 以下红色、80-99 紫色、100 及以上金色三档分色。 */
 /* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 月度经营趋势回款柱按完成率 80% 风险线分色，危险月份直接使用风险色。 */
 /* 更新时间: 2026-06-29 10:45:53  更新内容: 月度经营趋势图例改为静态说明，并将目标与回款柱重叠展示。 */
 import EChart from './EChart';
 import { getChannelTrend } from '../data/mock';
-import { COLOR, progressColor } from '../lib/format';
+import { COLOR, isRiskCompletion } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './MonthlyTrend.css';
 
-function recoveredBarColor(completionValue, tokens) {
-  return progressColor(completionValue, tokens.progressMid, tokens.progressGold);
+function completionPointColor(value, tokens) {
+  return isRiskCompletion(value) ? COLOR.warn : Number(value) >= 100 ? tokens.progressGold : tokens.chartMuted;
 }
 
 export default function MonthlyTrend({ channelKey = 'all' }) {
@@ -94,8 +95,6 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         barCategoryGap: '42%',
         itemStyle: {
           color: tokens.chartBarFaint,
-          borderColor: tokens.chartAxis,
-          borderWidth: 1,
           borderRadius: [3, 3, 0, 0],
         },
         emphasis: { disabled: true },
@@ -108,17 +107,11 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         barGap: '-100%',
         barCategoryGap: '42%',
         itemStyle: {
-          color: tokens.chartBar,
+          color: tokens.chartBarMuted,
           borderRadius: [3, 3, 0, 0],
         },
-        emphasis: { itemStyle: { color: tokens.chartText } },
-        data: recovered.map((value, index) => ({
-          value,
-          itemStyle: {
-            color: recoveredBarColor(completion[index], tokens),
-            borderRadius: [3, 3, 0, 0],
-          },
-        })),
+        emphasis: { itemStyle: { color: tokens.chartBar } },
+        data: recovered,
       },
       {
         name: '完成率%',
@@ -126,14 +119,15 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         yAxisIndex: 1,
         smooth: true,
         symbol: 'circle',
-        symbolSize: 6,
-        lineStyle: { color: COLOR.good, width: 2 },
-        itemStyle: { color: ({ value }) => progressColor(value, tokens.progressMid, tokens.progressGold), borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
+        symbolSize: ({ value }) => (isRiskCompletion(value) ? 8 : 5),
+        lineStyle: { color: tokens.chartBarMuted, width: 1.35, opacity: 0.72 },
+        itemStyle: { color: ({ value }) => completionPointColor(value, tokens), borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
         label: {
           show: true,
           position: 'top',
-          color: ({ value }) => progressColor(value, tokens.progressMid, tokens.progressGold),
+          color: ({ value }) => completionPointColor(value, tokens),
           fontSize: 14,
+          fontWeight: ({ value }) => (isRiskCompletion(value) ? 850 : 650),
           formatter: '{c}%',
         },
         data: completion,

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 23:48:36 CST
+ 更新内容: 开户数小卡片要求复用现有日维度趋势数据渲染近 7 日 sparkline。
+*/
+/*
  更新时间: 2026-07-03 18:31:29 CST
  更新内容: 开户数小卡片回归测试改为要求复用共享涨跌箭头与风险色格式。
 */
@@ -69,10 +73,13 @@ test('implements compact horizontal opening-account cards', () => {
   const componentSource = readFileSync(componentPath, 'utf8');
   const cssSource = readFileSync(cssPath, 'utf8');
 
-  assert.match(componentSource, /import \{ OPENING_ACCOUNT_METRICS \} from '\.\.\/data\/mock';/);
+  assert.match(componentSource, /import \{ getKpiSeries, OPENING_ACCOUNT_METRICS \} from '\.\.\/data\/mock';/);
   assert.match(componentSource, /import \{ deltaColor, fmtDelta \} from '\.\.\/lib\/format';/);
   assert.match(componentSource, /import \{ matchesSearchTerm \} from '\.\.\/lib\/searchMatch';/);
   assert.match(componentSource, /import SearchResultBorder from '\.\/SearchResultBorder';/);
+  assert.match(componentSource, /function getSparklinePoints\(metric\)/);
+  assert.match(componentSource, /getKpiSeries\(metric\.metric, \{ dim: 'day' \}\)\.slice\(-7\)/);
+  assert.match(componentSource, /function Sparkline\(\{ metric \}\)/);
   assert.match(componentSource, /className="opening-metric-cards"/);
   assert.match(componentSource, /export default function OpeningMetricCards\(\{ searchTerm = '', onOpenSecondary \}\)/);
   assert.match(componentSource, /<SearchResultBorder active=\{matchesSearchTerm\(metric\.keywords,\s*searchTerm\)\} key=\{metric\.key\}>[\s\S]*?<button/);
@@ -81,11 +88,16 @@ test('implements compact horizontal opening-account cards', () => {
   assert.match(componentSource, /<\/button>\s*<\/SearchResultBorder>/);
   assert.match(componentSource, /className="opening-metric-card__delta"/);
   assert.match(componentSource, /style=\{\{ color: deltaColor\(metric\.delta\) \}\}/);
+  assert.match(componentSource, /<Sparkline metric=\{metric\} \/>/);
+  assert.match(componentSource, /className="opening-metric-card__sparkline"/);
+  assert.match(componentSource, /aria-label=\{`\$\{metric\.title\}近 7 日开户趋势`\}/);
   assert.match(componentSource, /<div className="opening-metric-card__hint">点击展开二级 ▸<\/div>/);
   assert.match(componentSource, /\{fmtDelta\(metric\.delta\)\}/);
   assert.doesNotMatch(componentSource, /▲ \{formatDelta\(metric\.delta\)\}/);
   assert.match(cssSource, /\.opening-metric-cards\s*\{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/);
-  assert.match(cssSource, /\.opening-metric-card\s*\{[\s\S]*?min-height:\s*118px;[\s\S]*?border:\s*1px solid var\(--dashboard-card-border\);[\s\S]*?background:\s*var\(--dashboard-card-bg\);[\s\S]*?backdrop-filter:\s*var\(--dashboard-card-blur\);[\s\S]*?box-shadow:\s*var\(--dashboard-card-shadow\);/);
+  assert.match(cssSource, /\.opening-metric-card\s*\{[\s\S]*?min-height:\s*132px;[\s\S]*?border:\s*1px solid var\(--dashboard-card-border\);[\s\S]*?background:\s*var\(--dashboard-card-bg\);[\s\S]*?backdrop-filter:\s*var\(--dashboard-card-blur\);[\s\S]*?box-shadow:\s*var\(--dashboard-card-shadow\);/);
+  assert.match(cssSource, /\.opening-metric-card__sparkline\s*\{[\s\S]*?grid-column:\s*2;[\s\S]*?width:\s*96px;[\s\S]*?height:\s*32px;/);
+  assert.match(cssSource, /\.opening-metric-card__sparkline-path\s*\{[\s\S]*?stroke:\s*var\(--brand-lavender\);/);
   assert.match(cssSource, /\.opening-metric-card__hint\s*\{[\s\S]*?grid-column:\s*1 \/ -1;[\s\S]*?color:\s*var\(--faint\);/);
   assert.doesNotMatch(cssSource, /\.opening-metric-card::before/);
   assert.doesNotMatch(cssSource, /rgba\(var\(--warn-rgb\), \.24\)/);

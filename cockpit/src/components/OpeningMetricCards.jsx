@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 23:48:36 CST
+ 更新内容: 本月开户数与今日开户数卡片增加复用现有日维度数据的近 7 日 sparkline。
+*/
+/*
  更新时间: 2026-07-03 18:19:59 CST
  更新内容: 开户数趋势接入共享涨跌格式，下降时自动显示向下箭头和风险色。
 */
@@ -10,7 +14,7 @@
  更新时间: 2026-07-01 18:32:30 CST
  更新内容: 首页开户数小卡片点击时传入自身指标，打开对应开户数二级数据。
 */
-import { OPENING_ACCOUNT_METRICS } from '../data/mock';
+import { getKpiSeries, OPENING_ACCOUNT_METRICS } from '../data/mock';
 import { deltaColor, fmtDelta } from '../lib/format';
 import { matchesSearchTerm } from '../lib/searchMatch';
 import SearchResultBorder from './SearchResultBorder';
@@ -18,6 +22,44 @@ import './OpeningMetricCards.css';
 
 function formatNumber(value) {
   return Number(value).toLocaleString('zh-CN');
+}
+
+function getSparklinePoints(metric) {
+  return getKpiSeries(metric.metric, { dim: 'day' }).slice(-7);
+}
+
+function sparklinePath(points, width = 96, height = 32, padding = 3) {
+  if (!points.length) return '';
+  const values = points.map((point) => Number(point.value) || 0);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min || 1;
+  const innerWidth = width - padding * 2;
+  const innerHeight = height - padding * 2;
+
+  return values.map((value, index) => {
+    const x = padding + (points.length === 1 ? innerWidth : (innerWidth / (points.length - 1)) * index);
+    const y = padding + innerHeight - ((value - min) / span) * innerHeight;
+    return `${index === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+  }).join(' ');
+}
+
+function Sparkline({ metric }) {
+  const points = getSparklinePoints(metric);
+  const path = sparklinePath(points);
+
+  return (
+    <svg
+      className="opening-metric-card__sparkline"
+      viewBox="0 0 96 32"
+      role="img"
+      aria-label={`${metric.title}近 7 日开户趋势`}
+      focusable="false"
+    >
+      <path className="opening-metric-card__sparkline-base" d={path} />
+      <path className="opening-metric-card__sparkline-path" d={path} />
+    </svg>
+  );
 }
 
 export default function OpeningMetricCards({ searchTerm = '', onOpenSecondary }) {
@@ -42,6 +84,7 @@ export default function OpeningMetricCards({ searchTerm = '', onOpenSecondary })
                 {fmtDelta(metric.delta)}
               </span>
             </div>
+            <Sparkline metric={metric} />
             <div className="opening-metric-card__hint">点击展开二级 ▸</div>
           </button>
         </SearchResultBorder>

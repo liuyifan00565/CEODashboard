@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 23:48:36 CST  更新内容: 版本情况右侧四卡改为列表型表格，复用玻璃表格底、轻表头和行悬浮态。 */
 /* 更新时间: 2026-07-03 17:55:58 CST  更新内容: 版本情况主面板改为中性深色卡片玻璃底，不再使用大面积薰衣草/紫色背景渐变。 */
 /* 更新时间: 2026-07-03 15:39:00 CST  更新内容: 版本情况面板玻璃底与 hover 柔光改为冷紫 Vision Pro 风格。 */
 /* 更新时间: 2026-07-01 18:37:59 CST  更新内容: 去掉版本情况图表和二级展开背景里的紫色发光。 */
@@ -269,78 +270,100 @@
   }
 }
 
-.vf-card-grid {
-  min-width: 0;
-  height: min(100%, 304px);
-  box-sizing: border-box;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(124px, 1fr));
-  gap: 10px;
-  align-self: start;
-  align-content: stretch;
-  padding-block: 12px;
-}
-
 .vf-card-zone {
   min-width: 0;
   align-self: start;
+  padding-block: 12px;
 }
 
-.vf-version-card {
+.vf-version-table-wrap {
+  width: 100%;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 13px 14px 12px;
+  overflow-x: auto;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: rgba(255, 255, 255, .055);
+  background: rgba(255, 255, 255, .045);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.vf-version-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--txt);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.vf-version-table th,
+.vf-version-table td {
+  padding: 12px 11px;
+  border-bottom: 1px solid rgba(218, 226, 255, .08);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.vf-version-table th:first-child,
+.vf-version-table td:first-child {
+  text-align: left;
+}
+
+.vf-version-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(0, 0, 0, .16);
+  color: var(--faint);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1;
+}
+
+.vf-version-table tbody tr:last-child th,
+.vf-version-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.vf-version-table__row {
   cursor: pointer;
-  transition: background .22s ease, border-color .22s ease, transform .22s ease;
+  transition: background .2s ease, box-shadow .2s ease;
   -webkit-user-select: none;
   user-select: none;
 }
 
-.vf-version-card:hover,
-.vf-version-card:focus-visible {
-  border-color: var(--line-2);
+.vf-version-table__row:hover,
+.vf-version-table__row:focus-visible {
   background: var(--glass-cell-hover);
-  transform: translateY(-2px);
   outline: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -1px 0 rgba(255,255,255,.06);
 }
 
-.vf-version-footer {
-  min-width: 0;
-  display: grid;
-  gap: 7px;
+.vf-version-table__name {
+  color: var(--txt);
+  font-size: 14px;
+  font-weight: 850;
 }
 
-.vf-expand-hint {
-  appearance: none;
-  justify-self: start;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--faint);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 1.2;
-  opacity: .82;
-  pointer-events: none;
-  transition: color .22s ease, opacity .22s ease, transform .22s ease;
-}
-
-.vf-expand-hint:hover,
-.vf-expand-hint:focus-visible {
+.vf-version-table__price {
   color: var(--muted);
-  opacity: 1;
-  outline: none;
-  transform: translateX(2px);
+  font-weight: 680;
+}
+
+.vf-version-table__units,
+.vf-version-table__share,
+.vf-version-table__recovered {
+  color: rgba(239,251,255,.92);
+  font-weight: 780;
+}
+
+.vf-version-table__mom {
+  font-weight: 850;
+  text-shadow: 0 0 12px color-mix(in srgb, currentColor 38%, transparent);
 }
 
 .vf-detail-card {
@@ -369,75 +392,6 @@
   background: rgba(0, 0, 0, .82);
   -webkit-backdrop-filter: blur(14px) saturate(120%);
   backdrop-filter: blur(14px) saturate(120%);
-}
-
-.vf-version-top {
-  min-width: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.vf-version-name {
-  margin: 0;
-  color: var(--txt);
-  font-size: 15px;
-  font-weight: 800;
-  line-height: 1.22;
-}
-
-.vf-version-price {
-  display: block;
-  margin-top: 5px;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-}
-
-.vf-version-mom {
-  flex: none;
-  padding-top: 2px;
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 12px color-mix(in srgb, currentColor 38%, transparent);
-}
-
-.vf-version-basic {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.vf-metric {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.vf-metric-label {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 1.1;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.vf-metric-value {
-  min-width: 0;
-  color: var(--txt);
-  font-size: 16px;
-  font-weight: 850;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 }
 
 @media (max-width: 1180px) {
@@ -471,12 +425,7 @@
     margin-left: 0;
   }
 
-  .vf-card-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: none;
-    height: auto;
-    align-self: stretch;
-    align-content: start;
+  .vf-card-zone {
     padding-block: 0;
     margin-top: 8px;
   }

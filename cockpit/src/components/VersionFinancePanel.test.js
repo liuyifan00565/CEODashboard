@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 23:48:36 CST
+ 更新内容: 版本情况右侧展示从四张卡片改为六列表格，并要求每行继续打开版本二级弹窗。
+*/
+/*
  更新时间: 2026-07-03 11:28:32 CST
  更新内容: 要求版本情况半环图对称轴精准对齐数量/金额切换按钮。
 */
@@ -40,7 +44,7 @@ test('renders the large overview layout with half ring and amount/count switch',
   assert.match(css, /\.vf-overview/);
   assert.match(css, /\.vf-ring/);
   assert.match(css, /\.vf-metric-switch/);
-  assert.match(css, /\.vf-card-grid/);
+  assert.match(css, /\.vf-version-table-wrap/);
 });
 
 test('matches the version half ring size to the recovery half ring', () => {
@@ -60,13 +64,25 @@ test('places both totals under the version title instead of inside the ring', ()
   assert.doesNotMatch(css, /\.vf-ring-center/);
 });
 
-test('balances the four right-side version cards vertically', () => {
+test('renders a scannable six-column table for the four right-side versions', () => {
   assert.match(css, /\.vf-card-zone \{[\s\S]*?align-self: start;/);
-  assert.match(css, /\.vf-card-grid \{[\s\S]*?height: min\(100%, 304px\);/);
-  assert.match(css, /\.vf-card-grid \{[\s\S]*?grid-template-rows: repeat\(2, minmax\(124px, 1fr\)\);/);
-  assert.match(css, /\.vf-card-grid \{[\s\S]*?align-content: stretch;/);
-  assert.match(css, /\.vf-version-card \{[\s\S]*?justify-content: space-between;/);
-  assert.match(css, /\.vf-version-footer \{[\s\S]*?gap: 7px;/);
+  assert.match(source, /function versionShare\(version, totalUnits\)/);
+  assert.match(source, /const tableRows = versions\.map\(\(version\) => \(\{[\s\S]*?share: versionShare\(version, countTotal\),/);
+  assert.match(source, /<table className="vf-version-table"/);
+  assert.match(source, /<th scope="col">版本<\/th>/);
+  assert.match(source, /<th scope="col">单价<\/th>/);
+  assert.match(source, /<th scope="col">套数<\/th>/);
+  assert.match(source, /<th scope="col">占比<\/th>/);
+  assert.match(source, /<th scope="col">回款<\/th>/);
+  assert.match(source, /<th scope="col">环比<\/th>/);
+  assert.match(source, /<td className="vf-version-table__share">\{row\.share\}%<\/td>/);
+  assert.match(css, /\.vf-version-table-wrap\s*\{[\s\S]*?overflow-x:\s*auto;/);
+  assert.match(css, /\.vf-version-table\s*\{[\s\S]*?width:\s*100%;[\s\S]*?border-collapse:\s*separate;/);
+  assert.match(css, /\.vf-version-table thead th\s*\{[\s\S]*?background:\s*rgba\(0, 0, 0, \.16\);/);
+  assert.match(css, /\.vf-version-table__row:hover,[\s\S]*?\.vf-version-table__row:focus-visible\s*\{[\s\S]*?background:\s*var\(--glass-cell-hover\);/);
+  assert.doesNotMatch(source, /className="vf-version-card"/);
+  assert.doesNotMatch(css, /\.vf-card-grid/);
+  assert.doesNotMatch(css, /\.vf-version-card/);
 });
 
 test('adds a KPI-style secondary expand entry and version detail modal', () => {
@@ -83,15 +99,12 @@ test('adds a KPI-style secondary expand entry and version detail modal', () => {
   assert.match(source, /className="km-overlay vf-detail-overlay"/);
   assert.match(source, /className="km-mask vf-detail-mask"/);
   assert.match(source, /className="km-card vf-detail-card"/);
-  assert.match(source, /点击展开二级 ▸/);
-  assert.match(source, /className="vf-version-footer"/);
-  assert.match(source, /setDetailVersionKey\(v\.key\)/);
+  assert.match(source, /aria-label=\{`查看\$\{row\.name\}版本二级数据`\}/);
+  assert.match(source, /setDetailVersionKey\(row\.key\)/);
   assert.match(source, /versionKey=\{detailVersionKey\}/);
   assert.match(source, /<MultiSegmented options=\{SALES_FILTER_OPTS\}/);
   assert.match(source, /<Segmented options=\{VERSION_DETAIL_MODES\}/);
   assert.match(source, /{DIM_FOOTER\[dim\]} · {versionName}{modeMeta\.label}合计/);
-  assert.match(css, /\.vf-expand-hint/);
-  assert.match(css, /\.vf-version-footer/);
   assert.match(css, /\.vf-detail-card/);
   assert.match(css, /\.vf-detail-card \{[\s\S]*?width: min\(720px, calc\(100vw - 48px\)\);/);
   assert.match(css, /\.vf-detail-card \{[\s\S]*?max-height: calc\(100vh - 48px\);/);
@@ -110,15 +123,13 @@ test('adds a KPI-style secondary expand entry and version detail modal', () => {
   assert.match(css, /\.vf-detail-mask \{[\s\S]*?backdrop-filter: blur\(14px\) saturate\(120%\);/);
 });
 
-test('opens the matching secondary card from any point on a version card', () => {
-  assert.match(source, /className="vf-version-card"[\s\S]*?role="button"[\s\S]*?tabIndex=\{0\}/);
-  assert.match(source, /onClick=\{\(\) => setDetailVersionKey\(v\.key\)\}/);
-  assert.match(source, /onKeyDown=\{\(event\) => \{[\s\S]*?event\.key === 'Enter'[\s\S]*?event\.key === ' '[\s\S]*?setDetailVersionKey\(v\.key\)/);
-  assert.match(source, /<span className="vf-expand-hint">[\s\S]*?点击展开二级 ▸[\s\S]*?<\/span>/);
-  assert.doesNotMatch(source, /<button type="button" className="vf-expand-hint"/);
-  assert.match(css, /\.vf-version-card \{[\s\S]*?cursor: pointer;/);
-  assert.match(css, /\.vf-version-card:hover,[\s\S]*?\.vf-version-card:focus-visible \{/);
-  assert.match(css, /\.vf-expand-hint \{[\s\S]*?pointer-events: none;/);
+test('opens the matching secondary modal from any point on a version table row', () => {
+  assert.match(source, /<tr[\s\S]*?className="vf-version-table__row"[\s\S]*?role="button"[\s\S]*?tabIndex=\{0\}/);
+  assert.match(source, /onClick=\{\(\) => setDetailVersionKey\(row\.key\)\}/);
+  assert.match(source, /onKeyDown=\{\(event\) => \{[\s\S]*?event\.key === 'Enter'[\s\S]*?event\.key === ' '[\s\S]*?setDetailVersionKey\(row\.key\)/);
+  assert.match(source, /aria-label=\{`查看\$\{row\.name\}版本二级数据`\}/);
+  assert.match(css, /\.vf-version-table__row\s*\{[\s\S]*?cursor:\s*pointer;/);
+  assert.match(css, /\.vf-version-table__row:hover,[\s\S]*?\.vf-version-table__row:focus-visible \{/);
 });
 
 test('nudges the version half ring right while keeping the mode switch fixed', () => {
@@ -137,7 +148,7 @@ test('keeps the overview version row aligned to the large recovery card height',
   assert.match(dashboardCss, /\.dash-grid--overview\{\s*grid-template-columns:minmax\(0,1\.6fr\) minmax\(0,1fr\);\s*grid-template-rows:minmax\(326px,1fr\) minmax\(326px,342px\);/);
 });
 
-test('shows four primary version cards with compact original facts', () => {
+test('shows four primary version table rows with original facts and count share', () => {
   assert.deepEqual(
     VERSIONS
       .filter((version) => ['qihang', 'zhuoyue', 'zhizun', 'custom'].includes(version.key))
@@ -154,10 +165,11 @@ test('shows four primary version cards with compact original facts', () => {
     );
   }
 
-  assert.match(source, /vf-version-price/);
-  assert.match(source, /vf-version-mom/);
-  assert.match(source, /label="套数"/);
-  assert.match(source, /label="回款"/);
+  assert.match(source, /vf-version-table__price/);
+  assert.match(source, /vf-version-table__mom/);
+  assert.match(source, /vf-version-table__units/);
+  assert.match(source, /vf-version-table__recovered/);
+  assert.match(source, /share: versionShare\(version, countTotal\)/);
   assert.doesNotMatch(source, /当期应续费金额/);
   assert.doesNotMatch(source, /当期已续费金额/);
   assert.doesNotMatch(source, /当期续费率/);

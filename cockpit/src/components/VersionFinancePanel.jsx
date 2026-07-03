@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-03 23:48:36 CST  更新内容: 版本情况右侧由四张展示卡改为六列表格，并保留行点击打开版本二级弹窗。 */
 /* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 版本情况半环同步黑曜石月光紫色板，加入冷蓝、青玉、香槟层级。 */
 /* 更新时间: 2026-07-03 15:39:00 CST  更新内容: 版本情况半环图表改为低饱和冷紫品牌渐变，去除旧青蓝/薄荷混色。 */
 /* 更新时间: 2026-07-03 11:28:32 CST  更新内容: 精准调整版本情况半环图水平中心，使图形对称轴对齐数量/金额切换按钮。 */
@@ -51,15 +52,6 @@ const DIM_FOOTER = {
   day: '2026-06-30 当日',
 };
 const DAY_WEIGHTS = [62, 70, 55, 81, 74, 90, 68, 77, 84, 96];
-
-function VersionMetric({ label, value }) {
-  return (
-    <span className="vf-metric">
-      <span className="vf-metric-label">{label}</span>
-      <b className="vf-metric-value">{value}</b>
-    </span>
-  );
-}
 
 function getModeMeta(mode) {
   return VERSION_MODES.find((item) => item.value === mode) ?? VERSION_MODES[0];
@@ -137,6 +129,11 @@ function buildVersionDetailSeries({ salesKeys, mode, dim, versionKey }) {
 function formatModeValue(value, modeMeta) {
   const number = Number(value) || 0;
   return `${number.toLocaleString('zh-CN')}${modeMeta.unit}`;
+}
+
+function versionShare(version, totalUnits) {
+  const units = Number(version.units) || 0;
+  return totalUnits ? +(units / totalUnits * 100).toFixed(2) : 0;
 }
 
 function versionHalfRingOption(versions, mode, tokens) {
@@ -393,6 +390,10 @@ export default function VersionFinancePanel({ channelKey = 'all' }) {
   const versions = getDisplayVersions(getVersionRows(channelKey));
   const countTotal = versions.reduce((sum, version) => sum + (Number(version.units) || 0), 0);
   const amountTotal = versions.reduce((sum, version) => sum + (Number(version.recovered) || 0), 0);
+  const tableRows = versions.map((version) => ({
+    ...version,
+    share: versionShare(version, countTotal),
+  }));
   const channelName = channelKey === 'all' ? '' : getChannelRows(channelKey)[0]?.name;
 
   return (
@@ -444,40 +445,44 @@ export default function VersionFinancePanel({ channelKey = 'all' }) {
         </div>
 
         <div className="vf-card-zone">
-          <div className="vf-card-grid">
-            {versions.map((v) => (
-              <div
-                className="vf-version-card"
-                key={v.key}
-                role="button"
-                tabIndex={0}
-                onClick={() => setDetailVersionKey(v.key)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    setDetailVersionKey(v.key);
-                  }
-                }}
-              >
-                <div className="vf-version-top">
-                  <div>
-                    <h4 className="vf-version-name">{v.name}</h4>
-                    <span className="vf-version-price">{fmtMoney(v.price)}</span>
-                  </div>
-                  <span className="vf-version-mom" style={{ color: deltaColor(v.mom) }}>{fmtDelta(v.mom)}</span>
-                </div>
-
-                <div className="vf-version-footer">
-                  <div className="vf-version-basic">
-                    <VersionMetric label="套数" value={v.units} />
-                    <VersionMetric label="回款" value={`${v.recovered}万`} />
-                  </div>
-                  <span className="vf-expand-hint">
-                    点击展开二级 ▸
-                  </span>
-                </div>
-              </div>
-            ))}
+          <div className="vf-version-table-wrap">
+            <table className="vf-version-table">
+              <thead>
+                <tr>
+                  <th scope="col">版本</th>
+                  <th scope="col">单价</th>
+                  <th scope="col">套数</th>
+                  <th scope="col">占比</th>
+                  <th scope="col">回款</th>
+                  <th scope="col">环比</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tableRows.map((row) => (
+                  <tr
+                    className="vf-version-table__row"
+                    key={row.key}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`查看${row.name}版本二级数据`}
+                    onClick={() => setDetailVersionKey(row.key)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setDetailVersionKey(row.key);
+                      }
+                    }}
+                  >
+                    <th scope="row" className="vf-version-table__name">{row.name}</th>
+                    <td className="vf-version-table__price">{fmtMoney(row.price)}</td>
+                    <td className="vf-version-table__units">{row.units.toLocaleString('zh-CN')}</td>
+                    <td className="vf-version-table__share">{row.share}%</td>
+                    <td className="vf-version-table__recovered">{row.recovered}万</td>
+                    <td className="vf-version-table__mom" style={{ color: deltaColor(row.mom) }}>{fmtDelta(row.mom)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
