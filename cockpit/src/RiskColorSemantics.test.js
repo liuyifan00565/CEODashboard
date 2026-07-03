@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 23:27:28 CST
+ 更新内容: 调整交付看板超额完成语义，要求保留金色完成态并显示超额交付标签。
+*/
+/*
  更新时间: 2026-07-03 23:21:43 CST
  更新内容: 增加交付看板超额完成时复用红色预警视觉并显示超额交付标签的回归测试。
 */
@@ -101,18 +105,19 @@ test('keeps channel and delivery progress bars on the same risk rule', () => {
   );
   assert.equal(shouldUseChannelCompletionWarnFill({ key: 'east', completion: 70, warn: true }), true);
   assert.match(deliverySource, /const isUnderDelivery = row\.warn;/);
-  assert.match(deliverySource, /const isRiskDelivery = isUnderDelivery \|\| isOverDelivery;/);
+  assert.match(deliverySource, /const isRiskDelivery = isUnderDelivery;/);
   assert.match(deliverySource, /const deliveryProgressPctClassName = `dlv-progress-pct\$\{isRiskDelivery \? ' dlv-progress-pct--warn' : ''\}`;/);
   assert.match(deliveryCss, /\.dlv-progress-pct--warn\s*\{[\s\S]*?color:\s*var\(--warn\);/);
 });
 
-test('colors over-target delivery rows red and labels them as excess delivery', () => {
-  assert.match(deliverySource, /import \{ COLOR, progressGradient \} from '\.\.\/lib\/format';/);
+test('keeps over-target delivery rows gold and labels them as excess delivery', () => {
+  assert.match(deliverySource, /import \{ progressGradient \} from '\.\.\/lib\/format';/);
   assert.match(deliverySource, /const isOverDelivery = pct > 100;/);
   assert.match(deliverySource, /const deliveryTag = isOverDelivery \? '超额交付' : isUnderDelivery \? '交付预警' : null;/);
   assert.match(deliverySource, /const deliveryRowClassName = `dlv-row\$\{isRiskDelivery \? ' dlv-row--warn' : ''\}`;/);
-  assert.match(deliverySource, /const deliveryProgressBackground = isOverDelivery\s*\?\s*COLOR\.warnGradient\s*:\s*progressGradient\(pct, tokens\.progressMid\);/);
+  assert.match(deliverySource, /const deliveryProgressBackground = progressGradient\(pct, tokens\.progressMid\);/);
   assert.match(deliverySource, /\{deliveryTag && <span className="dlv-tag">\{deliveryTag\}<\/span>\}/);
+  assert.doesNotMatch(deliverySource, /COLOR\.warnGradient/);
 });
 
 test('uses shared delta formatting in opening-account cards instead of a hardcoded up arrow', () => {
