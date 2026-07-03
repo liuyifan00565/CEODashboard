@@ -3,6 +3,10 @@
  Update content: Use lower-opacity pure violet maintenance row overlays instead of pink-purple selected fills.
 */
 /*
+ Update time: 2026-07-03 11:49:32 CST
+ Update content: Soften the target maintenance frozen-name edge with a narrow transparent glass gradient.
+*/
+/*
  Update time: 2026-07-03 11:24:05 CST
  Update content: Keep target maintenance department/person names in a separate frozen pane so transparent glass cells do not reveal scrolled period text.
 */
@@ -541,6 +545,18 @@
   width: var(--mnt-target-name-width);
   min-width: var(--mnt-target-name-width);
   background: transparent;
+}
+
+.mnt-target-name-pane::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -28px;
+  bottom: 8px;
+  z-index: 2;
+  width: 28px;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(0, 0, 0, .22) 0%, rgba(0, 0, 0, .1) 48%, rgba(0, 0, 0, 0) 100%);
 }
 
 .mnt-target-scroll-pane {

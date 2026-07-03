@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:49:32 CST
+ Update content: Require a soft glass gradient at the target maintenance frozen-name edge.
+*/
+/*
  Update time: 2026-07-03 11:22:11 CST
  Update content: Add regression coverage preventing target maintenance department/person column bleed-through.
 */
@@ -17,6 +21,7 @@ function cssRuleBody(source, selector) {
 test('keeps the target maintenance name column outside the horizontal period scroller', () => {
   const targetMatrixBlock = cssRuleBody(maintenancePageCss, '.mnt-target-matrix');
   const targetNamePaneBlock = cssRuleBody(maintenancePageCss, '.mnt-target-name-pane');
+  const targetNameFadeBlock = cssRuleBody(maintenancePageCss, '.mnt-target-name-pane::after');
   const targetNameTableBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target-name');
   const targetScrollPaneBlock = cssRuleBody(maintenancePageCss, '.mnt-target-scroll-pane');
   const targetPeriodTableBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix--target');
@@ -32,6 +37,11 @@ test('keeps the target maintenance name column outside the horizontal period scr
   assert.match(targetNamePaneBlock, /left:\s*0;/);
   assert.match(targetNamePaneBlock, /z-index:\s*4;/);
   assert.match(targetNamePaneBlock, /background:\s*transparent;/);
+  assert.match(targetNameFadeBlock, /content:\s*'';/);
+  assert.match(targetNameFadeBlock, /right:\s*-28px;/);
+  assert.match(targetNameFadeBlock, /width:\s*28px;/);
+  assert.match(targetNameFadeBlock, /pointer-events:\s*none;/);
+  assert.match(targetNameFadeBlock, /linear-gradient\(90deg,\s*rgba\(0,\s*0,\s*0,\s*\.22\)\s*0%,\s*rgba\(0,\s*0,\s*0,\s*\.1\)\s*48%,\s*rgba\(0,\s*0,\s*0,\s*0\)\s*100%\)/);
   assert.match(targetNameTableBlock, /width:\s*var\(--mnt-target-name-width\);/);
   assert.match(targetScrollPaneBlock, /overflow-x:\s*auto;/);
   assert.match(targetScrollPaneBlock, /overflow-y:\s*hidden;/);
