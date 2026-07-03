@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 09:48:16 CST
+ 更新内容: 收窄顶部品牌玻璃胶囊宽度，减少右侧留白。
+*/
+/*
  Update time: 2026-07-02 18:49:46 CST
  Update content: Move the data maintenance switch into the right toolbar before search and match the expanded search pill radius.
 */
@@ -306,7 +310,7 @@ export default function App() {
         <div className="dash-main">
           <header className="dash-topbar">
             <GlassSurface
-              width={286}
+              width={240}
               height={52}
               borderRadius={16}
               brightness={58}
