@@ -32,6 +32,11 @@ const source = readFileSync(new URL('./VersionFinancePanel.jsx', import.meta.url
 const css = readFileSync(new URL('./VersionFinancePanel.css', import.meta.url), 'utf8');
 const dashboardCss = readFileSync(new URL('../dashboard.css', import.meta.url), 'utf8');
 
+function cssRuleBody(sourceText, selector) {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return sourceText.match(new RegExp(`${escapedSelector}\\s*\\{(?<body>[\\s\\S]*?)\\n\\}`))?.groups.body ?? '';
+}
+
 test('keeps VersionFinancePanel free of the removed finance health summary', () => {
   assert.doesNotMatch(source, /vf-finance/);
   assert.doesNotMatch(source, /vf-health/);
@@ -109,10 +114,12 @@ test('renders a scannable six-column table for the four right-side versions', ()
 });
 
 test('adds a concise operating insight under the version half ring', () => {
+  const insightBlock = cssRuleBody(css, '.vf-insight');
+
   assert.match(source, /<p className="vf-insight">/);
   assert.match(source, /启航版贡献主要销量，卓越版贡献最高回款，定制版保持高客单补充。/);
-  assert.match(css, /\.vf-insight \{[\s\S]*?max-width: 430px;[\s\S]*?margin: -18px 0 0 6px;[\s\S]*?color: rgba\(239,251,255,\.62\);/);
-  assert.doesNotMatch(css, /\.vf-insight \{[\s\S]*?box-shadow:/);
+  assert.match(css, /\.vf-insight \{[\s\S]*?position: absolute;[\s\S]*?left: 24px;[\s\S]*?bottom: 18px;[\s\S]*?max-width: 430px;[\s\S]*?margin: 0;[\s\S]*?color: rgba\(239,251,255,\.62\);/);
+  assert.doesNotMatch(insightBlock, /box-shadow:/);
 });
 
 test('adds a KPI-style secondary expand entry and version detail modal', () => {

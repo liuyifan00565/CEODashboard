@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-04 01:03:12 CST
+ Update content: Add restrained current-month chart tokens for the CEO dashboard trend highlight.
+*/
+/*
  Update time: 2026-07-03 18:54:17 CST
  Update content: Expose progressGold theme token and restore progressMid to the purple completion tier.
 */
@@ -30,8 +34,10 @@ const FALLBACK_TOKENS = {
   chartGrid: 'rgba(218,226,255,.085)',
   chartAxis: 'rgba(218,226,255,.34)',
   chartBar: 'rgba(139,124,255,.88)',
-  chartBarMuted: 'rgba(175,166,255,.38)',
+  chartBarCurrent: 'rgba(139,124,255,.72)',
+  chartBarMuted: 'rgba(175,166,255,.32)',
   chartBarFaint: 'rgba(148,163,184,.18)',
+  chartBarFaintCurrent: 'rgba(167,156,255,.24)',
   chartTooltipBg: 'rgba(6,9,20,.9)',
   chartTooltipBorder: 'rgba(218,226,255,.16)',
   chartPointer: 'rgba(139,124,255,.07)',
@@ -60,8 +66,10 @@ export function readThemeTokens() {
     chartGrid: cssVar(styles, '--chart-grid', FALLBACK_TOKENS.chartGrid),
     chartAxis: cssVar(styles, '--chart-axis', FALLBACK_TOKENS.chartAxis),
     chartBar: cssVar(styles, '--chart-bar', FALLBACK_TOKENS.chartBar),
+    chartBarCurrent: cssVar(styles, '--chart-bar-current', FALLBACK_TOKENS.chartBarCurrent),
     chartBarMuted: cssVar(styles, '--chart-bar-muted', FALLBACK_TOKENS.chartBarMuted),
     chartBarFaint: cssVar(styles, '--chart-bar-faint', FALLBACK_TOKENS.chartBarFaint),
+    chartBarFaintCurrent: cssVar(styles, '--chart-bar-faint-current', FALLBACK_TOKENS.chartBarFaintCurrent),
     chartTooltipBg: cssVar(styles, '--chart-tooltip-bg', FALLBACK_TOKENS.chartTooltipBg),
     chartTooltipBorder: cssVar(styles, '--chart-tooltip-border', FALLBACK_TOKENS.chartTooltipBorder),
     chartPointer: cssVar(styles, '--chart-pointer', FALLBACK_TOKENS.chartPointer),

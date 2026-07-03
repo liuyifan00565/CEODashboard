@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-04 01:03:12 CST
+ 更新内容: 月度趋势风险语义允许 6 月用同一紫色体系高亮，风险色仍只用于完成率点位和标签。
+*/
+/*
  更新时间: 2026-07-03 23:48:36 CST
  更新内容: 月度趋势风险语义改为回款柱统一低饱和紫色，低完成率仅在点位和标签使用风险色。
 */
@@ -90,13 +94,17 @@ test('renders recovery gap chip and its left trend chip with risk semantics', ()
   assert.match(kpiCardSource, /className=\{`kpi-card__gap\$\{isRiskCompletion\(card\.progress\) \? ' kpi-card__gap--risk' : ''\}`\}/);
 });
 
-test('keeps monthly trend recovered bars calm and moves risk to completion points and labels', () => {
+test('keeps monthly trend bars calm while highlighting only the current month', () => {
   assert.match(monthlyTrendSource, /import \{ COLOR, isRiskCompletion \} from '\.\.\/lib\/format';/);
   assert.doesNotMatch(monthlyTrendSource, /function recoveredBarColor/);
   assert.doesNotMatch(monthlyTrendSource, /color:\s*recoveredBarColor\(completion\[index\], tokens\)/);
-  assert.match(monthlyTrendSource, /name:\s*'目标'[\s\S]*?itemStyle:\s*\{[\s\S]*?color:\s*tokens\.chartBarFaint,[\s\S]*?borderRadius:/);
+  assert.match(monthlyTrendSource, /function isCurrentTrendMonth\(item\)/);
+  assert.match(monthlyTrendSource, /function currentMonthBarColor\(item, tokens\)/);
+  assert.match(monthlyTrendSource, /data:\s*target\.map\(\(value, index\) => \(\{[\s\S]*?color:\s*isCurrentTrendMonth\(trend\[index\]\) \? tokens\.chartBarFaintCurrent : tokens\.chartBarFaint,/);
   assert.doesNotMatch(monthlyTrendSource, /name:\s*'目标'[\s\S]*?borderColor:\s*tokens\.chartAxis/);
-  assert.match(monthlyTrendSource, /name:\s*'回款'[\s\S]*?itemStyle:\s*\{[\s\S]*?color:\s*tokens\.chartBarMuted,[\s\S]*?borderRadius:/);
+  assert.match(monthlyTrendSource, /data:\s*recovered\.map\(\(value, index\) => \(\{[\s\S]*?color:\s*currentMonthBarColor\(trend\[index\], tokens\),/);
+  assert.match(monthlyTrendSource, /return isCurrentTrendMonth\(item\) \? tokens\.chartBarCurrent : tokens\.chartBarMuted;/);
+  assert.doesNotMatch(monthlyTrendSource, /name:\s*'回款'[\s\S]*?COLOR\.warn/);
   assert.match(monthlyTrendSource, /function completionPointColor\(value, tokens\)/);
   assert.match(monthlyTrendSource, /isRiskCompletion\(value\) \? COLOR\.warn/);
   assert.match(monthlyTrendSource, /itemStyle:\s*\{ color: \(\{ value \}\) => completionPointColor\(value, tokens\)/);

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-04 01:03:12 CST  更新内容: 版本情况补充经营洞察文案，并让环比列使用独立数字对齐内层。 */
 /* 更新时间: 2026-07-04 00:21:24 CST  更新内容: 版本情况控制器移至右上，半环仅标前两项并降低光晕，表格增加版本色点。 */
 /* 更新时间: 2026-07-03 23:48:36 CST  更新内容: 版本情况右侧由四张展示卡改为六列表格，并保留行点击打开版本二级弹窗。 */
 /* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 版本情况半环同步黑曜石月光紫色板，加入冷蓝、青玉、香槟层级。 */
@@ -496,7 +497,9 @@ export default function VersionFinancePanel({ channelKey = 'all' }) {
                     <td className="vf-version-table__units">{row.units.toLocaleString('zh-CN')}</td>
                     <td className="vf-version-table__share">{row.share}%</td>
                     <td className="vf-version-table__recovered">{row.recovered}万</td>
-                    <td className="vf-version-table__mom" style={{ color: deltaColor(row.mom) }}>{fmtDelta(row.mom)}</td>
+                    <td>
+                      <span className="vf-version-table__mom" style={{ color: deltaColor(row.mom) }}>{fmtDelta(row.mom)}</span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -504,6 +507,7 @@ export default function VersionFinancePanel({ channelKey = 'all' }) {
           </div>
         </div>
       </div>
+      <p className="vf-insight">启航版贡献主要销量，卓越版贡献最高回款，定制版保持高客单补充。</p>
 
       {detailVersionKey && (
         <VersionDetailModal

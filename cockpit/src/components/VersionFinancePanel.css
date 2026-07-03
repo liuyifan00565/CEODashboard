@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-04 01:03:12 CST  更新内容: 版本情况补充轻量经营洞察，表格表头/分割线/环比对齐继续降噪。 */
 /* 更新时间: 2026-07-04 00:21:24 CST  更新内容: 版本情况控制器归位右上并改紫色选中态，半环和表格视觉层级降噪。 */
 /* 更新时间: 2026-07-03 23:48:36 CST  更新内容: 版本情况右侧四卡改为列表型表格，复用玻璃表格底、轻表头和行悬浮态。 */
 /* 更新时间: 2026-07-03 17:55:58 CST  更新内容: 版本情况主面板改为中性深色卡片玻璃底，不再使用大面积薰衣草/紫色背景渐变。 */
@@ -153,7 +154,7 @@
   border: 0;
   border-radius: 7px;
   background: transparent;
-  color: var(--muted);
+  color: rgba(255,255,255,.65);
   cursor: pointer;
   font: inherit;
   font-size: 14px;
@@ -190,6 +191,18 @@
   position: relative;
   z-index: 1;
   width: 100%;
+}
+
+.vf-insight {
+  position: absolute;
+  left: 24px;
+  bottom: 18px;
+  max-width: 430px;
+  margin: 0;
+  color: rgba(239,251,255,.62);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.55;
 }
 
 .vf-ring-tooltip {
@@ -303,8 +316,8 @@
 
 .vf-version-table th,
 .vf-version-table td {
-  padding: 14px 11px;
-  border-bottom: 1px solid rgba(218, 226, 255, .08);
+  padding: 13px 12px;
+  border-bottom: 1px solid rgba(218, 226, 255, .055);
   text-align: right;
   white-space: nowrap;
 }
@@ -318,8 +331,8 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  background: rgba(0, 0, 0, .08);
-  color: rgba(239,251,255,.48);
+  background: rgba(0, 0, 0, .055);
+  color: rgba(239,251,255,.42);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   font-size: 12px;
@@ -355,7 +368,7 @@
 .vf-version-table__name-inner {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   min-width: 0;
 }
 
@@ -379,7 +392,10 @@
 }
 
 .vf-version-table__mom {
-  opacity: .86;
+  display: block;
+  min-width: 52px;
+  text-align: right;
+  opacity: .82;
   font-weight: 850;
   text-shadow: none;
 }

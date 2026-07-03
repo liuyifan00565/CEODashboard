@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-04 01:03:12 CST
+ Update content: Diffuse the left-lower purple ambient glow and add restrained current-month chart tokens.
+*/
+/*
  Update time: 2026-07-03 18:54:17 CST
  Update content: Add gold target-achieved progress tokens and make mid-tier completion purple in both themes.
 */
@@ -137,7 +141,7 @@
   --bg-radial-a:rgba(139,124,255,.14);
   --bg-radial-b:rgba(127,212,246,.08);
   --bg-radial-c:rgba(95,75,180,.08);
-  --bg-radial-d:rgba(139,124,255,.10);
+  --bg-radial-d:rgba(139,124,255,.07);
   --bg-vignette:radial-gradient(circle at center,transparent 0%,rgba(0,0,0,.34) 100%);
   --bg-grid-line:rgba(255,255,255,.035);
   --bg-dot:rgba(255,255,255,.032);
@@ -154,8 +158,10 @@
   --chart-grid:rgba(218,226,255,.085);
   --chart-axis:rgba(218,226,255,.34);
   --chart-bar:rgba(139,124,255,.88);
-  --chart-bar-muted:rgba(175,166,255,.38);
+  --chart-bar-current:rgba(139,124,255,.72);
+  --chart-bar-muted:rgba(175,166,255,.32);
   --chart-bar-faint:rgba(148,163,184,.18);
+  --chart-bar-faint-current:rgba(167,156,255,.24);
   --chart-tooltip-bg:rgba(6,9,20,.9);
   --chart-tooltip-border:rgba(218,226,255,.16);
   --chart-pointer:rgba(139,124,255,.07);
@@ -217,7 +223,7 @@
   --bg-radial-a:rgba(139,124,255,.10);
   --bg-radial-b:rgba(183,140,50,.06);
   --bg-radial-c:rgba(31,42,68,.035);
-  --bg-radial-d:rgba(139,215,255,.08);
+  --bg-radial-d:rgba(139,124,255,.055);
   --bg-vignette:
     linear-gradient(90deg,rgba(255,255,255,.48),transparent 18%,transparent 82%,rgba(255,255,255,.36)),
     radial-gradient(circle at center,transparent 0%,rgba(31,42,68,.055) 100%);
@@ -237,8 +243,10 @@
   --chart-grid:rgba(31,42,68,.14);
   --chart-axis:rgba(31,42,68,.30);
   --chart-bar:rgba(111,98,216,.78);
-  --chart-bar-muted:rgba(111,98,216,.30);
+  --chart-bar-current:rgba(111,98,216,.60);
+  --chart-bar-muted:rgba(111,98,216,.24);
   --chart-bar-faint:rgba(31,42,68,.13);
+  --chart-bar-faint-current:rgba(111,98,216,.16);
   --chart-tooltip-bg:rgba(248,250,253,.96);
   --chart-tooltip-border:rgba(31,42,68,.18);
   --chart-pointer:rgba(139,124,255,.09);
@@ -289,7 +297,7 @@ body{
 .bg::after{
   content:"";position:fixed;inset:0;pointer-events:none;
   background:
-    radial-gradient(circle at 12% 76%,var(--bg-radial-d),transparent 22%),
+    radial-gradient(ellipse at 10% 78%,var(--bg-radial-d),transparent 34%),
     var(--bg-vignette),
     url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.45'/%3E%3C/svg%3E");
   background-size:auto,auto,256px 256px;

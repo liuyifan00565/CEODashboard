@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-04 01:03:12 CST
+ 更新内容: 默认 3D 小人投影降低亮度并扩大扩散，让左侧紫光退回背景氛围。
+*/
+/*
  更新时间: 2026-07-03 18:48:43 CST
  更新内容: 移除旧 DOM 图片栈样式，改为默认显示透明 3D Canvas，并仅在失败状态显示 PNG 兜底图。
 */
@@ -9,7 +13,7 @@
   aspect-ratio: 1 / 1.36;
   overflow: visible;
   pointer-events: none;
-  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, .4)) drop-shadow(0 0 18px rgba(114, 77, 255, .34));
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .38)) drop-shadow(0 0 30px rgba(114, 77, 255, .24));
 }
 
 .mascot-3d-stage--default {
@@ -36,7 +40,7 @@
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
-  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, .4)) drop-shadow(0 0 18px rgba(114, 77, 255, .34));
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .38)) drop-shadow(0 0 30px rgba(114, 77, 255, .24));
   transition: opacity .18s ease, visibility .18s ease;
 }
 

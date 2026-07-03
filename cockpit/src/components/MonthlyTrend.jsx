@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-04 01:03:12 CST  更新内容: 月度经营趋势仅突出当前 6 月柱形和轴标，其余月份继续保持低饱和。 */
 /* 更新时间: 2026-07-03 23:48:36 CST  更新内容: 月度趋势回款柱统一低饱和紫色，低完成率仅在完成率点位和标签使用风险色。 */
 /* 更新时间: 2026-07-03 18:54:17 CST  更新内容: 月度趋势回款柱与完成率标签按 80 以下红色、80-99 紫色、100 及以上金色三档分色。 */
 /* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 月度经营趋势回款柱按完成率 80% 风险线分色，危险月份直接使用风险色。 */
@@ -8,8 +9,18 @@ import { COLOR, isRiskCompletion } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './MonthlyTrend.css';
 
+const CURRENT_TREND_MONTH = '6月';
+
 function completionPointColor(value, tokens) {
   return isRiskCompletion(value) ? COLOR.warn : Number(value) >= 100 ? tokens.progressGold : tokens.chartMuted;
+}
+
+function isCurrentTrendMonth(item) {
+  return item?.month === CURRENT_TREND_MONTH;
+}
+
+function currentMonthBarColor(item, tokens) {
+  return isCurrentTrendMonth(item) ? tokens.chartBarCurrent : tokens.chartBarMuted;
 }
 
 export default function MonthlyTrend({ channelKey = 'all' }) {
@@ -65,7 +76,11 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
       data: months,
       axisLine: { lineStyle: { color: line } },
       axisTick: { show: false },
-      axisLabel: { color: faint, fontSize: 14 },
+      axisLabel: {
+        color: ({ value }) => (value === '6月' ? tokens.chartText : faint),
+        fontSize: 14,
+        fontWeight: ({ value }) => (value === '6月' ? 760 : 520),
+      },
     },
     yAxis: [
       {
@@ -94,11 +109,16 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         barWidth: 22,
         barCategoryGap: '42%',
         itemStyle: {
-          color: tokens.chartBarFaint,
           borderRadius: [3, 3, 0, 0],
         },
         emphasis: { disabled: true },
-        data: target,
+        data: target.map((value, index) => ({
+          value,
+          itemStyle: {
+            color: isCurrentTrendMonth(trend[index]) ? tokens.chartBarFaintCurrent : tokens.chartBarFaint,
+            borderRadius: [3, 3, 0, 0],
+          },
+        })),
       },
       {
         name: '回款',
@@ -107,11 +127,16 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         barGap: '-100%',
         barCategoryGap: '42%',
         itemStyle: {
-          color: tokens.chartBarMuted,
           borderRadius: [3, 3, 0, 0],
         },
         emphasis: { itemStyle: { color: tokens.chartBar } },
-        data: recovered,
+        data: recovered.map((value, index) => ({
+          value,
+          itemStyle: {
+            color: currentMonthBarColor(trend[index], tokens),
+            borderRadius: [3, 3, 0, 0],
+          },
+        })),
       },
       {
         name: '完成率%',

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-04 01:03:12 CST
+ Update content: Guard the restrained CEO dashboard pass with softer left ambient glow, more topbar breathing room, and a highlighted current month.
+*/
+/*
  Update time: 2026-07-04 00:23:37 CST
  Update content: Require search result feedback to use a one-shot soft purple glow instead of the electric border animation.
 */
@@ -138,10 +142,13 @@ const appSource = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
 const mockSource = readFileSync(new URL('./data/mock.js', import.meta.url), 'utf8');
 const fluidGlassSource = readFileSync(new URL('./components/FluidGlass/FluidGlass.jsx', import.meta.url), 'utf8');
 const dashboardCss = readFileSync(new URL('./dashboard.css', import.meta.url), 'utf8');
+const indexCss = readFileSync(new URL('./index.css', import.meta.url), 'utf8');
 const projectAgentGuidance = readFileSync(new URL('../../AGENTS.md', import.meta.url), 'utf8');
 const kpiCardCss = readFileSync(new URL('./components/KpiCard.css', import.meta.url), 'utf8');
 const kpiModalSource = readFileSync(new URL('./components/KpiModal.jsx', import.meta.url), 'utf8');
 const monthlyTrendSource = readFileSync(new URL('./components/MonthlyTrend.jsx', import.meta.url), 'utf8');
+const aiAnalysisWidgetCss = readFileSync(new URL('./components/AIAnalysisWidget.css', import.meta.url), 'utf8');
+const mascot3dStageCss = readFileSync(new URL('./components/Mascot3DStage.css', import.meta.url), 'utf8');
 const deliveryPanelCss = readFileSync(new URL('./components/DeliveryPanel.css', import.meta.url), 'utf8');
 const channelPanelSource = readFileSync(new URL('./components/ChannelPanel.jsx', import.meta.url), 'utf8');
 const channelPanelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
@@ -903,7 +910,7 @@ test('scrolls the dashboard content into view when a sidebar menu item is select
   assert.match(appSource, /pendingMenuScrollRef\.current = true;/);
   assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} \/>/);
   assert.match(appSource, /gridRef\.current\?\.scrollIntoView\(\{\s*behavior:\s*'smooth',\s*block:\s*'start'\s*\}\);/);
-  assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:86px;/);
+  assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:92px;/);
 });
 
 test('uses channel completion wording and connects the delivery dashboard panel', () => {
@@ -981,6 +988,32 @@ test('uses static trend legend and overlapping target versus recovered bars', ()
   assert.match(monthlyTrendSource, /selectedMode:\s*false/);
   assert.match(monthlyTrendSource, /barGap:\s*'-100%'/);
   assert.match(monthlyTrendSource, /barCategoryGap:\s*'42%'/);
+});
+
+test('highlights the current month in the restrained monthly trend instead of brightening every bar', () => {
+  assert.match(monthlyTrendSource, /function isCurrentTrendMonth\(item\)/);
+  assert.match(monthlyTrendSource, /currentMonthBarColor\(item, tokens\)/);
+  assert.match(monthlyTrendSource, /target\.map\(\(value, index\) => \(\{[\s\S]*?itemStyle: \{[\s\S]*?color: isCurrentTrendMonth\(trend\[index\]\) \? tokens\.chartBarFaintCurrent : tokens\.chartBarFaint,/);
+  assert.match(monthlyTrendSource, /recovered\.map\(\(value, index\) => \(\{[\s\S]*?color: currentMonthBarColor\(trend\[index\], tokens\),/);
+  assert.match(monthlyTrendSource, /axisLabel: \{[\s\S]*?color: \(\{ value \}\) => \(value === '6月' \? tokens\.chartText : faint\),/);
+  assert.match(indexCss, /--chart-bar-current:rgba\(139,124,255,\.72\);/);
+  assert.match(indexCss, /--chart-bar-muted:rgba\(175,166,255,\.32\);/);
+});
+
+test('keeps left ambient glow behind the AI mascot diffused and subordinate', () => {
+  assert.match(indexCss, /--bg-radial-d:rgba\(139,124,255,\.07\);/);
+  assert.match(indexCss, /radial-gradient\(ellipse at 10% 78%,var\(--bg-radial-d\),transparent 34%\)/);
+  assert.match(aiAnalysisWidgetCss, /\.ai-orb--think \.mascot-3d-stage,[\s\S]*?drop-shadow\(0 0 36px rgba\(139, 124, 255, \.18\)\)/);
+  assert.match(mascot3dStageCss, /drop-shadow\(0 0 30px rgba\(114, 77, 255, \.24\)\)/);
+  assert.doesNotMatch(indexCss, /--bg-radial-d:rgba\(139,124,255,\.10\);/);
+  assert.doesNotMatch(aiAnalysisWidgetCss, /drop-shadow\(0 0 32px rgba\(139, 124, 255, \.28\)\)/);
+});
+
+test('gives the top brand capsule more breathing room before the main chart', () => {
+  assert.match(dashboardCss, /\.dash-main\{[\s\S]*?gap:20px;/);
+  assert.match(dashboardCss, /\.dash-topbar\{[\s\S]*?padding:14px clamp\(16px,3vw,40px\) 18px;/);
+  assert.match(dashboardCss, /\.dash-content\{[\s\S]*?gap:18px;/);
+  assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:92px;/);
 });
 
 test('uses sales filters followed directly by year month day in the KPI modal', () => {

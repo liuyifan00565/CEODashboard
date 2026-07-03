@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-04 01:03:12 CST
+ Update content: Require the lower-left purple ambience to be dimmer and more diffused for the restrained CEO dashboard pass.
+*/
+/*
  Update time: 2026-07-03 18:54:17 CST
  Update content: Guard the red, purple, and gold completion color tiers.
 */
@@ -159,15 +163,16 @@ test('uses a static graphite grid and dot background instead of Color Bends', ()
   assert.match(darkThemeBlock(), /--bg-base-2:#080D18;/);
   assert.match(darkThemeBlock(), /--bg-base-3:#0B1020;/);
 
-  // 紫色只做远处环境光，透明度上限控制在 0.16 内。
+  // 紫色只做远处环境光，左下光晕更低透明、更大扩散，不能成为视觉主角。
   assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(139,124,255,\.14\);/);
   assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(127,212,246,\.08\);/);
   assert.match(darkThemeBlock(), /--bg-radial-c:rgba\(95,75,180,\.08\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(139,124,255,\.10\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(139,124,255,\.07\);/);
 
   assert.match(indexCss, /\.bg\{[\s\S]*?linear-gradient\(135deg,var\(--bg-base-1\) 0%,var\(--bg-base-2\) 48%,var\(--bg-base-3\) 100%\);/);
   assert.match(indexCss, /\.bg::before\{[\s\S]*?linear-gradient\(var\(--bg-grid-line\) 1px,transparent 1px\)[\s\S]*?radial-gradient\(var\(--bg-dot\) 1px,transparent 1\.4px\)[\s\S]*?background-size:56px 56px,56px 56px,28px 28px;/);
   assert.match(indexCss, /\.bg::before\{[\s\S]*?mask-image:radial-gradient\(circle at center,#000 0%,transparent 78%\);/);
+  assert.match(indexCss, /\.bg::after\{[\s\S]*?radial-gradient\(ellipse at 10% 78%,var\(--bg-radial-d\),transparent 34%\)/);
   assert.match(darkThemeBlock(), /--bg-grid-line:rgba\(255,255,255,\.035\);/);
   assert.match(darkThemeBlock(), /--bg-dot:rgba\(255,255,255,\.032\);/);
   assert.match(darkThemeBlock(), /--bg-noise-opacity:\.035;/);

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-04 01:03:12 CST
+ 更新内容: 顶部品牌胶囊与主图表之间增加呼吸距离，减少贴边压迫感。
+*/
+/*
  更新时间: 2026-07-04 00:23:37 CST
  更新内容: 搜索当前命中区域改为 960ms 一次性淡紫柔光高亮，移除电流颤动边框。
 */
@@ -70,7 +74,7 @@
 
 .dash-main{
   flex:1;min-width:0;display:flex;flex-direction:column;
-  padding:0 clamp(16px,3vw,40px) 24px;gap:16px;
+  padding:0 clamp(16px,3vw,40px) 24px;gap:20px;
 }
 
 /* ===== 顶栏 ===== */
@@ -78,7 +82,7 @@
   position:sticky;top:0;z-index:70;
   display:flex;align-items:center;gap:14px;row-gap:10px;flex-wrap:wrap;flex:none;min-width:0;
   margin:0 calc(clamp(16px,3vw,40px) * -1);
-  padding:18px clamp(16px,3vw,40px) 14px;
+  padding:14px clamp(16px,3vw,40px) 18px;
 }
 .dash-topbar .brand-glass{flex:0 0 256px;min-width:256px}
 .dash-topbar .brand-glass .glass-surface__content{padding:0}
@@ -134,8 +138,8 @@
 
 /* ===== 内容区 ===== */
 .dash-content{
-  flex:1;min-height:0;display:flex;flex-direction:column;gap:16px;
-  scroll-margin-top:86px;
+  flex:1;min-height:0;display:flex;flex-direction:column;gap:18px;
+  scroll-margin-top:92px;
 }
 
 /* ===== KPI 区：两张回款 + 销售完成组合长卡 ===== */
