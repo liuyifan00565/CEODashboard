@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:25:42 CST
+ Update content: Require 80-90 completion progress to stay in a soft yellow family before the 90 plus fluorescent yellow state.
+*/
+/*
  Update time: 2026-07-02 18:16:13 CST
  Update content: Restore palette guardrails to the original pink, fluorescent lime, and purple dot field.
 */
@@ -58,6 +62,16 @@ test('keeps 70 percent warning progress neutral rather than blue', () => {
   assert.match(themeSource, /progressMid:\s*'rgba\(255,255,255,\.92\)'/);
   assert.equal(progressColor(70, 'rgba(255,255,255,.92)'), 'rgba(255,255,255,.92)');
   assert.match(kpiSource, /const color = progressColor\(pct, tokens\.progressMid\);[\s\S]*?itemStyle:\s*\{ color, borderRadius: 5 \}/);
+});
+
+test('uses soft yellow for 80 to below 90 progress and fluorescent yellow for 90 plus', () => {
+  assert.equal(COLOR.yellow, '#ffe66d');
+  assert.equal(COLOR.good, '#dfff00');
+  assert.equal(progressColor(79.9, 'rgba(255,255,255,.92)'), 'rgba(255,255,255,.92)');
+  assert.equal(progressColor(80, 'rgba(255,255,255,.92)'), COLOR.yellow);
+  assert.equal(progressColor(89.9, 'rgba(255,255,255,.92)'), COLOR.yellow);
+  assert.equal(progressColor(90, 'rgba(255,255,255,.92)'), COLOR.good);
+  assert.equal(progressColor(100, 'rgba(255,255,255,.92)'), COLOR.good);
 });
 
 test('keeps the background dot field visibly purple', () => {

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:25:42 CST
+ Update content: Keep completion progress colors in the yellow family, using soft yellow from 80 to below 90 and fluorescent yellow from 90 upward.
+*/
+/*
  Update time: 2026-07-02 18:16:13 CST
  Update content: Restore KPI semantic color constants to neon pink and fluorescent lime.
 */
@@ -13,6 +17,7 @@
 export const COLOR = {
   up: '#ff4fd8',
   down: '#dfff00',
+  yellow: '#ffe66d',
   good: '#dfff00',
   warn: '#ff4fd8',
   txt: '#ffffff',
@@ -27,7 +32,8 @@ export const deltaArrow = (v) => (v >= 0 ? '▲' : '▼');
 export const fmtDelta = (v) => `${deltaArrow(v)} ${v >= 0 ? '+' : ''}${v}%`;
 export const progressColor = (pct, midColor = COLOR.txt) => {
   const value = Number(pct) || 0;
-  if (value >= 80) return COLOR.good;
+  if (value >= 90) return COLOR.good;
+  if (value >= 80) return COLOR.yellow;
   if (value >= 60) return midColor;
   return COLOR.up;
 };
