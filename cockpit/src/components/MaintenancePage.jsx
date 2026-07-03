@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 10:54:19 CST
+ Update content: Use one wide scrolling target maintenance table and remove pinned annual/current-quarter columns.
+*/
+/*
  Update time: 2026-07-03 10:29:25 CST
  Update content: Correct target maintenance current-month alignment to use the scroll pane coordinate system.
 */
@@ -53,8 +57,6 @@ const PAGE_RENDERERS = {
 };
 
 const TARGET_PERIOD_COLUMNS = buildTargetPeriodColumns(MAINTENANCE_PERIOD_COLUMNS, META.monthLabel);
-const TARGET_FIXED_PERIOD_COLUMNS = TARGET_PERIOD_COLUMNS.filter((column) => column.targetPinned);
-const TARGET_SCROLL_PERIOD_COLUMNS = TARGET_PERIOD_COLUMNS.filter((column) => !column.targetPinned);
 
 function getMaintenanceCurrentMonth(monthLabel = '') {
   const match = String(monthLabel).match(/(\d{1,2})\s*月/);
@@ -65,19 +67,8 @@ function getMaintenanceCurrentMonth(monthLabel = '') {
 
 function buildTargetPeriodColumns(periodColumns, monthLabel = '') {
   const currentMonth = getMaintenanceCurrentMonth(monthLabel);
-  const quarterKey = `q${Math.ceil(currentMonth / 3)}`;
-  const yearColumns = periodColumns.filter((column) => column.key === 'year');
-  const pinnedQuarterColumns = periodColumns.filter((column) => column.key === quarterKey);
-  const fixedKeys = new Set([...yearColumns, ...pinnedQuarterColumns].map((column) => column.key));
-  const restColumns = periodColumns.filter((column) => !fixedKeys.has(column.key));
-
-  return [
-    ...yearColumns,
-    ...pinnedQuarterColumns,
-    ...restColumns,
-  ].map((column) => ({
+  return periodColumns.map((column) => ({
     ...column,
-    targetPinned: fixedKeys.has(column.key),
     targetCurrentMonth: column.month === currentMonth,
   }));
 }
@@ -243,7 +234,7 @@ function useTargetCurrentMonthAlignment() {
     if (!currentMonthHeader) return;
 
     const maxScrollLeft = Math.max(0, scrollPane.scrollWidth - scrollPane.clientWidth);
-    const targetScrollLeft = currentMonthHeader.offsetLeft - scrollPane.offsetLeft + currentMonthHeader.offsetWidth - scrollPane.clientWidth;
+    const targetScrollLeft = currentMonthHeader.offsetLeft + currentMonthHeader.offsetWidth - scrollPane.clientWidth;
     scrollPane.scrollLeft = Math.max(0, Math.min(targetScrollLeft, maxScrollLeft));
   }, []);
 
@@ -297,48 +288,28 @@ function TargetMaintenancePage({ markDirty, status }) {
       </Panel>
       <Panel title="年度目标" meta={<SaveBadge status={status} />} className="mnt-main-panel">
         <MatrixShell className="mnt-matrix-wrap--target">
-          <div className="mnt-target-matrix">
-            <div className="mnt-target-fixed-pane">
-              <table className="mnt-matrix mnt-matrix--target-fixed">
-                <thead>
-                  <tr>
-                    <th>部门/人员</th>
-                    {TARGET_FIXED_PERIOD_COLUMNS.map((column) => <TargetPeriodHeader key={column.key} column={column} />)}
+          <div className="mnt-target-scroll-pane" ref={targetScrollPaneRef}>
+            <table className="mnt-matrix mnt-matrix--target">
+              <thead>
+                <tr>
+                  <th>部门/人员</th>
+                  {TARGET_PERIOD_COLUMNS.map((column) => <TargetPeriodHeader key={column.key} column={column} />)}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id} className={row.type === 'department' ? 'mnt-row--summary' : ''}>
+                    <td className="mnt-name-cell">
+                      <strong>{row.name}</strong>
+                      <span>{row.role}</span>
+                    </td>
+                    {TARGET_PERIOD_COLUMNS.map((column) => (
+                      <TargetPeriodCell key={column.key} row={row} column={column} markDirty={markDirty} />
+                    ))}
                   </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <tr key={row.id} className={row.type === 'department' ? 'mnt-row--summary' : ''}>
-                      <td className="mnt-name-cell">
-                        <strong>{row.name}</strong>
-                        <span>{row.role}</span>
-                      </td>
-                      {TARGET_FIXED_PERIOD_COLUMNS.map((column) => (
-                        <TargetPeriodCell key={column.key} row={row} column={column} markDirty={markDirty} />
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="mnt-target-scroll-pane" ref={targetScrollPaneRef}>
-              <table className="mnt-matrix mnt-matrix--target-scroll">
-                <thead>
-                  <tr>
-                    {TARGET_SCROLL_PERIOD_COLUMNS.map((column) => <TargetPeriodHeader key={column.key} column={column} />)}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <tr key={row.id} className={row.type === 'department' ? 'mnt-row--summary' : ''}>
-                      {TARGET_SCROLL_PERIOD_COLUMNS.map((column) => (
-                        <TargetPeriodCell key={column.key} row={row} column={column} markDirty={markDirty} />
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
         </MatrixShell>
       </Panel>

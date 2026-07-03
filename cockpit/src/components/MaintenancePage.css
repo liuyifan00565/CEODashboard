@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 10:54:19 CST
+ Update content: Widen maintenance matrix cells and switch progress bars from gradients to solid good/warn colors.
+*/
+/*
  Update time: 2026-07-03 10:22:28 CST
  Update content: Split target maintenance fixed columns from the month scroll pane while keeping the transparent glass table style.
 */
@@ -231,7 +235,7 @@
 }
 
 .mnt-number-input {
-  width: 96px;
+  width: 118px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -382,6 +386,7 @@
 }
 
 .mnt-matrix-wrap {
+  --mnt-maintenance-period-width: 172px;
   flex: 1;
   min-height: 0;
   overflow: auto;
@@ -395,32 +400,15 @@
 }
 
 .mnt-matrix-wrap--target {
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-.mnt-target-matrix {
-  --mnt-target-name-width: 164px;
-  --mnt-target-period-width: 128px;
-  display: grid;
-  grid-template-columns: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2) minmax(0, 1fr);
-  min-width: 0;
-  align-items: start;
-}
-
-.mnt-target-fixed-pane {
-  position: sticky;
-  left: 0;
-  z-index: 4;
-  width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2);
-  min-width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2);
-  background: transparent;
+  --mnt-target-name-width: 186px;
+  --mnt-target-period-width: 172px;
+  overflow: hidden;
 }
 
 .mnt-target-scroll-pane {
   min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
+  height: 100%;
+  overflow: auto;
   overscroll-behavior-x: contain;
 }
 
@@ -433,29 +421,20 @@
   font-size: 13px;
 }
 
-.mnt-matrix--target-fixed {
-  width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2);
-  min-width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 2);
+.mnt-matrix--target {
+  min-width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 17);
   table-layout: fixed;
 }
 
-.mnt-matrix--target-scroll {
-  width: max-content;
-  min-width: calc(var(--mnt-target-period-width) * 15);
-  table-layout: fixed;
-}
-
-.mnt-matrix--target-fixed th:first-child,
-.mnt-matrix--target-fixed td:first-child {
+.mnt-matrix--target th:first-child,
+.mnt-matrix--target td:first-child {
   width: var(--mnt-target-name-width);
   min-width: var(--mnt-target-name-width);
   max-width: var(--mnt-target-name-width);
 }
 
-.mnt-matrix--target-fixed th:not(:first-child),
-.mnt-matrix--target-fixed .mnt-period-cell,
-.mnt-matrix--target-scroll th,
-.mnt-matrix--target-scroll .mnt-period-cell {
+.mnt-matrix--target th:not(:first-child),
+.mnt-matrix--target .mnt-period-cell {
   width: var(--mnt-target-period-width);
   min-width: var(--mnt-target-period-width);
   max-width: var(--mnt-target-period-width);
@@ -471,7 +450,7 @@
 
 .mnt-matrix--cost,
 .mnt-matrix--labor {
-  min-width: 2100px;
+  min-width: 3000px;
 }
 
 .mnt-matrix th,
@@ -505,6 +484,11 @@
   color: var(--txt);
 }
 
+.mnt-matrix th:not(:first-child),
+.mnt-matrix .mnt-period-cell {
+  min-width: var(--mnt-maintenance-period-width);
+}
+
 .mnt-matrix th:first-child,
 .mnt-matrix td:first-child {
   position: sticky;
@@ -517,21 +501,6 @@
 
 .mnt-matrix th:first-child {
   z-index: 4;
-}
-
-.mnt-matrix--target-scroll th:first-child {
-  left: auto;
-  z-index: 2;
-  background: rgba(0,0,0,.16);
-}
-
-.mnt-matrix--target-scroll td:first-child {
-  position: static;
-  left: auto;
-  z-index: auto;
-  background: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
 }
 
 .mnt-matrix th:last-child,
@@ -648,19 +617,19 @@
 }
 
 .mnt-progress--danger span {
-  background: linear-gradient(90deg, rgba(var(--warn-rgb), .9) 0%, rgba(255,255,255,.5) 46%, rgba(255,255,255,0) 100%);
+  background: var(--warn);
 }
 
 .mnt-progress--warning span {
-  background: linear-gradient(90deg, rgba(255,255,255,.86) 0%, rgba(var(--good-rgb), .42) 42%, rgba(var(--good-rgb),0) 100%);
+  background: var(--warn);
 }
 
 .mnt-progress--good span {
-  background: linear-gradient(90deg, rgba(var(--good-rgb), .92) 0%, rgba(255,255,255,.58) 44%, rgba(255,255,255,0) 100%);
+  background: var(--good);
 }
 
 .mnt-progress--unset span {
-  background: linear-gradient(90deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.16) 46%, rgba(255,255,255,0) 100%);
+  background: rgba(255, 255, 255, .24);
 }
 
 .mnt-local-action {
