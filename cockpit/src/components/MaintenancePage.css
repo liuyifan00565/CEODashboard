@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-03 11:24:05 CST
+ Update content: Keep target maintenance department/person names in a separate frozen pane so transparent glass cells do not reveal scrolled period text.
+*/
+/*
+ Update time: 2026-07-03 11:19:40 CST
+ Update content: Add unified organization-style side navigation for all data maintenance pages.
+*/
+/*
  Update time: 2026-07-03 11:11:56 CST
  Update content: Change maintenance table row hover to a bright purple overlay and add persistent selected-row styling.
 */
@@ -323,6 +331,84 @@
   padding: 14px;
 }
 
+.mnt-side-nav {
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, .36) transparent;
+}
+
+.mnt-side-nav ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mnt-side-nav li ul {
+  margin-left: 13px;
+  padding-left: 10px;
+  border-left: 1px dashed var(--line);
+}
+
+.mnt-side-nav__button {
+  width: 100%;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.mnt-side-nav__button span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--txt);
+  font-size: 13px;
+  font-weight: 760;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mnt-side-nav__button small {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.mnt-side-nav__button--active {
+  border-color: var(--line-2);
+  background: rgba(255, 255, 255, .09);
+}
+
+.mnt-side-nav::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.mnt-side-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mnt-side-nav::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .36);
+  background-clip: padding-box;
+}
+
+.mnt-side-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, .5);
+  background-clip: padding-box;
+}
+
 .mnt-tree,
 .mnt-channel-tree,
 .mnt-edit-list {
@@ -330,18 +416,21 @@
   overflow: auto;
 }
 
+.mnt-side-nav ul,
 .mnt-tree ul {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+.mnt-side-nav li ul,
 .mnt-tree li ul {
   margin-left: 13px;
   padding-left: 10px;
   border-left: 1px dashed var(--line);
 }
 
+.mnt-side-nav__button,
 .mnt-tree-button,
 .mnt-channel-row {
   width: 100%;
@@ -358,11 +447,13 @@
   cursor: pointer;
 }
 
+.mnt-side-nav__button,
 .mnt-tree-button {
   padding: 7px 9px;
   font: inherit;
 }
 
+.mnt-side-nav__button span,
 .mnt-tree-button span,
 .mnt-channel-row span {
   min-width: 0;
@@ -374,6 +465,7 @@
   white-space: nowrap;
 }
 
+.mnt-side-nav__button small,
 .mnt-tree-button small,
 .mnt-channel-row small {
   color: var(--muted);
@@ -381,12 +473,18 @@
   white-space: nowrap;
 }
 
+.mnt-side-nav__button:hover,
+.mnt-side-nav__button--active,
 .mnt-tree-button:hover,
 .mnt-tree-button--active,
 .mnt-channel-row:hover,
 .mnt-channel-row--active {
   border-color: var(--line-2);
   background: rgba(255, 255, 255, .09);
+}
+
+.mnt-side-nav__button--muted {
+  opacity: .56;
 }
 
 .mnt-channel-row {
@@ -422,12 +520,31 @@
   --mnt-target-name-width: 186px;
   --mnt-target-period-width: 172px;
   overflow: hidden;
+  overflow-y: auto;
+}
+
+.mnt-target-matrix {
+  display: grid;
+  grid-template-columns: var(--mnt-target-name-width) minmax(0, 1fr);
+  min-width: 0;
+  align-items: start;
+}
+
+.mnt-target-name-pane {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  width: var(--mnt-target-name-width);
+  min-width: var(--mnt-target-name-width);
+  background: transparent;
 }
 
 .mnt-target-scroll-pane {
   min-width: 0;
   height: 100%;
   overflow: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
   overscroll-behavior-x: contain;
 }
 
@@ -488,21 +605,38 @@
 
 .mnt-matrix--target {
   min-width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 17);
+  min-width: calc(var(--mnt-target-period-width) * 17);
   table-layout: fixed;
 }
 
-.mnt-matrix--target th:first-child,
-.mnt-matrix--target td:first-child {
+.mnt-matrix--target-name {
+  width: var(--mnt-target-name-width);
+  min-width: var(--mnt-target-name-width);
+  table-layout: fixed;
+}
+
+.mnt-matrix--target-name th,
+.mnt-matrix--target-name td {
   width: var(--mnt-target-name-width);
   min-width: var(--mnt-target-name-width);
   max-width: var(--mnt-target-name-width);
 }
 
-.mnt-matrix--target th:not(:first-child),
+.mnt-matrix--target th,
 .mnt-matrix--target .mnt-period-cell {
   width: var(--mnt-target-period-width);
   min-width: var(--mnt-target-period-width);
   max-width: var(--mnt-target-period-width);
+}
+
+.mnt-matrix--target-name th,
+.mnt-matrix--target th {
+  height: 54px;
+}
+
+.mnt-matrix--target-name td,
+.mnt-matrix--target td {
+  height: 100px;
 }
 
 .mnt-user-table {
@@ -568,6 +702,26 @@
   z-index: 4;
 }
 
+.mnt-matrix--target th:first-child {
+  left: auto;
+  z-index: 2;
+  background: rgba(0,0,0,.16);
+}
+
+.mnt-matrix--target td:first-child {
+  position: static;
+  left: auto;
+  z-index: auto;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.mnt-matrix--target-name th:last-child,
+.mnt-matrix--target-name td:last-child {
+  border-right: 1px solid var(--line);
+}
+
 .mnt-matrix th:last-child,
 .mnt-matrix td:last-child,
 .mnt-user-table th:last-child,
@@ -588,6 +742,12 @@
   background: rgba(0,0,0,.14);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
+}
+
+.mnt-matrix--target .mnt-row--summary td:first-child {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .mnt-matrix tbody tr,

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 11:19:40 CST
+ Update content: Add regression coverage for unified organization-style maintenance side navigation.
+*/
+/*
  Update time: 2026-07-03 11:11:56 CST
  Update content: Add regression coverage for purple maintenance row hover overlays and persistent clicked-row highlights.
 */
@@ -350,6 +354,34 @@ test('builds the org and channel maintenance pages from reference tree and table
   assert.match(maintenancePageSource, /新增大类/);
   assert.match(maintenancePageSource, /新增来源/);
   assert.match(maintenancePageSource, /卫瓴线索来源/);
+});
+
+test('uses one organization-style side navigation across all maintenance pages', () => {
+  const sideNavBlock = cssRuleBody(maintenancePageCss, '.mnt-side-nav');
+  const sideNavChildListBlock = cssRuleBody(maintenancePageCss, '.mnt-side-nav li ul');
+  const sideNavButtonBlock = cssRuleBody(maintenancePageCss, '.mnt-side-nav__button');
+  const sideNavActiveBlock = cssRuleBody(maintenancePageCss, '.mnt-side-nav__button--active');
+
+  assert.match(maintenancePageSource, /function MaintenanceSideNav\(\{ nodes, activeId, onSelect \}\)/);
+  assert.match(maintenancePageSource, /function MaintenanceSideNavNode\(\{ node, activeId, onSelect \}\)/);
+  assert.match(maintenancePageSource, /function buildMaintenanceNavTree\(items, \{ rootId = 'all', countText = '项' \} = \{\}\) \{/);
+  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{\[TARGET_MAINTENANCE_ORG_TREE\]\} activeId=\{selectedOrg\} onSelect=\{setSelectedOrg\} \/>/);
+  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{costNavNodes\} activeId=\{selectedChannel\} onSelect=\{setSelectedChannel\} \/>/);
+  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{departmentNavNodes\} activeId=\{selectedDepartment\} onSelect=\{setSelectedDepartment\} \/>/);
+  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{channelGroupNavNodes\} activeId=\{selectedGroup\} onSelect=\{setSelectedGroup\} \/>/);
+  assert.doesNotMatch(maintenancePageSource, /className="mnt-channel-tree"/);
+  assert.doesNotMatch(maintenancePageSource, /className="mnt-edit-list"/);
+  assert.doesNotMatch(maintenancePageSource, /className="mnt-tree"/);
+  assert.doesNotMatch(maintenancePageSource, /className="mnt-tree-button/);
+
+  assert.match(sideNavBlock, /overflow:\s*auto;/);
+  assert.match(sideNavChildListBlock, /border-left:\s*1px dashed var\(--line\);/);
+  assert.match(sideNavButtonBlock, /min-height:\s*34px;/);
+  assert.match(sideNavButtonBlock, /border-radius:\s*10px;/);
+  assert.match(sideNavButtonBlock, /background:\s*transparent;/);
+  assert.match(sideNavButtonBlock, /justify-content:\s*space-between;/);
+  assert.match(sideNavActiveBlock, /border-color:\s*var\(--line-2\);/);
+  assert.match(sideNavActiveBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.09\);/);
 });
 
 test('keeps data maintenance cards buttons and controls on the dashboard glass system', () => {

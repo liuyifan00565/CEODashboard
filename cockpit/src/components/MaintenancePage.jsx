@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-03 11:24:05 CST
+ Update content: Freeze target maintenance department/person names outside the horizontal period scroller to prevent glass bleed-through.
+*/
+/*
+ Update time: 2026-07-03 11:19:40 CST
+ Update content: Unify all data maintenance side navigation with the organization tree style.
+*/
+/*
  Update time: 2026-07-03 11:12:08 CST
  Update content: Separate editable target maintenance inputs from readonly target summary values.
 */
@@ -123,6 +131,55 @@ function getSelectableRowProps(rowKey, selectedRowKey, onSelect, className = '')
   };
 }
 
+function getMaintenanceNavMeta(item, countText) {
+  if (item.meta) return item.meta;
+  if (item.kind) return item.kind;
+  if (typeof item.userCount === 'number') return `${item.userCount} 人`;
+  if (typeof item.count === 'number') return `${item.count} ${item.countText ?? countText}`;
+  return '';
+}
+
+function buildMaintenanceNavTree(items, { rootId = 'all', countText = '项' } = {}) {
+  const nodes = items.map((item) => ({
+    id: item.id,
+    name: item.name,
+    parentId: item.parentId || '',
+    meta: getMaintenanceNavMeta(item, countText),
+    disabled: item.enabled === false,
+    children: [],
+  }));
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const roots = [];
+
+  nodes.forEach((node) => {
+    if (node.parentId && nodeById.has(node.parentId)) {
+      nodeById.get(node.parentId).children.push(node);
+      return;
+    }
+    roots.push(node);
+  });
+
+  const root = nodeById.get(rootId);
+  return root ? [root] : roots;
+}
+
+function getDescendantIds(items, selectedId) {
+  const ids = new Set([selectedId]);
+  let changed = true;
+
+  while (changed) {
+    changed = false;
+    items.forEach((item) => {
+      if (!ids.has(item.id) && ids.has(item.parentId)) {
+        ids.add(item.id);
+        changed = true;
+      }
+    });
+  }
+
+  return ids;
+}
+
 function MaintenanceToolbarSurface({ className = '', children }) {
   return (
     <div className={`mnt-toolbar-surface ${className}`.trim()}>{children}</div>
@@ -222,21 +279,34 @@ function MatrixShell({ className = '', children }) {
   return <div className={`mnt-matrix-wrap ${className}`.trim()}>{children}</div>;
 }
 
-function TargetTreeNode({ node, activeId, onSelect }) {
+function MaintenanceSideNav({ nodes, activeId, onSelect }) {
+  return (
+    <nav className="mnt-side-nav" aria-label="维护侧栏导航">
+      <ul>
+        {nodes.map((node) => (
+          <MaintenanceSideNavNode key={node.id} node={node} activeId={activeId} onSelect={onSelect} />
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+function MaintenanceSideNavNode({ node, activeId, onSelect }) {
+  const active = node.id === activeId;
   return (
     <li>
       <button
         type="button"
-        className={`mnt-tree-button${node.id === activeId ? ' mnt-tree-button--active' : ''}`}
+        className={`mnt-side-nav__button${active ? ' mnt-side-nav__button--active' : ''}${node.disabled ? ' mnt-side-nav__button--muted' : ''}`}
         onClick={() => onSelect(node.id)}
       >
         <span>{node.name}</span>
-        <small>{node.userCount} 人</small>
+        {node.meta && <small>{node.meta}</small>}
       </button>
       {node.children?.length > 0 && (
         <ul>
           {node.children.map((child) => (
-            <TargetTreeNode key={child.id} node={child} activeId={activeId} onSelect={onSelect} />
+            <MaintenanceSideNavNode key={child.id} node={child} activeId={activeId} onSelect={onSelect} />
           ))}
         </ul>
       )}
@@ -320,36 +390,48 @@ function TargetMaintenancePage({ markDirty, status }) {
   return (
     <section className="mnt-layout mnt-layout--target">
       <Panel title="组织架构" meta={`${rows.filter((row) => row.type === 'user').length} 人`} className="mnt-side-panel">
-        <div className="mnt-tree">
-          <ul>
-            <TargetTreeNode node={TARGET_MAINTENANCE_ORG_TREE} activeId={selectedOrg} onSelect={setSelectedOrg} />
-          </ul>
-        </div>
+        <MaintenanceSideNav nodes={[TARGET_MAINTENANCE_ORG_TREE]} activeId={selectedOrg} onSelect={setSelectedOrg} />
       </Panel>
       <Panel title="年度目标" meta={<SaveBadge status={status} />} className="mnt-main-panel">
         <MatrixShell className="mnt-matrix-wrap--target">
-          <div className="mnt-target-scroll-pane" ref={targetScrollPaneRef}>
-            <table className="mnt-matrix mnt-matrix--target">
-              <thead>
-                <tr>
-                  <th>部门/人员</th>
-                  {TARGET_PERIOD_COLUMNS.map((column) => <TargetPeriodHeader key={column.key} column={column} />)}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.id} {...getSelectableRowProps(`target:${row.id}`, selectedTargetRow, setSelectedTargetRow, row.type === 'department' ? 'mnt-row--summary' : '')}>
-                    <td className="mnt-name-cell">
-                      <strong>{row.name}</strong>
-                      <span>{row.role}</span>
-                    </td>
-                    {TARGET_PERIOD_COLUMNS.map((column) => (
-                      <TargetPeriodCell key={column.key} row={row} column={column} markDirty={markDirty} />
-                    ))}
+          <div className="mnt-target-matrix">
+            <div className="mnt-target-name-pane">
+              <table className="mnt-matrix mnt-matrix--target-name">
+                <thead>
+                  <tr>
+                    <th>部门/人员</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.id} {...getSelectableRowProps(`target:${row.id}`, selectedTargetRow, setSelectedTargetRow, row.type === 'department' ? 'mnt-row--summary' : '')}>
+                      <td className="mnt-name-cell">
+                        <strong>{row.name}</strong>
+                        <span>{row.role}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mnt-target-scroll-pane" ref={targetScrollPaneRef}>
+              <table className="mnt-matrix mnt-matrix--target">
+                <thead>
+                  <tr>
+                    {TARGET_PERIOD_COLUMNS.map((column) => <TargetPeriodHeader key={column.key} column={column} />)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.id} {...getSelectableRowProps(`target:${row.id}`, selectedTargetRow, setSelectedTargetRow, row.type === 'department' ? 'mnt-row--summary' : '')}>
+                      {TARGET_PERIOD_COLUMNS.map((column) => (
+                        <TargetPeriodCell key={column.key} row={row} column={column} markDirty={markDirty} />
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </MatrixShell>
       </Panel>
@@ -357,19 +439,17 @@ function TargetMaintenancePage({ markDirty, status }) {
   );
 }
 
-function channelDepth(channelId, channels = COST_MAINTENANCE_CHANNELS) {
-  let depth = 0;
-  let current = channels.find((item) => item.id === channelId);
-  while (current?.parentId) {
-    depth += 1;
-    current = channels.find((item) => item.id === current.parentId);
-  }
-  return depth;
-}
-
 function CostMaintenancePage({ markDirty, status }) {
   const [selectedChannel, setSelectedChannel] = useState('all');
   const [selectedCostRow, setSelectedCostRow] = useState(null);
+  const costNavNodes = useMemo(() => buildMaintenanceNavTree(
+    COST_MAINTENANCE_CHANNELS.map((channel) => ({
+      ...channel,
+      parentId: channel.id === 'all' ? '' : channel.parentId || 'all',
+      meta: channel.kind,
+    })),
+    { rootId: 'all', countText: '项' }
+  ), []);
   const selectedIds = useMemo(() => {
     if (selectedChannel === 'all') return new Set(COST_MAINTENANCE_ROWS.map((row) => row.id));
     return new Set([
@@ -382,24 +462,7 @@ function CostMaintenancePage({ markDirty, status }) {
   return (
     <section className="mnt-layout mnt-layout--cost">
       <Panel title="渠道树" meta={`${COST_MAINTENANCE_CHANNELS.length - 1} 个渠道`} className="mnt-side-panel">
-        <div className="mnt-channel-tree">
-          {COST_MAINTENANCE_CHANNELS.map((channel) => (
-            <label
-              key={channel.id}
-              className={`mnt-channel-row${selectedChannel === channel.id ? ' mnt-channel-row--active' : ''}`}
-              style={{ '--depth': channelDepth(channel.id) }}
-            >
-              <input
-                type="radio"
-                name="cost-channel"
-                checked={selectedChannel === channel.id}
-                onChange={() => setSelectedChannel(channel.id)}
-              />
-              <span>{channel.name}</span>
-              <small>{channel.kind}</small>
-            </label>
-          ))}
-        </div>
+        <MaintenanceSideNav nodes={costNavNodes} activeId={selectedChannel} onSelect={setSelectedChannel} />
       </Panel>
       <div className="mnt-cost-stack">
         <Panel title="渠道成本维护" meta={<SaveBadge status={status} />} className="mnt-main-panel">
@@ -492,7 +555,24 @@ function departmentOptions(currentId = '') {
 
 function OrgMaintenancePage({ markDirty, status }) {
   const [departments, setDepartments] = useState(ORG_MAINTENANCE_DEPARTMENTS);
+  const [selectedDepartment, setSelectedDepartment] = useState('headquarters');
   const [selectedOrgRow, setSelectedOrgRow] = useState(null);
+  const departmentNavItems = useMemo(() => departments.map((dept) => ({
+    ...dept,
+    count: ORG_MAINTENANCE_USERS.filter((user) => user.deptId === dept.id && user.enabled).length,
+    countText: '人',
+  })), [departments]);
+  const departmentNavNodes = useMemo(
+    () => buildMaintenanceNavTree(departmentNavItems, { rootId: 'headquarters', countText: '人' }),
+    [departmentNavItems]
+  );
+  const selectedDepartmentIds = useMemo(
+    () => getDescendantIds(departments, selectedDepartment),
+    [departments, selectedDepartment]
+  );
+  const visibleUsers = selectedDepartment === 'headquarters'
+    ? ORG_MAINTENANCE_USERS
+    : ORG_MAINTENANCE_USERS.filter((user) => selectedDepartmentIds.has(user.deptId));
 
   function addDepartment() {
     const nextIndex = departments.length + 1;
@@ -507,21 +587,7 @@ function OrgMaintenancePage({ markDirty, status }) {
     <section className="mnt-layout mnt-layout--org">
       <Panel title="BI组织架构" meta={`${departments.length} 个组织`} className="mnt-side-panel">
         <button className="mnt-btn mnt-local-action" type="button" onClick={addDepartment}>新增组织</button>
-        <div className="mnt-edit-list">
-          {departments.map((dept) => (
-            <div key={dept.id} className={`mnt-edit-row${dept.enabled ? '' : ' mnt-edit-row--muted'}`}>
-              <input className="mnt-control" defaultValue={dept.name} onChange={markDirty} aria-label={`${dept.name}组织名称`} />
-              <select className="mnt-control" defaultValue={dept.parentId} onChange={markDirty} aria-label={`${dept.name}上级组织`}>
-                <option value="">无上级</option>
-                {departmentOptions(dept.id)}
-              </select>
-              <label className="mnt-check">
-                <input type="checkbox" defaultChecked={dept.enabled} onChange={markDirty} />
-                启用
-              </label>
-            </div>
-          ))}
-        </div>
+        <MaintenanceSideNav nodes={departmentNavNodes} activeId={selectedDepartment} onSelect={setSelectedDepartment} />
       </Panel>
       <Panel title="BI人员范围" meta={<><span>{ORG_MAINTENANCE_USERS.filter((user) => user.isSales && user.enabled).length} 名销售</span> <SaveBadge status={status} /></>} className="mnt-main-panel">
         <MatrixShell>
@@ -536,7 +602,7 @@ function OrgMaintenancePage({ markDirty, status }) {
               </tr>
             </thead>
             <tbody>
-              {ORG_MAINTENANCE_USERS.map((user) => (
+              {visibleUsers.map((user) => (
                 <tr key={user.id} {...getSelectableRowProps(`org:${user.id}`, selectedOrgRow, setSelectedOrgRow, user.enabled && user.isSales ? '' : 'mnt-row--muted')}>
                   <td className="mnt-name-cell">
                     <strong>{user.name}</strong>
@@ -582,7 +648,35 @@ function groupOptions(groups) {
 function ChannelMaintenancePage({ markDirty, status }) {
   const [groups, setGroups] = useState(CHANNEL_MAINTENANCE_GROUPS);
   const [sources, setSources] = useState(CHANNEL_MAINTENANCE_SOURCES);
+  const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedSourceRow, setSelectedSourceRow] = useState(null);
+  const sourceCountByGroup = useMemo(() => {
+    const counts = new Map();
+    sources.forEach((source) => {
+      counts.set(source.groupId, (counts.get(source.groupId) ?? 0) + 1);
+    });
+    return counts;
+  }, [sources]);
+  const channelGroupNavItems = useMemo(() => [
+    { id: 'all', name: '全部渠道大类', parentId: '', count: sources.length, countText: '来源', enabled: true },
+    ...groups.map((group) => ({
+      ...group,
+      parentId: group.parentId || 'all',
+      count: sourceCountByGroup.get(group.id) ?? 0,
+      countText: '来源',
+    })),
+  ], [groups, sourceCountByGroup, sources.length]);
+  const channelGroupNavNodes = useMemo(
+    () => buildMaintenanceNavTree(channelGroupNavItems, { rootId: 'all', countText: '来源' }),
+    [channelGroupNavItems]
+  );
+  const selectedGroupIds = useMemo(
+    () => getDescendantIds(channelGroupNavItems, selectedGroup),
+    [channelGroupNavItems, selectedGroup]
+  );
+  const visibleSources = selectedGroup === 'all'
+    ? sources
+    : sources.filter((source) => selectedGroupIds.has(source.groupId));
 
   function addGroup(parentId = '') {
     const nextIndex = groups.length + 1;
@@ -610,20 +704,8 @@ function ChannelMaintenancePage({ markDirty, status }) {
   return (
     <section className="mnt-layout mnt-layout--channel">
       <Panel title="渠道大类" meta={`${groups.length} 个大类`} className="mnt-side-panel">
-        <button className="mnt-btn mnt-local-action" type="button" onClick={() => addGroup('')}>新增大类</button>
-        <div className="mnt-edit-list">
-          {groups.map((group) => (
-            <div key={group.id} className={`mnt-channel-manage-row${group.enabled ? '' : ' mnt-edit-row--muted'}`} style={{ '--depth': group.parentId ? 1 : 0 }}>
-              <span className="mnt-tree-caret">›</span>
-              <input className="mnt-control" defaultValue={group.name} onChange={markDirty} aria-label={`${group.name}渠道大类名称`} />
-              <label className="mnt-check">
-                <input type="checkbox" defaultChecked={group.enabled} onChange={markDirty} />
-                启用
-              </label>
-              <button className="mnt-btn mnt-btn--tiny" type="button" onClick={() => addGroup(group.id)}>新增下级</button>
-            </div>
-          ))}
-        </div>
+        <button className="mnt-btn mnt-local-action" type="button" onClick={() => addGroup(selectedGroup === 'all' ? '' : selectedGroup)}>新增大类</button>
+        <MaintenanceSideNav nodes={channelGroupNavNodes} activeId={selectedGroup} onSelect={setSelectedGroup} />
       </Panel>
       <Panel title="卫瓴线索来源" meta={<SaveBadge status={status} />} className="mnt-main-panel">
         <button className="mnt-btn mnt-local-action" type="button" onClick={addSource}>新增来源</button>
@@ -640,7 +722,7 @@ function ChannelMaintenancePage({ markDirty, status }) {
               </tr>
             </thead>
             <tbody>
-              {sources.map((source) => (
+              {visibleSources.map((source) => (
                 <tr key={source.code} {...getSelectableRowProps(`source:${source.code}`, selectedSourceRow, setSelectedSourceRow, source.excluded ? 'mnt-row--muted' : '')}>
                   <td><input className="mnt-control" defaultValue={source.code} onChange={markDirty} aria-label={`${source.name}来源编码`} /></td>
                   <td><input className="mnt-control" defaultValue={source.name} onChange={markDirty} aria-label={`${source.name}来源名称`} /></td>
