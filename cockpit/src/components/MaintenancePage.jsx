@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-03 17:20:28 CST
+ 更新内容: 强化目标维护可填单元格状态标记，方便区分可填写目标和只读汇总目标。
+*/
+/*
  更新时间: 2026-07-03 17:05:00 CST
  更新内容: 目标维护选中行新增左右横向滚动按钮，便于不用底部滚动条即可移动月份表格。
 */
@@ -395,7 +399,11 @@ function TargetPeriodCell({ row, column, markDirty }) {
   const editable = row.type === 'user' && column.month;
 
   return (
-    <td className={`mnt-period-cell ${editable ? 'mnt-period-cell--editable' : 'mnt-period-cell--readonly'}`}>
+    <td
+      className={`mnt-period-cell ${editable ? 'mnt-period-cell--editable' : 'mnt-period-cell--readonly'}`}
+      data-target-editable={editable ? 'true' : 'false'}
+      title={editable ? '可填写目标' : '汇总目标，不可直接填写'}
+    >
       {editable ? (
         <div className="mnt-target-input-wrap">
           <input

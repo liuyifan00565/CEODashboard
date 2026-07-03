@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-03 17:20:28 CST
+ Update content: Require stronger editable target input affordance and softer readonly summary values.
+*/
+/*
  Update time: 2026-07-03 11:11:24 CST
  Update content: Add regression coverage for clearly separating editable and readonly target maintenance values.
 */
@@ -17,7 +21,7 @@ function cssRuleBody(source, selector) {
 test('marks target period cells as editable or readonly and keeps readonly values out of inputs', () => {
   assert.match(
     maintenancePageSource,
-    /<td className=\{`mnt-period-cell \$\{editable \? 'mnt-period-cell--editable' : 'mnt-period-cell--readonly'\}`\}>/
+    /<td\s+className=\{`mnt-period-cell \$\{editable \? 'mnt-period-cell--editable' : 'mnt-period-cell--readonly'\}`\}\s+data-target-editable=\{editable \? 'true' : 'false'\}\s+title=\{editable \? '可填写目标' : '汇总目标，不可直接填写'\}\s+>/
   );
   assert.match(maintenancePageSource, /<div className="mnt-target-input-wrap">/);
   assert.match(maintenancePageSource, /<span className="mnt-target-input-unit">万<\/span>/);
@@ -33,24 +37,39 @@ test('styles editable target values as glass inputs and readonly target values a
   const inputWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-target-input-wrap');
   const inputWrapHoverBlock = cssRuleBody(maintenancePageCss, '.mnt-target-input-wrap:hover');
   const inputWrapFocusBlock = cssRuleBody(maintenancePageCss, '.mnt-target-input-wrap:focus-within');
+  const inputWrapCueBlock = cssRuleBody(maintenancePageCss, '.mnt-target-input-wrap::before');
   const inputUnitBlock = cssRuleBody(maintenancePageCss, '.mnt-target-input-unit');
   const readonlyValueBlock = cssRuleBody(maintenancePageCss, '.mnt-target-readonly-value');
+  const readonlyStrongBlock = cssRuleBody(maintenancePageCss, '.mnt-target-readonly-value strong');
   const progressBlock = cssRuleBody(maintenancePageCss, '.mnt-progress');
 
   assert.match(editableCellBlock, /vertical-align:\s*top;/);
   assert.match(readonlyCellBlock, /vertical-align:\s*top;/);
+  assert.match(inputWrapBlock, /position:\s*relative;/);
+  assert.match(inputWrapBlock, /isolation:\s*isolate;/);
   assert.match(inputWrapBlock, /display:\s*grid;/);
   assert.match(inputWrapBlock, /grid-template-columns:\s*minmax\(0,\s*1fr\) auto;/);
-  assert.match(inputWrapBlock, /border:\s*1px solid var\(--line-2\);/);
-  assert.match(inputWrapBlock, /background:\s*color-mix\(in srgb, var\(--glass-cell-hover\) 54%, transparent\);/);
-  assert.match(inputWrapBlock, /box-shadow:[\s\S]*inset 0 0 0 1px rgba\(255,\s*255,\s*255,\s*\.1\)/);
-  assert.match(inputWrapHoverBlock, /border-color:\s*color-mix\(in srgb, var\(--txt\) 42%, var\(--line-2\)\);/);
+  assert.match(inputWrapBlock, /cursor:\s*text;/);
+  assert.match(inputWrapBlock, /overflow:\s*hidden;/);
+  assert.match(inputWrapBlock, /border:\s*1px solid color-mix\(in srgb, var\(--txt\) 30%, var\(--line-2\)\);/);
+  assert.match(inputWrapBlock, /background:\s*color-mix\(in srgb, var\(--glass-cell-hover\) 66%, transparent\);/);
+  assert.match(inputWrapBlock, /box-shadow:[\s\S]*0 0 0 1px color-mix\(in srgb, var\(--txt\) 18%, transparent\)/);
+  assert.match(inputWrapCueBlock, /position:\s*absolute;/);
+  assert.match(inputWrapCueBlock, /left:\s*0;/);
+  assert.match(inputWrapCueBlock, /width:\s*3px;/);
+  assert.match(inputWrapCueBlock, /background:\s*color-mix\(in srgb, var\(--txt\) 46%, transparent\);/);
+  assert.match(inputWrapHoverBlock, /border-color:\s*color-mix\(in srgb, var\(--txt\) 54%, var\(--line-2\)\);/);
+  assert.match(inputWrapHoverBlock, /background:\s*color-mix\(in srgb, var\(--glass-cell-hover\) 78%, transparent\);/);
   assert.match(inputWrapFocusBlock, /box-shadow:[\s\S]*0 0 0 3px var\(--focus-outline\)/);
   assert.match(inputUnitBlock, /color:\s*var\(--muted\);/);
   assert.match(readonlyValueBlock, /background:\s*transparent;/);
   assert.match(readonlyValueBlock, /border:\s*0;/);
   assert.match(readonlyValueBlock, /color:\s*var\(--muted\);/);
+  assert.match(readonlyValueBlock, /opacity:\s*\.68;/);
+  assert.match(readonlyValueBlock, /font-size:\s*12px;/);
+  assert.match(readonlyStrongBlock, /font-weight:\s*720;/);
   assert.doesNotMatch(progressBlock, /mnt-period-cell--editable|mnt-period-cell--readonly/);
   assert.doesNotMatch(inputWrapBlock, /var\(--good\)|var\(--warn\)|rgba\(190,\s*64,\s*255/);
+  assert.doesNotMatch(inputWrapCueBlock, /var\(--good\)|var\(--warn\)|rgba\(190,\s*64,\s*255/);
   assert.doesNotMatch(readonlyValueBlock, /var\(--good\)|var\(--warn\)|rgba\(190,\s*64,\s*255/);
 });
