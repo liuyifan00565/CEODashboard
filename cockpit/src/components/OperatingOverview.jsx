@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 21:24:15 CST  更新内容: 精简经营进度卡片眉题、风险渠道与节奏文案，并弱化指标分隔线。 */
 /* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 经营总览提高信息密度，加入月度/年度节奏判断、年度虚线目标和顶部明细入口。 */
 /* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 本月回款主数字改为静态权威值，避免截图或首屏加载时显示滚动中间态。 */
 /* 更新时间: 2026-07-05 18:20:00 CST  更新内容: 新增经营总览三段融合布局，本月为主视角、年度为节奏背景、渠道为原因拆解。 */
@@ -15,14 +16,13 @@ import { useThemeTokens } from '../lib/theme';
 import './OperatingOverview.css';
 
 const PROGRESS_KEYWORDS = [
-  '经营进度总览',
   '2026年6月经营进度',
   '本月回款',
   '月度完成率',
   '时间进度',
-  '节奏',
+  '领先 7.1%',
   '目标缺口',
-  '预计影响缺口',
+  '影响月度缺口 36万',
   '风险渠道',
   '线下华东',
   '本月整体进度正常，但线下华东低于目标节奏，预计影响月度缺口 36万。',
@@ -52,6 +52,11 @@ function formatPct(value) {
 function formatSignedPct(value) {
   const number = Number(value);
   return `${number >= 0 ? '+' : ''}${number.toFixed(1)}%`;
+}
+
+function formatPaceLead(value) {
+  const number = Number(value);
+  return `${number >= 0 ? '领先' : '落后'} ${Math.abs(number).toFixed(1)}%`;
 }
 
 function annualRhythmOption(series, tokens) {
@@ -156,7 +161,6 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
         <section className="op-panel op-panel--progress" data-anim>
           <header className="op-progress-head">
             <div>
-              <span className="op-eyebrow">经营进度总览</span>
               <h1>2026年6月经营进度</h1>
             </div>
             <button
@@ -165,7 +169,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
               disabled={!monthKpiCard || !onOpenKpi}
               onClick={() => onOpenKpi(monthKpiCard)}
             >
-              查看本月明细
+              查看近期明细
             </button>
           </header>
 
@@ -179,7 +183,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
               <span className="op-summary-label">月目标完成率</span>
               <b>{formatPct(KPI_DERIVED.monthCompletion)}</b>
               <span className="op-summary-sub">
-                时间进度 {formatPct(overviewMetrics.monthTimeProgress)} / 节奏 {formatSignedPct(overviewMetrics.monthPaceDelta)}
+                时间进度 {formatPct(overviewMetrics.monthTimeProgress)} · {formatPaceLead(overviewMetrics.monthPaceDelta)}
               </span>
               <div className="op-progress-track" aria-label={`月度完成率 ${KPI_DERIVED.monthCompletion}%`}>
                 <span style={{ width: progressWidth }} />
@@ -192,8 +196,8 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             </div>
             <div className="op-summary-cell op-summary-cell--warn">
               <span className="op-summary-label">风险渠道</span>
-              <b>线下华东 <em>70%</em></b>
-              <span className="op-summary-sub">预计影响缺口 {overviewMetrics.riskImpactGap}万</span>
+              <b>线下华东</b>
+              <span className="op-summary-sub">完成率 70%</span>
             </div>
           </div>
 

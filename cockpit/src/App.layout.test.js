@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 21:24:15 CST
+ 更新内容: 经营进度顶部微调回归测试，覆盖删眉题、查看近期明细、轻量节奏文案和弱分隔线。
+*/
+/*
  更新时间: 2026-07-05 19:10:30 CST
  更新内容: 增加经营总览信息密度、年度节奏虚线、渠道融合表和本月/年度二级入口回归测试。
 */
@@ -905,16 +909,18 @@ test('places the AI mascot inside a subdued sidebar status card', () => {
 
 test('uses one fused operating story instead of duplicated monthly and yearly recovery cards', () => {
   assert.match(operatingOverviewSource, /<h1>2026年6月经营进度<\/h1>/);
-  assert.match(operatingOverviewSource, /经营进度总览/);
+  assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">经营进度总览<\/span>/);
   assert.match(operatingOverviewSource, /本月回款/);
   assert.match(operatingOverviewSource, /月度完成率/);
   assert.match(operatingOverviewSource, /时间进度/);
-  assert.match(operatingOverviewSource, /节奏/);
-  assert.match(operatingOverviewSource, /预计影响缺口/);
+  assert.match(operatingOverviewSource, /formatPaceLead/);
+  assert.match(operatingOverviewSource, /领先/);
+  assert.doesNotMatch(operatingOverviewSource, /预计影响缺口 \{overviewMetrics\.riskImpactGap\}万/);
   assert.match(operatingOverviewSource, /目标缺口/);
   assert.match(operatingOverviewSource, /风险渠道/);
+  assert.match(operatingOverviewSource, /完成率 70%/);
   assert.match(operatingOverviewSource, /本月整体进度正常，但线下华东低于目标节奏，预计影响月度缺口 36万。/);
-  assert.match(operatingOverviewSource, /查看本月明细/);
+  assert.match(operatingOverviewSource, /查看近期明细/);
   assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
   assert.match(operatingOverviewSource, /年度节奏/);
   assert.match(operatingOverviewSource, /剩余月均需完成/);
@@ -929,6 +935,8 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewCss, /border:\s*1px solid var\(--dashboard-card-border\);/);
   assert.match(operatingOverviewCss, /backdrop-filter:\s*var\(--dashboard-card-blur\);/);
   assert.match(operatingOverviewCss, /box-shadow:\s*var\(--dashboard-card-shadow\);/);
+  assert.match(operatingOverviewCss, /\.op-summary-cell:nth-child\(2\),\s*\.op-summary-cell:nth-child\(3\)/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-summary-cell\s*\{[\s\S]*?border-left:\s*1px solid var\(--line-2\);/);
   assert.doesNotMatch(appSource, /recoveryKpiCards/);
   assert.doesNotMatch(appSource, /sidePanel=\{<ChannelPanel/);
   assert.doesNotMatch(dashboardCss, /\.dash-kpis/);

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 21:24:15 CST  更新内容: 弱化经营进度顶部指标分隔线，并适配风险渠道与节奏辅助文案的轻量展示。 */
 /* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 经营总览样式提高信息密度，支持四指标总览、年度虚线目标和轻量明细入口。 */
 /* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 优化经营总览移动端换行和主进度标题宽度，避免窄屏文字截断。 */
 /* 更新时间: 2026-07-05 18:20:00 CST  更新内容: 新增经营总览三段融合页样式，复用统一深色玻璃体系并降低发光和重复图表。 */
@@ -142,8 +143,8 @@
   display: grid;
   grid-template-columns: minmax(210px, 1.25fr) minmax(230px, 1.2fr) minmax(170px, .8fr) minmax(210px, 1fr);
   gap: 0;
-  border-top: 1px solid var(--line-2);
-  border-bottom: 1px solid var(--line-2);
+  border-top: 1px solid rgba(255,255,255,.075);
+  border-bottom: 1px solid rgba(255,255,255,.075);
 }
 
 .op-summary-cell {
@@ -152,11 +153,15 @@
   align-content: center;
   gap: 7px;
   padding: 17px clamp(14px, 1.8vw, 24px);
-  border-left: 1px solid var(--line-2);
+  border-left: 0;
+}
+
+.op-summary-cell:nth-child(2),
+.op-summary-cell:nth-child(3) {
+  border-left: 1px solid rgba(255,255,255,.07);
 }
 
 .op-summary-cell:first-child {
-  border-left: 0;
   padding-left: 0;
 }
 
@@ -262,7 +267,7 @@
   }
 
   .op-summary-cell:nth-child(n + 3) {
-    border-top: 1px solid var(--line-2);
+    border-top: 1px solid rgba(255,255,255,.07);
   }
 }
 
@@ -289,7 +294,7 @@
 
   .op-summary-cell {
     border-left: 0;
-    border-top: 1px solid var(--line-2);
+    border-top: 1px solid rgba(255,255,255,.07);
     padding-left: 0;
   }
 
