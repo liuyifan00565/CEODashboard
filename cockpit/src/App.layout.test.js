@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:20:59 CST
+ 更新内容: 增加所有仪表盘卡片复用月度趋势悬浮亮边效果的回归测试。
+*/
+/*
  更新时间: 2026-07-06 00:00:13 CST
  更新内容: 布局守卫测试同步算力与控件金色到高级哑金。
 */
@@ -1051,6 +1055,15 @@ test('restores secondary dashboard panels below the operating overview story', (
 test('gives the version panel the same hover halo as the monthly trend panel', () => {
   assert.match(dashboardCss, /\.dash-secondary-cell \.mt-panel,\s*[\s\S]*?\.dash-secondary-cell \.vf-panel\s*\{[\s\S]*?isolation:isolate;[\s\S]*?transition:border-color \.22s ease, box-shadow \.22s ease;/);
   assert.match(dashboardCss, /\.dash-secondary-cell \.mt-panel:hover,\s*[\s\S]*?\.dash-secondary-cell \.vf-panel:hover,\s*[\s\S]*?\.dash-secondary-cell \.vf-panel:focus-within,[\s\S]*?\.dash-secondary-delivery \.dlv-panel:hover,[\s\S]*?\.dash-secondary-delivery \.dlv-panel:focus-within\s*\{[\s\S]*?border-color:rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:var\(--glass-shadow\);/);
+});
+
+test('gives every dashboard card the shared hover halo', () => {
+  assert.match(operatingOverviewCss, /\.op-panel,\s*[\s\S]*?\.op-channel-wrap \.ch-panel\s*\{[\s\S]*?transition:\s*border-color \.22s ease, box-shadow \.22s ease;/);
+  assert.match(operatingOverviewCss, /\.op-panel:hover,\s*[\s\S]*?\.op-panel:focus-within,\s*[\s\S]*?\.op-channel-wrap \.ch-panel:hover,\s*[\s\S]*?\.op-channel-wrap \.ch-panel:focus-within\s*\{[\s\S]*?border-color:\s*rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
+  assert.match(kpiCardCss, /\.kpi-card:hover,\s*[\s\S]*?\.kpi-card:focus-visible\s*\{[\s\S]*?border-color:\s*rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
+  assert.match(openingMetricCardsCss, /\.opening-metric-card:hover,\s*[\s\S]*?\.opening-metric-card:focus-visible\s*\{[\s\S]*?border-color:\s*rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
+  assert.match(computePageCss, /\.cpu-kpi:hover,\s*[\s\S]*?\.cpu-kpi:focus-within\s*\{[\s\S]*?border-color:\s*rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
+  assert.match(computePageCss, /\.cpu-panel:hover,\s*[\s\S]*?\.cpu-panel:focus-within\s*\{[\s\S]*?border-color:\s*rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
 });
 
 test('uses one-shot soft glow for search result highlighting instead of electric borders', () => {

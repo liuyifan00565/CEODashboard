@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:20:59 CST
+ 更新内容: 算力页 KPI 与面板卡片 hover 统一复用月度趋势悬浮亮边玻璃反馈。
+*/
+/*
  更新时间: 2026-07-06 00:00:13 CST
  更新内容: 算力页下拉控件聚焦金色改为低饱和高级哑金。
 */
@@ -157,6 +161,7 @@
   -webkit-backdrop-filter: var(--dashboard-card-blur);
   backdrop-filter: var(--dashboard-card-blur);
   box-shadow: var(--dashboard-card-shadow);
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
 }
 
 .cpu-panel__head {
@@ -711,13 +716,14 @@
   .cpu-kpi:focus-within {
     transform: translateY(-3px);
     border-color: rgba(255,255,255,.34);
-    box-shadow: 0 22px 58px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.18);
+    box-shadow: var(--glass-shadow);
   }
 
-  .cpu-panel:hover {
+  .cpu-panel:hover,
+  .cpu-panel:focus-within {
     transform: translateY(-3px);
-    border-color: var(--line-2);
-    box-shadow: 0 22px 58px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.24);
+    border-color: rgba(255,255,255,.34);
+    box-shadow: var(--glass-shadow);
   }
 
 }

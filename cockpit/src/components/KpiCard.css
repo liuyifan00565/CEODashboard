@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 00:20:59 CST  更新内容: 回款 KPI 卡片 hover 统一复用月度趋势悬浮亮边玻璃反馈。 */
 /* 更新时间: 2026-07-05 15:29:01 CST  更新内容: 回款卡片改为更轻玻璃、半环缩小后退，并强化主数字层级。 */
 /* 更新时间: 2026-07-03 23:39:28 CST  更新内容: 回款半环图视觉退后，放大长卡主 KPI 数字并降低图表柔光。 */
 /* Update time: 2026-07-03 18:19:59 CST  Update content: Add explicit risk styling for KPI gaps when completion is below 80 percent. */
@@ -310,8 +311,8 @@
 .kpi-card:hover,
 .kpi-card:focus-visible {
   transform: translateY(-3px);
-  border-color: rgba(255, 255, 255, .18);
-  box-shadow: 0 24px 72px rgba(0, 0, 0, .30), inset 0 1px 0 rgba(255, 255, 255, .12);
+  border-color: rgba(255,255,255,.34);
+  box-shadow: var(--glass-shadow);
   outline: none;
 }
 

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 00:20:59 CST  更新内容: 经营总览所有卡片复用月度趋势悬浮亮边玻璃反馈。 */
 /* 更新时间: 2026-07-06 00:00:23 CST  更新内容: 固定经营总览搜索命中外壳的网格区域，避免搜索时卡片位置和尺寸跳变。 */
 /* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 经营进度顶部标题降级、弱化指标分隔线，并增加年度节奏图表底部呼吸空间。 */
 /* 更新时间: 2026-07-05 22:59:45 CST  更新内容: 年度节奏卡最终版采用三列核心指标、单行辅助说明和更稳的图表留白。 */
@@ -40,6 +41,19 @@
   -webkit-backdrop-filter: var(--dashboard-card-blur);
   backdrop-filter: var(--dashboard-card-blur);
   box-shadow: var(--dashboard-card-shadow);
+}
+
+.op-panel,
+.op-channel-wrap .ch-panel {
+  transition: border-color .22s ease, box-shadow .22s ease;
+}
+
+.op-panel:hover,
+.op-panel:focus-within,
+.op-channel-wrap .ch-panel:hover,
+.op-channel-wrap .ch-panel:focus-within {
+  border-color: rgba(255,255,255,.34);
+  box-shadow: var(--glass-shadow);
 }
 
 .op-panel--progress {
