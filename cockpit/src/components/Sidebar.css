@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-05 15:29:01 CST  更新内容: 侧边栏收窄为图标按钮，文字改为悬浮玻璃提示以降低左侧空黑感。 */
+/* 更新时间: 2026-07-05 16:12:00 CST  更新内容: 侧边栏恢复图标加文字的 220px 管理导航，并使用轻薄选中态与分组层级。 */
 /* 更新时间: 2026-07-02 16:28:00 CST  更新内容: 侧边导航图标样式适配统一 AppIcon 线性 SVG。 */
 .sb-glass {
   align-items: stretch;
@@ -13,12 +13,26 @@
 }
 
 .sb-root {
-  width: 72px;
+  width: 100%;
   box-sizing: border-box;
   background: transparent;
   border: none;
   border-radius: 24px;
-  padding: 10px;
+  padding: 12px;
+}
+
+.sb-section + .sb-section {
+  margin-top: 18px;
+}
+
+.sb-section-title {
+  display: block;
+  margin: 0 8px 8px;
+  color: rgba(255,255,255,.34);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: .08em;
 }
 
 .sb-list {
@@ -39,14 +53,14 @@
 .sb-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0;
+  justify-content: flex-start;
+  gap: 10px;
   position: relative;
-  width: 52px;
-  height: 52px;
-  padding: 0;
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
   border: 1px solid transparent;
-  border-radius: 16px;
+  border-radius: 12px;
   background: transparent;
   color: var(--muted);
   font: inherit;
@@ -56,70 +70,75 @@
 }
 
 .sb-item:hover {
-  background: rgba(255,255,255,.065);
-  border-color: rgba(255,255,255,.10);
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.075);
   color: var(--txt);
   transform: translateY(-1px);
 }
 
 .sb-item--active {
-  background: rgba(255,255,255,.085);
-  border-color: rgba(255,255,255,.12);
+  background: rgba(255,255,255,.065);
+  border-color: rgba(255,255,255,.08);
   color: var(--txt);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
 }
 
 .sb-item--active::before {
   content: '';
   position: absolute;
-  left: -3px;
+  left: 0;
   top: 50%;
   transform: translateY(-50%);
   width: 3px;
-  height: 20px;
-  border-radius: 2px;
-  background: var(--accent-gold-soft);
-  box-shadow: 0 0 12px rgba(215,181,109,.30);
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg,#A994FF,#7F6BFF);
+  box-shadow: 0 0 12px rgba(127,107,255,.28);
 }
 
 .sb-icon {
   flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   display: block;
-  opacity: .92;
+  opacity: .78;
 }
 
 .sb-name {
-  position: absolute;
-  left: calc(100% + 10px);
-  top: 50%;
-  z-index: 20;
-  transform: translateY(-50%) translateX(-4px);
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid rgba(255,255,255,.10);
-  border-radius: 10px;
-  background: rgba(13,19,36,.78);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: 0 14px 36px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.08);
-  color: rgba(247,248,252,.86);
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: rgba(255,255,255,.62);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
   white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .18s ease, transform .18s ease;
+  transition: color .2s ease, font-weight .2s ease;
 }
 
-.sb-item:hover .sb-name,
-.sb-item:focus-visible .sb-name {
-  opacity: 1;
-  transform: translateY(-50%) translateX(0);
+.sb-item:hover .sb-name {
+  color: rgba(255,255,255,.78);
+}
+
+.sb-item--active .sb-name {
+  color: rgba(255,255,255,.92);
+  font-weight: 600;
+}
+
+.sb-item--active .sb-icon {
+  opacity: .96;
+}
+
+.sb-item:disabled {
+  cursor: default;
+  opacity: .46;
+  transform: none;
+}
+
+.sb-item:disabled:hover {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
 }
 
 .sb-item:focus-visible {
@@ -140,12 +159,15 @@
   }
 
   .sb-item {
-    flex: 0 0 48px;
-    width: 48px;
+    flex: 0 0 auto;
+    width: auto;
     height: 48px;
+    padding: 0 12px;
   }
 
-  .sb-name {
-    display: none;
+  .sb-section {
+    display: contents;
   }
+
+  .sb-section-title {display: none}
 }

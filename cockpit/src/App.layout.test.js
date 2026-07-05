@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-05 15:29:01 CST
- 更新内容: 回归测试锁定首页高端深灰蓝玻璃改版、窄侧栏、自然标题和年度风险预测结构。
+ 更新时间: 2026-07-05 16:12:00 CST
+ 更新内容: 回归测试锁定 220px 图文管理侧栏、非固定页面标题和移除年度风险预测块。
 */
 /*
  Update time: 2026-07-04 01:03:12 CST
@@ -151,6 +151,7 @@ const kpiCardCss = readFileSync(new URL('./components/KpiCard.css', import.meta.
 const kpiModalSource = readFileSync(new URL('./components/KpiModal.jsx', import.meta.url), 'utf8');
 const monthlyTrendSource = readFileSync(new URL('./components/MonthlyTrend.jsx', import.meta.url), 'utf8');
 const aiAnalysisWidgetCss = readFileSync(new URL('./components/AIAnalysisWidget.css', import.meta.url), 'utf8');
+const aiAnalysisWidgetSource = readFileSync(new URL('./components/AIAnalysisWidget.jsx', import.meta.url), 'utf8');
 const mascot3dStageCss = readFileSync(new URL('./components/Mascot3DStage.css', import.meta.url), 'utf8');
 const deliveryPanelCss = readFileSync(new URL('./components/DeliveryPanel.css', import.meta.url), 'utf8');
 const channelPanelSource = readFileSync(new URL('./components/ChannelPanel.jsx', import.meta.url), 'utf8');
@@ -287,15 +288,28 @@ test('counts searchable matches and cycles the current result from the top searc
   assert.match(appSource, /scrollIntoView\(\{ behavior: 'smooth', block: 'center', inline: 'nearest' \}\)/);
 });
 
-test('renders a natural page title instead of a compact brand capsule', () => {
+test('renders the compact FuKe brand capsule in the topbar', () => {
+  const brandBlock = cssRuleBody(dashboardCss, '.dash-topbar .brand');
+  const brandTitleBlock = cssRuleBody(dashboardCss, '.dash-topbar .brand b');
+  const brandMetaBlock = cssRuleBody(dashboardCss, '.dash-topbar .brand small');
+
   assert.match(mockSource, /monthLabel: '2026年6月'/);
   assert.doesNotMatch(mockSource, /monthLabel: '2026 年 6 月'/);
-  assert.match(appSource, /<div className="dash-title-block">[\s\S]*?<h1>经营驾驶舱<\/h1>[\s\S]*?<p>福客 · \{META\.monthLabel\} · \{activeContextLabel\}<\/p>[\s\S]*?<\/div>/);
-  assert.match(dashboardCss, /\.dash-title-block\{[\s\S]*?display:flex;[\s\S]*?flex-direction:column;[\s\S]*?gap:4px;/);
-  assert.match(dashboardCss, /\.dash-title-block h1\{[\s\S]*?font-size:clamp\(24px,2\.4vw,34px\);[\s\S]*?font-weight:700;/);
-  assert.match(dashboardCss, /\.dash-title-block p\{[\s\S]*?color:rgba\(247,248,252,\.56\);[\s\S]*?font-size:14px;/);
-  assert.doesNotMatch(appSource, /className="brand-glass"/);
-  assert.doesNotMatch(dashboardCss, /\.dash-topbar \.brand-glass/);
+  assert.match(appSource, /import MetallicPaint from '\.\/components\/MetallicPaint\/MetallicPaint';/);
+  assert.match(appSource, /<GlassSurface[\s\S]*?width=\{328\}[\s\S]*?height=\{66\}[\s\S]*?borderRadius=\{22\}[\s\S]*?className="brand-glass"[\s\S]*?<div className="brand">/);
+  assert.match(appSource, /<span className="brand-logo-paint" aria-hidden="true">[\s\S]*?<MetallicPaint[\s\S]*?imageSrc="\/logo-black\.png"[\s\S]*?\/>[\s\S]*?<\/span>/);
+  assert.match(appSource, /<div className="brand-copy">[\s\S]*?<b>福客经营驾驶舱<\/b>[\s\S]*?<small>\{META\.monthLabel\} \| \{activeContextLabel\}<\/small>[\s\S]*?<\/div>/);
+  assert.match(dashboardCss, /\.dash-topbar \.brand-glass\{[\s\S]*?flex:0 0 328px;[\s\S]*?min-width:328px/);
+  assert.match(brandBlock, /padding:\s*0 18px;/);
+  assert.match(brandBlock, /gap:\s*13px;/);
+  assert.match(brandTitleBlock, /font-size:\s*20px;/);
+  assert.match(brandTitleBlock, /font-weight:\s*760;/);
+  assert.match(brandMetaBlock, /font-size:\s*16px;/);
+  assert.match(brandMetaBlock, /color:\s*rgba\(247,248,252,\.58\);/);
+  assert.doesNotMatch(appSource, /<div className="dash-title-block">/);
+  assert.doesNotMatch(dashboardCss, /\.dash-title-block/);
+  assert.doesNotMatch(appSource, /className="dash-page-context"/);
+  assert.doesNotMatch(dashboardCss, /\.dash-page-context/);
   assert.match(appSource, /const activeContextLabel = maintenanceMode\s*\?\s*'数据维护'\s*:\s*activeMenu === 'overview' \? 'CEO视角' : activeMenuLabel;/);
   assert.doesNotMatch(appSource, /<small>\{META\.monthLabel\}｜\{activeContextLabel\}<\/small>/);
   assert.doesNotMatch(appSource, /福客 · CEO 经营驾驶舱/);
@@ -310,11 +324,11 @@ test('adds a topbar data maintenance switch that swaps the sidebar navigation', 
   assert.match(appSource, /const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU\[0\]\?\.key \?\? 'target-maintenance';/);
   assert.match(appSource, /const \[maintenanceMode,\s*setMaintenanceMode\] = useState\(false\);/);
   assert.match(appSource, /const \[activeMaintenanceMenu,\s*setActiveMaintenanceMenu\] = useState\(DEFAULT_MAINTENANCE_MENU\);/);
-  assert.match(appSource, /const sidebarItems = maintenanceMode \? MAINTENANCE_MENU : MENU;/);
+  assert.match(appSource, /const sidebarItems = maintenanceMode \? MAINTENANCE_SIDEBAR_ITEMS : DASHBOARD_SIDEBAR_ITEMS;/);
   assert.match(appSource, /const sidebarActive = maintenanceMode \? activeMaintenanceMenu : activeMenu;/);
   assert.match(appSource, /const activeContextLabel = maintenanceMode\s*\?\s*'数据维护'\s*:/);
   assert.doesNotMatch(appSource, /`数据维护 · \$\{activeMaintenanceLabel\}`/);
-  assert.match(appSource, /function handleSidebarChange\(nextMenu\) \{[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setActiveMaintenanceMenu\(nextMenu\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?handleMenuChange\(nextMenu\);[\s\S]*?\}/);
+  assert.match(appSource, /function handleSidebarChange\(nextMenu\) \{[\s\S]*?if \(nextMenu === 'data-maintenance'\) \{[\s\S]*?setMaintenanceMode\(true\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setActiveMaintenanceMenu\(nextMenu\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?handleMenuChange\(nextMenu\);[\s\S]*?\}/);
   assert.match(appSource, /function handleMaintenanceModeToggle\(\) \{[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setMaintenanceMode\(false\);[\s\S]*?setActiveMenu\('overview'\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?setMaintenanceMode\(true\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?\}/);
   assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} \/>/);
   assert.match(appSource, /className="maintenance-glass"/);
@@ -338,25 +352,41 @@ test('adds a topbar data maintenance switch that swaps the sidebar navigation', 
 });
 
 test('softens the shared glass controls so navigation and top tools stay restrained', () => {
-  assert.doesNotMatch(appSource, /className="brand-glass"/);
-  assert.match(sidebarSource, /<GlassSurface[\s\S]*?brightness=\{48\}[\s\S]*?blur=\{10\}[\s\S]*?displace=\{0\.28\}[\s\S]*?backgroundOpacity=\{0\.055\}[\s\S]*?distortionScale=\{-48\}[\s\S]*?className="sb-glass"/);
+  assert.match(appSource, /className="brand-glass"/);
+  assert.match(sidebarSource, /<GlassSurface[\s\S]*?brightness=\{46\}[\s\S]*?blur=\{12\}[\s\S]*?displace=\{0\.22\}[\s\S]*?backgroundOpacity=\{0\.052\}[\s\S]*?distortionScale=\{-44\}[\s\S]*?className="sb-glass"/);
   assert.match(expandableSearchSource, /brightness=\{48\}[\s\S]*?blur=\{7\}[\s\S]*?displace=\{0\.35\}[\s\S]*?backgroundOpacity=\{0\.035\}[\s\S]*?distortionScale=\{-60\}/);
   assert.match(glassSurfaceCss, /\.glass-surface--svg\s*\{[\s\S]*?box-shadow:[\s\S]*?inset 0 0 0 1px[\s\S]*?inset 0 1px 0 rgba\(255, 255, 255, 0\.10\)[\s\S]*?0px 10px 30px rgba\(17, 17, 26, 0\.08\);/);
   assert.doesNotMatch(glassSurfaceCss, /0px 16px 56px rgba\(17, 17, 26, 0\.05\) inset/);
 });
 
-test('uses a narrow icon-first sidebar with accessible labels', () => {
+test('uses a 220px icon and text management sidebar with restrained hierarchy', () => {
   const sidebarItemBlock = cssRuleBody(sidebarCss, '.sb-item');
+  const sidebarNameBlock = cssRuleBody(sidebarCss, '.sb-name');
+  const sidebarSectionBlock = cssRuleBody(sidebarCss, '.sb-section-title');
 
-  assert.match(dashboardCss, /\.dash-aside\{[\s\S]*?width:96px;[\s\S]*?padding:18px 10px;/);
+  assert.match(appSource, /const DASHBOARD_SIDEBAR_ITEMS = \[[\s\S]*?section: '导航'[\s\S]*?name: '渠道分析'[\s\S]*?disabled: true[\s\S]*?key: 'data-maintenance'[\s\S]*?section: '系统'[\s\S]*?name: '搜索记录'/);
+  assert.match(appSource, /const MAINTENANCE_SIDEBAR_ITEMS = MAINTENANCE_MENU\.map\(\(item\) => \(\{ \.\.\.item, section: '系统' \}\)\);/);
+  assert.match(dashboardCss, /\.dash-aside\{[\s\S]*?width:220px;[\s\S]*?padding:18px 12px;/);
   assert.match(sidebarSource, /<nav className="sb-root" aria-label="主导航">/);
   assert.match(sidebarSource, /<button[\s\S]*?type="button"[\s\S]*?className=\{`sb-item\$\{item\.key === active \? ' sb-item--active' : ''\}`\}[\s\S]*?aria-label=\{item\.name\}[\s\S]*?title=\{item\.name\}/);
-  assert.match(sidebarCss, /\.sb-root\s*\{[\s\S]*?width:\s*72px;[\s\S]*?padding:\s*10px;/);
-  assert.match(sidebarItemBlock, /justify-content:\s*center;/);
-  assert.match(sidebarItemBlock, /width:\s*52px;/);
-  assert.match(sidebarItemBlock, /height:\s*52px;/);
-  assert.match(sidebarCss, /\.sb-name\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?left:\s*calc\(100% \+ 10px\);[\s\S]*?opacity:\s*0;/);
-  assert.match(sidebarCss, /\.sb-item:hover \.sb-name,[\s\S]*?\.sb-item:focus-visible \.sb-name\s*\{[\s\S]*?opacity:\s*1;/);
+  assert.match(sidebarSource, /<span className="sb-section-title">\{section\.title\}<\/span>/);
+  assert.match(sidebarSource, /disabled=\{Boolean\(item\.disabled\)\}/);
+  assert.match(sidebarCss, /\.sb-root\s*\{[\s\S]*?width:\s*100%;[\s\S]*?padding:\s*12px;/);
+  assert.match(sidebarItemBlock, /justify-content:\s*flex-start;/);
+  assert.match(sidebarItemBlock, /gap:\s*10px;/);
+  assert.match(sidebarItemBlock, /height:\s*44px;/);
+  assert.match(sidebarItemBlock, /border-radius:\s*12px;/);
+  assert.match(sidebarNameBlock, /font-size:\s*14px;/);
+  assert.match(sidebarNameBlock, /font-weight:\s*500;/);
+  assert.match(sidebarNameBlock, /color:\s*rgba\(255,255,255,\.62\);/);
+  assert.match(sidebarSectionBlock, /font-size:\s*12px;/);
+  assert.match(sidebarSectionBlock, /color:\s*rgba\(255,255,255,\.34\);/);
+  assert.match(sidebarSectionBlock, /letter-spacing:\s*\.08em;/);
+  assert.match(sidebarCss, /\.sb-icon\s*\{[\s\S]*?width:\s*16px;[\s\S]*?height:\s*16px;/);
+  assert.match(sidebarCss, /\.sb-item--active\s*\{[\s\S]*?background:\s*rgba\(255,255,255,\.065\);[\s\S]*?border-color:\s*rgba\(255,255,255,\.08\);/);
+  assert.match(sidebarCss, /\.sb-item--active::before\s*\{[\s\S]*?width:\s*3px;[\s\S]*?height:\s*18px;[\s\S]*?background:\s*linear-gradient\(180deg,#A994FF,#7F6BFF\);/);
+  assert.doesNotMatch(sidebarNameBlock, /position:\s*absolute/);
+  assert.doesNotMatch(sidebarNameBlock, /opacity:\s*0/);
   assert.doesNotMatch(sidebarSource, /<div className="sb-title">导航<\/div>/);
 });
 
@@ -838,15 +868,26 @@ test('notifies Fu Xiaoke when a KPI card is opened', () => {
   assert.match(appSource, /<KpiCard[\s\S]*?card=\{card\}[\s\S]*?onOpen=\{handleOpenCard\}/);
 });
 
+test('places the AI mascot inside a subdued sidebar status card', () => {
+  const aiWidgetBlock = cssRuleBody(aiAnalysisWidgetCss, '.ai-widget');
+
+  assert.match(aiAnalysisWidgetSource, /<div className="ai-status-copy" aria-hidden="true">[\s\S]*?<span>AI 助手<\/span>[\s\S]*?<b>经营分析<\/b>[\s\S]*?<\/div>/);
+  assert.match(aiWidgetBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.04\);/);
+  assert.match(aiWidgetBlock, /border:\s*1px solid rgba\(255,\s*255,\s*255,\s*\.08\);/);
+  assert.match(aiWidgetBlock, /border-radius:\s*18px;/);
+  assert.match(aiAnalysisWidgetCss, /\.ai-status-copy\s*\{[\s\S]*?display:\s*grid;[\s\S]*?gap:\s*3px;/);
+  assert.match(aiAnalysisWidgetCss, /\.ai-card-wrap\s*\{[\s\S]*?left:\s*244px;/);
+});
+
 test('builds two long recovery cards that each include a sales completion panel', () => {
   assert.match(appSource, /const recoveryKpiCards = filteredKpiCards\.filter\(\(card\) => \['month', 'year'\]\.includes\(card\.key\)\);/);
   assert.match(appSource, /const financeKpiCards = filteredKpiCards\.filter\(\(card\) => card\.key === 'cost'\);/);
   assert.match(dashboardCss, /\.dash-kpis\{\s*display:grid;grid-template-columns:minmax\(0,1fr\);grid-template-rows:repeat\(2,minmax\(326px,auto\)\);/);
   assert.match(dashboardCss, /\.dash-kpi-item\[data-kpi-key="month"\]\{grid-column:1;grid-row:1\}/);
   assert.match(dashboardCss, /\.dash-kpi-item\[data-kpi-key="year"\]\{grid-column:1;grid-row:2\}/);
-  assert.match(appSource, /function recoveryChannelTitle\(card\) \{[\s\S]*?return card\.key === 'year' \? '年度风险预测' : '渠道完成情况';[\s\S]*?\}/);
-  assert.match(appSource, /function recoveryChannelVariant\(card\) \{[\s\S]*?return card\.key === 'year' \? 'forecast' : 'completion';[\s\S]*?\}/);
-  assert.match(appSource, /recoveryKpiCards\.map\(\(card\) => \([\s\S]*?<KpiCard[\s\S]*?card=\{card\}[\s\S]*?onOpen=\{handleOpenCard\}[\s\S]*?sidePanel=\{<ChannelPanel channelKey=\{activeChannelKey\} title=\{recoveryChannelTitle\(card\)\} variant=\{recoveryChannelVariant\(card\)\} \/>\}[\s\S]*?\/>/);
+  assert.doesNotMatch(appSource, /function recoveryChannelTitle/);
+  assert.doesNotMatch(appSource, /function recoveryChannelVariant/);
+  assert.match(appSource, /recoveryKpiCards\.map\(\(card\) => \([\s\S]*?<KpiCard[\s\S]*?card=\{card\}[\s\S]*?onOpen=\{handleOpenCard\}[\s\S]*?sidePanel=\{<ChannelPanel channelKey=\{activeChannelKey\} title="渠道完成情况" \/>\}[\s\S]*?\/>/);
   assert.doesNotMatch(appSource, /className="dash-kpi-sales"/);
   assert.doesNotMatch(dashboardCss, /\.dash-kpi-sales/);
   assert.doesNotMatch(dashboardCss, /\.dash-kpi-item\[data-kpi-key="cost"\]\{grid-column:2;grid-row:1\}/);
@@ -921,7 +962,7 @@ test('routes every channel menu through the same overview layout with channel-sc
   assert.match(appSource, /const activeChannelKey = getDashboardChannelKey\(activeMenu\);/);
   assert.match(appSource, /getFilteredKpiCards\(\{ dim, dateRange, channel: activeChannelKey \}\)/);
   assert.match(appSource, /<MonthlyTrend channelKey=\{activeChannelKey\} \/>/);
-  assert.match(appSource, /<ChannelPanel channelKey=\{activeChannelKey\} title=\{recoveryChannelTitle\(card\)\} variant=\{recoveryChannelVariant\(card\)\} \/>/);
+  assert.match(appSource, /<ChannelPanel channelKey=\{activeChannelKey\} title="渠道完成情况" \/>/);
   assert.match(appSource, /<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);
   assert.match(appSource, /className=\{gridClassName\}/);
 });
@@ -937,7 +978,7 @@ test('scrolls the dashboard content into view when a sidebar menu item is select
 
 test('uses channel completion wording and connects the delivery dashboard panel', () => {
   assert.match(channelPanelSource, /渠道完成情况/);
-  assert.match(channelPanelSource, /export default function ChannelPanel\(\{ channelKey = 'all', title = '渠道完成情况', variant = 'completion' \}\)/);
+  assert.match(channelPanelSource, /export default function ChannelPanel\(\{ channelKey = 'all', title = '渠道完成情况' \}\)/);
   assert.match(channelPanelSource, /<span className="ch-title">\{title\}<\/span>/);
   assert.doesNotMatch(channelPanelSource, /本月销售完成/);
   assert.match(channelPanelSource, /createPortal/);
@@ -949,23 +990,21 @@ test('uses channel completion wording and connects the delivery dashboard panel'
   assert.match(appSource, /import DeliveryPanel from '\.\/components\/DeliveryPanel';/);
   assert.match(appSource, /<DeliveryPanel \/>/);
   assert.match(dashboardCss, /dash-delivery-row/);
-  assert.match(appSource, /sidePanel=\{<ChannelPanel channelKey=\{activeChannelKey\} title=\{recoveryChannelTitle\(card\)\} variant=\{recoveryChannelVariant\(card\)\} \/>\}/);
+  assert.match(appSource, /sidePanel=\{<ChannelPanel channelKey=\{activeChannelKey\} title="渠道完成情况" \/>\}/);
   assert.match(appSource, /className="dash-cell dash-cell--finance-kpis"/);
   assert.doesNotMatch(dashboardCss, /"version delivery"/);
 });
 
-test('turns the yearly recovery side panel into a decision forecast area', () => {
-  assert.match(channelPanelSource, /function buildAnnualRiskForecast\(rows\) \{/);
-  assert.match(channelPanelSource, /const forecast = buildAnnualRiskForecast\(rows\);/);
-  assert.match(channelPanelSource, /variant === 'forecast'/);
-  assert.match(channelPanelSource, /<div className="ch-forecast"/);
-  assert.match(channelPanelSource, /预计全年完成率/);
-  assert.match(channelPanelSource, /主要缺口/);
-  assert.match(channelPanelSource, /追回所需月均增量/);
+test('removes the yearly risk forecast block so recovery cards stay on channel completion', () => {
+  assert.doesNotMatch(channelPanelSource, /function buildAnnualRiskForecast/);
+  assert.doesNotMatch(channelPanelSource, /variant === 'forecast'/);
+  assert.doesNotMatch(channelPanelSource, /<div className="ch-forecast"/);
+  assert.doesNotMatch(channelPanelSource, /预计全年完成率/);
+  assert.doesNotMatch(channelPanelSource, /主要缺口/);
+  assert.doesNotMatch(channelPanelSource, /追回所需月均增量/);
   assert.match(channelPanelSource, /\{c\.warn && <span className="ch-tag">需关注<\/span>\}/);
   assert.doesNotMatch(channelPanelSource, /落后预警/);
-  assert.match(channelPanelCss, /\.ch-forecast\s*\{[\s\S]*?display:\s*grid;[\s\S]*?gap:\s*10px;/);
-  assert.match(channelPanelCss, /\.ch-forecast-card\s*\{[\s\S]*?background:\s*rgba\(255,\s*255,\s*255,\s*\.045\);[\s\S]*?border:\s*1px solid rgba\(255,\s*255,\s*255,\s*\.09\);/);
+  assert.doesNotMatch(channelPanelCss, /\.ch-forecast/);
 });
 
 test('matches overview cards to the neutral dark glass recipe', () => {

@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-05 15:29:01 CST  更新内容: 渠道面板新增年度风险预测轻玻璃卡片，并降低需关注提示饱和度。 */
+/* 更新时间: 2026-07-05 16:12:00 CST  更新内容: 移除年度风险预测轻卡片样式，渠道面板统一展示完成情况。 */
 /* Update time: 2026-07-03 17:55:40 CST  Update content: Move channel panels onto the neutral dark dashboard card glass recipe instead of transparent purple-tinted glass. */
 /* Update time: 2026-07-03 13:05:00 CST  Update content: 渠道进度条 fill 改用冰蓝/粉紫低饱和冷色线性渐变并加轻外发光，轨道改半透明蓝灰。 */
 /* Update time: 2026-07-02 17:09:15 CST  Update content: Reduce warning row saturation for the refined neon dashboard palette. */
@@ -39,47 +39,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.ch-list--compact {
-  margin-top: 10px;
-  gap: 4px;
-}
-
-.ch-forecast {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-
-.ch-forecast-card {
-  display: grid;
-  gap: 5px;
-  min-height: 66px;
-  padding: 12px 13px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, .045);
-  border: 1px solid rgba(255, 255, 255, .09);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.055);
-}
-
-.ch-forecast-card span {
-  color: rgba(247,248,252,.52);
-  font-size: 12px;
-  font-weight: 650;
-  line-height: 1.2;
-}
-
-.ch-forecast-card b {
-  color: rgba(247,248,252,.90);
-  font-size: 21px;
-  font-weight: 760;
-  line-height: 1.05;
-  letter-spacing: 0;
-}
-
-.ch-forecast-card--primary b {
-  color: var(--accent-gold-soft);
 }
 
 .ch-row {

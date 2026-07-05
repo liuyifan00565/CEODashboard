@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 16:12:00 CST
+ 更新内容: AI 入口测试同步 220px 侧栏状态卡尺寸和状态文案。
+*/
+/*
  更新时间: 2026-07-03 19:08:26 CST
  更新内容: 进一步放松 AI 小人入口集成断言的导入与事件命名绑定，保留状态归属和 mascot 资产隔离要求。
 */
@@ -162,16 +166,19 @@ test('uses theme-specific AI dialog card backgrounds', () => {
   assert.doesNotMatch(lightBlock, /--ai-card-bg:\s*#120F17;/);
 });
 
-test('styles the launcher as a transparent 3D mascot and speech bubble', () => {
-  assert.match(componentCss, /\.ai-widget\s*\{[^}]*min-height:\s*206px;/s);
-  assert.match(componentCss, /\.ai-orb\s*\{[^}]*width:\s*116px;/s);
-  assert.match(componentCss, /\.ai-orb\s*\{[^}]*height:\s*160px;/s);
+test('styles the launcher as a sidebar status card with a transparent 3D mascot and speech bubble', () => {
+  assert.match(componentSource, /<div className="ai-status-copy" aria-hidden="true">[\s\S]*?<span>AI 助手<\/span>[\s\S]*?<b>经营分析<\/b>/);
+  assert.match(componentCss, /\.ai-widget\s*\{[^}]*min-height:\s*112px;/s);
+  assert.match(componentCss, /\.ai-widget\s*\{[^}]*background:\s*rgba\(255,\s*255,\s*255,\s*\.04\);/s);
+  assert.match(componentCss, /\.ai-orb\s*\{[^}]*width:\s*74px;/s);
+  assert.match(componentCss, /\.ai-orb\s*\{[^}]*height:\s*92px;/s);
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*background:\s*transparent;/s);
+  assert.match(componentCss, /\.ai-status-copy\s*\{[^}]*display:\s*grid;/s);
   assert.match(componentCss, /\.ai-orb--wave \.mascot-3d-stage\s*\{[^}]*filter:\s*drop-shadow\(/s);
   assert.match(componentCss, /\.ai-orb--think \.mascot-3d-stage,[\s\S]*?\.ai-orb--talk \.mascot-3d-stage,[\s\S]*?\.ai-orb--click \.mascot-3d-stage\s*\{[^}]*drop-shadow\(/s);
   assert.doesNotMatch(componentCss, /brightness\(\.92\)|saturate\(\.82\)/);
   assert.match(componentCss, /\.ai-bubble\s*\{/);
-  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*bottom:\s*202px;/s);
+  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*bottom:\s*124px;/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*left:\s*50%;/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*width:\s*min\(186px, calc\(100vw - 32px\)\);/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*opacity:\s*0;/s);
@@ -182,7 +189,7 @@ test('styles the launcher as a transparent 3D mascot and speech bubble', () => {
   assert.doesNotMatch(componentCss, /\.ai-bubble-name/);
   assert.match(componentCss, /\.ai-card-wrap\s*\{[^}]*z-index:\s*1000;/s);
   assert.match(componentCss, /\.ai-widget--speaking \.ai-bubble\.ai-bubble--visible/);
-  assert.match(componentCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.ai-orb\s*\{[^}]*width:\s*100px;[\s\S]*?height:\s*138px;/);
+  assert.match(componentCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.ai-orb\s*\{[^}]*width:\s*82px;[\s\S]*?height:\s*108px;/);
   assert.match(componentCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.ai-bubble\s*\{[^}]*bottom:\s*160px;/);
   assert.doesNotMatch(componentCss, /--mascot-frame-count/);
   assert.doesNotMatch(componentCss, /ai-mascot-frames/);

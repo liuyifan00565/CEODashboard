@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-05 15:29:01 CST
- 更新内容: 首页搜索关键词同步渠道完成情况与年度风险预测新文案。
+ 更新时间: 2026-07-05 16:12:00 CST
+ 更新内容: 首页搜索关键词移除年度风险预测旧文案，回款区域统一渠道完成情况。
 */
 /*
  更新时间: 2026-07-03 23:39:28 CST
@@ -226,7 +226,7 @@ function withVisibleKeywords(baseKeywords, ...visibleTerms) {
 }
 
 function recoverySectionKeywords(cardKey) {
-  if (cardKey === 'year') return ['本年', '本年目标完成情况', '年度风险预测'];
+  if (cardKey === 'year') return ['本年', '本年目标完成情况', '渠道完成情况'];
   if (cardKey === 'month') return ['本月', '本月目标完成情况', '渠道完成情况'];
   return [];
 }

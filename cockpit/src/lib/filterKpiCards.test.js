@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-05 15:29:01 CST
- 更新内容: KPI 搜索关键词回归测试同步年度风险预测与渠道完成情况新文案。
+ 更新时间: 2026-07-05 16:12:00 CST
+ 更新内容: KPI 搜索关键词回归测试移除年度风险预测旧文案并保留渠道完成情况。
 */
 /*
  更新时间: 2026-07-03 23:39:28 CST
@@ -89,8 +89,8 @@ test('adds homepage annual section text to KPI search keywords so current year c
 
   assert.ok(annual.keywords.includes('本年'));
   assert.ok(annual.keywords.includes('本年目标完成情况'));
-  assert.ok(annual.keywords.includes('年度风险预测'));
-  assert.ok(!annual.keywords.includes('本年渠道完成情况'));
+  assert.ok(annual.keywords.includes('渠道完成情况'));
+  assert.ok(!annual.keywords.includes('年度风险预测'));
 });
 
 test('changes KPI card values when the calendar range changes', () => {

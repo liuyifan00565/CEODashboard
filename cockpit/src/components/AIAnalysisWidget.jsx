@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 16:12:00 CST
+ 更新内容: 左侧 AI 入口增加轻量状态文案，融入 220px 管理侧栏底部卡片。
+*/
+/*
  更新时间: 2026-07-03 18:19:59 CST
  更新内容: AI 分析弹窗边缘流光同步为月光紫、香槟金与冷蓝配色，移除粉紫/天蓝霓虹感。
 */
@@ -537,6 +541,10 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
           label="福小客 3D 经营助手"
         />
       </button>
+      <div className="ai-status-copy" aria-hidden="true">
+        <span>AI 助手</span>
+        <b>经营分析</b>
+      </div>
 
       {renderCard && (
         <div className="ai-card-wrap" ref={cardWrapRef}>

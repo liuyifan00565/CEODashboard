@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-05 15:29:01 CST
- 更新内容: 首页顶部改为自然经营标题，年度回款侧栏切换为风险预测视图以降低重复感。
+ 更新时间: 2026-07-05 16:12:00 CST
+ 更新内容: 首页恢复图文管理侧栏与顶部福客品牌胶囊，并移除年度风险预测侧栏变体。
 */
 /*
  更新时间: 2026-07-03 23:39:28 CST
@@ -106,6 +106,7 @@ import GlassSurface from './components/GlassSurface/GlassSurface';
 import Sidebar from './components/Sidebar';
 import ExpandableSearch from './components/ExpandableSearch';
 import SearchResultBorder from './components/SearchResultBorder';
+import MetallicPaint from './components/MetallicPaint/MetallicPaint';
 import KpiCard from './components/KpiCard';
 import KpiModal from './components/KpiModal';
 import MonthlyTrend from './components/MonthlyTrend';
@@ -124,6 +125,16 @@ import './dashboard.css';
 
 const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance';
 
+const DASHBOARD_SIDEBAR_ITEMS = [
+  ...MENU.map((item) => ({ ...item, section: '导航', icon: item.icon ?? item.key })),
+  { key: 'channel-analysis', name: '渠道分析', icon: 'channel', section: '导航', disabled: true },
+  { key: 'customer-conversion', name: '客户转化', icon: 'organization', section: '导航', disabled: true },
+  { key: 'data-maintenance', name: '数据维护', icon: 'target', section: '系统' },
+  { key: 'search-history', name: '搜索记录', icon: 'search', section: '系统', disabled: true },
+];
+
+const MAINTENANCE_SIDEBAR_ITEMS = MAINTENANCE_MENU.map((item) => ({ ...item, section: '系统' }));
+
 // 各主体面板的搜索关键字
 const PANEL_KEYWORDS = {
   trend: ['趋势', '月度', '回款', '目标', '完成率'],
@@ -131,14 +142,6 @@ const PANEL_KEYWORDS = {
   version: ['版本', '启航', '卓越', '至尊', '财务', '健康', '应收', '广告', '缺口', '续费'],
   delivery: ['交付', '实施', '配置', '知识库', '人效'],
 };
-
-function recoveryChannelTitle(card) {
-  return card.key === 'year' ? '年度风险预测' : '渠道完成情况';
-}
-
-function recoveryChannelVariant(card) {
-  return card.key === 'year' ? 'forecast' : 'completion';
-}
 
 function makeCompanionCueId(card) {
   return `${card?.key ?? 'card'}-${Date.now()}`;
@@ -167,7 +170,7 @@ export default function App() {
   const activeContextLabel = maintenanceMode
     ? '数据维护'
     : activeMenu === 'overview' ? 'CEO视角' : activeMenuLabel;
-  const sidebarItems = maintenanceMode ? MAINTENANCE_MENU : MENU;
+  const sidebarItems = maintenanceMode ? MAINTENANCE_SIDEBAR_ITEMS : DASHBOARD_SIDEBAR_ITEMS;
   const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const contentKey = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const gridClassName = activeMenu === 'overview'
@@ -199,6 +202,12 @@ export default function App() {
   }
 
   function handleSidebarChange(nextMenu) {
+    if (nextMenu === 'data-maintenance') {
+      setMaintenanceMode(true);
+      setActiveMaintenanceMenu(DEFAULT_MAINTENANCE_MENU);
+      return;
+    }
+
     if (maintenanceMode) {
       setActiveMaintenanceMenu(nextMenu);
       return;
@@ -316,10 +325,43 @@ export default function App() {
 
         <div className="dash-main">
           <header className="dash-topbar">
-            <div className="dash-title-block">
-              <h1>经营驾驶舱</h1>
-              <p>福客 · {META.monthLabel} · {activeContextLabel}</p>
-            </div>
+            <GlassSurface
+              width={328}
+              height={66}
+              borderRadius={22}
+              brightness={46}
+              blur={7}
+              displace={0.32}
+              backgroundOpacity={0.04}
+              distortionScale={-54}
+              className="brand-glass"
+            >
+              <div className="brand">
+                <span className="brand-logo-paint" aria-hidden="true">
+                  <MetallicPaint
+                    imageSrc="/logo-black.png"
+                    seed={64}
+                    scale={3.6}
+                    refraction={0.018}
+                    blur={0.014}
+                    liquid={0.68}
+                    speed={0.28}
+                    brightness={1.75}
+                    contrast={0.8}
+                    lightColor="#ffffff"
+                    darkColor="#050505"
+                    tintColor="#f0d99a"
+                    chromaticSpread={1.8}
+                    distortion={0.75}
+                    contour={0.28}
+                  />
+                </span>
+                <div className="brand-copy">
+                  <b>福客经营驾驶舱</b>
+                  <small>{META.monthLabel} | {activeContextLabel}</small>
+                </div>
+              </div>
+            </GlassSurface>
             <div className="dash-tools">
               <GlassSurface
                 width={126}
@@ -364,7 +406,7 @@ export default function App() {
                         <KpiCard
                           card={card}
                           onOpen={handleOpenCard}
-                          sidePanel={<ChannelPanel channelKey={activeChannelKey} title={recoveryChannelTitle(card)} variant={recoveryChannelVariant(card)} />}
+                          sidePanel={<ChannelPanel channelKey={activeChannelKey} title="渠道完成情况" />}
                         />
                       </SearchResultBorder>
                     </div>
