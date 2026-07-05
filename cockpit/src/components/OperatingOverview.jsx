@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 00:00:23 CST  更新内容: 为经营总览搜索命中外壳补充固定区域类名，避免搜索高亮改变卡片排布。 */
 /* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 年度节奏图表降噪并增加呼吸空间，顶部经营进度标题降级以突出核心数字。 */
 /* 更新时间: 2026-07-05 22:59:45 CST  更新内容: 年度节奏最终版改为三项核心指标、单行辅助说明、单标题和轻量明细入口。 */
 /* 更新时间: 2026-07-05 21:45:08 CST  更新内容: 年度节奏精简为五个核心指标，并只在图表首月、当前月和年目标显示数字标签。 */
@@ -171,7 +172,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
 
   return (
     <div className="op-overview">
-      <SearchResultBorder active={matchesSearchTerm(PROGRESS_KEYWORDS, searchTerm)}>
+      <SearchResultBorder active={matchesSearchTerm(PROGRESS_KEYWORDS, searchTerm)} className="op-search-result op-search-result--progress">
         <section className="op-panel op-panel--progress" data-anim>
           <header className="op-progress-head">
             <div>
@@ -219,7 +220,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
         </section>
       </SearchResultBorder>
 
-      <SearchResultBorder active={matchesSearchTerm(ANNUAL_KEYWORDS, searchTerm)}>
+      <SearchResultBorder active={matchesSearchTerm(ANNUAL_KEYWORDS, searchTerm)} className="op-search-result op-search-result--annual">
         <section className="op-panel op-panel--annual" data-anim>
           <header className="op-section-head">
             <div>
@@ -262,7 +263,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
         </section>
       </SearchResultBorder>
 
-      <SearchResultBorder active={matchesSearchTerm(CHANNEL_KEYWORDS, searchTerm)}>
+      <SearchResultBorder active={matchesSearchTerm(CHANNEL_KEYWORDS, searchTerm)} className="op-search-result op-search-result--channel">
         <div className="op-channel-wrap" data-anim>
           <ChannelPanel title="渠道完成情况" showPeriodSwitch />
         </div>

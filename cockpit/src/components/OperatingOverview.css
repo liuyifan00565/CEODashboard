@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 00:00:23 CST  更新内容: 固定经营总览搜索命中外壳的网格区域，避免搜索时卡片位置和尺寸跳变。 */
 /* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 经营进度顶部标题降级、弱化指标分隔线，并增加年度节奏图表底部呼吸空间。 */
 /* 更新时间: 2026-07-05 22:59:45 CST  更新内容: 年度节奏卡最终版采用三列核心指标、单行辅助说明和更稳的图表留白。 */
 /* 更新时间: 2026-07-05 21:45:08 CST  更新内容: 年度节奏指标区调整为五项核心信息，降低财务报表式密度。 */
@@ -58,6 +59,29 @@
 .op-channel-wrap {
   grid-area: channel;
   min-width: 0;
+}
+
+.op-search-result {
+  min-width: 0;
+}
+
+.op-search-result--progress {
+  grid-area: progress;
+}
+
+.op-search-result--annual {
+  grid-area: annual;
+}
+
+.op-search-result--channel {
+  grid-area: channel;
+}
+
+.op-search-result--annual,
+.op-search-result--channel,
+.op-search-result--annual .search-result-border__content,
+.op-search-result--channel .search-result-border__content {
+  height: 100%;
 }
 
 .op-channel-wrap,

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:00:13 CST
+ 更新内容: 布局守卫测试同步算力与控件金色到高级哑金。
+*/
+/*
  更新时间: 2026-07-05 23:42:14 CST
  更新内容: 增加主界面满分高级感果味抛光回归测试，覆盖弱分隔线、低层级标题、年度图表呼吸、渠道完成率内联进度和二级弹窗低饱和控件。
 */
@@ -139,6 +143,10 @@
  Update content: Add regression coverage for placing the data maintenance pill inside the right toolbar before search.
 */
 /*
+ 更新时间: 2026-07-05 23:59:27 CST
+ 更新内容: 增加搜索命中外壳不改变经营总览卡片网格位置的回归测试。
+*/
+/*
  更新时间: 2026-07-02 18:10:27 CST
  更新内容: 合并 GitHub 数据维护回归测试与本地品牌、搜索和顶部栏测试。
 */
@@ -275,14 +283,14 @@ test('keeps only compute usage in the compute trend chart with clear non-fluores
   assert.match(computePageSource, /textStyle:\s*\{[\s\S]*?color:\s*txt,[\s\S]*?fontSize:\s*18,[\s\S]*?fontWeight:\s*850,[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.55\)',[\s\S]*?textShadowBlur:\s*8,[\s\S]*?\}/);
   assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'bar'/);
   assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'line'[\s\S]*?smooth:\s*true[\s\S]*?symbol:\s*'circle'[\s\S]*?symbolSize:\s*7/);
-  assert.match(computePageSource, /const usagePeakLineColor = '#D7B56D';/);
+  assert.match(computePageSource, /const usagePeakLineColor = '#B7A06C';/);
   assert.match(computePageSource, /const usagePeakLabelColor = '#F7F8FC';/);
   assert.match(computePageSource, /const maxUsage = Math\.max\(\.\.\.usage\);/);
   assert.match(computePageSource, /const usagePeakLineData = usage\.map\(\(value\) => \(\{/);
   assert.match(computePageSource, /label:\s*\{[\s\S]*?show:\s*true[\s\S]*?color:\s*usagePeakLabelColor,[\s\S]*?fontWeight:\s*780,[\s\S]*?formatter:\s*\(params\) => formatWan\(params\.value\)[\s\S]*?textBorderColor:\s*'rgba\(13,0,22,\.82\)'[\s\S]*?textBorderWidth:\s*2[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.82\)'[\s\S]*?textShadowBlur:\s*6/);
   assert.doesNotMatch(computePageSource, /label:\s*value === maxUsage \?/);
   assert.doesNotMatch(computePageSource, /textShadowColor:\s*'rgba\(255,74,255,\.78\)'/);
-  assert.match(computePageSource, /lineStyle:\s*\{ color: usagePeakLineColor, width: 2\.4[\s\S]*?shadowBlur: 14[\s\S]*?shadowColor: 'rgba\(215,181,109,\.38\)'/);
+  assert.match(computePageSource, /lineStyle:\s*\{ color: usagePeakLineColor, width: 2\.4[\s\S]*?shadowBlur: 14[\s\S]*?shadowColor: 'rgba\(183,160,108,\.30\)'/);
   assert.match(computePageSource, /itemStyle:\s*\{[\s\S]*?color:\s*usagePeakLineColor,[\s\S]*?borderColor:\s*'#ffffff'/);
   assert.match(computePageSource, /barCategoryGap:\s*'42%'/);
   assert.doesNotMatch(computePageSource, /目标用量/);
@@ -326,6 +334,16 @@ test('counts searchable matches and cycles the current result from the top searc
   assert.match(appSource, /querySelectorAll\('\[data-search-match="true"\]'\)/);
   assert.match(appSource, /node\.dataset\.searchCurrent = index === currentIndex \? 'true' : 'false';/);
   assert.match(appSource, /scrollIntoView\(\{ behavior: 'smooth', block: 'center', inline: 'nearest' \}\)/);
+});
+
+test('keeps overview card placement stable when search result wrappers appear', () => {
+  assert.match(searchResultBorderSource, /export default function SearchResultBorder\(\{ active, children, className = '' \}\)/);
+  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(PROGRESS_KEYWORDS, searchTerm\)\} className="op-search-result op-search-result--progress">/);
+  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(ANNUAL_KEYWORDS, searchTerm\)\} className="op-search-result op-search-result--annual">/);
+  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(CHANNEL_KEYWORDS, searchTerm\)\} className="op-search-result op-search-result--channel">/);
+  assert.match(cssRuleBody(operatingOverviewCss, '.op-search-result--progress'), /grid-area:\s*progress;/);
+  assert.match(cssRuleBody(operatingOverviewCss, '.op-search-result--annual'), /grid-area:\s*annual;/);
+  assert.match(cssRuleBody(operatingOverviewCss, '.op-search-result--channel'), /grid-area:\s*channel;/);
 });
 
 test('renders the compact FuKe brand capsule in the topbar', () => {
@@ -690,8 +708,8 @@ test('uses full-width compute trend sliders that resize from 3 to 15 bars', () =
   assert.doesNotMatch(computePageSource, /zoomLock:\s*true/);
   assert.match(computePageSource, /realtime:\s*true/);
   assert.match(computePageSource, /borderColor:\s*'rgba\(139,124,255,\.32\)'/);
-  assert.match(computePageSource, /fillerColor:\s*'rgba\(215,181,109,\.22\)'/);
-  assert.match(computePageSource, /shadowColor:\s*'rgba\(215,181,109,\.45\)'/);
+  assert.match(computePageSource, /fillerColor:\s*'rgba\(183,160,108,\.18\)'/);
+  assert.match(computePageSource, /shadowColor:\s*'rgba\(183,160,108,\.34\)'/);
   assert.match(computePageSource, /shadowBlur:\s*16/);
   assert.match(computePageSource, /className="cpu-trend-echart"/);
   assert.match(computePageCss, /\.cpu-trend-chart \{[\s\S]*?position:\s*relative;/);
@@ -787,7 +805,7 @@ test('keeps compute pie labels and tooltip cards readable around donut charts', 
 });
 
 test('uses the overview half-ring palette for compute donut charts', () => {
-  assert.match(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#8B7CFF'[\s\S]*?'#74A7FF'[\s\S]*?'#6DD6D2'[\s\S]*?'#D7B56D'[\s\S]*?'rgba\(148, 163, 184, \.18\)'[\s\S]*?'#AFA6FF'[\s\S]*?'#6F62D8'[\s\S]*?'#D8D4FF'/);
+  assert.match(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#8B7CFF'[\s\S]*?'#74A7FF'[\s\S]*?'#6DD6D2'[\s\S]*?'#B7A06C'[\s\S]*?'rgba\(148, 163, 184, \.18\)'[\s\S]*?'#AFA6FF'[\s\S]*?'#6F62D8'[\s\S]*?'#D8D4FF'/);
   assert.doesNotMatch(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#9EDCFF'[\s\S]*?\];/);
   assert.match(computePageSource, /function applyComputeRingPalette\(data\)/);
   assert.match(computePageSource, /sort\(\(a, b\) => b\.value - a\.value\)/);
@@ -1009,7 +1027,7 @@ test('uses low-saturation dashboard controls in focused secondary interfaces', (
   assert.match(kpiModalCss, /\.km-controls \.msgm-btn--active,[\s\S]*?\.km-controls \.msgm-btn--active:hover\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(139,124,255,\.64\), rgba\(116,167,255,\.44\)\);/);
   assert.doesNotMatch(channelPanelCss, /\.ch-head[\s\S]*?var\(--control-solid\)/);
   assert.doesNotMatch(kpiModalCss, /\.km-controls[\s\S]*?var\(--control-solid\)/);
-  assert.match(indexCss, /--control-solid:#D7B56D;/);
+  assert.match(indexCss, /--control-solid:#B7A06C;/);
 });
 
 test('restores secondary dashboard panels below the operating overview story', () => {
@@ -1033,11 +1051,11 @@ test('uses one-shot soft glow for search result highlighting instead of electric
   assert.doesNotMatch(searchResultBorderSource, /<canvas/);
   assert.doesNotMatch(appSource, /import HighlightBeam/);
   assert.doesNotMatch(appSource, /<HighlightBeam/);
-  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(PROGRESS_KEYWORDS,\s*searchTerm\)\}>/);
-  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(ANNUAL_KEYWORDS,\s*searchTerm\)\}>/);
-  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(CHANNEL_KEYWORDS,\s*searchTerm\)\}>/);
-  assert.match(searchResultBorderSource, /data-search-match="true"/);
-  assert.match(searchResultBorderSource, /aria-label="搜索命中结果"/);
+  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(PROGRESS_KEYWORDS,\s*searchTerm\)\} className="op-search-result op-search-result--progress">/);
+  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(ANNUAL_KEYWORDS,\s*searchTerm\)\} className="op-search-result op-search-result--annual">/);
+  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(CHANNEL_KEYWORDS,\s*searchTerm\)\} className="op-search-result op-search-result--channel">/);
+  assert.match(searchResultBorderSource, /data-search-match=\{active \? 'true' : undefined\}/);
+  assert.match(searchResultBorderSource, /aria-label=\{active \? '搜索命中结果' : undefined\}/);
   assert.match(searchResultBorderSource, /className="search-result-border__content"/);
   assert.match(dashboardCss, /@keyframes searchResultSoftGlow/);
   assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\]::before\{[\s\S]*?animation:searchResultSoftGlow 960ms cubic-bezier\(\.22,1,\.36,1\) both;/);
