@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 21:45:08 CST  更新内容: 年度节奏精简为五个核心指标，并只在图表首月、当前月和年目标显示数字标签。 */
 /* 更新时间: 2026-07-05 21:24:15 CST  更新内容: 精简经营进度卡片眉题、风险渠道与节奏文案，并弱化指标分隔线。 */
 /* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 经营总览提高信息密度，加入月度/年度节奏判断、年度虚线目标和顶部明细入口。 */
 /* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 本月回款主数字改为静态权威值，避免截图或首屏加载时显示滚动中间态。 */
@@ -29,17 +30,17 @@ const PROGRESS_KEYWORDS = [
 ];
 const ANNUAL_KEYWORDS = [
   '年度节奏',
+  '年度经营进度',
   '年度累计',
-  '年度目标',
   '年度完成率',
   '年度缺口',
   '时间进度',
-  '节奏偏差',
   '剩余月均需完成',
+  '12月目标',
   '线下华东连续低于目标',
   '当前年度完成率略高于时间进度，但线下华东连续低于目标，需优先恢复渠道回款。',
 ];
-const CHANNEL_KEYWORDS = ['渠道完成情况', '本月', '年度', '线上', '线下华南', '线下华东', '代理', '年度贡献', '需关注'];
+const CHANNEL_KEYWORDS = ['渠道完成情况', '本月', '年度', '线上', '线下华南', '线下华东', '代理', '缺口', '需关注'];
 
 function formatWan(value) {
   return Number(value).toLocaleString('zh-CN');
@@ -49,14 +50,13 @@ function formatPct(value) {
   return `${Number(value).toFixed(1)}%`;
 }
 
-function formatSignedPct(value) {
-  const number = Number(value);
-  return `${number >= 0 ? '+' : ''}${number.toFixed(1)}%`;
-}
-
 function formatPaceLead(value) {
   const number = Number(value);
   return `${number >= 0 ? '领先' : '落后'} ${Math.abs(number).toFixed(1)}%`;
+}
+
+function shouldShowActualAnnualLabel(series, dataIndex) {
+  return dataIndex === 0 || dataIndex === series.actual.findLastIndex((value) => value != null);
 }
 
 function annualRhythmOption(series, tokens) {
@@ -121,7 +121,11 @@ function annualRhythmOption(series, tokens) {
           color: tokens.chartText,
           fontSize: 11,
           fontWeight: 720,
-          formatter: ({ value }) => (value == null ? '' : `${formatWan(value)}万`),
+          formatter: ({ value, dataIndex }) => (
+            value == null || !shouldShowActualAnnualLabel(series, dataIndex)
+              ? ''
+              : `${series.labels[dataIndex]} ${formatWan(value)}万`
+          ),
         },
         data: series.actual,
       },
@@ -140,7 +144,11 @@ function annualRhythmOption(series, tokens) {
           color: ({ dataIndex }) => (dataIndex === series.labels.length - 1 ? tokens.progressGold : tokens.chartMuted),
           fontSize: 11,
           fontWeight: 720,
-          formatter: ({ value, dataIndex }) => (value == null || dataIndex !== series.labels.length - 1 ? '' : `${formatWan(value)}万`),
+          formatter: ({ value, dataIndex }) => (
+            value == null || dataIndex !== series.labels.length - 1
+              ? ''
+              : `${series.labels[dataIndex]} ${formatWan(value)}万`
+          ),
         },
         data: series.target,
       },
@@ -209,7 +217,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
         <section className="op-panel op-panel--annual" data-anim>
           <header className="op-section-head">
             <div>
-              <span className="op-eyebrow">年度节奏</span>
+              <span className="op-eyebrow">年度经营进度</span>
               <h2>年度节奏</h2>
             </div>
             <button
@@ -228,20 +236,12 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
               <b>{formatWan(KPI.yearRecovered)}万</b>
             </div>
             <div className="op-metric">
-              <span>年度目标</span>
-              <b>{formatWan(KPI.yearTarget)}万</b>
-            </div>
-            <div className="op-metric">
               <span>年度完成率</span>
               <b>{formatPct(KPI_DERIVED.yearCompletion)}</b>
             </div>
             <div className="op-metric">
               <span>时间进度</span>
               <b>{formatPct(overviewMetrics.annualTimeProgress)}</b>
-            </div>
-            <div className="op-metric">
-              <span>节奏偏差</span>
-              <b>{formatSignedPct(overviewMetrics.annualPaceDelta)}</b>
             </div>
             <div className="op-metric">
               <span>年度缺口</span>

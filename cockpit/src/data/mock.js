@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 21:45:08 CST
+ 更新内容: 渠道完成行补充本月缺口和年度缺口，支持本月/年度表格按维度展示。
+*/
+/*
  更新时间: 2026-07-05 19:10:30 CST
  更新内容: 增加经营总览节奏判断指标、年度实线/目标虚线序列和渠道本月年度融合行字段。
 */
@@ -202,6 +206,8 @@ export function getChannelCompletionRows(period = 'month', channelKey = 'all') {
     const yearRecovered = Math.round(KPI.yearRecovered * (monthRecovered / monthRecoveredTotal));
     const yearTarget = Math.round(KPI.yearTarget * (monthTarget / monthTargetTotal));
     const yearCompletion = yearTarget ? +((yearRecovered / yearTarget) * 100).toFixed(1) : 0;
+    const monthGap = Math.max(0, monthTarget - monthRecovered);
+    const yearGap = Math.max(0, yearTarget - yearRecovered);
     const recovered = safePeriod === 'year' ? yearRecovered : monthRecovered;
     const target = safePeriod === 'year' ? yearTarget : monthTarget;
     const warn = group.salesKeys.some((key) => Boolean(findChannel(key)?.warn));
@@ -215,9 +221,11 @@ export function getChannelCompletionRows(period = 'month', channelKey = 'all') {
       monthRecovered,
       monthTarget,
       monthCompletion,
+      monthGap,
       yearRecovered,
       yearTarget,
       yearCompletion,
+      yearGap,
       annualContribution: KPI.yearRecovered ? +((yearRecovered / KPI.yearRecovered) * 100).toFixed(1) : 0,
       status: warn ? '需关注' : '正常',
       warn,

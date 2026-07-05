@@ -1,5 +1,6 @@
-/* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 渠道表格调整为进度、本月完成、月完成率、年度累计、年度贡献和状态七列融合布局。 */
-/* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 收紧渠道完成情况表格列宽，避免右侧年度贡献和状态在中等宽度卡片中被截断。 */
+/* 更新时间: 2026-07-05 21:45:08 CST  更新内容: 渠道表格收敛为本月/年度互斥数据列，并移除重复风险标签样式。 */
+/* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 渠道表格调整为进度、本月完成、月完成率、年度累计、年度字段和状态七列融合布局。 */
+/* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 收紧渠道完成情况表格列宽，避免右侧年度字段和状态在中等宽度卡片中被截断。 */
 /* 更新时间: 2026-07-05 18:20:00 CST  更新内容: 渠道完成情况改为本月/年度单列表表格样式并保留低饱和风险标记。 */
 /* 更新时间: 2026-07-05 16:12:00 CST  更新内容: 移除年度风险预测轻卡片样式，渠道面板统一展示完成情况。 */
 /* Update time: 2026-07-03 17:55:40 CST  Update content: Move channel panels onto the neutral dark dashboard card glass recipe instead of transparent purple-tinted glass. */
@@ -52,8 +53,8 @@
 
 .ch-table-head {
   display: grid;
-  grid-template-columns: minmax(66px, .76fr) minmax(92px, 1fr) minmax(62px, .58fr) minmax(50px, .48fr) minmax(72px, .66fr) minmax(50px, .46fr) minmax(46px, .42fr);
-  gap: 8px;
+  grid-template-columns: minmax(78px, .9fr) repeat(4, minmax(70px, .78fr)) minmax(54px, .5fr);
+  gap: 10px;
   padding: 0 24px 8px 12px;
   color: var(--faint);
   font-size: 11px;
@@ -72,10 +73,10 @@
   position: relative;
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(66px, .76fr) minmax(92px, 1fr) minmax(62px, .58fr) minmax(50px, .48fr) minmax(72px, .66fr) minmax(50px, .46fr) minmax(46px, .42fr);
+  grid-template-columns: minmax(78px, .9fr) repeat(4, minmax(70px, .78fr)) minmax(54px, .5fr);
   align-items: center;
-  gap: 8px;
-  padding: 12px 24px 12px 12px;
+  gap: 10px;
+  padding: 13px 24px 13px 12px;
   border-radius: 12px;
   border: 1px solid transparent;
   text-align: left;
@@ -107,14 +108,7 @@
 .ch-name-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
   min-width: 0;
-}
-
-.ch-row--warn .ch-name-wrap {
-  align-items: flex-start;
-  flex-direction: column;
-  gap: 5px;
 }
 
 .ch-name {
@@ -128,80 +122,7 @@
   color: var(--warn);
 }
 
-.ch-tag {
-  font-size: 12px;
-  line-height: 1;
-  padding: 3px 7px;
-  border-radius: 6px;
-  color: var(--warn);
-  background: rgba(var(--warn-rgb), 0.09);
-  border: 1px solid rgba(var(--warn-rgb), 0.22);
-  box-shadow: 0 0 10px rgba(var(--warn-rgb), 0.07);
-  white-space: nowrap;
-}
-
-.ch-amount,
-.ch-year-amount {
-  font-size: 12px;
-  color: var(--muted);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-
-.ch-amount b,
-.ch-year-amount b {
-  color: var(--txt);
-  font-weight: 600;
-}
-
-.ch-amount .ch-sep,
-.ch-year-amount .ch-sep {
-  color: var(--faint);
-  margin: 0 3px;
-}
-
-.ch-bar-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.ch-bar {
-  position: relative;
-  flex: 1;
-  height: 8px;
-  border-radius: 99px;
-  background: var(--bar-track);
-  overflow: hidden;
-}
-
-.ch-bar-fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 0;
-  border-radius: 99px;
-  background: var(--bar-good);
-  box-shadow: var(--bar-good-glow);
-  transition: width 1.1s cubic-bezier(.16, 1, .3, 1);
-}
-
-.ch-bar-fill--warn {
-  background: var(--bar-warn);
-  box-shadow: var(--bar-warn-glow);
-}
-
-.ch-pct {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  min-width: 38px;
-  text-align: right;
-}
-
-.ch-contribution,
-.ch-month-rate,
+.ch-cell,
 .ch-status {
   color: var(--muted);
   font-size: 12px;
@@ -219,18 +140,15 @@
   color: var(--warn);
 }
 
-.ch-row--warn .ch-pct {
-  color: var(--txt);
-}
-
 .ch-row-arrow {
   position: absolute;
   right: 10px;
-  bottom: 12px;
+  top: 50%;
   width: 13px;
   height: 13px;
   color: var(--muted);
   opacity: 0.72;
+  transform: translateY(-50%);
   transition: color .2s ease, opacity .2s ease, transform .2s ease;
   pointer-events: none;
 }
@@ -239,7 +157,7 @@
 .ch-row:focus-visible .ch-row-arrow {
   color: var(--txt);
   opacity: 1;
-  transform: translateX(2px);
+  transform: translate(2px, -50%);
 }
 
 .ch-zone {
@@ -418,18 +336,13 @@
     padding: 12px 32px 13px 14px;
   }
 
-  .ch-bar-row {
-    display: flex;
-  }
-
-  .ch-contribution,
+  .ch-cell,
   .ch-status {
     text-align: left;
   }
 
   .ch-member-money,
-  .ch-amount,
-  .ch-year-amount {
+  .ch-cell {
     white-space: normal;
   }
 }

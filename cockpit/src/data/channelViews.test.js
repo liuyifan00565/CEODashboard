@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 21:45:08 CST
+ 更新内容: 增加渠道完成表本月缺口和年度缺口字段回归测试。
+*/
+/*
  更新时间: 2026-07-05 19:10:30 CST
  更新内容: 增加经营总览高密度指标、年度实线/虚线节奏和渠道本月年度融合行回归测试。
 */
@@ -299,10 +303,13 @@ test('returns operating overview channel rows for monthly and annual period swit
   assert.equal(monthRows.find((row) => row.key === 'online').monthRecovered, 210);
   assert.equal(monthRows.find((row) => row.key === 'online').monthTarget, 240);
   assert.equal(monthRows.find((row) => row.key === 'online').monthCompletion, 87.5);
+  assert.equal(monthRows.find((row) => row.key === 'online').monthGap, 30);
   assert.equal(monthRows.find((row) => row.key === 'online').yearRecovered, 1348);
   assert.equal(monthRows.find((row) => row.key === 'online').yearTarget, 2400);
+  assert.equal(monthRows.find((row) => row.key === 'online').yearGap, 1052);
   assert.equal(monthRows.find((row) => row.key === 'online').annualContribution, 43.2);
   assert.equal(monthRows.find((row) => row.key === 'east').monthCompletion, 70);
+  assert.equal(monthRows.find((row) => row.key === 'east').monthGap, 36);
   assert.equal(monthRows.find((row) => row.key === 'east').status, '需关注');
   assert.ok(monthRows.filter((row) => row.status === '需关注').every((row) => row.key === 'east'));
   assert.equal(monthRows.reduce((sum, row) => sum + row.monthRecovered, 0), 486);
@@ -311,9 +318,11 @@ test('returns operating overview channel rows for monthly and annual period swit
 
   assert.equal(yearRows.find((row) => row.key === 'online').recovered, 1348);
   assert.equal(yearRows.find((row) => row.key === 'online').target, 2400);
+  assert.equal(yearRows.find((row) => row.key === 'online').yearGap, 1052);
   assert.equal(yearRows.find((row) => row.key === 'online').completion, yearRows.find((row) => row.key === 'online').yearCompletion);
   assert.equal(yearRows.find((row) => row.key === 'online').monthRecovered, 210);
   assert.equal(yearRows.find((row) => row.key === 'online').monthTarget, 240);
+  assert.equal(yearRows.find((row) => row.key === 'east').yearGap, 661);
   assert.equal(yearRows.find((row) => row.key === 'east').status, '需关注');
   assert.ok(yearRows.every((row) => row.period === 'year'));
 });

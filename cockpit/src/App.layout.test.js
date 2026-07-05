@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 21:45:08 CST
+ 更新内容: 增加年度节奏精简指标、关键节点图表标签和渠道表本月/年度互斥列回归测试。
+*/
+/*
  更新时间: 2026-07-05 21:24:15 CST
  更新内容: 经营进度顶部微调回归测试，覆盖删眉题、查看近期明细、轻量节奏文案和弱分隔线。
 */
@@ -923,7 +927,18 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /查看近期明细/);
   assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
   assert.match(operatingOverviewSource, /年度节奏/);
+  assert.match(operatingOverviewSource, /<span className="op-eyebrow">年度经营进度<\/span>/);
+  assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">年度节奏<\/span>/);
+  assert.match(operatingOverviewSource, /年度累计回款/);
+  assert.match(operatingOverviewSource, /年度完成率/);
+  assert.match(operatingOverviewSource, /时间进度/);
+  assert.match(operatingOverviewSource, /年度缺口/);
   assert.match(operatingOverviewSource, /剩余月均需完成/);
+  assert.doesNotMatch(operatingOverviewSource, /<span>年度目标<\/span>/);
+  assert.doesNotMatch(operatingOverviewSource, /<span>节奏偏差<\/span>/);
+  assert.match(operatingOverviewSource, /function shouldShowActualAnnualLabel/);
+  assert.match(operatingOverviewSource, /dataIndex === 0 \|\| dataIndex === series\.actual\.findLastIndex/);
+  assert.match(operatingOverviewSource, /dataIndex !== series\.labels\.length - 1/);
   assert.match(operatingOverviewSource, /当前年度完成率略高于时间进度，但线下华东连续低于目标，需优先恢复渠道回款。/);
   assert.match(operatingOverviewSource, /查看年度明细/);
   assert.match(operatingOverviewSource, /onOpenKpi\(yearKpiCard\)/);
@@ -1036,17 +1051,29 @@ test('uses one channel completion panel with month and year switching', () => {
   assert.match(channelPanelSource, /const \[period,\s*setPeriod\] = useState\('month'\);/);
   assert.match(channelPanelSource, /getChannelCompletionRows\(period, channelKey\)/);
   assert.match(channelPanelSource, /<Segmented options=\{CHANNEL_PERIOD_OPTIONS\} value=\{period\} onChange=\{setPeriod\} \/>/);
-  assert.match(channelPanelSource, /<span className="ch-title">\{title\}<\/span>/);
-  assert.match(channelPanelSource, /<span>进度<\/span>/);
-  assert.match(channelPanelSource, /<span>本月完成<\/span>/);
-  assert.match(channelPanelSource, /<span>月完成率<\/span>/);
-  assert.match(channelPanelSource, /<span>年度累计<\/span>/);
-  assert.match(channelPanelSource, /年度贡献/);
+  assert.match(channelPanelSource, /period === 'year' \? '年度渠道完成情况' : `本月\$\{title\}`/);
+  assert.match(channelPanelSource, /const tableColumns = CHANNEL_TABLE_COLUMNS\[period\];/);
+  assert.match(channelPanelSource, /CHANNEL_TABLE_COLUMNS/);
+  assert.match(channelPanelSource, /label: '本月完成'/);
+  assert.match(channelPanelSource, /label: '月目标'/);
+  assert.match(channelPanelSource, /label: '完成率'/);
+  assert.match(channelPanelSource, /label: '缺口'/);
+  assert.match(channelPanelSource, /label: '年度累计'/);
+  assert.match(channelPanelSource, /label: '年度目标'/);
+  assert.match(channelPanelSource, /label: '年度完成率'/);
+  assert.match(channelPanelSource, /label: '年度缺口'/);
+  assert.doesNotMatch(channelPanelSource, /年度贡献/);
+  assert.match(channelPanelSource, /function formatChannelPct/);
+  assert.match(channelPanelSource, /Number\(value\)\.toFixed\(1\)/);
   assert.match(channelPanelSource, /period === 'year' \? c\.yearCompletion : c\.monthCompletion/);
+  assert.match(channelPanelSource, /formatChannelPct\(pct\)/);
   assert.match(channelPanelSource, /c\.monthRecovered/);
   assert.match(channelPanelSource, /c\.monthTarget/);
+  assert.match(channelPanelSource, /c\.monthGap/);
   assert.match(channelPanelSource, /c\.yearRecovered/);
   assert.match(channelPanelSource, /c\.yearTarget/);
+  assert.match(channelPanelSource, /c\.yearGap/);
+  assert.doesNotMatch(channelPanelSource, /className="ch-tag"/);
   assert.doesNotMatch(channelPanelSource, /本月进度/);
   assert.doesNotMatch(channelPanelSource, /本月销售完成/);
   assert.match(channelPanelSource, /createPortal/);
@@ -1075,9 +1102,10 @@ test('removes the yearly risk forecast block so recovery cards stay on channel c
   assert.doesNotMatch(channelPanelSource, /预计全年完成率/);
   assert.doesNotMatch(channelPanelSource, /主要缺口/);
   assert.doesNotMatch(channelPanelSource, /追回所需月均增量/);
-  assert.match(channelPanelSource, /\{c\.status === '需关注' && <span className="ch-tag">需关注<\/span>\}/);
+  assert.doesNotMatch(channelPanelSource, /<span className="ch-tag">需关注<\/span>/);
   assert.doesNotMatch(channelPanelSource, /落后预警/);
   assert.doesNotMatch(channelPanelCss, /\.ch-forecast/);
+  assert.doesNotMatch(channelPanelCss, /\.ch-tag/);
 });
 
 test('matches overview cards to the neutral dark glass recipe', () => {

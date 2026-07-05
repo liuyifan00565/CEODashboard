@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 21:45:08 CST
+ 更新内容: 渠道风险行回归测试改为保留低饱和行背景并移除重复风险标签。
+*/
+/*
  更新时间: 2026-07-05 15:29:01 CST
  更新内容: 守卫测试切换到提亮后的深灰蓝空间背景、轻玻璃卡片和低饱和风险色。
 */
@@ -187,5 +191,5 @@ test('uses a static graphite grid and dot background instead of Color Bends', ()
 
 test('keeps warning rows translucent instead of becoming saturated candy blocks', () => {
   assert.match(channelCss, /\.ch-row--warn\s*\{[\s\S]*?background:\s*rgba\(var\(--warn-rgb\), 0\.055\);[\s\S]*?border-color:\s*rgba\(var\(--warn-rgb\), 0\.18\);/);
-  assert.match(channelCss, /\.ch-tag\s*\{[\s\S]*?background:\s*rgba\(var\(--warn-rgb\), 0\.09\);[\s\S]*?border:\s*1px solid rgba\(var\(--warn-rgb\), 0\.22\);[\s\S]*?box-shadow:\s*0 0 10px rgba\(var\(--warn-rgb\), 0\.07\);/);
+  assert.doesNotMatch(channelCss, /\.ch-tag\s*\{/);
 });
