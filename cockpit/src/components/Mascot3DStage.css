@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:45:00 CST
+ 更新内容: 将 Canvas fallback 图片可见性收敛到加载/失败状态，避免常态覆盖 3D 模型。
+*/
+/*
  更新时间: 2026-07-04 01:03:12 CST
  更新内容: 默认 3D 小人投影降低亮度并扩大扩散，让左侧紫光退回背景氛围。
 */
@@ -48,6 +52,8 @@
   opacity: 0;
 }
 
+.mascot-3d-stage--fallback .mascot-fallback-image,
+.mascot-3d-stage--loading .mascot-fallback-image,
 .mascot-3d-stage--failed .mascot-fallback-image {
   opacity: 1;
   visibility: visible;

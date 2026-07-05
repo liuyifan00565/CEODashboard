@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:44:00 CST
+ 更新内容: 补充 DOM 兜底加载态与 WebGL context 事件断言，避免 R3F fallback 图片常态覆盖 3D canvas。
+*/
+/*
  更新时间: 2026-07-03 19:08:26 CST
  更新内容: 收紧 AI 小人身份配色与骨骼姿态实际应用红灯断言，避免泛化机器人或空 pose 调用通过。
 */
@@ -80,9 +84,21 @@ test('keeps the transparent Fu Xiaoke PNG only as a WebGL fallback', () => {
 
   assert.deepEqual(pngLiterals, ['/ai-mascot-transparent.png']);
   assert.match(stageCode, /mascot-fallback-image/);
+  assert.match(stageCode, /<Canvas[\s\S]*\bfallback=\{[^}]*(?:fallbackImage|MascotFallbackImage|mascot-fallback-image)[^}]*\}/);
+  assert.match(stageCode, /fallbackImage\s*=\s*<MascotFallbackImage[\s\S]{0,180}mascot-fallback-image/);
+  assert.match(stageCode, /(?:function\s+MascotFallbackImage|<img)[\s\S]{0,320}FALLBACK_MASCOT_SOURCE/);
+  assert.match(stageCode, /WebGLRenderingContext|createElement\(['"]canvas['"]\)|getContext\(['"]webgl/);
+  assert.match(stageCode, /useState\(\(\)\s*=>\s*!?\w*WebGL|canCreateWebGLContext|webglAvailable/i);
+  assert.match(stageCode, /ErrorBoundary|componentDidCatch|getDerivedStateFromError|try\s*\{[\s\S]{0,240}getContext\(['"]webgl/);
+  assert.match(stageCode, /canvasReady|setCanvasReady/);
+  assert.match(stageCode, /setCanvasReady\(true\)/);
+  assert.match(stageCode, /(?:!canvasReady|canvasReady\s*\?\s*['"`][^'"`]*['"`]\s*:\s*['"`][^'"`]*mascot-3d-stage--(?:fallback|loading))/);
+  assert.match(stageCode, /webglcontext(?:creationerror|lost)/i);
   assert.match(stageCode, /mascot-3d-stage--[\w-]*(?:fallback|failed)[\w-]*|(?:fallback|failed)[\s\S]{0,160}\?\s*['"`][^'"`]*mascot-3d-stage--/i);
   assert.match(stageCssCode, /\.mascot-fallback-image\s*\{/);
   assert.match(stageCssCode, /\.mascot-3d-stage--[\w-]*(?:fallback|failed)[\w-]*\s+\.mascot-fallback-image\s*\{/);
+  assert.match(stageCssCode, /\.mascot-3d-stage--(?:fallback|loading)[\s\S]{0,160}\.mascot-fallback-image\s*\{[\s\S]{0,160}opacity:\s*1/);
+  assert.doesNotMatch(stageCssCode, /\.mascot-fallback-image--canvas\s*\{[\s\S]{0,120}opacity:\s*1/i);
   assert.doesNotMatch(stageCode, /\buseTexture\b|TextureLoader|loadTexture|MASCOT_ACTION_POSES/);
   assert.doesNotMatch(stageCode, /<mesh[\s\S]{0,240}(?:ai-mascot-transparent\.png|mascot[^'"]*\.png)[\s\S]{0,240}<mesh/i);
 });

@@ -1,8 +1,12 @@
 /*
+ 更新时间: 2026-07-06 00:22:00 CST
+ 更新内容: 增加 Canvas 成功前的 DOM 兜底层和 WebGL context 失败监听，避免 R3F 异步初始化失败时舞台空白。
+*/
+/*
  更新时间: 2026-07-03 18:48:43 CST
  更新内容: 将福小客主渲染替换为 R3F 程序化骨骼 3D 模型，并保留透明 PNG 作为 WebGL 失败兜底。
 */
-import { useRef, useState } from 'react';
+import { Component, useEffect, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -27,6 +31,44 @@ const COLORS = {
   darkInk: '#18244d',
   blush: '#ff8fc7',
 };
+
+function canCreateWebGLContext() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return true;
+  if (!window.WebGLRenderingContext) return false;
+
+  try {
+    const canvas = document.createElement('canvas');
+    const context = (
+      canvas.getContext('webgl2')
+      || canvas.getContext('webgl')
+      || canvas.getContext('experimental-webgl')
+    );
+    context?.getExtension?.('WEBGL_lose_context')?.loseContext?.();
+    return Boolean(context);
+  } catch {
+    return false;
+  }
+}
+
+class MascotCanvasErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { failed: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch() {
+    this.props.onFailure?.();
+  }
+
+  render() {
+    if (this.state.failed) return this.props.fallback;
+    return this.props.children;
+  }
+}
 
 function initialPosition(boneName) {
   return INITIAL_RIG_POSE[boneName]?.position ?? [0, 0, 0];
@@ -424,39 +466,89 @@ function MascotPuppet({ action, pointer, analysisActive }) {
   );
 }
 
+function MascotFallbackImage({ className = 'mascot-fallback-image' }) {
+  return (
+    <img
+      className={className}
+      src={FALLBACK_MASCOT_SOURCE}
+      alt=""
+      draggable="false"
+      aria-hidden="true"
+    />
+  );
+}
+
 export default function Mascot3DStage({
   action = MASCOT_ACTIONS.idle,
   pointer = DEFAULT_POINTER,
   analysisActive = false,
   label = '福小客 3D 经营助手',
 }) {
-  const [canvasFailed, setCanvasFailed] = useState(false);
+  const [canvasFailed, setCanvasFailed] = useState(() => !canCreateWebGLContext());
+  const [canvasReady, setCanvasReady] = useState(false);
+  const canvasEventCleanupRef = useRef(null);
   const defaultIdle = action === MASCOT_ACTIONS.idle && !analysisActive;
-  const stageClassName = `mascot-3d-stage${defaultIdle ? ' mascot-3d-stage--default' : ''}${canvasFailed ? ' mascot-3d-stage--failed' : ''}`;
+  const showFallback = canvasFailed || !canvasReady;
+  const loadingFallback = !canvasFailed && !canvasReady;
+  const stageClassName = `mascot-3d-stage${defaultIdle ? ' mascot-3d-stage--default' : ''}${showFallback ? ' mascot-3d-stage--fallback' : ''}${loadingFallback ? ' mascot-3d-stage--loading' : ''}${canvasFailed ? ' mascot-3d-stage--failed' : ''}`;
+  const fallbackImage = <MascotFallbackImage className="mascot-fallback-image mascot-fallback-image--canvas" />;
+
+  useEffect(() => () => {
+    canvasEventCleanupRef.current?.();
+  }, []);
+
+  const handleCanvasFailure = () => {
+    canvasEventCleanupRef.current?.();
+    canvasEventCleanupRef.current = null;
+    setCanvasReady(false);
+    setCanvasFailed(true);
+  };
+
+  const handleCanvasCreated = ({ gl }) => {
+    canvasEventCleanupRef.current?.();
+    canvasEventCleanupRef.current = null;
+
+    const canvas = gl?.domElement;
+    if (canvas?.addEventListener) {
+      const handleContextFailure = (event) => {
+        event?.preventDefault?.();
+        handleCanvasFailure();
+      };
+
+      canvas.addEventListener('webglcontextcreationerror', handleContextFailure, false);
+      canvas.addEventListener('webglcontextlost', handleContextFailure, false);
+      canvasEventCleanupRef.current = () => {
+        canvas.removeEventListener('webglcontextcreationerror', handleContextFailure, false);
+        canvas.removeEventListener('webglcontextlost', handleContextFailure, false);
+      };
+    }
+
+    setCanvasReady(true);
+    setCanvasFailed(false);
+  };
 
   return (
     <span className={stageClassName} role="img" aria-label={label}>
-      <Canvas
-        orthographic
-        camera={{ position: [0, 0, 5], zoom: 64 }}
-        dpr={[1, 1.7]}
-        gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
-        onCreated={() => setCanvasFailed(false)}
-        onError={() => setCanvasFailed(true)}
-      >
-        <ambientLight intensity={1.08} />
-        <directionalLight position={[1.8, 2.6, 3.2]} intensity={1.45} color="#ffffff" />
-        <pointLight position={[-0.7, 0.6, 1.4]} intensity={0.82} color={COLORS.helmetPurple} />
-        <pointLight position={[0.72, -0.28, 1.8]} intensity={0.58} color={COLORS.iceCyan} />
-        <MascotPuppet action={action} pointer={pointer} analysisActive={analysisActive} />
-      </Canvas>
-      <img
-        className="mascot-fallback-image"
-        src={FALLBACK_MASCOT_SOURCE}
-        alt=""
-        draggable="false"
-        aria-hidden="true"
-      />
+      {!canvasFailed && (
+        <MascotCanvasErrorBoundary fallback={fallbackImage} onFailure={handleCanvasFailure}>
+          <Canvas
+            orthographic
+            camera={{ position: [0, 0, 5], zoom: 64 }}
+            dpr={[1, 1.7]}
+            gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
+            onCreated={handleCanvasCreated}
+            onError={handleCanvasFailure}
+            fallback={fallbackImage}
+          >
+            <ambientLight intensity={1.08} />
+            <directionalLight position={[1.8, 2.6, 3.2]} intensity={1.45} color="#ffffff" />
+            <pointLight position={[-0.7, 0.6, 1.4]} intensity={0.82} color={COLORS.helmetPurple} />
+            <pointLight position={[0.72, -0.28, 1.8]} intensity={0.58} color={COLORS.iceCyan} />
+            <MascotPuppet action={action} pointer={pointer} analysisActive={analysisActive} />
+          </Canvas>
+        </MascotCanvasErrorBoundary>
+      )}
+      <MascotFallbackImage />
     </span>
   );
 }
