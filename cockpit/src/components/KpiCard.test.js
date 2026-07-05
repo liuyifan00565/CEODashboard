@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 19:10:30 CST
+ 更新内容: KPI 回款半环标题回归测试改为月度/年度回款结构，适配经营总览顶部轻量下钻入口。
+*/
+/*
  更新时间: 2026-07-05 15:29:01 CST
  更新内容: KPI 回归测试锁定更小更克制的半环图、低饱和通道色和更轻玻璃层级。
 */
@@ -210,8 +214,8 @@ test('uses four sales source slices in the recovery half-donut chart', () => {
   assert.doesNotMatch(componentSource, /name:\s*'缺口'/);
 });
 
-test('keeps only the target completion title at the upper-left of the recovery half-donut', () => {
-  assert.match(componentSource, /function recoveryPieHeading\(card\) \{[\s\S]*?return card\.key === 'year' \? '本年目标完成情况' : '本月目标完成情况';[\s\S]*?\}/);
+test('keeps only the recovery structure title at the upper-left of the recovery half-donut', () => {
+  assert.match(componentSource, /function recoveryPieHeading\(card\) \{[\s\S]*?return card\.key === 'year' \? '年度回款结构' : '月度回款结构';[\s\S]*?\}/);
   assert.match(componentSource, /function recoveryCompletedValue\(card\) \{[\s\S]*?return Math\.max\(Number\(card\.value\) \|\| 0, 0\);[\s\S]*?\}/);
   assert.match(componentSource, /function recoveryTargetValue\(card\) \{[\s\S]*?return recoveryCompletedValue\(card\) \+ \(Number\(card\.gap\) \|\| 0\);[\s\S]*?\}/);
   assert.match(componentSource, /<div className="kpi-card__pie-head">[\s\S]*?<div className="kpi-card__pie-title">\{recoveryPieHeading\(card\)\}<\/div>[\s\S]*?<\/div>[\s\S]*?<EChart option=\{recoveryPieOption\(card, tokens, recoveryAccent\)\}/);

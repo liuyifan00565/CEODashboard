@@ -1,10 +1,11 @@
+/* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 经营总览样式提高信息密度，支持四指标总览、年度虚线目标和轻量明细入口。 */
 /* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 优化经营总览移动端换行和主进度标题宽度，避免窄屏文字截断。 */
 /* 更新时间: 2026-07-05 18:20:00 CST  更新内容: 新增经营总览三段融合页样式，复用统一深色玻璃体系并降低发光和重复图表。 */
 .op-overview {
   width: 100%;
   max-width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1.06fr) minmax(360px, .94fr);
+  grid-template-columns: minmax(0, .96fr) minmax(500px, 1.04fr);
   grid-template-areas:
     "progress progress"
     "annual channel";
@@ -21,6 +22,7 @@
   -webkit-backdrop-filter: var(--dashboard-card-blur);
   backdrop-filter: var(--dashboard-card-blur);
   box-shadow: var(--dashboard-card-shadow);
+  padding: clamp(18px, 2vw, 26px);
 }
 
 .op-channel-wrap .ch-panel {
@@ -35,16 +37,11 @@
   box-shadow: var(--dashboard-card-shadow);
 }
 
-.op-panel {
-  padding: clamp(18px, 2vw, 26px);
-}
-
 .op-panel--progress {
   grid-area: progress;
-  display: grid;
-  grid-template-columns: minmax(230px, .95fr) minmax(280px, 1fr) minmax(230px, .82fr);
-  align-items: center;
-  gap: clamp(20px, 3vw, 42px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .op-panel--annual {
@@ -65,14 +62,20 @@
 }
 
 .op-channel-wrap .ch-panel {
-  padding: 20px 22px 22px;
+  padding: 20px 18px 22px;
+}
+
+.op-progress-head,
+.op-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
 }
 
 .op-eyebrow,
-.op-section-meta,
-.op-subtle,
-.op-hero-label,
-.op-risk-card span,
+.op-summary-label,
+.op-summary-sub,
 .op-metric span {
   color: var(--faint);
   font-size: 13px;
@@ -86,15 +89,15 @@
   color: rgba(247,248,252,.66);
 }
 
-.op-progress-copy h1,
+.op-progress-head h1,
 .op-section-head h2 {
   margin: 0;
   color: var(--txt);
   letter-spacing: 0;
 }
 
-.op-progress-copy h1 {
-  font-size: clamp(24px, 2.4vw, 36px);
+.op-progress-head h1 {
+  font-size: clamp(24px, 2.4vw, 34px);
   font-weight: 760;
   line-height: 1.08;
 }
@@ -105,59 +108,92 @@
   line-height: 1.18;
 }
 
-.op-hero-number {
-  margin-top: 20px;
+.op-detail-button {
+  flex: none;
+  min-width: 104px;
+  padding: 9px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  background: var(--ai-chip-bg);
+  color: rgba(247,248,252,.82);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 720;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color .2s ease, background .2s ease, color .2s ease, transform .2s ease;
+}
+
+.op-detail-button:hover:not(:disabled),
+.op-detail-button:focus-visible:not(:disabled) {
+  border-color: rgba(255,255,255,.28);
+  background: var(--ai-chip-hover);
   color: var(--txt);
-  font-size: clamp(56px, 6vw, 86px);
-  font-weight: 820;
-  line-height: .96;
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.op-detail-button:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+}
+
+.op-summary-grid {
+  display: grid;
+  grid-template-columns: minmax(210px, 1.25fr) minmax(230px, 1.2fr) minmax(170px, .8fr) minmax(210px, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--line-2);
+  border-bottom: 1px solid var(--line-2);
+}
+
+.op-summary-cell {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 7px;
+  padding: 17px clamp(14px, 1.8vw, 24px);
+  border-left: 1px solid var(--line-2);
+}
+
+.op-summary-cell:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.op-summary-cell b {
+  color: var(--txt);
+  font-size: clamp(28px, 2.9vw, 46px);
+  font-weight: 800;
+  line-height: 1;
   letter-spacing: 0;
   font-variant-numeric: tabular-nums;
 }
 
-.op-hero-label {
+.op-summary-cell--hero b {
+  font-size: clamp(48px, 5vw, 72px);
+  font-weight: 830;
+  line-height: .94;
+}
+
+.op-summary-cell--warn b,
+.op-summary-cell--warn em {
+  color: var(--warn);
+}
+
+.op-summary-cell em {
+  font-style: normal;
+  font-size: .76em;
+}
+
+.op-summary-sub {
   display: block;
-  margin-top: 10px;
-  color: rgba(247,248,252,.78);
-  font-size: 15px;
-}
-
-.op-subtle {
-  display: block;
-  margin-top: 7px;
-}
-
-.op-progress-rate {
-  display: grid;
-  gap: 12px;
-}
-
-.op-rate-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 18px;
-}
-
-.op-rate-head span {
-  color: rgba(247,248,252,.72);
-  font-size: 15px;
-  font-weight: 680;
-}
-
-.op-rate-head b {
-  margin-left: auto;
-  color: var(--txt);
-  font-size: clamp(34px, 4vw, 54px);
-  font-weight: 800;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
+  color: rgba(247,248,252,.54);
 }
 
 .op-progress-track {
   position: relative;
-  height: 12px;
+  width: min(100%, 360px);
+  height: 8px;
   border-radius: 999px;
   background: var(--bar-track);
   overflow: hidden;
@@ -171,52 +207,11 @@
   box-shadow: var(--bar-good-glow);
 }
 
-.op-risk-stack {
-  display: grid;
-  gap: 18px;
-  border-left: 1px solid var(--line-2);
-  padding-left: clamp(18px, 2vw, 28px);
-}
-
-.op-risk-card {
-  display: grid;
-  gap: 6px;
-}
-
-.op-risk-card b {
-  color: var(--txt);
-  font-size: clamp(24px, 2.4vw, 34px);
-  font-weight: 780;
-  line-height: 1.06;
-  font-variant-numeric: tabular-nums;
-}
-
-.op-risk-card--warn b,
-.op-risk-card--warn em {
-  color: var(--warn);
-}
-
-.op-risk-card em {
-  font-style: normal;
-  font-size: .78em;
-}
-
-.op-section-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-}
-
-.op-section-meta {
-  padding-top: 2px;
-  white-space: nowrap;
-}
-
 .op-annual-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 13px 16px;
+  padding-top: 2px;
 }
 
 .op-metric {
@@ -227,23 +222,26 @@
 
 .op-metric b {
   color: var(--txt);
-  font-size: clamp(19px, 1.7vw, 26px);
+  font-size: clamp(18px, 1.55vw, 24px);
   font-weight: 760;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
 
 .op-annual-chart {
-  min-height: 170px;
+  min-height: 190px;
 }
 
 .op-judgement {
   margin: 0;
-  padding-top: 2px;
   color: rgba(247,248,252,.78);
   font-size: 14px;
   font-weight: 650;
   line-height: 1.55;
+}
+
+.op-judgement--progress {
+  color: rgba(247,248,252,.82);
 }
 
 @media (max-width: 1180px) {
@@ -254,21 +252,21 @@
       "annual"
       "channel";
   }
-}
 
-@media (max-width: 860px) {
-  .op-panel--progress {
-    grid-template-columns: 1fr;
-  }
-
-  .op-risk-stack {
-    border-left: 0;
-    border-top: 1px solid var(--line-2);
-    padding-left: 0;
-    padding-top: 18px;
+  .op-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .op-summary-cell:nth-child(odd) {
+    border-left: 0;
+  }
+
+  .op-summary-cell:nth-child(n + 3) {
+    border-top: 1px solid var(--line-2);
+  }
+}
+
+@media (max-width: 860px) {
   .op-annual-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -279,24 +277,23 @@
     padding: 16px;
   }
 
-  .op-rate-head {
-    gap: 8px 14px;
-  }
-
-  .op-rate-head b {
-    font-size: 40px;
-  }
-
-  .op-risk-stack,
-  .op-annual-grid {
-    grid-template-columns: 1fr;
-  }
-
+  .op-progress-head,
   .op-section-head {
     flex-direction: column;
   }
 
-  .op-section-meta {
-    white-space: normal;
+  .op-summary-grid,
+  .op-annual-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .op-summary-cell {
+    border-left: 0;
+    border-top: 1px solid var(--line-2);
+    padding-left: 0;
+  }
+
+  .op-summary-cell:first-child {
+    border-top: 0;
   }
 }

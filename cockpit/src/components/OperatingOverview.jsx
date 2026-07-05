@@ -1,25 +1,63 @@
+/* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 经营总览提高信息密度，加入月度/年度节奏判断、年度虚线目标和顶部明细入口。 */
 /* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 本月回款主数字改为静态权威值，避免截图或首屏加载时显示滚动中间态。 */
 /* 更新时间: 2026-07-05 18:20:00 CST  更新内容: 新增经营总览三段融合布局，本月为主视角、年度为节奏背景、渠道为原因拆解。 */
 import EChart from './EChart';
 import SearchResultBorder from './SearchResultBorder';
 import ChannelPanel from './ChannelPanel';
-import { KPI, KPI_DERIVED, getAnnualRhythmPoints } from '../data/mock';
+import {
+  KPI,
+  KPI_DERIVED,
+  getAnnualRhythmSeries,
+  getOperatingOverviewMetrics,
+} from '../data/mock';
 import { matchesSearchTerm } from '../lib/searchMatch';
 import { useThemeTokens } from '../lib/theme';
 import './OperatingOverview.css';
 
-const PROGRESS_KEYWORDS = ['经营进度总览', '2026年6月经营进度', '本月回款', '月度完成率', '缺口', '风险渠道', '线下华东'];
-const ANNUAL_KEYWORDS = ['年度节奏', '年度累计', '年度目标', '年度完成率', '年度缺口', '理想节奏', '线下华东回款恢复'];
+const PROGRESS_KEYWORDS = [
+  '经营进度总览',
+  '2026年6月经营进度',
+  '本月回款',
+  '月度完成率',
+  '时间进度',
+  '节奏',
+  '目标缺口',
+  '预计影响缺口',
+  '风险渠道',
+  '线下华东',
+  '本月整体进度正常，但线下华东低于目标节奏，预计影响月度缺口 36万。',
+];
+const ANNUAL_KEYWORDS = [
+  '年度节奏',
+  '年度累计',
+  '年度目标',
+  '年度完成率',
+  '年度缺口',
+  '时间进度',
+  '节奏偏差',
+  '剩余月均需完成',
+  '线下华东连续低于目标',
+  '当前年度完成率略高于时间进度，但线下华东连续低于目标，需优先恢复渠道回款。',
+];
 const CHANNEL_KEYWORDS = ['渠道完成情况', '本月', '年度', '线上', '线下华南', '线下华东', '代理', '年度贡献', '需关注'];
 
 function formatWan(value) {
   return Number(value).toLocaleString('zh-CN');
 }
 
-function annualRhythmOption(points, tokens) {
+function formatPct(value) {
+  return `${Number(value).toFixed(1)}%`;
+}
+
+function formatSignedPct(value) {
+  const number = Number(value);
+  return `${number >= 0 ? '+' : ''}${number.toFixed(1)}%`;
+}
+
+function annualRhythmOption(series, tokens) {
   return {
     backgroundColor: 'transparent',
-    grid: { left: 8, right: 18, top: 18, bottom: 18, containLabel: true },
+    grid: { left: 8, right: 18, top: 28, bottom: 18, containLabel: true },
     tooltip: {
       trigger: 'axis',
       backgroundColor: tokens.chartTooltipBg,
@@ -27,21 +65,31 @@ function annualRhythmOption(points, tokens) {
       borderWidth: 1,
       textStyle: { color: tokens.chartText, fontSize: 12 },
       formatter: (params) => {
-        const item = params[0];
+        const valid = params.find((item) => item.value != null);
+        if (!valid) return '';
         return `<div style="display:grid;gap:4px">
-          <span style="color:${tokens.chartMuted}">${item.axisValue}</span>
-          <strong style="color:${tokens.chartText};font-size:15px">${formatWan(item.value)} 万</strong>
+          <span style="color:${tokens.chartMuted}">${valid.axisValue}</span>
+          <strong style="color:${tokens.chartText};font-size:15px">${formatWan(valid.value)} 万</strong>
+          <span style="color:${tokens.chartMuted}">${valid.seriesName}</span>
         </div>`;
       },
     },
+    legend: {
+      top: 0,
+      right: 0,
+      itemWidth: 16,
+      itemHeight: 8,
+      textStyle: { color: tokens.chartMuted, fontSize: 11 },
+      data: ['累计回款', '目标节奏'],
+    },
     xAxis: {
       type: 'category',
-      data: points.map((point) => point.label),
+      data: series.labels,
       axisLine: { lineStyle: { color: tokens.chartGrid } },
       axisTick: { show: false },
       axisLabel: {
         color: ({ value }) => (value === '6月' ? tokens.chartText : tokens.chartMuted),
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: ({ value }) => (value === '6月' ? 760 : 560),
       },
     },
@@ -51,72 +99,105 @@ function annualRhythmOption(points, tokens) {
       splitLine: { lineStyle: { color: tokens.chartGrid } },
       axisLine: { show: false },
     },
-    series: [{
-      name: '年度节奏',
-      type: 'line',
-      smooth: true,
-      symbol: 'circle',
-      symbolSize: (value, params) => (points[params.dataIndex]?.tone === 'target' ? 8 : 7),
-      lineStyle: { width: 2, color: tokens.chartBarCurrent, shadowBlur: 8, shadowColor: 'rgba(139,124,255,.16)' },
-      itemStyle: {
-        color: (params) => (points[params.dataIndex]?.tone === 'target' ? tokens.progressGold : tokens.chartBarCurrent),
-        borderColor: tokens.chartPointBorder,
-        borderWidth: 1.5,
+    series: [
+      {
+        name: '累计回款',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 7,
+        connectNulls: false,
+        lineStyle: { width: 2.2, color: tokens.chartBarCurrent, shadowBlur: 8, shadowColor: 'rgba(139,124,255,.16)' },
+        itemStyle: { color: tokens.chartBarCurrent, borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
+        areaStyle: { color: 'rgba(139,124,255,.055)' },
+        label: {
+          show: true,
+          position: 'top',
+          color: tokens.chartText,
+          fontSize: 11,
+          fontWeight: 720,
+          formatter: ({ value }) => (value == null ? '' : `${formatWan(value)}万`),
+        },
+        data: series.actual,
       },
-      areaStyle: { color: 'rgba(139,124,255,.055)' },
-      label: {
-        show: true,
-        position: 'top',
-        color: ({ dataIndex }) => (points[dataIndex]?.tone === 'target' ? tokens.progressGold : tokens.chartText),
-        fontSize: 12,
-        fontWeight: 720,
-        formatter: ({ value }) => `${formatWan(value)}万`,
+      {
+        name: '目标节奏',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        connectNulls: true,
+        lineStyle: { width: 2, type: 'dashed', color: tokens.progressGold, shadowBlur: 8, shadowColor: 'rgba(215,181,109,.16)' },
+        itemStyle: { color: tokens.progressGold, borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
+        label: {
+          show: true,
+          position: 'top',
+          color: ({ dataIndex }) => (dataIndex === series.labels.length - 1 ? tokens.progressGold : tokens.chartMuted),
+          fontSize: 11,
+          fontWeight: 720,
+          formatter: ({ value, dataIndex }) => (value == null || dataIndex !== series.labels.length - 1 ? '' : `${formatWan(value)}万`),
+        },
+        data: series.target,
       },
-      data: points.map((point) => point.value),
-    }],
+    ],
   };
 }
 
-export default function OperatingOverview({ searchTerm = '' }) {
+export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearKpiCard, onOpenKpi }) {
   const tokens = useThemeTokens();
-  const annualPoints = getAnnualRhythmPoints();
-  const annualOption = annualRhythmOption(annualPoints, tokens);
+  const overviewMetrics = getOperatingOverviewMetrics();
+  const annualSeries = getAnnualRhythmSeries();
+  const annualOption = annualRhythmOption(annualSeries, tokens);
   const progressWidth = `${Math.min(KPI_DERIVED.monthCompletion, 100)}%`;
 
   return (
     <div className="op-overview">
       <SearchResultBorder active={matchesSearchTerm(PROGRESS_KEYWORDS, searchTerm)}>
         <section className="op-panel op-panel--progress" data-anim>
-          <div className="op-progress-copy">
-            <span className="op-eyebrow">经营进度总览</span>
-            <h1>2026年6月经营进度</h1>
-            <div className="op-hero-number">
-              {formatWan(KPI.monthRecovered)}万
+          <header className="op-progress-head">
+            <div>
+              <span className="op-eyebrow">经营进度总览</span>
+              <h1>2026年6月经营进度</h1>
             </div>
-            <span className="op-hero-label">本月回款</span>
-            <span className="op-subtle">月度目标 {formatWan(KPI.monthTarget)}万</span>
-          </div>
+            <button
+              type="button"
+              className="op-detail-button"
+              disabled={!monthKpiCard || !onOpenKpi}
+              onClick={() => onOpenKpi(monthKpiCard)}
+            >
+              查看本月明细
+            </button>
+          </header>
 
-          <div className="op-progress-rate">
-            <div className="op-rate-head">
-              <span>月目标完成率</span>
-              <b>{KPI_DERIVED.monthCompletion}%</b>
+          <div className="op-summary-grid">
+            <div className="op-summary-cell op-summary-cell--hero">
+              <span className="op-summary-label">本月回款</span>
+              <b>{formatWan(KPI.monthRecovered)}万</b>
+              <span className="op-summary-sub">月度目标 {formatWan(KPI.monthTarget)}万</span>
             </div>
-            <div className="op-progress-track" aria-label={`月度完成率 ${KPI_DERIVED.monthCompletion}%`}>
-              <span style={{ width: progressWidth }} />
+            <div className="op-summary-cell">
+              <span className="op-summary-label">月目标完成率</span>
+              <b>{formatPct(KPI_DERIVED.monthCompletion)}</b>
+              <span className="op-summary-sub">
+                时间进度 {formatPct(overviewMetrics.monthTimeProgress)} / 节奏 {formatSignedPct(overviewMetrics.monthPaceDelta)}
+              </span>
+              <div className="op-progress-track" aria-label={`月度完成率 ${KPI_DERIVED.monthCompletion}%`}>
+                <span style={{ width: progressWidth }} />
+              </div>
             </div>
-          </div>
-
-          <div className="op-risk-stack">
-            <div className="op-risk-card">
-              <span>缺口</span>
+            <div className="op-summary-cell">
+              <span className="op-summary-label">目标缺口</span>
               <b>{formatWan(KPI_DERIVED.monthGap)}万</b>
+              <span className="op-summary-sub">距离月度目标</span>
             </div>
-            <div className="op-risk-card op-risk-card--warn">
-              <span>风险渠道</span>
+            <div className="op-summary-cell op-summary-cell--warn">
+              <span className="op-summary-label">风险渠道</span>
               <b>线下华东 <em>70%</em></b>
+              <span className="op-summary-sub">预计影响缺口 {overviewMetrics.riskImpactGap}万</span>
             </div>
           </div>
+
+          <p className="op-judgement op-judgement--progress">{overviewMetrics.monthJudgement}</p>
         </section>
       </SearchResultBorder>
 
@@ -127,7 +208,14 @@ export default function OperatingOverview({ searchTerm = '' }) {
               <span className="op-eyebrow">年度节奏</span>
               <h2>年度节奏</h2>
             </div>
-            <span className="op-section-meta">1月 → 6月 → 12月目标</span>
+            <button
+              type="button"
+              className="op-detail-button"
+              disabled={!yearKpiCard || !onOpenKpi}
+              onClick={() => onOpenKpi(yearKpiCard)}
+            >
+              查看年度明细
+            </button>
           </header>
 
           <div className="op-annual-grid">
@@ -141,19 +229,31 @@ export default function OperatingOverview({ searchTerm = '' }) {
             </div>
             <div className="op-metric">
               <span>年度完成率</span>
-              <b>{KPI_DERIVED.yearCompletion}%</b>
+              <b>{formatPct(KPI_DERIVED.yearCompletion)}</b>
+            </div>
+            <div className="op-metric">
+              <span>时间进度</span>
+              <b>{formatPct(overviewMetrics.annualTimeProgress)}</b>
+            </div>
+            <div className="op-metric">
+              <span>节奏偏差</span>
+              <b>{formatSignedPct(overviewMetrics.annualPaceDelta)}</b>
             </div>
             <div className="op-metric">
               <span>年度缺口</span>
               <b>{formatWan(KPI_DERIVED.yearGap)}万</b>
             </div>
+            <div className="op-metric">
+              <span>剩余月均需完成</span>
+              <b>{formatWan(overviewMetrics.remainingMonthlyRequired)}万</b>
+            </div>
           </div>
 
-          <div className="op-annual-chart" aria-label="年度节奏轻量趋势线">
-            <EChart option={annualOption} style={{ height: 170 }} />
+          <div className="op-annual-chart" aria-label="年度节奏累计实线和目标虚线">
+            <EChart option={annualOption} style={{ height: 190 }} />
           </div>
 
-          <p className="op-judgement">当前年度进度低于理想节奏，需重点关注线下华东回款恢复。</p>
+          <p className="op-judgement">{overviewMetrics.annualJudgement}</p>
         </section>
       </SearchResultBorder>
 

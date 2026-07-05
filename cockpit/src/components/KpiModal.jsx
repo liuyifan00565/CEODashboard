@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 19:10:30 CST  更新内容: KPI 二级弹窗按本月/年度入口默认切换维度，并将回款弹窗标题改为月度/年度明细。 */
 /* 更新时间: 2026-07-02 16:52:00 CST  更新内容: KPI 二级弹窗关闭按钮改用统一 AppIcon 线性图标。 */
 import { useEffect, useRef, useState, useMemo } from 'react';
 import * as echarts from 'echarts';
@@ -31,8 +32,10 @@ export default function KpiModal({ card, onClose }) {
   const tokens = useThemeTokens();
   const [salesKeys, setSalesKeys] = useState(() => SALES_FILTER_OPTS.map((opt) => opt.value));
   const [version, setVersion] = useState('all');
-  const [dim, setDim] = useState('month');
+  const initialDim = card.key === 'year' ? 'year' : 'month';
+  const [dim, setDim] = useState(initialDim);
   const isRenewal = card.metric === 'renewalRate';
+  const modalTitle = card.key === 'year' ? '年度回款明细' : card.key === 'month' ? '月度回款明细' : card.title;
   const renewalData = useMemo(
     () => (isRenewal ? getRenewalModalData(version, dim, salesKeys) : null),
     [isRenewal, version, dim, salesKeys]
@@ -157,7 +160,7 @@ export default function KpiModal({ card, onClose }) {
       <div className="km-mask" ref={maskRef} onClick={handleClose} />
       <div className="km-card" ref={cardRef}>
         <div className="km-head">
-          <h3 className="km-title">{card.title}</h3>
+          <h3 className="km-title">{modalTitle}</h3>
           <button type="button" className="km-close" aria-label="关闭" onClick={handleClose}>
             <AppIcon name="close" size={17} />
           </button>

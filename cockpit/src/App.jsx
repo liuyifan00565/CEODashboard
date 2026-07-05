@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 19:10:30 CST
+ 更新内容: 经营总览顶部接入本月和年度 KPI 明细入口，复用现有 KPI 二级弹窗。
+*/
+/*
  更新时间: 2026-07-05 18:46:00 CST
  更新内容: 在经营总览三段融合故事流下方恢复月度趋势、开户投入、版本情况和交付面板，并保留 KPI 下钻联动。
 */
@@ -182,6 +186,8 @@ export default function App() {
     () => getFilteredKpiCards({ dim, dateRange, channel: activeChannelKey }),
     [dim, dateRange, activeChannelKey]
   );
+  const monthKpiCard = filteredKpiCards.find((card) => card.key === 'month');
+  const yearKpiCard = filteredKpiCards.find((card) => card.key === 'year');
   const financeKpiCards = filteredKpiCards.filter((card) => card.key === 'cost');
   const openCardData = useMemo(
     () => filteredKpiCards.find((card) => card.key === openCard?.key) ?? openCard ?? null,
@@ -400,7 +406,12 @@ export default function App() {
               <ComputeUsagePage searchTerm={searchTerm} dim={dim} dateRange={dateRange} />
             ) : (
               <>
-                <OperatingOverview searchTerm={searchTerm} />
+                <OperatingOverview
+                  searchTerm={searchTerm}
+                  monthKpiCard={monthKpiCard}
+                  yearKpiCard={yearKpiCard}
+                  onOpenKpi={handleOpenCard}
+                />
 
                 <div className="dash-secondary-grid">
                   <div className="dash-secondary-cell dash-secondary-cell--trend" data-anim>

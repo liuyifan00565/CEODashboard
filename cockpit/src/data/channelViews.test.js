@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 19:10:30 CST
+ 更新内容: 增加经营总览高密度指标、年度实线/虚线节奏和渠道本月年度融合行回归测试。
+*/
+/*
  更新时间: 2026-07-05 18:20:00 CST
  更新内容: 增加经营总览渠道完成本月/年度行和年度节奏点位回归测试。
 */
@@ -48,6 +52,8 @@ import {
   getChannelTrend,
   getChannelCompletionRows,
   getAnnualRhythmPoints,
+  getAnnualRhythmSeries,
+  getOperatingOverviewMetrics,
   getDashboardChannelKey,
   getDeliveryRows,
   getDeliverySummary,
@@ -290,28 +296,57 @@ test('returns operating overview channel rows for monthly and annual period swit
   const yearRows = getChannelCompletionRows('year');
 
   assert.deepEqual(monthRows.map((row) => row.name), ['线上', '线下华南', '代理', '线下华东']);
-  assert.equal(monthRows.find((row) => row.key === 'online').recovered, 210);
-  assert.equal(monthRows.find((row) => row.key === 'online').target, 240);
-  assert.equal(monthRows.find((row) => row.key === 'east').completion, 70);
+  assert.equal(monthRows.find((row) => row.key === 'online').monthRecovered, 210);
+  assert.equal(monthRows.find((row) => row.key === 'online').monthTarget, 240);
+  assert.equal(monthRows.find((row) => row.key === 'online').monthCompletion, 87.5);
+  assert.equal(monthRows.find((row) => row.key === 'online').yearRecovered, 1348);
+  assert.equal(monthRows.find((row) => row.key === 'online').yearTarget, 2400);
+  assert.equal(monthRows.find((row) => row.key === 'online').annualContribution, 43.2);
+  assert.equal(monthRows.find((row) => row.key === 'east').monthCompletion, 70);
   assert.equal(monthRows.find((row) => row.key === 'east').status, '需关注');
   assert.ok(monthRows.filter((row) => row.status === '需关注').every((row) => row.key === 'east'));
-  assert.equal(monthRows.reduce((sum, row) => sum + row.recovered, 0), 486);
-  assert.ok(monthRows.find((row) => row.key === 'online').annualContribution > 43);
+  assert.equal(monthRows.reduce((sum, row) => sum + row.monthRecovered, 0), 486);
+  assert.ok(monthRows.every((row) => row.period === 'month'));
+  assert.ok(monthRows.every((row) => row.completion === row.monthCompletion));
 
-  assert.equal(yearRows.find((row) => row.key === 'online').recovered, Math.round(3120 * (210 / 486)));
+  assert.equal(yearRows.find((row) => row.key === 'online').recovered, 1348);
   assert.equal(yearRows.find((row) => row.key === 'online').target, 2400);
+  assert.equal(yearRows.find((row) => row.key === 'online').completion, yearRows.find((row) => row.key === 'online').yearCompletion);
+  assert.equal(yearRows.find((row) => row.key === 'online').monthRecovered, 210);
+  assert.equal(yearRows.find((row) => row.key === 'online').monthTarget, 240);
   assert.equal(yearRows.find((row) => row.key === 'east').status, '需关注');
   assert.ok(yearRows.every((row) => row.period === 'year'));
 });
 
-test('returns lightweight annual rhythm points anchored to the annual KPI values', () => {
+test('returns operating overview pace metrics for dense executive judgement', () => {
+  const metrics = getOperatingOverviewMetrics();
+
+  assert.equal(metrics.monthTimeProgress, 76.7);
+  assert.equal(metrics.monthPaceDelta, 7.1);
+  assert.equal(metrics.riskImpactGap, 36);
+  assert.equal(metrics.annualTimeProgress, 50);
+  assert.equal(metrics.annualPaceDelta, 3.8);
+  assert.equal(metrics.remainingMonthlyRequired, 536);
+  assert.equal(metrics.monthJudgement, '本月整体进度正常，但线下华东低于目标节奏，预计影响月度缺口 36万。');
+  assert.equal(metrics.annualJudgement, '当前年度完成率略高于时间进度，但线下华东连续低于目标，需优先恢复渠道回款。');
+});
+
+test('returns annual rhythm actual and target series anchored to annual KPI values', () => {
   const points = getAnnualRhythmPoints();
+  const series = getAnnualRhythmSeries();
 
   assert.deepEqual(points.map((point) => point.label), ['1月', '6月', '12月目标']);
   assert.equal(points.find((point) => point.label === '6月').value, 3120);
   assert.equal(points.find((point) => point.label === '12月目标').value, 5800);
   assert.equal(points.find((point) => point.label === '6月').tone, 'current');
   assert.equal(points.find((point) => point.label === '12月目标').tone, 'target');
+  assert.deepEqual(series.labels, ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月目标']);
+  assert.equal(series.actual[0], 437);
+  assert.equal(series.actual[5], 3120);
+  assert.equal(series.actual[6], null);
+  assert.equal(series.target[4], null);
+  assert.equal(series.target[5], 3120);
+  assert.equal(series.target.at(-1), 5800);
 });
 
 test('returns sorted sales member rows with personal targets and progress', () => {

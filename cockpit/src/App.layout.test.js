@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 19:10:30 CST
+ 更新内容: 增加经营总览信息密度、年度节奏虚线、渠道融合表和本月/年度二级入口回归测试。
+*/
+/*
  更新时间: 2026-07-05 18:46:00 CST
  更新内容: 调整经营总览回归测试，要求融合总览下方恢复月度趋势、开户投入、版本情况和交付面板。
 */
@@ -188,7 +192,7 @@ function cssRuleBody(source, selector) {
 test('keeps the overview on a fixed operating story layout', () => {
   assert.doesNotMatch(appSource, /DraggableKpiLayer/);
   assert.doesNotMatch(appSource, /DraggablePanelLayer/);
-  assert.match(appSource, /<OperatingOverview searchTerm=\{searchTerm\} \/>/);
+  assert.match(appSource, /<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}[\s\S]*?\/>/);
   assert.match(operatingOverviewSource, /className="op-overview"/);
   assert.match(operatingOverviewCss, /\.op-overview\s*\{[\s\S]*?display:\s*grid;/);
   assert.doesNotMatch(appSource, /recoveryKpiCards/);
@@ -202,7 +206,7 @@ test('renders compute usage analysis as an independent dashboard page', () => {
   assert.match(appSource, /const isComputePage = activeMenu === 'compute';/);
   assert.match(appSource, /isComputePage \? \(/);
   assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim=\{dim\} dateRange=\{dateRange\} \/>/);
-  assert.match(appSource, /: \(\s*<>\s*<OperatingOverview searchTerm=\{searchTerm\} \/>/);
+  assert.match(appSource, /: \(\s*<>\s*<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
 });
 
 test('uses neutral dark glass backgrounds without BorderGlow sweep for top compute KPI cards', () => {
@@ -878,7 +882,9 @@ test('removes compute resource utilization from the compute analysis page', () =
 
 test('keeps the operating story overview while restoring secondary KPI companion openings', () => {
   assert.match(appSource, /import OperatingOverview from '\.\/components\/OperatingOverview';/);
-  assert.match(appSource, /<OperatingOverview searchTerm=\{searchTerm\} \/>/);
+  assert.match(appSource, /const monthKpiCard = filteredKpiCards\.find\(\(card\) => card\.key === 'month'\);/);
+  assert.match(appSource, /const yearKpiCard = filteredKpiCards\.find\(\(card\) => card\.key === 'year'\);/);
+  assert.match(appSource, /<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}[\s\S]*?monthKpiCard=\{monthKpiCard\}[\s\S]*?yearKpiCard=\{yearKpiCard\}[\s\S]*?onOpenKpi=\{handleOpenCard\}[\s\S]*?\/>/);
   assert.match(appSource, /<AIAnalysisWidget activeMenu=\{activeMenu\} dim=\{dim\} channelKey=\{activeChannelKey\} companionCue=\{companionCue\} \/>/);
   assert.match(appSource, /buildCardCompanionCue/);
   assert.match(appSource, /function handleOpenCard/);
@@ -902,10 +908,21 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /经营进度总览/);
   assert.match(operatingOverviewSource, /本月回款/);
   assert.match(operatingOverviewSource, /月度完成率/);
-  assert.match(operatingOverviewSource, /缺口/);
+  assert.match(operatingOverviewSource, /时间进度/);
+  assert.match(operatingOverviewSource, /节奏/);
+  assert.match(operatingOverviewSource, /预计影响缺口/);
+  assert.match(operatingOverviewSource, /目标缺口/);
   assert.match(operatingOverviewSource, /风险渠道/);
+  assert.match(operatingOverviewSource, /本月整体进度正常，但线下华东低于目标节奏，预计影响月度缺口 36万。/);
+  assert.match(operatingOverviewSource, /查看本月明细/);
+  assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
   assert.match(operatingOverviewSource, /年度节奏/);
-  assert.match(operatingOverviewSource, /当前年度进度低于理想节奏，需重点关注线下华东回款恢复。/);
+  assert.match(operatingOverviewSource, /剩余月均需完成/);
+  assert.match(operatingOverviewSource, /当前年度完成率略高于时间进度，但线下华东连续低于目标，需优先恢复渠道回款。/);
+  assert.match(operatingOverviewSource, /查看年度明细/);
+  assert.match(operatingOverviewSource, /onOpenKpi\(yearKpiCard\)/);
+  assert.match(operatingOverviewSource, /getOperatingOverviewMetrics/);
+  assert.match(operatingOverviewSource, /getAnnualRhythmSeries/);
   assert.match(operatingOverviewSource, /<ChannelPanel title="渠道完成情况" showPeriodSwitch \/>/);
   assert.match(operatingOverviewCss, /\.op-overview/);
   assert.match(operatingOverviewCss, /background:\s*var\(--dashboard-card-bg\);/);
@@ -918,7 +935,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
 });
 
 test('restores secondary dashboard panels below the operating overview story', () => {
-  assert.match(appSource, /<OperatingOverview searchTerm=\{searchTerm\} \/>/);
+  assert.match(appSource, /<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
   assert.match(appSource, /className="dash-secondary-grid"/);
   assert.match(appSource, /<MonthlyTrend channelKey=\{activeChannelKey\} \/>/);
   assert.match(appSource, /<OpeningMetricCards searchTerm=\{searchTerm\} onOpenSecondary=\{handleOpenCard\} \/>/);
@@ -976,7 +993,7 @@ test('removes the overview channel ROI card and replaces the original overview g
   assert.doesNotMatch(appSource, /function ChannelRoiPanel/);
   assert.doesNotMatch(appSource, /dash-cell--roi/);
   assert.doesNotMatch(appSource, /panelVisible = \{[\s\S]*?roi:/);
-  assert.match(appSource, /<OperatingOverview searchTerm=\{searchTerm\} \/>/);
+  assert.match(appSource, /<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
   assert.match(appSource, /className="dash-secondary-delivery"/);
   assert.match(dashboardCss, /grid-template-areas:\s*"trend finance"\s*"version version";/);
   assert.doesNotMatch(dashboardCss, /grid-template-areas:[\s\S]*?"roi version"/);
@@ -987,7 +1004,7 @@ test('routes overview through the fused operating layout while compute keeps sco
   assert.doesNotMatch(appSource, /dash-token/);
   assert.doesNotMatch(appSource, /activeMenu === 'finance'/);
   assert.match(appSource, /const activeChannelKey = getDashboardChannelKey\(activeMenu\);/);
-  assert.match(appSource, /<OperatingOverview searchTerm=\{searchTerm\} \/>/);
+  assert.match(appSource, /<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
   assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim=\{dim\} dateRange=\{dateRange\} \/>/);
   assert.match(appSource, /getFilteredKpiCards\(\{ dim, dateRange, channel: activeChannelKey \}\)/);
   assert.match(appSource, /<MonthlyTrend channelKey=\{activeChannelKey\} \/>/);
@@ -1012,8 +1029,17 @@ test('uses one channel completion panel with month and year switching', () => {
   assert.match(channelPanelSource, /getChannelCompletionRows\(period, channelKey\)/);
   assert.match(channelPanelSource, /<Segmented options=\{CHANNEL_PERIOD_OPTIONS\} value=\{period\} onChange=\{setPeriod\} \/>/);
   assert.match(channelPanelSource, /<span className="ch-title">\{title\}<\/span>/);
+  assert.match(channelPanelSource, /<span>进度<\/span>/);
+  assert.match(channelPanelSource, /<span>本月完成<\/span>/);
+  assert.match(channelPanelSource, /<span>月完成率<\/span>/);
+  assert.match(channelPanelSource, /<span>年度累计<\/span>/);
   assert.match(channelPanelSource, /年度贡献/);
-  assert.match(channelPanelSource, /完成\/目标/);
+  assert.match(channelPanelSource, /period === 'year' \? c\.yearCompletion : c\.monthCompletion/);
+  assert.match(channelPanelSource, /c\.monthRecovered/);
+  assert.match(channelPanelSource, /c\.monthTarget/);
+  assert.match(channelPanelSource, /c\.yearRecovered/);
+  assert.match(channelPanelSource, /c\.yearTarget/);
+  assert.doesNotMatch(channelPanelSource, /本月进度/);
   assert.doesNotMatch(channelPanelSource, /本月销售完成/);
   assert.match(channelPanelSource, /createPortal/);
   assert.match(channelPanelSource, /document\.body/);
@@ -1023,6 +1049,15 @@ test('uses one channel completion panel with month and year switching', () => {
   assert.match(channelPanelCss, /\.ch-row-arrow/);
   assert.match(operatingOverviewSource, /<ChannelPanel title="渠道完成情况" showPeriodSwitch \/>/);
   assert.doesNotMatch(appSource, /sidePanel=\{<ChannelPanel/);
+});
+
+test('opens monthly and annual drilldowns from the operating overview with contextual modal labels', () => {
+  assert.match(operatingOverviewSource, /function OperatingOverview\(\{ searchTerm = '', monthKpiCard, yearKpiCard, onOpenKpi \}\)/);
+  assert.match(operatingOverviewSource, /disabled=\{!monthKpiCard \|\| !onOpenKpi\}/);
+  assert.match(operatingOverviewSource, /disabled=\{!yearKpiCard \|\| !onOpenKpi\}/);
+  assert.match(kpiModalSource, /const initialDim = card\.key === 'year' \? 'year' : 'month';/);
+  assert.match(kpiModalSource, /const modalTitle = card\.key === 'year' \? '年度回款明细' : card\.key === 'month' \? '月度回款明细' : card\.title;/);
+  assert.match(kpiModalSource, /<h3 className="km-title">\{modalTitle\}<\/h3>/);
 });
 
 test('removes the yearly risk forecast block so recovery cards stay on channel completion', () => {

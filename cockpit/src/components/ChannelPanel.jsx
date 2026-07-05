@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 渠道完成情况改为本月与年度信息同屏展示，分段切换仅控制进度条主视角。 */
 /* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 渠道进度条首屏直接显示真实宽度，避免加载截图或快速查看时停留在动画起点。 */
 /* 更新时间: 2026-07-05 18:20:00 CST  更新内容: 渠道完成情况改为单一列表并增加本月/年度切换与年度贡献列。 */
 /* 更新时间: 2026-07-05 16:12:00 CST  更新内容: 移除年度风险预测变体，回款侧栏统一回到渠道完成情况。 */
@@ -46,15 +47,17 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
 
       <div className="ch-table-head" aria-hidden="true">
         <span>渠道</span>
-        <span>本月进度</span>
-        <span>完成/目标</span>
+        <span>进度</span>
+        <span>本月完成</span>
+        <span>月完成率</span>
+        <span>年度累计</span>
         <span>年度贡献</span>
         <span>状态</span>
       </div>
 
       <div className="ch-list">
         {rows.map((c, i) => {
-          const pct = c.completion;
+          const pct = period === 'year' ? c.yearCompletion : c.monthCompletion;
           const barW = `${Math.min(pct, 100)}%`;
           return (
             <button
@@ -84,9 +87,15 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
                 <span className="ch-pct">{fmtPct(pct)}</span>
               </div>
               <span className="ch-amount">
-                <b>{formatChannelAmount(c.recovered)}</b>
+                <b>{formatChannelAmount(c.monthRecovered)}</b>
                 <span className="ch-sep">/</span>
-                {formatChannelAmount(c.target)}
+                {formatChannelAmount(c.monthTarget)}
+              </span>
+              <span className="ch-month-rate">{fmtPct(c.monthCompletion)}</span>
+              <span className="ch-year-amount">
+                <b>{formatChannelAmount(c.yearRecovered)}</b>
+                <span className="ch-sep">/</span>
+                {formatChannelAmount(c.yearTarget)}
               </span>
               <span className="ch-contribution">{fmtPct(c.annualContribution)}</span>
               <span className={`ch-status${c.status === '需关注' ? ' ch-status--warn' : ''}`}>{c.status}</span>

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 19:10:30 CST
+ 更新内容: 搜索关键词回归测试补充经营节奏、预计影响缺口、剩余月均和年度贡献等高密度看板词。
+*/
+/*
  更新时间: 2026-07-05 18:20:00 CST
  更新内容: 搜索关键词回归测试改为经营进度总览、年度节奏和唯一渠道完成情况。
 */
@@ -95,10 +99,16 @@ test('adds fused operating overview section text to KPI search keywords', () => 
   assert.ok(month.keywords.includes('经营进度总览'));
   assert.ok(month.keywords.includes('2026年6月经营进度'));
   assert.ok(month.keywords.includes('风险渠道'));
+  assert.ok(month.keywords.includes('时间进度'));
+  assert.ok(month.keywords.includes('节奏 +7.1%'));
+  assert.ok(month.keywords.includes('预计影响缺口 36万'));
   assert.ok(!month.keywords.includes('本月目标完成情况'));
   assert.ok(annual.keywords.includes('年度节奏'));
   assert.ok(annual.keywords.includes('年度累计'));
+  assert.ok(annual.keywords.includes('剩余月均需完成'));
+  assert.ok(annual.keywords.includes('节奏偏差 +3.8%'));
   assert.ok(annual.keywords.includes('渠道完成情况'));
+  assert.ok(annual.keywords.includes('年度贡献'));
   assert.ok(!annual.keywords.includes('本年目标完成情况'));
   assert.ok(!annual.keywords.includes('年度风险预测'));
 });

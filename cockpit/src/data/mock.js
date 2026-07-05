@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 19:10:30 CST
+ 更新内容: 增加经营总览节奏判断指标、年度实线/目标虚线序列和渠道本月年度融合行字段。
+*/
+/*
  更新时间: 2026-07-05 18:20:00 CST
  更新内容: 增加经营总览融合页的渠道完成本月/年度行和年度节奏轻量点位数据。
 */
@@ -81,6 +85,17 @@ export const KPI_DERIVED = {
   costRatio: +(KPI.totalCost / KPI.monthRecovered * 100).toFixed(1),         // 32.1 费比
   channelRoi: +(KPI.monthRecovered / KPI.totalCost).toFixed(2),              // 3.12 销售投入 ROI
   roi: +(KPI.monthRecovered / KPI.adCost).toFixed(2),                        // 5.06 ROI
+};
+
+export const OPERATING_OVERVIEW_METRICS = {
+  monthTimeProgress: 76.7,
+  monthPaceDelta: 7.1,
+  riskImpactGap: 36,
+  annualTimeProgress: 50.0,
+  annualPaceDelta: 3.8,
+  remainingMonthlyRequired: 536,
+  monthJudgement: '本月整体进度正常，但线下华东低于目标节奏，预计影响月度缺口 36万。',
+  annualJudgement: '当前年度完成率略高于时间进度，但线下华东连续低于目标，需优先恢复渠道回款。',
 };
 
 // ===== 开户数趋势（经营总览，单位：户）=====
@@ -179,17 +194,16 @@ export function getChannelCompletionRows(period = 'month', channelKey = 'all') {
     : SALES_GROUPS;
   const monthRecoveredTotal = KPI.monthRecovered || 1;
   const monthTargetTotal = KPI.monthTarget || 1;
-  const periodRecoveredTotal = safePeriod === 'year' ? KPI.yearRecovered : KPI.monthRecovered;
 
   const rows = sourceGroups.map((group) => {
     const monthRecovered = group.salesKeys.reduce((sum, key) => sum + (findChannel(key)?.recovered ?? 0), 0);
     const monthTarget = group.salesKeys.reduce((sum, key) => sum + (findChannel(key)?.target ?? 0), 0);
-    const recovered = safePeriod === 'year'
-      ? Math.round(KPI.yearRecovered * (monthRecovered / monthRecoveredTotal))
-      : monthRecovered;
-    const target = safePeriod === 'year'
-      ? Math.round(KPI.yearTarget * (monthTarget / monthTargetTotal))
-      : monthTarget;
+    const monthCompletion = monthTarget ? +((monthRecovered / monthTarget) * 100).toFixed(1) : 0;
+    const yearRecovered = Math.round(KPI.yearRecovered * (monthRecovered / monthRecoveredTotal));
+    const yearTarget = Math.round(KPI.yearTarget * (monthTarget / monthTargetTotal));
+    const yearCompletion = yearTarget ? +((yearRecovered / yearTarget) * 100).toFixed(1) : 0;
+    const recovered = safePeriod === 'year' ? yearRecovered : monthRecovered;
+    const target = safePeriod === 'year' ? yearTarget : monthTarget;
     const warn = group.salesKeys.some((key) => Boolean(findChannel(key)?.warn));
 
     return withCompletion({
@@ -198,7 +212,13 @@ export function getChannelCompletionRows(period = 'month', channelKey = 'all') {
       period: safePeriod,
       target,
       recovered,
-      annualContribution: periodRecoveredTotal ? +((recovered / periodRecoveredTotal) * 100).toFixed(1) : 0,
+      monthRecovered,
+      monthTarget,
+      monthCompletion,
+      yearRecovered,
+      yearTarget,
+      yearCompletion,
+      annualContribution: KPI.yearRecovered ? +((yearRecovered / KPI.yearRecovered) * 100).toFixed(1) : 0,
       status: warn ? '需关注' : '正常',
       warn,
     });
@@ -208,6 +228,10 @@ export function getChannelCompletionRows(period = 'month', channelKey = 'all') {
   const warnRows = rows.filter((row) => row.warn).sort((a, b) => b.completion - a.completion);
 
   return [...normalRows, ...warnRows];
+}
+
+export function getOperatingOverviewMetrics() {
+  return { ...OPERATING_OVERVIEW_METRICS };
 }
 
 export function getSalesMemberRows(groupKey = 'online') {
@@ -788,6 +812,30 @@ export function getAnnualRhythmPoints() {
     { label: META.monthLabel.replace(/^2026年/, ''), value: KPI.yearRecovered, tone: 'current' },
     { label: '12月目标', value: KPI.yearTarget, tone: 'target' },
   ];
+}
+
+export function getAnnualRhythmSeries() {
+  const rawCurrent = MONTHLY_TREND.reduce((sum, row) => sum + row.recovered, 0);
+  const scale = rawCurrent ? KPI.yearRecovered / rawCurrent : 1;
+  let cumulative = 0;
+  const actualValues = MONTHLY_TREND.map((row, index) => {
+    cumulative += row.recovered;
+    return index === MONTHLY_TREND.length - 1 ? KPI.yearRecovered : Math.round(cumulative * scale);
+  });
+  const futureLabels = ['7月', '8月', '9月', '10月', '11月', '12月目标'];
+  const labels = [...MONTHLY_TREND.map((row) => row.month), ...futureLabels];
+  const monthlyTargetStep = (KPI.yearTarget - KPI.yearRecovered) / futureLabels.length;
+  const targetValues = futureLabels.map((_, index) => Math.round(KPI.yearRecovered + monthlyTargetStep * (index + 1)));
+
+  return {
+    labels,
+    actual: [...actualValues, ...futureLabels.map(() => null)],
+    target: [
+      ...MONTHLY_TREND.slice(0, -1).map(() => null),
+      KPI.yearRecovered,
+      ...targetValues,
+    ],
+  };
 }
 
 // ===== KPI 二级卡片：按 销售维度 × 订单类型 × 年/月/日 的柱状数据 =====

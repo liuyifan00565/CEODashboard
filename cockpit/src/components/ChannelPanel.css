@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 渠道表格调整为进度、本月完成、月完成率、年度累计、年度贡献和状态七列融合布局。 */
 /* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 收紧渠道完成情况表格列宽，避免右侧年度贡献和状态在中等宽度卡片中被截断。 */
 /* 更新时间: 2026-07-05 18:20:00 CST  更新内容: 渠道完成情况改为本月/年度单列表表格样式并保留低饱和风险标记。 */
 /* 更新时间: 2026-07-05 16:12:00 CST  更新内容: 移除年度风险预测轻卡片样式，渠道面板统一展示完成情况。 */
@@ -51,11 +52,11 @@
 
 .ch-table-head {
   display: grid;
-  grid-template-columns: minmax(82px, .9fr) minmax(128px, 1.25fr) minmax(68px, .58fr) minmax(62px, .54fr) minmax(58px, .48fr);
-  gap: 10px;
-  padding: 0 28px 8px 14px;
+  grid-template-columns: minmax(66px, .76fr) minmax(92px, 1fr) minmax(62px, .58fr) minmax(50px, .48fr) minmax(72px, .66fr) minmax(50px, .46fr) minmax(46px, .42fr);
+  gap: 8px;
+  padding: 0 24px 8px 12px;
   color: var(--faint);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 650;
   line-height: 1.2;
 }
@@ -71,10 +72,10 @@
   position: relative;
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(82px, .9fr) minmax(128px, 1.25fr) minmax(68px, .58fr) minmax(62px, .54fr) minmax(58px, .48fr);
+  grid-template-columns: minmax(66px, .76fr) minmax(92px, 1fr) minmax(62px, .58fr) minmax(50px, .48fr) minmax(72px, .66fr) minmax(50px, .46fr) minmax(46px, .42fr);
   align-items: center;
-  gap: 10px;
-  padding: 13px 28px 13px 14px;
+  gap: 8px;
+  padding: 12px 24px 12px 12px;
   border-radius: 12px;
   border: 1px solid transparent;
   text-align: left;
@@ -110,8 +111,14 @@
   min-width: 0;
 }
 
+.ch-row--warn .ch-name-wrap {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 5px;
+}
+
 .ch-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--txt);
   white-space: nowrap;
@@ -122,7 +129,7 @@
 }
 
 .ch-tag {
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1;
   padding: 3px 7px;
   border-radius: 6px;
@@ -133,27 +140,30 @@
   white-space: nowrap;
 }
 
-.ch-amount {
-  font-size: 14px;
+.ch-amount,
+.ch-year-amount {
+  font-size: 12px;
   color: var(--muted);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 
-.ch-amount b {
+.ch-amount b,
+.ch-year-amount b {
   color: var(--txt);
   font-weight: 600;
 }
 
-.ch-amount .ch-sep {
+.ch-amount .ch-sep,
+.ch-year-amount .ch-sep {
   color: var(--faint);
-  margin: 0 6px;
+  margin: 0 3px;
 }
 
 .ch-bar-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .ch-bar {
@@ -181,19 +191,20 @@
 }
 
 .ch-pct {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--muted);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-  min-width: 42px;
+  min-width: 38px;
   text-align: right;
 }
 
 .ch-contribution,
+.ch-month-rate,
 .ch-status {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 650;
   text-align: right;
   white-space: nowrap;
@@ -417,7 +428,8 @@
   }
 
   .ch-member-money,
-  .ch-amount {
+  .ch-amount,
+  .ch-year-amount {
     white-space: normal;
   }
 }
