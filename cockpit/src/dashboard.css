@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:13:39 CST
+ 更新内容: 版本情况面板复用月度趋势与交付面板的悬浮亮边玻璃反馈。
+*/
+/*
  更新时间: 2026-07-05 23:42:14 CST
  更新内容: 首页下方二级卡片辅助文字层级降噪，月度趋势说明回到弱提示状态。
 */
@@ -202,14 +206,14 @@
 .dash-secondary-delivery .search-result-border,
 .dash-secondary-delivery .search-result-border .search-result-border__content{height:100%}
 
-.dash-secondary-delivery .dlv-panel{
+.dash-secondary-cell .mt-panel,
+.dash-secondary-cell .vf-panel{
+  position:relative;
   isolation:isolate;
   transition:border-color .22s ease, box-shadow .22s ease;
 }
 
 .dash-secondary-cell .mt-panel{
-  position:relative;
-  isolation:isolate;
   display:flex;
   flex-direction:column;
   background: var(--dashboard-card-bg);
@@ -218,6 +222,10 @@
   -webkit-backdrop-filter: var(--dashboard-card-blur);
   box-shadow: var(--dashboard-card-shadow);
   overflow:hidden;
+}
+
+.dash-secondary-delivery .dlv-panel{
+  isolation:isolate;
   transition:border-color .22s ease, box-shadow .22s ease;
 }
 .dash-secondary-cell .mt-panel > *,
@@ -227,6 +235,8 @@
 }
 .dash-secondary-cell .mt-panel:hover,
 .dash-secondary-cell .mt-panel:focus-within,
+.dash-secondary-cell .vf-panel:hover,
+.dash-secondary-cell .vf-panel:focus-within,
 .dash-secondary-delivery .dlv-panel:hover,
 .dash-secondary-delivery .dlv-panel:focus-within{
   border-color:rgba(255,255,255,.34);

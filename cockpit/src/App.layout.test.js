@@ -143,6 +143,10 @@
  Update content: Add regression coverage for placing the data maintenance pill inside the right toolbar before search.
 */
 /*
+ 更新时间: 2026-07-06 00:13:39 CST
+ 更新内容: 增加版本情况面板复用月度趋势悬浮亮边效果的回归测试。
+*/
+/*
  更新时间: 2026-07-05 23:59:27 CST
  更新内容: 增加搜索命中外壳不改变经营总览卡片网格位置的回归测试。
 */
@@ -1042,6 +1046,11 @@ test('restores secondary dashboard panels below the operating overview story', (
   assert.match(dashboardCss, /\.dash-secondary-delivery/);
   assert.doesNotMatch(appSource, /recoveryKpiCards/);
   assert.doesNotMatch(dashboardCss, /\.dash-kpis/);
+});
+
+test('gives the version panel the same hover halo as the monthly trend panel', () => {
+  assert.match(dashboardCss, /\.dash-secondary-cell \.mt-panel,\s*[\s\S]*?\.dash-secondary-cell \.vf-panel\s*\{[\s\S]*?isolation:isolate;[\s\S]*?transition:border-color \.22s ease, box-shadow \.22s ease;/);
+  assert.match(dashboardCss, /\.dash-secondary-cell \.mt-panel:hover,\s*[\s\S]*?\.dash-secondary-cell \.vf-panel:hover,\s*[\s\S]*?\.dash-secondary-cell \.vf-panel:focus-within,[\s\S]*?\.dash-secondary-delivery \.dlv-panel:hover,[\s\S]*?\.dash-secondary-delivery \.dlv-panel:focus-within\s*\{[\s\S]*?border-color:rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:var\(--glass-shadow\);/);
 });
 
 test('uses one-shot soft glow for search result highlighting instead of electric borders', () => {
