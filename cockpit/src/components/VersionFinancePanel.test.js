@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 23:42:14 CST
+ 更新内容: 版本情况首页高度对齐测试同步到当前 dash-secondary-grid 二级布局。
+*/
+/*
  更新时间: 2026-07-04 01:03:12 CST
  更新内容: 约束版本情况补充经营洞察，并继续弱化表头、分割线与环比列对齐。
 */
@@ -194,7 +198,8 @@ test('uses restrained purple selected state and softer table deltas', () => {
 });
 
 test('keeps the overview version row aligned to the large recovery card height', () => {
-  assert.match(dashboardCss, /\.dash-grid--overview\{\s*grid-template-columns:minmax\(0,1\.6fr\) minmax\(0,1fr\);\s*grid-template-rows:minmax\(326px,1fr\) minmax\(326px,342px\);/);
+  assert.match(dashboardCss, /\.dash-secondary-grid\{\s*flex:1;min-height:0;display:grid;gap:16px;\s*grid-template-columns:minmax\(0,1\.6fr\) minmax\(0,1fr\);\s*grid-template-rows:minmax\(326px,1fr\) minmax\(326px,342px\);/);
+  assert.match(dashboardCss, /\.dash-secondary-cell--version\{grid-area:version\}/);
 });
 
 test('shows four primary version table rows with original facts and count share', () => {

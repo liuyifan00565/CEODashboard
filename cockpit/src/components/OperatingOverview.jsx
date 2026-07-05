@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 年度节奏图表降噪并增加呼吸空间，顶部经营进度标题降级以突出核心数字。 */
 /* 更新时间: 2026-07-05 22:59:45 CST  更新内容: 年度节奏最终版改为三项核心指标、单行辅助说明、单标题和轻量明细入口。 */
 /* 更新时间: 2026-07-05 21:45:08 CST  更新内容: 年度节奏精简为五个核心指标，并只在图表首月、当前月和年目标显示数字标签。 */
 /* 更新时间: 2026-07-05 21:24:15 CST  更新内容: 精简经营进度卡片眉题、风险渠道与节奏文案，并弱化指标分隔线。 */
@@ -61,9 +62,12 @@ function shouldShowActualAnnualLabel(series, dataIndex) {
 }
 
 function annualRhythmOption(series, tokens) {
+  const annualMutedText = tokens.theme === 'light' ? 'rgba(38,42,58,.45)' : 'rgba(247,248,252,.45)';
+  const annualGridLine = tokens.theme === 'light' ? 'rgba(50,56,78,.05)' : 'rgba(255,255,255,.04)';
+
   return {
     backgroundColor: 'transparent',
-    grid: { left: 8, right: 20, top: 32, bottom: 18, containLabel: true },
+    grid: { left: 8, right: 28, top: 36, bottom: 30, containLabel: true },
     tooltip: {
       trigger: 'axis',
       backgroundColor: tokens.chartTooltipBg,
@@ -74,9 +78,9 @@ function annualRhythmOption(series, tokens) {
         const valid = params.find((item) => item.value != null);
         if (!valid) return '';
         return `<div style="display:grid;gap:4px">
-          <span style="color:${tokens.chartMuted}">${valid.axisValue}</span>
+          <span style="color:${annualMutedText}">${valid.axisValue}</span>
           <strong style="color:${tokens.chartText};font-size:15px">${formatWan(valid.value)} 万</strong>
-          <span style="color:${tokens.chartMuted}">${valid.seriesName}</span>
+          <span style="color:${annualMutedText}">${valid.seriesName}</span>
         </div>`;
       },
     },
@@ -85,24 +89,24 @@ function annualRhythmOption(series, tokens) {
       left: 0,
       itemWidth: 16,
       itemHeight: 8,
-      textStyle: { color: tokens.chartMuted, fontSize: 11 },
+      textStyle: { color: annualMutedText, fontSize: 11 },
       data: ['累计回款', '目标节奏'],
     },
     xAxis: {
       type: 'category',
       data: series.labels,
-      axisLine: { lineStyle: { color: tokens.chartGrid } },
+      axisLine: { lineStyle: { color: annualGridLine } },
       axisTick: { show: false },
       axisLabel: {
-        color: ({ value }) => (value === '6月' ? tokens.chartText : tokens.chartMuted),
+        color: ({ value }) => (value === '6月' ? tokens.chartText : annualMutedText),
         fontSize: 11,
         fontWeight: ({ value }) => (value === '6月' ? 760 : 560),
       },
     },
     yAxis: {
       type: 'value',
-      axisLabel: { color: tokens.chartMuted, fontSize: 11, formatter: (value) => `${Math.round(value / 1000)}k` },
-      splitLine: { lineStyle: { color: tokens.chartGrid } },
+      axisLabel: { color: annualMutedText, fontSize: 11, formatter: (value) => `${Math.round(value / 1000)}k` },
+      splitLine: { lineStyle: { color: annualGridLine } },
       axisLine: { show: false },
     },
     series: [
@@ -142,9 +146,10 @@ function annualRhythmOption(series, tokens) {
         label: {
           show: true,
           position: 'top',
-          color: ({ dataIndex }) => (dataIndex === series.labels.length - 1 ? tokens.progressGold : tokens.chartMuted),
+          color: ({ dataIndex }) => (dataIndex === series.labels.length - 1 ? tokens.progressGold : annualMutedText),
           fontSize: 11,
           fontWeight: 720,
+          offset: [12, -10],
           formatter: ({ value, dataIndex }) => (
             value == null || dataIndex !== series.labels.length - 1
               ? ''
@@ -250,7 +255,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
           </p>
 
           <div className="op-annual-chart" aria-label="年度节奏累计实线和目标虚线">
-            <EChart option={annualOption} style={{ height: 205 }} />
+            <EChart option={annualOption} style={{ height: 218 }} />
           </div>
 
           <p className="op-judgement">{overviewMetrics.annualJudgement}</p>

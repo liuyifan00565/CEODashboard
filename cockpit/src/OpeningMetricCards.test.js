@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 23:42:14 CST
+ 更新内容: 开户数首页位置测试同步到经营总览下方二级财务 KPI stack，不再依赖旧 showOpeningMetrics 变量。
+*/
+/*
  更新时间: 2026-07-03 23:48:36 CST
  更新内容: 开户数小卡片要求复用现有日维度趋势数据渲染近 7 日 sparkline。
 */
@@ -59,9 +63,10 @@ test('provides matching secondary series for each opening-account metric', () =>
 
 test('renders opening-account cards in the homepage finance KPI stack only', () => {
   assert.match(appSource, /import OpeningMetricCards from '\.\/components\/OpeningMetricCards';/);
-  assert.match(appSource, /const showOpeningMetrics = activeMenu === 'overview';/);
+  assert.match(appSource, /className="dash-secondary-grid"/);
   assert.match(appSource, /const openCardData = useMemo\(\s*\(\) => filteredKpiCards\.find\(\(card\) => card\.key === openCard\?\.key\) \?\? openCard \?\? null,/);
   assert.match(appSource, /<div className="dash-finance-kpi-item dash-finance-kpi-item--openings" data-kpi-key="openings">[\s\S]*?<OpeningMetricCards searchTerm=\{searchTerm\} onOpenSecondary=\{handleOpenCard\} \/>[\s\S]*?<\/div>/);
+  assert.doesNotMatch(appSource, /showOpeningMetrics/);
   assert.doesNotMatch(appSource, /<div className="dash-kpis">[\s\S]*?<\/div>\s*\{showOpeningMetrics && \(\s*<OpeningMetricCards onOpenSecondary=\{handleOpenCard\} \/>/);
   assert.doesNotMatch(appSource, /monthRecoveryCard && handleOpenCard\(monthRecoveryCard\)/);
 });

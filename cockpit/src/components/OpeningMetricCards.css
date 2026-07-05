@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 23:42:14 CST
+ 更新内容: 开户数二级卡片 hover 和文字层级降噪，贴合首页满分果味抛光。
+*/
+/*
  更新时间: 2026-07-03 23:48:36 CST
  更新内容: 开户数卡片增加近 7 日细 sparkline，并保持统一玻璃卡片体系与移动端自适应。
 */
@@ -46,16 +50,16 @@
 
 .opening-metric-card:hover,
 .opening-metric-card:focus-visible {
-  transform: translateY(-3px);
-  border-color: var(--line-2);
-  box-shadow: 0 22px 58px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255, 255, 255, .24);
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,.24);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .36), inset 0 1px 0 rgba(255, 255, 255, .18);
   outline: none;
 }
 
 .opening-metric-card__title {
   grid-column: 1;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 650;
   line-height: 1.2;
 }

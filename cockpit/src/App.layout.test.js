@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 23:42:14 CST
+ 更新内容: 增加主界面满分高级感果味抛光回归测试，覆盖弱分隔线、低层级标题、年度图表呼吸、渠道完成率内联进度和二级弹窗低饱和控件。
+*/
+/*
  更新时间: 2026-07-05 22:59:45 CST
  更新内容: 增加年度节奏最终版三指标、单行辅助说明和单标题布局回归测试。
 */
@@ -177,6 +181,7 @@ const indexCss = readFileSync(new URL('./index.css', import.meta.url), 'utf8');
 const projectAgentGuidance = readFileSync(new URL('../../AGENTS.md', import.meta.url), 'utf8');
 const kpiCardCss = readFileSync(new URL('./components/KpiCard.css', import.meta.url), 'utf8');
 const kpiModalSource = readFileSync(new URL('./components/KpiModal.jsx', import.meta.url), 'utf8');
+const kpiModalCss = readFileSync(new URL('./components/KpiModal.css', import.meta.url), 'utf8');
 const monthlyTrendSource = readFileSync(new URL('./components/MonthlyTrend.jsx', import.meta.url), 'utf8');
 const aiAnalysisWidgetCss = readFileSync(new URL('./components/AIAnalysisWidget.css', import.meta.url), 'utf8');
 const aiAnalysisWidgetSource = readFileSync(new URL('./components/AIAnalysisWidget.jsx', import.meta.url), 'utf8');
@@ -971,6 +976,42 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.doesNotMatch(dashboardCss, /\.dash-kpis/);
 });
 
+test('polishes the operating progress hierarchy with whitespace-first grouping', () => {
+  const summaryGridBlock = cssRuleBody(operatingOverviewCss, '.op-summary-grid');
+  const progressTitleBlock = cssRuleBody(operatingOverviewCss, '.op-progress-head h1');
+
+  assert.match(progressTitleBlock, /font-size:\s*clamp\(21px, 2vw, 28px\);/);
+  assert.match(progressTitleBlock, /font-weight:\s*700;/);
+  assert.match(summaryGridBlock, /border-top:\s*1px solid rgba\(255,255,255,\.035\);/);
+  assert.match(summaryGridBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.035\);/);
+  assert.match(operatingOverviewCss, /\.op-summary-cell:nth-child\(2\),\s*\.op-summary-cell:nth-child\(3\)\s*\{[\s\S]*?border-left:\s*1px solid rgba\(255,255,255,\.028\);/);
+  assert.match(operatingOverviewCss, /\.op-summary-cell:nth-child\(n \+ 3\)\s*\{[\s\S]*?border-top:\s*1px solid rgba\(255,255,255,\.035\);/);
+  assert.doesNotMatch(progressTitleBlock, /font-size:\s*clamp\(24px, 2\.4vw, 34px\);/);
+  assert.doesNotMatch(summaryGridBlock, /rgba\(255,255,255,\.075\)/);
+});
+
+test('gives the annual rhythm chart softer context and more breathing room', () => {
+  assert.match(operatingOverviewSource, /const annualMutedText = tokens\.theme === 'light' \? 'rgba\(38,42,58,\.45\)' : 'rgba\(247,248,252,\.45\)';/);
+  assert.match(operatingOverviewSource, /const annualGridLine = tokens\.theme === 'light' \? 'rgba\(50,56,78,\.05\)' : 'rgba\(255,255,255,\.04\)';/);
+  assert.match(operatingOverviewSource, /grid:\s*\{ left: 8, right: 28, top: 36, bottom: 30, containLabel: true \}/);
+  assert.match(operatingOverviewSource, /legend:\s*\{[\s\S]*?textStyle:\s*\{ color: annualMutedText, fontSize: 11 \}/);
+  assert.match(operatingOverviewSource, /axisLine:\s*\{ lineStyle:\s*\{ color: annualGridLine \} \}/);
+  assert.match(operatingOverviewSource, /splitLine:\s*\{ lineStyle:\s*\{ color: annualGridLine \} \}/);
+  assert.match(operatingOverviewSource, /offset:\s*\[12, -10\]/);
+  assert.match(operatingOverviewSource, /<EChart option=\{annualOption\} style=\{\{ height: 218 \}\} \/>/);
+  assert.match(operatingOverviewCss, /\.op-annual-chart\s*\{[\s\S]*?min-height:\s*218px;[\s\S]*?margin-bottom:\s*10px;/);
+});
+
+test('uses low-saturation dashboard controls in focused secondary interfaces', () => {
+  assert.match(channelPanelCss, /\.ch-head \.sgm-thumb\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(139,124,255,\.64\), rgba\(116,167,255,\.46\)\);/);
+  assert.match(channelPanelCss, /\.ch-head \.sgm-btn--active,[\s\S]*?\.ch-head \.sgm-btn--active:hover\s*\{[\s\S]*?color:\s*rgba\(255,255,255,\.96\);/);
+  assert.match(kpiModalCss, /\.km-controls \.sgm-thumb\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(139,124,255,\.64\), rgba\(116,167,255,\.46\)\);/);
+  assert.match(kpiModalCss, /\.km-controls \.msgm-btn--active,[\s\S]*?\.km-controls \.msgm-btn--active:hover\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(139,124,255,\.64\), rgba\(116,167,255,\.44\)\);/);
+  assert.doesNotMatch(channelPanelCss, /\.ch-head[\s\S]*?var\(--control-solid\)/);
+  assert.doesNotMatch(kpiModalCss, /\.km-controls[\s\S]*?var\(--control-solid\)/);
+  assert.match(indexCss, /--control-solid:#D7B56D;/);
+});
+
 test('restores secondary dashboard panels below the operating overview story', () => {
   assert.match(appSource, /<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
   assert.match(appSource, /className="dash-secondary-grid"/);
@@ -1076,13 +1117,15 @@ test('uses one channel completion panel with month and year switching', () => {
   assert.match(channelPanelSource, /label: '年度目标'/);
   assert.match(channelPanelSource, /label: '年度完成率'/);
   assert.match(channelPanelSource, /label: '年度缺口'/);
-  assert.match(channelPanelSource, /<span>进度<\/span>/);
+  assert.doesNotMatch(channelPanelSource, /<span>进度<\/span>/);
   assert.doesNotMatch(channelPanelSource, /<span>状态<\/span>/);
   assert.doesNotMatch(channelPanelSource, /年度贡献/);
   assert.match(channelPanelSource, /function formatChannelPct/);
   assert.match(channelPanelSource, /Number\(value\)\.toFixed\(1\)/);
   assert.match(channelPanelSource, /period === 'year' \? c\.yearCompletion : c\.monthCompletion/);
   assert.match(channelPanelSource, /formatChannelPct\(pct\)/);
+  assert.match(channelPanelSource, /className="ch-completion-stack"/);
+  assert.match(channelPanelSource, /<span className="ch-completion-value">\{formatChannelPct\(pct\)\}<\/span>/);
   assert.match(channelPanelSource, /className="ch-progress-cell"/);
   assert.match(channelPanelSource, /className="ch-progress"/);
   assert.match(channelPanelSource, /className="ch-progress-fill"/);
@@ -1105,8 +1148,11 @@ test('uses one channel completion panel with month and year switching', () => {
   assert.match(channelPanelSource, /fmtPct/);
   assert.match(channelPanelSource, /ch-row-arrow/);
   assert.match(channelPanelCss, /\.ch-row-arrow/);
-  assert.match(channelPanelCss, /\.ch-table-head span:nth-child\(n \+ 2\):not\(:last-child\)\s*\{[\s\S]*?text-align:\s*right;/);
+  assert.match(channelPanelCss, /grid-template-columns:\s*minmax\(84px, \.95fr\) repeat\(4, minmax\(78px, \.82fr\)\);/);
+  assert.match(channelPanelCss, /\.ch-table-head span:nth-child\(n \+ 2\)\s*\{[\s\S]*?text-align:\s*right;/);
   assert.match(channelPanelCss, /\.ch-cell\s*\{[\s\S]*?text-align:\s*right;[\s\S]*?font-variant-numeric:\s*tabular-nums;/);
+  assert.match(channelPanelCss, /\.ch-cell--completion\s*\{[\s\S]*?align-self:\s*stretch;/);
+  assert.match(channelPanelCss, /\.ch-completion-stack\s*\{[\s\S]*?align-items:\s*flex-end;/);
   assert.match(channelPanelCss, /\.ch-progress-cell\s*\{/);
   assert.match(channelPanelCss, /\.ch-progress-fill\s*\{/);
   assert.doesNotMatch(channelPanelCss, /\.ch-status/);

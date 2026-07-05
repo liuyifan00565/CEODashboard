@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 渠道分段控件改局部紫蓝低饱和选中态，并将进度条收进完成率单元格。 */
 /* 更新时间: 2026-07-05 22:45:24 CST  更新内容: 渠道表格数值列头右对齐，移除状态列样式并新增当前完成率进度条列。 */
 /* 更新时间: 2026-07-05 21:45:08 CST  更新内容: 渠道表格收敛为本月/年度互斥数据列，并移除重复风险标签样式。 */
 /* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 渠道表格调整为进度、本月完成、月完成率、年度累计、年度字段和状态七列融合布局。 */
@@ -52,9 +53,19 @@
   flex: none;
 }
 
+.ch-head .sgm-thumb {
+  background: linear-gradient(135deg, rgba(139,124,255,.64), rgba(116,167,255,.46));
+  box-shadow: 0 0 16px rgba(139,124,255,.18), 0 1px 8px rgba(0, 0, 0, .26);
+}
+
+.ch-head .sgm-btn--active,
+.ch-head .sgm-btn--active:hover {
+  color: rgba(255,255,255,.96);
+}
+
 .ch-table-head {
   display: grid;
-  grid-template-columns: minmax(78px, .9fr) repeat(4, minmax(72px, .76fr)) minmax(96px, .72fr);
+  grid-template-columns: minmax(84px, .95fr) repeat(4, minmax(78px, .82fr));
   gap: 10px;
   padding: 0 24px 8px 12px;
   color: var(--faint);
@@ -67,12 +78,8 @@
   min-width: 0;
 }
 
-.ch-table-head span:nth-child(n + 2):not(:last-child) {
+.ch-table-head span:nth-child(n + 2) {
   text-align: right;
-}
-
-.ch-table-head span:last-child {
-  text-align: left;
 }
 
 .ch-list {
@@ -86,7 +93,7 @@
   position: relative;
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(78px, .9fr) repeat(4, minmax(72px, .76fr)) minmax(96px, .72fr);
+  grid-template-columns: minmax(84px, .95fr) repeat(4, minmax(78px, .82fr));
   align-items: center;
   gap: 10px;
   padding: 13px 24px 13px 12px;
@@ -144,18 +151,41 @@
   font-variant-numeric: tabular-nums;
 }
 
+.ch-cell--completion {
+  align-self: stretch;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ch-completion-stack {
+  width: min(112px, 100%);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 5px;
+}
+
+.ch-completion-value {
+  color: var(--txt);
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1;
+}
+
 .ch-progress-cell {
   min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding-right: 6px;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .ch-progress {
   position: relative;
-  width: min(104px, 100%);
-  height: 8px;
+  width: 100%;
+  height: 6px;
   border-radius: 99px;
   background: var(--bar-track);
   border: 1px solid var(--bar-track-border);
@@ -366,6 +396,12 @@
 
   .ch-cell {
     text-align: left;
+  }
+
+  .ch-cell--completion,
+  .ch-completion-stack {
+    align-items: flex-start;
+    justify-content: flex-start;
   }
 
   .ch-progress-cell {

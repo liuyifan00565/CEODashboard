@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 版本情况表格和合计数字进一步降噪，保持半环和表格信息完整。 */
 /* 更新时间: 2026-07-04 01:03:12 CST  更新内容: 版本情况补充轻量经营洞察，表格表头/分割线/环比对齐继续降噪。 */
 /* 更新时间: 2026-07-04 00:21:24 CST  更新内容: 版本情况控制器归位右上并改紫色选中态，半环和表格视觉层级降噪。 */
 /* 更新时间: 2026-07-03 23:48:36 CST  更新内容: 版本情况右侧四卡改为列表型表格，复用玻璃表格底、轻表头和行悬浮态。 */
@@ -77,7 +78,7 @@
   font-size: 18px;
   font-weight: 900;
   line-height: 1;
-  text-shadow: 0 0 14px rgba(255,255,255,.2);
+  text-shadow: 0 0 10px rgba(255,255,255,.14);
 }
 
 .vf-total-stack i {
@@ -298,10 +299,10 @@
   overflow-x: auto;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: rgba(255, 255, 255, .045);
+  background: rgba(255, 255, 255, .032);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
 }
 
 .vf-version-table {

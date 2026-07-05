@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 交付看板辅助文字和完成态背景降噪，保持目标达成金色语义但降低铺色。 */
 /* 更新时间: 2026-07-03 23:33:15 CST  更新内容: 交付看板超额完成行背景、标签和百分比改为金色完成态。 */
 /* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 交付看板低于 80% 的完成率数字跟随风险色，统一预警语义。 */
 /* 更新时间: 2026-07-03 17:55:46 CST  更新内容: 交付看板外层卡片改用中性深色玻璃变量，去除透明强紫背景观感。 */
@@ -37,8 +38,8 @@
 .dlv-sub {
   display: block;
   margin-top: 5px;
-  color: var(--muted);
-  font-size: 14px;
+  color: var(--faint);
+  font-size: 13px;
 }
 
 .dlv-summary {
@@ -101,10 +102,10 @@
 
 .dlv-row--over {
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--accent-gold) 16%, transparent), transparent 46%),
-    color-mix(in srgb, var(--accent-gold) 9%, var(--glass-cell));
-  border-color: color-mix(in srgb, var(--accent-gold) 42%, var(--line));
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--accent-gold-soft) 18%, transparent);
+    linear-gradient(90deg, color-mix(in srgb, var(--accent-gold) 10%, transparent), transparent 46%),
+    color-mix(in srgb, var(--accent-gold) 5%, var(--glass-cell));
+  border-color: color-mix(in srgb, var(--accent-gold) 30%, var(--line));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--accent-gold-soft) 12%, transparent);
 }
 
 .dlv-row-main,

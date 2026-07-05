@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 23:42:14 CST  更新内容: KPI 与版本二级弹窗筛选控件改为局部紫蓝低饱和选中态，保持金色仅用于目标语义。 */
 /* 更新时间: 2026-07-01 18:37:59 CST  更新内容: 去掉 KPI 二级展开界面背景里的紫色光晕，保留深色玻璃底。 */
 
 .km-overlay {
@@ -75,9 +76,32 @@
 .km-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
-  margin-top: 18px;
+  margin-top: 16px;
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, .055);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .026);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.km-controls .sgm-thumb {
+  background: linear-gradient(135deg, rgba(139,124,255,.64), rgba(116,167,255,.46));
+  box-shadow: 0 0 16px rgba(139,124,255,.18), 0 1px 8px rgba(0, 0, 0, .26);
+}
+
+.km-controls .sgm-btn--active,
+.km-controls .sgm-btn--active:hover {
+  color: rgba(255,255,255,.96);
+}
+
+.km-controls .msgm-btn--active,
+.km-controls .msgm-btn--active:hover {
+  color: rgba(255,255,255,.96);
+  background: linear-gradient(135deg, rgba(139,124,255,.64), rgba(116,167,255,.44));
+  box-shadow: 0 0 16px rgba(139,124,255,.16), 0 1px 8px rgba(0, 0, 0, .24);
 }
 
 .km-headline {

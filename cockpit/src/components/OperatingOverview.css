@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 经营进度顶部标题降级、弱化指标分隔线，并增加年度节奏图表底部呼吸空间。 */
 /* 更新时间: 2026-07-05 22:59:45 CST  更新内容: 年度节奏卡最终版采用三列核心指标、单行辅助说明和更稳的图表留白。 */
 /* 更新时间: 2026-07-05 21:45:08 CST  更新内容: 年度节奏指标区调整为五项核心信息，降低财务报表式密度。 */
 /* 更新时间: 2026-07-05 21:24:15 CST  更新内容: 弱化经营进度顶部指标分隔线，并适配风险渠道与节奏辅助文案的轻量展示。 */
@@ -100,9 +101,9 @@
 }
 
 .op-progress-head h1 {
-  font-size: clamp(24px, 2.4vw, 34px);
-  font-weight: 760;
-  line-height: 1.08;
+  font-size: clamp(21px, 2vw, 28px);
+  font-weight: 700;
+  line-height: 1.1;
 }
 
 .op-section-head h2 {
@@ -145,8 +146,8 @@
   display: grid;
   grid-template-columns: minmax(210px, 1.25fr) minmax(230px, 1.2fr) minmax(170px, .8fr) minmax(210px, 1fr);
   gap: 0;
-  border-top: 1px solid rgba(255,255,255,.075);
-  border-bottom: 1px solid rgba(255,255,255,.075);
+  border-top: 1px solid rgba(255,255,255,.035);
+  border-bottom: 1px solid rgba(255,255,255,.035);
 }
 
 .op-summary-cell {
@@ -160,7 +161,7 @@
 
 .op-summary-cell:nth-child(2),
 .op-summary-cell:nth-child(3) {
-  border-left: 1px solid rgba(255,255,255,.07);
+  border-left: 1px solid rgba(255,255,255,.028);
 }
 
 .op-summary-cell:first-child {
@@ -244,7 +245,8 @@
 }
 
 .op-annual-chart {
-  min-height: 205px;
+  min-height: 218px;
+  margin-bottom: 10px;
 }
 
 .op-judgement {
@@ -277,7 +279,7 @@
   }
 
   .op-summary-cell:nth-child(n + 3) {
-    border-top: 1px solid rgba(255,255,255,.07);
+    border-top: 1px solid rgba(255,255,255,.035);
   }
 }
 
@@ -304,7 +306,7 @@
 
   .op-summary-cell {
     border-left: 0;
-    border-top: 1px solid rgba(255,255,255,.07);
+    border-top: 1px solid rgba(255,255,255,.035);
     padding-left: 0;
   }
 

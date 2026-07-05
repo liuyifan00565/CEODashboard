@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 23:42:14 CST
+ 更新内容: 首页下方二级卡片辅助文字层级降噪，月度趋势说明回到弱提示状态。
+*/
+/*
  更新时间: 2026-07-05 18:46:00 CST
  更新内容: 恢复经营总览下方月度趋势、开户投入、版本情况和交付面板布局，保留融合总览首屏结构。
 */
@@ -229,7 +233,7 @@
   box-shadow:var(--glass-shadow);
 }
 .dash-secondary-cell .mt-title{font-size:16px;color:var(--txt)}
-.dash-secondary-cell .mt-sub{font-size:14px;color:var(--txt)}
+.dash-secondary-cell .mt-sub{font-size:13px;color:var(--faint)}
 .dash-secondary-cell .mt-chart{flex:1;min-height:0}
 .dash-secondary-cell .mt-chart > div{height:100%!important;min-height:180px}
 
