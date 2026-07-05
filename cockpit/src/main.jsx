@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 23:55:52 CST
+ 更新内容: 移除全局 GlassCursor 光标光晕挂载，保留系统原生光标显示。
+*/
+/*
  更新时间: 2026-07-03 16:05:19 CST
  更新内容: 在 React 入口挂载玻璃光标层，恢复光标旁边的紫色小光晕。
 */
@@ -10,11 +14,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
-import GlassCursor from './components/GlassCursor'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
-    <GlassCursor />
   </StrictMode>,
 )

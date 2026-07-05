@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 23:55:52 CST
+ 更新内容: 光标效果回归测试改为要求移除光标附近紫色光晕和全屏覆盖层。
+*/
+/*
  Update time: 2026-07-03 16:24:00 CST
  Update content: Guard that the purple diffused glow stays compact near the cursor instead of flooding the panel.
 */
@@ -31,41 +35,23 @@ const mainSource = readFileSync(new URL('./main.jsx', import.meta.url), 'utf8');
 const cursorSource = readFileSync(new URL('./components/GlassCursor.jsx', import.meta.url), 'utf8');
 const cursorCss = readFileSync(new URL('./components/GlassCursor.css', import.meta.url), 'utf8');
 
-function cssRuleBody(source, selector) {
-  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return source.match(new RegExp(`${escapedSelector}\\s*\\{(?<body>[\\s\\S]*?)\\n\\}`))?.groups.body ?? '';
-}
-
-test('mounts the glass cursor from the dashboard shell', () => {
+test('does not mount a cursor glow layer from the dashboard shell', () => {
   assert.doesNotMatch(appSource, /GlassCursor/);
-  assert.match(mainSource, /import GlassCursor from '\.\/components\/GlassCursor';?/);
-  assert.match(mainSource, /<GlassCursor\s*\/>/);
+  assert.doesNotMatch(mainSource, /import GlassCursor from '\.\/components\/GlassCursor';?/);
+  assert.doesNotMatch(mainSource, /<GlassCursor\s*\/>/);
 });
 
-test('renders a purple halo around the visible native cursor without catching clicks', () => {
-  const fixedBlock = cssRuleBody(cursorCss, '.glass-cursor-fixed');
-  const haloBlock = cssRuleBody(cursorCss, '.glass-cursor-halo');
-  const haloGlowBlock = cssRuleBody(cursorCss, '.glass-cursor-halo::before');
-  const visibleBlock = cssRuleBody(cursorCss, '.glass-cursor-halo--visible');
-
-  assert.match(cursorSource, /const haloClassName = haloVisible \? 'glass-cursor-halo glass-cursor-halo--visible' : 'glass-cursor-halo';/);
-  assert.match(cursorSource, /<div ref=\{haloRef\} className=\{haloClassName\} aria-hidden="true"\s*\/>/);
-  assert.match(cursorSource, /window\.addEventListener\('pointermove', onPointerMove, \{ passive: true \}\);/);
-  assert.match(cursorSource, /window\.addEventListener\('mousemove', onPointerMove, \{ passive: true \}\);/);
+test('keeps the cursor helper inert so the native cursor has no surrounding light', () => {
+  assert.match(cursorSource, /export default function GlassCursor\(\) \{\s*return null;\s*\}/);
+  assert.doesNotMatch(cursorSource, /useState|useRef|useEffect/);
+  assert.doesNotMatch(cursorSource, /GlassCursor\.css/);
+  assert.doesNotMatch(cursorSource, /addEventListener\('pointermove'|addEventListener\('mousemove'/);
+  assert.doesNotMatch(cursorSource, /glass-cursor-halo|glass-cursor-fixed|haloClassName/);
   assert.doesNotMatch(cursorSource, /<Canvas/);
-  assert.match(haloBlock, /position:\s*fixed;/);
-  assert.match(fixedBlock, /z-index:\s*2147483647;/);
-  assert.match(haloBlock, /width:\s*190px;/);
-  assert.match(haloBlock, /height:\s*190px;/);
-  assert.doesNotMatch(haloBlock, /filter:/);
-  assert.match(haloGlowBlock, /background:\s*radial-gradient\(circle, rgba\(168,85,247,\.8\)/);
-  assert.match(haloGlowBlock, /rgba\(124,108,255,0\) 100%\);/);
-  assert.match(haloGlowBlock, /filter:\s*blur\(16px\) saturate\(1\.36\);/);
-  assert.doesNotMatch(cursorCss, /\.glass-cursor-halo::after/);
+
+  assert.doesNotMatch(cursorCss, /\.glass-cursor-halo|\.glass-cursor-fixed/);
+  assert.doesNotMatch(cursorCss, /radial-gradient|box-shadow|filter:\s*blur|saturate\(/);
+  assert.doesNotMatch(cursorCss, /z-index:\s*2147483647/);
   assert.doesNotMatch(cursorCss, /mix-blend-mode/);
-  assert.match(haloBlock, /transform:\s*translate\(-50%,\s*-50%\);/);
-  assert.match(haloBlock, /pointer-events:\s*none;/);
-  assert.match(visibleBlock, /opacity:\s*1;/);
-  assert.doesNotMatch(cursorCss, /rgba\(124,108,255,0\)\s+7[0-9]%/);
   assert.doesNotMatch(cursorCss, /cursor:\s*none/);
 });

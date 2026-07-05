@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 23:55:52 CST
+ 更新内容: 清空光标光晕样式，移除径向紫光、模糊和最高层覆盖规则。
+*/
+/*
  更新时间: 2026-07-03 16:24:00 CST
  更新内容: 将紫色散光范围收小到光标附近，避免大面积铺满面板。
 */
@@ -38,41 +42,3 @@
  更新时间: 2026-06-24
  更新内容: 玻璃球指针容器 —— 全屏透明覆盖层，玻璃球跟随鼠标，页面透过显示；显式禁止 Canvas 拦截页面点击。
 */
-.glass-cursor-fixed {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647;
-  pointer-events: none !important;
-}
-.glass-cursor-fixed * {
-  pointer-events: none !important;
-}
-.glass-cursor-halo {
-  --glass-cursor-x: -100px;
-  --glass-cursor-y: -100px;
-  position: fixed;
-  left: var(--glass-cursor-x);
-  top: var(--glass-cursor-y);
-  width: 190px;
-  height: 190px;
-  border-radius: 999px;
-  isolation: isolate;
-  opacity: 0;
-  transform: translate(-50%, -50%);
-  transition: opacity .18s ease;
-  will-change: transform, opacity;
-  pointer-events: none;
-}
-.glass-cursor-halo::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(circle, rgba(168,85,247,.8) 0%, rgba(124,58,237,.44) 32%, rgba(91,45,225,.18) 68%, rgba(124,108,255,0) 100%);
-  box-shadow: 0 0 70px rgba(168,85,247,.42), 0 0 140px rgba(124,58,237,.28);
-  filter: blur(16px) saturate(1.36);
-  pointer-events: none;
-}
-.glass-cursor-halo--visible {
-  opacity: 1;
-}
