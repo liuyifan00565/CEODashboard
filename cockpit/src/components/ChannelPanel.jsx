@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 22:45:24 CST  更新内容: 渠道完成表移除状态列，改为按当前维度完成率展示进度条，并配合表头数值列对齐。 */
 /* 更新时间: 2026-07-05 21:45:08 CST  更新内容: 渠道完成情况改为本月/年度互斥列展示，完成率固定一位小数，并移除渠道名旁重复风险标签。 */
 /* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 渠道完成情况改为本月与年度信息同屏展示，分段切换仅控制进度条主视角。 */
 /* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 渠道进度条首屏直接显示真实宽度，避免加载截图或快速查看时停留在动画起点。 */
@@ -73,7 +74,7 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
         {tableColumns.map((column) => (
           <span key={column.key}>{column.label}</span>
         ))}
-        <span>状态</span>
+        <span>进度</span>
       </div>
 
       <div className="ch-list">
@@ -97,7 +98,17 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
                   {column.key === 'completion' ? formatChannelPct(pct) : column.render(c)}
                 </span>
               ))}
-              <span className={`ch-status${c.status === '需关注' ? ' ch-status--warn' : ''}`}>{c.status}</span>
+              <span className="ch-progress-cell" aria-label={`${c.name}完成进度 ${formatChannelPct(pct)}`}>
+                <span className="ch-progress">
+                  <span
+                    className="ch-progress-fill"
+                    style={{
+                      width: `${Math.min(pct, 100)}%`,
+                      background: progressGradient(pct, tokens.progressMid),
+                    }}
+                  />
+                </span>
+              </span>
               <AppIcon name="chevronRight" className="ch-row-arrow" size={13} />
             </button>
           );

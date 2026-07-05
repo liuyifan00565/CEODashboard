@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 22:45:24 CST  更新内容: 渠道表格数值列头右对齐，移除状态列样式并新增当前完成率进度条列。 */
 /* 更新时间: 2026-07-05 21:45:08 CST  更新内容: 渠道表格收敛为本月/年度互斥数据列，并移除重复风险标签样式。 */
 /* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 渠道表格调整为进度、本月完成、月完成率、年度累计、年度字段和状态七列融合布局。 */
 /* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 收紧渠道完成情况表格列宽，避免右侧年度字段和状态在中等宽度卡片中被截断。 */
@@ -53,13 +54,25 @@
 
 .ch-table-head {
   display: grid;
-  grid-template-columns: minmax(78px, .9fr) repeat(4, minmax(70px, .78fr)) minmax(54px, .5fr);
+  grid-template-columns: minmax(78px, .9fr) repeat(4, minmax(72px, .76fr)) minmax(96px, .72fr);
   gap: 10px;
   padding: 0 24px 8px 12px;
   color: var(--faint);
   font-size: 11px;
   font-weight: 650;
   line-height: 1.2;
+}
+
+.ch-table-head span {
+  min-width: 0;
+}
+
+.ch-table-head span:nth-child(n + 2):not(:last-child) {
+  text-align: right;
+}
+
+.ch-table-head span:last-child {
+  text-align: left;
 }
 
 .ch-list {
@@ -73,7 +86,7 @@
   position: relative;
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(78px, .9fr) repeat(4, minmax(70px, .78fr)) minmax(54px, .5fr);
+  grid-template-columns: minmax(78px, .9fr) repeat(4, minmax(72px, .76fr)) minmax(96px, .72fr);
   align-items: center;
   gap: 10px;
   padding: 13px 24px 13px 12px;
@@ -122,8 +135,7 @@
   color: var(--warn);
 }
 
-.ch-cell,
-.ch-status {
+.ch-cell {
   color: var(--muted);
   font-size: 12px;
   font-weight: 650;
@@ -132,12 +144,28 @@
   font-variant-numeric: tabular-nums;
 }
 
-.ch-status {
-  color: rgba(247,248,252,.72);
+.ch-progress-cell {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-right: 6px;
 }
 
-.ch-status--warn {
-  color: var(--warn);
+.ch-progress {
+  position: relative;
+  width: min(104px, 100%);
+  height: 8px;
+  border-radius: 99px;
+  background: var(--bar-track);
+  border: 1px solid var(--bar-track-border);
+  overflow: hidden;
+}
+
+.ch-progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
 }
 
 .ch-row-arrow {
@@ -336,9 +364,16 @@
     padding: 12px 32px 13px 14px;
   }
 
-  .ch-cell,
-  .ch-status {
+  .ch-cell {
     text-align: left;
+  }
+
+  .ch-progress-cell {
+    justify-content: flex-start;
+  }
+
+  .ch-progress {
+    width: min(180px, 100%);
   }
 
   .ch-member-money,

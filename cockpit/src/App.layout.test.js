@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 22:45:24 CST
+ 更新内容: 增加渠道完成表列头对齐、移除状态列并改为进度条的回归测试。
+*/
+/*
  更新时间: 2026-07-05 21:45:08 CST
  更新内容: 增加年度节奏精简指标、关键节点图表标签和渠道表本月/年度互斥列回归测试。
 */
@@ -1062,11 +1066,20 @@ test('uses one channel completion panel with month and year switching', () => {
   assert.match(channelPanelSource, /label: '年度目标'/);
   assert.match(channelPanelSource, /label: '年度完成率'/);
   assert.match(channelPanelSource, /label: '年度缺口'/);
+  assert.match(channelPanelSource, /<span>进度<\/span>/);
+  assert.doesNotMatch(channelPanelSource, /<span>状态<\/span>/);
   assert.doesNotMatch(channelPanelSource, /年度贡献/);
   assert.match(channelPanelSource, /function formatChannelPct/);
   assert.match(channelPanelSource, /Number\(value\)\.toFixed\(1\)/);
   assert.match(channelPanelSource, /period === 'year' \? c\.yearCompletion : c\.monthCompletion/);
   assert.match(channelPanelSource, /formatChannelPct\(pct\)/);
+  assert.match(channelPanelSource, /className="ch-progress-cell"/);
+  assert.match(channelPanelSource, /className="ch-progress"/);
+  assert.match(channelPanelSource, /className="ch-progress-fill"/);
+  assert.match(channelPanelSource, /width:\s*`\$\{Math\.min\(pct, 100\)\}%`/);
+  assert.match(channelPanelSource, /aria-label=\{`\$\{c\.name\}完成进度 \$\{formatChannelPct\(pct\)\}`\}/);
+  assert.doesNotMatch(channelPanelSource, /className=\{`ch-status/);
+  assert.doesNotMatch(channelPanelSource, /\{c\.status\}/);
   assert.match(channelPanelSource, /c\.monthRecovered/);
   assert.match(channelPanelSource, /c\.monthTarget/);
   assert.match(channelPanelSource, /c\.monthGap/);
@@ -1082,6 +1095,11 @@ test('uses one channel completion panel with month and year switching', () => {
   assert.match(channelPanelSource, /fmtPct/);
   assert.match(channelPanelSource, /ch-row-arrow/);
   assert.match(channelPanelCss, /\.ch-row-arrow/);
+  assert.match(channelPanelCss, /\.ch-table-head span:nth-child\(n \+ 2\):not\(:last-child\)\s*\{[\s\S]*?text-align:\s*right;/);
+  assert.match(channelPanelCss, /\.ch-cell\s*\{[\s\S]*?text-align:\s*right;[\s\S]*?font-variant-numeric:\s*tabular-nums;/);
+  assert.match(channelPanelCss, /\.ch-progress-cell\s*\{/);
+  assert.match(channelPanelCss, /\.ch-progress-fill\s*\{/);
+  assert.doesNotMatch(channelPanelCss, /\.ch-status/);
   assert.match(operatingOverviewSource, /<ChannelPanel title="渠道完成情况" showPeriodSwitch \/>/);
   assert.doesNotMatch(appSource, /sidePanel=\{<ChannelPanel/);
 });
