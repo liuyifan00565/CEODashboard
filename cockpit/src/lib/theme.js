@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:00:13 CST
+ 更新内容: 主题 fallback 的完成态金色同步为高级哑金。
+*/
+/*
  更新时间: 2026-07-05 15:29:01 CST
  更新内容: 主题 fallback 同步深灰蓝玻璃改版后的图表与提示色。
 */
@@ -47,7 +51,7 @@ const FALLBACK_TOKENS = {
   chartPointer: 'rgba(139,124,255,.07)',
   chartPointBorder: '#060914',
   progressMid: '#8B7CFF',
-  progressGold: '#D7B56D',
+  progressGold: '#B7A06C',
 };
 
 function cssVar(styles, name, fallback) {

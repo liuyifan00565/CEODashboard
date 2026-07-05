@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:00:13 CST
+ 更新内容: KPI 完成态金色图表守卫改为灰金/香槟哑金渐变。
+*/
+/*
  更新时间: 2026-07-05 19:10:30 CST
  更新内容: KPI 回款半环标题回归测试改为月度/年度回款结构，适配经营总览顶部轻量下钻入口。
 */
@@ -244,7 +248,7 @@ test('adds a transparent unfinished slice at the right edge of the recovery half
 });
 
 test('uses muted chart accents without turning every recovery slice strong purple', () => {
-  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#7F6BE8[\s\S]*?#9B86FF[\s\S]*?#C8BFFF[\s\S]*?#6FB7D5[\s\S]*?#9BD8F4[\s\S]*?#D7F0FA[\s\S]*?#50B8AA[\s\S]*?#72D7C9[\s\S]*?#C2F0E9[\s\S]*?#B89642[\s\S]*?#E2C15F[\s\S]*?#F1DEA0[\s\S]*?\];/);
+  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#7F6BE8[\s\S]*?#9B86FF[\s\S]*?#C8BFFF[\s\S]*?#6FB7D5[\s\S]*?#9BD8F4[\s\S]*?#D7F0FA[\s\S]*?#50B8AA[\s\S]*?#72D7C9[\s\S]*?#C2F0E9[\s\S]*?#947E55[\s\S]*?#B7A06C[\s\S]*?#D6C49A[\s\S]*?\];/);
   assert.doesNotMatch(componentSource, /#6D28D9|#8B5CF6|#C084FC|#A855F7/);
   assert.doesNotMatch(componentSource, /#A7F3D0/);
   assert.doesNotMatch(componentSource, /#B7F3FF/);
@@ -276,7 +280,7 @@ test('uses the neutral dark glass card recipe without broad purple wash', () => 
 });
 
 test('uses red, purple, and gold completion progress gradients in the KPI ECharts bars', () => {
-  assert.match(componentSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?#A94F62[\s\S]*?#D86A82[\s\S]*?#E7A0AE[\s\S]*?#9B7A36[\s\S]*?#D7B56D[\s\S]*?#F0D99A[\s\S]*?#8B7CFF[\s\S]*?#AFA6FF[\s\S]*?#D8D4FF[\s\S]*?#8BD7FF[\s\S]*?\}/);
+  assert.match(componentSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?#A94F62[\s\S]*?#D86A82[\s\S]*?#E7A0AE[\s\S]*?#7E6B49[\s\S]*?#B7A06C[\s\S]*?#D6C49A[\s\S]*?#8B7CFF[\s\S]*?#AFA6FF[\s\S]*?#D8D4FF[\s\S]*?#8BD7FF[\s\S]*?\}/);
 });
 
 test('keeps recovery half-donut labels readable in the elongated card', () => {

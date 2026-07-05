@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:00:13 CST
+ 更新内容: 完成率 100% 以上的金色语义改为低饱和高级哑金。
+*/
+/*
  更新时间: 2026-07-05 15:29:01 CST
  更新内容: 风险色语义改为低饱和玫瑰色，保持完成率三档规则不变。
 */
@@ -59,15 +63,15 @@ export const COLOR = {
   down: '#D86A82',
   good: '#8B7CFF',
   warn: '#D86A82',
-  gold: '#D7B56D',
+  gold: '#B7A06C',
   txt: '#F7F8FC',
   muted: '#B9C2D4',
   line: 'rgba(218,226,255,.10)',
   axis: 'rgba(218,226,255,.34)',
-  // 进度条统一语义：80% 以下风险玫红，80-99% 品牌月光紫，100% 及以上香槟金。
+  // 进度条统一语义：80% 以下风险玫红，80-99% 品牌月光紫，100% 及以上高级哑金。
   goodGradient: 'linear-gradient(90deg,#8B7CFF 0%,#AFA6FF 54%,#D8D4FF 82%,#8BD7FF 100%)',
   warnGradient: 'linear-gradient(90deg,#A94F62 0%,#D86A82 58%,#E7A0AE 100%)',
-  goldGradient: 'linear-gradient(90deg,#9B7A36 0%,#D7B56D 58%,#F0D99A 100%)',
+  goldGradient: 'linear-gradient(90deg,#7E6B49 0%,#B7A06C 58%,#D6C49A 100%)',
 };
 
 export const isRiskCompletion = (pct) => (Number(pct) || 0) < 80;

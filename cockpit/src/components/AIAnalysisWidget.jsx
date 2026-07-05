@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:00:13 CST
+ 更新内容: AI 分析弹窗边缘流光金色改为高级哑金。
+*/
+/*
  更新时间: 2026-07-05 16:12:00 CST
  更新内容: 左侧 AI 入口增加轻量状态文案，融入 220px 管理侧栏底部卡片。
 */
@@ -558,7 +562,7 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
             glowIntensity={2.2}
             coneSpread={25}
             animated
-            colors={['#8B7CFF', '#D7B56D', '#74A7FF']}
+            colors={['#8B7CFF', '#B7A06C', '#74A7FF']}
           >
             <section className="ai-card-inner" aria-label="AI 分析对话框">
               <header className="ai-card-head">

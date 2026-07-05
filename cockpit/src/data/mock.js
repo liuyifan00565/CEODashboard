@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:00:13 CST
+ 更新内容: 模拟数据中的金色图表色同步为高级哑金与灰金高光。
+*/
+/*
  更新时间: 2026-07-05 22:59:45 CST
  更新内容: 年度节奏辅助说明补充剩余月份字段，支持最终版单行说明。
 */
@@ -420,8 +424,8 @@ export const COMPUTE_HALF_YEAR_TREND = [
 
 export const COMPUTE_VERSION_CONSUMPTION = [
   { name: '试用版', value: 2, color: '#94A3B8' },
-  { name: '企业版', value: 3, color: '#D7B56D' },
-  { name: '旗舰版', value: 5, color: '#F0D99A' },
+  { name: '企业版', value: 3, color: '#B7A06C' },
+  { name: '旗舰版', value: 5, color: '#D6C49A' },
   { name: '免费版', value: 3, color: '#D86A82' },
   { name: '卓越版', value: 37, color: '#8B7CFF' },
   { name: '创世版', value: 28, color: '#74A7FF' },
@@ -431,7 +435,7 @@ export const COMPUTE_VERSION_CONSUMPTION = [
 
 export const COMPUTE_USAGE_DISTRIBUTION = [
   { name: '算力用量=0', value: 75, color: '#94A3B8' },
-  { name: '0<算力用量<=100', value: 3, color: '#D7B56D' },
+  { name: '0<算力用量<=100', value: 3, color: '#B7A06C' },
   { name: '100<算力用量<=1000', value: 5, color: '#D86A82' },
   { name: '1000<算力用量<=5000', value: 7, color: '#E7A0AE' },
   { name: '5000<算力用量<=10000', value: 5, color: '#74A7FF' },
@@ -457,7 +461,7 @@ export const COMPUTE_RESOURCE_HEALTH = [
   { key: 'smart-eye', name: '会眼智宝', usage: 10.8, trend: '+1.6%', state: '稳态调用', tone: 'neutral', color: '#D8D4FF' },
   { key: 'vision', name: '视频识别', usage: 9.6, trend: '-1.4%', state: '低峰运行', tone: 'neutral', color: '#74A7FF' },
   { key: 'guard', name: '后置回复拦截', usage: 6.8, trend: '+0.9%', state: '需关注', tone: 'warn', color: '#D86A82' },
-  { key: 'dialog-test', name: '对话测试', usage: 5.2, trend: '+0.4%', state: '轻量验证', tone: 'neutral', color: '#D7B56D' },
+  { key: 'dialog-test', name: '对话测试', usage: 5.2, trend: '+0.4%', state: '轻量验证', tone: 'neutral', color: '#B7A06C' },
 ];
 
 export function getComputeOverview() {

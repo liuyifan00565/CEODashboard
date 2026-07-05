@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:00:13 CST
+ 更新内容: 将完成态金色守卫测试改为低饱和高级哑金 token 与渐变。
+*/
+/*
  更新时间: 2026-07-05 21:45:08 CST
  更新内容: 渠道风险行回归测试改为保留低饱和行背景并移除重复风险标签。
 */
@@ -116,7 +120,7 @@ test('uses the graphite violet champagne semantic accents', () => {
   assert.match(block, /--brand-lavender:#D8D4FF;/);
   assert.match(block, /--brand-mist:#F7F8FC;/);
   assert.match(block, /--brand-ice:#8BD7FF;/);
-  assert.match(block, /--accent-gold:#D7B56D;/);
+  assert.match(block, /--accent-gold:#B7A06C;/);
   assert.match(block, /--up:#AFA6FF;/);
   assert.match(block, /--down:#D86A82;/);
   assert.match(block, /--good:#8B7CFF;/);
@@ -127,26 +131,26 @@ test('uses the graphite violet champagne semantic accents', () => {
   assert.match(block, /--warn-rgb:216,106,130;/);
   assert.match(block, /--bar-good:linear-gradient\(90deg,#8B7CFF 0%,#AFA6FF 54%,#D8D4FF 82%,#8BD7FF 100%\);/);
   assert.match(block, /--bar-warn:linear-gradient\(90deg,#A94F62 0%,#D86A82 58%,#E7A0AE 100%\);/);
-  assert.match(block, /--bar-gold:linear-gradient\(90deg,#9B7A36 0%,#D7B56D 58%,#F0D99A 100%\);/);
+  assert.match(block, /--bar-gold:linear-gradient\(90deg,#7E6B49 0%,#B7A06C 58%,#D6C49A 100%\);/);
 
   assert.equal(COLOR.up, '#AFA6FF');
   assert.equal(COLOR.down, '#D86A82');
   assert.equal(COLOR.good, '#8B7CFF');
   assert.equal(COLOR.warn, '#D86A82');
-  assert.equal(COLOR.gold, '#D7B56D');
+  assert.equal(COLOR.gold, '#B7A06C');
 });
 
 test('maps completion progress to red below 80, purple through 99, and gold at target', () => {
   const block = darkThemeBlock();
 
   assert.match(block, /--progress-mid:#8B7CFF;/);
-  assert.match(block, /--progress-gold:#D7B56D;/);
+  assert.match(block, /--progress-gold:#B7A06C;/);
   assert.match(themeSource, /progressMid:\s*'#8B7CFF'/);
-  assert.match(themeSource, /progressGold:\s*'#D7B56D'/);
-  assert.equal(progressColor(70, '#8B7CFF', '#D7B56D'), '#D86A82');
-  assert.equal(progressColor(80, '#8B7CFF', '#D7B56D'), '#8B7CFF');
-  assert.equal(progressColor(99.9, '#8B7CFF', '#D7B56D'), '#8B7CFF');
-  assert.equal(progressColor(100, '#8B7CFF', '#D7B56D'), '#D7B56D');
+  assert.match(themeSource, /progressGold:\s*'#B7A06C'/);
+  assert.equal(progressColor(70, '#8B7CFF', '#B7A06C'), '#D86A82');
+  assert.equal(progressColor(80, '#8B7CFF', '#B7A06C'), '#8B7CFF');
+  assert.equal(progressColor(99.9, '#8B7CFF', '#B7A06C'), '#8B7CFF');
+  assert.equal(progressColor(100, '#8B7CFF', '#B7A06C'), '#B7A06C');
   assert.match(kpiSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?new echarts\.graphic\.LinearGradient/);
   assert.match(kpiSource, /const labelColor = progressColor\(pct, tokens\.progressMid, tokens\.progressGold\);[\s\S]*?itemStyle:\s*\{ color: progressBarColor\(pct, tokens\), borderRadius: 5, shadowBlur: 6, shadowColor: labelColor \}/);
 });

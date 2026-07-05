@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 00:00:13 CST  更新内容: 版本情况半环与色点中的金色改为高级哑金。 */
 /* 更新时间: 2026-07-04 01:03:12 CST  更新内容: 版本情况补充经营洞察文案，并让环比列使用独立数字对齐内层。 */
 /* 更新时间: 2026-07-04 00:21:24 CST  更新内容: 版本情况控制器移至右上，半环仅标前两项并降低光晕，表格增加版本色点。 */
 /* 更新时间: 2026-07-03 23:48:36 CST  更新内容: 版本情况右侧由四张展示卡改为六列表格，并保留行点击打开版本二级弹窗。 */
@@ -34,9 +35,9 @@ const VERSION_RING_COLORS = [
   { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8B7CFF' }, { offset: 1, color: '#D8D4FF' }] },
   { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#74A7FF' }, { offset: 1, color: '#C8D9FF' }] },
   { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6DD6D2' }, { offset: 1, color: '#BFEDEC' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#D7B56D' }, { offset: 1, color: '#F0D99A' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#B7A06C' }, { offset: 1, color: '#D6C49A' }] },
 ];
-const VERSION_DOT_COLORS = ['#8B7CFF', '#74A7FF', '#6DD6D2', '#D7B56D'];
+const VERSION_DOT_COLORS = ['#8B7CFF', '#74A7FF', '#6DD6D2', '#B7A06C'];
 const SALES_FILTER_OPTS = [
   { value: 'online', label: '线上' },
   { value: 'south', label: '华南线下' },

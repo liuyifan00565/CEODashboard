@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 00:00:13 CST  更新内容: KPI 完成态金色进度与半环切片统一改为高级哑金渐变。 */
 /* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 回款半环标题改为月度/年度回款结构，适配经营总览顶部轻量下钻入口。 */
 /* 更新时间: 2026-07-05 15:29:01 CST  更新内容: 回款半环图缩小并换为低饱和通道色，风险进度改为柔和玫瑰色。 */
 /* 更新时间: 2026-07-03 23:39:28 CST  更新内容: 收敛回款半环图未完成扇区、标签与阴影，让主 KPI 数字更主导。 */
@@ -33,7 +34,7 @@ const CHANNEL_PIE_GRADIENTS = [
   { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#7F6BE8' }, { offset: 0.55, color: '#9B86FF' }, { offset: 1, color: '#C8BFFF' }] },
   { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6FB7D5' }, { offset: 0.58, color: '#9BD8F4' }, { offset: 1, color: '#D7F0FA' }] },
   { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#50B8AA' }, { offset: 0.58, color: '#72D7C9' }, { offset: 1, color: '#C2F0E9' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#B89642' }, { offset: 0.56, color: '#E2C15F' }, { offset: 1, color: '#F1DEA0' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#947E55' }, { offset: 0.56, color: '#B7A06C' }, { offset: 1, color: '#D6C49A' }] },
 ];
 const CHANNEL_PERCENT_COLORS = ['#ffffff', '#ffffff', '#ffffff', '#ffffff'];
 const CHANNEL_PIE_LABELS = { south: '线下华南', east: '线下华东' };
@@ -142,9 +143,9 @@ function progressBarColor(pct, tokens) {
 
   if (value >= 100) {
     return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-      { offset: 0, color: '#9B7A36' },
-      { offset: 0.58, color: '#D7B56D' },
-      { offset: 1, color: '#F0D99A' },
+      { offset: 0, color: '#7E6B49' },
+      { offset: 0.58, color: '#B7A06C' },
+      { offset: 1, color: '#D6C49A' },
     ]);
   }
 

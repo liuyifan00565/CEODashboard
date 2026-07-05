@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 00:00:13 CST  更新内容: 年度目标线的金色阴影同步降为高级哑金强度。 */
 /* 更新时间: 2026-07-06 00:00:23 CST  更新内容: 为经营总览搜索命中外壳补充固定区域类名，避免搜索高亮改变卡片排布。 */
 /* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 年度节奏图表降噪并增加呼吸空间，顶部经营进度标题降级以突出核心数字。 */
 /* 更新时间: 2026-07-05 22:59:45 CST  更新内容: 年度节奏最终版改为三项核心指标、单行辅助说明、单标题和轻量明细入口。 */
@@ -142,7 +143,7 @@ function annualRhythmOption(series, tokens) {
         symbol: 'circle',
         symbolSize: 6,
         connectNulls: true,
-        lineStyle: { width: 2, type: 'dashed', color: tokens.progressGold, shadowBlur: 8, shadowColor: 'rgba(215,181,109,.16)' },
+        lineStyle: { width: 2, type: 'dashed', color: tokens.progressGold, shadowBlur: 8, shadowColor: 'rgba(183,160,108,.12)' },
         itemStyle: { color: tokens.progressGold, borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
         label: {
           show: true,

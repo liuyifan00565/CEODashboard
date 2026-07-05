@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:00:13 CST
+ 更新内容: 全局完成态金色从亮香槟金降为灰金/高级哑金，并降低相关辉光强度。
+*/
+/*
  更新时间: 2026-07-05 15:29:01 CST
  更新内容: 首页主题提亮为柔和深灰蓝空间背景，卡片改轻玻璃变量并降低风险红饱和度。
 */
@@ -105,8 +109,8 @@
   --brand-lavender:#D8D4FF;
   --brand-mist:#F7F8FC;
   --brand-ice:#8BD7FF;
-  --accent-gold:#D7B56D;
-  --accent-gold-soft:#F0D99A;
+  --accent-gold:#B7A06C;
+  --accent-gold-soft:#D6C49A;
   --dashboard-card-bg:rgba(255, 255, 255, 0.052);
   --dashboard-card-border:rgba(255, 255, 255, 0.10);
   --dashboard-card-shadow:0 24px 80px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255,255,255,.06);
@@ -136,8 +140,8 @@
   --bar-good-glow:0 0 14px rgba(139,124,255,.18);
   --bar-warn:linear-gradient(90deg,#A94F62 0%,#D86A82 58%,#E7A0AE 100%);
   --bar-warn-glow:0 0 14px rgba(216,106,130,.16);
-  --bar-gold:linear-gradient(90deg,#9B7A36 0%,#D7B56D 58%,#F0D99A 100%);
-  --bar-gold-glow:0 0 18px rgba(215,181,109,.26);
+  --bar-gold:linear-gradient(90deg,#7E6B49 0%,#B7A06C 58%,#D6C49A 100%);
+  --bar-gold-glow:0 0 16px rgba(183,160,108,.20);
   /* 背景：柔和深灰蓝底；紫色只做远处环境光，网格/点阵提供秩序感。 */
   --bg-base-1:#0D1324;
   --bg-base-2:#0B1020;
@@ -150,12 +154,12 @@
   --bg-grid-line:rgba(255,255,255,.030);
   --bg-dot:rgba(255,255,255,.028);
   --bg-noise-opacity:.03;
-  --brand-dot-shadow:0 0 12px rgba(215,181,109,.32);
+  --brand-dot-shadow:0 0 12px rgba(183,160,108,.24);
   --control-hover:rgba(139,124,255,.10);
   --theme-toggle-icon:#D8D4FF;
   --theme-toggle-hover:rgba(139,124,255,.10);
-  --focus-outline:rgba(215,181,109,.42);
-  --control-solid:#D7B56D;
+  --focus-outline:rgba(183,160,108,.34);
+  --control-solid:#B7A06C;
   --control-solid-text:#111318;
   --chart-text:#F7F8FC;
   --chart-muted:#B9C2D4;
@@ -171,13 +175,13 @@
   --chart-pointer:rgba(139,124,255,.07);
   --chart-point-border:#060914;
   --progress-mid:#8B7CFF;
-  --progress-gold:#D7B56D;
+  --progress-gold:#B7A06C;
   --ai-card-bg:#0B1020;
   --ai-orb-text:#F7F8FC;
   --ai-ring-text:rgba(247,248,252,.84);
   --ai-label-text:#F7F8FC;
   --ai-ring-shadow:0 0 8px rgba(0,0,0,.78),0 0 16px rgba(139,124,255,.24);
-  --ai-label-shadow:0 1px 3px rgba(0,0,0,.78),0 0 16px rgba(215,181,109,.18);
+  --ai-label-shadow:0 1px 3px rgba(0,0,0,.78),0 0 16px rgba(183,160,108,.14);
   --ai-chip-bg:rgba(255,255,255,.06);
   --ai-chip-hover:rgba(255,255,255,.08);
   color-scheme:var(--color-scheme-value);
@@ -202,8 +206,8 @@
   --brand-lavender:#D8D4FF;
   --brand-mist:#F7F8FC;
   --brand-ice:#8BD7FF;
-  --accent-gold:#B78C32;
-  --accent-gold-soft:#D7B56D;
+  --accent-gold:#9A8054;
+  --accent-gold-soft:#B7A06C;
   --up:#6F62D8;
   --down:#C85D72;
   --good:#6F62D8;
@@ -218,14 +222,14 @@
   --bar-good-glow:0 0 16px rgba(111,98,216,.18);
   --bar-warn:linear-gradient(90deg,#A24D5D 0%,#C85D72 58%,#E19AAA 100%);
   --bar-warn-glow:0 0 16px rgba(200,93,114,.16);
-  --bar-gold:linear-gradient(90deg,#8C6726 0%,#B78C32 58%,#D7B56D 100%);
-  --bar-gold-glow:0 0 16px rgba(183,140,50,.2);
-  /* 背景：雾白蓝灰底 + 极淡月光紫/香槟补光，与暗主题同构 */
+  --bar-gold:linear-gradient(90deg,#6F5C3E 0%,#9A8054 58%,#B7A06C 100%);
+  --bar-gold-glow:0 0 14px rgba(154,128,84,.16);
+  /* 背景：雾白蓝灰底 + 极淡月光紫/灰金补光，与暗主题同构 */
   --bg-base-1:#F8FAFD;
   --bg-base-2:#F3F6FA;
   --bg-base-3:#E9EEF6;
   --bg-radial-a:rgba(139,124,255,.10);
-  --bg-radial-b:rgba(183,140,50,.06);
+  --bg-radial-b:rgba(154,128,84,.045);
   --bg-radial-c:rgba(31,42,68,.035);
   --bg-radial-d:rgba(139,124,255,.055);
   --bg-vignette:
@@ -235,12 +239,12 @@
   --bg-grid-line-strong:rgba(31,42,68,.018);
   --bg-dot:rgba(31,42,68,.024);
   --bg-noise-opacity:.025;
-  --brand-dot-shadow:0 0 12px rgba(183,140,50,.22);
+  --brand-dot-shadow:0 0 12px rgba(154,128,84,.16);
   --control-hover:rgba(139,124,255,.10);
   --theme-toggle-icon:#111318;
   --theme-toggle-hover:rgba(139,124,255,.10);
-  --focus-outline:rgba(183,140,50,.34);
-  --control-solid:#B78C32;
+  --focus-outline:rgba(154,128,84,.28);
+  --control-solid:#9A8054;
   --control-solid-text:#111318;
   --chart-text:#111318;
   --chart-muted:#38445A;
@@ -256,13 +260,13 @@
   --chart-pointer:rgba(139,124,255,.09);
   --chart-point-border:#F3F6FA;
   --progress-mid:#6F62D8;
-  --progress-gold:#B78C32;
+  --progress-gold:#9A8054;
   --ai-card-bg:#F8FAFD;
   --ai-orb-text:#111318;
   --ai-ring-text:rgba(17,19,24,.76);
   --ai-label-text:#111318;
   --ai-ring-shadow:0 0 8px rgba(255,255,255,.55),0 0 16px rgba(111,98,216,.16);
-  --ai-label-shadow:0 1px 3px rgba(255,255,255,.7),0 0 16px rgba(183,140,50,.14);
+  --ai-label-shadow:0 1px 3px rgba(255,255,255,.7),0 0 16px rgba(154,128,84,.10);
   --ai-chip-bg:rgba(31,42,68,.06);
   --ai-chip-hover:rgba(139,124,255,.12);
   color-scheme:var(--color-scheme-value);

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:00:13 CST
+ 更新内容: 边缘流光默认金色改为低饱和高级哑金。
+*/
+/*
  更新时间: 2026-07-03 18:19:59 CST
  更新内容: 边缘流光默认色同步为月光紫、香槟金与冷蓝高级配色。
 */
@@ -80,7 +84,7 @@ const BorderGlow = ({
   glowIntensity = 1,
   coneSpread = 25,
   animated = false,
-  colors = ['#8B7CFF', '#D7B56D', '#74A7FF'],
+  colors = ['#8B7CFF', '#B7A06C', '#74A7FF'],
   fillOpacity = 0.5,
 }) => {
   const cardRef = useRef(null);

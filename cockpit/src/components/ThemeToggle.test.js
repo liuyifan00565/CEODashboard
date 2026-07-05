@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:00:13 CST
+ 更新内容: 亮色主题金色守卫改为更灰、更低饱和的高级哑金。
+*/
+/*
  更新时间: 2026-07-05 15:29:01 CST
  更新内容: 主题回归测试同步低饱和风险色与更轻玻璃卡片 token。
 */
@@ -131,7 +135,7 @@ test('keeps graphite violet brand accents aligned in light theme', () => {
   assert.match(block, /--brand-lavender:#D8D4FF;/);
   assert.match(block, /--brand-mist:#F7F8FC;/);
   assert.match(block, /--brand-ice:#8BD7FF;/);
-  assert.match(block, /--accent-gold:#B78C32;/);
+  assert.match(block, /--accent-gold:#9A8054;/);
   assert.match(block, /--up:#6F62D8;/);
   assert.match(block, /--down:#C85D72;/);
   assert.match(block, /--good:#6F62D8;/);
@@ -142,9 +146,9 @@ test('keeps graphite violet brand accents aligned in light theme', () => {
   assert.match(block, /--warn-rgb:200,93,114;/);
   assert.match(block, /--bar-good:linear-gradient\(90deg,#6F62D8 0%,#8B7CFF 56%,#C9C3FF 88%,#8BD7FF 100%\);/);
   assert.match(block, /--bar-warn:linear-gradient\(90deg,#A24D5D 0%,#C85D72 58%,#E19AAA 100%\);/);
-  assert.match(block, /--bar-gold:linear-gradient\(90deg,#8C6726 0%,#B78C32 58%,#D7B56D 100%\);/);
+  assert.match(block, /--bar-gold:linear-gradient\(90deg,#6F5C3E 0%,#9A8054 58%,#B7A06C 100%\);/);
   assert.match(block, /--progress-mid:#6F62D8;/);
-  assert.match(block, /--progress-gold:#B78C32;/);
+  assert.match(block, /--progress-gold:#9A8054;/);
 });
 
 test('charts and KPI progress bars read theme tokens instead of hard-coded white colors', () => {

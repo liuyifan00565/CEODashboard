@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-06 00:06:58 CST
+ 更新内容: 超额交付行金色背景与边框守卫改为更淡的哑金比例。
+*/
+/*
+ 更新时间: 2026-07-06 00:00:13 CST
+ 更新内容: 风险语义测试同步完成态高级哑金主色。
+*/
+/*
  更新时间: 2026-07-05 15:29:01 CST
  更新内容: 风险与背景回归测试切换到柔和深灰蓝玻璃主题和低饱和玫瑰风险色。
 */
@@ -62,7 +70,7 @@ test('uses the softened graphite blue glass palette tokens', () => {
   assert.match(indexCss, /--brand-purple:#8B7CFF;/);
   assert.match(indexCss, /--brand-purple-2:#AFA6FF;/);
   assert.match(indexCss, /--brand-lavender:#D8D4FF;/);
-  assert.match(indexCss, /--control-solid:#D7B56D;/);
+  assert.match(indexCss, /--control-solid:#B7A06C;/);
   assert.match(indexCss, /--warn:#D86A82;/);
   assert.match(indexCss, /--warn-rgb:216,106,130;/);
 });
@@ -148,7 +156,7 @@ test('keeps over-target delivery rows gold and labels them as excess delivery', 
   assert.match(deliverySource, /const deliveryProgressBackground = progressGradient\(pct, tokens\.progressMid\);/);
   assert.match(deliverySource, /\{deliveryTag && <span className=\{deliveryTagClassName\}>\{deliveryTag\}<\/span>\}/);
   assert.doesNotMatch(deliverySource, /COLOR\.warnGradient/);
-  assert.match(deliveryCss, /\.dlv-row--over\s*\{[\s\S]*?var\(--accent-gold\)[\s\S]*?\}/);
+  assert.match(deliveryCss, /\.dlv-row--over\s*\{[\s\S]*?color-mix\(in srgb, var\(--accent-gold\) 7%, transparent\)[\s\S]*?color-mix\(in srgb, var\(--accent-gold\) 3%, var\(--glass-cell\)\)[\s\S]*?border-color:\s*color-mix\(in srgb, var\(--accent-gold\) 18%, var\(--line\)\);[\s\S]*?box-shadow:\s*inset 0 1px 0 color-mix\(in srgb, var\(--accent-gold-soft\) 8%, transparent\);/);
   assert.match(deliveryCss, /\.dlv-tag--over\s*\{[\s\S]*?color:\s*var\(--accent-gold-soft\);[\s\S]*?\}/);
   assert.match(deliveryCss, /\.dlv-progress-pct--over\s*\{[\s\S]*?color:\s*var\(--accent-gold-soft\);[\s\S]*?\}/);
 });

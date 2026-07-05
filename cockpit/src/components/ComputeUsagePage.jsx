@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 00:00:13 CST
+ 更新内容: 算力页图表金色强调改为灰金/高级哑金并降低高光透明度。
+*/
+/*
  更新时间: 2026-07-03 18:19:59 CST
  更新内容: 算力页图表色板收敛到月光紫、冷蓝、青玉、香槟金与风险玫红，移除强霓虹青/洋红。
 */
@@ -65,7 +69,7 @@ const COMPUTE_RING_COLORS = [
   '#8B7CFF',
   '#74A7FF',
   '#6DD6D2',
-  '#D7B56D',
+  '#B7A06C',
   'rgba(148, 163, 184, .18)',
   '#AFA6FF',
   '#6F62D8',
@@ -297,7 +301,7 @@ function buildTrendOption({ trend, tokens }) {
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
   const usageColor = tokens.chartBar;
-  const usagePeakLineColor = '#D7B56D';
+  const usagePeakLineColor = '#B7A06C';
   const usagePeakLabelColor = '#F7F8FC';
   const maxUsage = Math.max(...usage);
   const usagePeakLineData = usage.map((value) => ({
@@ -361,19 +365,19 @@ function buildTrendOption({ trend, tokens }) {
         realtime: true,
         borderColor: 'rgba(139,124,255,.32)',
         backgroundColor: 'rgba(255,255,255,.045)',
-        fillerColor: 'rgba(215,181,109,.22)',
+        fillerColor: 'rgba(183,160,108,.18)',
         handleStyle: {
-          color: 'rgba(240,217,154,.9)',
-          borderColor: 'rgba(215,181,109,.82)',
+          color: 'rgba(214,196,154,.86)',
+          borderColor: 'rgba(183,160,108,.68)',
           shadowBlur: 16,
-          shadowColor: 'rgba(215,181,109,.45)',
+          shadowColor: 'rgba(183,160,108,.34)',
         },
         dataBackground: {
           lineStyle: { color: 'rgba(255,255,255,.16)' },
           areaStyle: { color: 'rgba(255,255,255,.04)' },
         },
         selectedDataBackground: {
-          lineStyle: { color: 'rgba(215,181,109,.44)' },
+          lineStyle: { color: 'rgba(183,160,108,.32)' },
           areaStyle: { color: 'rgba(139,124,255,.09)' },
         },
         showDetail: false,
@@ -434,13 +438,13 @@ function buildTrendOption({ trend, tokens }) {
         symbolSize: 7,
         showSymbol: true,
         z: 4,
-        lineStyle: { color: usagePeakLineColor, width: 2.4, shadowBlur: 14, shadowColor: 'rgba(215,181,109,.38)' },
+        lineStyle: { color: usagePeakLineColor, width: 2.4, shadowBlur: 14, shadowColor: 'rgba(183,160,108,.30)' },
         itemStyle: {
           color: usagePeakLineColor,
           borderColor: '#ffffff',
           borderWidth: 2,
           shadowBlur: 12,
-          shadowColor: 'rgba(215,181,109,.38)',
+          shadowColor: 'rgba(183,160,108,.30)',
         },
         emphasis: {
           scale: true,
