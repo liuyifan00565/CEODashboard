@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 收紧渠道完成情况表格列宽，避免右侧年度贡献和状态在中等宽度卡片中被截断。 */
+/* 更新时间: 2026-07-05 18:20:00 CST  更新内容: 渠道完成情况改为本月/年度单列表表格样式并保留低饱和风险标记。 */
 /* 更新时间: 2026-07-05 16:12:00 CST  更新内容: 移除年度风险预测轻卡片样式，渠道面板统一展示完成情况。 */
 /* Update time: 2026-07-03 17:55:40 CST  Update content: Move channel panels onto the neutral dark dashboard card glass recipe instead of transparent purple-tinted glass. */
 /* Update time: 2026-07-03 13:05:00 CST  Update content: 渠道进度条 fill 改用冰蓝/粉紫低饱和冷色线性渐变并加轻外发光，轨道改半透明蓝灰。 */
@@ -18,9 +20,17 @@
 
 .ch-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
+  gap: 14px;
   margin-bottom: 18px;
+}
+
+.ch-head-copy {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
 }
 
 .ch-title {
@@ -35,6 +45,21 @@
   color: var(--faint);
 }
 
+.ch-head .sgm-glass {
+  flex: none;
+}
+
+.ch-table-head {
+  display: grid;
+  grid-template-columns: minmax(82px, .9fr) minmax(128px, 1.25fr) minmax(68px, .58fr) minmax(62px, .54fr) minmax(58px, .48fr);
+  gap: 10px;
+  padding: 0 28px 8px 14px;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
 .ch-list {
   display: flex;
   flex-direction: column;
@@ -45,7 +70,11 @@
   appearance: none;
   position: relative;
   width: 100%;
-  padding: 12px 34px 14px 14px;
+  display: grid;
+  grid-template-columns: minmax(82px, .9fr) minmax(128px, 1.25fr) minmax(68px, .58fr) minmax(62px, .54fr) minmax(58px, .48fr);
+  align-items: center;
+  gap: 10px;
+  padding: 13px 28px 13px 14px;
   border-radius: 12px;
   border: 1px solid transparent;
   text-align: left;
@@ -68,10 +97,10 @@
 
 .ch-row-top {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: flex-start;
   gap: 12px;
-  margin-bottom: 9px;
+  min-width: 0;
 }
 
 .ch-name-wrap {
@@ -157,8 +186,26 @@
   color: var(--muted);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-  min-width: 48px;
+  min-width: 42px;
   text-align: right;
+}
+
+.ch-contribution,
+.ch-status {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ch-status {
+  color: rgba(247,248,252,.72);
+}
+
+.ch-status--warn {
+  color: var(--warn);
 }
 
 .ch-row--warn .ch-pct {
@@ -167,7 +214,7 @@
 
 .ch-row-arrow {
   position: absolute;
-  right: 13px;
+  right: 10px;
   bottom: 12px;
   width: 13px;
   height: 13px;
@@ -334,10 +381,39 @@
 }
 
 @media (max-width: 640px) {
+  .ch-head,
   .ch-row-top,
   .ch-member-main {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .ch-head {
+    gap: 12px;
+  }
+
+  .ch-head-copy {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .ch-table-head {
+    display: none;
+  }
+
+  .ch-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px 32px 13px 14px;
+  }
+
+  .ch-bar-row {
+    display: flex;
+  }
+
+  .ch-contribution,
+  .ch-status {
+    text-align: left;
   }
 
   .ch-member-money,

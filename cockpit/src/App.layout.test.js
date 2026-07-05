@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-05 18:46:00 CST
+ 更新内容: 调整经营总览回归测试，要求融合总览下方恢复月度趋势、开户投入、版本情况和交付面板。
+*/
+/*
+ 更新时间: 2026-07-05 18:20:00 CST
+ 更新内容: 增加经营总览三段融合改版的布局、渠道切换和顶部更新数据按钮回归测试。
+*/
+/*
  更新时间: 2026-07-05 16:12:00 CST
  更新内容: 回归测试锁定 220px 图文管理侧栏、非固定页面标题和移除年度风险预测块。
 */
@@ -139,7 +147,7 @@
  Update content: Expect search highlight green to use the restored fluorescent lime RGB.
 */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const appSource = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
@@ -156,6 +164,10 @@ const mascot3dStageCss = readFileSync(new URL('./components/Mascot3DStage.css', 
 const deliveryPanelCss = readFileSync(new URL('./components/DeliveryPanel.css', import.meta.url), 'utf8');
 const channelPanelSource = readFileSync(new URL('./components/ChannelPanel.jsx', import.meta.url), 'utf8');
 const channelPanelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
+const operatingOverviewUrl = new URL('./components/OperatingOverview.jsx', import.meta.url);
+const operatingOverviewCssUrl = new URL('./components/OperatingOverview.css', import.meta.url);
+const operatingOverviewSource = existsSync(operatingOverviewUrl) ? readFileSync(operatingOverviewUrl, 'utf8') : '';
+const operatingOverviewCss = existsSync(operatingOverviewCssUrl) ? readFileSync(operatingOverviewCssUrl, 'utf8') : '';
 const sidebarCss = readFileSync(new URL('./components/Sidebar.css', import.meta.url), 'utf8');
 const versionFinancePanelCss = readFileSync(new URL('./components/VersionFinancePanel.css', import.meta.url), 'utf8');
 const openingMetricCardsCss = readFileSync(new URL('./components/OpeningMetricCards.css', import.meta.url), 'utf8');
@@ -173,13 +185,16 @@ function cssRuleBody(source, selector) {
   return source.match(new RegExp(`${escapedSelector}\\s*\\{(?<body>[\\s\\S]*?)\\n\\}`))?.groups.body ?? '';
 }
 
-test('keeps all dashboard data cards on fixed grid layouts', () => {
+test('keeps the overview on a fixed operating story layout', () => {
   assert.doesNotMatch(appSource, /DraggableKpiLayer/);
   assert.doesNotMatch(appSource, /DraggablePanelLayer/);
-  assert.match(appSource, /className="dash-kpis"/);
-  assert.match(appSource, /data-kpi-key=\{card\.key\}/);
-  assert.match(appSource, /const gridClassName = activeMenu === 'overview'/);
-  assert.match(appSource, /className=\{gridClassName\}/);
+  assert.match(appSource, /<OperatingOverview searchTerm=\{searchTerm\} \/>/);
+  assert.match(operatingOverviewSource, /className="op-overview"/);
+  assert.match(operatingOverviewCss, /\.op-overview\s*\{[\s\S]*?display:\s*grid;/);
+  assert.doesNotMatch(appSource, /recoveryKpiCards/);
+  assert.doesNotMatch(appSource, /sidePanel=\{<ChannelPanel/);
+  assert.doesNotMatch(appSource, /const gridClassName = activeMenu === 'overview'/);
+  assert.doesNotMatch(appSource, /className=\{gridClassName\}/);
 });
 
 test('renders compute usage analysis as an independent dashboard page', () => {
@@ -187,7 +202,7 @@ test('renders compute usage analysis as an independent dashboard page', () => {
   assert.match(appSource, /const isComputePage = activeMenu === 'compute';/);
   assert.match(appSource, /isComputePage \? \(/);
   assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim=\{dim\} dateRange=\{dateRange\} \/>/);
-  assert.match(appSource, /: \(\s*<>\s*<div className="dash-kpis">/);
+  assert.match(appSource, /: \(\s*<>\s*<OperatingOverview searchTerm=\{searchTerm\} \/>/);
 });
 
 test('uses neutral dark glass backgrounds without BorderGlow sweep for top compute KPI cards', () => {
@@ -298,7 +313,7 @@ test('renders the compact FuKe brand capsule in the topbar', () => {
   assert.match(appSource, /import MetallicPaint from '\.\/components\/MetallicPaint\/MetallicPaint';/);
   assert.match(appSource, /<GlassSurface[\s\S]*?width=\{328\}[\s\S]*?height=\{66\}[\s\S]*?borderRadius=\{22\}[\s\S]*?className="brand-glass"[\s\S]*?<div className="brand">/);
   assert.match(appSource, /<span className="brand-logo-paint" aria-hidden="true">[\s\S]*?<MetallicPaint[\s\S]*?imageSrc="\/logo-black\.png"[\s\S]*?\/>[\s\S]*?<\/span>/);
-  assert.match(appSource, /<div className="brand-copy">[\s\S]*?<b>福客经营驾驶舱<\/b>[\s\S]*?<small>\{META\.monthLabel\} \| \{activeContextLabel\}<\/small>[\s\S]*?<\/div>/);
+  assert.match(appSource, /<div className="brand-copy">[\s\S]*?<b>福客经营驾驶舱<\/b>[\s\S]*?<small>\{META\.monthLabel\} \/ \{activeContextLabel\}<\/small>[\s\S]*?<\/div>/);
   assert.match(dashboardCss, /\.dash-topbar \.brand-glass\{[\s\S]*?flex:0 0 328px;[\s\S]*?min-width:328px/);
   assert.match(brandBlock, /padding:\s*0 18px;/);
   assert.match(brandBlock, /gap:\s*13px;/);
@@ -312,6 +327,7 @@ test('renders the compact FuKe brand capsule in the topbar', () => {
   assert.doesNotMatch(dashboardCss, /\.dash-page-context/);
   assert.match(appSource, /const activeContextLabel = maintenanceMode\s*\?\s*'数据维护'\s*:\s*activeMenu === 'overview' \? 'CEO视角' : activeMenuLabel;/);
   assert.doesNotMatch(appSource, /<small>\{META\.monthLabel\}｜\{activeContextLabel\}<\/small>/);
+  assert.doesNotMatch(appSource, /<small>\{META\.monthLabel\} \| \{activeContextLabel\}<\/small>/);
   assert.doesNotMatch(appSource, /福客 · CEO 经营驾驶舱/);
   assert.doesNotMatch(appSource, /\{META\.monthLabel\} · \{activeMenu === 'overview' \? '月度视角' : activeMenuLabel\}/);
 });
@@ -335,7 +351,7 @@ test('adds a topbar data maintenance switch that swaps the sidebar navigation', 
   assert.match(appSource, /<div className="dash-tools">\s*<GlassSurface[\s\S]*?width=\{126\}[\s\S]*?height=\{54\}[\s\S]*?borderRadius=\{27\}[\s\S]*?brightness=\{46\}[\s\S]*?blur=\{7\}[\s\S]*?displace=\{0\.35\}[\s\S]*?backgroundOpacity=\{0\.035\}[\s\S]*?distortionScale=\{-55\}[\s\S]*?className="maintenance-glass"[\s\S]*?<button[\s\S]*?<\/GlassSurface>\s*<ExpandableSearch/);
   assert.match(appSource, /className=\{`dash-maintenance-switch\$\{maintenanceMode \? ' dash-maintenance-switch--active' : ''\}`\}/);
   assert.match(appSource, /aria-pressed=\{maintenanceMode\}/);
-  assert.match(appSource, /\{maintenanceMode \? '返回主界面' : '数据维护'\}/);
+  assert.match(appSource, /\{maintenanceMode \? '返回主界面' : '更新数据'\}/);
   assert.doesNotMatch(appSource, /dash-maintenance-switch__icon/);
   assert.match(dashboardCss, /\.dash-tools \.maintenance-glass\{[\s\S]*?flex:0 0 auto;/);
   assert.doesNotMatch(dashboardCss, /\.dash-topbar \.maintenance-glass\{[\s\S]*?margin-left:auto;/);
@@ -860,12 +876,14 @@ test('removes compute resource utilization from the compute analysis page', () =
   assert.doesNotMatch(computePageCss, /grid-area:\s*health/);
 });
 
-test('notifies Fu Xiaoke when a KPI card is opened', () => {
-  assert.match(appSource, /import \{ buildCardCompanionCue \} from '\.\/lib\/mascotCompanion';/);
-  assert.match(appSource, /const \[companionCue,\s*setCompanionCue\] = useState\(null\);/);
-  assert.match(appSource, /function handleOpenCard\(card\) \{[\s\S]*?setOpenCard\(card\);[\s\S]*?setCompanionCue\(\{[\s\S]*?\.\.\.buildCardCompanionCue\(card\),[\s\S]*?id: makeCompanionCueId\(card\),[\s\S]*?\}\);[\s\S]*?\}/);
+test('keeps the operating story overview while restoring secondary KPI companion openings', () => {
+  assert.match(appSource, /import OperatingOverview from '\.\/components\/OperatingOverview';/);
+  assert.match(appSource, /<OperatingOverview searchTerm=\{searchTerm\} \/>/);
   assert.match(appSource, /<AIAnalysisWidget activeMenu=\{activeMenu\} dim=\{dim\} channelKey=\{activeChannelKey\} companionCue=\{companionCue\} \/>/);
-  assert.match(appSource, /<KpiCard[\s\S]*?card=\{card\}[\s\S]*?onOpen=\{handleOpenCard\}/);
+  assert.match(appSource, /buildCardCompanionCue/);
+  assert.match(appSource, /function handleOpenCard/);
+  assert.match(appSource, /<KpiCard card=\{card\} onOpen=\{handleOpenCard\} \/>/);
+  assert.doesNotMatch(appSource, /sidePanel=\{<ChannelPanel/);
 });
 
 test('places the AI mascot inside a subdued sidebar status card', () => {
@@ -879,42 +897,50 @@ test('places the AI mascot inside a subdued sidebar status card', () => {
   assert.match(aiAnalysisWidgetCss, /\.ai-card-wrap\s*\{[\s\S]*?left:\s*244px;/);
 });
 
-test('builds two long recovery cards that each include a sales completion panel', () => {
-  assert.match(appSource, /const recoveryKpiCards = filteredKpiCards\.filter\(\(card\) => \['month', 'year'\]\.includes\(card\.key\)\);/);
-  assert.match(appSource, /const financeKpiCards = filteredKpiCards\.filter\(\(card\) => card\.key === 'cost'\);/);
-  assert.match(dashboardCss, /\.dash-kpis\{\s*display:grid;grid-template-columns:minmax\(0,1fr\);grid-template-rows:repeat\(2,minmax\(326px,auto\)\);/);
-  assert.match(dashboardCss, /\.dash-kpi-item\[data-kpi-key="month"\]\{grid-column:1;grid-row:1\}/);
-  assert.match(dashboardCss, /\.dash-kpi-item\[data-kpi-key="year"\]\{grid-column:1;grid-row:2\}/);
-  assert.doesNotMatch(appSource, /function recoveryChannelTitle/);
-  assert.doesNotMatch(appSource, /function recoveryChannelVariant/);
-  assert.match(appSource, /recoveryKpiCards\.map\(\(card\) => \([\s\S]*?<KpiCard[\s\S]*?card=\{card\}[\s\S]*?onOpen=\{handleOpenCard\}[\s\S]*?sidePanel=\{<ChannelPanel channelKey=\{activeChannelKey\} title="渠道完成情况" \/>\}[\s\S]*?\/>/);
-  assert.doesNotMatch(appSource, /className="dash-kpi-sales"/);
-  assert.doesNotMatch(dashboardCss, /\.dash-kpi-sales/);
-  assert.doesNotMatch(dashboardCss, /\.dash-kpi-item\[data-kpi-key="cost"\]\{grid-column:2;grid-row:1\}/);
-  assert.doesNotMatch(dashboardCss, /\.dash-kpi-item\[data-kpi-key="renewal"\]\{grid-column:2;grid-row:2\}/);
+test('uses one fused operating story instead of duplicated monthly and yearly recovery cards', () => {
+  assert.match(operatingOverviewSource, /<h1>2026年6月经营进度<\/h1>/);
+  assert.match(operatingOverviewSource, /经营进度总览/);
+  assert.match(operatingOverviewSource, /本月回款/);
+  assert.match(operatingOverviewSource, /月度完成率/);
+  assert.match(operatingOverviewSource, /缺口/);
+  assert.match(operatingOverviewSource, /风险渠道/);
+  assert.match(operatingOverviewSource, /年度节奏/);
+  assert.match(operatingOverviewSource, /当前年度进度低于理想节奏，需重点关注线下华东回款恢复。/);
+  assert.match(operatingOverviewSource, /<ChannelPanel title="渠道完成情况" showPeriodSwitch \/>/);
+  assert.match(operatingOverviewCss, /\.op-overview/);
+  assert.match(operatingOverviewCss, /background:\s*var\(--dashboard-card-bg\);/);
+  assert.match(operatingOverviewCss, /border:\s*1px solid var\(--dashboard-card-border\);/);
+  assert.match(operatingOverviewCss, /backdrop-filter:\s*var\(--dashboard-card-blur\);/);
+  assert.match(operatingOverviewCss, /box-shadow:\s*var\(--dashboard-card-shadow\);/);
+  assert.doesNotMatch(appSource, /recoveryKpiCards/);
+  assert.doesNotMatch(appSource, /sidePanel=\{<ChannelPanel/);
+  assert.doesNotMatch(dashboardCss, /\.dash-kpis/);
 });
 
-test('moves opening metrics into the cost slot and cost into the former renewal slot', () => {
-  assert.match(appSource, /<div className="dash-cell dash-cell--finance-kpis" data-anim>/);
-  assert.match(appSource, /<div className="dash-finance-kpi-item dash-finance-kpi-item--openings" data-kpi-key="openings">[\s\S]*?<OpeningMetricCards searchTerm=\{searchTerm\} onOpenSecondary=\{handleOpenCard\} \/>[\s\S]*?<\/div>/);
+test('restores secondary dashboard panels below the operating overview story', () => {
+  assert.match(appSource, /<OperatingOverview searchTerm=\{searchTerm\} \/>/);
+  assert.match(appSource, /className="dash-secondary-grid"/);
+  assert.match(appSource, /<MonthlyTrend channelKey=\{activeChannelKey\} \/>/);
+  assert.match(appSource, /<OpeningMetricCards searchTerm=\{searchTerm\} onOpenSecondary=\{handleOpenCard\} \/>/);
+  assert.match(appSource, /<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);
+  assert.match(appSource, /<DeliveryPanel \/>/);
   assert.match(appSource, /financeKpiCards\.map\(\(card\) => \(/);
-  assert.match(appSource, /className="dash-finance-kpi-item"/);
-  assert.doesNotMatch(appSource, /\['cost', 'renewal'\]\.includes\(card\.key\)/);
-  assert.doesNotMatch(appSource, /data-kpi-key=\{card\.key\} key=\{card\.key\}[\s\S]*?card=\{card\}[\s\S]*?card\.key === 'renewal'/);
-  assert.match(dashboardCss, /grid-template-areas:\s*"trend finance"\s*"version version";/);
-  assert.match(dashboardCss, /\.dash-grid--overview \.dash-cell--finance-kpis\{grid-area:finance\}/);
-  assert.match(dashboardCss, /\.dash-finance-kpis\{[\s\S]*?display:grid;[\s\S]*?grid-template-rows:repeat\(2,minmax\(0,1fr\)\);[\s\S]*?gap:14px;/);
-  assert.match(dashboardCss, /\.dash-finance-kpi-item--openings \.opening-metric-cards\{[\s\S]*?height:100%;/);
+  assert.match(dashboardCss, /\.dash-secondary-grid/);
+  assert.match(dashboardCss, /\.dash-secondary-delivery/);
+  assert.doesNotMatch(appSource, /recoveryKpiCards/);
+  assert.doesNotMatch(dashboardCss, /\.dash-kpis/);
 });
 
 test('uses one-shot soft glow for search result highlighting instead of electric borders', () => {
-  assert.match(appSource, /import SearchResultBorder from '\.\/components\/SearchResultBorder';/);
-  assert.match(appSource, /import \{ matchesSearchTerm \} from '\.\/lib\/searchMatch';/);
+  assert.match(operatingOverviewSource, /import SearchResultBorder from '\.\/SearchResultBorder';/);
+  assert.match(operatingOverviewSource, /import \{ matchesSearchTerm \} from '\.\.\/lib\/searchMatch';/);
   assert.doesNotMatch(searchResultBorderSource, /ElectricBorder/);
   assert.doesNotMatch(searchResultBorderSource, /<canvas/);
   assert.doesNotMatch(appSource, /import HighlightBeam/);
   assert.doesNotMatch(appSource, /<HighlightBeam/);
-  assert.match(appSource, /<SearchResultBorder active=\{matchesSearchTerm\(card\.keywords,\s*searchTerm\)\}>/);
+  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(PROGRESS_KEYWORDS,\s*searchTerm\)\}>/);
+  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(ANNUAL_KEYWORDS,\s*searchTerm\)\}>/);
+  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(CHANNEL_KEYWORDS,\s*searchTerm\)\}>/);
   assert.match(searchResultBorderSource, /data-search-match="true"/);
   assert.match(searchResultBorderSource, /aria-label="搜索命中结果"/);
   assert.match(searchResultBorderSource, /className="search-result-border__content"/);
@@ -946,25 +972,27 @@ test('keeps the current search result highlight edge-only without full-card purp
   assert.doesNotMatch(computePageCss, /\.cpu-panel\[data-search-current="true"\][\s\S]*?box-shadow:[\s\S]*?rgba\(96,0,255/);
 });
 
-test('removes the overview channel ROI card and keeps delivery below the original overview grid', () => {
+test('removes the overview channel ROI card and replaces the original overview grid', () => {
   assert.doesNotMatch(appSource, /function ChannelRoiPanel/);
   assert.doesNotMatch(appSource, /dash-cell--roi/);
   assert.doesNotMatch(appSource, /panelVisible = \{[\s\S]*?roi:/);
+  assert.match(appSource, /<OperatingOverview searchTerm=\{searchTerm\} \/>/);
+  assert.match(appSource, /className="dash-secondary-delivery"/);
   assert.match(dashboardCss, /grid-template-areas:\s*"trend finance"\s*"version version";/);
-  assert.match(appSource, /className="dash-delivery-row"/);
   assert.doesNotMatch(dashboardCss, /grid-template-areas:[\s\S]*?"roi version"/);
 });
 
-test('routes every channel menu through the same overview layout with channel-scoped data', () => {
+test('routes overview through the fused operating layout while compute keeps scoped data', () => {
   assert.doesNotMatch(appSource, /TOKEN_STATS/);
   assert.doesNotMatch(appSource, /dash-token/);
   assert.doesNotMatch(appSource, /activeMenu === 'finance'/);
   assert.match(appSource, /const activeChannelKey = getDashboardChannelKey\(activeMenu\);/);
+  assert.match(appSource, /<OperatingOverview searchTerm=\{searchTerm\} \/>/);
+  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim=\{dim\} dateRange=\{dateRange\} \/>/);
   assert.match(appSource, /getFilteredKpiCards\(\{ dim, dateRange, channel: activeChannelKey \}\)/);
   assert.match(appSource, /<MonthlyTrend channelKey=\{activeChannelKey\} \/>/);
-  assert.match(appSource, /<ChannelPanel channelKey=\{activeChannelKey\} title="渠道完成情况" \/>/);
   assert.match(appSource, /<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);
-  assert.match(appSource, /className=\{gridClassName\}/);
+  assert.doesNotMatch(appSource, /className=\{gridClassName\}/);
 });
 
 test('scrolls the dashboard content into view when a sidebar menu item is selected', () => {
@@ -976,23 +1004,25 @@ test('scrolls the dashboard content into view when a sidebar menu item is select
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:92px;/);
 });
 
-test('uses channel completion wording and connects the delivery dashboard panel', () => {
+test('uses one channel completion panel with month and year switching', () => {
   assert.match(channelPanelSource, /渠道完成情况/);
-  assert.match(channelPanelSource, /export default function ChannelPanel\(\{ channelKey = 'all', title = '渠道完成情况' \}\)/);
+  assert.match(channelPanelSource, /import Segmented from '\.\/Segmented';/);
+  assert.match(channelPanelSource, /export default function ChannelPanel\(\{ channelKey = 'all', title = '渠道完成情况', showPeriodSwitch = false \}\)/);
+  assert.match(channelPanelSource, /const \[period,\s*setPeriod\] = useState\('month'\);/);
+  assert.match(channelPanelSource, /getChannelCompletionRows\(period, channelKey\)/);
+  assert.match(channelPanelSource, /<Segmented options=\{CHANNEL_PERIOD_OPTIONS\} value=\{period\} onChange=\{setPeriod\} \/>/);
   assert.match(channelPanelSource, /<span className="ch-title">\{title\}<\/span>/);
+  assert.match(channelPanelSource, /年度贡献/);
+  assert.match(channelPanelSource, /完成\/目标/);
   assert.doesNotMatch(channelPanelSource, /本月销售完成/);
   assert.match(channelPanelSource, /createPortal/);
   assert.match(channelPanelSource, /document\.body/);
-  assert.match(channelPanelSource, /fmtWan/);
+  assert.match(channelPanelSource, /formatChannelAmount/);
   assert.match(channelPanelSource, /fmtPct/);
   assert.match(channelPanelSource, /ch-row-arrow/);
   assert.match(channelPanelCss, /\.ch-row-arrow/);
-  assert.match(appSource, /import DeliveryPanel from '\.\/components\/DeliveryPanel';/);
-  assert.match(appSource, /<DeliveryPanel \/>/);
-  assert.match(dashboardCss, /dash-delivery-row/);
-  assert.match(appSource, /sidePanel=\{<ChannelPanel channelKey=\{activeChannelKey\} title="渠道完成情况" \/>\}/);
-  assert.match(appSource, /className="dash-cell dash-cell--finance-kpis"/);
-  assert.doesNotMatch(dashboardCss, /"version delivery"/);
+  assert.match(operatingOverviewSource, /<ChannelPanel title="渠道完成情况" showPeriodSwitch \/>/);
+  assert.doesNotMatch(appSource, /sidePanel=\{<ChannelPanel/);
 });
 
 test('removes the yearly risk forecast block so recovery cards stay on channel completion', () => {
@@ -1002,27 +1032,27 @@ test('removes the yearly risk forecast block so recovery cards stay on channel c
   assert.doesNotMatch(channelPanelSource, /预计全年完成率/);
   assert.doesNotMatch(channelPanelSource, /主要缺口/);
   assert.doesNotMatch(channelPanelSource, /追回所需月均增量/);
-  assert.match(channelPanelSource, /\{c\.warn && <span className="ch-tag">需关注<\/span>\}/);
+  assert.match(channelPanelSource, /\{c\.status === '需关注' && <span className="ch-tag">需关注<\/span>\}/);
   assert.doesNotMatch(channelPanelSource, /落后预警/);
   assert.doesNotMatch(channelPanelCss, /\.ch-forecast/);
 });
 
 test('matches overview cards to the neutral dark glass recipe', () => {
   const kpiCardBlock = cssRuleBody(kpiCardCss, '.kpi-card');
-  const trendPanelBlock = cssRuleBody(dashboardCss, '.dash-cell .mt-panel');
+  const operatingPanelBlock = cssRuleBody(operatingOverviewCss, '.op-panel');
   const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-panel');
   const channelPanelBlock = cssRuleBody(channelPanelCss, '.ch-panel');
   const versionPanelBlock = cssRuleBody(versionFinancePanelCss, '.vf-panel');
   const openingCardBlock = cssRuleBody(openingMetricCardsCss, '.opening-metric-card');
 
-  [kpiCardBlock, trendPanelBlock, deliveryPanelBlock, channelPanelBlock, versionPanelBlock, openingCardBlock].forEach((block) => {
+  [kpiCardBlock, operatingPanelBlock, deliveryPanelBlock, channelPanelBlock, versionPanelBlock, openingCardBlock].forEach((block) => {
     assert.match(block, /background:\s*var\(--dashboard-card-bg\);/);
     assert.match(block, /border:\s*1px solid var\(--dashboard-card-border\);/);
     assert.match(block, /backdrop-filter:\s*var\(--dashboard-card-blur\);/);
     assert.match(block, /box-shadow:\s*var\(--dashboard-card-shadow\);/);
   });
-  assert.doesNotMatch(trendPanelBlock, /#101012/);
-  assert.doesNotMatch(trendPanelBlock, /radial-gradient\(ellipse at 52% 94%/);
+  assert.doesNotMatch(operatingPanelBlock, /#101012/);
+  assert.doesNotMatch(operatingPanelBlock, /radial-gradient\(ellipse at 52% 94%/);
   assert.doesNotMatch(deliveryPanelBlock, /#101012/);
   assert.doesNotMatch(deliveryPanelBlock, /radial-gradient\(ellipse at 52% 94%/);
   assert.doesNotMatch(versionPanelBlock, /rgba\(201,194,255,\.055\)|linear-gradient\(120deg/);
@@ -1043,19 +1073,21 @@ test('keeps channel secondary detail modal on the unified focused glass backgrou
   assert.doesNotMatch(channelModalBlock, /radial-gradient\(circle at 4% 86%, rgba\(96, 0, 255/);
 });
 
-test('keeps overview trend and delivery panels free of hover flow borders', () => {
-  const trendPanelBlock = cssRuleBody(dashboardCss, '.dash-cell .mt-panel');
+test('keeps operating overview panels free of hover flow borders', () => {
+  const operatingPanelBlock = cssRuleBody(operatingOverviewCss, '.op-panel');
   const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-panel');
 
   assert.doesNotMatch(dashboardCss, /@property --dash-flow-angle/);
-  assert.doesNotMatch(dashboardCss, /\.dash-cell \.mt-panel::before/);
-  assert.doesNotMatch(dashboardCss, /\.dash-delivery-row \.dlv-panel::before/);
+  assert.doesNotMatch(dashboardCss, /\.dash-secondary-cell \.mt-panel::before/);
+  assert.doesNotMatch(dashboardCss, /\.dash-secondary-delivery \.dlv-panel::before/);
+  assert.doesNotMatch(operatingOverviewCss, /@property --dash-flow-angle/);
+  assert.doesNotMatch(operatingOverviewCss, /conic-gradient\(\s*from var\(--dash-flow-angle\)/);
   assert.doesNotMatch(dashboardCss, /dashPanelFlow/);
   assert.doesNotMatch(dashboardCss, /conic-gradient\(\s*from var\(--dash-flow-angle\)/);
   assert.doesNotMatch(dashboardCss, /rgba\(244,114,182/);
   assert.doesNotMatch(dashboardCss, /rgba\(192,132,252/);
-  assert.match(dashboardCss, /\.dash-delivery-row \.dlv-panel\{[\s\S]*?transition:border-color \.22s ease, box-shadow \.22s ease;/);
-  assert.match(trendPanelBlock, /background:\s*var\(--dashboard-card-bg\);/);
+  assert.match(dashboardCss, /\.dash-secondary-delivery \.dlv-panel\{[\s\S]*?transition:border-color \.22s ease, box-shadow \.22s ease;/);
+  assert.match(operatingPanelBlock, /background:\s*var\(--dashboard-card-bg\);/);
   assert.match(deliveryPanelBlock, /background:\s*var\(--dashboard-card-bg\);/);
 });
 

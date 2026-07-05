@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 渠道进度条首屏直接显示真实宽度，避免加载截图或快速查看时停留在动画起点。 */
+/* 更新时间: 2026-07-05 18:20:00 CST  更新内容: 渠道完成情况改为单一列表并增加本月/年度切换与年度贡献列。 */
 /* 更新时间: 2026-07-05 16:12:00 CST  更新内容: 移除年度风险预测变体，回款侧栏统一回到渠道完成情况。 */
 /* 更新时间: 2026-07-03 17:51:36 CST  更新内容: 四区域渠道进度条统一紫色时同步移除 warning fill class，避免低于 80% 残留红色外发光。 */
 /* 更新时间: 2026-07-03 17:50:36 CST  更新内容: 四区域渠道完成进度条回退为统一主题紫色渐变，不再按饼图分色或低于 80% 切红。 */
@@ -5,41 +7,55 @@
 /* 更新时间: 2026-07-03 13:05:00 CST  更新内容: 渠道面板进度条 fill 改用 progressGradient 返回的低饱和冷色线性渐变，匹配全局冰蓝/粉紫主题。 */
 /* 更新时间: 2026-07-02 16:52:00 CST  更新内容: 渠道面板行箭头和弹窗关闭按钮改用统一 AppIcon 线性图标。 */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import AppIcon from './AppIcon';
-import { getSalesCompletionRows, getSalesMemberRows } from '../data/mock';
+import Segmented from './Segmented';
+import { getChannelCompletionRows, getSalesMemberRows } from '../data/mock';
 import { fmtPct, fmtWan, progressGradient } from '../lib/format';
 import { channelCompletionBarBackground, shouldUseChannelCompletionWarnFill } from '../lib/channelCompletionBar';
 import { useThemeTokens } from '../lib/theme';
 import './ChannelPanel.css';
 
-export default function ChannelPanel({ channelKey = 'all', title = '渠道完成情况' }) {
-  // 挂载后再写入进度条宽度，触发 CSS width 过渡填充动画
+const CHANNEL_PERIOD_OPTIONS = [
+  { value: 'month', label: '本月' },
+  { value: 'year', label: '年度' },
+];
+
+function formatChannelAmount(value) {
+  return Number(value).toLocaleString('zh-CN');
+}
+
+export default function ChannelPanel({ channelKey = 'all', title = '渠道完成情况', showPeriodSwitch = false }) {
   const tokens = useThemeTokens();
-  const [filled, setFilled] = useState(false);
+  const [period, setPeriod] = useState('month');
   const [openKey, setOpenKey] = useState(null);
-  const rows = getSalesCompletionRows(channelKey);
+  const rows = getChannelCompletionRows(period, channelKey);
   const openRow = rows.find((row) => row.key === openKey);
   const members = openKey ? getSalesMemberRows(openKey) : [];
-
-  useEffect(() => {
-    setFilled(false);
-    const id = requestAnimationFrame(() => setFilled(true));
-    return () => cancelAnimationFrame(id);
-  }, [channelKey]);
 
   return (
     <section className="ch-panel">
       <header className="ch-head">
-        <span className="ch-title">{title}</span>
-        <span className="ch-head-sub">单位：万元</span>
+        <div className="ch-head-copy">
+          <span className="ch-title">{title}</span>
+          <span className="ch-head-sub">单位：万元</span>
+        </div>
+        {showPeriodSwitch && <Segmented options={CHANNEL_PERIOD_OPTIONS} value={period} onChange={setPeriod} />}
       </header>
+
+      <div className="ch-table-head" aria-hidden="true">
+        <span>渠道</span>
+        <span>本月进度</span>
+        <span>完成/目标</span>
+        <span>年度贡献</span>
+        <span>状态</span>
+      </div>
 
       <div className="ch-list">
         {rows.map((c, i) => {
           const pct = c.completion;
-          const barW = filled ? `${Math.min(pct, 100)}%` : '0%';
+          const barW = `${Math.min(pct, 100)}%`;
           return (
             <button
               type="button"
@@ -50,13 +66,8 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
               <div className="ch-row-top">
                 <div className="ch-name-wrap">
                   <span className="ch-name">{c.name}</span>
-                  {c.warn && <span className="ch-tag">需关注</span>}
+                  {c.status === '需关注' && <span className="ch-tag">需关注</span>}
                 </div>
-                <span className="ch-amount">
-                  <b>{fmtWan(c.recovered)}</b>
-                  <span className="ch-sep">/</span>
-                  目标 {fmtWan(c.target)}
-                </span>
               </div>
 
               <div className="ch-bar-row">
@@ -72,6 +83,13 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
                 </div>
                 <span className="ch-pct">{fmtPct(pct)}</span>
               </div>
+              <span className="ch-amount">
+                <b>{formatChannelAmount(c.recovered)}</b>
+                <span className="ch-sep">/</span>
+                {formatChannelAmount(c.target)}
+              </span>
+              <span className="ch-contribution">{fmtPct(c.annualContribution)}</span>
+              <span className={`ch-status${c.status === '需关注' ? ' ch-status--warn' : ''}`}>{c.status}</span>
               <AppIcon name="chevronRight" className="ch-row-arrow" size={13} />
             </button>
           );

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 18:20:00 CST
+ 更新内容: 首页搜索关键词切换为经营进度总览、年度节奏和唯一渠道完成情况。
+*/
+/*
  更新时间: 2026-07-05 16:12:00 CST
  更新内容: 首页搜索关键词移除年度风险预测旧文案，回款区域统一渠道完成情况。
 */
@@ -226,8 +230,8 @@ function withVisibleKeywords(baseKeywords, ...visibleTerms) {
 }
 
 function recoverySectionKeywords(cardKey) {
-  if (cardKey === 'year') return ['本年', '本年目标完成情况', '渠道完成情况'];
-  if (cardKey === 'month') return ['本月', '本月目标完成情况', '渠道完成情况'];
+  if (cardKey === 'year') return ['年度节奏', '年度累计', '年度目标', '年度缺口', '渠道完成情况'];
+  if (cardKey === 'month') return ['经营进度总览', '2026年6月经营进度', '本月回款', '月度完成率', '风险渠道', '渠道完成情况'];
   return [];
 }
 

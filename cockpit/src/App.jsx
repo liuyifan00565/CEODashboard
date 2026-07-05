@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-05 18:46:00 CST
+ 更新内容: 在经营总览三段融合故事流下方恢复月度趋势、开户投入、版本情况和交付面板，并保留 KPI 下钻联动。
+*/
+/*
+ 更新时间: 2026-07-05 18:20:00 CST
+ 更新内容: 经营总览首页切换为经营进度总览、年度节奏、渠道完成情况三段融合结构，并将顶部按钮改为更新数据。
+*/
+/*
  更新时间: 2026-07-05 16:12:00 CST
  更新内容: 首页恢复图文管理侧栏与顶部福客品牌胶囊，并移除年度风险预测侧栏变体。
 */
@@ -110,12 +118,12 @@ import MetallicPaint from './components/MetallicPaint/MetallicPaint';
 import KpiCard from './components/KpiCard';
 import KpiModal from './components/KpiModal';
 import MonthlyTrend from './components/MonthlyTrend';
-import ChannelPanel from './components/ChannelPanel';
 import VersionFinancePanel from './components/VersionFinancePanel';
 import DeliveryPanel from './components/DeliveryPanel';
 import ComputeUsagePage from './components/ComputeUsagePage';
 import OpeningMetricCards from './components/OpeningMetricCards';
 import MaintenancePage from './components/MaintenancePage';
+import OperatingOverview from './components/OperatingOverview';
 
 import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
@@ -135,10 +143,8 @@ const DASHBOARD_SIDEBAR_ITEMS = [
 
 const MAINTENANCE_SIDEBAR_ITEMS = MAINTENANCE_MENU.map((item) => ({ ...item, section: '系统' }));
 
-// 各主体面板的搜索关键字
 const PANEL_KEYWORDS = {
   trend: ['趋势', '月度', '回款', '目标', '完成率'],
-  sales: ['销售', '线上', '线下', '代理', '战区', '华南', '华东'],
   version: ['版本', '启航', '卓越', '至尊', '财务', '健康', '应收', '广告', '缺口', '续费'],
   delivery: ['交付', '实施', '配置', '知识库', '人效'],
 };
@@ -164,7 +170,6 @@ export default function App() {
   const pendingSearchScrollRef = useRef(false);
   const isMaintenancePage = maintenanceMode;
   const isComputePage = activeMenu === 'compute';
-  const showOpeningMetrics = activeMenu === 'overview';
   const activeChannelKey = getDashboardChannelKey(activeMenu);
   const activeMenuLabel = getDashboardMenuLabel(activeMenu);
   const activeContextLabel = maintenanceMode
@@ -173,14 +178,10 @@ export default function App() {
   const sidebarItems = maintenanceMode ? MAINTENANCE_SIDEBAR_ITEMS : DASHBOARD_SIDEBAR_ITEMS;
   const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const contentKey = maintenanceMode ? activeMaintenanceMenu : activeMenu;
-  const gridClassName = activeMenu === 'overview'
-    ? 'dash-grid dash-grid--overview'
-    : `dash-grid dash-grid--overview dash-grid--${activeMenu}`;
   const filteredKpiCards = useMemo(
     () => getFilteredKpiCards({ dim, dateRange, channel: activeChannelKey }),
     [dim, dateRange, activeChannelKey]
   );
-  const recoveryKpiCards = filteredKpiCards.filter((card) => ['month', 'year'].includes(card.key));
   const financeKpiCards = filteredKpiCards.filter((card) => card.key === 'cost');
   const openCardData = useMemo(
     () => filteredKpiCards.find((card) => card.key === openCard?.key) ?? openCard ?? null,
@@ -358,7 +359,7 @@ export default function App() {
                 </span>
                 <div className="brand-copy">
                   <b>福客经营驾驶舱</b>
-                  <small>{META.monthLabel} | {activeContextLabel}</small>
+                  <small>{META.monthLabel} / {activeContextLabel}</small>
                 </div>
               </div>
             </GlassSurface>
@@ -380,7 +381,7 @@ export default function App() {
                   onClick={handleMaintenanceModeToggle}
                   aria-pressed={maintenanceMode}
                 >
-                  <span>{maintenanceMode ? '返回主界面' : '数据维护'}</span>
+                  <span>{maintenanceMode ? '返回主界面' : '更新数据'}</span>
                 </button>
               </GlassSurface>
               <ExpandableSearch
@@ -399,33 +400,20 @@ export default function App() {
               <ComputeUsagePage searchTerm={searchTerm} dim={dim} dateRange={dateRange} />
             ) : (
               <>
-                <div className="dash-kpis">
-                  {recoveryKpiCards.map((card) => (
-                    <div className="dash-kpi-item" data-anim data-kpi-key={card.key} key={card.key}>
-                      <SearchResultBorder active={matchesSearchTerm(card.keywords, searchTerm)}>
-                        <KpiCard
-                          card={card}
-                          onOpen={handleOpenCard}
-                          sidePanel={<ChannelPanel channelKey={activeChannelKey} title="渠道完成情况" />}
-                        />
-                      </SearchResultBorder>
-                    </div>
-                  ))}
-                </div>
+                <OperatingOverview searchTerm={searchTerm} />
 
-                <div className={gridClassName}>
-                  <div className="dash-cell dash-cell--trend" data-anim>
+                <div className="dash-secondary-grid">
+                  <div className="dash-secondary-cell dash-secondary-cell--trend" data-anim>
                     <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.trend, searchTerm)}>
                       <MonthlyTrend channelKey={activeChannelKey} />
                     </SearchResultBorder>
                   </div>
-                  <div className="dash-cell dash-cell--finance-kpis" data-anim>
+
+                  <div className="dash-secondary-cell dash-secondary-cell--finance" data-anim>
                     <div className="dash-finance-kpis">
-                      {showOpeningMetrics && (
-                        <div className="dash-finance-kpi-item dash-finance-kpi-item--openings" data-kpi-key="openings">
-                          <OpeningMetricCards searchTerm={searchTerm} onOpenSecondary={handleOpenCard} />
-                        </div>
-                      )}
+                      <div className="dash-finance-kpi-item dash-finance-kpi-item--openings" data-kpi-key="openings">
+                        <OpeningMetricCards searchTerm={searchTerm} onOpenSecondary={handleOpenCard} />
+                      </div>
                       {financeKpiCards.map((card) => (
                         <div className="dash-finance-kpi-item" data-kpi-key={card.key} key={card.key}>
                           <SearchResultBorder active={matchesSearchTerm(card.keywords, searchTerm)}>
@@ -435,14 +423,15 @@ export default function App() {
                       ))}
                     </div>
                   </div>
-                  <div className="dash-cell dash-cell--version" data-anim>
+
+                  <div className="dash-secondary-cell dash-secondary-cell--version" data-anim>
                     <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.version, searchTerm)}>
                       <VersionFinancePanel channelKey={activeChannelKey} />
                     </SearchResultBorder>
                   </div>
                 </div>
 
-                <div className="dash-delivery-row" data-anim>
+                <div className="dash-secondary-delivery" data-anim>
                   <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.delivery, searchTerm)}>
                     <DeliveryPanel />
                   </SearchResultBorder>

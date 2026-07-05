@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 18:20:00 CST
+ 更新内容: 搜索关键词回归测试改为经营进度总览、年度节奏和唯一渠道完成情况。
+*/
+/*
  更新时间: 2026-07-05 16:12:00 CST
  更新内容: KPI 搜索关键词回归测试移除年度风险预测旧文案并保留渠道完成情况。
 */
@@ -83,13 +87,19 @@ test('adds visible card text to KPI search keywords so total investment can be l
   assert.ok(cost.keywords.some((keyword) => String(keyword).includes('总投入 156 万')));
 });
 
-test('adds homepage annual section text to KPI search keywords so current year can be located', () => {
+test('adds fused operating overview section text to KPI search keywords', () => {
   const cards = getFilteredKpiCards({ dim: 'month', dateRange: ['2026-06-01', '2026-06-30'] });
+  const month = byKey(cards, 'month');
   const annual = byKey(cards, 'year');
 
-  assert.ok(annual.keywords.includes('本年'));
-  assert.ok(annual.keywords.includes('本年目标完成情况'));
+  assert.ok(month.keywords.includes('经营进度总览'));
+  assert.ok(month.keywords.includes('2026年6月经营进度'));
+  assert.ok(month.keywords.includes('风险渠道'));
+  assert.ok(!month.keywords.includes('本月目标完成情况'));
+  assert.ok(annual.keywords.includes('年度节奏'));
+  assert.ok(annual.keywords.includes('年度累计'));
   assert.ok(annual.keywords.includes('渠道完成情况'));
+  assert.ok(!annual.keywords.includes('本年目标完成情况'));
   assert.ok(!annual.keywords.includes('年度风险预测'));
 });
 

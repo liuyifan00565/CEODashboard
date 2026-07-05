@@ -1,4 +1,16 @@
 /*
+ 更新时间: 2026-07-05 18:46:00 CST
+ 更新内容: 恢复经营总览下方月度趋势、开户投入、版本情况和交付面板布局，保留融合总览首屏结构。
+*/
+/*
+ 更新时间: 2026-07-05 18:32:00 CST
+ 更新内容: 收紧移动端顶栏与主内容宽度，避免经营总览三段布局在窄屏产生横向溢出。
+*/
+/*
+ 更新时间: 2026-07-05 18:20:00 CST
+ 更新内容: 移除旧首页 KPI/趋势/版本/交付网格样式，保留搜索命中边框供经营总览三段布局复用。
+*/
+/*
  更新时间: 2026-07-05 16:12:00 CST
  更新内容: 首页壳层恢复 220px 图文管理侧栏与顶部福客品牌胶囊，并保留工具区右对齐。
 */
@@ -147,16 +159,81 @@
   scroll-margin-top:92px;
 }
 
-/* ===== KPI 区：两张回款 + 销售完成组合长卡 ===== */
-.dash-kpis{
-  display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(2,minmax(326px,auto));gap:14px;flex:none;
+/* ===== 经营总览下方业务拆解 ===== */
+.dash-secondary-grid{
+  flex:1;min-height:0;display:grid;gap:16px;
+  grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);
+  grid-template-rows:minmax(326px,1fr) minmax(326px,342px);
+  grid-template-areas:
+    "trend finance"
+    "version version";
 }
-.dash-kpi-item{min-width:0}
-.dash-kpi-item[data-kpi-key="month"]{grid-column:1;grid-row:1}
-.dash-kpi-item[data-kpi-key="year"]{grid-column:1;grid-row:2}
-.dash-kpi-item .search-result-border,
-.dash-kpi-item .search-result-border .search-result-border__content,
-.dash-kpi-item .kpi-card{height:100%}
+.dash-secondary-cell{min-width:0;min-height:0}
+.dash-secondary-cell--trend{grid-area:trend}
+.dash-secondary-cell--finance{grid-area:finance}
+.dash-secondary-cell--version{grid-area:version}
+.dash-secondary-cell .search-result-border,
+.dash-secondary-cell .search-result-border .search-result-border__content{height:100%}
+.dash-secondary-cell .mt-panel,
+.dash-secondary-cell .vf-panel{height:100%}
+
+.dash-finance-kpis{
+  height:100%;min-height:0;display:grid;grid-template-rows:repeat(2,minmax(0,1fr));gap:14px;
+}
+.dash-finance-kpi-item{min-width:0;min-height:0}
+.dash-finance-kpi-item .search-result-border,
+.dash-finance-kpi-item .search-result-border .search-result-border__content,
+.dash-finance-kpi-item .kpi-card{height:100%}
+.dash-finance-kpi-item--openings .opening-metric-cards{
+  height:100%;
+}
+.dash-finance-kpi-item--openings .opening-metric-card{
+  min-height:0;
+  height:100%;
+}
+
+.dash-secondary-delivery{
+  flex:none;
+}
+.dash-secondary-delivery .search-result-border,
+.dash-secondary-delivery .search-result-border .search-result-border__content{height:100%}
+
+.dash-secondary-delivery .dlv-panel{
+  isolation:isolate;
+  transition:border-color .22s ease, box-shadow .22s ease;
+}
+
+.dash-secondary-cell .mt-panel{
+  position:relative;
+  isolation:isolate;
+  display:flex;
+  flex-direction:column;
+  background: var(--dashboard-card-bg);
+  border: 1px solid var(--dashboard-card-border);
+  backdrop-filter: var(--dashboard-card-blur);
+  -webkit-backdrop-filter: var(--dashboard-card-blur);
+  box-shadow: var(--dashboard-card-shadow);
+  overflow:hidden;
+  transition:border-color .22s ease, box-shadow .22s ease;
+}
+.dash-secondary-cell .mt-panel > *,
+.dash-secondary-delivery .dlv-panel > *{
+  position:relative;
+  z-index:1;
+}
+.dash-secondary-cell .mt-panel:hover,
+.dash-secondary-cell .mt-panel:focus-within,
+.dash-secondary-delivery .dlv-panel:hover,
+.dash-secondary-delivery .dlv-panel:focus-within{
+  border-color:rgba(255,255,255,.34);
+  box-shadow:var(--glass-shadow);
+}
+.dash-secondary-cell .mt-title{font-size:16px;color:var(--txt)}
+.dash-secondary-cell .mt-sub{font-size:14px;color:var(--txt)}
+.dash-secondary-cell .mt-chart{flex:1;min-height:0}
+.dash-secondary-cell .mt-chart > div{height:100%!important;min-height:180px}
+
+/* ===== 搜索命中边框 ===== */
 .search-result-border{
   position:relative;
   width:100%;
@@ -211,95 +288,6 @@
   100%{opacity:0}
 }
 
-/* ===== 主体 grid ===== */
-.dash-grid{
-  flex:1;min-height:0;display:grid;gap:16px;
-}
-/* 总览：趋势与费比续费 KPI 在首行，版本情况横跨底部整行 */
-.dash-grid--overview{
-  grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);
-  grid-template-rows:minmax(326px,1fr) minmax(326px,342px);
-  grid-template-areas:
-    "trend finance"
-    "version version";
-}
-.dash-grid--overview .dash-cell--trend{grid-area:trend}
-.dash-grid--overview .dash-cell--finance-kpis{grid-area:finance}
-.dash-grid--overview .dash-cell--version{grid-area:version}
-
-/* 销售分析：单面板铺满 */
-.dash-grid--channel,
-.dash-grid--finance{
-  grid-template-columns:minmax(0,1fr);
-  grid-template-rows:1fr;
-}
-
-.dash-cell{min-width:0;min-height:0}
-/* 让玻璃面板撑满网格单元 */
-.dash-cell .search-result-border,
-.dash-cell .search-result-border .search-result-border__content{height:100%}
-.dash-cell .mt-panel,
-.dash-cell .vf-panel{height:100%}
-
-.dash-finance-kpis{
-  height:100%;min-height:0;display:grid;grid-template-rows:repeat(2,minmax(0,1fr));gap:14px;
-}
-.dash-finance-kpi-item{min-width:0;min-height:0}
-.dash-finance-kpi-item .search-result-border,
-.dash-finance-kpi-item .search-result-border .search-result-border__content,
-.dash-finance-kpi-item .kpi-card{height:100%}
-.dash-finance-kpi-item--openings .opening-metric-cards{
-  height:100%;
-}
-.dash-finance-kpi-item--openings .opening-metric-card{
-  min-height:0;
-  height:100%;
-}
-
-.dash-delivery-row{
-  flex:none;
-}
-.dash-delivery-row .search-result-border,
-.dash-delivery-row .search-result-border .search-result-border__content{height:100%}
-
-.dash-delivery-row .dlv-panel{
-  isolation:isolate;
-  transition:border-color .22s ease, box-shadow .22s ease;
-}
-
-.dash-cell .mt-panel{
-  position:relative;
-  isolation:isolate;
-  display:flex;
-  flex-direction:column;
-  background: var(--dashboard-card-bg);
-  border: 1px solid var(--dashboard-card-border);
-  backdrop-filter: var(--dashboard-card-blur);
-  -webkit-backdrop-filter: var(--dashboard-card-blur);
-  box-shadow: var(--dashboard-card-shadow);
-  overflow:hidden;
-  transition:border-color .22s ease, box-shadow .22s ease;
-}
-.dash-cell .mt-panel > *,
-.dash-delivery-row .dlv-panel > *{
-  position:relative;
-  z-index:1;
-}
-.dash-cell .mt-panel:hover,
-.dash-cell .mt-panel:focus-within,
-.dash-delivery-row .dlv-panel:hover,
-.dash-delivery-row .dlv-panel:focus-within{
-  border-color:rgba(255,255,255,.34);
-  box-shadow:var(--glass-shadow);
-}
-.dash-cell .mt-title{font-size:16px;color:var(--txt)}
-.dash-cell .mt-sub{font-size:14px;color:var(--txt)}
-.dash-cell .mt-chart{flex:1;min-height:0}
-.dash-cell .mt-chart > div{height:100%!important;min-height:180px}
-
-/* 聚焦面板（单独视图时居中收窄，避免过宽失衡） */
-.dash-cell--focus{max-width:1080px;width:100%;margin:0 auto}
-
 /* ===== Token 简版面板 ===== */
 .dash-token{
   flex:1;min-height:0;display:flex;flex-direction:column;gap:18px;
@@ -326,23 +314,22 @@
 
 /* ===== 窄屏降级 ===== */
 @media (max-width:1180px){
-  .dash-grid--overview{
+  .dash-secondary-grid{
     grid-template-columns:1fr;
     grid-template-rows:auto auto auto;
     grid-template-areas:"trend" "finance" "version";
   }
-  .dash-kpis{grid-template-columns:1fr;grid-template-rows:auto auto}
-  .dash-kpi-item[data-kpi-key="month"],
-  .dash-kpi-item[data-kpi-key="year"]{grid-column:1 / -1;grid-row:auto}
   .dash-finance-kpis{grid-template-columns:1fr;grid-template-rows:auto auto}
 }
 @media (max-width:760px){
   .dash-shell{flex-direction:column}
   .dash-aside{position:static;width:100%;height:auto;min-height:0}
-  .dash-topbar .brand-glass{flex-basis:min(328px,100%);min-width:0}
-  .dash-kpis{grid-template-columns:1fr}
-  .dash-kpi-item[data-kpi-key]{grid-column:1;grid-row:auto}
-  .dash-finance-kpis{grid-template-columns:1fr;grid-template-rows:auto auto}
+  .dash-main{padding:0 12px 20px}
+  .dash-content{width:100%;max-width:100%;overflow-x:hidden}
+  .dash-topbar{margin:0 -12px;padding:14px 12px 18px}
+  .dash-topbar .brand-glass{flex:1 1 100%;min-width:0;max-width:100%}
+  .dash-tools{flex:1 1 100%;width:100%;max-width:100%;margin-left:0;justify-content:flex-end}
+  .dash-tools .maintenance-glass{max-width:126px}
   .dash-token-grid{grid-template-columns:1fr}
 }
 

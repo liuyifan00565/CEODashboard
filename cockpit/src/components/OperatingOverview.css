@@ -1,0 +1,302 @@
+/* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 优化经营总览移动端换行和主进度标题宽度，避免窄屏文字截断。 */
+/* 更新时间: 2026-07-05 18:20:00 CST  更新内容: 新增经营总览三段融合页样式，复用统一深色玻璃体系并降低发光和重复图表。 */
+.op-overview {
+  width: 100%;
+  max-width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.06fr) minmax(360px, .94fr);
+  grid-template-areas:
+    "progress progress"
+    "annual channel";
+  gap: 16px;
+}
+
+.op-panel {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--dashboard-card-bg);
+  border: 1px solid var(--dashboard-card-border);
+  -webkit-backdrop-filter: var(--dashboard-card-blur);
+  backdrop-filter: var(--dashboard-card-blur);
+  box-shadow: var(--dashboard-card-shadow);
+}
+
+.op-channel-wrap .ch-panel {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--dashboard-card-bg);
+  border: 1px solid var(--dashboard-card-border);
+  -webkit-backdrop-filter: var(--dashboard-card-blur);
+  backdrop-filter: var(--dashboard-card-blur);
+  box-shadow: var(--dashboard-card-shadow);
+}
+
+.op-panel {
+  padding: clamp(18px, 2vw, 26px);
+}
+
+.op-panel--progress {
+  grid-area: progress;
+  display: grid;
+  grid-template-columns: minmax(230px, .95fr) minmax(280px, 1fr) minmax(230px, .82fr);
+  align-items: center;
+  gap: clamp(20px, 3vw, 42px);
+}
+
+.op-panel--annual {
+  grid-area: annual;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.op-channel-wrap {
+  grid-area: channel;
+  min-width: 0;
+}
+
+.op-channel-wrap,
+.op-channel-wrap .ch-panel {
+  height: 100%;
+}
+
+.op-channel-wrap .ch-panel {
+  padding: 20px 22px 22px;
+}
+
+.op-eyebrow,
+.op-section-meta,
+.op-subtle,
+.op-hero-label,
+.op-risk-card span,
+.op-metric span {
+  color: var(--faint);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.op-eyebrow {
+  display: inline-flex;
+  margin-bottom: 8px;
+  color: rgba(247,248,252,.66);
+}
+
+.op-progress-copy h1,
+.op-section-head h2 {
+  margin: 0;
+  color: var(--txt);
+  letter-spacing: 0;
+}
+
+.op-progress-copy h1 {
+  font-size: clamp(24px, 2.4vw, 36px);
+  font-weight: 760;
+  line-height: 1.08;
+}
+
+.op-section-head h2 {
+  font-size: 18px;
+  font-weight: 720;
+  line-height: 1.18;
+}
+
+.op-hero-number {
+  margin-top: 20px;
+  color: var(--txt);
+  font-size: clamp(56px, 6vw, 86px);
+  font-weight: 820;
+  line-height: .96;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.op-hero-label {
+  display: block;
+  margin-top: 10px;
+  color: rgba(247,248,252,.78);
+  font-size: 15px;
+}
+
+.op-subtle {
+  display: block;
+  margin-top: 7px;
+}
+
+.op-progress-rate {
+  display: grid;
+  gap: 12px;
+}
+
+.op-rate-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.op-rate-head span {
+  color: rgba(247,248,252,.72);
+  font-size: 15px;
+  font-weight: 680;
+}
+
+.op-rate-head b {
+  margin-left: auto;
+  color: var(--txt);
+  font-size: clamp(34px, 4vw, 54px);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.op-progress-track {
+  position: relative;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--bar-track);
+  overflow: hidden;
+}
+
+.op-progress-track span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--bar-good);
+  box-shadow: var(--bar-good-glow);
+}
+
+.op-risk-stack {
+  display: grid;
+  gap: 18px;
+  border-left: 1px solid var(--line-2);
+  padding-left: clamp(18px, 2vw, 28px);
+}
+
+.op-risk-card {
+  display: grid;
+  gap: 6px;
+}
+
+.op-risk-card b {
+  color: var(--txt);
+  font-size: clamp(24px, 2.4vw, 34px);
+  font-weight: 780;
+  line-height: 1.06;
+  font-variant-numeric: tabular-nums;
+}
+
+.op-risk-card--warn b,
+.op-risk-card--warn em {
+  color: var(--warn);
+}
+
+.op-risk-card em {
+  font-style: normal;
+  font-size: .78em;
+}
+
+.op-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.op-section-meta {
+  padding-top: 2px;
+  white-space: nowrap;
+}
+
+.op-annual-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.op-metric {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.op-metric b {
+  color: var(--txt);
+  font-size: clamp(19px, 1.7vw, 26px);
+  font-weight: 760;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.op-annual-chart {
+  min-height: 170px;
+}
+
+.op-judgement {
+  margin: 0;
+  padding-top: 2px;
+  color: rgba(247,248,252,.78);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+@media (max-width: 1180px) {
+  .op-overview {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "progress"
+      "annual"
+      "channel";
+  }
+}
+
+@media (max-width: 860px) {
+  .op-panel--progress {
+    grid-template-columns: 1fr;
+  }
+
+  .op-risk-stack {
+    border-left: 0;
+    border-top: 1px solid var(--line-2);
+    padding-left: 0;
+    padding-top: 18px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .op-annual-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .op-panel {
+    padding: 16px;
+  }
+
+  .op-rate-head {
+    gap: 8px 14px;
+  }
+
+  .op-rate-head b {
+    font-size: 40px;
+  }
+
+  .op-risk-stack,
+  .op-annual-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .op-section-head {
+    flex-direction: column;
+  }
+
+  .op-section-meta {
+    white-space: normal;
+  }
+}

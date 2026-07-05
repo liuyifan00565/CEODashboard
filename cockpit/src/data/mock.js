@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 18:20:00 CST
+ 更新内容: 增加经营总览融合页的渠道完成本月/年度行和年度节奏轻量点位数据。
+*/
+/*
  更新时间: 2026-07-05 15:29:01 CST
  更新内容: 演示图表风险色同步低饱和玫瑰色，减少红色报错感。
 */
@@ -165,6 +169,45 @@ export function getSalesCompletionRows() {
       warn: target ? recovered / target < 0.8 : false,
     });
   }));
+}
+
+export function getChannelCompletionRows(period = 'month', channelKey = 'all') {
+  const safePeriod = period === 'year' ? 'year' : 'month';
+  const selectedChannel = findChannel(channelKey);
+  const sourceGroups = selectedChannel
+    ? SALES_GROUPS.filter((group) => group.salesKeys.includes(selectedChannel.key))
+    : SALES_GROUPS;
+  const monthRecoveredTotal = KPI.monthRecovered || 1;
+  const monthTargetTotal = KPI.monthTarget || 1;
+  const periodRecoveredTotal = safePeriod === 'year' ? KPI.yearRecovered : KPI.monthRecovered;
+
+  const rows = sourceGroups.map((group) => {
+    const monthRecovered = group.salesKeys.reduce((sum, key) => sum + (findChannel(key)?.recovered ?? 0), 0);
+    const monthTarget = group.salesKeys.reduce((sum, key) => sum + (findChannel(key)?.target ?? 0), 0);
+    const recovered = safePeriod === 'year'
+      ? Math.round(KPI.yearRecovered * (monthRecovered / monthRecoveredTotal))
+      : monthRecovered;
+    const target = safePeriod === 'year'
+      ? Math.round(KPI.yearTarget * (monthTarget / monthTargetTotal))
+      : monthTarget;
+    const warn = group.salesKeys.some((key) => Boolean(findChannel(key)?.warn));
+
+    return withCompletion({
+      key: group.key,
+      name: group.name,
+      period: safePeriod,
+      target,
+      recovered,
+      annualContribution: periodRecoveredTotal ? +((recovered / periodRecoveredTotal) * 100).toFixed(1) : 0,
+      status: warn ? '需关注' : '正常',
+      warn,
+    });
+  });
+
+  const normalRows = rows.filter((row) => !row.warn).sort((a, b) => b.completion - a.completion);
+  const warnRows = rows.filter((row) => row.warn).sort((a, b) => b.completion - a.completion);
+
+  return [...normalRows, ...warnRows];
 }
 
 export function getSalesMemberRows(groupKey = 'online') {
@@ -733,6 +776,18 @@ export function getChannelTrend(channelKey = 'all') {
       completion: target ? +((recovered / target) * 100).toFixed(1) : 0,
     };
   });
+}
+
+export function getAnnualRhythmPoints() {
+  const firstMonth = MONTHLY_TREND[0];
+  const rawCurrent = MONTHLY_TREND.reduce((sum, row) => sum + row.recovered, 0);
+  const scale = rawCurrent ? KPI.yearRecovered / rawCurrent : 1;
+
+  return [
+    { label: firstMonth?.month ?? '1月', value: Math.round((firstMonth?.recovered ?? 0) * scale), tone: 'actual' },
+    { label: META.monthLabel.replace(/^2026年/, ''), value: KPI.yearRecovered, tone: 'current' },
+    { label: '12月目标', value: KPI.yearTarget, tone: 'target' },
+  ];
 }
 
 // ===== KPI 二级卡片：按 销售维度 × 订单类型 × 年/月/日 的柱状数据 =====
