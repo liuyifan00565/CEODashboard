@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 22:59:45 CST
+ 更新内容: 增加年度节奏辅助说明剩余月份字段回归测试。
+*/
+/*
  更新时间: 2026-07-05 21:45:08 CST
  更新内容: 增加渠道完成表本月缺口和年度缺口字段回归测试。
 */
@@ -335,6 +339,7 @@ test('returns operating overview pace metrics for dense executive judgement', ()
   assert.equal(metrics.riskImpactGap, 36);
   assert.equal(metrics.annualTimeProgress, 50);
   assert.equal(metrics.annualPaceDelta, 3.8);
+  assert.equal(metrics.remainingMonths, 6);
   assert.equal(metrics.remainingMonthlyRequired, 536);
   assert.equal(metrics.monthJudgement, '本月整体进度正常，但线下华东低于目标节奏，预计影响月度缺口 36万。');
   assert.equal(metrics.annualJudgement, '当前年度完成率略高于时间进度，但线下华东连续低于目标，需优先恢复渠道回款。');

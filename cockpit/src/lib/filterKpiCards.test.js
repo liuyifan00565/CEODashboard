@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 22:59:45 CST
+ 更新内容: 搜索关键词同步年度节奏最终版，保留辅助说明并移除不可见节奏偏差和年度贡献。
+*/
+/*
  更新时间: 2026-07-05 21:24:15 CST
  更新内容: 搜索关键词测试同步经营进度顶部精简文案，覆盖查看近期明细、领先节奏和风险完成率。
 */
@@ -110,10 +114,11 @@ test('adds fused operating overview section text to KPI search keywords', () => 
   assert.ok(!month.keywords.includes('本月目标完成情况'));
   assert.ok(annual.keywords.includes('年度节奏'));
   assert.ok(annual.keywords.includes('年度累计'));
-  assert.ok(annual.keywords.includes('剩余月均需完成'));
-  assert.ok(annual.keywords.includes('节奏偏差 +3.8%'));
+  assert.ok(annual.keywords.includes('明细 >'));
+  assert.ok(annual.keywords.includes('月均仍需完成'));
+  assert.ok(!annual.keywords.includes('节奏偏差 +3.8%'));
   assert.ok(annual.keywords.includes('渠道完成情况'));
-  assert.ok(annual.keywords.includes('年度贡献'));
+  assert.ok(!annual.keywords.includes('年度贡献'));
   assert.ok(!annual.keywords.includes('本年目标完成情况'));
   assert.ok(!annual.keywords.includes('年度风险预测'));
 });

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 22:59:45 CST
+ 更新内容: 年度节奏辅助说明补充剩余月份字段，支持最终版单行说明。
+*/
+/*
  更新时间: 2026-07-05 21:45:08 CST
  更新内容: 渠道完成行补充本月缺口和年度缺口，支持本月/年度表格按维度展示。
 */
@@ -97,6 +101,7 @@ export const OPERATING_OVERVIEW_METRICS = {
   riskImpactGap: 36,
   annualTimeProgress: 50.0,
   annualPaceDelta: 3.8,
+  remainingMonths: 6,
   remainingMonthlyRequired: 536,
   monthJudgement: '本月整体进度正常，但线下华东低于目标节奏，预计影响月度缺口 36万。',
   annualJudgement: '当前年度完成率略高于时间进度，但线下华东连续低于目标，需优先恢复渠道回款。',

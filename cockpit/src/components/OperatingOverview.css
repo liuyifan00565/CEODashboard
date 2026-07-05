@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 22:59:45 CST  更新内容: 年度节奏卡最终版采用三列核心指标、单行辅助说明和更稳的图表留白。 */
 /* 更新时间: 2026-07-05 21:45:08 CST  更新内容: 年度节奏指标区调整为五项核心信息，降低财务报表式密度。 */
 /* 更新时间: 2026-07-05 21:24:15 CST  更新内容: 弱化经营进度顶部指标分隔线，并适配风险渠道与节奏辅助文案的轻量展示。 */
 /* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 经营总览样式提高信息密度，支持四指标总览、年度虚线目标和轻量明细入口。 */
@@ -50,7 +51,7 @@
   grid-area: annual;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .op-channel-wrap {
@@ -215,27 +216,35 @@
 
 .op-annual-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(86px, 1fr));
-  gap: 13px 14px;
-  padding-top: 2px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px 16px;
+  padding-top: 4px;
 }
 
 .op-metric {
   display: grid;
-  gap: 5px;
+  gap: 7px;
   min-width: 0;
 }
 
 .op-metric b {
   color: var(--txt);
-  font-size: clamp(18px, 1.55vw, 24px);
+  font-size: clamp(20px, 1.65vw, 26px);
   font-weight: 760;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
 
+.op-annual-note {
+  margin: -1px 0 1px;
+  color: rgba(247,248,252,.56);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
 .op-annual-chart {
-  min-height: 190px;
+  min-height: 205px;
 }
 
 .op-judgement {
@@ -274,7 +283,7 @@
 
 @media (max-width: 860px) {
   .op-annual-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

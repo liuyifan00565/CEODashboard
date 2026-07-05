@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 22:59:45 CST  更新内容: 年度节奏最终版改为三项核心指标、单行辅助说明、单标题和轻量明细入口。 */
 /* 更新时间: 2026-07-05 21:45:08 CST  更新内容: 年度节奏精简为五个核心指标，并只在图表首月、当前月和年目标显示数字标签。 */
 /* 更新时间: 2026-07-05 21:24:15 CST  更新内容: 精简经营进度卡片眉题、风险渠道与节奏文案，并弱化指标分隔线。 */
 /* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 经营总览提高信息密度，加入月度/年度节奏判断、年度虚线目标和顶部明细入口。 */
@@ -30,12 +31,12 @@ const PROGRESS_KEYWORDS = [
 ];
 const ANNUAL_KEYWORDS = [
   '年度节奏',
-  '年度经营进度',
   '年度累计',
   '年度完成率',
   '年度缺口',
   '时间进度',
-  '剩余月均需完成',
+  '明细 >',
+  '月均仍需完成',
   '12月目标',
   '线下华东连续低于目标',
   '当前年度完成率略高于时间进度，但线下华东连续低于目标，需优先恢复渠道回款。',
@@ -62,7 +63,7 @@ function shouldShowActualAnnualLabel(series, dataIndex) {
 function annualRhythmOption(series, tokens) {
   return {
     backgroundColor: 'transparent',
-    grid: { left: 8, right: 18, top: 28, bottom: 18, containLabel: true },
+    grid: { left: 8, right: 20, top: 32, bottom: 18, containLabel: true },
     tooltip: {
       trigger: 'axis',
       backgroundColor: tokens.chartTooltipBg,
@@ -81,7 +82,7 @@ function annualRhythmOption(series, tokens) {
     },
     legend: {
       top: 0,
-      right: 0,
+      left: 0,
       itemWidth: 16,
       itemHeight: 8,
       textStyle: { color: tokens.chartMuted, fontSize: 11 },
@@ -217,7 +218,6 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
         <section className="op-panel op-panel--annual" data-anim>
           <header className="op-section-head">
             <div>
-              <span className="op-eyebrow">年度经营进度</span>
               <h2>年度节奏</h2>
             </div>
             <button
@@ -226,7 +226,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
               disabled={!yearKpiCard || !onOpenKpi}
               onClick={() => onOpenKpi(yearKpiCard)}
             >
-              查看年度明细
+              明细 &gt;
             </button>
           </header>
 
@@ -240,21 +240,17 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
               <b>{formatPct(KPI_DERIVED.yearCompletion)}</b>
             </div>
             <div className="op-metric">
-              <span>时间进度</span>
-              <b>{formatPct(overviewMetrics.annualTimeProgress)}</b>
-            </div>
-            <div className="op-metric">
               <span>年度缺口</span>
               <b>{formatWan(KPI_DERIVED.yearGap)}万</b>
             </div>
-            <div className="op-metric">
-              <span>剩余月均需完成</span>
-              <b>{formatWan(overviewMetrics.remainingMonthlyRequired)}万</b>
-            </div>
           </div>
 
+          <p className="op-annual-note">
+            时间进度 {formatPct(overviewMetrics.annualTimeProgress)} · 剩余 {overviewMetrics.remainingMonths} 个月，月均仍需完成 {formatWan(overviewMetrics.remainingMonthlyRequired)} 万
+          </p>
+
           <div className="op-annual-chart" aria-label="年度节奏累计实线和目标虚线">
-            <EChart option={annualOption} style={{ height: 190 }} />
+            <EChart option={annualOption} style={{ height: 205 }} />
           </div>
 
           <p className="op-judgement">{overviewMetrics.annualJudgement}</p>
