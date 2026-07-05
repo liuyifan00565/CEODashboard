@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 15:29:01 CST
+ 更新内容: 首页顶部改为自然经营标题，年度回款侧栏切换为风险预测视图以降低重复感。
+*/
+/*
  更新时间: 2026-07-03 23:39:28 CST
  更新内容: 降低顶部船舶信息卡与数据维护按钮的 GlassSurface 高光、模糊和折射强度。
 */
@@ -102,7 +106,6 @@ import GlassSurface from './components/GlassSurface/GlassSurface';
 import Sidebar from './components/Sidebar';
 import ExpandableSearch from './components/ExpandableSearch';
 import SearchResultBorder from './components/SearchResultBorder';
-import MetallicPaint from './components/MetallicPaint/MetallicPaint';
 import KpiCard from './components/KpiCard';
 import KpiModal from './components/KpiModal';
 import MonthlyTrend from './components/MonthlyTrend';
@@ -130,7 +133,11 @@ const PANEL_KEYWORDS = {
 };
 
 function recoveryChannelTitle(card) {
-  return card.key === 'year' ? '本年渠道完成情况' : '本月渠道完成情况';
+  return card.key === 'year' ? '年度风险预测' : '渠道完成情况';
+}
+
+function recoveryChannelVariant(card) {
+  return card.key === 'year' ? 'forecast' : 'completion';
 }
 
 function makeCompanionCueId(card) {
@@ -309,44 +316,10 @@ export default function App() {
 
         <div className="dash-main">
           <header className="dash-topbar">
-            <GlassSurface
-              width={240}
-              height={52}
-              borderRadius={16}
-              brightness={46}
-              blur={7}
-              displace={0.35}
-              backgroundOpacity={0.035}
-              distortionScale={-55}
-              className="brand-glass"
-            >
-              <div className="brand">
-                <span className="brand-logo-paint" aria-hidden="true">
-                  <MetallicPaint
-                    imageSrc="/logo-black.png"
-                    seed={64}
-                    scale={3.6}
-                    refraction={0.018}
-                    blur={0.014}
-                    liquid={0.68}
-                    speed={0.28}
-                    brightness={1.75}
-                    contrast={0.8}
-                    fresnel={1.2}
-                    lightColor="#ffffff"
-                    darkColor="#050505"
-                    tintColor="#f0d99a"
-                    chromaticSpread={1.8}
-                    distortion={0.75}
-                    contour={0.28}
-                  />
-                </span>
-                <div className="brand-copy">
-                  <b>福客经营驾驶舱</b>
-                  <small>{META.monthLabel}｜{activeContextLabel}</small>
-                </div>
-              </div>
-            </GlassSurface>
+            <div className="dash-title-block">
+              <h1>经营驾驶舱</h1>
+              <p>福客 · {META.monthLabel} · {activeContextLabel}</p>
+            </div>
             <div className="dash-tools">
               <GlassSurface
                 width={126}
@@ -391,7 +364,7 @@ export default function App() {
                         <KpiCard
                           card={card}
                           onOpen={handleOpenCard}
-                          sidePanel={<ChannelPanel channelKey={activeChannelKey} title={recoveryChannelTitle(card)} />}
+                          sidePanel={<ChannelPanel channelKey={activeChannelKey} title={recoveryChannelTitle(card)} variant={recoveryChannelVariant(card)} />}
                         />
                       </SearchResultBorder>
                     </div>

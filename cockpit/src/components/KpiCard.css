@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 15:29:01 CST  更新内容: 回款卡片改为更轻玻璃、半环缩小后退，并强化主数字层级。 */
 /* 更新时间: 2026-07-03 23:39:28 CST  更新内容: 回款半环图视觉退后，放大长卡主 KPI 数字并降低图表柔光。 */
 /* Update time: 2026-07-03 18:19:59 CST  Update content: Add explicit risk styling for KPI gaps when completion is below 80 percent. */
 /* Update time: 2026-07-03 17:55:18 CST  Update content: Replace strong purple KPI glass with neutral dark card glass and reduce recovery accent glow area. */
@@ -41,7 +42,7 @@
 
 .kpi-card--recovery {
   display: grid;
-  grid-template-columns: minmax(340px, 460px) minmax(0, 1fr);
+  grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
   align-items: center;
   gap: 16px;
   min-height: 158px;
@@ -50,9 +51,9 @@
 }
 
 .kpi-card--with-side {
-  grid-template-columns: minmax(400px, 500px) minmax(270px,.86fr) minmax(340px,.95fr);
-  gap: 12px;
-  min-height: 342px;
+  grid-template-columns: minmax(340px, 420px) minmax(280px,.9fr) minmax(340px,.95fr);
+  gap: 16px;
+  min-height: 326px;
 }
 
 .kpi-card--recovery::before {
@@ -80,15 +81,15 @@
 }
 
 .kpi-card--with-side .kpi-card__body {
-  margin-left: -64px;
+  margin-left: -44px;
   gap: 10px;
 }
 
 .kpi-card__pie {
   position: relative;
   z-index: 1;
-  width: clamp(410px, 31vw, 520px);
-  min-height: 342px;
+  width: clamp(350px, 26vw, 450px);
+  min-height: 300px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -107,9 +108,9 @@
   z-index: 0;
   border-radius: 50%;
   background:
-    radial-gradient(ellipse at 50% 56%, color-mix(in srgb, var(--kpi-accent) 9%, transparent) 0%, color-mix(in srgb, var(--kpi-accent) 5%, transparent) 34%, transparent 72%);
-  filter: blur(16px) saturate(.86);
-  opacity: .24;
+    radial-gradient(ellipse at 50% 56%, color-mix(in srgb, var(--kpi-accent) 6%, transparent) 0%, color-mix(in srgb, var(--kpi-accent) 3%, transparent) 34%, transparent 72%);
+  filter: blur(14px) saturate(.82);
+  opacity: .18;
   pointer-events: none;
 }
 
@@ -143,7 +144,7 @@
   z-index: 1;
   width: 100%;
   flex: none;
-  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--kpi-accent) 4%, transparent));
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--kpi-accent) 3%, transparent));
 }
 
 .kpi-card--recovery .kpi-card__progress-chart {
@@ -310,14 +311,14 @@
 .kpi-card:focus-visible {
   transform: translateY(-3px);
   border-color: rgba(255, 255, 255, .18);
-  box-shadow: 0 22px 62px rgba(0, 0, 0, .38), inset 0 1px 0 rgba(255, 255, 255, .16);
+  box-shadow: 0 24px 72px rgba(0, 0, 0, .30), inset 0 1px 0 rgba(255, 255, 255, .12);
   outline: none;
 }
 
 .kpi-card__title {
   font-size: 14px;
   font-weight: 500;
-  color: var(--muted);
+  color: rgba(247,248,252,.60);
   letter-spacing: .02em;
 }
 
@@ -331,6 +332,7 @@
   line-height: 1.05;
   font-weight: 700;
   color: var(--txt);
+  letter-spacing: 0;
   font-variant-numeric: tabular-nums;
 }
 
@@ -344,12 +346,12 @@
 }
 
 .kpi-card--with-side .kpi-card__value {
-  font-size: clamp(42px, 3.6vw, 52px);
+  font-size: clamp(46px, 3.8vw, 56px);
 }
 
 .kpi-card__sub {
   font-size: 14px;
-  color: var(--muted);
+  color: rgba(247,248,252,.52);
   white-space: pre-line;
 }
 
@@ -376,7 +378,7 @@
 }
 
 .kpi-card__sub-value {
-  color: rgba(239,251,255,.86);
+  color: rgba(247,248,252,.82);
   font-size: 1.1em;
   font-weight: 760;
 }
@@ -399,7 +401,7 @@
   align-items: baseline;
   justify-content: space-between;
   font-size: 14px;
-  color: var(--muted);
+  color: rgba(247,248,252,.50);
 }
 
 .kpi-card__progress-pct {
@@ -439,12 +441,12 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--warn);
-  text-shadow: 0 0 12px rgba(var(--warn-rgb), .32);
+  text-shadow: 0 0 10px rgba(var(--warn-rgb), .22);
 }
 
 .kpi-card__gap--risk {
   color: var(--warn);
-  text-shadow: 0 0 14px rgba(var(--warn-rgb), .38);
+  text-shadow: 0 0 12px rgba(var(--warn-rgb), .24);
 }
 
 .kpi-card--with-side .kpi-card__chip,

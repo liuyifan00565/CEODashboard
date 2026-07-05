@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 15:29:01 CST
+ 更新内容: 首页主题提亮为柔和深灰蓝空间背景，卡片改轻玻璃变量并降低风险红饱和度。
+*/
+/*
  Update time: 2026-07-04 01:03:12 CST
  Update content: Diffuse the left-lower purple ambient glow and add restrained current-month chart tokens.
 */
@@ -94,7 +98,7 @@
 :root,
 :root[data-theme="dark"]{
   --color-scheme-value:dark;
-  --bg:#050812;
+  --bg:#0B1020;
   --brand-purple:#8B7CFF;
   --brand-purple-2:#AFA6FF;
   --brand-purple-3:#D8D4FF;
@@ -103,49 +107,49 @@
   --brand-ice:#8BD7FF;
   --accent-gold:#D7B56D;
   --accent-gold-soft:#F0D99A;
-  --dashboard-card-bg:rgba(13, 18, 32, 0.66);
-  --dashboard-card-border:rgba(218, 226, 255, 0.13);
-  --dashboard-card-shadow:0 24px 72px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255,255,255,.08);
-  --dashboard-card-blur:blur(20px) saturate(150%);
-  --panel:rgba(255,255,255,.065);
-  --panel-2:rgba(255,255,255,.085);
-  --line:rgba(218,226,255,.10);
-  --line-2:rgba(218,226,255,.16);
-  --glass-cell:rgba(255,255,255,.055);
-  --glass-cell-hover:rgba(139,124,255,.12);
-  --glass-shadow:0 24px 72px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.12), inset 0 -1px 0 rgba(255,255,255,.035);
-  --glass-blur:blur(24px) saturate(150%);
+  --dashboard-card-bg:rgba(255, 255, 255, 0.052);
+  --dashboard-card-border:rgba(255, 255, 255, 0.10);
+  --dashboard-card-shadow:0 24px 80px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255,255,255,.06);
+  --dashboard-card-blur:blur(24px) saturate(145%);
+  --panel:rgba(255,255,255,.055);
+  --panel-2:rgba(255,255,255,.072);
+  --line:rgba(255,255,255,.08);
+  --line-2:rgba(255,255,255,.12);
+  --glass-cell:rgba(255,255,255,.052);
+  --glass-cell-hover:rgba(255,255,255,.075);
+  --glass-shadow:0 22px 68px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.10), inset 0 -1px 0 rgba(255,255,255,.025);
+  --glass-blur:blur(24px) saturate(145%);
   --txt:#F7F8FC;
   --muted:#B9C2D4;
   --faint:rgba(185,194,212,.62);
   --up:#AFA6FF;
-  --down:#E85D75;
+  --down:#D86A82;
   --good:#8B7CFF;
-  --warn:#E85D75;
+  --warn:#D86A82;
   --up-rgb:175,166,255;
-  --down-rgb:232,93,117;
+  --down-rgb:216,106,130;
   --good-rgb:139,124,255;
-  --warn-rgb:232,93,117;
+  --warn-rgb:216,106,130;
   --bar-track:rgba(148,163,184,.18);
-  --bar-track-border:rgba(218,226,255,.16);
+  --bar-track-border:rgba(255,255,255,.12);
   --bar-good:linear-gradient(90deg,#8B7CFF 0%,#AFA6FF 54%,#D8D4FF 82%,#8BD7FF 100%);
-  --bar-good-glow:0 0 16px rgba(139,124,255,.22);
-  --bar-warn:linear-gradient(90deg,#B8334B 0%,#E85D75 58%,#FF8A9A 100%);
-  --bar-warn-glow:0 0 16px rgba(232,93,117,.22);
+  --bar-good-glow:0 0 14px rgba(139,124,255,.18);
+  --bar-warn:linear-gradient(90deg,#A94F62 0%,#D86A82 58%,#E7A0AE 100%);
+  --bar-warn-glow:0 0 14px rgba(216,106,130,.16);
   --bar-gold:linear-gradient(90deg,#9B7A36 0%,#D7B56D 58%,#F0D99A 100%);
   --bar-gold-glow:0 0 18px rgba(215,181,109,.26);
-  /* 背景：深石墨黑蓝底；紫色只做远处环境光，网格/点阵提供秩序感。 */
-  --bg-base-1:#050812;
-  --bg-base-2:#080D18;
-  --bg-base-3:#0B1020;
-  --bg-radial-a:rgba(139,124,255,.14);
-  --bg-radial-b:rgba(127,212,246,.08);
-  --bg-radial-c:rgba(95,75,180,.08);
-  --bg-radial-d:rgba(139,124,255,.07);
-  --bg-vignette:radial-gradient(circle at center,transparent 0%,rgba(0,0,0,.34) 100%);
-  --bg-grid-line:rgba(255,255,255,.035);
-  --bg-dot:rgba(255,255,255,.032);
-  --bg-noise-opacity:.035;
+  /* 背景：柔和深灰蓝底；紫色只做远处环境光，网格/点阵提供秩序感。 */
+  --bg-base-1:#0D1324;
+  --bg-base-2:#0B1020;
+  --bg-base-3:#070B14;
+  --bg-radial-a:rgba(124,92,255,.16);
+  --bg-radial-b:rgba(88,166,255,.10);
+  --bg-radial-c:rgba(118,154,206,.055);
+  --bg-radial-d:rgba(139,124,255,.045);
+  --bg-vignette:radial-gradient(circle at center,transparent 0%,rgba(0,0,0,.24) 100%);
+  --bg-grid-line:rgba(255,255,255,.030);
+  --bg-dot:rgba(255,255,255,.028);
+  --bg-noise-opacity:.03;
   --brand-dot-shadow:0 0 12px rgba(215,181,109,.32);
   --control-hover:rgba(139,124,255,.10);
   --theme-toggle-icon:#D8D4FF;
@@ -155,15 +159,15 @@
   --control-solid-text:#111318;
   --chart-text:#F7F8FC;
   --chart-muted:#B9C2D4;
-  --chart-grid:rgba(218,226,255,.085);
-  --chart-axis:rgba(218,226,255,.34);
-  --chart-bar:rgba(139,124,255,.88);
-  --chart-bar-current:rgba(139,124,255,.72);
-  --chart-bar-muted:rgba(175,166,255,.32);
+  --chart-grid:rgba(226,234,255,.070);
+  --chart-axis:rgba(226,234,255,.28);
+  --chart-bar:rgba(155,134,255,.74);
+  --chart-bar-current:rgba(155,134,255,.68);
+  --chart-bar-muted:rgba(155,134,255,.24);
   --chart-bar-faint:rgba(148,163,184,.18);
   --chart-bar-faint-current:rgba(167,156,255,.24);
-  --chart-tooltip-bg:rgba(6,9,20,.9);
-  --chart-tooltip-border:rgba(218,226,255,.16);
+  --chart-tooltip-bg:rgba(9,14,28,.88);
+  --chart-tooltip-border:rgba(255,255,255,.12);
   --chart-pointer:rgba(139,124,255,.07);
   --chart-point-border:#060914;
   --progress-mid:#8B7CFF;
@@ -175,7 +179,7 @@
   --ai-ring-shadow:0 0 8px rgba(0,0,0,.78),0 0 16px rgba(139,124,255,.24);
   --ai-label-shadow:0 1px 3px rgba(0,0,0,.78),0 0 16px rgba(215,181,109,.18);
   --ai-chip-bg:rgba(255,255,255,.06);
-  --ai-chip-hover:rgba(139,124,255,.12);
+  --ai-chip-hover:rgba(255,255,255,.08);
   color-scheme:var(--color-scheme-value);
 }
 :root[data-theme="light"]{
@@ -201,19 +205,19 @@
   --accent-gold:#B78C32;
   --accent-gold-soft:#D7B56D;
   --up:#6F62D8;
-  --down:#D94D66;
+  --down:#C85D72;
   --good:#6F62D8;
-  --warn:#D94D66;
+  --warn:#C85D72;
   --up-rgb:111,98,216;
-  --down-rgb:217,77,102;
+  --down-rgb:200,93,114;
   --good-rgb:111,98,216;
-  --warn-rgb:217,77,102;
+  --warn-rgb:200,93,114;
   --bar-track:rgba(31,42,68,.13);
   --bar-track-border:rgba(31,42,68,.18);
   --bar-good:linear-gradient(90deg,#6F62D8 0%,#8B7CFF 56%,#C9C3FF 88%,#8BD7FF 100%);
   --bar-good-glow:0 0 16px rgba(111,98,216,.18);
-  --bar-warn:linear-gradient(90deg,#AA2F45 0%,#D94D66 58%,#F07C8E 100%);
-  --bar-warn-glow:0 0 16px rgba(217,77,102,.18);
+  --bar-warn:linear-gradient(90deg,#A24D5D 0%,#C85D72 58%,#E19AAA 100%);
+  --bar-warn-glow:0 0 16px rgba(200,93,114,.16);
   --bar-gold:linear-gradient(90deg,#8C6726 0%,#B78C32 58%,#D7B56D 100%);
   --bar-gold-glow:0 0 16px rgba(183,140,50,.2);
   /* 背景：雾白蓝灰底 + 极淡月光紫/香槟补光，与暗主题同构 */
@@ -279,7 +283,7 @@ body{
     radial-gradient(circle at 24% 18%,var(--bg-radial-a),transparent 28%),
     radial-gradient(circle at 78% 8%,var(--bg-radial-b),transparent 24%),
     radial-gradient(circle at 50% 92%,var(--bg-radial-c),transparent 30%),
-    linear-gradient(135deg,var(--bg-base-1) 0%,var(--bg-base-2) 48%,var(--bg-base-3) 100%);
+    linear-gradient(180deg,var(--bg-base-1) 0%,var(--bg-base-2) 48%,var(--bg-base-3) 100%);
 }
 /* Magic UI Grid/Dot Pattern 思路：低透明网格和点阵只提供精度感，不抢数据。 */
 .bg::before{

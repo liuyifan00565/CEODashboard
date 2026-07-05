@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 15:29:01 CST  更新内容: 回款半环图缩小并换为低饱和通道色，风险进度改为柔和玫瑰色。 */
 /* 更新时间: 2026-07-03 23:39:28 CST  更新内容: 收敛回款半环图未完成扇区、标签与阴影，让主 KPI 数字更主导。 */
 /* 更新时间: 2026-07-03 18:54:17 CST  更新内容: KPI 完成率颜色改为 80 以下红色、80-99 紫色、100 及以上金色三档。 */
 /* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 将 KPI 完成率 80% 以下、缺口与趋势芯片统一接入风险色语义，并同步高级紫蓝图表色板。 */
@@ -28,10 +29,10 @@ import './KpiCard.css';
 
 // 分段半环仪表盘：保留低饱和品牌强调，避免四个渠道全部成为强紫色块。
 const CHANNEL_PIE_GRADIENTS = [
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6F62D8' }, { offset: 0.55, color: '#8B7CFF' }, { offset: 1, color: '#D8D4FF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#4E78C8' }, { offset: 0.58, color: '#74A7FF' }, { offset: 1, color: '#C8D9FF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#4FA7A4' }, { offset: 0.58, color: '#6DD6D2' }, { offset: 1, color: '#BFEDEC' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#9B7A36' }, { offset: 0.56, color: '#D7B56D' }, { offset: 1, color: '#F0D99A' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#7F6BE8' }, { offset: 0.55, color: '#9B86FF' }, { offset: 1, color: '#C8BFFF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6FB7D5' }, { offset: 0.58, color: '#9BD8F4' }, { offset: 1, color: '#D7F0FA' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#50B8AA' }, { offset: 0.58, color: '#72D7C9' }, { offset: 1, color: '#C2F0E9' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#B89642' }, { offset: 0.56, color: '#E2C15F' }, { offset: 1, color: '#F1DEA0' }] },
 ];
 const CHANNEL_PERCENT_COLORS = ['#ffffff', '#ffffff', '#ffffff', '#ffffff'];
 const CHANNEL_PIE_LABELS = { south: '线下华南', east: '线下华东' };
@@ -39,8 +40,8 @@ const CHANNEL_PIE_LABELS = { south: '线下华南', east: '线下华东' };
 const INCOMPLETE_PIE_COLOR = {
   type: 'linear', x: 0, y: 0, x2: 1, y2: 1,
   colorStops: [
-    { offset: 0, color: 'rgba(160, 170, 210, 0.08)' },
-    { offset: 1, color: 'rgba(160, 170, 210, 0.045)' },
+    { offset: 0, color: 'rgba(255, 255, 255, 0.035)' },
+    { offset: 1, color: 'rgba(255, 255, 255, 0.02)' },
   ],
 };
 const INCOMPLETE_PERCENT_COLOR = '#ffffff';
@@ -132,9 +133,9 @@ function progressBarColor(pct, tokens) {
   const value = Number(pct) || 0;
   if (value < 80) {
     return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-      { offset: 0, color: '#B8334B' },
-      { offset: 0.58, color: '#E85D75' },
-      { offset: 1, color: '#FF8A9A' },
+      { offset: 0, color: '#A94F62' },
+      { offset: 0.58, color: '#D86A82' },
+      { offset: 1, color: '#E7A0AE' },
     ]);
   }
 
@@ -205,8 +206,8 @@ function recoveryPieData(card) {
     percentColor: INCOMPLETE_PERCENT_COLOR,
     itemStyle: {
       color: INCOMPLETE_PIE_COLOR,
-      opacity: .26,
-      borderColor: 'rgba(160, 170, 210, .10)',
+      opacity: .24,
+      borderColor: 'rgba(255, 255, 255, .08)',
       borderWidth: 1,
       shadowBlur: 0,
     },
@@ -276,8 +277,8 @@ function recoveryPieOption(card, tokens, accentColor) {
       {
         type: 'pie',
         name: card.title,
-        radius: ['52%', '70%'],
-        center: ['50%', '70%'],
+        radius: ['50%', '66%'],
+        center: ['50%', '72%'],
         startAngle: 180,
         endAngle: 360,
         minShowLabelAngle: 1,
@@ -330,12 +331,12 @@ function recoveryPieOption(card, tokens, accentColor) {
           show: true,
           lineStyle: {
             color: tokens.chartText,
-            opacity: 0.42,
-            width: 1.2,
+            opacity: 0.28,
+            width: 1,
           },
           smooth: 0.18,
-          length: 14,
-          length2: 24,
+          length: 12,
+          length2: 20,
         },
         labelLayout: (params) => recoveryPieLabelLayout(params, card.key),
         animationType: 'scale',
@@ -391,7 +392,7 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
               {card.progress}%
             </span>
           </div>
-          <EChart option={progressOption(card.progress, tokens)} className="kpi-card__progress-chart" style={{ height: 12 }} />
+          <EChart option={progressOption(card.progress, tokens)} className="kpi-card__progress-chart" style={{ height: 10 }} />
         </div>
       )}
 
@@ -435,7 +436,7 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
             <div className="kpi-card__pie-head">
               <div className="kpi-card__pie-title">{recoveryPieHeading(card)}</div>
             </div>
-          <EChart option={recoveryPieOption(card, tokens, recoveryAccent)} className="kpi-card__pie-chart" style={{ height: 326 }} />
+          <EChart option={recoveryPieOption(card, tokens, recoveryAccent)} className="kpi-card__pie-chart" style={{ height: 292 }} />
           </div>
           <div className="kpi-card__body">{cardContent}</div>
           {sidePanel && (

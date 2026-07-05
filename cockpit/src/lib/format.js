@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 15:29:01 CST
+ 更新内容: 风险色语义改为低饱和玫瑰色，保持完成率三档规则不变。
+*/
+/*
  Update time: 2026-07-03 18:54:17 CST
  Update content: Split completion colors into red below 80, purple from 80 to 99, and gold at 100 percent or above.
 */
@@ -52,9 +56,9 @@
 */
 export const COLOR = {
   up: '#AFA6FF',
-  down: '#E85D75',
+  down: '#D86A82',
   good: '#8B7CFF',
-  warn: '#E85D75',
+  warn: '#D86A82',
   gold: '#D7B56D',
   txt: '#F7F8FC',
   muted: '#B9C2D4',
@@ -62,7 +66,7 @@ export const COLOR = {
   axis: 'rgba(218,226,255,.34)',
   // 进度条统一语义：80% 以下风险玫红，80-99% 品牌月光紫，100% 及以上香槟金。
   goodGradient: 'linear-gradient(90deg,#8B7CFF 0%,#AFA6FF 54%,#D8D4FF 82%,#8BD7FF 100%)',
-  warnGradient: 'linear-gradient(90deg,#B8334B 0%,#E85D75 58%,#FF8A9A 100%)',
+  warnGradient: 'linear-gradient(90deg,#A94F62 0%,#D86A82 58%,#E7A0AE 100%)',
   goldGradient: 'linear-gradient(90deg,#9B7A36 0%,#D7B56D 58%,#F0D99A 100%)',
 };
 

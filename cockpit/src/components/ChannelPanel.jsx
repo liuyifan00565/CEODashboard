@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-05 15:29:01 CST  更新内容: 年度回款侧栏新增风险预测变体，并将预警文案降级为需关注。 */
 /* 更新时间: 2026-07-03 17:51:36 CST  更新内容: 四区域渠道进度条统一紫色时同步移除 warning fill class，避免低于 80% 残留红色外发光。 */
 /* 更新时间: 2026-07-03 17:50:36 CST  更新内容: 四区域渠道完成进度条回退为统一主题紫色渐变，不再按饼图分色或低于 80% 切红。 */
 /* 更新时间: 2026-07-03 16:57:57 CST  更新内容: 四区域渠道完成进度条达标时改用半环图渠道色，低于 80% 时改用红色预警渐变。 */
@@ -7,18 +8,29 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import AppIcon from './AppIcon';
-import { getSalesCompletionRows, getSalesMemberRows } from '../data/mock';
+import { KPI_DERIVED, getSalesCompletionRows, getSalesMemberRows } from '../data/mock';
 import { fmtPct, fmtWan, progressGradient } from '../lib/format';
 import { channelCompletionBarBackground, shouldUseChannelCompletionWarnFill } from '../lib/channelCompletionBar';
 import { useThemeTokens } from '../lib/theme';
 import './ChannelPanel.css';
 
-export default function ChannelPanel({ channelKey = 'all', title = '本月渠道完成情况' }) {
+function buildAnnualRiskForecast(rows) {
+  const weakest = [...rows].sort((a, b) => a.completion - b.completion)[0] ?? null;
+  return {
+    projectedCompletion: 73.4,
+    mainGap: weakest?.name ?? '线下华东',
+    monthlyRecoveryNeed: Math.round(KPI_DERIVED.yearGap / 8),
+  };
+}
+
+export default function ChannelPanel({ channelKey = 'all', title = '渠道完成情况', variant = 'completion' }) {
   // 挂载后再写入进度条宽度，触发 CSS width 过渡填充动画
   const tokens = useThemeTokens();
   const [filled, setFilled] = useState(false);
   const [openKey, setOpenKey] = useState(null);
   const rows = getSalesCompletionRows(channelKey);
+  const forecast = buildAnnualRiskForecast(rows);
+  const showForecast = variant === 'forecast';
   const openRow = rows.find((row) => row.key === openKey);
   const members = openKey ? getSalesMemberRows(openKey) : [];
 
@@ -35,7 +47,24 @@ export default function ChannelPanel({ channelKey = 'all', title = '本月渠道
         <span className="ch-head-sub">单位：万元</span>
       </header>
 
-      <div className="ch-list">
+      {showForecast && (
+        <div className="ch-forecast" aria-label="年度风险预测摘要">
+          <div className="ch-forecast-card ch-forecast-card--primary">
+            <span>预计全年完成率</span>
+            <b>{forecast.projectedCompletion}%</b>
+          </div>
+          <div className="ch-forecast-card">
+            <span>主要缺口</span>
+            <b>{forecast.mainGap}</b>
+          </div>
+          <div className="ch-forecast-card">
+            <span>追回所需月均增量</span>
+            <b>{forecast.monthlyRecoveryNeed} 万</b>
+          </div>
+        </div>
+      )}
+
+      <div className={`ch-list${showForecast ? ' ch-list--compact' : ''}`}>
         {rows.map((c, i) => {
           const pct = c.completion;
           const barW = filled ? `${Math.min(pct, 100)}%` : '0%';
@@ -49,7 +78,7 @@ export default function ChannelPanel({ channelKey = 'all', title = '本月渠道
               <div className="ch-row-top">
                 <div className="ch-name-wrap">
                   <span className="ch-name">{c.name}</span>
-                  {c.warn && <span className="ch-tag">落后预警</span>}
+                  {c.warn && <span className="ch-tag">需关注</span>}
                 </div>
                 <span className="ch-amount">
                   <b>{fmtWan(c.recovered)}</b>

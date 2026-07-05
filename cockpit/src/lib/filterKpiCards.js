@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 15:29:01 CST
+ 更新内容: 首页搜索关键词同步渠道完成情况与年度风险预测新文案。
+*/
+/*
  更新时间: 2026-07-03 23:39:28 CST
  更新内容: 修正年度回款卡累计完成率文案，避免在默认月度视角显示为“月度累计完成率”。
 */
@@ -222,8 +226,8 @@ function withVisibleKeywords(baseKeywords, ...visibleTerms) {
 }
 
 function recoverySectionKeywords(cardKey) {
-  if (cardKey === 'year') return ['本年', '本年目标完成情况', '本年渠道完成情况'];
-  if (cardKey === 'month') return ['本月', '本月目标完成情况', '本月渠道完成情况'];
+  if (cardKey === 'year') return ['本年', '本年目标完成情况', '年度风险预测'];
+  if (cardKey === 'month') return ['本月', '本月目标完成情况', '渠道完成情况'];
   return [];
 }
 

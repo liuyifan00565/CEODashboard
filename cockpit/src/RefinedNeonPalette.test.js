@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 15:29:01 CST
+ 更新内容: 守卫测试切换到提亮后的深灰蓝空间背景、轻玻璃卡片和低饱和风险色。
+*/
+/*
  Update time: 2026-07-04 01:03:12 CST
  Update content: Require the lower-left purple ambience to be dimmer and more diffused for the restrained CEO dashboard pass.
 */
@@ -110,21 +114,21 @@ test('uses the graphite violet champagne semantic accents', () => {
   assert.match(block, /--brand-ice:#8BD7FF;/);
   assert.match(block, /--accent-gold:#D7B56D;/);
   assert.match(block, /--up:#AFA6FF;/);
-  assert.match(block, /--down:#E85D75;/);
+  assert.match(block, /--down:#D86A82;/);
   assert.match(block, /--good:#8B7CFF;/);
-  assert.match(block, /--warn:#E85D75;/);
+  assert.match(block, /--warn:#D86A82;/);
   assert.match(block, /--up-rgb:175,166,255;/);
-  assert.match(block, /--down-rgb:232,93,117;/);
+  assert.match(block, /--down-rgb:216,106,130;/);
   assert.match(block, /--good-rgb:139,124,255;/);
-  assert.match(block, /--warn-rgb:232,93,117;/);
+  assert.match(block, /--warn-rgb:216,106,130;/);
   assert.match(block, /--bar-good:linear-gradient\(90deg,#8B7CFF 0%,#AFA6FF 54%,#D8D4FF 82%,#8BD7FF 100%\);/);
-  assert.match(block, /--bar-warn:linear-gradient\(90deg,#B8334B 0%,#E85D75 58%,#FF8A9A 100%\);/);
+  assert.match(block, /--bar-warn:linear-gradient\(90deg,#A94F62 0%,#D86A82 58%,#E7A0AE 100%\);/);
   assert.match(block, /--bar-gold:linear-gradient\(90deg,#9B7A36 0%,#D7B56D 58%,#F0D99A 100%\);/);
 
   assert.equal(COLOR.up, '#AFA6FF');
-  assert.equal(COLOR.down, '#E85D75');
+  assert.equal(COLOR.down, '#D86A82');
   assert.equal(COLOR.good, '#8B7CFF');
-  assert.equal(COLOR.warn, '#E85D75');
+  assert.equal(COLOR.warn, '#D86A82');
   assert.equal(COLOR.gold, '#D7B56D');
 });
 
@@ -135,7 +139,7 @@ test('maps completion progress to red below 80, purple through 99, and gold at t
   assert.match(block, /--progress-gold:#D7B56D;/);
   assert.match(themeSource, /progressMid:\s*'#8B7CFF'/);
   assert.match(themeSource, /progressGold:\s*'#D7B56D'/);
-  assert.equal(progressColor(70, '#8B7CFF', '#D7B56D'), '#E85D75');
+  assert.equal(progressColor(70, '#8B7CFF', '#D7B56D'), '#D86A82');
   assert.equal(progressColor(80, '#8B7CFF', '#D7B56D'), '#8B7CFF');
   assert.equal(progressColor(99.9, '#8B7CFF', '#D7B56D'), '#8B7CFF');
   assert.equal(progressColor(100, '#8B7CFF', '#D7B56D'), '#D7B56D');
@@ -158,28 +162,30 @@ test('uses a static graphite grid and dot background instead of Color Bends', ()
   assert.doesNotMatch(indexCss, /\n\.bg-shade/);
 
   // 深石墨黑蓝底：不能是纯黑，也不能让紫色成为主视觉。
-  assert.match(darkThemeBlock(), /--bg:#050812;/);
-  assert.match(darkThemeBlock(), /--bg-base-1:#050812;/);
-  assert.match(darkThemeBlock(), /--bg-base-2:#080D18;/);
-  assert.match(darkThemeBlock(), /--bg-base-3:#0B1020;/);
+  assert.match(darkThemeBlock(), /--bg:#0B1020;/);
+  assert.match(darkThemeBlock(), /--bg-base-1:#0D1324;/);
+  assert.match(darkThemeBlock(), /--bg-base-2:#0B1020;/);
+  assert.match(darkThemeBlock(), /--bg-base-3:#070B14;/);
+  assert.match(darkThemeBlock(), /--dashboard-card-bg:rgba\(255,\s*255,\s*255,\s*0\.052\);/);
+  assert.match(darkThemeBlock(), /--dashboard-card-border:rgba\(255,\s*255,\s*255,\s*0\.10\);/);
 
   // 紫色只做远处环境光，左下光晕更低透明、更大扩散，不能成为视觉主角。
-  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(139,124,255,\.14\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(127,212,246,\.08\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-c:rgba\(95,75,180,\.08\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(139,124,255,\.07\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(124,92,255,\.16\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(88,166,255,\.10\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-c:rgba\(118,154,206,\.055\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(139,124,255,\.045\);/);
 
-  assert.match(indexCss, /\.bg\{[\s\S]*?linear-gradient\(135deg,var\(--bg-base-1\) 0%,var\(--bg-base-2\) 48%,var\(--bg-base-3\) 100%\);/);
+  assert.match(indexCss, /\.bg\{[\s\S]*?linear-gradient\(180deg,var\(--bg-base-1\) 0%,var\(--bg-base-2\) 48%,var\(--bg-base-3\) 100%\);/);
   assert.match(indexCss, /\.bg::before\{[\s\S]*?linear-gradient\(var\(--bg-grid-line\) 1px,transparent 1px\)[\s\S]*?radial-gradient\(var\(--bg-dot\) 1px,transparent 1\.4px\)[\s\S]*?background-size:56px 56px,56px 56px,28px 28px;/);
   assert.match(indexCss, /\.bg::before\{[\s\S]*?mask-image:radial-gradient\(circle at center,#000 0%,transparent 78%\);/);
   assert.match(indexCss, /\.bg::after\{[\s\S]*?radial-gradient\(ellipse at 10% 78%,var\(--bg-radial-d\),transparent 34%\)/);
-  assert.match(darkThemeBlock(), /--bg-grid-line:rgba\(255,255,255,\.035\);/);
-  assert.match(darkThemeBlock(), /--bg-dot:rgba\(255,255,255,\.032\);/);
-  assert.match(darkThemeBlock(), /--bg-noise-opacity:\.035;/);
+  assert.match(darkThemeBlock(), /--bg-grid-line:rgba\(255,255,255,\.030\);/);
+  assert.match(darkThemeBlock(), /--bg-dot:rgba\(255,255,255,\.028\);/);
+  assert.match(darkThemeBlock(), /--bg-noise-opacity:\.03;/);
   assert.match(indexCss, /\.bg::after\{[\s\S]*?feTurbulence[\s\S]*?fractalNoise[\s\S]*?mix-blend-mode:overlay;/);
 });
 
 test('keeps warning rows translucent instead of becoming saturated candy blocks', () => {
-  assert.match(channelCss, /\.ch-row--warn\s*\{[\s\S]*?background:\s*rgba\(var\(--warn-rgb\), 0\.07\);[\s\S]*?border-color:\s*rgba\(var\(--warn-rgb\), 0\.2\);/);
-  assert.match(channelCss, /\.ch-tag\s*\{[\s\S]*?background:\s*rgba\(var\(--warn-rgb\), 0\.11\);[\s\S]*?border:\s*1px solid rgba\(var\(--warn-rgb\), 0\.28\);[\s\S]*?box-shadow:\s*0 0 12px rgba\(var\(--warn-rgb\), 0\.1\);/);
+  assert.match(channelCss, /\.ch-row--warn\s*\{[\s\S]*?background:\s*rgba\(var\(--warn-rgb\), 0\.055\);[\s\S]*?border-color:\s*rgba\(var\(--warn-rgb\), 0\.18\);/);
+  assert.match(channelCss, /\.ch-tag\s*\{[\s\S]*?background:\s*rgba\(var\(--warn-rgb\), 0\.09\);[\s\S]*?border:\s*1px solid rgba\(var\(--warn-rgb\), 0\.22\);[\s\S]*?box-shadow:\s*0 0 10px rgba\(var\(--warn-rgb\), 0\.07\);/);
 });

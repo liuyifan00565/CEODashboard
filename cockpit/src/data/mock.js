@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 15:29:01 CST
+ 更新内容: 演示图表风险色同步低饱和玫瑰色，减少红色报错感。
+*/
+/*
  更新时间: 2026-07-03 18:54:17 CST
  更新内容: 维护页目标完成率状态改为 80 以下 danger、80-99 warning、100 及以上 good。
 */
@@ -338,7 +342,7 @@ export const COMPUTE_VERSION_CONSUMPTION = [
   { name: '试用版', value: 2, color: '#94A3B8' },
   { name: '企业版', value: 3, color: '#D7B56D' },
   { name: '旗舰版', value: 5, color: '#F0D99A' },
-  { name: '免费版', value: 3, color: '#E85D75' },
+  { name: '免费版', value: 3, color: '#D86A82' },
   { name: '卓越版', value: 37, color: '#8B7CFF' },
   { name: '创世版', value: 28, color: '#74A7FF' },
   { name: '至尊版ultra', value: 1, color: '#6DD6D2' },
@@ -348,8 +352,8 @@ export const COMPUTE_VERSION_CONSUMPTION = [
 export const COMPUTE_USAGE_DISTRIBUTION = [
   { name: '算力用量=0', value: 75, color: '#94A3B8' },
   { name: '0<算力用量<=100', value: 3, color: '#D7B56D' },
-  { name: '100<算力用量<=1000', value: 5, color: '#E85D75' },
-  { name: '1000<算力用量<=5000', value: 7, color: '#FF8A9A' },
+  { name: '100<算力用量<=1000', value: 5, color: '#D86A82' },
+  { name: '1000<算力用量<=5000', value: 7, color: '#E7A0AE' },
   { name: '5000<算力用量<=10000', value: 5, color: '#74A7FF' },
   { name: '算力用量>10000', value: 10, color: '#6DD6D2' },
 ];
@@ -372,7 +376,7 @@ export const COMPUTE_RESOURCE_HEALTH = [
   { key: 'sync', name: '商品同步', usage: 18.9, trend: '+2.1%', state: '增长可控', tone: 'neutral', color: '#AFA6FF' },
   { key: 'smart-eye', name: '会眼智宝', usage: 10.8, trend: '+1.6%', state: '稳态调用', tone: 'neutral', color: '#D8D4FF' },
   { key: 'vision', name: '视频识别', usage: 9.6, trend: '-1.4%', state: '低峰运行', tone: 'neutral', color: '#74A7FF' },
-  { key: 'guard', name: '后置回复拦截', usage: 6.8, trend: '+0.9%', state: '需关注', tone: 'warn', color: '#E85D75' },
+  { key: 'guard', name: '后置回复拦截', usage: 6.8, trend: '+0.9%', state: '需关注', tone: 'warn', color: '#D86A82' },
   { key: 'dialog-test', name: '对话测试', usage: 5.2, trend: '+0.4%', state: '轻量验证', tone: 'neutral', color: '#D7B56D' },
 ];
 

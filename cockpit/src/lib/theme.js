@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 15:29:01 CST
+ 更新内容: 主题 fallback 同步深灰蓝玻璃改版后的图表与提示色。
+*/
+/*
  Update time: 2026-07-04 01:03:12 CST
  Update content: Add restrained current-month chart tokens for the CEO dashboard trend highlight.
 */
@@ -31,15 +35,15 @@ const FALLBACK_TOKENS = {
   faint: 'rgba(185,194,212,.62)',
   chartText: '#F7F8FC',
   chartMuted: '#B9C2D4',
-  chartGrid: 'rgba(218,226,255,.085)',
-  chartAxis: 'rgba(218,226,255,.34)',
-  chartBar: 'rgba(139,124,255,.88)',
-  chartBarCurrent: 'rgba(139,124,255,.72)',
-  chartBarMuted: 'rgba(175,166,255,.32)',
+  chartGrid: 'rgba(226,234,255,.070)',
+  chartAxis: 'rgba(226,234,255,.28)',
+  chartBar: 'rgba(155,134,255,.74)',
+  chartBarCurrent: 'rgba(155,134,255,.68)',
+  chartBarMuted: 'rgba(155,134,255,.24)',
   chartBarFaint: 'rgba(148,163,184,.18)',
   chartBarFaintCurrent: 'rgba(167,156,255,.24)',
-  chartTooltipBg: 'rgba(6,9,20,.9)',
-  chartTooltipBorder: 'rgba(218,226,255,.16)',
+  chartTooltipBg: 'rgba(9,14,28,.88)',
+  chartTooltipBorder: 'rgba(255,255,255,.12)',
   chartPointer: 'rgba(139,124,255,.07)',
   chartPointBorder: '#060914',
   progressMid: '#8B7CFF',

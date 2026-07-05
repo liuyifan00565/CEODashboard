@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 15:29:01 CST
+ 更新内容: 适配 96px 窄侧栏，缩小 AI 小人入口并调整对话卡片锚点。
+*/
+/*
  更新时间: 2026-07-04 01:03:12 CST
  更新内容: 左下 AI 小人状态投影降低约三成并扩大紫色扩散，避免抢占核心数据视线。
 */
@@ -18,15 +22,15 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 206px;
+  min-height: 148px;
   margin-top: auto;
   padding: 8px 0 4px;
 }
 
 .ai-orb {
   position: relative;
-  width: 116px;
-  height: 160px;
+  width: 74px;
+  height: 112px;
   padding: 0;
   border: none;
   background: transparent;
@@ -37,6 +41,14 @@
   overflow: visible;
   perspective: 900px;
   transform: translateZ(0);
+}
+
+.ai-orb .mascot-3d-stage {
+  width: 82px;
+}
+
+.ai-orb .mascot-3d-stage--default {
+  width: 72px;
 }
 
 .ai-orb:focus-visible {
@@ -68,7 +80,7 @@
 .ai-bubble {
   position: absolute;
   left: 50%;
-  bottom: 202px;
+  bottom: 144px;
   z-index: 4;
   display: grid;
   gap: 4px;
@@ -131,9 +143,9 @@
 
 .ai-card-wrap {
   position: fixed;
-  left: 256px;
+  left: 112px;
   bottom: 24px;
-  width: min(420px, calc(100vw - 284px));
+  width: min(420px, calc(100vw - 140px));
   z-index: 1000;
   pointer-events: auto;
   transform-origin: left bottom;

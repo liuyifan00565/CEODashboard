@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 15:29:01 CST
+ 更新内容: 回归测试锁定首页高端深灰蓝玻璃改版、窄侧栏、自然标题和年度风险预测结构。
+*/
+/*
  Update time: 2026-07-04 01:03:12 CST
  Update content: Guard the restrained CEO dashboard pass with softer left ambient glow, more topbar breathing room, and a highlighted current month.
 */
@@ -140,7 +144,6 @@ import test from 'node:test';
 
 const appSource = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
 const mockSource = readFileSync(new URL('./data/mock.js', import.meta.url), 'utf8');
-const fluidGlassSource = readFileSync(new URL('./components/FluidGlass/FluidGlass.jsx', import.meta.url), 'utf8');
 const dashboardCss = readFileSync(new URL('./dashboard.css', import.meta.url), 'utf8');
 const indexCss = readFileSync(new URL('./index.css', import.meta.url), 'utf8');
 const projectAgentGuidance = readFileSync(new URL('../../AGENTS.md', import.meta.url), 'utf8');
@@ -152,6 +155,7 @@ const mascot3dStageCss = readFileSync(new URL('./components/Mascot3DStage.css', 
 const deliveryPanelCss = readFileSync(new URL('./components/DeliveryPanel.css', import.meta.url), 'utf8');
 const channelPanelSource = readFileSync(new URL('./components/ChannelPanel.jsx', import.meta.url), 'utf8');
 const channelPanelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
+const sidebarCss = readFileSync(new URL('./components/Sidebar.css', import.meta.url), 'utf8');
 const versionFinancePanelCss = readFileSync(new URL('./components/VersionFinancePanel.css', import.meta.url), 'utf8');
 const openingMetricCardsCss = readFileSync(new URL('./components/OpeningMetricCards.css', import.meta.url), 'utf8');
 const computePageSource = readFileSync(new URL('./components/ComputeUsagePage.jsx', import.meta.url), 'utf8');
@@ -283,17 +287,19 @@ test('counts searchable matches and cycles the current result from the top searc
   assert.match(appSource, /scrollIntoView\(\{ behavior: 'smooth', block: 'center', inline: 'nearest' \}\)/);
 });
 
-test('renders the brand title as 福客经营驾驶舱 with CEO monthly perspective', () => {
+test('renders a natural page title instead of a compact brand capsule', () => {
   assert.match(mockSource, /monthLabel: '2026年6月'/);
   assert.doesNotMatch(mockSource, /monthLabel: '2026 年 6 月'/);
-  assert.match(appSource, /<b>福客经营驾驶舱<\/b>/);
-  assert.match(dashboardCss, /\.dash-topbar \.brand-glass\{flex:0 0 256px;min-width:256px\}/);
+  assert.match(appSource, /<div className="dash-title-block">[\s\S]*?<h1>经营驾驶舱<\/h1>[\s\S]*?<p>福客 · \{META\.monthLabel\} · \{activeContextLabel\}<\/p>[\s\S]*?<\/div>/);
+  assert.match(dashboardCss, /\.dash-title-block\{[\s\S]*?display:flex;[\s\S]*?flex-direction:column;[\s\S]*?gap:4px;/);
+  assert.match(dashboardCss, /\.dash-title-block h1\{[\s\S]*?font-size:clamp\(24px,2\.4vw,34px\);[\s\S]*?font-weight:700;/);
+  assert.match(dashboardCss, /\.dash-title-block p\{[\s\S]*?color:rgba\(247,248,252,\.56\);[\s\S]*?font-size:14px;/);
+  assert.doesNotMatch(appSource, /className="brand-glass"/);
+  assert.doesNotMatch(dashboardCss, /\.dash-topbar \.brand-glass/);
   assert.match(appSource, /const activeContextLabel = maintenanceMode\s*\?\s*'数据维护'\s*:\s*activeMenu === 'overview' \? 'CEO视角' : activeMenuLabel;/);
-  assert.match(appSource, /<small>\{META\.monthLabel\}｜\{activeContextLabel\}<\/small>/);
+  assert.doesNotMatch(appSource, /<small>\{META\.monthLabel\}｜\{activeContextLabel\}<\/small>/);
   assert.doesNotMatch(appSource, /福客 · CEO 经营驾驶舱/);
   assert.doesNotMatch(appSource, /\{META\.monthLabel\} · \{activeMenu === 'overview' \? '月度视角' : activeMenuLabel\}/);
-  assert.match(fluidGlassSource, /福客经营驾驶舱/);
-  assert.doesNotMatch(fluidGlassSource, /福客 · CEO 经营驾驶舱/);
 });
 
 test('adds a topbar data maintenance switch that swaps the sidebar navigation', () => {
@@ -332,11 +338,26 @@ test('adds a topbar data maintenance switch that swaps the sidebar navigation', 
 });
 
 test('softens the shared glass controls so navigation and top tools stay restrained', () => {
-  assert.match(appSource, /<GlassSurface[\s\S]*?brightness=\{46\}[\s\S]*?blur=\{7\}[\s\S]*?displace=\{0\.35\}[\s\S]*?backgroundOpacity=\{0\.035\}[\s\S]*?distortionScale=\{-55\}[\s\S]*?className="brand-glass"/);
-  assert.match(sidebarSource, /<GlassSurface[\s\S]*?brightness=\{46\}[\s\S]*?blur=\{8\}[\s\S]*?displace=\{0\.35\}[\s\S]*?backgroundOpacity=\{0\.035\}[\s\S]*?distortionScale=\{-55\}[\s\S]*?className="sb-glass"/);
+  assert.doesNotMatch(appSource, /className="brand-glass"/);
+  assert.match(sidebarSource, /<GlassSurface[\s\S]*?brightness=\{48\}[\s\S]*?blur=\{10\}[\s\S]*?displace=\{0\.28\}[\s\S]*?backgroundOpacity=\{0\.055\}[\s\S]*?distortionScale=\{-48\}[\s\S]*?className="sb-glass"/);
   assert.match(expandableSearchSource, /brightness=\{48\}[\s\S]*?blur=\{7\}[\s\S]*?displace=\{0\.35\}[\s\S]*?backgroundOpacity=\{0\.035\}[\s\S]*?distortionScale=\{-60\}/);
   assert.match(glassSurfaceCss, /\.glass-surface--svg\s*\{[\s\S]*?box-shadow:[\s\S]*?inset 0 0 0 1px[\s\S]*?inset 0 1px 0 rgba\(255, 255, 255, 0\.10\)[\s\S]*?0px 10px 30px rgba\(17, 17, 26, 0\.08\);/);
   assert.doesNotMatch(glassSurfaceCss, /0px 16px 56px rgba\(17, 17, 26, 0\.05\) inset/);
+});
+
+test('uses a narrow icon-first sidebar with accessible labels', () => {
+  const sidebarItemBlock = cssRuleBody(sidebarCss, '.sb-item');
+
+  assert.match(dashboardCss, /\.dash-aside\{[\s\S]*?width:96px;[\s\S]*?padding:18px 10px;/);
+  assert.match(sidebarSource, /<nav className="sb-root" aria-label="主导航">/);
+  assert.match(sidebarSource, /<button[\s\S]*?type="button"[\s\S]*?className=\{`sb-item\$\{item\.key === active \? ' sb-item--active' : ''\}`\}[\s\S]*?aria-label=\{item\.name\}[\s\S]*?title=\{item\.name\}/);
+  assert.match(sidebarCss, /\.sb-root\s*\{[\s\S]*?width:\s*72px;[\s\S]*?padding:\s*10px;/);
+  assert.match(sidebarItemBlock, /justify-content:\s*center;/);
+  assert.match(sidebarItemBlock, /width:\s*52px;/);
+  assert.match(sidebarItemBlock, /height:\s*52px;/);
+  assert.match(sidebarCss, /\.sb-name\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?left:\s*calc\(100% \+ 10px\);[\s\S]*?opacity:\s*0;/);
+  assert.match(sidebarCss, /\.sb-item:hover \.sb-name,[\s\S]*?\.sb-item:focus-visible \.sb-name\s*\{[\s\S]*?opacity:\s*1;/);
+  assert.doesNotMatch(sidebarSource, /<div className="sb-title">导航<\/div>/);
 });
 
 test('renders data maintenance as four independent pages instead of the dashboard grid', () => {
@@ -823,8 +844,9 @@ test('builds two long recovery cards that each include a sales completion panel'
   assert.match(dashboardCss, /\.dash-kpis\{\s*display:grid;grid-template-columns:minmax\(0,1fr\);grid-template-rows:repeat\(2,minmax\(326px,auto\)\);/);
   assert.match(dashboardCss, /\.dash-kpi-item\[data-kpi-key="month"\]\{grid-column:1;grid-row:1\}/);
   assert.match(dashboardCss, /\.dash-kpi-item\[data-kpi-key="year"\]\{grid-column:1;grid-row:2\}/);
-  assert.match(appSource, /function recoveryChannelTitle\(card\) \{[\s\S]*?return card\.key === 'year' \? '本年渠道完成情况' : '本月渠道完成情况';[\s\S]*?\}/);
-  assert.match(appSource, /recoveryKpiCards\.map\(\(card\) => \([\s\S]*?<KpiCard[\s\S]*?card=\{card\}[\s\S]*?onOpen=\{handleOpenCard\}[\s\S]*?sidePanel=\{<ChannelPanel channelKey=\{activeChannelKey\} title=\{recoveryChannelTitle\(card\)\} \/>\}[\s\S]*?\/>/);
+  assert.match(appSource, /function recoveryChannelTitle\(card\) \{[\s\S]*?return card\.key === 'year' \? '年度风险预测' : '渠道完成情况';[\s\S]*?\}/);
+  assert.match(appSource, /function recoveryChannelVariant\(card\) \{[\s\S]*?return card\.key === 'year' \? 'forecast' : 'completion';[\s\S]*?\}/);
+  assert.match(appSource, /recoveryKpiCards\.map\(\(card\) => \([\s\S]*?<KpiCard[\s\S]*?card=\{card\}[\s\S]*?onOpen=\{handleOpenCard\}[\s\S]*?sidePanel=\{<ChannelPanel channelKey=\{activeChannelKey\} title=\{recoveryChannelTitle\(card\)\} variant=\{recoveryChannelVariant\(card\)\} \/>\}[\s\S]*?\/>/);
   assert.doesNotMatch(appSource, /className="dash-kpi-sales"/);
   assert.doesNotMatch(dashboardCss, /\.dash-kpi-sales/);
   assert.doesNotMatch(dashboardCss, /\.dash-kpi-item\[data-kpi-key="cost"\]\{grid-column:2;grid-row:1\}/);
@@ -899,7 +921,7 @@ test('routes every channel menu through the same overview layout with channel-sc
   assert.match(appSource, /const activeChannelKey = getDashboardChannelKey\(activeMenu\);/);
   assert.match(appSource, /getFilteredKpiCards\(\{ dim, dateRange, channel: activeChannelKey \}\)/);
   assert.match(appSource, /<MonthlyTrend channelKey=\{activeChannelKey\} \/>/);
-  assert.match(appSource, /<ChannelPanel channelKey=\{activeChannelKey\} title=\{recoveryChannelTitle\(card\)\} \/>/);
+  assert.match(appSource, /<ChannelPanel channelKey=\{activeChannelKey\} title=\{recoveryChannelTitle\(card\)\} variant=\{recoveryChannelVariant\(card\)\} \/>/);
   assert.match(appSource, /<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);
   assert.match(appSource, /className=\{gridClassName\}/);
 });
@@ -914,8 +936,8 @@ test('scrolls the dashboard content into view when a sidebar menu item is select
 });
 
 test('uses channel completion wording and connects the delivery dashboard panel', () => {
-  assert.match(channelPanelSource, /本月渠道完成情况/);
-  assert.match(channelPanelSource, /export default function ChannelPanel\(\{ channelKey = 'all', title = '本月渠道完成情况' \}\)/);
+  assert.match(channelPanelSource, /渠道完成情况/);
+  assert.match(channelPanelSource, /export default function ChannelPanel\(\{ channelKey = 'all', title = '渠道完成情况', variant = 'completion' \}\)/);
   assert.match(channelPanelSource, /<span className="ch-title">\{title\}<\/span>/);
   assert.doesNotMatch(channelPanelSource, /本月销售完成/);
   assert.match(channelPanelSource, /createPortal/);
@@ -927,9 +949,23 @@ test('uses channel completion wording and connects the delivery dashboard panel'
   assert.match(appSource, /import DeliveryPanel from '\.\/components\/DeliveryPanel';/);
   assert.match(appSource, /<DeliveryPanel \/>/);
   assert.match(dashboardCss, /dash-delivery-row/);
-  assert.match(appSource, /sidePanel=\{<ChannelPanel channelKey=\{activeChannelKey\} title=\{recoveryChannelTitle\(card\)\} \/>\}/);
+  assert.match(appSource, /sidePanel=\{<ChannelPanel channelKey=\{activeChannelKey\} title=\{recoveryChannelTitle\(card\)\} variant=\{recoveryChannelVariant\(card\)\} \/>\}/);
   assert.match(appSource, /className="dash-cell dash-cell--finance-kpis"/);
   assert.doesNotMatch(dashboardCss, /"version delivery"/);
+});
+
+test('turns the yearly recovery side panel into a decision forecast area', () => {
+  assert.match(channelPanelSource, /function buildAnnualRiskForecast\(rows\) \{/);
+  assert.match(channelPanelSource, /const forecast = buildAnnualRiskForecast\(rows\);/);
+  assert.match(channelPanelSource, /variant === 'forecast'/);
+  assert.match(channelPanelSource, /<div className="ch-forecast"/);
+  assert.match(channelPanelSource, /预计全年完成率/);
+  assert.match(channelPanelSource, /主要缺口/);
+  assert.match(channelPanelSource, /追回所需月均增量/);
+  assert.match(channelPanelSource, /\{c\.warn && <span className="ch-tag">需关注<\/span>\}/);
+  assert.doesNotMatch(channelPanelSource, /落后预警/);
+  assert.match(channelPanelCss, /\.ch-forecast\s*\{[\s\S]*?display:\s*grid;[\s\S]*?gap:\s*10px;/);
+  assert.match(channelPanelCss, /\.ch-forecast-card\s*\{[\s\S]*?background:\s*rgba\(255,\s*255,\s*255,\s*\.045\);[\s\S]*?border:\s*1px solid rgba\(255,\s*255,\s*255,\s*\.09\);/);
 });
 
 test('matches overview cards to the neutral dark glass recipe', () => {
@@ -996,12 +1032,12 @@ test('highlights the current month in the restrained monthly trend instead of br
   assert.match(monthlyTrendSource, /target\.map\(\(value, index\) => \(\{[\s\S]*?itemStyle: \{[\s\S]*?color: isCurrentTrendMonth\(trend\[index\]\) \? tokens\.chartBarFaintCurrent : tokens\.chartBarFaint,/);
   assert.match(monthlyTrendSource, /recovered\.map\(\(value, index\) => \(\{[\s\S]*?color: currentMonthBarColor\(trend\[index\], tokens\),/);
   assert.match(monthlyTrendSource, /axisLabel: \{[\s\S]*?color: \(\{ value \}\) => \(value === '6月' \? tokens\.chartText : faint\),/);
-  assert.match(indexCss, /--chart-bar-current:rgba\(139,124,255,\.72\);/);
-  assert.match(indexCss, /--chart-bar-muted:rgba\(175,166,255,\.32\);/);
+  assert.match(indexCss, /--chart-bar-current:rgba\(155,134,255,\.68\);/);
+  assert.match(indexCss, /--chart-bar-muted:rgba\(155,134,255,\.24\);/);
 });
 
 test('keeps left ambient glow behind the AI mascot diffused and subordinate', () => {
-  assert.match(indexCss, /--bg-radial-d:rgba\(139,124,255,\.07\);/);
+  assert.match(indexCss, /--bg-radial-d:rgba\(139,124,255,\.045\);/);
   assert.match(indexCss, /radial-gradient\(ellipse at 10% 78%,var\(--bg-radial-d\),transparent 34%\)/);
   assert.match(aiAnalysisWidgetCss, /\.ai-orb--think \.mascot-3d-stage,[\s\S]*?drop-shadow\(0 0 36px rgba\(139, 124, 255, \.18\)\)/);
   assert.match(mascot3dStageCss, /drop-shadow\(0 0 30px rgba\(114, 77, 255, \.24\)\)/);

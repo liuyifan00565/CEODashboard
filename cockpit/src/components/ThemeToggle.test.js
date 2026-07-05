@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 15:29:01 CST
+ 更新内容: 主题回归测试同步低饱和风险色与更轻玻璃卡片 token。
+*/
+/*
  Update time: 2026-07-03 18:54:17 CST
  Update content: Require light theme progress tokens to expose purple mid-tier and gold target-tier colors.
 */
@@ -129,15 +133,15 @@ test('keeps graphite violet brand accents aligned in light theme', () => {
   assert.match(block, /--brand-ice:#8BD7FF;/);
   assert.match(block, /--accent-gold:#B78C32;/);
   assert.match(block, /--up:#6F62D8;/);
-  assert.match(block, /--down:#D94D66;/);
+  assert.match(block, /--down:#C85D72;/);
   assert.match(block, /--good:#6F62D8;/);
-  assert.match(block, /--warn:#D94D66;/);
+  assert.match(block, /--warn:#C85D72;/);
   assert.match(block, /--up-rgb:111,98,216;/);
-  assert.match(block, /--down-rgb:217,77,102;/);
+  assert.match(block, /--down-rgb:200,93,114;/);
   assert.match(block, /--good-rgb:111,98,216;/);
-  assert.match(block, /--warn-rgb:217,77,102;/);
+  assert.match(block, /--warn-rgb:200,93,114;/);
   assert.match(block, /--bar-good:linear-gradient\(90deg,#6F62D8 0%,#8B7CFF 56%,#C9C3FF 88%,#8BD7FF 100%\);/);
-  assert.match(block, /--bar-warn:linear-gradient\(90deg,#AA2F45 0%,#D94D66 58%,#F07C8E 100%\);/);
+  assert.match(block, /--bar-warn:linear-gradient\(90deg,#A24D5D 0%,#C85D72 58%,#E19AAA 100%\);/);
   assert.match(block, /--bar-gold:linear-gradient\(90deg,#8C6726 0%,#B78C32 58%,#D7B56D 100%\);/);
   assert.match(block, /--progress-mid:#6F62D8;/);
   assert.match(block, /--progress-gold:#B78C32;/);

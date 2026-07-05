@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-05 15:29:01 CST
+ 更新内容: 风险与背景回归测试切换到柔和深灰蓝玻璃主题和低饱和玫瑰风险色。
+*/
+/*
  更新时间: 2026-07-04 01:03:12 CST
  更新内容: 月度趋势风险语义允许 6 月用同一紫色体系高亮，风险色仍只用于完成率点位和标签。
 */
@@ -47,17 +51,20 @@ const deliverySource = readFileSync(new URL('./components/DeliveryPanel.jsx', im
 const deliveryCss = readFileSync(new URL('./components/DeliveryPanel.css', import.meta.url), 'utf8');
 const openingMetricSource = readFileSync(new URL('./components/OpeningMetricCards.jsx', import.meta.url), 'utf8');
 
-test('uses the obsidian graphite violet and champagne palette tokens', () => {
-  assert.match(indexCss, /--bg:#050812;/);
-  assert.match(indexCss, /--bg-base-1:#050812;/);
-  assert.match(indexCss, /--bg-base-2:#080D18;/);
-  assert.match(indexCss, /--bg-base-3:#0B1020;/);
+test('uses the softened graphite blue glass palette tokens', () => {
+  assert.match(indexCss, /--bg:#0B1020;/);
+  assert.match(indexCss, /--bg-base-1:#0D1324;/);
+  assert.match(indexCss, /--bg-base-2:#0B1020;/);
+  assert.match(indexCss, /--bg-base-3:#070B14;/);
+  assert.match(indexCss, /--dashboard-card-bg:rgba\(255,\s*255,\s*255,\s*0\.052\);/);
+  assert.match(indexCss, /--dashboard-card-border:rgba\(255,\s*255,\s*255,\s*0\.10\);/);
+  assert.match(indexCss, /--dashboard-card-shadow:0 24px 80px rgba\(0,\s*0,\s*0,\s*0\.28\), inset 0 1px 0 rgba\(255,255,255,\.06\);/);
   assert.match(indexCss, /--brand-purple:#8B7CFF;/);
   assert.match(indexCss, /--brand-purple-2:#AFA6FF;/);
   assert.match(indexCss, /--brand-lavender:#D8D4FF;/);
   assert.match(indexCss, /--control-solid:#D7B56D;/);
-  assert.match(indexCss, /--warn:#E85D75;/);
-  assert.match(indexCss, /--warn-rgb:232,93,117;/);
+  assert.match(indexCss, /--warn:#D86A82;/);
+  assert.match(indexCss, /--warn-rgb:216,106,130;/);
 });
 
 test('uses red below 80, purple from 80 to 99, and gold at 100 percent or above', () => {
