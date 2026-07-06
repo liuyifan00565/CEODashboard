@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 14:44:12 CST  更新内容: 月度经营趋势完成率折线、圆点和读数改为图二青蓝色。 */
 /* 更新时间: 2026-07-06 14:30:24 CST  更新内容: 月度经营趋势完成率读数下移贴近折线原点上方。 */
 /* 更新时间: 2026-07-06 14:18:47 CST  更新内容: 月度经营趋势完成率读数取消黑色贴片，改为折线上方荧光黄文字。 */
 /* 更新时间: 2026-07-06 14:03:06 CST  更新内容: 月度经营趋势完成率读数固定上移，避免数据显示在折线上。 */
@@ -6,11 +7,11 @@
 /* 更新时间: 2026-06-29 10:45:53  更新内容: 月度经营趋势图例改为静态说明，并将目标与回款柱重叠展示。 */
 import EChart from './EChart';
 import { getChannelTrend } from '../data/mock';
-import { COLOR, progressColor } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './MonthlyTrend.css';
 
 const COMPLETION_LABEL_OFFSET = [0, -2];
+const COMPLETION_LINE_COLOR = '#43eaff';
 
 function safeTrendNumber(value) {
   const number = Number(value);
@@ -164,14 +165,14 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         symbolSize: 6,
         showAllSymbol: true,
         clip: false,
-        lineStyle: { color: COLOR.good, width: 2 },
-        itemStyle: { color: ({ value }) => progressColor(value, tokens.progressMid), borderColor: tokens.chartPointBorder, borderWidth: 2 },
+        lineStyle: { color: COMPLETION_LINE_COLOR, width: 2 },
+        itemStyle: { color: COMPLETION_LINE_COLOR, borderColor: '#c8fbff', borderWidth: 2 },
         z: 8,
         label: {
           show: true,
           position: 'top',
           offset: COMPLETION_LABEL_OFFSET,
-          color: COLOR.good,
+          color: COMPLETION_LINE_COLOR,
           fontSize: 14,
           fontWeight: 700,
           lineHeight: 17,

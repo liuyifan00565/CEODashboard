@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 14:44:12 CST
+ 更新内容: 要求月度经营趋势完成率折线、圆点和读数改为图二青蓝色。
+*/
+/*
  更新时间: 2026-07-06 14:30:24 CST
  更新内容: 要求月度经营趋势完成率读数贴近折线原点上方，避免距离过高。
 */
@@ -38,10 +42,15 @@ test('keeps the completion line readable for changing monthly trend data', () =>
   assert.match(source, /completionAxisMax\(values\)[\s\S]*?Math\.max\(24,\s*maxValue \* 0\.18\)/);
   assert.match(source, /grid:\s*\{[\s\S]*?top:\s*68[\s\S]*?right:\s*24[\s\S]*?bottom:\s*12/);
   assert.match(source, /const COMPLETION_LABEL_OFFSET = \[0,\s*-2\];/);
+  assert.match(source, /const COMPLETION_LINE_COLOR = '#43eaff';/);
   assert.doesNotMatch(source, /position:\s*\(params\) => \(params\.dataIndex % 2 === 0 \? 'top' : 'bottom'\)/);
   assert.match(source, /label:\s*\{[\s\S]*?position:\s*'top'/);
   assert.match(source, /offset:\s*COMPLETION_LABEL_OFFSET/);
-  assert.match(completionLabelBlock, /color:\s*COLOR\.good/);
+  assert.match(source, /lineStyle:\s*\{\s*color:\s*COMPLETION_LINE_COLOR,\s*width:\s*2\s*\}/);
+  assert.match(source, /itemStyle:\s*\{\s*color:\s*COMPLETION_LINE_COLOR/);
+  assert.match(completionLabelBlock, /color:\s*COMPLETION_LINE_COLOR/);
+  assert.doesNotMatch(source, /progressColor/);
+  assert.doesNotMatch(completionLabelBlock, /COLOR\.good/);
   assert.doesNotMatch(completionLabelBlock, /backgroundColor:/);
   assert.doesNotMatch(completionLabelBlock, /borderColor:/);
   assert.doesNotMatch(completionLabelBlock, /borderWidth:/);
