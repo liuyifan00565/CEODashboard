@@ -1,21 +1,8 @@
 /*
- 更新时间: 2026-07-06 11:20:00 CST
- 更新内容: 保留 imagegen 透明图切层 rig，并将默认环境投影收敛为低占比银紫玫瑰微光。
-*/
-/*
- 更新时间: 2026-07-06 11:02:20 CST
- 更新内容: 为 imagegen 透明图切层 rig 增加头身四肢关节、动作关键帧和鼠标跟随变量。
-*/
-/*
- 更新时间: 2026-07-06 10:49:22 CST
- 更新内容: 小人舞台改为 imagegen 透明参考图驱动，并保留鼠标跟随和动作状态动画。
+ 更新时间: 2026-07-06 12:11:26 CST
+ 更新内容: 为 Blender GLB 版 AI 小人增加透明 Canvas 舞台、加载兜底和克制银紫投影。
 */
 .mascot-3d-stage {
-  --mascot-pointer-x: 0;
-  --mascot-pointer-y: 0;
-  --mascot-pointer-translate-x: 0px;
-  --mascot-pointer-translate-y: 0px;
-  --mascot-pointer-tilt: 0deg;
   position: relative;
   display: block;
   width: 112px;
@@ -29,15 +16,21 @@
   width: 96px;
 }
 
-.mascot-rig-root {
+.mascot-3d-stage canvas {
   position: absolute;
   inset: 0;
   display: block;
-  transform-origin: 50% 82%;
-  will-change: transform, filter;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0;
+  transition: opacity .18s ease;
 }
 
-.mascot-rig-layer {
+.mascot-3d-stage--ready canvas {
+  opacity: 1;
+}
+
+.mascot-reference-fallback {
   position: absolute;
   inset: 0;
   display: block;
@@ -46,279 +39,21 @@
   max-width: none;
   object-fit: contain;
   object-position: center bottom;
+  opacity: 1;
+  visibility: visible;
   user-select: none;
   -webkit-user-drag: none;
-  will-change: transform;
+  transition: opacity .18s ease, visibility .18s ease;
 }
 
-.mascot-rig-layer--head {
-  transform-origin: 50% 48%;
+.mascot-3d-stage--ready .mascot-reference-fallback {
+  opacity: 0;
+  visibility: hidden;
 }
 
-.mascot-rig-layer--body {
-  transform-origin: 50% 70%;
-}
-
-.mascot-rig-layer--left-arm {
-  transform-origin: 33% 50%;
-}
-
-.mascot-rig-layer--right-arm {
-  transform-origin: 67% 50%;
-}
-
-.mascot-rig-layer--left-leg {
-  transform-origin: 39% 72%;
-}
-
-.mascot-rig-layer--right-leg {
-  transform-origin: 59% 72%;
-}
-
-.mascot-action--idle .mascot-rig-root {
-  animation: mascot-rig-float 4.2s ease-in-out infinite;
-}
-
-.mascot-action--idle .mascot-rig-layer--head {
-  animation: mascot-rig-head-idle 4.6s ease-in-out infinite;
-}
-
-.mascot-action--idle .mascot-rig-layer--left-arm,
-.mascot-action--idle .mascot-rig-layer--right-arm {
-  animation: mascot-rig-arm-idle 4.8s ease-in-out infinite;
-}
-
-.mascot-action--wave .mascot-rig-root {
-  animation: mascot-rig-float 2.6s ease-in-out infinite;
-}
-
-.mascot-action--wave .mascot-rig-layer--right-arm {
-  animation: mascot-rig-wave-right .82s ease-in-out infinite;
-}
-
-.mascot-action--wave .mascot-rig-layer--head {
-  animation: mascot-rig-head-wave .95s ease-in-out infinite;
-}
-
-.mascot-action--talk .mascot-rig-root,
-.mascot-3d-stage--active .mascot-rig-root {
-  animation: mascot-rig-talk-body .74s ease-in-out infinite;
-}
-
-.mascot-action--talk .mascot-rig-layer--head,
-.mascot-3d-stage--active .mascot-rig-layer--head {
-  animation: mascot-rig-talk-head .42s ease-in-out infinite;
-}
-
-.mascot-action--think .mascot-rig-root {
-  transform: translate3d(var(--mascot-pointer-translate-x), calc(var(--mascot-pointer-translate-y) + 1px), 0)
-    rotate(calc(var(--mascot-pointer-tilt) - 1deg));
-}
-
-.mascot-action--think .mascot-rig-layer--head {
-  transform: rotate(-5deg) translate3d(-2px, 0, 0);
-}
-
-.mascot-action--think .mascot-rig-layer--right-arm {
-  transform: rotate(-10deg) translate3d(-1px, -3px, 0);
-}
-
-.mascot-action--alert .mascot-rig-root {
-  animation: mascot-rig-alert-root .62s ease-in-out infinite;
-}
-
-.mascot-action--alert .mascot-rig-layer--head {
-  animation: mascot-rig-alert-head .62s ease-in-out infinite;
-}
-
-.mascot-action--celebrate .mascot-rig-root,
-.mascot-action--click .mascot-rig-root {
-  animation: mascot-rig-celebrate-root .74s ease-in-out infinite;
-}
-
-.mascot-action--celebrate .mascot-rig-layer--left-arm,
-.mascot-action--click .mascot-rig-layer--left-arm {
-  animation: mascot-rig-celebrate-left-arm .74s ease-in-out infinite;
-}
-
-.mascot-action--celebrate .mascot-rig-layer--right-arm,
-.mascot-action--click .mascot-rig-layer--right-arm {
-  animation: mascot-rig-celebrate-right-arm .74s ease-in-out infinite;
-}
-
-.mascot-action--celebrate .mascot-rig-layer--left-leg,
-.mascot-action--click .mascot-rig-layer--left-leg,
-.mascot-action--celebrate .mascot-rig-layer--right-leg,
-.mascot-action--click .mascot-rig-layer--right-leg {
-  animation: mascot-rig-leg-bounce .74s ease-in-out infinite;
-}
-
-@keyframes mascot-rig-float {
-  0%,
-  100% {
-    transform: translate3d(var(--mascot-pointer-translate-x), var(--mascot-pointer-translate-y), 0)
-      rotate(calc(var(--mascot-pointer-tilt) - 1deg));
-  }
-
-  50% {
-    transform: translate3d(var(--mascot-pointer-translate-x), calc(var(--mascot-pointer-translate-y) - 7px), 0)
-      rotate(calc(var(--mascot-pointer-tilt) + 1deg));
-  }
-}
-
-@keyframes mascot-rig-head-idle {
-  0%,
-  100% {
-    transform: rotate(-1deg);
-  }
-
-  50% {
-    transform: rotate(2deg) translate3d(1px, -2px, 0);
-  }
-}
-
-@keyframes mascot-rig-arm-idle {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-
-  50% {
-    transform: rotate(-2deg) translate3d(0, 1px, 0);
-  }
-}
-
-@keyframes mascot-rig-wave-right {
-  0%,
-  100% {
-    transform: rotate(-2deg) translate3d(0, 0, 0);
-  }
-
-  50% {
-    transform: rotate(-22deg) translate3d(-4px, -9px, 0);
-  }
-}
-
-@keyframes mascot-rig-head-wave {
-  0%,
-  100% {
-    transform: rotate(-1deg);
-  }
-
-  50% {
-    transform: rotate(3deg) translate3d(1px, -2px, 0);
-  }
-}
-
-@keyframes mascot-rig-talk-body {
-  0%,
-  100% {
-    transform: translate3d(var(--mascot-pointer-translate-x), var(--mascot-pointer-translate-y), 0)
-      rotate(var(--mascot-pointer-tilt));
-  }
-
-  50% {
-    transform: translate3d(var(--mascot-pointer-translate-x), calc(var(--mascot-pointer-translate-y) - 4px), 0)
-      rotate(calc(var(--mascot-pointer-tilt) + .8deg));
-  }
-}
-
-@keyframes mascot-rig-talk-head {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) rotate(-1deg);
-  }
-
-  50% {
-    transform: translate3d(0, -2px, 0) rotate(1.5deg);
-  }
-}
-
-@keyframes mascot-rig-alert-root {
-  0%,
-  100% {
-    transform: translate3d(var(--mascot-pointer-translate-x), var(--mascot-pointer-translate-y), 0)
-      rotate(calc(var(--mascot-pointer-tilt) - 3deg));
-    filter: saturate(1);
-  }
-
-  50% {
-    transform: translate3d(var(--mascot-pointer-translate-x), calc(var(--mascot-pointer-translate-y) - 6px), 0)
-      rotate(calc(var(--mascot-pointer-tilt) + 3deg));
-    filter: saturate(1.22) brightness(1.06);
-  }
-}
-
-@keyframes mascot-rig-alert-head {
-  0%,
-  100% {
-    transform: rotate(-2deg);
-  }
-
-  50% {
-    transform: rotate(4deg) translate3d(0, -2px, 0);
-  }
-}
-
-@keyframes mascot-rig-celebrate-root {
-  0%,
-  100% {
-    transform: translate3d(var(--mascot-pointer-translate-x), var(--mascot-pointer-translate-y), 0)
-      rotate(calc(var(--mascot-pointer-tilt) - 2deg));
-  }
-
-  50% {
-    transform: translate3d(var(--mascot-pointer-translate-x), calc(var(--mascot-pointer-translate-y) - 13px), 0)
-      rotate(calc(var(--mascot-pointer-tilt) + 4deg));
-  }
-}
-
-@keyframes mascot-rig-celebrate-left-arm {
-  0%,
-  100% {
-    transform: rotate(2deg);
-  }
-
-  50% {
-    transform: rotate(14deg) translate3d(3px, -8px, 0);
-  }
-}
-
-@keyframes mascot-rig-celebrate-right-arm {
-  0%,
-  100% {
-    transform: rotate(-2deg);
-  }
-
-  50% {
-    transform: rotate(-16deg) translate3d(-3px, -8px, 0);
-  }
-}
-
-@keyframes mascot-rig-leg-bounce {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-
-  50% {
-    transform: translate3d(0, 3px, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mascot-rig-root,
-  .mascot-rig-layer,
-  .mascot-action--idle .mascot-rig-root,
-  .mascot-action--idle .mascot-rig-layer--head,
-  .mascot-action--wave .mascot-rig-layer--right-arm,
-  .mascot-action--talk .mascot-rig-root,
-  .mascot-3d-stage--active .mascot-rig-root,
-  .mascot-action--alert .mascot-rig-root,
-  .mascot-action--celebrate .mascot-rig-root,
-  .mascot-action--click .mascot-rig-root {
-    animation: none;
-  }
+.mascot-3d-stage--failed .mascot-reference-fallback {
+  opacity: 1;
+  visibility: visible;
 }
 
 @media (max-width: 760px) {
