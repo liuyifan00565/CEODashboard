@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 15:03:18 CST
+ 更新内容: 算力用量分布环图外拉标签支持区间名和占比分行显示，避免右侧长标签被截断。
+*/
+/*
  更新时间: 2026-07-06 12:25:08 CST
  更新内容: 算力用量分布环图单独左移并收窄外半径，避免右侧标签被裁切。
 */
@@ -260,6 +264,9 @@ function computePieLabelLayout(params) {
 
 function formatComputePieLabel(params) {
   const name = formatPieLabelName(params.name);
+  if (params.data?.wrapLabel) {
+    return `{name|${name}}\n{value|${params.percent}%}`;
+  }
   if (COMPUTE_STACKED_PIE_LABELS.has(String(params.name))) {
     return `{name|${name}}\n{value|${params.percent}%}`;
   }
@@ -695,6 +702,7 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
         data: data.map((item) => ({
           name: item.name,
           value: item.value,
+          wrapLabel: isUsageDistributionPie,
           itemStyle: { color: item.color },
         })),
       },
