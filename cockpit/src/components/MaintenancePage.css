@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:57:51 CST
+ 更新内容: 为目标维护工具栏增加目标数据更新时间的紧凑状态文案样式。
+*/
+/*
  更新时间: 2026-07-03 11:55:42 CST
  更新内容: 合并 ttoswar 最新维护页导航、冻结列柔化和紫色选中态改动。
 */
@@ -309,6 +313,17 @@
   border-color: rgba(var(--warn-rgb), .32);
   color: var(--warn);
   background: rgba(var(--warn-rgb), .08);
+}
+
+.mnt-target-updated-at {
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 720;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .mnt-layout {

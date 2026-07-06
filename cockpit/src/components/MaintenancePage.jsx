@@ -1,4 +1,20 @@
 /*
+ Update time: 2026-07-06 11:15:05 CST
+ Update content: Filter annual target rows to the selected organization branch instead of scrolling the full table.
+*/
+/*
+ Update time: 2026-07-06 11:04:58 CST
+ Update content: Display the target maintenance root organization as all departments in both side nav and target rows.
+*/
+/*
+ Update time: 2026-07-06 11:01:06 CST
+ Update content: Show the shared target data updated timestamp before the status badge on all four maintenance pages.
+*/
+/*
+ Update time: 2026-07-06 10:57:51 CST
+ Update content: Add a compact target data updated timestamp to the target maintenance toolbar and refresh it after saves.
+*/
+/*
  Update time: 2026-07-06 10:28:05 CST
  Update content: Load data maintenance pages from MySQL APIs and save editable UI fields back to matching database tables.
 */
@@ -100,6 +116,8 @@ const PAGE_API_RESOURCES = {
   'org-maintenance': 'org',
   'channel-maintenance': 'channels',
 };
+const INITIAL_TARGET_UPDATED_AT = '2026/7/6 10:42:41';
+const TARGET_ALL_DEPARTMENTS_LABEL = '所有部门';
 const DEFAULT_MAINTENANCE_DATA = {
   target: {
     orgTree: TARGET_MAINTENANCE_ORG_TREE,
@@ -229,6 +247,12 @@ function nowLabel() {
   return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
 }
 
+function nowFullLabel() {
+  const date = new Date();
+  const padTime = (value) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${padTime(date.getHours())}:${padTime(date.getMinutes())}:${padTime(date.getSeconds())}`;
+}
+
 function handleSelectableRowKeyDown(event, rowKey, onSelect) {
   if (event.target !== event.currentTarget) return;
   if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -296,6 +320,40 @@ function getDescendantIds(items, selectedId) {
   return ids;
 }
 
+function withTargetAllDepartmentsRoot(orgTree) {
+  if (!orgTree) return orgTree;
+  return { ...orgTree, name: TARGET_ALL_DEPARTMENTS_LABEL };
+}
+
+function withTargetAllDepartmentsRow(row, rootId) {
+  return row.id === rootId ? { ...row, name: TARGET_ALL_DEPARTMENTS_LABEL } : row;
+}
+
+function collectTargetOrgBranch(node, ids) {
+  if (!node) return;
+  ids.add(node.id);
+  (node.children ?? []).forEach((child) => collectTargetOrgBranch(child, ids));
+}
+
+function collectTargetOrgIds(node, selectedId) {
+  if (!node) return new Set();
+  if (node.id === selectedId) {
+    const ids = new Set();
+    collectTargetOrgBranch(node, ids);
+    return ids;
+  }
+  for (const child of node.children ?? []) {
+    const ids = collectTargetOrgIds(child, selectedId);
+    if (ids.size) return ids;
+  }
+  return new Set();
+}
+
+function filterTargetRowsByOrg(rows, orgIds, selectedOrg, rootId) {
+  if (selectedOrg === rootId || orgIds.size === 0) return rows;
+  return rows.filter((row) => row.type === 'department' ? orgIds.has(row.id) : orgIds.has(row.deptId));
+}
+
 function MaintenanceToolbarSurface({ className = '', children }) {
   return (
     <div className={`mnt-toolbar-surface ${className}`.trim()}>{children}</div>
@@ -315,7 +373,12 @@ function SaveBadge({ status }) {
   return <span className={`mnt-save-badge${dirty ? ' mnt-save-badge--dirty' : ''}`}>{status}</span>;
 }
 
-function MaintenanceToolbar({ activePage, year, status, onBack, onDirty, onSave, onYearChange }) {
+function TargetUpdatedAtBadge({ updatedAt }) {
+  if (!updatedAt) return null;
+  return <span className="mnt-target-updated-at">目标数据已更新：{updatedAt}</span>;
+}
+
+function MaintenanceToolbar({ activePage, year, status, targetUpdatedAt, onBack, onDirty, onSave, onYearChange }) {
   const meta = getMaintenancePageMeta(activePage);
   const title = MAINTENANCE_TITLE_TEXT[activePage] ?? meta.title;
 
@@ -369,6 +432,7 @@ function MaintenanceToolbar({ activePage, year, status, onBack, onDirty, onSave,
         <div className="mnt-actions">
           {actions[activePage] ?? actions['target-maintenance']}
           <button className="mnt-btn" type="button" onClick={onBack}>返回看板</button>
+          <TargetUpdatedAtBadge updatedAt={targetUpdatedAt} />
           <SaveBadge status={status} />
         </div>
       </section>
@@ -502,6 +566,15 @@ function TargetMaintenancePage({ markDirty, status, data, onDataChange }) {
   const targetScrollPaneRef = useTargetCurrentMonthAlignment();
   const rows = data?.rows ?? TARGET_MAINTENANCE_ROWS;
   const orgTree = data?.orgTree ?? TARGET_MAINTENANCE_ORG_TREE;
+  const targetOrgTree = useMemo(() => withTargetAllDepartmentsRoot(orgTree), [orgTree]);
+  const targetRows = useMemo(() => rows.map((row) => withTargetAllDepartmentsRow(row, orgTree?.id)), [orgTree?.id, rows]);
+  const targetOrgIds = useMemo(() => collectTargetOrgIds(targetOrgTree, selectedOrg), [selectedOrg, targetOrgTree]);
+  const visibleTargetRows = useMemo(() => filterTargetRowsByOrg(targetRows, targetOrgIds, selectedOrg, orgTree?.id), [orgTree?.id, selectedOrg, targetOrgIds, targetRows]);
+
+  function handleTargetOrgSelect(orgId) {
+    setSelectedOrg(orgId);
+    setSelectedTargetRow(null);
+  }
 
   function handleTargetChange(rowId, monthKey, value) {
     onDataChange((current) => ({
@@ -521,7 +594,7 @@ function TargetMaintenancePage({ markDirty, status, data, onDataChange }) {
   return (
     <section className="mnt-layout mnt-layout--target">
       <Panel title="组织架构" meta={`${rows.filter((row) => row.type === 'user').length} 人`} className="mnt-side-panel">
-        <MaintenanceSideNav nodes={[orgTree]} activeId={selectedOrg} onSelect={setSelectedOrg} />
+        <MaintenanceSideNav nodes={[targetOrgTree]} activeId={selectedOrg} onSelect={handleTargetOrgSelect} />
       </Panel>
       <Panel title="年度目标" meta={<SaveBadge status={status} />} className="mnt-main-panel">
         <MatrixShell className="mnt-matrix-wrap--target">
@@ -534,7 +607,7 @@ function TargetMaintenancePage({ markDirty, status, data, onDataChange }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((row) => (
+                  {visibleTargetRows.map((row) => (
                     <tr key={row.id} {...getSelectableRowProps(`target:${row.id}`, selectedTargetRow, setSelectedTargetRow, row.type === 'department' ? 'mnt-row--summary' : '')}>
                       <td className="mnt-name-cell">
                         <strong>{row.name}</strong>
@@ -553,7 +626,7 @@ function TargetMaintenancePage({ markDirty, status, data, onDataChange }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((row) => (
+                  {visibleTargetRows.map((row) => (
                     <tr key={row.id} {...getSelectableRowProps(`target:${row.id}`, selectedTargetRow, setSelectedTargetRow, row.type === 'department' ? 'mnt-row--summary' : '')}>
                       {TARGET_PERIOD_COLUMNS.map((column) => (
                         <TargetPeriodCell key={column.key} row={row} column={column} onTargetChange={handleTargetChange} />
@@ -946,6 +1019,7 @@ function ChannelMaintenancePage({ markDirty, status, data, onDataChange }) {
 
 export default function MaintenancePage({ activePage = 'target-maintenance', onBack }) {
   const [statusByPage, setStatusByPage] = useState({});
+  const [targetUpdatedAt, setTargetUpdatedAt] = useState(INITIAL_TARGET_UPDATED_AT);
   const [year, setYear] = useState('2026');
   const [maintenanceData, setMaintenanceData] = useState(() => cloneMaintenanceData());
   const Page = PAGE_RENDERERS[activePage] ?? TargetMaintenancePage;
@@ -1006,6 +1080,7 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
         ...current,
         [dataKey]: saved,
       }));
+      setTargetUpdatedAt(nowFullLabel());
       setStatusByPage((current) => ({ ...current, [activePage]: `已保存 ${nowLabel()}` }));
     } catch {
       setStatusByPage((current) => ({ ...current, [activePage]: '保存失败' }));
@@ -1018,6 +1093,7 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
         activePage={activePage}
         year={year}
         status={status}
+        targetUpdatedAt={targetUpdatedAt}
         onBack={onBack}
         onDirty={markDirty}
         onSave={saveActivePage}

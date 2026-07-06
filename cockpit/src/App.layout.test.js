@@ -1,4 +1,16 @@
 /*
+ 更新时间: 2026-07-06 11:09:18 CST
+ 更新内容: 同步目标维护组织侧栏点击后过滤年度目标行的布局断言。
+*/
+/*
+ 更新时间: 2026-07-06 11:04:58 CST
+ 更新内容: 同步目标维护根组织显示为所有部门后的侧栏断言。
+*/
+/*
+ 更新时间: 2026-07-06 11:01:06 CST
+ 更新内容: 同步四个维护页目标数据更新时间位于状态徽标左侧的布局断言。
+*/
+/*
  更新时间: 2026-07-06 10:28:05 CST
  更新内容: 更新维护页数据库读写接入后的字段文案与数据源断言。
 */
@@ -395,7 +407,7 @@ test('uses one organization-style side navigation across all maintenance pages',
   assert.match(maintenancePageSource, /function MaintenanceSideNav\(\{ nodes, activeId, onSelect \}\)/);
   assert.match(maintenancePageSource, /function MaintenanceSideNavNode\(\{ node, activeId, onSelect \}\)/);
   assert.match(maintenancePageSource, /function buildMaintenanceNavTree\(items, \{ rootId = 'all', countText = '项' \} = \{\}\) \{/);
-  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{\[orgTree\]\} activeId=\{selectedOrg\} onSelect=\{setSelectedOrg\} \/>/);
+  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{\[targetOrgTree\]\} activeId=\{selectedOrg\} onSelect=\{handleTargetOrgSelect\} \/>/);
   assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{costNavNodes\} activeId=\{selectedChannel\} onSelect=\{setSelectedChannel\} \/>/);
   assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{departmentNavNodes\} activeId=\{activeDepartment\} onSelect=\{setSelectedDepartment\} \/>/);
   assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{channelGroupNavNodes\} activeId=\{selectedGroup\} onSelect=\{setSelectedGroup\} \/>/);
@@ -451,7 +463,7 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.match(maintenancePageCss, /\.mnt-title-scope \{[\s\S]*?display:\s*inline;[\s\S]*?font-size:\s*12px;/);
   assert.doesNotMatch(maintenancePageCss, /\.mnt-toolbar \.mnt-title-block span \{/);
   assert.match(maintenancePageSource, /aria-label="目标年份"[\s\S]*?<\/select>\s*<button className="mnt-btn" type="button" onClick=\{onDirty\}>下载模板<\/button>/);
-  assert.match(maintenancePageSource, /<div className="mnt-actions">\s*\{actions\[activePage\] \?\? actions\['target-maintenance'\]\}\s*<button className="mnt-btn" type="button" onClick=\{onBack\}>返回看板<\/button>\s*<SaveBadge status=\{status\} \/>/);
+  assert.match(maintenancePageSource, /<div className="mnt-actions">\s*\{actions\[activePage\] \?\? actions\['target-maintenance'\]\}\s*<button className="mnt-btn" type="button" onClick=\{onBack\}>返回看板<\/button>\s*<TargetUpdatedAtBadge updatedAt=\{targetUpdatedAt\} \/>\s*<SaveBadge status=\{status\} \/>/);
   assert.doesNotMatch(maintenancePageSource, /<div className="mnt-actions">\s*<SaveBadge/);
   assert.match(toolbarBlock, /min-height:\s*42px;/);
   assert.match(toolbarBlock, /padding:\s*6px 10px;/);
