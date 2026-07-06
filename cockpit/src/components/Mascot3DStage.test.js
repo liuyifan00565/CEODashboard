@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-06 10:49:22 CST
- 更新内容: 将 AI 小人验收改为 imagegen/参考透明 PNG 驱动，禁止再退回手写 SVG 或低保真 mesh。
+ 更新时间: 2026-07-06 11:02:20 CST
+ 更新内容: 验收 AI 小人从单张参考 PNG 升级为 imagegen 透明图切层骨骼 rig，并覆盖动作层驱动。
 */
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -9,6 +9,8 @@ import assert from 'node:assert/strict';
 const stageSource = readFileSync(new URL('./Mascot3DStage.jsx', import.meta.url), 'utf8');
 const stageCss = readFileSync(new URL('./Mascot3DStage.css', import.meta.url), 'utf8');
 const mascotTransparentUrl = new URL('../../public/ai-mascot-transparent.png', import.meta.url);
+const rigLayerUrls = ['head', 'body', 'left-arm', 'right-arm', 'left-leg', 'right-leg']
+  .map((name) => new URL(`../../public/mascot-rig/${name}.png`, import.meta.url));
 const stageCode = stripSourceComments(stageSource);
 const stageCssCode = stripSourceComments(stageCss);
 
@@ -22,32 +24,73 @@ function countMatches(source, patterns) {
   return patterns.filter((pattern) => pattern.test(source)).length;
 }
 
-test('renders Fu Xiaoke from the reference transparent PNG instead of a hand-built SVG or mesh', () => {
-  assert.match(stageCode, /REFERENCE_MASCOT_SOURCE\s*=\s*['"]\/ai-mascot-transparent\.png['"]/);
-  assert.match(stageCode, /<img[\s\S]*className="mascot-imagegen-asset"[\s\S]*src=\{REFERENCE_MASCOT_SOURCE\}/);
-  assert.match(stageCode, /draggable="false"/);
-  assert.match(stageCode, /aria-hidden="true"/);
-  assert.match(stageCssCode, /\.mascot-imagegen-asset\s*\{/);
-  assert.match(stageCssCode, /object-fit:\s*contain/);
-  assert.match(stageCssCode, /object-position:\s*center bottom/);
+function readPngMeta(url) {
+  const bytes = readFileSync(url);
+  return {
+    signature: bytes.toString('ascii', 1, 4),
+    width: bytes.readUInt32BE(16),
+    height: bytes.readUInt32BE(20),
+    colorType: bytes[25],
+  };
+}
 
+test('renders Fu Xiaoke as a six-layer imagegen rig instead of a single full-body image', () => {
+  const expectedLayers = ['left-leg', 'right-leg', 'body', 'left-arm', 'right-arm', 'head'];
+
+  assert.match(stageCode, /MASCOT_RIG_LAYERS\s*=\s*\[/);
+  for (const layer of expectedLayers) {
+    assert.match(stageCode, new RegExp(`id:\\s*['"]${layer}['"][\\s\\S]*src:\\s*['"]/mascot-rig/${layer}\\.png['"]`));
+    assert.match(stageCode, new RegExp(`mascot-rig-layer--\\$\\{layer\\.id\\}`));
+  }
+
+  assert.match(stageCode, /<span className="mascot-rig-root" aria-hidden="true">/);
+  assert.match(stageCode, /MASCOT_RIG_LAYERS\.map/);
+  assert.match(stageCode, /<img[\s\S]*className=\{`mascot-rig-layer mascot-rig-layer--\$\{layer\.id\}`\}[\s\S]*src=\{layer\.src\}/);
+  assert.match(stageCssCode, /\.mascot-rig-root\s*\{/);
+  assert.match(stageCssCode, /\.mascot-rig-layer\s*\{/);
+
+  assert.doesNotMatch(stageCode, /REFERENCE_MASCOT_SOURCE|src=\{REFERENCE_MASCOT_SOURCE\}|className="mascot-imagegen-asset"/);
   assert.doesNotMatch(stageCode, /<svg\b|mascot-layered-rig|mascot-layer--|wing-logo/);
   assert.doesNotMatch(stageCode, /@react-three\/fiber|@react-three\/drei|new THREE|<Canvas\b|useFrame\s*\(/);
   assert.doesNotMatch(stageCode, /<mesh\b|sphereGeometry|capsuleGeometry|boxGeometry|meshStandardMaterial|TextureLoader|useTexture/);
   assert.doesNotMatch(stageCode, /MASCOT_ACTION_POSES|ceo-mascot-[\w-]+\.png|ai-mascot-frames|sprite/i);
 });
 
-test('ships the reference mascot as a transparent PNG asset', () => {
+test('ships reference and rig layers as transparent same-canvas PNG assets', () => {
   assert.ok(existsSync(mascotTransparentUrl), 'reference transparent mascot asset should exist');
+  const referenceMeta = readPngMeta(mascotTransparentUrl);
+  assert.equal(referenceMeta.signature, 'PNG');
+  assert.equal(referenceMeta.width, 1084);
+  assert.equal(referenceMeta.height, 1451);
+  assert.ok([4, 6].includes(referenceMeta.colorType), 'reference PNG should include an alpha channel');
 
-  const mascot = readFileSync(mascotTransparentUrl);
-  assert.equal(mascot.toString('ascii', 1, 4), 'PNG');
-  assert.equal(mascot.readUInt32BE(16), 1084);
-  assert.equal(mascot.readUInt32BE(20), 1451);
-  assert.ok([4, 6].includes(mascot[25]), 'PNG should include an alpha channel');
+  for (const layerUrl of rigLayerUrls) {
+    assert.ok(existsSync(layerUrl), `${layerUrl.pathname} should exist`);
+    const layerMeta = readPngMeta(layerUrl);
+    assert.equal(layerMeta.signature, 'PNG');
+    assert.equal(layerMeta.width, 1084);
+    assert.equal(layerMeta.height, 1451);
+    assert.ok([4, 6].includes(layerMeta.colorType), `${layerUrl.pathname} should include an alpha channel`);
+  }
 });
 
-test('drives the generated-image mascot with action classes and pointer variables', () => {
+test('defines independent bone pivots for head body arms and legs', () => {
+  const boneSignals = [
+    /\.mascot-rig-layer--head\s*\{[\s\S]*transform-origin:\s*50%\s+48%;/,
+    /\.mascot-rig-layer--body\s*\{[\s\S]*transform-origin:\s*50%\s+70%;/,
+    /\.mascot-rig-layer--left-arm\s*\{[\s\S]*transform-origin:\s*33%\s+50%;/,
+    /\.mascot-rig-layer--right-arm\s*\{[\s\S]*transform-origin:\s*67%\s+50%;/,
+    /\.mascot-rig-layer--left-leg\s*\{[\s\S]*transform-origin:\s*39%\s+72%;/,
+    /\.mascot-rig-layer--right-leg\s*\{[\s\S]*transform-origin:\s*59%\s+72%;/,
+  ];
+
+  assert.equal(countMatches(stageCssCode, boneSignals), boneSignals.length, 'each visible part should have its own pivot');
+  assert.match(stageCssCode, /will-change:\s*transform/);
+  assert.match(stageCssCode, /position:\s*absolute/);
+  assert.match(stageCssCode, /inset:\s*0/);
+});
+
+test('drives the rig with action classes and pointer variables instead of frame swaps', () => {
   assert.match(stageCode, /MASCOT_ACTIONS\.(?:idle|wave|talk|think|alert|celebrate|click)/);
   assert.match(stageCode, /data-action=\{safeAction\}/);
   assert.match(stageCode, /style=\{stageStyle\}/);
@@ -65,19 +108,23 @@ test('drives the generated-image mascot with action classes and pointer variable
     /\.mascot-action--alert/,
     /\.mascot-action--celebrate/,
     /\.mascot-action--click/,
-    /@keyframes mascot-imagegen-idle/,
-    /@keyframes mascot-imagegen-wave/,
-    /@keyframes mascot-imagegen-talk/,
-    /@keyframes mascot-imagegen-alert/,
-    /@keyframes mascot-imagegen-celebrate/,
+    /@keyframes mascot-rig-float/,
+    /@keyframes mascot-rig-head-idle/,
+    /@keyframes mascot-rig-wave-right/,
+    /@keyframes mascot-rig-talk-head/,
+    /@keyframes mascot-rig-alert-root/,
+    /@keyframes mascot-rig-celebrate-left-arm/,
+    /@keyframes mascot-rig-celebrate-right-arm/,
+    /@keyframes mascot-rig-leg-bounce/,
   ];
 
-  assert.equal(countMatches(stageCssCode, actionSignals), actionSignals.length, 'all companion actions should map to high-frame CSS motion');
+  assert.equal(countMatches(stageCssCode, actionSignals), actionSignals.length, 'all companion actions should map to high-frame rig motion');
   assert.match(stageCssCode, /var\(--mascot-pointer-translate-x\)/);
   assert.match(stageCssCode, /var\(--mascot-pointer-translate-y\)/);
   assert.match(stageCssCode, /var\(--mascot-pointer-tilt\)/);
   assert.doesNotMatch(stageCode, /scaleX|scaleY/);
   assert.doesNotMatch(stageCssCode, /scaleX\(|scaleY\(/);
+  assert.doesNotMatch(stageCode, /ai-mascot-sprite|mascot-frame|poseKey|frameIndex/i);
 });
 
 test('keeps the AI mascot compact while preserving the original launcher treatment', () => {

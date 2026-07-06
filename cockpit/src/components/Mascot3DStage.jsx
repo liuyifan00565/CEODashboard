@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 11:02:20 CST
+ 更新内容: 将单张参考图升级为 imagegen 透明图切层骨骼 rig，支持头身四肢独立动作。
+*/
+/*
  更新时间: 2026-07-06 10:49:22 CST
  更新内容: 改为使用 imagegen/参考透明 PNG 作为 AI 小人主体，避免手写 SVG 外观偏离参考图。
 */
@@ -6,7 +10,14 @@ import { MASCOT_ACTIONS } from '../lib/mascotCompanion';
 import './Mascot3DStage.css';
 
 const DEFAULT_POINTER = { x: 0, y: 0, active: false };
-const REFERENCE_MASCOT_SOURCE = '/ai-mascot-transparent.png';
+const MASCOT_RIG_LAYERS = [
+  { id: 'left-leg', src: '/mascot-rig/left-leg.png', alt: '' },
+  { id: 'right-leg', src: '/mascot-rig/right-leg.png', alt: '' },
+  { id: 'body', src: '/mascot-rig/body.png', alt: '' },
+  { id: 'left-arm', src: '/mascot-rig/left-arm.png', alt: '' },
+  { id: 'right-arm', src: '/mascot-rig/right-arm.png', alt: '' },
+  { id: 'head', src: '/mascot-rig/head.png', alt: '' },
+];
 const VALID_ACTIONS = new Set(Object.values(MASCOT_ACTIONS));
 
 function clampUnit(value) {
@@ -40,7 +51,7 @@ export default function Mascot3DStage({
   const defaultIdle = safeAction === MASCOT_ACTIONS.idle && !analysisActive;
   const stageClassName = [
     'mascot-3d-stage',
-    'mascot-3d-stage--imagegen',
+    'mascot-3d-stage--rigged',
     `mascot-action--${safeAction}`,
     defaultIdle ? 'mascot-3d-stage--default' : '',
     analysisActive ? 'mascot-3d-stage--active' : '',
@@ -56,13 +67,17 @@ export default function Mascot3DStage({
 
   return (
     <span className={stageClassName} role="img" aria-label={label} data-action={safeAction} style={stageStyle}>
-      <img
-        className="mascot-imagegen-asset"
-        src={REFERENCE_MASCOT_SOURCE}
-        alt=""
-        draggable="false"
-        aria-hidden="true"
-      />
+      <span className="mascot-rig-root" aria-hidden="true">
+        {MASCOT_RIG_LAYERS.map((layer) => (
+          <img
+            key={layer.id}
+            className={`mascot-rig-layer mascot-rig-layer--${layer.id}`}
+            src={layer.src}
+            alt={layer.alt}
+            draggable="false"
+          />
+        ))}
+      </span>
     </span>
   );
 }

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 11:02:20 CST
+ 更新内容: 为 imagegen 透明图切层 rig 增加头身四肢关节、动作关键帧和鼠标跟随变量。
+*/
+/*
  更新时间: 2026-07-06 10:49:22 CST
  更新内容: 小人舞台改为 imagegen 透明参考图驱动，并保留鼠标跟随和动作状态动画。
 */
@@ -21,7 +25,17 @@
   width: 96px;
 }
 
-.mascot-imagegen-asset {
+.mascot-rig-root {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transform-origin: 50% 82%;
+  will-change: transform, filter;
+}
+
+.mascot-rig-layer {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
@@ -30,38 +44,112 @@
   object-position: center bottom;
   user-select: none;
   -webkit-user-drag: none;
-  transform-origin: 50% 82%;
-  will-change: transform, filter;
+  will-change: transform;
 }
 
-.mascot-action--idle .mascot-imagegen-asset {
-  animation: mascot-imagegen-idle 4.2s ease-in-out infinite;
+.mascot-rig-layer--head {
+  transform-origin: 50% 48%;
 }
 
-.mascot-action--wave .mascot-imagegen-asset {
-  animation: mascot-imagegen-wave .95s ease-in-out infinite;
+.mascot-rig-layer--body {
+  transform-origin: 50% 70%;
 }
 
-.mascot-action--talk .mascot-imagegen-asset,
-.mascot-3d-stage--active .mascot-imagegen-asset {
-  animation: mascot-imagegen-talk .72s ease-in-out infinite;
+.mascot-rig-layer--left-arm {
+  transform-origin: 33% 50%;
 }
 
-.mascot-action--think .mascot-imagegen-asset {
+.mascot-rig-layer--right-arm {
+  transform-origin: 67% 50%;
+}
+
+.mascot-rig-layer--left-leg {
+  transform-origin: 39% 72%;
+}
+
+.mascot-rig-layer--right-leg {
+  transform-origin: 59% 72%;
+}
+
+.mascot-action--idle .mascot-rig-root {
+  animation: mascot-rig-float 4.2s ease-in-out infinite;
+}
+
+.mascot-action--idle .mascot-rig-layer--head {
+  animation: mascot-rig-head-idle 4.6s ease-in-out infinite;
+}
+
+.mascot-action--idle .mascot-rig-layer--left-arm,
+.mascot-action--idle .mascot-rig-layer--right-arm {
+  animation: mascot-rig-arm-idle 4.8s ease-in-out infinite;
+}
+
+.mascot-action--wave .mascot-rig-root {
+  animation: mascot-rig-float 2.6s ease-in-out infinite;
+}
+
+.mascot-action--wave .mascot-rig-layer--right-arm {
+  animation: mascot-rig-wave-right .82s ease-in-out infinite;
+}
+
+.mascot-action--wave .mascot-rig-layer--head {
+  animation: mascot-rig-head-wave .95s ease-in-out infinite;
+}
+
+.mascot-action--talk .mascot-rig-root,
+.mascot-3d-stage--active .mascot-rig-root {
+  animation: mascot-rig-talk-body .74s ease-in-out infinite;
+}
+
+.mascot-action--talk .mascot-rig-layer--head,
+.mascot-3d-stage--active .mascot-rig-layer--head {
+  animation: mascot-rig-talk-head .42s ease-in-out infinite;
+}
+
+.mascot-action--think .mascot-rig-root {
   transform: translate3d(var(--mascot-pointer-translate-x), calc(var(--mascot-pointer-translate-y) + 1px), 0)
-    rotate(calc(var(--mascot-pointer-tilt) - 4deg));
+    rotate(calc(var(--mascot-pointer-tilt) - 1deg));
 }
 
-.mascot-action--alert .mascot-imagegen-asset {
-  animation: mascot-imagegen-alert .62s ease-in-out infinite;
+.mascot-action--think .mascot-rig-layer--head {
+  transform: rotate(-5deg) translate3d(-2px, 0, 0);
 }
 
-.mascot-action--celebrate .mascot-imagegen-asset,
-.mascot-action--click .mascot-imagegen-asset {
-  animation: mascot-imagegen-celebrate .74s ease-in-out infinite;
+.mascot-action--think .mascot-rig-layer--right-arm {
+  transform: rotate(-10deg) translate3d(-1px, -3px, 0);
 }
 
-@keyframes mascot-imagegen-idle {
+.mascot-action--alert .mascot-rig-root {
+  animation: mascot-rig-alert-root .62s ease-in-out infinite;
+}
+
+.mascot-action--alert .mascot-rig-layer--head {
+  animation: mascot-rig-alert-head .62s ease-in-out infinite;
+}
+
+.mascot-action--celebrate .mascot-rig-root,
+.mascot-action--click .mascot-rig-root {
+  animation: mascot-rig-celebrate-root .74s ease-in-out infinite;
+}
+
+.mascot-action--celebrate .mascot-rig-layer--left-arm,
+.mascot-action--click .mascot-rig-layer--left-arm {
+  animation: mascot-rig-celebrate-left-arm .74s ease-in-out infinite;
+}
+
+.mascot-action--celebrate .mascot-rig-layer--right-arm,
+.mascot-action--click .mascot-rig-layer--right-arm {
+  animation: mascot-rig-celebrate-right-arm .74s ease-in-out infinite;
+}
+
+.mascot-action--celebrate .mascot-rig-layer--left-leg,
+.mascot-action--click .mascot-rig-layer--left-leg,
+.mascot-action--celebrate .mascot-rig-layer--right-leg,
+.mascot-action--click .mascot-rig-layer--right-leg {
+  animation: mascot-rig-leg-bounce .74s ease-in-out infinite;
+}
+
+@keyframes mascot-rig-float {
   0%,
   100% {
     transform: translate3d(var(--mascot-pointer-translate-x), var(--mascot-pointer-translate-y), 0)
@@ -74,20 +162,51 @@
   }
 }
 
-@keyframes mascot-imagegen-wave {
+@keyframes mascot-rig-head-idle {
   0%,
   100% {
-    transform: translate3d(var(--mascot-pointer-translate-x), var(--mascot-pointer-translate-y), 0)
-      rotate(calc(var(--mascot-pointer-tilt) - 4deg));
+    transform: rotate(-1deg);
   }
 
   50% {
-    transform: translate3d(calc(var(--mascot-pointer-translate-x) + 3px), calc(var(--mascot-pointer-translate-y) - 8px), 0)
-      rotate(calc(var(--mascot-pointer-tilt) + 7deg));
+    transform: rotate(2deg) translate3d(1px, -2px, 0);
   }
 }
 
-@keyframes mascot-imagegen-talk {
+@keyframes mascot-rig-arm-idle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(-2deg) translate3d(0, 1px, 0);
+  }
+}
+
+@keyframes mascot-rig-wave-right {
+  0%,
+  100% {
+    transform: rotate(-2deg) translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: rotate(-22deg) translate3d(-4px, -9px, 0);
+  }
+}
+
+@keyframes mascot-rig-head-wave {
+  0%,
+  100% {
+    transform: rotate(-1deg);
+  }
+
+  50% {
+    transform: rotate(3deg) translate3d(1px, -2px, 0);
+  }
+}
+
+@keyframes mascot-rig-talk-body {
   0%,
   100% {
     transform: translate3d(var(--mascot-pointer-translate-x), var(--mascot-pointer-translate-y), 0)
@@ -100,7 +219,18 @@
   }
 }
 
-@keyframes mascot-imagegen-alert {
+@keyframes mascot-rig-talk-head {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-1deg);
+  }
+
+  50% {
+    transform: translate3d(0, -2px, 0) rotate(1.5deg);
+  }
+}
+
+@keyframes mascot-rig-alert-root {
   0%,
   100% {
     transform: translate3d(var(--mascot-pointer-translate-x), var(--mascot-pointer-translate-y), 0)
@@ -115,7 +245,18 @@
   }
 }
 
-@keyframes mascot-imagegen-celebrate {
+@keyframes mascot-rig-alert-head {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+
+  50% {
+    transform: rotate(4deg) translate3d(0, -2px, 0);
+  }
+}
+
+@keyframes mascot-rig-celebrate-root {
   0%,
   100% {
     transform: translate3d(var(--mascot-pointer-translate-x), var(--mascot-pointer-translate-y), 0)
@@ -128,15 +269,50 @@
   }
 }
 
+@keyframes mascot-rig-celebrate-left-arm {
+  0%,
+  100% {
+    transform: rotate(2deg);
+  }
+
+  50% {
+    transform: rotate(14deg) translate3d(3px, -8px, 0);
+  }
+}
+
+@keyframes mascot-rig-celebrate-right-arm {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+
+  50% {
+    transform: rotate(-16deg) translate3d(-3px, -8px, 0);
+  }
+}
+
+@keyframes mascot-rig-leg-bounce {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, 3px, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .mascot-imagegen-asset,
-  .mascot-action--idle .mascot-imagegen-asset,
-  .mascot-action--wave .mascot-imagegen-asset,
-  .mascot-action--talk .mascot-imagegen-asset,
-  .mascot-3d-stage--active .mascot-imagegen-asset,
-  .mascot-action--alert .mascot-imagegen-asset,
-  .mascot-action--celebrate .mascot-imagegen-asset,
-  .mascot-action--click .mascot-imagegen-asset {
+  .mascot-rig-root,
+  .mascot-rig-layer,
+  .mascot-action--idle .mascot-rig-root,
+  .mascot-action--idle .mascot-rig-layer--head,
+  .mascot-action--wave .mascot-rig-layer--right-arm,
+  .mascot-action--talk .mascot-rig-root,
+  .mascot-3d-stage--active .mascot-rig-root,
+  .mascot-action--alert .mascot-rig-root,
+  .mascot-action--celebrate .mascot-rig-root,
+  .mascot-action--click .mascot-rig-root {
     animation: none;
   }
 }
