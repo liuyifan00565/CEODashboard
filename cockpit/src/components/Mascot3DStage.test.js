@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-06 12:25:44 CST
- 更新内容: 增加 AI 小人精修模型验收，锁定福客 logo 位于头盔正面中轴上方安全可视位置且使用项目 logo.png。
+ 更新时间: 2026-07-06 12:35:55 CST
+ 更新内容: 增加 AI 小人正面参考图还原验收，锁定脸部开窗轮廓、福客 logo 中轴位置和项目 logo.png。
 */
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { test } from 'node:test';
@@ -50,12 +50,12 @@ test('ships a real Blender-generated GLB mascot model instead of PNG frame or la
   assert.match(generatorCode, /export_format\s*=\s*["']GLB["']/);
   assert.match(generatorCode, /OUTPUT\s*=\s*ROOT\s*\/\s*["']cockpit["']\s*\/\s*["']public["']\s*\/\s*["']models["']\s*\/\s*["']ai-mascot\.glb["']/);
   assert.match(generatorCode, /transparent-glass-dome/);
-  assert.match(generatorCode, /soft-face-panel['"],\s*\(0,\s*-0\.82,\s*1\.82\)/);
+  assert.match(generatorCode, /shape_panel\(["']soft-face-panel["']/);
+  assert.match(generatorCode, /purple-face-window-rim/);
   assert.match(generatorCode, /AI-badge-text/);
   assert.match(generatorCode, /microphone-boom/);
   assert.match(generatorCode, /LOGO_IMAGE\s*=\s*ROOT\s*\/\s*["']logo\.png["']/);
-  assert.match(generatorCode, /helmet-logo-centered-purple-panel/);
-  assert.match(generatorCode, /image_plane\(["']helmet-wing-logo["'],\s*LOGO_IMAGE,\s*\(0,\s*-1\.02,\s*2\.18\),\s*0\.20/);
+  assert.match(generatorCode, /image_plane\(["']helmet-wing-logo["'],\s*LOGO_IMAGE,\s*\(0,\s*-1\.055,\s*2\.19\),\s*0\.245/);
   assert.doesNotMatch(generatorCode, /helmet-wing-logo["'],\s*["']F["']/);
 
   assert.doesNotMatch(stageCode, /MASCOT_RIG_LAYERS|mascot-rig-layer|MASCOT_ACTION_POSES|ceo-mascot-[\w-]+\.png|ai-mascot-frames|sprite/i);
