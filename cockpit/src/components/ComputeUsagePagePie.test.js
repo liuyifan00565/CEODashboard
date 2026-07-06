@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 16:05:00 CST
+ 更新内容: 要求算力用量分布环形图按扇区占比分档设置折线长度——小扇区加长、大扇区适中。
+*/
+/*
  更新时间: 2026-07-06 15:45:00 CST
  更新内容: 要求算力用量分布环形图标签折线进一步加长并增加最小间距，避免=0等小扇区数据被遮挡。
 */
@@ -45,7 +49,9 @@ test('keeps the usage distribution chart as a full donut with lifted natural lab
   assert.doesNotMatch(source, /const pieAngles =/);
   assert.match(source, /const pieLabelLine = isUsageDistributionPie \? COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE : COMPUTE_DEFAULT_LABEL_LINE;/);
   assert.match(source, /const COMPUTE_DEFAULT_LABEL_LINE = \{\s*length:\s*12,\s*length2:\s*16,\s*smooth:\s*false,\s*width:\s*1,\s*opacity:\s*\.72,\s*\};/);
-  assert.match(source, /const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = \{\s*length:\s*36,\s*length2:\s*32,\s*smooth:\s*false,\s*width:\s*1\.2,\s*opacity:\s*\.82,\s*minMargin:\s*8\s*\};/);
+  assert.match(source, /const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = \{\s*length:\s*18,\s*length2:\s*18,\s*smooth:\s*false,\s*width:\s*1,\s*opacity:\s*\.78,\s*\};/);
+  assert.match(source, /const COMPUTE_USAGE_DISTRIBUTION_SMALL_LABEL_LINE = \{\s*length:\s*34,\s*length2:\s*30,\s*smooth:\s*false,\s*width:\s*1\.2,\s*opacity:\s*\.84\s*\};/);
+  assert.match(source, /const COMPUTE_USAGE_DISTRIBUTION_SMALL_THRESHOLD = 0\.1;/);
   assert.match(source, /if \(params\.data\?\.wrapLabel\) \{/);
   assert.match(source, /wrapLabel:\s*isUsageDistributionPie/);
   assert.match(source, /return `\{name\|\$\{name\}\}\\n\{value\|\$\{params\.percent\}%\}`;/);
@@ -56,4 +62,7 @@ test('keeps the usage distribution chart as a full donut with lifted natural lab
   assert.match(source, /lineStyle:\s*\{\s*color:\s*tokens\.chartAxis,\s*width:\s*pieLabelLine\.width,\s*opacity:\s*pieLabelLine\.opacity\s*\}/);
   assert.match(source, /buildPieOption\(\{ data: versionPieData, tokens, unitLabel: '消耗权重', naturalLabelLayout: true \}\)/);
   assert.match(source, /buildPieOption\(\{ data: distributionPieData, tokens, unitLabel: '客户占比权重', naturalLabelLayout: true \}\)/);
+  assert.match(source, /isUsageDistributionPie && item\.value \/ total < COMPUTE_USAGE_DISTRIBUTION_SMALL_THRESHOLD/);
+  assert.match(source, /length:\s*COMPUTE_USAGE_DISTRIBUTION_SMALL_LABEL_LINE\.length/);
+  assert.match(source, /length2:\s*COMPUTE_USAGE_DISTRIBUTION_SMALL_LABEL_LINE\.length2/);
 });

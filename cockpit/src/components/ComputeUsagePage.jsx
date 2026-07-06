@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 16:05:00 CST
+ 更新内容: 算力用量分布环形图按扇区占比分档设置折线长度——小扇区加长、大扇区适中，确保所有数据清晰可读且不互相遮挡。
+*/
+/*
  更新时间: 2026-07-06 15:45:00 CST
  更新内容: 算力用量分布环形图标签折线进一步加长并增加最小间距，避免=0等小扇区数据被遮挡。
 */
@@ -93,7 +97,9 @@ const COMPUTE_DEFAULT_PIE_RADIUS = ['58%', '92%'];
 const COMPUTE_USAGE_DISTRIBUTION_PIE_CENTER = ['45%', '52%'];
 const COMPUTE_USAGE_DISTRIBUTION_PIE_RADIUS = ['54%', '86%'];
 const COMPUTE_DEFAULT_LABEL_LINE = { length: 12, length2: 16, smooth: false, width: 1, opacity: .72, };
-const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = { length: 36, length2: 32, smooth: false, width: 1.2, opacity: .82, minMargin: 8 };
+const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = { length: 18, length2: 18, smooth: false, width: 1, opacity: .78, };
+const COMPUTE_USAGE_DISTRIBUTION_SMALL_LABEL_LINE = { length: 34, length2: 30, smooth: false, width: 1.2, opacity: .84 };
+const COMPUTE_USAGE_DISTRIBUTION_SMALL_THRESHOLD = 0.1;
 const COMPUTE_VERSION_RIGHT_LABEL_SLOTS = {
   '试用版': -82,
   '企业版': -42,
@@ -714,7 +720,6 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
           length: pieLabelLine.length,
           length2: pieLabelLine.length2,
           smooth: pieLabelLine.smooth,
-          ...(pieLabelLine.minMargin != null ? { minMargin: pieLabelLine.minMargin } : {}),
           lineStyle: { color: tokens.chartAxis, width: pieLabelLine.width, opacity: pieLabelLine.opacity },
         },
         ...(naturalLabelLayout ? {} : { labelLayout: computePieLabelLayout }),
@@ -726,12 +731,31 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
             shadowColor: 'rgba(255,255,255,.18)',
           },
         },
-        data: data.map((item) => ({
-          name: item.name,
-          value: item.value,
-          wrapLabel: isUsageDistributionPie,
-          itemStyle: { color: item.color },
-        })),
+        data: (() => {
+          const total = data.reduce((sum, item) => sum + item.value, 0) || 1;
+          return data.map((item) => {
+            const entry = {
+              name: item.name,
+              value: item.value,
+              wrapLabel: isUsageDistributionPie,
+              itemStyle: { color: item.color },
+            };
+            if (isUsageDistributionPie && item.value / total < COMPUTE_USAGE_DISTRIBUTION_SMALL_THRESHOLD) {
+              entry.labelLine = {
+                show: true,
+                length: COMPUTE_USAGE_DISTRIBUTION_SMALL_LABEL_LINE.length,
+                length2: COMPUTE_USAGE_DISTRIBUTION_SMALL_LABEL_LINE.length2,
+                smooth: COMPUTE_USAGE_DISTRIBUTION_SMALL_LABEL_LINE.smooth,
+                lineStyle: {
+                  color: tokens.chartAxis,
+                  width: COMPUTE_USAGE_DISTRIBUTION_SMALL_LABEL_LINE.width,
+                  opacity: COMPUTE_USAGE_DISTRIBUTION_SMALL_LABEL_LINE.opacity,
+                },
+              };
+            }
+            return entry;
+          });
+        })(),
       },
     ],
     media: [
