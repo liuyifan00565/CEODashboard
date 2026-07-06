@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 15:29:41 CST
+ 更新内容: 要求算力用量分布环图外拉折线显著加长并增强线条可见度。
+*/
+/*
  更新时间: 2026-07-06 15:17:44 CST
  更新内容: 要求算力用量分布环图外拉折线参照 ECharts 半环示例拉出两段折线。
 */
@@ -26,14 +30,15 @@ test('moves only the usage distribution donut left so right-side labels stay vis
   assert.match(source, /const pieCenter = isUsageDistributionPie \? COMPUTE_USAGE_DISTRIBUTION_PIE_CENTER : COMPUTE_DEFAULT_PIE_CENTER;/);
   assert.match(source, /const pieRadius = isUsageDistributionPie \? COMPUTE_USAGE_DISTRIBUTION_PIE_RADIUS : COMPUTE_DEFAULT_PIE_RADIUS;/);
   assert.match(source, /const pieLabelLine = isUsageDistributionPie \? COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE : COMPUTE_DEFAULT_LABEL_LINE;/);
-  assert.match(source, /const COMPUTE_DEFAULT_LABEL_LINE = \{\s*length:\s*12,\s*length2:\s*16,\s*smooth:\s*false,\s*\};/);
-  assert.match(source, /const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = \{\s*length:\s*18,\s*length2:\s*32,\s*smooth:\s*false,\s*\};/);
+  assert.match(source, /const COMPUTE_DEFAULT_LABEL_LINE = \{\s*length:\s*12,\s*length2:\s*16,\s*smooth:\s*false,\s*width:\s*1,\s*opacity:\s*\.72,\s*\};/);
+  assert.match(source, /const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = \{\s*length:\s*28,\s*length2:\s*56,\s*smooth:\s*false,\s*width:\s*1\.35,\s*opacity:\s*\.9,\s*\};/);
   assert.match(source, /if \(params\.data\?\.wrapLabel\) \{/);
   assert.match(source, /wrapLabel:\s*isUsageDistributionPie/);
   assert.match(source, /return `\{name\|\$\{name\}\}\\n\{value\|\$\{params\.percent\}%\}`;/);
   assert.match(source, /radius:\s*pieRadius/);
   assert.match(source, /center:\s*pieCenter/);
   assert.match(source, /labelLine:\s*\{[\s\S]*?length:\s*pieLabelLine\.length,[\s\S]*?length2:\s*pieLabelLine\.length2,[\s\S]*?smooth:\s*pieLabelLine\.smooth/);
+  assert.match(source, /lineStyle:\s*\{\s*color:\s*tokens\.chartAxis,\s*width:\s*pieLabelLine\.width,\s*opacity:\s*pieLabelLine\.opacity\s*\}/);
   assert.match(source, /buildPieOption\(\{ data: versionPieData, tokens, unitLabel: '消耗权重', naturalLabelLayout: true \}\)/);
   assert.match(source, /buildPieOption\(\{ data: distributionPieData, tokens, unitLabel: '客户占比权重' \}\)/);
 });
