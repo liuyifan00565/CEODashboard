@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:28:05 CST
+ 更新内容: 更新维护页默认数据断言，匹配 ceo_dashboard MySQL 表字段。
+*/
+/*
  更新时间: 2026-07-03 10:25:18 CST
  更新内容: 增加维护页目标完成率超过 80% 才变色的回归测试。
 */
@@ -131,7 +135,10 @@ test('highlights target maintenance progress only after completion exceeds 80 pe
 
 test('provides cost maintenance channel rows and labor cost rows', () => {
   assert.ok(COST_MAINTENANCE_CHANNELS.some((channel) => channel.name === '全部渠道'));
-  assert.ok(COST_MAINTENANCE_CHANNELS.some((channel) => channel.kind === '大类'));
+  assert.deepEqual(
+    COST_MAINTENANCE_CHANNELS.filter((channel) => channel.channelId).map((channel) => channel.name),
+    ['线上', '华南线下', '华东线下', '代理']
+  );
   assert.ok(COST_MAINTENANCE_ROWS.every((row) => row.periods.m06.cost >= 0));
   assert.ok(COST_MAINTENANCE_ROWS.every((row) => row.periods.m06.actual >= 0));
   assert.deepEqual(
@@ -144,16 +151,19 @@ test('provides cost maintenance channel rows and labor cost rows', () => {
 test('provides organization maintenance departments and BI users', () => {
   assert.ok(ORG_MAINTENANCE_DEPARTMENTS.some((dept) => dept.name === '线上销售部'));
   assert.ok(ORG_MAINTENANCE_DEPARTMENTS.some((dept) => dept.parentId));
-  assert.ok(ORG_MAINTENANCE_USERS.every((user) => user.name && user.sourceUserId));
+  assert.ok(ORG_MAINTENANCE_USERS.every((user) => user.name && user.externalBiUserId));
   assert.ok(ORG_MAINTENANCE_USERS.some((user) => user.isSales && user.enabled));
   assert.ok(ORG_MAINTENANCE_USERS.some((user) => !user.enabled));
 });
 
 test('provides channel maintenance groups and source mappings', () => {
-  assert.ok(CHANNEL_MAINTENANCE_GROUPS.some((group) => group.name === '付费流量'));
-  assert.ok(CHANNEL_MAINTENANCE_GROUPS.some((group) => group.parentId));
+  assert.deepEqual(
+    CHANNEL_MAINTENANCE_GROUPS.map((group) => group.name),
+    ['线上', '华南线下', '华东线下', '代理']
+  );
+  assert.ok(CHANNEL_MAINTENANCE_GROUPS.every((group) => group.channelId));
   assert.ok(CHANNEL_MAINTENANCE_SOURCES.every((source) => source.code && source.name));
-  assert.ok(CHANNEL_MAINTENANCE_SOURCES.some((source) => source.groupId === 'group_paid_flow'));
+  assert.ok(CHANNEL_MAINTENANCE_SOURCES.some((source) => source.groupId === 'channel-3001'));
   assert.ok(CHANNEL_MAINTENANCE_SOURCES.some((source) => source.excluded));
 });
 

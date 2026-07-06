@@ -1,5 +1,8 @@
 # CEO 经营驾驶舱 React Demo
 
+更新时间: 2026-07-06 10:28:05 CST
+更新内容: 增加数据维护页 MySQL 接入、环境变量和保存接口说明。
+
 更新时间: 2026-07-01 18:32:30 CST
 更新内容: 同步首页开户数小卡片二级弹窗改为展示对应开户数数据的说明。
 
@@ -43,6 +46,28 @@ npm run serve
 ```bash
 npm run lint
 ```
+
+## 数据维护 MySQL 接入
+
+四个数据维护页会通过服务端 `/api/maintenance/*` 接口读取和保存本地 MySQL `ceo_dashboard`：
+
+- `GET /api/maintenance/bootstrap?year=2026`：一次性读取目标、成本、组织、渠道四页数据。
+- `PUT /api/maintenance/targets`：保存人员月度目标到 `biz_target_monthly.target_amount_yuan`，页面单位为“万”，落库单位为“元”。
+- `PUT /api/maintenance/costs`：保存渠道月度投入到 `biz_channel_cost_monthly.investment_amount_yuan`，保存人力成本到 `biz_labor_cost_monthly.amount_yuan`。
+- `PUT /api/maintenance/org`：保存组织和人员字段到 `dim_department`、`dim_staff`。
+- `PUT /api/maintenance/channels`：保存渠道大类到 `dim_channel`，保存线索来源映射到 `dim_channel_source`。
+
+本地创建 `cockpit/.env.local`，不要提交真实数据库密码：
+
+```bash
+CEO_DB_HOST=127.0.0.1
+CEO_DB_PORT=3306
+CEO_DB_USER=ceo_navicat
+CEO_DB_PASSWORD=your-mysql-password
+CEO_DB_NAME=ceo_dashboard
+```
+
+也可以用 `CEO_DB_DSN=mysql://user:password@127.0.0.1:3306/ceo_dashboard`。如果维护表为空，接口会返回与 MySQL 字段对齐的默认可编辑数据；用户在 UI 中保存后，数据库成为后续展示来源。
 
 ## 筛选联动演示口径
 

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:28:05 CST
+ 更新内容: 将维护页兜底数据对齐 ceo_dashboard MySQL 表字段与四个基础渠道。
+*/
+/*
  更新时间: 2026-07-03 11:09:47 CST
  更新内容: 修正开户数搜索关键词，避免“今日”误命中本月开户数。
 */
@@ -962,21 +966,18 @@ export const TARGET_MAINTENANCE_ROWS = [
 
 export const COST_MAINTENANCE_CHANNELS = [
   { id: 'all', name: '全部渠道', kind: '全部', parentId: '' },
-  { id: 'group_paid_flow', name: '付费流量', kind: '大类', parentId: '' },
-  { id: 'online_ads', name: '线上广告', kind: '明细', parentId: 'group_paid_flow' },
-  { id: 'group_offline', name: '线下获客', kind: '大类', parentId: '' },
-  { id: 'south_events', name: '华南会销', kind: '明细', parentId: 'group_offline' },
-  { id: 'east_events', name: '华东会销', kind: '明细', parentId: 'group_offline' },
-  { id: 'group_agent', name: '代理渠道', kind: '大类', parentId: '' },
-  { id: 'agent_rebate', name: '代理返点', kind: '明细', parentId: 'group_agent' },
+  { id: 'channel-3001', channelId: 3001, key: 'online', name: '线上', kind: '渠道', parentId: '' },
+  { id: 'channel-3002', channelId: 3002, key: 'south', name: '华南线下', kind: '渠道', parentId: '' },
+  { id: 'channel-3003', channelId: 3003, key: 'east', name: '华东线下', kind: '渠道', parentId: '' },
+  { id: 'channel-3004', channelId: 3004, key: 'agent', name: '代理', kind: '渠道', parentId: '' },
 ];
 
 export const COST_MAINTENANCE_ROWS = [
-  { id: 'group_paid_flow', type: 'group', name: '付费流量', periods: createCostPeriods([58, 62, 66, 70, 74, 74, 78, 80, 82, 84, 86, 88], [172, 184, 196, 205, 188, 210, 0, 0, 0, 0, 0, 0], [18, 20, 21, 23, 20, 24, 0, 0, 0, 0, 0, 0]) },
-  { id: 'online_ads', type: 'channel', name: '线上广告', parentId: 'group_paid_flow', periods: createCostPeriods([58, 62, 66, 70, 74, 74, 78, 80, 82, 84, 86, 88], [172, 184, 196, 205, 188, 210, 0, 0, 0, 0, 0, 0], [18, 20, 21, 23, 20, 24, 0, 0, 0, 0, 0, 0]) },
-  { id: 'south_events', type: 'channel', name: '华南会销', parentId: 'group_offline', periods: createCostPeriods([22, 24, 26, 28, 28, 28, 30, 31, 32, 33, 34, 35], [72, 78, 88, 92, 84, 96, 0, 0, 0, 0, 0, 0], [7, 8, 9, 10, 8, 10, 0, 0, 0, 0, 0, 0]) },
-  { id: 'east_events', type: 'channel', name: '华东会销', parentId: 'group_offline', periods: createCostPeriods([30, 32, 34, 36, 38, 38, 40, 42, 44, 45, 46, 48], [70, 74, 82, 86, 76, 84, 0, 0, 0, 0, 0, 0], [6, 7, 8, 8, 7, 8, 0, 0, 0, 0, 0, 0]) },
-  { id: 'agent_rebate', type: 'channel', name: '代理返点', parentId: 'group_agent', periods: createCostPeriods([12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21, 22], [62, 68, 74, 82, 88, 96, 0, 0, 0, 0, 0, 0], [6, 7, 8, 8, 9, 10, 0, 0, 0, 0, 0, 0]) },
+  { id: 'all', type: 'group', name: '全部渠道', periods: createCostPeriods([122, 131, 140, 149, 156, 156, 165, 171, 177, 182, 187, 193], [376, 404, 440, 465, 436, 486, 0, 0, 0, 0, 0, 0], [37, 42, 46, 49, 44, 52, 0, 0, 0, 0, 0, 0]) },
+  { id: 'channel-3001', channelId: 3001, type: 'channel', name: '线上', periods: createCostPeriods([58, 62, 66, 70, 74, 74, 78, 80, 82, 84, 86, 88], [172, 184, 196, 205, 188, 210, 0, 0, 0, 0, 0, 0], [18, 20, 21, 23, 20, 24, 0, 0, 0, 0, 0, 0]) },
+  { id: 'channel-3002', channelId: 3002, type: 'channel', name: '华南线下', periods: createCostPeriods([22, 24, 26, 28, 28, 28, 30, 31, 32, 33, 34, 35], [72, 78, 88, 92, 84, 96, 0, 0, 0, 0, 0, 0], [7, 8, 9, 10, 8, 10, 0, 0, 0, 0, 0, 0]) },
+  { id: 'channel-3003', channelId: 3003, type: 'channel', name: '华东线下', periods: createCostPeriods([30, 32, 34, 36, 38, 38, 40, 42, 44, 45, 46, 48], [70, 74, 82, 86, 76, 84, 0, 0, 0, 0, 0, 0], [6, 7, 8, 8, 7, 8, 0, 0, 0, 0, 0, 0]) },
+  { id: 'channel-3004', channelId: 3004, type: 'channel', name: '代理', periods: createCostPeriods([12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21, 22], [62, 68, 74, 82, 88, 96, 0, 0, 0, 0, 0, 0], [6, 7, 8, 8, 9, 10, 0, 0, 0, 0, 0, 0]) },
 ];
 
 export const LABOR_COST_MAINTENANCE_ROWS = [
@@ -995,31 +996,29 @@ export const ORG_MAINTENANCE_DEPARTMENTS = [
 ];
 
 export const ORG_MAINTENANCE_USERS = [
-  { id: 'u-online-01', name: '王丽英', sourceName: 'BI 销售', deptId: 'online-sales', isSales: true, enabled: true, sourceUserId: 'wl_10086' },
-  { id: 'u-online-02', name: '李思雨', sourceName: 'BI 销售', deptId: 'online-sales', isSales: true, enabled: true, sourceUserId: 'wl_10087' },
-  { id: 'u-south-01', name: '杨磊', sourceName: 'BI 销售', deptId: 'south-sales', isSales: true, enabled: true, sourceUserId: 'wl_10091' },
-  { id: 'u-east-01', name: '马骏', sourceName: 'BI 销售', deptId: 'east-sales', isSales: true, enabled: true, sourceUserId: 'wl_10095' },
-  { id: 'u-agent-01', name: '南唐代理', sourceName: '渠道伙伴', deptId: 'agent-sales', isSales: true, enabled: true, sourceUserId: 'wl_partner_01' },
-  { id: 'u-paused-01', name: '旧账号样本', sourceName: '历史人员', deptId: 'paused-team', isSales: false, enabled: false, sourceUserId: 'wl_archived_01' },
+  { id: 'u-online-01', name: '王丽英', sourceName: 'BI 销售', deptId: 'online-sales', isSales: true, enabled: true, externalBiUserId: 'wl_10086' },
+  { id: 'u-online-02', name: '李思雨', sourceName: 'BI 销售', deptId: 'online-sales', isSales: true, enabled: true, externalBiUserId: 'wl_10087' },
+  { id: 'u-south-01', name: '杨磊', sourceName: 'BI 销售', deptId: 'south-sales', isSales: true, enabled: true, externalBiUserId: 'wl_10091' },
+  { id: 'u-east-01', name: '马骏', sourceName: 'BI 销售', deptId: 'east-sales', isSales: true, enabled: true, externalBiUserId: 'wl_10095' },
+  { id: 'u-agent-01', name: '南唐代理', sourceName: '渠道伙伴', deptId: 'agent-sales', isSales: true, enabled: true, externalBiUserId: 'wl_partner_01' },
+  { id: 'u-paused-01', name: '旧账号样本', sourceName: '历史人员', deptId: 'paused-team', isSales: false, enabled: false, externalBiUserId: 'wl_archived_01' },
 ];
 
 export const CHANNEL_MAINTENANCE_GROUPS = [
-  { id: 'group_paid_flow', name: '付费流量', parentId: '', enabled: true },
-  { id: 'group_offline', name: '线下获客', parentId: '', enabled: true },
-  { id: 'group_private_domain', name: '私域转介绍', parentId: '', enabled: true },
-  { id: 'group_agent', name: '代理渠道', parentId: '', enabled: true },
-  { id: 'group_paid_search', name: '搜索投放', parentId: 'group_paid_flow', enabled: true },
-  { id: 'group_unattributed', name: '未归因', parentId: '', enabled: false },
+  { id: 'channel-3001', channelId: 3001, key: 'online', name: '线上', parentId: '', enabled: true },
+  { id: 'channel-3002', channelId: 3002, key: 'south', name: '华南线下', parentId: '', enabled: true },
+  { id: 'channel-3003', channelId: 3003, key: 'east', name: '华东线下', parentId: '', enabled: true },
+  { id: 'channel-3004', channelId: 3004, key: 'agent', name: '代理', parentId: '', enabled: true },
 ];
 
 export const CHANNEL_MAINTENANCE_SOURCES = [
-  { code: '1001', name: '百度搜索', groupId: 'group_paid_flow', enabled: true, excluded: false },
-  { code: '1002', name: '巨量广告', groupId: 'group_paid_flow', enabled: true, excluded: false },
-  { code: '2001', name: '广州会销', groupId: 'group_offline', enabled: true, excluded: false },
-  { code: '2002', name: '杭州会销', groupId: 'group_offline', enabled: true, excluded: false },
-  { code: '3001', name: '老客转介绍', groupId: 'group_private_domain', enabled: true, excluded: false },
-  { code: '4001', name: '代理商报备', groupId: 'group_agent', enabled: true, excluded: false },
-  { code: '9999', name: '测试来源', groupId: '', enabled: false, excluded: true },
+  { sourceId: 7001, code: '1001', name: '百度搜索', groupId: 'channel-3001', excluded: false },
+  { sourceId: 7002, code: '1002', name: '巨量广告', groupId: 'channel-3001', excluded: false },
+  { sourceId: 7003, code: '2001', name: '广州会销', groupId: 'channel-3002', excluded: false },
+  { sourceId: 7004, code: '2002', name: '杭州会销', groupId: 'channel-3003', excluded: false },
+  { sourceId: 7005, code: '3001', name: '老客转介绍', groupId: 'channel-3001', excluded: false },
+  { sourceId: 7006, code: '4001', name: '代理商报备', groupId: 'channel-3004', excluded: false },
+  { sourceId: 7099, code: '9999', name: '测试来源', groupId: '', excluded: true },
 ];
 
 export function getMaintenancePageMeta(pageKey = 'target-maintenance') {

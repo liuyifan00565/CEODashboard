@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-06 10:28:05 CST
+ Update content: Load data maintenance pages from MySQL APIs and save editable UI fields back to matching database tables.
+*/
+/*
  Update time: 2026-07-03 11:24:05 CST
  Update content: Freeze target maintenance department/person names outside the horizontal period scroller to prevent glass bleed-through.
 */
@@ -42,7 +46,7 @@
  更新时间: 2026-07-02 19:13:36 CST
  更新内容: 去除内容区分隔点，标题分隔点保持原样，并将维护页进度百分比单独换行展示。
 */
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import {
   CHANNEL_MAINTENANCE_GROUPS,
@@ -77,6 +81,55 @@ const PAGE_RENDERERS = {
 };
 
 const TARGET_PERIOD_COLUMNS = buildTargetPeriodColumns(MAINTENANCE_PERIOD_COLUMNS, META.monthLabel);
+const MAINTENANCE_MONTH_KEYS = MAINTENANCE_PERIOD_COLUMNS.filter((column) => column.month).map((column) => column.key);
+const MAINTENANCE_QUARTERS = {
+  q1: ['m01', 'm02', 'm03'],
+  q2: ['m04', 'm05', 'm06'],
+  q3: ['m07', 'm08', 'm09'],
+  q4: ['m10', 'm11', 'm12'],
+};
+const PAGE_DATA_KEYS = {
+  'target-maintenance': 'target',
+  'cost-maintenance': 'cost',
+  'org-maintenance': 'org',
+  'channel-maintenance': 'channel',
+};
+const PAGE_API_RESOURCES = {
+  'target-maintenance': 'targets',
+  'cost-maintenance': 'costs',
+  'org-maintenance': 'org',
+  'channel-maintenance': 'channels',
+};
+const DEFAULT_MAINTENANCE_DATA = {
+  target: {
+    orgTree: TARGET_MAINTENANCE_ORG_TREE,
+    rows: TARGET_MAINTENANCE_ROWS,
+  },
+  cost: {
+    channels: COST_MAINTENANCE_CHANNELS,
+    rows: COST_MAINTENANCE_ROWS,
+    laborRows: LABOR_COST_MAINTENANCE_ROWS,
+  },
+  org: {
+    departments: ORG_MAINTENANCE_DEPARTMENTS,
+    users: ORG_MAINTENANCE_USERS,
+  },
+  channel: {
+    groups: CHANNEL_MAINTENANCE_GROUPS,
+    sources: CHANNEL_MAINTENANCE_SOURCES,
+  },
+};
+
+function cloneMaintenanceData(data = DEFAULT_MAINTENANCE_DATA) {
+  return JSON.parse(JSON.stringify(data));
+}
+
+function mergeMaintenanceData(data) {
+  return {
+    ...cloneMaintenanceData(),
+    ...(data || {}),
+  };
+}
 
 function getMaintenanceCurrentMonth(monthLabel = '') {
   const match = String(monthLabel).match(/(\d{1,2})\s*月/);
@@ -107,6 +160,69 @@ function formatPct(value) {
 
 function formatRoi(value) {
   return Number(value || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function maintenanceStatus(pct, target) {
+  if (!target) return 'unset';
+  return pct > 80 ? 'good' : 'danger';
+}
+
+function targetPeriod(target, actual) {
+  const safeTarget = Math.max(0, Number(target || 0));
+  const safeActual = Math.max(0, Number(actual || 0));
+  const pct = safeTarget ? +((safeActual / safeTarget) * 100).toFixed(1) : 0;
+  return { target: safeTarget, actual: safeActual, pct, status: maintenanceStatus(pct, safeTarget) };
+}
+
+function costPeriod(cost, actual, deals = 0) {
+  const safeCost = Math.max(0, Number(cost || 0));
+  const safeActual = Math.max(0, Number(actual || 0));
+  const safeDeals = Math.max(0, Math.round(Number(deals || 0)));
+  const roi = safeCost ? +((safeActual - safeCost) / safeCost).toFixed(2) : 0;
+  return { cost: safeCost, actual: safeActual, deals: safeDeals, roi };
+}
+
+function laborPeriod(cost) {
+  return { cost: Math.max(0, Number(cost || 0)) };
+}
+
+function sumPeriodValues(keys, periods, field) {
+  return keys.reduce((sum, key) => sum + Number(periods[key]?.[field] || 0), 0);
+}
+
+function recalcTargetPeriods(periods) {
+  const next = { ...periods };
+  Object.entries(MAINTENANCE_QUARTERS).forEach(([key, months]) => {
+    next[key] = targetPeriod(sumPeriodValues(months, next, 'target'), sumPeriodValues(months, next, 'actual'));
+  });
+  next.year = targetPeriod(sumPeriodValues(MAINTENANCE_MONTH_KEYS, next, 'target'), sumPeriodValues(MAINTENANCE_MONTH_KEYS, next, 'actual'));
+  return next;
+}
+
+function recalcCostPeriods(periods) {
+  const next = { ...periods };
+  Object.entries(MAINTENANCE_QUARTERS).forEach(([key, months]) => {
+    next[key] = costPeriod(
+      sumPeriodValues(months, next, 'cost'),
+      sumPeriodValues(months, next, 'actual'),
+      sumPeriodValues(months, next, 'deals')
+    );
+  });
+  next.year = costPeriod(
+    sumPeriodValues(MAINTENANCE_MONTH_KEYS, next, 'cost'),
+    sumPeriodValues(MAINTENANCE_MONTH_KEYS, next, 'actual'),
+    sumPeriodValues(MAINTENANCE_MONTH_KEYS, next, 'deals')
+  );
+  return next;
+}
+
+function recalcLaborPeriods(periods) {
+  const next = { ...periods };
+  Object.entries(MAINTENANCE_QUARTERS).forEach(([key, months]) => {
+    next[key] = laborPeriod(sumPeriodValues(months, next, 'cost'));
+  });
+  next.year = laborPeriod(sumPeriodValues(MAINTENANCE_MONTH_KEYS, next, 'cost'));
+  return next;
 }
 
 function nowLabel() {
@@ -199,13 +315,12 @@ function SaveBadge({ status }) {
   return <span className={`mnt-save-badge${dirty ? ' mnt-save-badge--dirty' : ''}`}>{status}</span>;
 }
 
-function MaintenanceToolbar({ activePage, status, onBack, onDirty, onSave }) {
+function MaintenanceToolbar({ activePage, year, status, onBack, onDirty, onSave, onYearChange }) {
   const meta = getMaintenancePageMeta(activePage);
   const title = MAINTENANCE_TITLE_TEXT[activePage] ?? meta.title;
-  const [year, setYear] = useState('2026');
 
   function handleYearChange(event) {
-    setYear(event.target.value);
+    onYearChange(event.target.value);
     onDirty();
   }
 
@@ -353,7 +468,7 @@ function TargetPeriodHeader({ column }) {
   );
 }
 
-function TargetPeriodCell({ row, column, markDirty }) {
+function TargetPeriodCell({ row, column, onTargetChange }) {
   const period = row.periods[column.key];
   const editable = row.type === 'user' && column.month;
 
@@ -365,8 +480,8 @@ function TargetPeriodCell({ row, column, markDirty }) {
             className="mnt-number-input mnt-target-input"
             type="number"
             min="0"
-            defaultValue={period.target}
-            onChange={markDirty}
+            value={period.target}
+            onChange={(event) => onTargetChange(row.id, column.key, event.target.value)}
             aria-label={`${row.name}${column.label}目标`}
           />
           <span className="mnt-target-input-unit">万</span>
@@ -381,16 +496,32 @@ function TargetPeriodCell({ row, column, markDirty }) {
   );
 }
 
-function TargetMaintenancePage({ markDirty, status }) {
+function TargetMaintenancePage({ markDirty, status, data, onDataChange }) {
   const [selectedOrg, setSelectedOrg] = useState('all');
   const [selectedTargetRow, setSelectedTargetRow] = useState(null);
   const targetScrollPaneRef = useTargetCurrentMonthAlignment();
-  const rows = TARGET_MAINTENANCE_ROWS;
+  const rows = data?.rows ?? TARGET_MAINTENANCE_ROWS;
+  const orgTree = data?.orgTree ?? TARGET_MAINTENANCE_ORG_TREE;
+
+  function handleTargetChange(rowId, monthKey, value) {
+    onDataChange((current) => ({
+      ...current,
+      rows: (current.rows ?? []).map((row) => {
+        if (row.id !== rowId) return row;
+        const periods = {
+          ...row.periods,
+          [monthKey]: targetPeriod(value, row.periods?.[monthKey]?.actual),
+        };
+        return { ...row, periods: recalcTargetPeriods(periods) };
+      }),
+    }));
+    markDirty();
+  }
 
   return (
     <section className="mnt-layout mnt-layout--target">
       <Panel title="组织架构" meta={`${rows.filter((row) => row.type === 'user').length} 人`} className="mnt-side-panel">
-        <MaintenanceSideNav nodes={[TARGET_MAINTENANCE_ORG_TREE]} activeId={selectedOrg} onSelect={setSelectedOrg} />
+        <MaintenanceSideNav nodes={[orgTree]} activeId={selectedOrg} onSelect={setSelectedOrg} />
       </Panel>
       <Panel title="年度目标" meta={<SaveBadge status={status} />} className="mnt-main-panel">
         <MatrixShell className="mnt-matrix-wrap--target">
@@ -425,7 +556,7 @@ function TargetMaintenancePage({ markDirty, status }) {
                   {rows.map((row) => (
                     <tr key={row.id} {...getSelectableRowProps(`target:${row.id}`, selectedTargetRow, setSelectedTargetRow, row.type === 'department' ? 'mnt-row--summary' : '')}>
                       {TARGET_PERIOD_COLUMNS.map((column) => (
-                        <TargetPeriodCell key={column.key} row={row} column={column} markDirty={markDirty} />
+                        <TargetPeriodCell key={column.key} row={row} column={column} onTargetChange={handleTargetChange} />
                       ))}
                     </tr>
                   ))}
@@ -439,29 +570,63 @@ function TargetMaintenancePage({ markDirty, status }) {
   );
 }
 
-function CostMaintenancePage({ markDirty, status }) {
+function CostMaintenancePage({ markDirty, status, data, onDataChange }) {
   const [selectedChannel, setSelectedChannel] = useState('all');
   const [selectedCostRow, setSelectedCostRow] = useState(null);
+  const channels = data?.channels ?? COST_MAINTENANCE_CHANNELS;
+  const rows = data?.rows ?? COST_MAINTENANCE_ROWS;
+  const laborRows = data?.laborRows ?? LABOR_COST_MAINTENANCE_ROWS;
   const costNavNodes = useMemo(() => buildMaintenanceNavTree(
-    COST_MAINTENANCE_CHANNELS.map((channel) => ({
+    channels.map((channel) => ({
       ...channel,
       parentId: channel.id === 'all' ? '' : channel.parentId || 'all',
       meta: channel.kind,
     })),
     { rootId: 'all', countText: '项' }
-  ), []);
+  ), [channels]);
   const selectedIds = useMemo(() => {
-    if (selectedChannel === 'all') return new Set(COST_MAINTENANCE_ROWS.map((row) => row.id));
+    if (selectedChannel === 'all') return new Set(rows.map((row) => row.id));
     return new Set([
       selectedChannel,
-      ...COST_MAINTENANCE_CHANNELS.filter((item) => item.parentId === selectedChannel).map((item) => item.id),
+      ...channels.filter((item) => item.parentId === selectedChannel).map((item) => item.id),
     ]);
-  }, [selectedChannel]);
-  const visibleRows = COST_MAINTENANCE_ROWS.filter((row) => selectedIds.has(row.id) || selectedChannel === 'all');
+  }, [channels, rows, selectedChannel]);
+  const visibleRows = rows.filter((row) => selectedIds.has(row.id) || selectedChannel === 'all');
+
+  function updateChannelCost(rowId, monthKey, value) {
+    onDataChange((current) => ({
+      ...current,
+      rows: (current.rows ?? []).map((row) => {
+        if (row.id !== rowId) return row;
+        const currentPeriod = row.periods?.[monthKey] ?? {};
+        const periods = {
+          ...row.periods,
+          [monthKey]: costPeriod(value, currentPeriod.actual, currentPeriod.deals),
+        };
+        return { ...row, periods: recalcCostPeriods(periods) };
+      }),
+    }));
+    markDirty();
+  }
+
+  function updateLaborCost(rowId, monthKey, value) {
+    onDataChange((current) => ({
+      ...current,
+      laborRows: (current.laborRows ?? []).map((row) => {
+        if (row.id !== rowId) return row;
+        const periods = {
+          ...row.periods,
+          [monthKey]: laborPeriod(value),
+        };
+        return { ...row, periods: recalcLaborPeriods(periods) };
+      }),
+    }));
+    markDirty();
+  }
 
   return (
     <section className="mnt-layout mnt-layout--cost">
-      <Panel title="渠道树" meta={`${COST_MAINTENANCE_CHANNELS.length - 1} 个渠道`} className="mnt-side-panel">
+      <Panel title="渠道树" meta={`${Math.max(0, channels.length - 1)} 个渠道`} className="mnt-side-panel">
         <MaintenanceSideNav nodes={costNavNodes} activeId={selectedChannel} onSelect={setSelectedChannel} />
       </Panel>
       <div className="mnt-cost-stack">
@@ -489,7 +654,7 @@ function CostMaintenancePage({ markDirty, status }) {
                           {editable ? (
                             <label className="mnt-inline-field">
                               <span>成本</span>
-                              <input className="mnt-control mnt-number-input" type="number" min="0" defaultValue={period.cost} onChange={markDirty} />
+                              <input className="mnt-control mnt-number-input" type="number" min="0" value={period.cost} onChange={(event) => updateChannelCost(row.id, column.key, event.target.value)} />
                             </label>
                           ) : (
                             <div className="mnt-mini-line">成本 {formatWan(period.cost)}</div>
@@ -516,7 +681,7 @@ function CostMaintenancePage({ markDirty, status }) {
                 </tr>
               </thead>
               <tbody>
-                {LABOR_COST_MAINTENANCE_ROWS.map((row) => (
+                {laborRows.map((row) => (
                   <tr key={row.id} {...getSelectableRowProps(`labor:${row.id}`, selectedCostRow, setSelectedCostRow)}>
                     <td className="mnt-name-cell">
                       <strong>{row.name}</strong>
@@ -527,7 +692,7 @@ function CostMaintenancePage({ markDirty, status }) {
                       return (
                         <td key={column.key} className="mnt-period-cell">
                           {column.month ? (
-                            <input className="mnt-control mnt-number-input" type="number" min="0" defaultValue={period.cost} onChange={markDirty} />
+                            <input className="mnt-control mnt-number-input" type="number" min="0" value={period.cost} onChange={(event) => updateLaborCost(row.id, column.key, event.target.value)} />
                           ) : (
                             <strong>{formatWan(period.cost)}</strong>
                           )}
@@ -545,41 +710,56 @@ function CostMaintenancePage({ markDirty, status }) {
   );
 }
 
-function departmentOptions(currentId = '') {
-  return ORG_MAINTENANCE_DEPARTMENTS.map((dept) => (
+function departmentOptions(departments, currentId = '') {
+  return departments.map((dept) => (
     <option key={dept.id} value={dept.id} disabled={dept.id === currentId}>
       {dept.name}
     </option>
   ));
 }
 
-function OrgMaintenancePage({ markDirty, status }) {
-  const [departments, setDepartments] = useState(ORG_MAINTENANCE_DEPARTMENTS);
+function OrgMaintenancePage({ markDirty, status, data, onDataChange }) {
+  const departments = data?.departments ?? ORG_MAINTENANCE_DEPARTMENTS;
+  const users = data?.users ?? ORG_MAINTENANCE_USERS;
   const [selectedDepartment, setSelectedDepartment] = useState('headquarters');
   const [selectedOrgRow, setSelectedOrgRow] = useState(null);
+  const activeDepartment = departments.some((dept) => dept.id === selectedDepartment)
+    ? selectedDepartment
+    : departments[0]?.id ?? 'headquarters';
   const departmentNavItems = useMemo(() => departments.map((dept) => ({
     ...dept,
-    count: ORG_MAINTENANCE_USERS.filter((user) => user.deptId === dept.id && user.enabled).length,
+    count: users.filter((user) => user.deptId === dept.id && user.enabled).length,
     countText: '人',
-  })), [departments]);
+  })), [departments, users]);
   const departmentNavNodes = useMemo(
     () => buildMaintenanceNavTree(departmentNavItems, { rootId: 'headquarters', countText: '人' }),
     [departmentNavItems]
   );
   const selectedDepartmentIds = useMemo(
-    () => getDescendantIds(departments, selectedDepartment),
-    [departments, selectedDepartment]
+    () => getDescendantIds(departments, activeDepartment),
+    [activeDepartment, departments]
   );
-  const visibleUsers = selectedDepartment === 'headquarters'
-    ? ORG_MAINTENANCE_USERS
-    : ORG_MAINTENANCE_USERS.filter((user) => selectedDepartmentIds.has(user.deptId));
+  const visibleUsers = activeDepartment === 'headquarters'
+    ? users
+    : users.filter((user) => selectedDepartmentIds.has(user.deptId));
 
   function addDepartment() {
     const nextIndex = departments.length + 1;
-    setDepartments([
-      ...departments,
-      { id: `new-dept-${nextIndex}`, name: `新增组织 ${nextIndex}`, parentId: 'headquarters', enabled: true },
-    ]);
+    onDataChange((current) => ({
+      ...current,
+      departments: [
+        ...(current.departments ?? []),
+        { id: `new-dept-${nextIndex}`, name: `新增组织 ${nextIndex}`, parentId: 'department-1001', enabled: true },
+      ],
+    }));
+    markDirty();
+  }
+
+  function updateUser(userId, patch) {
+    onDataChange((current) => ({
+      ...current,
+      users: (current.users ?? []).map((user) => (user.id === userId ? { ...user, ...patch } : user)),
+    }));
     markDirty();
   }
 
@@ -587,9 +767,9 @@ function OrgMaintenancePage({ markDirty, status }) {
     <section className="mnt-layout mnt-layout--org">
       <Panel title="BI组织架构" meta={`${departments.length} 个组织`} className="mnt-side-panel">
         <button className="mnt-btn mnt-local-action" type="button" onClick={addDepartment}>新增组织</button>
-        <MaintenanceSideNav nodes={departmentNavNodes} activeId={selectedDepartment} onSelect={setSelectedDepartment} />
+        <MaintenanceSideNav nodes={departmentNavNodes} activeId={activeDepartment} onSelect={setSelectedDepartment} />
       </Panel>
-      <Panel title="BI人员范围" meta={<><span>{ORG_MAINTENANCE_USERS.filter((user) => user.isSales && user.enabled).length} 名销售</span> <SaveBadge status={status} /></>} className="mnt-main-panel">
+      <Panel title="BI人员范围" meta={<><span>{users.filter((user) => user.isSales && user.enabled).length} 名销售</span> <SaveBadge status={status} /></>} className="mnt-main-panel">
         <MatrixShell>
           <table className="mnt-user-table">
             <thead>
@@ -598,7 +778,7 @@ function OrgMaintenancePage({ markDirty, status }) {
                 <th>BI组织</th>
                 <th>销售</th>
                 <th>启用</th>
-                <th>卫瓴ID</th>
+                <th>外部BI ID</th>
               </tr>
             </thead>
             <tbody>
@@ -609,23 +789,23 @@ function OrgMaintenancePage({ markDirty, status }) {
                     <span>{user.sourceName}</span>
                   </td>
                   <td>
-                    <select className="mnt-control" defaultValue={user.deptId} onChange={markDirty} aria-label={`${user.name}所属组织`}>
-                      {departmentOptions()}
+                    <select className="mnt-control" value={user.deptId} onChange={(event) => updateUser(user.id, { deptId: event.target.value })} aria-label={`${user.name}所属组织`}>
+                      {departmentOptions(departments)}
                     </select>
                   </td>
                   <td>
                     <label className="mnt-check">
-                      <input type="checkbox" defaultChecked={user.isSales} onChange={markDirty} />
+                      <input type="checkbox" checked={user.isSales} onChange={(event) => updateUser(user.id, { isSales: event.target.checked })} />
                       销售
                     </label>
                   </td>
                   <td>
                     <label className="mnt-check">
-                      <input type="checkbox" defaultChecked={user.enabled} onChange={markDirty} />
+                      <input type="checkbox" checked={user.enabled} onChange={(event) => updateUser(user.id, { enabled: event.target.checked })} />
                       启用
                     </label>
                   </td>
-                  <td><code>{user.sourceUserId}</code></td>
+                  <td><code>{user.externalBiUserId ?? user.sourceUserId}</code></td>
                 </tr>
               ))}
             </tbody>
@@ -645,9 +825,9 @@ function groupOptions(groups) {
   );
 }
 
-function ChannelMaintenancePage({ markDirty, status }) {
-  const [groups, setGroups] = useState(CHANNEL_MAINTENANCE_GROUPS);
-  const [sources, setSources] = useState(CHANNEL_MAINTENANCE_SOURCES);
+function ChannelMaintenancePage({ markDirty, status, data, onDataChange }) {
+  const groups = data?.groups ?? CHANNEL_MAINTENANCE_GROUPS;
+  const sources = data?.sources ?? CHANNEL_MAINTENANCE_SOURCES;
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedSourceRow, setSelectedSourceRow] = useState(null);
   const sourceCountByGroup = useMemo(() => {
@@ -680,24 +860,41 @@ function ChannelMaintenancePage({ markDirty, status }) {
 
   function addGroup(parentId = '') {
     const nextIndex = groups.length + 1;
-    setGroups([
-      ...groups,
-      { id: `new-channel-${nextIndex}`, name: `新增大类 ${nextIndex}`, parentId, enabled: true },
-    ]);
+    onDataChange((current) => ({
+      ...current,
+      groups: [
+        ...(current.groups ?? []),
+        { id: `new-channel-${nextIndex}`, name: `新增大类 ${nextIndex}`, parentId, enabled: true },
+      ],
+    }));
     markDirty();
   }
 
   function addSource() {
     const nextIndex = sources.length + 1;
-    setSources([
-      ...sources,
-      { code: String(9000 + nextIndex), name: `新增来源 ${nextIndex}`, groupId: groups[0]?.id || '', enabled: true, excluded: false },
-    ]);
+    onDataChange((current) => ({
+      ...current,
+      sources: [
+        ...(current.sources ?? []),
+        { sourceId: null, code: String(9000 + nextIndex), name: `新增来源 ${nextIndex}`, groupId: groups[0]?.id || '', excluded: false },
+      ],
+    }));
     markDirty();
   }
 
   function deleteSource(code) {
-    setSources(sources.filter((source) => source.code !== code));
+    onDataChange((current) => ({
+      ...current,
+      sources: (current.sources ?? []).filter((source) => source.code !== code),
+    }));
+    markDirty();
+  }
+
+  function updateSource(code, patch) {
+    onDataChange((current) => ({
+      ...current,
+      sources: (current.sources ?? []).map((source) => (source.code === code ? { ...source, ...patch } : source)),
+    }));
     markDirty();
   }
 
@@ -716,7 +913,6 @@ function ChannelMaintenancePage({ markDirty, status }) {
                 <th>来源编码</th>
                 <th>来源名称</th>
                 <th>归属渠道大类</th>
-                <th>启用</th>
                 <th>排除</th>
                 <th>操作</th>
               </tr>
@@ -724,22 +920,16 @@ function ChannelMaintenancePage({ markDirty, status }) {
             <tbody>
               {visibleSources.map((source) => (
                 <tr key={source.code} {...getSelectableRowProps(`source:${source.code}`, selectedSourceRow, setSelectedSourceRow, source.excluded ? 'mnt-row--muted' : '')}>
-                  <td><input className="mnt-control" defaultValue={source.code} onChange={markDirty} aria-label={`${source.name}来源编码`} /></td>
-                  <td><input className="mnt-control" defaultValue={source.name} onChange={markDirty} aria-label={`${source.name}来源名称`} /></td>
+                  <td><input className="mnt-control" value={source.code} onChange={(event) => updateSource(source.code, { code: event.target.value })} aria-label={`${source.name}来源编码`} /></td>
+                  <td><input className="mnt-control" value={source.name} onChange={(event) => updateSource(source.code, { name: event.target.value })} aria-label={`${source.name}来源名称`} /></td>
                   <td>
-                    <select className="mnt-control" defaultValue={source.groupId} onChange={markDirty} aria-label={`${source.name}归属渠道`}>
+                    <select className="mnt-control" value={source.groupId} onChange={(event) => updateSource(source.code, { groupId: event.target.value })} aria-label={`${source.name}归属渠道`}>
                       {groupOptions(groups)}
                     </select>
                   </td>
                   <td>
                     <label className="mnt-check">
-                      <input type="checkbox" defaultChecked={source.enabled} onChange={markDirty} />
-                      启用
-                    </label>
-                  </td>
-                  <td>
-                    <label className="mnt-check">
-                      <input type="checkbox" defaultChecked={source.excluded} onChange={markDirty} />
+                      <input type="checkbox" checked={source.excluded} onChange={(event) => updateSource(source.code, { excluded: event.target.checked })} />
                       排除
                     </label>
                   </td>
@@ -756,27 +946,89 @@ function ChannelMaintenancePage({ markDirty, status }) {
 
 export default function MaintenancePage({ activePage = 'target-maintenance', onBack }) {
   const [statusByPage, setStatusByPage] = useState({});
+  const [year, setYear] = useState('2026');
+  const [maintenanceData, setMaintenanceData] = useState(() => cloneMaintenanceData());
   const Page = PAGE_RENDERERS[activePage] ?? TargetMaintenancePage;
   const status = statusByPage[activePage] ?? '未修改';
+  const dataKey = PAGE_DATA_KEYS[activePage] ?? 'target';
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadMaintenanceData() {
+      try {
+        const response = await fetch(`/api/maintenance/bootstrap?year=${encodeURIComponent(year)}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        if (!active) return;
+        setMaintenanceData(mergeMaintenanceData(data));
+        setStatusByPage((current) => ({ ...current, [activePage]: '已加载数据库' }));
+      } catch {
+        if (!active) return;
+        setMaintenanceData(cloneMaintenanceData());
+        setStatusByPage((current) => ({ ...current, [activePage]: '数据库未连接，使用示例数据' }));
+      }
+    }
+
+    loadMaintenanceData();
+    return () => {
+      active = false;
+    };
+  }, [activePage, year]);
 
   function markDirty() {
     setStatusByPage((current) => ({ ...current, [activePage]: '有未保存修改' }));
   }
 
-  function markSaved() {
-    setStatusByPage((current) => ({ ...current, [activePage]: `已保存 ${nowLabel()}` }));
+  function updatePageData(key, updater) {
+    setMaintenanceData((current) => ({
+      ...current,
+      [key]: typeof updater === 'function' ? updater(current[key]) : updater,
+    }));
+  }
+
+  async function saveActivePage() {
+    const resource = PAGE_API_RESOURCES[activePage] ?? 'targets';
+    setStatusByPage((current) => ({ ...current, [activePage]: '保存中' }));
+
+    try {
+      const response = await fetch(`/api/maintenance/${resource}?year=${encodeURIComponent(year)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          year,
+          data: maintenanceData[dataKey],
+        }),
+      });
+      const saved = await response.json();
+      if (!response.ok) throw new Error(saved?.error || `HTTP ${response.status}`);
+      setMaintenanceData((current) => ({
+        ...current,
+        [dataKey]: saved,
+      }));
+      setStatusByPage((current) => ({ ...current, [activePage]: `已保存 ${nowLabel()}` }));
+    } catch {
+      setStatusByPage((current) => ({ ...current, [activePage]: '保存失败' }));
+    }
   }
 
   return (
     <div className="mnt-page">
       <MaintenanceToolbar
         activePage={activePage}
+        year={year}
         status={status}
         onBack={onBack}
         onDirty={markDirty}
-        onSave={markSaved}
+        onSave={saveActivePage}
+        onYearChange={setYear}
       />
-      <Page markDirty={markDirty} status={status} />
+      <Page
+        data={maintenanceData[dataKey]}
+        markDirty={markDirty}
+        status={status}
+        onDataChange={(updater) => updatePageData(dataKey, updater)}
+      />
     </div>
   );
 }

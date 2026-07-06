@@ -1,4 +1,8 @@
 <!--
+更新时间: 2026-07-06 10:28:05 CST
+更新内容: 补充维护页真实 MySQL 读写接口已接入，更新第二阶段实现状态与验证记录。
+-->
+<!--
 更新时间: 2026-07-02 18:25:37 CST
 更新内容: 新增四个维护页内容规划，按 MySQL 字段和线上旧维护页结构确定本地页面展示内容；明确只改内容、不改样式框架。
 -->
@@ -171,37 +175,39 @@
 - 归属渠道，对应 `channel_id`。
 - 是否排除，对应 `is_excluded`。
 
-当前 `dim_channel_source` 没有 `is_enabled` 字段，因此内容有两种处理方式：
-
-- 推荐：右侧表格不强调“启用”，以“排除”作为是否参与统计的主要开关。
-- 兼容：如果暂时保留现有“启用”列，则默认只作为前端内容演示，不写入数据库，后续真实接口接入前需补字段或移除。
+当前 `dim_channel_source` 没有 `is_enabled` 字段，因此右侧表格不展示“启用”，以“排除”作为是否参与统计的主要开关。
 
 ## 验证要求
 
-内容改造后需要验证：
+维护页接入 MySQL 后需要验证：
 
 - 四个维护页仍能正常切换。
 - 顶部工具栏高度和玻璃样式不变。
 - 卡片、表格外壳、表头、固定首列继续沿用现有透明玻璃体系。
 - 页面文案与数据库字段语义一致。
-- 不改动 `MaintenancePage.css`，除非后续发现文本溢出且必须用现有变量做小范围修正。
+- UI 中可编辑的目标、成本、人力成本、组织人员、渠道来源字段保存后能更新对应 MySQL 表。
+- 维护页读取接口失败时仍能保留字段语义一致的前端兜底数据。
 
-## 后续实现边界
+## 已接入接口
 
-第一阶段只改本地静态内容：
+本次已将原“第二阶段”真实读写接口接入当前 React/Node 服务：
 
-- `cockpit/src/data/mock.js`
-- 必要时调整 `cockpit/src/components/MaintenancePage.jsx` 中的字段标题和文案
-
-不在第一阶段接入真实 MySQL 接口，不新增后端服务，不新增数据库字段。
-
-第二阶段如需真实数据读写，再设计接口：
-
-- `GET /api/maintenance/targets`
-- `POST /api/maintenance/targets`
-- `GET /api/maintenance/costs`
-- `POST /api/maintenance/costs`
+- `GET /api/maintenance/bootstrap?year=2026`
+- `GET /api/maintenance/targets?year=2026`
+- `PUT /api/maintenance/targets`
+- `GET /api/maintenance/costs?year=2026`
+- `PUT /api/maintenance/costs`
 - `GET /api/maintenance/org`
-- `POST /api/maintenance/org`
+- `PUT /api/maintenance/org`
 - `GET /api/maintenance/channels`
-- `POST /api/maintenance/channels`
+- `PUT /api/maintenance/channels`
+
+字段落库规则：
+
+- 页面金额单位为“万”，保存到 MySQL 时转成“元”。
+- 目标维护只保存人员月度目标到 `biz_target_monthly`，季度和全年由月度汇总展示。
+- 成本维护保存渠道月度投入到 `biz_channel_cost_monthly`，保存人力成本到 `biz_labor_cost_monthly`。
+- 组织维护保存 `dim_department` 和 `dim_staff`，人员外部 ID 使用 `external_bi_user_id`。
+- 渠道维护保存 `dim_channel` 和 `dim_channel_source`，线索来源只保存 `source_code`、`source_name`、`channel_id`、`is_excluded`。
+
+不新增数据库字段，不改变现有表结构。

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:28:05 CST
+ 更新内容: 更新维护页数据库读写接入后的字段文案与数据源断言。
+*/
+/*
  更新时间: 2026-07-03 11:55:42 CST
  更新内容: 合并 ttoswar 最新维护页导航、冻结列和选中态回归测试。
 */
@@ -373,7 +377,7 @@ test('builds the org and channel maintenance pages from reference tree and table
   assert.match(maintenancePageSource, /更新 BI 销售人员/);
   assert.match(maintenancePageSource, /BI组织架构/);
   assert.match(maintenancePageSource, /BI人员范围/);
-  assert.match(maintenancePageSource, /卫瓴ID/);
+  assert.match(maintenancePageSource, /外部BI ID/);
   assert.match(maintenancePageSource, /CHANNEL_MAINTENANCE_GROUPS/);
   assert.match(maintenancePageSource, /CHANNEL_MAINTENANCE_SOURCES/);
   assert.match(maintenancePageSource, /补齐默认来源/);
@@ -391,9 +395,9 @@ test('uses one organization-style side navigation across all maintenance pages',
   assert.match(maintenancePageSource, /function MaintenanceSideNav\(\{ nodes, activeId, onSelect \}\)/);
   assert.match(maintenancePageSource, /function MaintenanceSideNavNode\(\{ node, activeId, onSelect \}\)/);
   assert.match(maintenancePageSource, /function buildMaintenanceNavTree\(items, \{ rootId = 'all', countText = '项' \} = \{\}\) \{/);
-  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{\[TARGET_MAINTENANCE_ORG_TREE\]\} activeId=\{selectedOrg\} onSelect=\{setSelectedOrg\} \/>/);
+  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{\[orgTree\]\} activeId=\{selectedOrg\} onSelect=\{setSelectedOrg\} \/>/);
   assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{costNavNodes\} activeId=\{selectedChannel\} onSelect=\{setSelectedChannel\} \/>/);
-  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{departmentNavNodes\} activeId=\{selectedDepartment\} onSelect=\{setSelectedDepartment\} \/>/);
+  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{departmentNavNodes\} activeId=\{activeDepartment\} onSelect=\{setSelectedDepartment\} \/>/);
   assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{channelGroupNavNodes\} activeId=\{selectedGroup\} onSelect=\{setSelectedGroup\} \/>/);
   assert.doesNotMatch(maintenancePageSource, /className="mnt-channel-tree"/);
   assert.doesNotMatch(maintenancePageSource, /className="mnt-edit-list"/);

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:28:05 CST
+ 更新内容: 接入 /api/maintenance 数据维护 MySQL 读写接口。
+*/
+/*
  更新时间: 2026-07-01 11:19:49 CST
  更新内容: 生产服务入口新增 /api/ai/hover-cue 千问悬浮气泡接口，并保留静态 dist 与 AI 分析接口。
 */
@@ -10,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { handleAiAnalyzeRequest } from './server/dashscope.js';
 import { handleAiHoverCueRequest } from './server/hoverCue.js';
 import { loadLocalEnv } from './server/env.js';
+import { handleMaintenanceRequest } from './server/maintenanceApi.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const projectRoot = path.dirname(__filename);
@@ -84,6 +89,16 @@ const server = http.createServer((req, res) => {
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
       }
       res.end(JSON.stringify({ error: `AI 悬浮气泡接口异常：${err.message}` }));
+    });
+    return;
+  }
+
+  if (url.pathname.startsWith('/api/maintenance/')) {
+    handleMaintenanceRequest(req, res).catch((err) => {
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      }
+      res.end(JSON.stringify({ error: `数据维护接口异常：${err.message}` }));
     });
     return;
   }
