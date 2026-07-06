@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: 扩展主题读取层，暴露银紫玫瑰高亮、业务语义色与图表专用 token。
+*/
+/*
  更新时间: 2026-07-06 00:00:13 CST
  更新内容: 主题 fallback 的完成态金色同步为高级哑金。
 */
@@ -41,17 +45,33 @@ const FALLBACK_TOKENS = {
   chartMuted: '#B9C2D4',
   chartGrid: 'rgba(226,234,255,.070)',
   chartAxis: 'rgba(226,234,255,.28)',
-  chartBar: 'rgba(155,134,255,.74)',
-  chartBarCurrent: 'rgba(155,134,255,.68)',
-  chartBarMuted: 'rgba(155,134,255,.24)',
+  chartBar: '#8E86FF',
+  chartBarCurrent: '#8E86FF',
+  chartBarMuted: 'rgba(184,156,255,.22)',
   chartBarFaint: 'rgba(148,163,184,.18)',
-  chartBarFaintCurrent: 'rgba(167,156,255,.24)',
+  chartBarFaintCurrent: 'rgba(184,156,255,.16)',
   chartTooltipBg: 'rgba(9,14,28,.88)',
   chartTooltipBorder: 'rgba(255,255,255,.12)',
-  chartPointer: 'rgba(139,124,255,.07)',
+  chartPointer: 'rgba(184,156,255,.07)',
   chartPointBorder: '#060914',
-  progressMid: '#8B7CFF',
-  progressGold: '#B7A06C',
+  progressMid: '#8E86FF',
+  progressGold: '#C9A96B',
+  accentStart: '#8E86FF',
+  accentMid: '#B89CFF',
+  accentEnd: '#E4B8D7',
+  accentLine: '#D9D1FF',
+  accentGradientX: 'linear-gradient(90deg,#8E86FF 0%,#B89CFF 46%,#E4B8D7 100%)',
+  accentGradientY: 'linear-gradient(180deg,#B89CFF 0%,#8E86FF 100%)',
+  semanticRisk: '#F06A8B',
+  semanticGoal: '#C9A96B',
+  semanticCapacity: '#7EA7FF',
+  semanticSuccessMuted: '#A6C878',
+  chartActualBarTop: '#B89CFF',
+  chartActualBarBottom: '#8E86FF',
+  chartTargetBar: 'rgba(255,255,255,0.13)',
+  chartRateLine: '#D9D1FF',
+  chartRiskPoint: '#F06A8B',
+  chartGoalLine: '#C9A96B',
 };
 
 function cssVar(styles, name, fallback) {
@@ -84,6 +104,22 @@ export function readThemeTokens() {
     chartPointBorder: cssVar(styles, '--chart-point-border', FALLBACK_TOKENS.chartPointBorder),
     progressMid: cssVar(styles, '--progress-mid', FALLBACK_TOKENS.progressMid),
     progressGold: cssVar(styles, '--progress-gold', FALLBACK_TOKENS.progressGold),
+    accentStart: cssVar(styles, '--accent-start', FALLBACK_TOKENS.accentStart),
+    accentMid: cssVar(styles, '--accent-mid', FALLBACK_TOKENS.accentMid),
+    accentEnd: cssVar(styles, '--accent-end', FALLBACK_TOKENS.accentEnd),
+    accentLine: cssVar(styles, '--accent-line', FALLBACK_TOKENS.accentLine),
+    accentGradientX: cssVar(styles, '--accent-gradient-x', FALLBACK_TOKENS.accentGradientX),
+    accentGradientY: cssVar(styles, '--accent-gradient-y', FALLBACK_TOKENS.accentGradientY),
+    semanticRisk: cssVar(styles, '--semantic-risk', FALLBACK_TOKENS.semanticRisk),
+    semanticGoal: cssVar(styles, '--semantic-goal', FALLBACK_TOKENS.semanticGoal),
+    semanticCapacity: cssVar(styles, '--semantic-capacity', FALLBACK_TOKENS.semanticCapacity),
+    semanticSuccessMuted: cssVar(styles, '--semantic-success-muted', FALLBACK_TOKENS.semanticSuccessMuted),
+    chartActualBarTop: cssVar(styles, '--chart-actual-bar-top', FALLBACK_TOKENS.chartActualBarTop),
+    chartActualBarBottom: cssVar(styles, '--chart-actual-bar-bottom', FALLBACK_TOKENS.chartActualBarBottom),
+    chartTargetBar: cssVar(styles, '--chart-target-bar', FALLBACK_TOKENS.chartTargetBar),
+    chartRateLine: cssVar(styles, '--chart-rate-line', FALLBACK_TOKENS.chartRateLine),
+    chartRiskPoint: cssVar(styles, '--chart-risk-point', FALLBACK_TOKENS.chartRiskPoint),
+    chartGoalLine: cssVar(styles, '--chart-goal-line', FALLBACK_TOKENS.chartGoalLine),
   };
 }
 

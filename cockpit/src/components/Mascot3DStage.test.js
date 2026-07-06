@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 11:20:00 CST
+ 更新内容: AI 小人测试保留 imagegen 分层 rig 验收，并同步银紫玫瑰环境投影。
+*/
+/*
  更新时间: 2026-07-06 11:02:20 CST
  更新内容: 验收 AI 小人从单张参考 PNG 升级为 imagegen 透明图切层骨骼 rig，并覆盖动作层驱动。
 */
@@ -132,7 +136,7 @@ test('keeps the AI mascot compact while preserving the original launcher treatme
   assert.match(stageCssCode, /\.mascot-3d-stage\s*\{[^}]*width:\s*112px;/s);
   assert.match(stageCssCode, /\.mascot-3d-stage\s*\{[^}]*aspect-ratio:\s*1\s*\/\s*1\.34;/s);
   assert.match(stageCssCode, /\.mascot-3d-stage\s*\{[^}]*overflow:\s*visible;/s);
-  assert.match(stageCssCode, /\.mascot-3d-stage\s*\{[^}]*filter:\s*drop-shadow\(0 18px 30px rgba\(0, 0, 0, \.38\)\) drop-shadow\(0 0 30px rgba\(114, 77, 255, \.24\)\);/s);
+  assert.match(stageCssCode, /\.mascot-3d-stage\s*\{[^}]*filter:\s*drop-shadow\(0 18px 30px rgba\(0, 0, 0, \.38\)\) drop-shadow\(0 0 30px rgba\(184, 156, 255, \.18\)\);/s);
   assert.match(stageCssCode, /\.mascot-3d-stage--default\s*\{[^}]*width:\s*96px;/s);
   assert.match(stageCssCode, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.mascot-3d-stage\s*\{[^}]*width:\s*96px;[\s\S]*?\.mascot-3d-stage--default\s*\{[^}]*width:\s*84px;/);
 });

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: 亮色主题回归测试同步银紫玫瑰 fallback、高级果味语义色与图表用途 token。
+*/
+/*
  更新时间: 2026-07-06 00:00:13 CST
  更新内容: 亮色主题金色守卫改为更灰、更低饱和的高级哑金。
 */
@@ -126,29 +130,38 @@ test('uses a fog white-blue light theme background with non-white text and chart
   assert.doesNotMatch(block, /--chart-(?:text|muted|grid|bar|bar-muted):\s*(?:#fff|#ffffff|rgba\(255,\s*255,\s*255)/i);
 });
 
-test('keeps graphite violet brand accents aligned in light theme', () => {
+test('keeps silver-rose fruit accents aligned in light theme', () => {
   const block = lightThemeBlock();
 
-  assert.match(block, /--brand-purple:#8B7CFF;/);
-  assert.match(block, /--brand-purple-2:#AFA6FF;/);
-  assert.match(block, /--brand-purple-3:#D8D4FF;/);
-  assert.match(block, /--brand-lavender:#D8D4FF;/);
+  assert.match(block, /--accent-start:#8E86FF;/);
+  assert.match(block, /--accent-mid:#B89CFF;/);
+  assert.match(block, /--accent-end:#E4B8D7;/);
+  assert.match(block, /--accent-line:#D9D1FF;/);
+  assert.match(block, /--semantic-risk:#F06A8B;/);
+  assert.match(block, /--semantic-goal:#C9A96B;/);
+  assert.match(block, /--semantic-capacity:#7EA7FF;/);
+  assert.match(block, /--chart-actual-bar-top:#B89CFF;/);
+  assert.match(block, /--chart-target-bar:rgba\(31,42,68,\.13\);/);
+  assert.match(block, /--brand-purple:#8E86FF;/);
+  assert.match(block, /--brand-purple-2:#B89CFF;/);
+  assert.match(block, /--brand-purple-3:#E4B8D7;/);
+  assert.match(block, /--brand-lavender:#D9D1FF;/);
   assert.match(block, /--brand-mist:#F7F8FC;/);
-  assert.match(block, /--brand-ice:#8BD7FF;/);
-  assert.match(block, /--accent-gold:#9A8054;/);
-  assert.match(block, /--up:#6F62D8;/);
-  assert.match(block, /--down:#C85D72;/);
-  assert.match(block, /--good:#6F62D8;/);
-  assert.match(block, /--warn:#C85D72;/);
-  assert.match(block, /--up-rgb:111,98,216;/);
-  assert.match(block, /--down-rgb:200,93,114;/);
-  assert.match(block, /--good-rgb:111,98,216;/);
-  assert.match(block, /--warn-rgb:200,93,114;/);
-  assert.match(block, /--bar-good:linear-gradient\(90deg,#6F62D8 0%,#8B7CFF 56%,#C9C3FF 88%,#8BD7FF 100%\);/);
-  assert.match(block, /--bar-warn:linear-gradient\(90deg,#A24D5D 0%,#C85D72 58%,#E19AAA 100%\);/);
-  assert.match(block, /--bar-gold:linear-gradient\(90deg,#6F5C3E 0%,#9A8054 58%,#B7A06C 100%\);/);
-  assert.match(block, /--progress-mid:#6F62D8;/);
-  assert.match(block, /--progress-gold:#9A8054;/);
+  assert.match(block, /--brand-ice:#7EA7FF;/);
+  assert.match(block, /--accent-gold:#9E7E42;/);
+  assert.match(block, /--up:#8E86FF;/);
+  assert.match(block, /--down:#D85476;/);
+  assert.match(block, /--good:#7468E8;/);
+  assert.match(block, /--warn:#D85476;/);
+  assert.match(block, /--up-rgb:142,134,255;/);
+  assert.match(block, /--down-rgb:216,84,118;/);
+  assert.match(block, /--good-rgb:116,104,232;/);
+  assert.match(block, /--warn-rgb:216,84,118;/);
+  assert.match(block, /--bar-good:linear-gradient\(90deg,#7468E8 0%,#9C82F0 48%,#D7AFCF 100%\);/);
+  assert.match(block, /--bar-warn:linear-gradient\(90deg,#B84E68 0%,#D85476 58%,#F19AAA 100%\);/);
+  assert.match(block, /--bar-gold:linear-gradient\(90deg,#7D6233 0%,#9E7E42 58%,#C9A96B 100%\);/);
+  assert.match(block, /--progress-mid:#7468E8;/);
+  assert.match(block, /--progress-gold:#9E7E42;/);
 });
 
 test('charts and KPI progress bars read theme tokens instead of hard-coded white colors', () => {

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: GlassSurface 默认 focus outline 接入主题银紫玫瑰 focus token，移除系统硬蓝。
+*/
+/*
  更新时间: 2026-07-03 23:39:28 CST
  更新内容: 收敛 GlassSurface 默认高光与多层内阴影，让导航、搜索和顶部按钮玻璃质感更克制。
 */
@@ -99,6 +103,6 @@
 }
 
 .glass-surface:focus-visible {
-  outline: 2px solid light-dark(#007aff, #0a84ff);
+  outline: 2px solid var(--focus-outline);
   outline-offset: 2px;
 }

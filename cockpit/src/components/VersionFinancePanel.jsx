@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 10:48:16 CST  更新内容: 版本情况色板改为银紫玫瑰与香槟/柔和辅助色，移除青蓝主视觉。 */
 /* 更新时间: 2026-07-06 10:00:00 CST  更新内容: 版本二级明细弹窗继承高级果味玻璃明细页母版。 */
 /* 更新时间: 2026-07-06 00:00:13 CST  更新内容: 版本情况半环与色点中的金色改为高级哑金。 */
 /* 更新时间: 2026-07-04 01:03:12 CST  更新内容: 版本情况补充经营洞察文案，并让环比列使用独立数字对齐内层。 */
@@ -33,12 +34,12 @@ const VERSION_DETAIL_MODES = [
   { value: 'count', label: '套数', field: 'units', unit: '套' },
 ];
 const VERSION_RING_COLORS = [
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8B7CFF' }, { offset: 1, color: '#D8D4FF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#74A7FF' }, { offset: 1, color: '#C8D9FF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6DD6D2' }, { offset: 1, color: '#BFEDEC' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#B7A06C' }, { offset: 1, color: '#D6C49A' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8E86FF' }, { offset: 1, color: '#E4B8D7' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#B89CFF' }, { offset: 1, color: '#D9D1FF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#9B6FAD' }, { offset: 1, color: '#E4B8D7' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#C9A96B' }, { offset: 1, color: '#E3D2A4' }] },
 ];
-const VERSION_DOT_COLORS = ['#8B7CFF', '#74A7FF', '#6DD6D2', '#B7A06C'];
+const VERSION_DOT_COLORS = ['#8E86FF', '#B89CFF', '#E4B8D7', '#C9A96B'];
 const SALES_FILTER_OPTS = [
   { value: 'online', label: '线上' },
   { value: 'south', label: '华南线下' },
@@ -169,12 +170,12 @@ function buildVersionSummary(selected, modeMeta, versionName) {
 function versionDetailBarColor(active) {
   return new echarts.graphic.LinearGradient(0, 0, 0, 1, active
     ? [
-        { offset: 0, color: '#B8A8FF' },
-        { offset: 1, color: '#7B61FF' },
+        { offset: 0, color: '#B89CFF' },
+        { offset: 1, color: '#8E86FF' },
       ]
     : [
-        { offset: 0, color: 'rgba(132,118,226,0.58)' },
-        { offset: 1, color: 'rgba(82,72,150,0.42)' },
+        { offset: 0, color: 'rgba(184,156,255,0.36)' },
+        { offset: 1, color: 'rgba(142,134,255,0.26)' },
       ]);
 }
 
@@ -237,7 +238,7 @@ function versionHalfRingOption(versions, mode, tokens) {
           borderColor: 'rgba(255, 255, 255, .11)',
           borderWidth: 1,
           shadowBlur: 5,
-          shadowColor: 'rgba(167, 156, 255, .08)',
+          shadowColor: 'rgba(184, 156, 255, .08)',
         },
         label: {
           show: false,
@@ -361,7 +362,7 @@ function VersionDetailModal({ channelKey, versionKey, onClose }) {
         borderWidth: 0,
         padding: 0,
         textStyle: { color: tokens.chartText, fontSize: 12, lineHeight: 16 },
-        axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(169,155,255,0.08)' } },
+        axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(184,156,255,0.08)' } },
         formatter: (params) => {
           const point = params[0] ?? {};
           const value = point.data?.value ?? point.value ?? 0;

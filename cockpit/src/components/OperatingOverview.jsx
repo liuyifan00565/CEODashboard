@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 10:48:16 CST  更新内容: 经营总览年度节奏线改为银紫玫瑰主线与香槟目标虚线的业务语义分层。 */
 /* 更新时间: 2026-07-06 00:00:13 CST  更新内容: 年度目标线的金色阴影同步降为高级哑金强度。 */
 /* 更新时间: 2026-07-06 00:00:23 CST  更新内容: 为经营总览搜索命中外壳补充固定区域类名，避免搜索高亮改变卡片排布。 */
 /* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 年度节奏图表降噪并增加呼吸空间，顶部经营进度标题降级以突出核心数字。 */
@@ -119,9 +120,9 @@ function annualRhythmOption(series, tokens) {
         symbol: 'circle',
         symbolSize: 7,
         connectNulls: false,
-        lineStyle: { width: 2.2, color: tokens.chartBarCurrent, shadowBlur: 8, shadowColor: 'rgba(139,124,255,.16)' },
+        lineStyle: { width: 2.2, color: tokens.chartBarCurrent, shadowBlur: 8, shadowColor: 'rgba(184,156,255,.16)' },
         itemStyle: { color: tokens.chartBarCurrent, borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
-        areaStyle: { color: 'rgba(139,124,255,.055)' },
+        areaStyle: { color: 'rgba(184,156,255,.052)' },
         label: {
           show: true,
           position: 'top',
@@ -143,7 +144,7 @@ function annualRhythmOption(series, tokens) {
         symbol: 'circle',
         symbolSize: 6,
         connectNulls: true,
-        lineStyle: { width: 2, type: 'dashed', color: tokens.progressGold, shadowBlur: 8, shadowColor: 'rgba(183,160,108,.12)' },
+        lineStyle: { width: 2, type: 'dashed', color: tokens.progressGold, shadowBlur: 8, shadowColor: 'rgba(201,169,107,.12)' },
         itemStyle: { color: tokens.progressGold, borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
         label: {
           show: true,

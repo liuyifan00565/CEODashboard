@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: 布局守卫测试同步高级果味配色，覆盖银紫玫瑰高亮、玫瑰风险、香槟目标与算力容量冷蓝例外。
+*/
+/*
  更新时间: 2026-07-06 10:49:52 CST
  更新内容: 增加顶部品牌胶囊滚动折叠为 sticky 身份标识的回归测试。
 */
@@ -295,14 +299,14 @@ test('keeps only compute usage in the compute trend chart with clear non-fluores
   assert.match(computePageSource, /textStyle:\s*\{[\s\S]*?color:\s*txt,[\s\S]*?fontSize:\s*18,[\s\S]*?fontWeight:\s*850,[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.55\)',[\s\S]*?textShadowBlur:\s*8,[\s\S]*?\}/);
   assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'bar'/);
   assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'line'[\s\S]*?smooth:\s*true[\s\S]*?symbol:\s*'circle'[\s\S]*?symbolSize:\s*7/);
-  assert.match(computePageSource, /const usagePeakLineColor = '#B7A06C';/);
+  assert.match(computePageSource, /const usagePeakLineColor = tokens\.semanticGoal;/);
   assert.match(computePageSource, /const usagePeakLabelColor = '#F7F8FC';/);
   assert.match(computePageSource, /const maxUsage = Math\.max\(\.\.\.usage\);/);
   assert.match(computePageSource, /const usagePeakLineData = usage\.map\(\(value\) => \(\{/);
   assert.match(computePageSource, /label:\s*\{[\s\S]*?show:\s*true[\s\S]*?color:\s*usagePeakLabelColor,[\s\S]*?fontWeight:\s*780,[\s\S]*?formatter:\s*\(params\) => formatWan\(params\.value\)[\s\S]*?textBorderColor:\s*'rgba\(13,0,22,\.82\)'[\s\S]*?textBorderWidth:\s*2[\s\S]*?textShadowColor:\s*'rgba\(0,0,0,\.82\)'[\s\S]*?textShadowBlur:\s*6/);
   assert.doesNotMatch(computePageSource, /label:\s*value === maxUsage \?/);
   assert.doesNotMatch(computePageSource, /textShadowColor:\s*'rgba\(255,74,255,\.78\)'/);
-  assert.match(computePageSource, /lineStyle:\s*\{ color: usagePeakLineColor, width: 2\.4[\s\S]*?shadowBlur: 14[\s\S]*?shadowColor: 'rgba\(183,160,108,\.30\)'/);
+  assert.match(computePageSource, /lineStyle:\s*\{ color: usagePeakLineColor, width: 2\.4[\s\S]*?shadowBlur: 14[\s\S]*?shadowColor: 'rgba\(201,169,107,\.26\)'/);
   assert.match(computePageSource, /itemStyle:\s*\{[\s\S]*?color:\s*usagePeakLineColor,[\s\S]*?borderColor:\s*'#ffffff'/);
   assert.match(computePageSource, /barCategoryGap:\s*'42%'/);
   assert.doesNotMatch(computePageSource, /目标用量/);
@@ -687,12 +691,14 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.doesNotMatch(maintenancePageCss, /box-shadow:\s*0 5px 14px rgba\(216, 58, 215/);
 });
 
-test('uses purple maintenance table row hover overlays and persistent clicked-row highlights', () => {
+test('uses silver-purple maintenance table row hover overlays and persistent clicked-row highlights', () => {
   const matrixWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap');
 
-  assert.match(matrixWrapBlock, /--glass-cell-hover:\s*rgba\(96,\s*0,\s*255,\s*\.18\);/);
-  assert.match(matrixWrapBlock, /--mnt-row-selected-overlay:\s*rgba\(96,\s*0,\s*255,\s*\.24\);/);
-  assert.match(matrixWrapBlock, /--mnt-row-selected-hover-overlay:\s*rgba\(96,\s*0,\s*255,\s*\.3\);/);
+  assert.match(matrixWrapBlock, /--glass-cell-hover:\s*rgba\(184,\s*156,\s*255,\s*\.12\);/);
+  assert.match(matrixWrapBlock, /--mnt-row-selected-overlay:\s*var\(--mnt-selected-bg\);/);
+  assert.match(matrixWrapBlock, /--mnt-row-selected-hover-overlay:\s*rgba\(184,\s*156,\s*255,\s*\.15\);/);
+  assert.match(matrixWrapBlock, /--mnt-selected-bg:\s*rgba\(184,\s*156,\s*255,\s*\.10\);/);
+  assert.match(matrixWrapBlock, /--mnt-selected-border:\s*rgba\(228,\s*184,\s*215,\s*\.24\);/);
   assert.doesNotMatch(matrixWrapBlock, /190,\s*64,\s*255|210,\s*86,\s*255/);
   assert.match(maintenancePageCss, /\.mnt-matrix tbody tr:hover td,\s*[\s\S]*?\.mnt-user-table tbody tr:hover td \{[\s\S]*?background:\s*var\(--glass-cell-hover\);/);
   assert.match(maintenancePageCss, /\.mnt-matrix tbody tr\.mnt-row--selected td,\s*[\s\S]*?\.mnt-user-table tbody tr\.mnt-row--selected td \{[\s\S]*?background:\s*var\(--mnt-row-selected-overlay\);/);
@@ -738,9 +744,9 @@ test('uses full-width compute trend sliders that resize from 3 to 15 bars', () =
   assert.doesNotMatch(computePageSource, /sliderWindowSpan/);
   assert.doesNotMatch(computePageSource, /zoomLock:\s*true/);
   assert.match(computePageSource, /realtime:\s*true/);
-  assert.match(computePageSource, /borderColor:\s*'rgba\(139,124,255,\.32\)'/);
-  assert.match(computePageSource, /fillerColor:\s*'rgba\(183,160,108,\.18\)'/);
-  assert.match(computePageSource, /shadowColor:\s*'rgba\(183,160,108,\.34\)'/);
+  assert.match(computePageSource, /borderColor:\s*'rgba\(184,156,255,\.30\)'/);
+  assert.match(computePageSource, /fillerColor:\s*'rgba\(201,169,107,\.16\)'/);
+  assert.match(computePageSource, /shadowColor:\s*'rgba\(201,169,107,\.28\)'/);
   assert.match(computePageSource, /shadowBlur:\s*16/);
   assert.match(computePageSource, /className="cpu-trend-echart"/);
   assert.match(computePageCss, /\.cpu-trend-chart \{[\s\S]*?position:\s*relative;/);
@@ -759,7 +765,7 @@ test('uses full-width compute trend sliders that resize from 3 to 15 bars', () =
 
 test('adds a linked full-width compute capacity trend card below usage trend', () => {
   assert.match(computePageSource, /function buildCapacityTrendOption\(\{ trend, tokens, totalCapacity \}\)/);
-  assert.match(computePageSource, /const capacityColor = '#74A7FF';/);
+  assert.match(computePageSource, /const capacityColor = tokens\.semanticCapacity;/);
   assert.match(computePageSource, /capacity:\s*point\.capacity \?\? 0/);
   assert.match(computePageSource, /const latestCapacityBase = buckets\[0\]\?\.capacity \|\| 1;/);
   assert.match(computePageSource, /const capacityScale = totalCapacity \/ latestCapacityBase;/);
@@ -773,9 +779,9 @@ test('adds a linked full-width compute capacity trend card below usage trend', (
   assert.match(computePageSource, /className="cpu-capacity-echart"/);
   assert.match(computePageSource, /option=\{capacityTrendOption\}/);
   assert.match(computePageSource, /name:\s*'算力总容量'[\s\S]*?type:\s*'line'[\s\S]*?smooth:\s*true[\s\S]*?areaStyle:/);
-  assert.match(computePageSource, /fillerColor:\s*'rgba\(116,167,255,\.22\)'/);
-  assert.match(computePageSource, /borderColor:\s*'rgba\(116,167,255,\.34\)'/);
-  assert.match(computePageSource, /shadowColor:\s*'rgba\(116,167,255,\.42\)'/);
+  assert.match(computePageSource, /fillerColor:\s*'rgba\(126,167,255,\.22\)'/);
+  assert.match(computePageSource, /borderColor:\s*'rgba\(126,167,255,\.34\)'/);
+  assert.match(computePageSource, /shadowColor:\s*'rgba\(126,167,255,\.42\)'/);
   assert.match(computePageCss, /\.cpu-panel--capacity-trend \{[\s\S]*?grid-area:\s*capacity;[\s\S]*?min-height:\s*430px;/);
   assert.match(computePageCss, /\.cpu-capacity-chart \{[\s\S]*?min-height:\s*300px;/);
   assert.match(computePageCss, /\.cpu-capacity-echart \{[\s\S]*?height:\s*100% !important;/);
@@ -836,7 +842,7 @@ test('keeps compute pie labels and tooltip cards readable around donut charts', 
 });
 
 test('uses the overview half-ring palette for compute donut charts', () => {
-  assert.match(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#8B7CFF'[\s\S]*?'#74A7FF'[\s\S]*?'#6DD6D2'[\s\S]*?'#B7A06C'[\s\S]*?'rgba\(148, 163, 184, \.18\)'[\s\S]*?'#AFA6FF'[\s\S]*?'#6F62D8'[\s\S]*?'#D8D4FF'/);
+  assert.match(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#8E86FF'[\s\S]*?'#B89CFF'[\s\S]*?'#E4B8D7'[\s\S]*?'#C9A96B'[\s\S]*?'rgba\(148, 163, 184, \.18\)'[\s\S]*?'#D9D1FF'[\s\S]*?'#A6C878'[\s\S]*?'#F06A8B'/);
   assert.doesNotMatch(computePageSource, /const COMPUTE_RING_COLORS = \[[\s\S]*?'#9EDCFF'[\s\S]*?\];/);
   assert.match(computePageSource, /function applyComputeRingPalette\(data\)/);
   assert.match(computePageSource, /sort\(\(a, b\) => b\.value - a\.value\)/);
@@ -1052,13 +1058,13 @@ test('gives the annual rhythm chart softer context and more breathing room', () 
 });
 
 test('uses low-saturation dashboard controls in focused secondary interfaces', () => {
-  assert.match(channelPanelCss, /\.ch-head \.sgm-thumb\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(139,124,255,\.64\), rgba\(116,167,255,\.46\)\);/);
+  assert.match(channelPanelCss, /\.ch-head \.sgm-thumb\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(142,134,255,\.64\), rgba\(228,184,215,\.42\)\);/);
   assert.match(channelPanelCss, /\.ch-head \.sgm-btn--active,[\s\S]*?\.ch-head \.sgm-btn--active:hover\s*\{[\s\S]*?color:\s*rgba\(255,255,255,\.96\);/);
-  assert.match(kpiModalCss, /\.km-controls \.sgm-thumb\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(139,124,255,\.64\), rgba\(116,167,255,\.46\)\);/);
-  assert.match(kpiModalCss, /\.km-controls \.msgm-btn--active,[\s\S]*?\.km-controls \.msgm-btn--active:hover\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(139,124,255,\.64\), rgba\(116,167,255,\.44\)\);/);
+  assert.match(kpiModalCss, /\.km-controls \.sgm-thumb\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(142,134,255,\.64\), rgba\(228,184,215,\.44\)\);/);
+  assert.match(kpiModalCss, /\.km-controls \.msgm-btn--active,[\s\S]*?\.km-controls \.msgm-btn--active:hover\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(142,134,255,\.62\), rgba\(228,184,215,\.42\)\);/);
   assert.doesNotMatch(channelPanelCss, /\.ch-head[\s\S]*?var\(--control-solid\)/);
   assert.doesNotMatch(kpiModalCss, /\.km-controls[\s\S]*?var\(--control-solid\)/);
-  assert.match(indexCss, /--control-solid:#B7A06C;/);
+  assert.match(indexCss, /--control-solid:#8E86FF;/);
 });
 
 test('restores secondary dashboard panels below the operating overview story', () => {
@@ -1124,8 +1130,8 @@ test('keeps the current search result highlight edge-only without full-card purp
   assert.doesNotMatch(currentSearchBlock, /filter:\s*drop-shadow/);
   assert.doesNotMatch(currentSearchContentBlock, /box-shadow:/);
   assert.doesNotMatch(currentSearchBackgroundBlock, /transform:\s*scale/);
-  assert.match(dashboardCss, /\.search-result-border::before\{[\s\S]*?border:1px solid rgba\(167,156,255,\.42\);/);
-  assert.match(dashboardCss, /\.search-result-border::after\{[\s\S]*?background:rgba\(167,156,255,\.055\);/);
+  assert.match(dashboardCss, /\.search-result-border::before\{[\s\S]*?border:1px solid rgba\(228,184,215,\.38\);/);
+  assert.match(dashboardCss, /\.search-result-border::after\{[\s\S]*?background:rgba\(228,184,215,\.045\);/);
   assert.doesNotMatch(computePageCss, /\.cpu-kpi-slot\[data-search-current="true"\],[\s\S]*?filter:\s*drop-shadow/);
   assert.doesNotMatch(computePageCss, /\.cpu-panel\[data-search-current="true"\][\s\S]*?box-shadow:[\s\S]*?rgba\(96,0,255/);
 });
@@ -1308,18 +1314,18 @@ test('uses static trend legend and overlapping target versus recovered bars', ()
 test('highlights the current month in the restrained monthly trend instead of brightening every bar', () => {
   assert.match(monthlyTrendSource, /function isCurrentTrendMonth\(item\)/);
   assert.match(monthlyTrendSource, /currentMonthBarColor\(item, tokens\)/);
-  assert.match(monthlyTrendSource, /target\.map\(\(value, index\) => \(\{[\s\S]*?itemStyle: \{[\s\S]*?color: isCurrentTrendMonth\(trend\[index\]\) \? tokens\.chartBarFaintCurrent : tokens\.chartBarFaint,/);
+  assert.match(monthlyTrendSource, /target\.map\(\(value\) => \(\{[\s\S]*?itemStyle: \{[\s\S]*?color: targetBarColor\(tokens\),/);
   assert.match(monthlyTrendSource, /recovered\.map\(\(value, index\) => \(\{[\s\S]*?color: currentMonthBarColor\(trend\[index\], tokens\),/);
   assert.match(monthlyTrendSource, /axisLabel: \{[\s\S]*?color: \(\{ value \}\) => \(value === '6月' \? tokens\.chartText : faint\),/);
-  assert.match(indexCss, /--chart-bar-current:rgba\(155,134,255,\.68\);/);
-  assert.match(indexCss, /--chart-bar-muted:rgba\(155,134,255,\.24\);/);
+  assert.match(indexCss, /--chart-bar-current:#8E86FF;/);
+  assert.match(indexCss, /--chart-bar-muted:rgba\(184,156,255,\.22\);/);
 });
 
 test('keeps left ambient glow behind the AI mascot diffused and subordinate', () => {
-  assert.match(indexCss, /--bg-radial-d:rgba\(139,124,255,\.045\);/);
+  assert.match(indexCss, /--bg-radial-d:rgba\(184,156,255,\.042\);/);
   assert.match(indexCss, /radial-gradient\(ellipse at 10% 78%,var\(--bg-radial-d\),transparent 34%\)/);
-  assert.match(aiAnalysisWidgetCss, /\.ai-orb--think \.mascot-3d-stage,[\s\S]*?drop-shadow\(0 0 36px rgba\(139, 124, 255, \.18\)\)/);
-  assert.match(mascot3dStageCss, /drop-shadow\(0 0 30px rgba\(114, 77, 255, \.24\)\)/);
+  assert.match(aiAnalysisWidgetCss, /\.ai-orb--think \.mascot-3d-stage,[\s\S]*?drop-shadow\(0 0 36px rgba\(184, 156, 255, \.16\)\)/);
+  assert.match(mascot3dStageCss, /drop-shadow\(0 0 30px rgba\(184, 156, 255, \.18\)\)/);
   assert.doesNotMatch(indexCss, /--bg-radial-d:rgba\(139,124,255,\.10\);/);
   assert.doesNotMatch(aiAnalysisWidgetCss, /drop-shadow\(0 0 32px rgba\(139, 124, 255, \.28\)\)/);
 });
@@ -1334,7 +1340,7 @@ test('gives the top brand capsule more breathing room before the main chart', ()
 test('uses sales filters followed directly by year month day in the KPI modal', () => {
   assert.match(kpiModalSource, /import MultiSegmented from '\.\/MultiSegmented';/);
   assert.match(kpiModalSource, /salesKeys/);
-  assert.match(kpiModalSource, /<MultiSegmented options=\{SALES_FILTER_OPTS\} value=\{salesKeys\} onChange=\{setSalesKeys\} \/>\s*<Segmented options=\{DIM_OPTS\} value=\{dim\} onChange=\{setDim\} \/>/);
+  assert.match(kpiModalSource, /<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">渠道<\/span>[\s\S]*?<MultiSegmented options=\{SALES_FILTER_OPTS\} value=\{salesKeys\} onChange=\{setSalesKeys\} \/>[\s\S]*?<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">粒度<\/span>[\s\S]*?<Segmented options=\{DIM_OPTS\} value=\{dim\} onChange=\{setDim\} \/>/);
   assert.doesNotMatch(kpiModalSource, /ORDER_TYPE_OPTS/);
   assert.doesNotMatch(kpiModalSource, /orderType/);
   assert.doesNotMatch(kpiModalSource, /新签/);

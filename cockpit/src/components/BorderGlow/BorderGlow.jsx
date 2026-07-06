@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: 边缘流光默认色改为银紫玫瑰与香槟点缀，移除硬蓝 fallback。
+*/
+/*
  更新时间: 2026-07-06 00:00:13 CST
  更新内容: 边缘流光默认金色改为低饱和高级哑金。
 */
@@ -84,7 +88,7 @@ const BorderGlow = ({
   glowIntensity = 1,
   coneSpread = 25,
   animated = false,
-  colors = ['#8B7CFF', '#B7A06C', '#74A7FF'],
+  colors = ['#8E86FF', '#E4B8D7', '#C9A96B'],
   fillOpacity = 0.5,
 }) => {
   const cardRef = useRef(null);

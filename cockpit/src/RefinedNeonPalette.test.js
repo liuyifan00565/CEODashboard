@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: 调色板守卫测试同步为深紫黑玻璃底、银紫玫瑰高亮、玫瑰风险与香槟目标语义。
+*/
+/*
  更新时间: 2026-07-06 00:00:13 CST
  更新内容: 将完成态金色守卫测试改为低饱和高级哑金 token 与渐变。
 */
@@ -111,46 +115,55 @@ function darkThemeBlock() {
   return match.groups.body;
 }
 
-test('uses the graphite violet champagne semantic accents', () => {
+test('uses silver-rose fruit semantic accents on the graphite glass base', () => {
   const block = darkThemeBlock();
 
-  assert.match(block, /--brand-purple:#8B7CFF;/);
-  assert.match(block, /--brand-purple-2:#AFA6FF;/);
-  assert.match(block, /--brand-purple-3:#D8D4FF;/);
-  assert.match(block, /--brand-lavender:#D8D4FF;/);
+  assert.match(block, /--accent-start:#8E86FF;/);
+  assert.match(block, /--accent-mid:#B89CFF;/);
+  assert.match(block, /--accent-end:#E4B8D7;/);
+  assert.match(block, /--accent-line:#D9D1FF;/);
+  assert.match(block, /--accent-gradient-x:linear-gradient\(90deg,#8E86FF 0%,#B89CFF 46%,#E4B8D7 100%\);/);
+  assert.match(block, /--semantic-risk:#F06A8B;/);
+  assert.match(block, /--semantic-goal:#C9A96B;/);
+  assert.match(block, /--semantic-capacity:#7EA7FF;/);
+  assert.match(block, /--semantic-success-muted:#A6C878;/);
+  assert.match(block, /--brand-purple:#8E86FF;/);
+  assert.match(block, /--brand-purple-2:#B89CFF;/);
+  assert.match(block, /--brand-purple-3:#E4B8D7;/);
+  assert.match(block, /--brand-lavender:#D9D1FF;/);
   assert.match(block, /--brand-mist:#F7F8FC;/);
-  assert.match(block, /--brand-ice:#8BD7FF;/);
-  assert.match(block, /--accent-gold:#B7A06C;/);
-  assert.match(block, /--up:#AFA6FF;/);
-  assert.match(block, /--down:#D86A82;/);
-  assert.match(block, /--good:#8B7CFF;/);
-  assert.match(block, /--warn:#D86A82;/);
-  assert.match(block, /--up-rgb:175,166,255;/);
-  assert.match(block, /--down-rgb:216,106,130;/);
-  assert.match(block, /--good-rgb:139,124,255;/);
-  assert.match(block, /--warn-rgb:216,106,130;/);
-  assert.match(block, /--bar-good:linear-gradient\(90deg,#8B7CFF 0%,#AFA6FF 54%,#D8D4FF 82%,#8BD7FF 100%\);/);
-  assert.match(block, /--bar-warn:linear-gradient\(90deg,#A94F62 0%,#D86A82 58%,#E7A0AE 100%\);/);
-  assert.match(block, /--bar-gold:linear-gradient\(90deg,#7E6B49 0%,#B7A06C 58%,#D6C49A 100%\);/);
+  assert.match(block, /--brand-ice:#7EA7FF;/);
+  assert.match(block, /--accent-gold:#C9A96B;/);
+  assert.match(block, /--up:#B89CFF;/);
+  assert.match(block, /--down:#F06A8B;/);
+  assert.match(block, /--good:#8E86FF;/);
+  assert.match(block, /--warn:#F06A8B;/);
+  assert.match(block, /--up-rgb:184,156,255;/);
+  assert.match(block, /--down-rgb:240,106,139;/);
+  assert.match(block, /--good-rgb:142,134,255;/);
+  assert.match(block, /--warn-rgb:240,106,139;/);
+  assert.match(block, /--bar-good:linear-gradient\(90deg,#8E86FF 0%,#B89CFF 46%,#E4B8D7 100%\);/);
+  assert.match(block, /--bar-warn:linear-gradient\(90deg,#B84E68 0%,#F06A8B 58%,#FF9EB4 100%\);/);
+  assert.match(block, /--bar-gold:linear-gradient\(90deg,#8E7040 0%,#C9A96B 58%,#E3D2A4 100%\);/);
 
-  assert.equal(COLOR.up, '#AFA6FF');
-  assert.equal(COLOR.down, '#D86A82');
-  assert.equal(COLOR.good, '#8B7CFF');
-  assert.equal(COLOR.warn, '#D86A82');
-  assert.equal(COLOR.gold, '#B7A06C');
+  assert.equal(COLOR.up, '#B89CFF');
+  assert.equal(COLOR.down, '#F06A8B');
+  assert.equal(COLOR.good, '#8E86FF');
+  assert.equal(COLOR.warn, '#F06A8B');
+  assert.equal(COLOR.gold, '#C9A96B');
 });
 
-test('maps completion progress to red below 80, purple through 99, and gold at target', () => {
+test('maps completion progress to rose risk below 80, silver rose through 99, and champagne at target', () => {
   const block = darkThemeBlock();
 
-  assert.match(block, /--progress-mid:#8B7CFF;/);
-  assert.match(block, /--progress-gold:#B7A06C;/);
-  assert.match(themeSource, /progressMid:\s*'#8B7CFF'/);
-  assert.match(themeSource, /progressGold:\s*'#B7A06C'/);
-  assert.equal(progressColor(70, '#8B7CFF', '#B7A06C'), '#D86A82');
-  assert.equal(progressColor(80, '#8B7CFF', '#B7A06C'), '#8B7CFF');
-  assert.equal(progressColor(99.9, '#8B7CFF', '#B7A06C'), '#8B7CFF');
-  assert.equal(progressColor(100, '#8B7CFF', '#B7A06C'), '#B7A06C');
+  assert.match(block, /--progress-mid:#8E86FF;/);
+  assert.match(block, /--progress-gold:#C9A96B;/);
+  assert.match(themeSource, /progressMid:\s*'#8E86FF'/);
+  assert.match(themeSource, /progressGold:\s*'#C9A96B'/);
+  assert.equal(progressColor(70, '#8E86FF', '#C9A96B'), '#F06A8B');
+  assert.equal(progressColor(80, '#8E86FF', '#C9A96B'), '#8E86FF');
+  assert.equal(progressColor(99.9, '#8E86FF', '#C9A96B'), '#8E86FF');
+  assert.equal(progressColor(100, '#8E86FF', '#C9A96B'), '#C9A96B');
   assert.match(kpiSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?new echarts\.graphic\.LinearGradient/);
   assert.match(kpiSource, /const labelColor = progressColor\(pct, tokens\.progressMid, tokens\.progressGold\);[\s\S]*?itemStyle:\s*\{ color: progressBarColor\(pct, tokens\), borderRadius: 5, shadowBlur: 6, shadowColor: labelColor \}/);
 });
@@ -178,10 +191,10 @@ test('uses a static graphite grid and dot background instead of Color Bends', ()
   assert.match(darkThemeBlock(), /--dashboard-card-border:rgba\(255,\s*255,\s*255,\s*0\.10\);/);
 
   // 紫色只做远处环境光，左下光晕更低透明、更大扩散，不能成为视觉主角。
-  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(124,92,255,\.16\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(88,166,255,\.10\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(142,134,255,\.14\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(126,167,255,\.09\);/);
   assert.match(darkThemeBlock(), /--bg-radial-c:rgba\(118,154,206,\.055\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(139,124,255,\.045\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(184,156,255,\.042\);/);
 
   assert.match(indexCss, /\.bg\{[\s\S]*?linear-gradient\(180deg,var\(--bg-base-1\) 0%,var\(--bg-base-2\) 48%,var\(--bg-base-3\) 100%\);/);
   assert.match(indexCss, /\.bg::before\{[\s\S]*?linear-gradient\(var\(--bg-grid-line\) 1px,transparent 1px\)[\s\S]*?radial-gradient\(var\(--bg-dot\) 1px,transparent 1\.4px\)[\s\S]*?background-size:56px 56px,56px 56px,28px 28px;/);

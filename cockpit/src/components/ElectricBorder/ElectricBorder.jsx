@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: 电流边框默认色改为银紫主高亮，避免旧亮紫 fallback。
+*/
+/*
  更新时间: 2026-07-03 18:19:59 CST
  更新内容: 电流边框默认色同步为月光紫主品牌色，避免旧高饱和紫回落。
 */
@@ -15,7 +19,7 @@ import './ElectricBorder.css';
 
 const ElectricBorder = ({
   children,
-  color = '#8B7CFF',
+  color = '#8E86FF',
   speed = 1,
   chaos = 0.12,
   thickness = 2,

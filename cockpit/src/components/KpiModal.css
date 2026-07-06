@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 10:48:16 CST  更新内容: KPI 与版本二级弹窗筛选控件选中态改为银紫玫瑰光，避免继续混用硬蓝。 */
 /* 更新时间: 2026-07-06 10:00:00 CST  更新内容: KPI 与版本二级弹窗统一升级为高级果味玻璃明细页母版。 */
 /* 更新时间: 2026-07-05 23:42:14 CST  更新内容: KPI 与版本二级弹窗筛选控件改为局部紫蓝低饱和选中态，保持金色仅用于目标语义。 */
 /* 更新时间: 2026-07-01 18:37:59 CST  更新内容: 去掉 KPI 二级展开界面背景里的紫色光晕，保留深色玻璃底。 */
@@ -133,7 +134,7 @@
 
 .km-controls .sgm-thumb {
   border-radius: 9px;
-  background: linear-gradient(135deg, rgba(139,124,255,.64), rgba(116,167,255,.46));
+  background: linear-gradient(135deg, rgba(142,134,255,.64), rgba(228,184,215,.44));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.20),
     0 8px 22px rgba(112, 93, 255, 0.18);
@@ -156,7 +157,7 @@
 .km-controls .msgm-btn--active,
 .km-controls .msgm-btn--active:hover {
   color: rgba(255,255,255,.96);
-  background: linear-gradient(135deg, rgba(139,124,255,.64), rgba(116,167,255,.44));
+  background: linear-gradient(135deg, rgba(142,134,255,.62), rgba(228,184,215,.42));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.20),
     0 8px 22px rgba(112, 93, 255, 0.18);

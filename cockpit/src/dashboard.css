@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: 全局搜索命中边缘光改为低透明银紫玫瑰，避免旧亮紫光晕。
+*/
+/*
  更新时间: 2026-07-06 10:49:52 CST
  更新内容: 顶部福客品牌胶囊滚动后以 260ms morph 折叠为一行 sticky 身份标识，并在深滚动时弱化。
 */
@@ -330,13 +334,13 @@
 .search-result-border::before{
   inset:-2px;
   z-index:2;
-  border:1px solid rgba(167,156,255,.42);
-  box-shadow:0 0 0 1px rgba(167,156,255,.08),0 0 18px rgba(139,124,255,.22),0 0 34px rgba(139,124,255,.10);
+  border:1px solid rgba(228,184,215,.38);
+  box-shadow:0 0 0 1px rgba(228,184,215,.08),0 0 18px rgba(184,156,255,.20),0 0 34px rgba(142,134,255,.08);
 }
 .search-result-border::after{
   inset:0;
   z-index:0;
-  background:rgba(167,156,255,.055);
+  background:rgba(228,184,215,.045);
   transform:none;
 }
 .search-result-border[data-search-current="true"]{
@@ -349,10 +353,10 @@
   animation:searchResultSoftFill 960ms cubic-bezier(.22,1,.36,1) both;
 }
 @keyframes searchResultSoftGlow{
-  0%{opacity:0;box-shadow:0 0 0 1px rgba(167,156,255,0),0 0 0 rgba(139,124,255,0)}
-  18%{opacity:1;box-shadow:0 0 0 1px rgba(167,156,255,.10),0 0 18px rgba(139,124,255,.24),0 0 34px rgba(139,124,255,.12)}
-  62%{opacity:.82;box-shadow:0 0 0 1px rgba(167,156,255,.08),0 0 16px rgba(139,124,255,.20),0 0 28px rgba(139,124,255,.08)}
-  100%{opacity:0;box-shadow:0 0 0 1px rgba(167,156,255,0),0 0 0 rgba(139,124,255,0)}
+  0%{opacity:0;box-shadow:0 0 0 1px rgba(228,184,215,0),0 0 0 rgba(184,156,255,0)}
+  18%{opacity:1;box-shadow:0 0 0 1px rgba(228,184,215,.10),0 0 18px rgba(184,156,255,.22),0 0 34px rgba(142,134,255,.10)}
+  62%{opacity:.82;box-shadow:0 0 0 1px rgba(228,184,215,.08),0 0 16px rgba(184,156,255,.18),0 0 28px rgba(142,134,255,.08)}
+  100%{opacity:0;box-shadow:0 0 0 1px rgba(228,184,215,0),0 0 0 rgba(184,156,255,0)}
 }
 @keyframes searchResultSoftFill{
   0%{opacity:0}

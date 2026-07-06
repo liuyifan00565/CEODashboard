@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 10:48:16 CST  更新内容: KPI 进度和半环色板收敛为银紫玫瑰、柔玫瑰与香槟目标层级，移除青蓝跳色。 */
 /* 更新时间: 2026-07-06 00:00:13 CST  更新内容: KPI 完成态金色进度与半环切片统一改为高级哑金渐变。 */
 /* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 回款半环标题改为月度/年度回款结构，适配经营总览顶部轻量下钻入口。 */
 /* 更新时间: 2026-07-05 15:29:01 CST  更新内容: 回款半环图缩小并换为低饱和通道色，风险进度改为柔和玫瑰色。 */
@@ -31,10 +32,10 @@ import './KpiCard.css';
 
 // 分段半环仪表盘：保留低饱和品牌强调，避免四个渠道全部成为强紫色块。
 const CHANNEL_PIE_GRADIENTS = [
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#7F6BE8' }, { offset: 0.55, color: '#9B86FF' }, { offset: 1, color: '#C8BFFF' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#6FB7D5' }, { offset: 0.58, color: '#9BD8F4' }, { offset: 1, color: '#D7F0FA' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#50B8AA' }, { offset: 0.58, color: '#72D7C9' }, { offset: 1, color: '#C2F0E9' }] },
-  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#947E55' }, { offset: 0.56, color: '#B7A06C' }, { offset: 1, color: '#D6C49A' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8E86FF' }, { offset: 0.52, color: '#B89CFF' }, { offset: 1, color: '#E4B8D7' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#7C75E8' }, { offset: 0.58, color: '#AFA4F4' }, { offset: 1, color: '#D9D1FF' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#9B6FAD' }, { offset: 0.58, color: '#C99BC4' }, { offset: 1, color: '#E4B8D7' }] },
+  { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8E7040' }, { offset: 0.56, color: '#C9A96B' }, { offset: 1, color: '#E3D2A4' }] },
 ];
 const CHANNEL_PERCENT_COLORS = ['#ffffff', '#ffffff', '#ffffff', '#ffffff'];
 const CHANNEL_PIE_LABELS = { south: '线下华南', east: '线下华东' };
@@ -135,25 +136,24 @@ function progressBarColor(pct, tokens) {
   const value = Number(pct) || 0;
   if (value < 80) {
     return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-      { offset: 0, color: '#A94F62' },
-      { offset: 0.58, color: '#D86A82' },
-      { offset: 1, color: '#E7A0AE' },
+      { offset: 0, color: '#B84E68' },
+      { offset: 0.58, color: '#F06A8B' },
+      { offset: 1, color: '#FF9EB4' },
     ]);
   }
 
   if (value >= 100) {
     return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-      { offset: 0, color: '#7E6B49' },
-      { offset: 0.58, color: '#B7A06C' },
-      { offset: 1, color: '#D6C49A' },
+      { offset: 0, color: '#8E7040' },
+      { offset: 0.58, color: '#C9A96B' },
+      { offset: 1, color: '#E3D2A4' },
     ]);
   }
 
   return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-    { offset: 0, color: '#8B7CFF' },
-    { offset: 0.56, color: '#AFA6FF' },
-    { offset: 0.88, color: '#D8D4FF' },
-    { offset: 1, color: '#8BD7FF' },
+    { offset: 0, color: '#8E86FF' },
+    { offset: 0.46, color: '#B89CFF' },
+    { offset: 1, color: '#E4B8D7' },
   ]);
 }
 
@@ -291,13 +291,13 @@ function recoveryPieOption(card, tokens, accentColor) {
           borderColor: 'rgba(255, 255, 255, .08)',
           borderWidth: 1,
           shadowBlur: 3,
-          shadowColor: 'rgba(167, 156, 255, .08)',
+          shadowColor: 'rgba(184, 156, 255, .08)',
         },
         emphasis: {
           scale: false,
           itemStyle: {
             shadowBlur: 6,
-            shadowColor: 'rgba(167, 156, 255, .12)',
+            shadowColor: 'rgba(184, 156, 255, .12)',
             borderColor: 'rgba(255, 255, 255, .12)',
           },
         },

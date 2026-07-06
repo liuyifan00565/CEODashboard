@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: KPI 卡片测试同步银紫玫瑰半环与三档进度渐变，移除青绿和旧亮紫断言。
+*/
+/*
  更新时间: 2026-07-06 10:00:00 CST
  更新内容: 增加 KPI 二级明细弹窗高级果味母版的结构与视觉回归测试。
 */
@@ -252,9 +256,10 @@ test('adds a transparent unfinished slice at the right edge of the recovery half
   assert.match(componentSource, /目标 \$\{params\.data\?\.targetValue \?\? '-'\} 万 · 完成率 \$\{card\.progress \?\? percent\}%/);
 });
 
-test('uses muted chart accents without turning every recovery slice strong purple', () => {
-  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#7F6BE8[\s\S]*?#9B86FF[\s\S]*?#C8BFFF[\s\S]*?#6FB7D5[\s\S]*?#9BD8F4[\s\S]*?#D7F0FA[\s\S]*?#50B8AA[\s\S]*?#72D7C9[\s\S]*?#C2F0E9[\s\S]*?#947E55[\s\S]*?#B7A06C[\s\S]*?#D6C49A[\s\S]*?\];/);
+test('uses muted silver-rose chart accents without turning every recovery slice strong purple', () => {
+  assert.match(componentSource, /const CHANNEL_PIE_GRADIENTS = \[[\s\S]*?#8E86FF[\s\S]*?#B89CFF[\s\S]*?#E4B8D7[\s\S]*?#7C75E8[\s\S]*?#AFA4F4[\s\S]*?#D9D1FF[\s\S]*?#9B6FAD[\s\S]*?#C99BC4[\s\S]*?#E4B8D7[\s\S]*?#8E7040[\s\S]*?#C9A96B[\s\S]*?#E3D2A4[\s\S]*?\];/);
   assert.doesNotMatch(componentSource, /#6D28D9|#8B5CF6|#C084FC|#A855F7/);
+  assert.doesNotMatch(componentSource, /#6FB7D5|#9BD8F4|#D7F0FA|#50B8AA|#72D7C9|#C2F0E9/);
   assert.doesNotMatch(componentSource, /#A7F3D0/);
   assert.doesNotMatch(componentSource, /#B7F3FF/);
   assert.doesNotMatch(componentSource, /const CHANNEL_PIE_COLORS = \['#d6ccb2', '#a9b3b8', '#808b93', '#5f6975'\];/);
@@ -284,8 +289,8 @@ test('uses the neutral dark glass card recipe without broad purple wash', () => 
   assert.match(cssSource, /\.kpi-card__side-panel \.ch-bar-fill\s*\{[\s\S]*?opacity:\s*\.82;[\s\S]*?filter:\s*saturate\(\.82\);/);
 });
 
-test('uses red, purple, and gold completion progress gradients in the KPI ECharts bars', () => {
-  assert.match(componentSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?#A94F62[\s\S]*?#D86A82[\s\S]*?#E7A0AE[\s\S]*?#7E6B49[\s\S]*?#B7A06C[\s\S]*?#D6C49A[\s\S]*?#8B7CFF[\s\S]*?#AFA6FF[\s\S]*?#D8D4FF[\s\S]*?#8BD7FF[\s\S]*?\}/);
+test('uses rose risk, silver rose, and champagne completion progress gradients in the KPI ECharts bars', () => {
+  assert.match(componentSource, /function progressBarColor\(pct, tokens\) \{[\s\S]*?#B84E68[\s\S]*?#F06A8B[\s\S]*?#FF9EB4[\s\S]*?#8E7040[\s\S]*?#C9A96B[\s\S]*?#E3D2A4[\s\S]*?#8E86FF[\s\S]*?#B89CFF[\s\S]*?#E4B8D7[\s\S]*?\}/);
 });
 
 test('keeps recovery half-donut labels readable in the elongated card', () => {

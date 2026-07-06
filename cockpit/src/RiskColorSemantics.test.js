@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: 风险语义测试同步银紫玫瑰主高亮、玫瑰风险、香槟目标与月度趋势图表专用 token。
+*/
+/*
  更新时间: 2026-07-06 00:06:58 CST
  更新内容: 超额交付行金色背景与边框守卫改为更淡的哑金比例。
 */
@@ -59,7 +63,7 @@ const deliverySource = readFileSync(new URL('./components/DeliveryPanel.jsx', im
 const deliveryCss = readFileSync(new URL('./components/DeliveryPanel.css', import.meta.url), 'utf8');
 const openingMetricSource = readFileSync(new URL('./components/OpeningMetricCards.jsx', import.meta.url), 'utf8');
 
-test('uses the softened graphite blue glass palette tokens', () => {
+test('uses the softened graphite glass palette with silver-rose usage tokens', () => {
   assert.match(indexCss, /--bg:#0B1020;/);
   assert.match(indexCss, /--bg-base-1:#0D1324;/);
   assert.match(indexCss, /--bg-base-2:#0B1020;/);
@@ -67,28 +71,37 @@ test('uses the softened graphite blue glass palette tokens', () => {
   assert.match(indexCss, /--dashboard-card-bg:rgba\(255,\s*255,\s*255,\s*0\.052\);/);
   assert.match(indexCss, /--dashboard-card-border:rgba\(255,\s*255,\s*255,\s*0\.10\);/);
   assert.match(indexCss, /--dashboard-card-shadow:0 24px 80px rgba\(0,\s*0,\s*0,\s*0\.28\), inset 0 1px 0 rgba\(255,255,255,\.06\);/);
-  assert.match(indexCss, /--brand-purple:#8B7CFF;/);
-  assert.match(indexCss, /--brand-purple-2:#AFA6FF;/);
-  assert.match(indexCss, /--brand-lavender:#D8D4FF;/);
-  assert.match(indexCss, /--control-solid:#B7A06C;/);
-  assert.match(indexCss, /--warn:#D86A82;/);
-  assert.match(indexCss, /--warn-rgb:216,106,130;/);
+  assert.match(indexCss, /--accent-start:#8E86FF;/);
+  assert.match(indexCss, /--accent-mid:#B89CFF;/);
+  assert.match(indexCss, /--accent-end:#E4B8D7;/);
+  assert.match(indexCss, /--accent-line:#D9D1FF;/);
+  assert.match(indexCss, /--semantic-risk:#F06A8B;/);
+  assert.match(indexCss, /--semantic-goal:#C9A96B;/);
+  assert.match(indexCss, /--semantic-capacity:#7EA7FF;/);
+  assert.match(indexCss, /--chart-actual-bar-top:#B89CFF;/);
+  assert.match(indexCss, /--chart-target-bar:rgba\(255,255,255,0\.13\);/);
+  assert.match(indexCss, /--brand-purple:#8E86FF;/);
+  assert.match(indexCss, /--brand-purple-2:#B89CFF;/);
+  assert.match(indexCss, /--brand-lavender:#D9D1FF;/);
+  assert.match(indexCss, /--control-solid:#8E86FF;/);
+  assert.match(indexCss, /--warn:#F06A8B;/);
+  assert.match(indexCss, /--warn-rgb:240,106,139;/);
 });
 
-test('uses red below 80, purple from 80 to 99, and gold at 100 percent or above', () => {
+test('uses rose risk below 80, silver rose from 80 to 99, and champagne at 100 percent or above', () => {
   assert.equal(format.progressColor(79.9, format.COLOR.good, format.COLOR.gold), format.COLOR.warn);
   assert.equal(format.progressColor(60, format.COLOR.good, format.COLOR.gold), format.COLOR.warn);
   assert.equal(format.progressColor(53.8, format.COLOR.good, format.COLOR.gold), format.COLOR.warn);
-  assert.equal(format.progressGradient(79.9, '#D8D4FF'), format.COLOR.warnGradient);
-  assert.equal(format.progressGradient(70, '#D8D4FF'), format.COLOR.warnGradient);
+  assert.equal(format.progressGradient(79.9, '#E4B8D7'), format.COLOR.warnGradient);
+  assert.equal(format.progressGradient(70, '#E4B8D7'), format.COLOR.warnGradient);
   assert.equal(format.progressColor(80, format.COLOR.good, format.COLOR.gold), format.COLOR.good);
   assert.equal(format.progressColor(99.9, format.COLOR.good, format.COLOR.gold), format.COLOR.good);
-  assert.equal(format.progressGradient(80, '#D8D4FF'), format.COLOR.goodGradient);
-  assert.equal(format.progressGradient(99.9, '#D8D4FF'), format.COLOR.goodGradient);
+  assert.equal(format.progressGradient(80, '#E4B8D7'), format.COLOR.goodGradient);
+  assert.equal(format.progressGradient(99.9, '#E4B8D7'), format.COLOR.goodGradient);
   assert.equal(format.progressColor(100, format.COLOR.good, format.COLOR.gold), format.COLOR.gold);
   assert.equal(format.progressColor(118, format.COLOR.good, format.COLOR.gold), format.COLOR.gold);
-  assert.equal(format.progressGradient(100, '#D8D4FF'), format.COLOR.goldGradient);
-  assert.equal(format.progressGradient(118, '#D8D4FF'), format.COLOR.goldGradient);
+  assert.equal(format.progressGradient(100, '#E4B8D7'), format.COLOR.goldGradient);
+  assert.equal(format.progressGradient(118, '#E4B8D7'), format.COLOR.goldGradient);
 });
 
 test('formats falling values and under-target gaps as risk deltas', () => {
@@ -110,33 +123,37 @@ test('renders recovery gap chip and its left trend chip with risk semantics', ()
 });
 
 test('keeps monthly trend bars calm while highlighting only the current month', () => {
-  assert.match(monthlyTrendSource, /import \{ COLOR, isRiskCompletion \} from '\.\.\/lib\/format';/);
+  assert.match(monthlyTrendSource, /import \{ isRiskCompletion \} from '\.\.\/lib\/format';/);
   assert.doesNotMatch(monthlyTrendSource, /function recoveredBarColor/);
   assert.doesNotMatch(monthlyTrendSource, /color:\s*recoveredBarColor\(completion\[index\], tokens\)/);
   assert.match(monthlyTrendSource, /function isCurrentTrendMonth\(item\)/);
   assert.match(monthlyTrendSource, /function currentMonthBarColor\(item, tokens\)/);
-  assert.match(monthlyTrendSource, /data:\s*target\.map\(\(value, index\) => \(\{[\s\S]*?color:\s*isCurrentTrendMonth\(trend\[index\]\) \? tokens\.chartBarFaintCurrent : tokens\.chartBarFaint,/);
+  assert.match(monthlyTrendSource, /function actualBarColor\(tokens\)/);
+  assert.match(monthlyTrendSource, /function targetBarColor\(tokens\)/);
+  assert.match(monthlyTrendSource, /return tokens\.chartTargetBar;/);
+  assert.match(monthlyTrendSource, /data:\s*target\.map\(\(value\) => \(\{[\s\S]*?color:\s*targetBarColor\(tokens\),/);
   assert.doesNotMatch(monthlyTrendSource, /name:\s*'目标'[\s\S]*?borderColor:\s*tokens\.chartAxis/);
   assert.match(monthlyTrendSource, /data:\s*recovered\.map\(\(value, index\) => \(\{[\s\S]*?color:\s*currentMonthBarColor\(trend\[index\], tokens\),/);
-  assert.match(monthlyTrendSource, /return isCurrentTrendMonth\(item\) \? tokens\.chartBarCurrent : tokens\.chartBarMuted;/);
+  assert.match(monthlyTrendSource, /return isCurrentTrendMonth\(item\) \? actualBarColor\(tokens\) : \{/);
   assert.doesNotMatch(monthlyTrendSource, /name:\s*'回款'[\s\S]*?COLOR\.warn/);
   assert.match(monthlyTrendSource, /function completionPointColor\(value, tokens\)/);
-  assert.match(monthlyTrendSource, /isRiskCompletion\(value\) \? COLOR\.warn/);
+  assert.match(monthlyTrendSource, /isRiskCompletion\(value\) \? tokens\.chartRiskPoint/);
+  assert.match(monthlyTrendSource, /Number\(value\) >= 100 \? tokens\.semanticGoal : tokens\.chartRateLine/);
   assert.match(monthlyTrendSource, /itemStyle:\s*\{ color: \(\{ value \}\) => completionPointColor\(value, tokens\)/);
   assert.match(monthlyTrendSource, /label:\s*\{[\s\S]*?color: \(\{ value \}\) => completionPointColor\(value, tokens\)/);
 });
 
 test('keeps channel and delivery progress bars on the same risk rule', () => {
   assert.equal(
-    channelCompletionBarBackground({ key: 'east', completion: 70 }, '#D8D4FF'),
+    channelCompletionBarBackground({ key: 'east', completion: 70 }, '#E4B8D7'),
     format.COLOR.warnGradient
   );
   assert.equal(
-    channelCompletionBarBackground({ key: 'agent', completion: 79.9 }, '#D8D4FF'),
+    channelCompletionBarBackground({ key: 'agent', completion: 79.9 }, '#E4B8D7'),
     format.COLOR.warnGradient
   );
   assert.equal(
-    channelCompletionBarBackground({ key: 'online', completion: 100 }, '#D8D4FF'),
+    channelCompletionBarBackground({ key: 'online', completion: 100 }, '#E4B8D7'),
     format.COLOR.goldGradient
   );
   assert.equal(shouldUseChannelCompletionWarnFill({ key: 'east', completion: 70, warn: true }), true);

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 10:48:16 CST  更新内容: KPI 二级弹窗柱形高亮改为银紫玫瑰，未选中柱回退为低透明银紫。 */
 /* 更新时间: 2026-07-06 10:00:00 CST  更新内容: KPI 二级弹窗升级为高级果味玻璃明细页母版，补充副标题、主指标、图表 tooltip 和摘要条。 */
 /* 更新时间: 2026-07-05 19:10:30 CST  更新内容: KPI 二级弹窗按本月/年度入口默认切换维度，并将回款弹窗标题改为月度/年度明细。 */
 /* 更新时间: 2026-07-02 16:52:00 CST  更新内容: KPI 二级弹窗关闭按钮改用统一 AppIcon 线性图标。 */
@@ -139,12 +140,12 @@ function buildGoalSummary(card, sel, cardUnit) {
 function modalBarColor(active) {
   return new echarts.graphic.LinearGradient(0, 0, 0, 1, active
     ? [
-        { offset: 0, color: '#B8A8FF' },
-        { offset: 1, color: '#7B61FF' },
+        { offset: 0, color: '#B89CFF' },
+        { offset: 1, color: '#8E86FF' },
       ]
     : [
-        { offset: 0, color: 'rgba(132,118,226,0.58)' },
-        { offset: 1, color: 'rgba(82,72,150,0.42)' },
+        { offset: 0, color: 'rgba(184,156,255,0.36)' },
+        { offset: 1, color: 'rgba(142,134,255,0.26)' },
       ]);
 }
 

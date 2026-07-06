@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: 模拟数据展示色收敛为银紫玫瑰、香槟目标、玫瑰风险与柔和辅助色，移除硬蓝和青绿主视觉。
+*/
+/*
  更新时间: 2026-07-06 00:00:13 CST
  更新内容: 模拟数据中的金色图表色同步为高级哑金与灰金高光。
 */
@@ -424,22 +428,22 @@ export const COMPUTE_HALF_YEAR_TREND = [
 
 export const COMPUTE_VERSION_CONSUMPTION = [
   { name: '试用版', value: 2, color: '#94A3B8' },
-  { name: '企业版', value: 3, color: '#B7A06C' },
-  { name: '旗舰版', value: 5, color: '#D6C49A' },
-  { name: '免费版', value: 3, color: '#D86A82' },
-  { name: '卓越版', value: 37, color: '#8B7CFF' },
-  { name: '创世版', value: 28, color: '#74A7FF' },
-  { name: '至尊版ultra', value: 1, color: '#6DD6D2' },
-  { name: '启航版', value: 31, color: '#AFA6FF' },
+  { name: '企业版', value: 3, color: '#C9A96B' },
+  { name: '旗舰版', value: 5, color: '#E3D2A4' },
+  { name: '免费版', value: 3, color: '#F06A8B' },
+  { name: '卓越版', value: 37, color: '#8E86FF' },
+  { name: '创世版', value: 28, color: '#B89CFF' },
+  { name: '至尊版ultra', value: 1, color: '#E4B8D7' },
+  { name: '启航版', value: 31, color: '#D9D1FF' },
 ];
 
 export const COMPUTE_USAGE_DISTRIBUTION = [
   { name: '算力用量=0', value: 75, color: '#94A3B8' },
-  { name: '0<算力用量<=100', value: 3, color: '#B7A06C' },
-  { name: '100<算力用量<=1000', value: 5, color: '#D86A82' },
-  { name: '1000<算力用量<=5000', value: 7, color: '#E7A0AE' },
-  { name: '5000<算力用量<=10000', value: 5, color: '#74A7FF' },
-  { name: '算力用量>10000', value: 10, color: '#6DD6D2' },
+  { name: '0<算力用量<=100', value: 3, color: '#C9A96B' },
+  { name: '100<算力用量<=1000', value: 5, color: '#F06A8B' },
+  { name: '1000<算力用量<=5000', value: 7, color: '#E4B8D7' },
+  { name: '5000<算力用量<=10000', value: 5, color: '#B89CFF' },
+  { name: '算力用量>10000', value: 10, color: '#8E86FF' },
 ];
 
 export const COMPUTE_CUSTOMER_ROWS = [
@@ -456,12 +460,12 @@ export const COMPUTE_CUSTOMER_ROWS = [
 ];
 
 export const COMPUTE_RESOURCE_HEALTH = [
-  { key: 'reply', name: '自动回复', usage: 57.4, trend: '+6.8%', state: '高频稳定', tone: 'good', color: '#8B7CFF' },
-  { key: 'sync', name: '商品同步', usage: 18.9, trend: '+2.1%', state: '增长可控', tone: 'neutral', color: '#AFA6FF' },
-  { key: 'smart-eye', name: '会眼智宝', usage: 10.8, trend: '+1.6%', state: '稳态调用', tone: 'neutral', color: '#D8D4FF' },
-  { key: 'vision', name: '视频识别', usage: 9.6, trend: '-1.4%', state: '低峰运行', tone: 'neutral', color: '#74A7FF' },
-  { key: 'guard', name: '后置回复拦截', usage: 6.8, trend: '+0.9%', state: '需关注', tone: 'warn', color: '#D86A82' },
-  { key: 'dialog-test', name: '对话测试', usage: 5.2, trend: '+0.4%', state: '轻量验证', tone: 'neutral', color: '#B7A06C' },
+  { key: 'reply', name: '自动回复', usage: 57.4, trend: '+6.8%', state: '高频稳定', tone: 'good', color: '#8E86FF' },
+  { key: 'sync', name: '商品同步', usage: 18.9, trend: '+2.1%', state: '增长可控', tone: 'neutral', color: '#B89CFF' },
+  { key: 'smart-eye', name: '会眼智宝', usage: 10.8, trend: '+1.6%', state: '稳态调用', tone: 'neutral', color: '#D9D1FF' },
+  { key: 'vision', name: '视频识别', usage: 9.6, trend: '-1.4%', state: '低峰运行', tone: 'neutral', color: '#E4B8D7' },
+  { key: 'guard', name: '后置回复拦截', usage: 6.8, trend: '+0.9%', state: '需关注', tone: 'warn', color: '#F06A8B' },
+  { key: 'dialog-test', name: '对话测试', usage: 5.2, trend: '+0.4%', state: '轻量验证', tone: 'neutral', color: '#C9A96B' },
 ];
 
 export function getComputeOverview() {

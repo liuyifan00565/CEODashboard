@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 10:48:16 CST  更新内容: 月度趋势按高级果味规则重排图表权重，回款用银紫渐变，目标后退，风险点保留玫瑰红。 */
 /* 更新时间: 2026-07-04 01:03:12 CST  更新内容: 月度经营趋势仅突出当前 6 月柱形和轴标，其余月份继续保持低饱和。 */
 /* 更新时间: 2026-07-03 23:48:36 CST  更新内容: 月度趋势回款柱统一低饱和紫色，低完成率仅在完成率点位和标签使用风险色。 */
 /* 更新时间: 2026-07-03 18:54:17 CST  更新内容: 月度趋势回款柱与完成率标签按 80 以下红色、80-99 紫色、100 及以上金色三档分色。 */
@@ -5,22 +6,50 @@
 /* 更新时间: 2026-06-29 10:45:53  更新内容: 月度经营趋势图例改为静态说明，并将目标与回款柱重叠展示。 */
 import EChart from './EChart';
 import { getChannelTrend } from '../data/mock';
-import { COLOR, isRiskCompletion } from '../lib/format';
+import { isRiskCompletion } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './MonthlyTrend.css';
 
 const CURRENT_TREND_MONTH = '6月';
 
 function completionPointColor(value, tokens) {
-  return isRiskCompletion(value) ? COLOR.warn : Number(value) >= 100 ? tokens.progressGold : tokens.chartMuted;
+  return isRiskCompletion(value) ? tokens.chartRiskPoint : Number(value) >= 100 ? tokens.semanticGoal : tokens.chartRateLine;
 }
 
 function isCurrentTrendMonth(item) {
   return item?.month === CURRENT_TREND_MONTH;
 }
 
+function actualBarColor(tokens) {
+  return {
+    type: 'linear',
+    x: 0,
+    y: 0,
+    x2: 0,
+    y2: 1,
+    colorStops: [
+      { offset: 0, color: tokens.chartActualBarTop },
+      { offset: 1, color: tokens.chartActualBarBottom },
+    ],
+  };
+}
+
+function targetBarColor(tokens) {
+  return tokens.chartTargetBar;
+}
+
 function currentMonthBarColor(item, tokens) {
-  return isCurrentTrendMonth(item) ? tokens.chartBarCurrent : tokens.chartBarMuted;
+  return isCurrentTrendMonth(item) ? actualBarColor(tokens) : {
+    type: 'linear',
+    x: 0,
+    y: 0,
+    x2: 0,
+    y2: 1,
+    colorStops: [
+      { offset: 0, color: 'rgba(184,156,255,.28)' },
+      { offset: 1, color: 'rgba(142,134,255,.18)' },
+    ],
+  };
 }
 
 export default function MonthlyTrend({ channelKey = 'all' }) {
@@ -112,10 +141,10 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
           borderRadius: [3, 3, 0, 0],
         },
         emphasis: { disabled: true },
-        data: target.map((value, index) => ({
+        data: target.map((value) => ({
           value,
           itemStyle: {
-            color: isCurrentTrendMonth(trend[index]) ? tokens.chartBarFaintCurrent : tokens.chartBarFaint,
+            color: targetBarColor(tokens),
             borderRadius: [3, 3, 0, 0],
           },
         })),
@@ -129,7 +158,7 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         itemStyle: {
           borderRadius: [3, 3, 0, 0],
         },
-        emphasis: { itemStyle: { color: tokens.chartBar } },
+        emphasis: { itemStyle: { color: actualBarColor(tokens) } },
         data: recovered.map((value, index) => ({
           value,
           itemStyle: {
@@ -145,7 +174,7 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         smooth: true,
         symbol: 'circle',
         symbolSize: ({ value }) => (isRiskCompletion(value) ? 8 : 5),
-        lineStyle: { color: tokens.chartBarMuted, width: 1.35, opacity: 0.72 },
+        lineStyle: { color: tokens.chartRateLine, width: 1.5, opacity: 0.72, shadowBlur: 8, shadowColor: 'rgba(184,156,255,.24)' },
         itemStyle: { color: ({ value }) => completionPointColor(value, tokens), borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
         label: {
           show: true,

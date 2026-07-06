@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: 将公共颜色函数切换为银紫玫瑰主高亮、玫瑰风险与香槟目标三档语义。
+*/
+/*
  更新时间: 2026-07-06 00:00:13 CST
  更新内容: 完成率 100% 以上的金色语义改为低饱和高级哑金。
 */
@@ -59,19 +63,19 @@
  更新内容: 完成率中档颜色支持由主题传入，避免白色主题下 60-80 完成率文字不可读。
 */
 export const COLOR = {
-  up: '#AFA6FF',
-  down: '#D86A82',
-  good: '#8B7CFF',
-  warn: '#D86A82',
-  gold: '#B7A06C',
+  up: '#B89CFF',
+  down: '#F06A8B',
+  good: '#8E86FF',
+  warn: '#F06A8B',
+  gold: '#C9A96B',
   txt: '#F7F8FC',
   muted: '#B9C2D4',
   line: 'rgba(218,226,255,.10)',
   axis: 'rgba(218,226,255,.34)',
-  // 进度条统一语义：80% 以下风险玫红，80-99% 品牌月光紫，100% 及以上高级哑金。
-  goodGradient: 'linear-gradient(90deg,#8B7CFF 0%,#AFA6FF 54%,#D8D4FF 82%,#8BD7FF 100%)',
-  warnGradient: 'linear-gradient(90deg,#A94F62 0%,#D86A82 58%,#E7A0AE 100%)',
-  goldGradient: 'linear-gradient(90deg,#7E6B49 0%,#B7A06C 58%,#D6C49A 100%)',
+  // 进度条统一语义：80% 以下风险玫红，80-99% 银紫玫瑰，100% 及以上香槟目标色。
+  goodGradient: 'linear-gradient(90deg,#8E86FF 0%,#B89CFF 46%,#E4B8D7 100%)',
+  warnGradient: 'linear-gradient(90deg,#B84E68 0%,#F06A8B 58%,#FF9EB4 100%)',
+  goldGradient: 'linear-gradient(90deg,#8E7040 0%,#C9A96B 58%,#E3D2A4 100%)',
 };
 
 export const isRiskCompletion = (pct) => (Number(pct) || 0) < 80;

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: AI 助手阴影与气泡呼吸光改为银紫玫瑰高亮，保留告警玫瑰红与庆祝香槟金语义。
+*/
+/*
  更新时间: 2026-07-05 16:12:00 CST
  更新内容: 适配 220px 图文侧栏，将 AI 小人入口收进底部轻量状态卡。
 */
@@ -85,17 +89,17 @@
 }
 
 .ai-orb:focus-visible .mascot-3d-stage {
-  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .38)) drop-shadow(0 0 34px rgba(139, 124, 255, .36));
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .38)) drop-shadow(0 0 34px rgba(184, 156, 255, .30));
 }
 
 .ai-orb--wave .mascot-3d-stage {
-  filter: drop-shadow(0 20px 32px rgba(0, 0, 0, .4)) drop-shadow(0 0 30px rgba(116, 167, 255, .30));
+  filter: drop-shadow(0 20px 32px rgba(0, 0, 0, .4)) drop-shadow(0 0 30px rgba(228, 184, 215, .24));
 }
 
 .ai-orb--think .mascot-3d-stage,
 .ai-orb--talk .mascot-3d-stage,
 .ai-orb--click .mascot-3d-stage {
-  filter: drop-shadow(0 22px 36px rgba(0, 0, 0, .4)) drop-shadow(0 0 30px rgba(116, 167, 255, .26)) drop-shadow(0 0 36px rgba(139, 124, 255, .18));
+  filter: drop-shadow(0 22px 36px rgba(0, 0, 0, .4)) drop-shadow(0 0 30px rgba(228, 184, 215, .18)) drop-shadow(0 0 36px rgba(184, 156, 255, .16));
 }
 
 .ai-orb--alert .mascot-3d-stage {
@@ -166,7 +170,7 @@
   }
 
   50% {
-    box-shadow: 0 20px 38px rgba(0, 0, 0, .3), 0 0 24px rgba(139, 124, 255, .18), inset 0 1px 0 rgba(255, 255, 255, .16);
+    box-shadow: 0 20px 38px rgba(0, 0, 0, .3), 0 0 24px rgba(184, 156, 255, .16), inset 0 1px 0 rgba(255, 255, 255, .16);
   }
 }
 

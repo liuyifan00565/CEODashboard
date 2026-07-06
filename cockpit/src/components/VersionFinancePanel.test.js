@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: 版本情况测试同步银紫玫瑰半环阴影与切换器选中态。
+*/
+/*
  更新时间: 2026-07-06 10:00:00 CST
  更新内容: 增加版本二级明细弹窗继承高级果味母版结构的回归测试。
 */
@@ -191,7 +195,7 @@ test('keeps the version half ring calm and labels only the two largest versions'
   assert.match(source, /labelLine:\s*\{[\s\S]*?show: isMajorLabel,/);
   assert.match(source, /center: \['49\.5%', '68%'\]/);
   assert.match(source, /shadowBlur: 5,/);
-  assert.match(source, /shadowColor: 'rgba\(167, 156, 255, \.08\)'/);
+  assert.match(source, /shadowColor: 'rgba\(184, 156, 255, \.08\)'/);
   assert.match(css, /\.vf-ring-pane \{[\s\S]*?align-items: flex-start;/);
   assert.match(css, /\.vf-ring-pane \{[\s\S]*?padding-top: 0;/);
   assert.match(css, /\.vf-ring-pane \{[\s\S]*?padding-left: 4px;/);
@@ -201,8 +205,9 @@ test('keeps the version half ring calm and labels only the two largest versions'
   assert.match(css, /\.vf-ring \{[\s\S]*?margin-left: -16px;/);
 });
 
-test('uses restrained purple selected state and softer table deltas', () => {
-  assert.match(css, /\.vf-metric-switch__thumb \{[\s\S]*?background: rgba\(143, 124, 255, \.78\);/);
+test('uses restrained silver-rose selected state and softer table deltas', () => {
+  assert.match(css, /\.vf-metric-switch__thumb \{[\s\S]*?background: linear-gradient\(135deg, rgba\(142, 134, 255, \.72\), rgba\(228, 184, 215, \.46\)\);/);
+  assert.match(css, /\.vf-metric-switch__thumb \{[\s\S]*?box-shadow: 0 0 16px rgba\(184, 156, 255, \.20\), 0 1px 8px rgba\(0, 0, 0, 0\.28\);/);
   assert.match(css, /\.vf-metric-switch__btn \{[\s\S]*?color: rgba\(255,255,255,\.65\);/);
   assert.match(css, /\.vf-metric-switch__btn--active,[\s\S]*?\.vf-metric-switch__btn--active:hover \{[\s\S]*?color: #fff;/);
   assert.doesNotMatch(css, /\.vf-metric-switch__thumb \{[\s\S]*?background: var\(--control-solid\);/);

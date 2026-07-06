@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:48:16 CST
+ 更新内容: AI 助手流光边框改为银紫玫瑰与香槟点缀，移除默认硬蓝主视觉。
+*/
+/*
  更新时间: 2026-07-06 00:00:13 CST
  更新内容: AI 分析弹窗边缘流光金色改为高级哑金。
 */
@@ -562,7 +566,7 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
             glowIntensity={2.2}
             coneSpread={25}
             animated
-            colors={['#8B7CFF', '#B7A06C', '#74A7FF']}
+            colors={['#8E86FF', '#E4B8D7', '#C9A96B']}
           >
             <section className="ai-card-inner" aria-label="AI 分析对话框">
               <header className="ai-card-head">
