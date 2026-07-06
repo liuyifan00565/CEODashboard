@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 11:23:48 CST
+ 更新内容: 恢复全局 GlassCursor 环境柔光挂载，用低透明银紫玫瑰光补充暗色玻璃层次。
+*/
+/*
  更新时间: 2026-07-05 23:55:52 CST
  更新内容: 移除全局 GlassCursor 光标光晕挂载，保留系统原生光标显示。
 */
@@ -14,9 +18,13 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import GlassCursor from './components/GlassCursor'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <>
+      <App />
+      <GlassCursor />
+    </>
   </StrictMode>,
 )
