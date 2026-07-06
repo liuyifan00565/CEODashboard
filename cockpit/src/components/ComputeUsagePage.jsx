@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 14:30:26 CST
+ 更新内容: 算力用量分布顶部小扇区外拉折线上提，避免遮住数据。
+*/
+/*
  更新时间: 2026-07-06 14:21:24 CST
  更新内容: 算力用量分布恢复完整圆环图，仅保留自然外拉折线布局。
 */
@@ -85,7 +89,7 @@ const COMPUTE_DEFAULT_PIE_RADIUS = ['58%', '92%'];
 const COMPUTE_USAGE_DISTRIBUTION_PIE_CENTER = ['45%', '52%'];
 const COMPUTE_USAGE_DISTRIBUTION_PIE_RADIUS = ['54%', '86%'];
 const COMPUTE_DEFAULT_LABEL_LINE = { length: 12, length2: 16, smooth: false, width: 1, opacity: .72, };
-const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = { length: 15, length2: 15, smooth: false, width: 1, opacity: .72, };
+const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = { length: 24, length2: 20, smooth: false, width: 1, opacity: .78, };
 const COMPUTE_VERSION_RIGHT_LABEL_SLOTS = {
   '试用版': -82,
   '企业版': -42,
