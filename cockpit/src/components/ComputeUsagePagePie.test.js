@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 15:45:00 CST
+ 更新内容: 要求算力用量分布环形图标签折线进一步加长并增加最小间距，避免=0等小扇区数据被遮挡。
+*/
+/*
  更新时间: 2026-07-06 14:30:26 CST
  更新内容: 要求算力用量分布顶部小扇区折线外移上提，避免遮住数据。
 */
@@ -41,7 +45,7 @@ test('keeps the usage distribution chart as a full donut with lifted natural lab
   assert.doesNotMatch(source, /const pieAngles =/);
   assert.match(source, /const pieLabelLine = isUsageDistributionPie \? COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE : COMPUTE_DEFAULT_LABEL_LINE;/);
   assert.match(source, /const COMPUTE_DEFAULT_LABEL_LINE = \{\s*length:\s*12,\s*length2:\s*16,\s*smooth:\s*false,\s*width:\s*1,\s*opacity:\s*\.72,\s*\};/);
-  assert.match(source, /const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = \{\s*length:\s*24,\s*length2:\s*20,\s*smooth:\s*false,\s*width:\s*1,\s*opacity:\s*\.78,\s*\};/);
+  assert.match(source, /const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = \{\s*length:\s*36,\s*length2:\s*32,\s*smooth:\s*false,\s*width:\s*1\.2,\s*opacity:\s*\.82,\s*minMargin:\s*8\s*\};/);
   assert.match(source, /if \(params\.data\?\.wrapLabel\) \{/);
   assert.match(source, /wrapLabel:\s*isUsageDistributionPie/);
   assert.match(source, /return `\{name\|\$\{name\}\}\\n\{value\|\$\{params\.percent\}%\}`;/);

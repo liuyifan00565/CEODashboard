@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 15:45:00 CST
+ 更新内容: 算力用量分布环形图标签折线进一步加长并增加最小间距，避免=0等小扇区数据被遮挡。
+*/
+/*
  更新时间: 2026-07-06 14:30:26 CST
  更新内容: 算力用量分布顶部小扇区外拉折线上提，避免遮住数据。
 */
@@ -89,7 +93,7 @@ const COMPUTE_DEFAULT_PIE_RADIUS = ['58%', '92%'];
 const COMPUTE_USAGE_DISTRIBUTION_PIE_CENTER = ['45%', '52%'];
 const COMPUTE_USAGE_DISTRIBUTION_PIE_RADIUS = ['54%', '86%'];
 const COMPUTE_DEFAULT_LABEL_LINE = { length: 12, length2: 16, smooth: false, width: 1, opacity: .72, };
-const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = { length: 24, length2: 20, smooth: false, width: 1, opacity: .78, };
+const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = { length: 36, length2: 32, smooth: false, width: 1.2, opacity: .82, minMargin: 8 };
 const COMPUTE_VERSION_RIGHT_LABEL_SLOTS = {
   '试用版': -82,
   '企业版': -42,
@@ -710,6 +714,7 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
           length: pieLabelLine.length,
           length2: pieLabelLine.length2,
           smooth: pieLabelLine.smooth,
+          ...(pieLabelLine.minMargin != null ? { minMargin: pieLabelLine.minMargin } : {}),
           lineStyle: { color: tokens.chartAxis, width: pieLabelLine.width, opacity: pieLabelLine.opacity },
         },
         ...(naturalLabelLayout ? {} : { labelLayout: computePieLabelLayout }),
