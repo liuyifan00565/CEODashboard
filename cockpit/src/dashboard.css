@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:49:52 CST
+ 更新内容: 顶部福客品牌胶囊滚动后以 260ms morph 折叠为一行 sticky 身份标识，并在深滚动时弱化。
+*/
+/*
  更新时间: 2026-07-06 00:13:39 CST
  更新内容: 版本情况面板复用月度趋势与交付面板的悬浮亮边玻璃反馈。
 */
@@ -108,14 +112,69 @@
   margin:0 calc(clamp(16px,3vw,40px) * -1);
   padding:14px clamp(16px,3vw,40px) 18px;
 }
-.dash-topbar .brand-glass{flex:0 0 328px;min-width:328px;max-width:328px}
+.dash-topbar .brand-glass{
+  flex:0 0 320px;min-width:320px;max-width:320px;
+  transition:width .26s cubic-bezier(.22,1,.36,1),height .26s cubic-bezier(.22,1,.36,1),flex-basis .26s cubic-bezier(.22,1,.36,1),min-width .26s cubic-bezier(.22,1,.36,1),max-width .26s cubic-bezier(.22,1,.36,1),opacity .26s cubic-bezier(.22,1,.36,1),filter .26s cubic-bezier(.22,1,.36,1) !important;
+}
+.dash-topbar .brand-glass--compact{
+  flex-basis:248px;
+  min-width:248px;
+  max-width:248px;
+  filter:saturate(.96) brightness(.98);
+}
+.dash-topbar .brand-glass--minimal{
+  flex-basis:180px;
+  min-width:180px;
+  max-width:180px;
+  opacity:.74;
+  filter:saturate(.88) brightness(.94);
+}
 .dash-topbar .brand-glass .glass-surface__content{padding:0}
-.dash-topbar .brand{width:100%;height:100%;min-width:0;flex:none;padding:0 18px;gap:13px;}
-.dash-topbar .brand-copy{min-width:0}
+.dash-topbar .brand{width:100%;height:100%;min-width:0;flex:none;padding:0 18px;gap:13px;transition:padding .26s cubic-bezier(.22,1,.36,1),gap .26s cubic-bezier(.22,1,.36,1);}
+.dash-topbar .brand-glass--compact .brand{padding:0 14px;gap:9px}
+.dash-topbar .brand-glass--minimal .brand{padding:0 12px;gap:8px}
+.dash-topbar .brand-logo-paint{transition:width .26s cubic-bezier(.22,1,.36,1),height .26s cubic-bezier(.22,1,.36,1),flex-basis .26s cubic-bezier(.22,1,.36,1),filter .26s cubic-bezier(.22,1,.36,1)}
+.dash-topbar .brand-glass--compact .brand-logo-paint{flex-basis:28px;width:28px;height:22px;filter:drop-shadow(0 0 8px rgba(255,255,255,.22))}
+.dash-topbar .brand-glass--minimal .brand-logo-paint{flex-basis:22px;width:22px;height:18px;filter:drop-shadow(0 0 5px rgba(255,255,255,.16))}
+.dash-topbar .brand-copy{min-width:0;flex:1;display:grid;align-items:center}
+.dash-topbar .brand-copy-full{
+  grid-area:1/1;
+  min-width:0;
+  transition:opacity .22s cubic-bezier(.22,1,.36,1),transform .22s cubic-bezier(.22,1,.36,1);
+}
+.dash-topbar .brand-copy-inline{
+  grid-area:1/1;
+  min-width:0;
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:14px;
+  font-weight:760;
+  line-height:1;
+  color:rgba(247,248,252,.88);
+  opacity:0;
+  transform:translateY(5px);
+}
+.dash-topbar .brand-glass--compact .brand-copy-full,
+.dash-topbar .brand-glass--minimal .brand-copy-full{
+  opacity:0;
+  transform:translateY(-5px);
+  pointer-events:none;
+}
+.dash-topbar .brand-glass--compact .brand-copy-inline,
+.dash-topbar .brand-glass--minimal .brand-copy-inline{
+  opacity:1;
+  transform:translateY(0);
+}
+.dash-topbar .brand-glass--minimal .brand-copy-inline{font-size:13px;color:rgba(247,248,252,.78)}
 .dash-topbar .brand b{font-size:20px;font-weight:760;color:rgba(247,248,252,.92);line-height:1.05}
 .dash-topbar .brand small{display:block;margin-top:5px;font-size:16px;font-weight:650;color:rgba(247,248,252,.58);line-height:1.05}
 .dash-topbar .brand b,
-.dash-topbar .brand small{white-space:nowrap;letter-spacing:0}
+.dash-topbar .brand small,
+.dash-topbar .brand-copy-inline{letter-spacing:0}
+.dash-topbar .brand b,
+.dash-topbar .brand small{white-space:nowrap}
 .dash-tools{
   margin-left:auto;display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0;flex:0 1 auto;
 }
@@ -341,7 +400,9 @@
   .dash-main{padding:0 12px 20px}
   .dash-content{width:100%;max-width:100%;overflow-x:hidden}
   .dash-topbar{margin:0 -12px;padding:14px 12px 18px}
-  .dash-topbar .brand-glass{flex:1 1 100%;min-width:0;max-width:100%}
+  .dash-topbar .brand-glass{flex:0 1 320px;min-width:min(100%,320px);max-width:100%}
+  .dash-topbar .brand-glass--compact{flex-basis:min(248px,100%);min-width:min(100%,248px);max-width:min(100%,248px)}
+  .dash-topbar .brand-glass--minimal{flex-basis:min(180px,100%);min-width:min(100%,180px);max-width:min(100%,180px)}
   .dash-tools{flex:1 1 100%;width:100%;max-width:100%;margin-left:0;justify-content:flex-end}
   .dash-tools .maintenance-glass{max-width:126px}
   .dash-token-grid{grid-template-columns:1fr}

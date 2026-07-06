@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:49:52 CST
+ 更新内容: 顶部福客品牌胶囊滚动后折叠为一行 sticky 身份标识，并在深滚动时弱化为极简版本。
+*/
+/*
  更新时间: 2026-07-05 19:10:30 CST
  更新内容: 经营总览顶部接入本月和年度 KPI 明细入口，复用现有 KPI 二级弹窗。
 */
@@ -153,6 +157,11 @@ const PANEL_KEYWORDS = {
   delivery: ['交付', '实施', '配置', '知识库', '人效'],
 };
 
+function formatCompactMonthLabel(label) {
+  const match = String(label).match(/(\d{4})\s*年\s*(\d{1,2})\s*月/);
+  return match ? `${match[1]}.${match[2].padStart(2, '0')}` : label;
+}
+
 function makeCompanionCueId(card) {
   return `${card?.key ?? 'card'}-${Date.now()}`;
 }
@@ -168,8 +177,10 @@ export default function App() {
   const [activeSearchIndex, setActiveSearchIndex] = useState(0);
   const [openCard, setOpenCard] = useState(null);
   const [companionCue, setCompanionCue] = useState(null);
+  const [brandMode, setBrandMode] = useState('full');
 
   const gridRef = useRef(null);
+  const secondaryGridRef = useRef(null);
   const pendingMenuScrollRef = useRef(false);
   const pendingSearchScrollRef = useRef(false);
   const isMaintenancePage = maintenanceMode;
@@ -179,6 +190,11 @@ export default function App() {
   const activeContextLabel = maintenanceMode
     ? '数据维护'
     : activeMenu === 'overview' ? 'CEO视角' : activeMenuLabel;
+  const compactMonthLabel = formatCompactMonthLabel(META.monthLabel);
+  const compactContextLabel = activeContextLabel === 'CEO视角' ? 'CEO' : activeContextLabel;
+  const brandIdentityText = brandMode === 'minimal'
+    ? '经营驾驶舱'
+    : `福客经营驾驶舱 · ${compactMonthLabel} · ${compactContextLabel}`;
   const sidebarItems = maintenanceMode ? MAINTENANCE_SIDEBAR_ITEMS : DASHBOARD_SIDEBAR_ITEMS;
   const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const contentKey = maintenanceMode ? activeMaintenanceMenu : activeMenu;
@@ -193,6 +209,47 @@ export default function App() {
     () => filteredKpiCards.find((card) => card.key === openCard?.key) ?? openCard ?? null,
     [filteredKpiCards, openCard]
   );
+
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    let animationFrame = 0;
+
+    function resolveBrandMode() {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+      if (scrollTop <= 80) {
+        return 'full';
+      }
+
+      const secondaryTop = secondaryGridRef.current?.getBoundingClientRect().top;
+      const deepScroll = Number.isFinite(secondaryTop) ? secondaryTop <= 112 : scrollTop > 520;
+      return deepScroll ? 'minimal' : 'compact';
+    }
+
+    function updateBrandMode() {
+      setBrandMode((currentMode) => {
+        const nextMode = resolveBrandMode();
+        return currentMode === nextMode ? currentMode : nextMode;
+      });
+    }
+
+    function requestBrandMode() {
+      if (animationFrame) return;
+      animationFrame = window.requestAnimationFrame(() => {
+        animationFrame = 0;
+        updateBrandMode();
+      });
+    }
+
+    updateBrandMode();
+    window.addEventListener('scroll', requestBrandMode, { passive: true });
+    window.addEventListener('resize', requestBrandMode);
+    return () => {
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener('scroll', requestBrandMode);
+      window.removeEventListener('resize', requestBrandMode);
+    };
+  }, [contentKey]);
 
   function scrollDashboardIntoView() {
     pendingMenuScrollRef.current = false;
@@ -333,15 +390,15 @@ export default function App() {
         <div className="dash-main">
           <header className="dash-topbar">
             <GlassSurface
-              width={328}
-              height={66}
-              borderRadius={22}
-              brightness={46}
+              width={brandMode === 'full' ? 320 : brandMode === 'compact' ? 248 : 180}
+              height={brandMode === 'full' ? 62 : brandMode === 'compact' ? 40 : 38}
+              borderRadius={brandMode === 'full' ? 22 : 16}
+              brightness={brandMode === 'full' ? 46 : 38}
               blur={7}
-              displace={0.32}
-              backgroundOpacity={0.04}
-              distortionScale={-54}
-              className="brand-glass"
+              displace={brandMode === 'full' ? 0.32 : 0.2}
+              backgroundOpacity={brandMode === 'full' ? 0.045 : brandMode === 'compact' ? 0.03 : 0.018}
+              distortionScale={brandMode === 'full' ? -54 : -42}
+              className={`brand-glass brand-glass--${brandMode}`}
             >
               <div className="brand">
                 <span className="brand-logo-paint" aria-hidden="true">
@@ -364,8 +421,11 @@ export default function App() {
                   />
                 </span>
                 <div className="brand-copy">
-                  <b>福客经营驾驶舱</b>
-                  <small>{META.monthLabel} / {activeContextLabel}</small>
+                  <span className="brand-copy-full">
+                    <b>福客经营驾驶舱</b>
+                    <small>{META.monthLabel} / {activeContextLabel}</small>
+                  </span>
+                  <span className="brand-copy-inline">{brandIdentityText}</span>
                 </div>
               </div>
             </GlassSurface>
@@ -413,7 +473,7 @@ export default function App() {
                   onOpenKpi={handleOpenCard}
                 />
 
-                <div className="dash-secondary-grid">
+                <div className="dash-secondary-grid" ref={secondaryGridRef}>
                   <div className="dash-secondary-cell dash-secondary-cell--trend" data-anim>
                     <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.trend, searchTerm)}>
                       <MonthlyTrend channelKey={activeChannelKey} />
