@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-06 14:41:51 CST
+ 更新内容: 要求月度经营趋势完成率蓝色读数横向偏移改为 12，并整体上移 2px。
+*/
+/*
+ 更新时间: 2026-07-06 14:41:51 CST
+ 更新内容: 要求月度经营趋势完成率蓝色读数整体向左移动。
+*/
+/*
  更新时间: 2026-07-06 14:31:30 CST
  更新内容: 要求月度经营趋势完成率读数避开折线并保留轻微文字阴影。
 */
@@ -57,7 +65,7 @@ test('keeps the completion line readable for changing monthly trend data', () =>
   assert.match(source, /scale:\s*true/);
   assert.match(source, /completionAxisMax\(values\)[\s\S]*?Math\.max\(24,\s*maxValue \* 0\.18\)/);
   assert.match(source, /grid:\s*\{[\s\S]*?top:\s*68[\s\S]*?right:\s*24[\s\S]*?bottom:\s*12/);
-  assert.match(source, /const COMPLETION_LABEL_OFFSET = \[24,\s*0\];/);
+  assert.match(source, /const COMPLETION_LABEL_OFFSET = \[12,\s*0\];/);
   assert.match(source, /const COMPLETION_LINE_COLOR = '#43eaff';/);
   assert.doesNotMatch(source, /position:\s*\(params\) => \(params\.dataIndex % 2 === 0 \? 'top' : 'bottom'\)/);
   assert.match(source, /label:\s*\{[\s\S]*?position:\s*'bottom'/);
@@ -77,7 +85,7 @@ test('keeps the completion line readable for changing monthly trend data', () =>
   assert.match(source, /distance:\s*2/);
   assert.match(source, /textShadowColor:\s*'rgba\(0,\s*0,\s*0,\s*\.72\)'/);
   assert.match(source, /textShadowBlur:\s*5/);
-  assert.match(source, /Math\.max\(8,\s*labelY \+ 6\)/);
+  assert.match(source, /Math\.max\(8,\s*labelY \+ 4\)/);
   assert.match(source, /formatter:\s*\(\{ value \}\) => `\$\{Number\(value\)\.toFixed\(1\)\}%`/);
   assert.match(source, /labelLayout:\s*completionLabelLayout/);
   assert.match(source, /showAllSymbol:\s*true/);
