@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:37:27 CST
+ 更新内容: 同步 AI 小人入口测试描述，明确新分层小人不依赖透明 PNG 整图渲染。
+*/
+/*
  更新时间: 2026-07-05 16:12:00 CST
  更新内容: AI 入口测试同步 220px 侧栏状态卡尺寸和状态文案。
 */
@@ -196,7 +200,7 @@ test('styles the launcher as a sidebar status card with a transparent 3D mascot 
   assert.doesNotMatch(componentCss, /ai-mascot-sprite/);
 });
 
-test('ships the transparent mascot image used by the 3D stage', () => {
+test('keeps the legacy transparent mascot asset available while the launcher stays image-free', () => {
   assert.ok(existsSync(mascotTransparentUrl), 'transparent AI mascot asset should exist');
   const mascot = readFileSync(mascotTransparentUrl);
   assert.equal(mascot.toString('ascii', 1, 4), 'PNG');
