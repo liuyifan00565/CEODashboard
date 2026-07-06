@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-06 12:35:55 CST
- 更新内容: 增加 AI 小人正面参考图还原验收，锁定脸部开窗轮廓、福客 logo 中轴位置和项目 logo.png。
+ 更新时间: 2026-07-06 14:19:58 CST
+ 更新内容: 增加灰模锁定文件和 MASCOT_PART_MAP 分件清单验收，避免后续材质与形体精修覆盖基准。
 */
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { test } from 'node:test';
@@ -10,6 +10,8 @@ const stageSource = readFileSync(new URL('./Mascot3DStage.jsx', import.meta.url)
 const stageCss = readFileSync(new URL('./Mascot3DStage.css', import.meta.url), 'utf8');
 const generatorSource = readFileSync(new URL('../../../scripts/generate_ai_mascot_glb.py', import.meta.url), 'utf8');
 const glbUrl = new URL('../../public/models/ai-mascot.glb', import.meta.url);
+const lockedGlbUrl = new URL('../../public/models/mascot_graymodel_v2_locked.glb', import.meta.url);
+const lockedPreviewUrl = new URL('../../public/models/mascot_graymodel_v2_locked_preview.png', import.meta.url);
 const stageCode = stripSourceComments(stageSource);
 const stageCssCode = stripSourceComments(stageCss);
 const generatorCode = stripSourceComments(generatorSource);
@@ -50,8 +52,33 @@ test('ships a real Blender-generated GLB mascot model instead of PNG frame or la
   assert.match(generatorCode, /export_format\s*=\s*["']GLB["']/);
   assert.match(generatorCode, /OUTPUT\s*=\s*ROOT\s*\/\s*["']cockpit["']\s*\/\s*["']public["']\s*\/\s*["']models["']\s*\/\s*["']ai-mascot\.glb["']/);
   assert.match(generatorCode, /transparent-glass-dome/);
+  assert.match(generatorCode, /helmet-lower-white-support-ring/);
+  assert.match(generatorCode, /helmet-lower-white-left-cap/);
+  assert.match(generatorCode, /helmet-lower-white-right-cap/);
+  assert.doesNotMatch(generatorCode, /shape_panel\(\s*["']helmet-lower-white-band["']/);
+  assert.doesNotMatch(generatorCode, /white-helmet-front-rim/);
+  assert.match(generatorCode, /face-cushion-volume/);
   assert.match(generatorCode, /shape_panel\(["']soft-face-panel["']/);
-  assert.match(generatorCode, /purple-face-window-rim/);
+  assert.doesNotMatch(generatorCode, /purple-face-window-rim/);
+  assert.match(generatorCode, /sphere\(["']soft-suit-body["']/);
+  assert.doesNotMatch(generatorCode, /soft-belly-volume/);
+  assert.match(generatorCode, /shape_panel\(["']purple-front-yoke["']/);
+  assert.match(generatorCode, /soft-hip-bridge/);
+  assert.match(generatorCode, /left-shoulder-socket/);
+  assert.match(generatorCode, /right-shoulder-socket/);
+  assert.match(generatorCode, /left-shoulder-flow/);
+  assert.match(generatorCode, /right-shoulder-flow/);
+  assert.match(generatorCode, /left-soft-leg/);
+  assert.match(generatorCode, /right-soft-leg/);
+  assert.match(generatorCode, /ai-badge-recess-ring/);
+  assert.match(generatorCode, /ai-badge-outer-bezel/);
+  assert.match(generatorCode, /ai-badge-glow-core/);
+  assert.doesNotMatch(generatorCode, /visor-brow-soft-highlight/);
+  assert.doesNotMatch(generatorCode, /purple-visor-brow/);
+  assert.doesNotMatch(generatorCode, /blue-glass-front-rim/);
+  assert.doesNotMatch(generatorCode, /helmet-inner-shadow-rim/);
+  assert.doesNotMatch(generatorCode, /glass-top-outer-highlight/);
+  assert.doesNotMatch(generatorCode, /glass-left-side-highlight/);
   assert.match(generatorCode, /AI-badge-text/);
   assert.match(generatorCode, /microphone-boom/);
   assert.match(generatorCode, /LOGO_IMAGE\s*=\s*ROOT\s*\/\s*["']logo\.png["']/);
@@ -60,6 +87,51 @@ test('ships a real Blender-generated GLB mascot model instead of PNG frame or la
 
   assert.doesNotMatch(stageCode, /MASCOT_RIG_LAYERS|mascot-rig-layer|MASCOT_ACTION_POSES|ceo-mascot-[\w-]+\.png|ai-mascot-frames|sprite/i);
   assert.doesNotMatch(stageCode, /\/mascot-rig\/(?:head|body|left-arm|right-arm|left-leg|right-leg)\.png/);
+});
+
+test('locks the current graymodel checkpoint before material and detail passes', () => {
+  assert.ok(existsSync(lockedGlbUrl), 'Locked graymodel GLB should exist before material work');
+  assert.ok(existsSync(lockedPreviewUrl), 'Locked graymodel preview should exist before material work');
+  assert.equal(readGlbHeader(lockedGlbUrl).magic, 'glTF');
+  assert.ok(statSync(lockedGlbUrl).size > 500000);
+  assert.ok(statSync(lockedPreviewUrl).size > 200000);
+});
+
+test('declares a functional part map for controlled mascot refinement passes', () => {
+  const requiredPartGroups = [
+    'head',
+    'outer_helmet',
+    'inner_face',
+    'facial_features',
+    'accessories',
+    'helmet_support',
+    'body',
+    'badge',
+    'arms',
+    'legs',
+  ];
+
+  assert.match(generatorCode, /MASCOT_PART_MAP\s*=\s*\{/);
+  for (const group of requiredPartGroups) {
+    assert.match(generatorCode, new RegExp(`["']${group}["']\\s*:`));
+  }
+
+  for (const partName of [
+    'transparent-glass-dome',
+    'face-cushion-volume',
+    'left-headphone-shell',
+    'right-headphone-shell',
+    'microphone-boom',
+    'helmet-lower-white-support-ring',
+    'soft-suit-body',
+    'ai-badge-glow-core',
+    'left-arm',
+    'right-arm',
+    'left-soft-leg',
+    'right-soft-leg',
+  ]) {
+    assert.match(generatorCode, new RegExp(`["']${partName}["']`));
+  }
 });
 
 test('loads the GLB through React Three Fiber with an image fallback only for failure or loading', () => {
