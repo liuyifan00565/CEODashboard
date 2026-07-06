@@ -1,4 +1,16 @@
 /*
+ 更新时间: 2026-07-06 16:26:12 CST
+ 更新内容: 要求月度经营趋势完成率读数从当前下方位置继续上移贴近折线。
+*/
+/*
+ 更新时间: 2026-07-06 16:07:18 CST
+ 更新内容: 要求月度经营趋势完成率读数贴近折线下方红框位置，不再过低。
+*/
+/*
+ 更新时间: 2026-07-06 15:44:36 CST
+ 更新内容: 要求月度经营趋势完成率读数放到折线下方并向柱子右侧偏移。
+*/
+/*
  更新时间: 2026-07-06 14:44:12 CST
  更新内容: 要求月度经营趋势完成率折线、圆点和读数改为图二青蓝色。
 */
@@ -41,11 +53,12 @@ test('keeps the completion line readable for changing monthly trend data', () =>
   assert.match(source, /scale:\s*true/);
   assert.match(source, /completionAxisMax\(values\)[\s\S]*?Math\.max\(24,\s*maxValue \* 0\.18\)/);
   assert.match(source, /grid:\s*\{[\s\S]*?top:\s*68[\s\S]*?right:\s*24[\s\S]*?bottom:\s*12/);
-  assert.match(source, /const COMPLETION_LABEL_OFFSET = \[0,\s*-2\];/);
+  assert.match(source, /const COMPLETION_LABEL_OFFSET = \[24,\s*0\];/);
   assert.match(source, /const COMPLETION_LINE_COLOR = '#43eaff';/);
   assert.doesNotMatch(source, /position:\s*\(params\) => \(params\.dataIndex % 2 === 0 \? 'top' : 'bottom'\)/);
-  assert.match(source, /label:\s*\{[\s\S]*?position:\s*'top'/);
+  assert.match(source, /label:\s*\{[\s\S]*?position:\s*'bottom'/);
   assert.match(source, /offset:\s*COMPLETION_LABEL_OFFSET/);
+  assert.match(source, /align:\s*'left'/);
   assert.match(source, /lineStyle:\s*\{\s*color:\s*COMPLETION_LINE_COLOR,\s*width:\s*2\s*\}/);
   assert.match(source, /itemStyle:\s*\{\s*color:\s*COMPLETION_LINE_COLOR/);
   assert.match(completionLabelBlock, /color:\s*COMPLETION_LINE_COLOR/);
@@ -57,7 +70,8 @@ test('keeps the completion line readable for changing monthly trend data', () =>
   assert.doesNotMatch(completionLabelBlock, /borderRadius:/);
   assert.doesNotMatch(completionLabelBlock, /padding:/);
   assert.match(source, /fontWeight:\s*700/);
-  assert.match(source, /distance:\s*4/);
+  assert.match(source, /distance:\s*2/);
+  assert.match(source, /Math\.max\(8,\s*labelY - 16\)/);
   assert.match(source, /formatter:\s*\(\{ value \}\) => `\$\{Number\(value\)\.toFixed\(1\)\}%`/);
   assert.match(source, /labelLayout:\s*completionLabelLayout/);
   assert.match(source, /showAllSymbol:\s*true/);
