@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-06 11:39:42 CST
+ Update content: Keep maintenance UI synchronized with local database refreshes while preserving unsaved edits.
+*/
+/*
  Update time: 2026-07-06 11:15:05 CST
  Update content: Filter annual target rows to the selected organization branch instead of scrolling the full table.
 */
@@ -116,6 +120,8 @@ const PAGE_API_RESOURCES = {
   'org-maintenance': 'org',
   'channel-maintenance': 'channels',
 };
+const MAINTENANCE_REFRESH_INTERVAL_MS = 5000;
+const MAINTENANCE_BLOCKED_REFRESH_STATUSES = new Set(['有未保存修改', '保存中']);
 const INITIAL_TARGET_UPDATED_AT = '2026/7/6 10:42:41';
 const TARGET_ALL_DEPARTMENTS_LABEL = '所有部门';
 const DEFAULT_MAINTENANCE_DATA = {
@@ -147,6 +153,19 @@ function mergeMaintenanceData(data) {
     ...cloneMaintenanceData(),
     ...(data || {}),
   };
+}
+
+function isMaintenanceRefreshBlocked(status) {
+  return MAINTENANCE_BLOCKED_REFRESH_STATUSES.has(status);
+}
+
+function mergeMaintenanceRefresh(currentData, refreshedData, statusByPage) {
+  const merged = mergeMaintenanceData(refreshedData);
+  Object.entries(PAGE_DATA_KEYS).forEach(([pageKey, dataKey]) => {
+    if (!isMaintenanceRefreshBlocked(statusByPage?.[pageKey])) return;
+    merged[dataKey] = currentData?.[dataKey] ?? merged[dataKey];
+  });
+  return merged;
 }
 
 function getMaintenanceCurrentMonth(monthLabel = '') {
@@ -1022,31 +1041,53 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
   const [targetUpdatedAt, setTargetUpdatedAt] = useState(INITIAL_TARGET_UPDATED_AT);
   const [year, setYear] = useState('2026');
   const [maintenanceData, setMaintenanceData] = useState(() => cloneMaintenanceData());
+  const statusRef = useRef(statusByPage);
   const Page = PAGE_RENDERERS[activePage] ?? TargetMaintenancePage;
   const status = statusByPage[activePage] ?? '未修改';
   const dataKey = PAGE_DATA_KEYS[activePage] ?? 'target';
 
   useEffect(() => {
+    statusRef.current = statusByPage;
+  }, [statusByPage]);
+
+  useEffect(() => {
     let active = true;
 
-    async function loadMaintenanceData() {
+    async function loadMaintenanceData({ announce = false } = {}) {
       try {
-        const response = await fetch(`/api/maintenance/bootstrap?year=${encodeURIComponent(year)}`);
+        const response = await fetch(`/api/maintenance/bootstrap?year=${encodeURIComponent(year)}`, {
+          cache: 'no-store',
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         if (!active) return;
-        setMaintenanceData(mergeMaintenanceData(data));
-        setStatusByPage((current) => ({ ...current, [activePage]: '已加载数据库' }));
+        setMaintenanceData((current) => mergeMaintenanceRefresh(current, data, statusRef.current));
+        setStatusByPage((current) => {
+          if (isMaintenanceRefreshBlocked(current[activePage])) return current;
+          return { ...current, [activePage]: announce ? '已加载数据库' : `已同步数据库 ${nowLabel()}` };
+        });
       } catch {
         if (!active) return;
-        setMaintenanceData(cloneMaintenanceData());
+        if (!announce) {
+          setStatusByPage((current) => {
+            if (isMaintenanceRefreshBlocked(current[activePage])) return current;
+            return { ...current, [activePage]: '数据库同步失败' };
+          });
+          return;
+        }
+        setMaintenanceData((current) => mergeMaintenanceRefresh(current, cloneMaintenanceData(), statusRef.current));
         setStatusByPage((current) => ({ ...current, [activePage]: '数据库未连接，使用示例数据' }));
       }
     }
 
-    loadMaintenanceData();
+    loadMaintenanceData({ announce: true });
+    const refreshTimer = window.setInterval(() => {
+      loadMaintenanceData({ announce: false });
+    }, MAINTENANCE_REFRESH_INTERVAL_MS);
+
     return () => {
       active = false;
+      window.clearInterval(refreshTimer);
     };
   }, [activePage, year]);
 
@@ -1068,6 +1109,7 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
     try {
       const response = await fetch(`/api/maintenance/${resource}?year=${encodeURIComponent(year)}`, {
         method: 'PUT',
+        cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           year,

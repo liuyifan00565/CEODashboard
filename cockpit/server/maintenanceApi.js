@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 11:39:42 CST
+ 更新内容: 为数据维护 API 响应增加 no-store，确保 UI 每次读取本地数据库最新数据。
+*/
+/*
  更新时间: 2026-07-06 10:28:05 CST
  更新内容: 新增数据维护页 MySQL 读写接口，统一 UI 可编辑字段与 ceo_dashboard 表字段。
 */
@@ -80,7 +84,7 @@ export function getMaintenanceResourceFromPath(pathname) {
 }
 
 function jsonResponse(res, statusCode, body) {
-  res.writeHead(statusCode, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.writeHead(statusCode, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
   res.end(JSON.stringify(body));
 }
 
