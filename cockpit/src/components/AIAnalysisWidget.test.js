@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:49:22 CST
+ 更新内容: 同步 AI 小人入口测试描述，明确透明参考图重新作为小人舞台资产。
+*/
+/*
  更新时间: 2026-07-06 10:37:27 CST
  更新内容: 同步 AI 小人入口测试描述，明确新分层小人不依赖透明 PNG 整图渲染。
 */
@@ -200,7 +204,7 @@ test('styles the launcher as a sidebar status card with a transparent 3D mascot 
   assert.doesNotMatch(componentCss, /ai-mascot-sprite/);
 });
 
-test('keeps the legacy transparent mascot asset available while the launcher stays image-free', () => {
+test('keeps the reference transparent mascot asset available for the mascot stage', () => {
   assert.ok(existsSync(mascotTransparentUrl), 'transparent AI mascot asset should exist');
   const mascot = readFileSync(mascotTransparentUrl);
   assert.equal(mascot.toString('ascii', 1, 4), 'PNG');

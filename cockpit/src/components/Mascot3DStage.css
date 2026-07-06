@@ -1,36 +1,17 @@
 /*
- 更新时间: 2026-07-06 10:33:11 CST
- 更新内容: 将鼠标跟随变量合入关键帧动画，避免动作状态覆盖桌宠式跟随。
-*/
-/*
- 更新时间: 2026-07-06 10:44:00 CST
- 更新内容: 为参考图风格 2.5D 分层小人新增骨骼动画、玻璃头盔高光和动作状态样式。
-*/
-/*
- 更新时间: 2026-07-06 00:45:00 CST
- 更新内容: 将 Canvas fallback 图片可见性收敛到加载/失败状态，避免常态覆盖 3D 模型。
-*/
-/*
- 更新时间: 2026-07-04 01:03:12 CST
- 更新内容: 默认 3D 小人投影降低亮度并扩大扩散，让左侧紫光退回背景氛围。
-*/
-/*
- 更新时间: 2026-07-03 18:48:43 CST
- 更新内容: 移除旧 DOM 图片栈样式，改为默认显示透明 3D Canvas，并仅在失败状态显示 PNG 兜底图。
+ 更新时间: 2026-07-06 10:49:22 CST
+ 更新内容: 小人舞台改为 imagegen 透明参考图驱动，并保留鼠标跟随和动作状态动画。
 */
 .mascot-3d-stage {
   --mascot-pointer-x: 0;
   --mascot-pointer-y: 0;
   --mascot-pointer-translate-x: 0px;
   --mascot-pointer-translate-y: 0px;
-  --mascot-pointer-root-tilt: 0deg;
-  --mascot-pointer-head-x: 0px;
-  --mascot-pointer-head-y: 0px;
-  --mascot-pointer-head-tilt: 0deg;
+  --mascot-pointer-tilt: 0deg;
   position: relative;
   display: block;
   width: 112px;
-  aspect-ratio: 1 / 1.36;
+  aspect-ratio: 1 / 1.34;
   overflow: visible;
   pointer-events: none;
   filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .38)) drop-shadow(0 0 30px rgba(114, 77, 255, .24));
@@ -40,390 +21,122 @@
   width: 96px;
 }
 
-.mascot-layered-rig {
+.mascot-imagegen-asset {
   display: block;
   width: 100%;
   height: 100%;
-  overflow: visible;
+  max-width: none;
+  object-fit: contain;
+  object-position: center bottom;
+  user-select: none;
+  -webkit-user-drag: none;
+  transform-origin: 50% 82%;
+  will-change: transform, filter;
 }
 
-.mascot-bone,
-.mascot-layered-rig g,
-.mascot-layered-rig path,
-.mascot-layered-rig ellipse,
-.mascot-layered-rig circle,
-.mascot-layered-rig text {
-  transform-box: fill-box;
+.mascot-action--idle .mascot-imagegen-asset {
+  animation: mascot-imagegen-idle 4.2s ease-in-out infinite;
 }
 
-.mascot-bone {
-  will-change: transform;
+.mascot-action--wave .mascot-imagegen-asset {
+  animation: mascot-imagegen-wave .95s ease-in-out infinite;
 }
 
-.mascot-bone--root {
-  transform-origin: 120px 170px;
-  animation: mascot-float 4.2s ease-in-out infinite;
+.mascot-action--talk .mascot-imagegen-asset,
+.mascot-3d-stage--active .mascot-imagegen-asset {
+  animation: mascot-imagegen-talk .72s ease-in-out infinite;
 }
 
-.mascot-bone--head {
-  transform-origin: 120px 128px;
-  transform: translate3d(var(--mascot-pointer-head-x), var(--mascot-pointer-head-y), 0)
-    rotate(var(--mascot-pointer-head-tilt));
-  transition: transform .2s ease;
+.mascot-action--think .mascot-imagegen-asset {
+  transform: translate3d(var(--mascot-pointer-translate-x), calc(var(--mascot-pointer-translate-y) + 1px), 0)
+    rotate(calc(var(--mascot-pointer-tilt) - 4deg));
 }
 
-.mascot-bone--body {
-  transform-origin: 120px 174px;
+.mascot-action--alert .mascot-imagegen-asset {
+  animation: mascot-imagegen-alert .62s ease-in-out infinite;
 }
 
-.mascot-bone--left-arm {
-  transform-origin: 81px 163px;
+.mascot-action--celebrate .mascot-imagegen-asset,
+.mascot-action--click .mascot-imagegen-asset {
+  animation: mascot-imagegen-celebrate .74s ease-in-out infinite;
 }
 
-.mascot-bone--right-arm {
-  transform-origin: 166px 163px;
-}
-
-.mascot-bone--left-leg {
-  transform-origin: 101px 206px;
-}
-
-.mascot-bone--right-leg {
-  transform-origin: 140px 206px;
-}
-
-.mascot-bone--mouth {
-  transform-origin: 120px 124px;
-}
-
-.mascot-bone--eyes {
-  transform-origin: 120px 101px;
-  animation: mascot-blink 5.8s steps(1, end) infinite;
-}
-
-.mascot-ground-shadow {
-  fill: rgba(8, 8, 18, .26);
-}
-
-.mascot-suit-body,
-.mascot-suit-limb {
-  fill: url(#suitGradient);
-  stroke: rgba(111, 67, 255, .45);
-  stroke-width: 2.2;
-}
-
-.mascot-purple-yoke,
-.mascot-purple-boot,
-.mascot-purple-cuff {
-  fill: #6f43ff;
-  stroke: #4b2ad8;
-  stroke-width: 1.4;
-}
-
-.mascot-layer--helmet-glass {
-  opacity: .92;
-}
-
-.mascot-helmet-glass {
-  fill: url(#helmetGlassGradient);
-  stroke: rgba(167, 243, 255, .88);
-  stroke-width: 4;
-  filter: url(#glassGlow);
-}
-
-.mascot-layer--helmet-shell {
-  fill: url(#helmetShellGradient);
-  stroke: rgba(55, 22, 190, .6);
-  stroke-width: 1.6;
-}
-
-.helmet-forehead-wave {
-  opacity: .96;
-}
-
-.mascot-layer--face {
-  fill: url(#faceGradient);
-  stroke: rgba(255, 255, 255, .82);
-  stroke-width: 1.2;
-}
-
-.mascot-layer--eye {
-  fill: #061642;
-  stroke: rgba(255, 255, 255, .18);
-  stroke-width: 1;
-}
-
-.mascot-eye-spark {
-  fill: rgba(255, 255, 255, .92);
-}
-
-.mascot-layer--cheek {
-  fill: url(#cheekGradient);
-}
-
-.mascot-layer--smile {
-  fill: none;
-  stroke: #050719;
-  stroke-width: 6;
-  stroke-linecap: round;
-}
-
-.mascot-earcup {
-  fill: #edf6ff;
-  stroke: rgba(139, 233, 255, .64);
-  stroke-width: 2.4;
-}
-
-.mascot-earcup-core {
-  fill: #6f43ff;
-  stroke: rgba(255, 255, 255, .5);
-  stroke-width: 1.4;
-}
-
-.mascot-ear-logo,
-.mascot-layer--helmet-logo {
-  fill: #fff;
-}
-
-.mascot-layer--microphone {
-  fill: none;
-  stroke: #07091a;
-  stroke-width: 5;
-  stroke-linecap: round;
-}
-
-.mic-tip {
-  fill: #0a1027;
-  stroke: rgba(255, 255, 255, .24);
-  stroke-width: 1;
-}
-
-.mascot-ai-badge {
-  fill: #724dff;
-  stroke: rgba(255, 255, 255, .88);
-  stroke-width: 3;
-}
-
-.mascot-ai-badge-ring {
-  fill: none;
-  stroke: rgba(255, 255, 255, .54);
-  stroke-width: 2;
-}
-
-.mascot-ai-badge-text {
-  fill: #fff;
-  font-size: 26px;
-  font-weight: 900;
-  letter-spacing: 0;
-}
-
-.mascot-panel-line {
-  fill: none;
-  stroke: rgba(90, 130, 255, .7);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.mascot-panel-line--glow,
-.mascot-cyan-slot {
-  fill: none;
-  stroke: url(#cyanGlowGradient);
-  stroke-width: 3;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 4px rgba(86, 223, 255, .55));
-}
-
-.mascot-layer--helmet-highlight {
-  fill: rgba(255, 255, 255, .72);
-  opacity: .7;
-  mix-blend-mode: screen;
-}
-
-.mascot-helmet-rim,
-.mascot-glass-edge {
-  fill: none;
-  stroke: rgba(255, 255, 255, .58);
-  stroke-width: 3;
-  opacity: .78;
-}
-
-.mascot-glass-edge {
-  stroke: rgba(167, 243, 255, .68);
-  stroke-width: 2;
-}
-
-.mascot-action--idle .mascot-bone--head {
-  animation: mascot-head-idle 4.4s ease-in-out infinite;
-}
-
-.mascot-action--wave .mascot-bone--right-arm {
-  animation: mascot-wave-arm .9s ease-in-out infinite;
-}
-
-.mascot-action--wave .mascot-bone--head {
-  animation: mascot-head-idle 2.8s ease-in-out infinite;
-}
-
-.mascot-action--talk .mascot-bone--mouth,
-.mascot-3d-stage--active .mascot-bone--mouth {
-  animation: mascot-talk-mouth .46s ease-in-out infinite;
-}
-
-.mascot-action--talk .mascot-bone--body,
-.mascot-3d-stage--active .mascot-bone--body {
-  animation: mascot-talk-body 1.1s ease-in-out infinite;
-}
-
-.mascot-action--think .mascot-bone--head {
-  transform: translate3d(calc(var(--mascot-pointer-head-x) - 3px), calc(var(--mascot-pointer-head-y) + 1px), 0)
-    rotate(calc(var(--mascot-pointer-head-tilt) - 5deg));
-}
-
-.mascot-action--think .mascot-bone--right-arm {
-  transform: rotate(-16deg) translate3d(-3px, -1px, 0);
-}
-
-.mascot-action--alert .mascot-bone--root {
-  animation: mascot-alert-pulse .62s ease-in-out infinite;
-}
-
-.mascot-action--alert .mascot-bone--head {
-  transform: translate3d(var(--mascot-pointer-head-x), calc(var(--mascot-pointer-head-y) - 2px), 0)
-    rotate(calc(var(--mascot-pointer-head-tilt) + 2deg));
-}
-
-.mascot-action--celebrate .mascot-bone--left-arm,
-.mascot-action--celebrate .mascot-bone--right-arm,
-.mascot-action--click .mascot-bone--left-arm,
-.mascot-action--click .mascot-bone--right-arm {
-  animation: mascot-celebrate-arms .72s ease-in-out infinite;
-}
-
-.mascot-action--celebrate .mascot-bone--root,
-.mascot-action--click .mascot-bone--root {
-  animation: mascot-celebrate-hop .72s ease-in-out infinite;
-}
-
-@keyframes mascot-float {
+@keyframes mascot-imagegen-idle {
   0%,
   100% {
     transform: translate3d(var(--mascot-pointer-translate-x), var(--mascot-pointer-translate-y), 0)
-      rotate(calc(var(--mascot-pointer-root-tilt) - 1deg));
+      rotate(calc(var(--mascot-pointer-tilt) - 1deg));
   }
 
   50% {
     transform: translate3d(var(--mascot-pointer-translate-x), calc(var(--mascot-pointer-translate-y) - 7px), 0)
-      rotate(calc(var(--mascot-pointer-root-tilt) + 1deg));
+      rotate(calc(var(--mascot-pointer-tilt) + 1deg));
   }
 }
 
-@keyframes mascot-head-idle {
-  0%,
-  100% {
-    transform: translate3d(var(--mascot-pointer-head-x), var(--mascot-pointer-head-y), 0)
-      rotate(calc(var(--mascot-pointer-head-tilt) - 1.5deg));
-  }
-
-  50% {
-    transform: translate3d(calc(var(--mascot-pointer-head-x) + 1px), calc(var(--mascot-pointer-head-y) - 2px), 0)
-      rotate(calc(var(--mascot-pointer-head-tilt) + 2deg));
-  }
-}
-
-@keyframes mascot-blink {
-  0%,
-  88%,
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-
-  91% {
-    opacity: .48;
-    transform: translate3d(0, 2px, 0);
-  }
-}
-
-@keyframes mascot-wave-arm {
-  0%,
-  100% {
-    transform: rotate(-4deg) translate3d(0, 0, 0);
-  }
-
-  50% {
-    transform: rotate(-28deg) translate3d(-4px, -7px, 0);
-  }
-}
-
-@keyframes mascot-talk-mouth {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  50% {
-    transform: translate3d(0, 1px, 0) scale(1.14);
-  }
-}
-
-@keyframes mascot-talk-body {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) rotate(-1deg);
-  }
-
-  50% {
-    transform: translate3d(0, -2px, 0) rotate(1deg);
-  }
-}
-
-@keyframes mascot-alert-pulse {
+@keyframes mascot-imagegen-wave {
   0%,
   100% {
     transform: translate3d(var(--mascot-pointer-translate-x), var(--mascot-pointer-translate-y), 0)
-      rotate(calc(var(--mascot-pointer-root-tilt) - 2deg));
+      rotate(calc(var(--mascot-pointer-tilt) - 4deg));
   }
 
   50% {
-    transform: translate3d(var(--mascot-pointer-translate-x), calc(var(--mascot-pointer-translate-y) - 5px), 0)
-      rotate(calc(var(--mascot-pointer-root-tilt) + 3deg));
+    transform: translate3d(calc(var(--mascot-pointer-translate-x) + 3px), calc(var(--mascot-pointer-translate-y) - 8px), 0)
+      rotate(calc(var(--mascot-pointer-tilt) + 7deg));
   }
 }
 
-@keyframes mascot-celebrate-arms {
-  0%,
-  100% {
-    transform: rotate(0deg) translate3d(0, 0, 0);
-  }
-
-  50% {
-    transform: rotate(18deg) translate3d(0, -8px, 0);
-  }
-}
-
-@keyframes mascot-celebrate-hop {
+@keyframes mascot-imagegen-talk {
   0%,
   100% {
     transform: translate3d(var(--mascot-pointer-translate-x), var(--mascot-pointer-translate-y), 0)
-      rotate(calc(var(--mascot-pointer-root-tilt) - 1deg));
+      rotate(var(--mascot-pointer-tilt));
   }
 
   50% {
-    transform: translate3d(var(--mascot-pointer-translate-x), calc(var(--mascot-pointer-translate-y) - 12px), 0)
-      rotate(calc(var(--mascot-pointer-root-tilt) + 2deg));
+    transform: translate3d(var(--mascot-pointer-translate-x), calc(var(--mascot-pointer-translate-y) - 4px), 0)
+      rotate(calc(var(--mascot-pointer-tilt) + .8deg));
+  }
+}
+
+@keyframes mascot-imagegen-alert {
+  0%,
+  100% {
+    transform: translate3d(var(--mascot-pointer-translate-x), var(--mascot-pointer-translate-y), 0)
+      rotate(calc(var(--mascot-pointer-tilt) - 3deg));
+    filter: saturate(1);
+  }
+
+  50% {
+    transform: translate3d(var(--mascot-pointer-translate-x), calc(var(--mascot-pointer-translate-y) - 6px), 0)
+      rotate(calc(var(--mascot-pointer-tilt) + 3deg));
+    filter: saturate(1.22) brightness(1.06);
+  }
+}
+
+@keyframes mascot-imagegen-celebrate {
+  0%,
+  100% {
+    transform: translate3d(var(--mascot-pointer-translate-x), var(--mascot-pointer-translate-y), 0)
+      rotate(calc(var(--mascot-pointer-tilt) - 2deg));
+  }
+
+  50% {
+    transform: translate3d(var(--mascot-pointer-translate-x), calc(var(--mascot-pointer-translate-y) - 13px), 0)
+      rotate(calc(var(--mascot-pointer-tilt) + 4deg));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mascot-bone,
-  .mascot-action--idle .mascot-bone--head,
-  .mascot-action--wave .mascot-bone--right-arm,
-  .mascot-action--talk .mascot-bone--mouth,
-  .mascot-3d-stage--active .mascot-bone--mouth,
-  .mascot-action--alert .mascot-bone--root,
-  .mascot-action--celebrate .mascot-bone--root,
-  .mascot-action--click .mascot-bone--root {
+  .mascot-imagegen-asset,
+  .mascot-action--idle .mascot-imagegen-asset,
+  .mascot-action--wave .mascot-imagegen-asset,
+  .mascot-action--talk .mascot-imagegen-asset,
+  .mascot-3d-stage--active .mascot-imagegen-asset,
+  .mascot-action--alert .mascot-imagegen-asset,
+  .mascot-action--celebrate .mascot-imagegen-asset,
+  .mascot-action--click .mascot-imagegen-asset {
     animation: none;
   }
 }
