@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 15:17:44 CST
+ 更新内容: 算力用量分布环图外拉折线参照 ECharts 半环示例加长为两段折线。
+*/
+/*
  更新时间: 2026-07-06 15:03:18 CST
  更新内容: 算力用量分布环图外拉标签支持区间名和占比分行显示，避免右侧长标签被截断。
 */
@@ -72,6 +76,8 @@ const COMPUTE_DEFAULT_PIE_CENTER = ['55%', '52%'];
 const COMPUTE_DEFAULT_PIE_RADIUS = ['58%', '92%'];
 const COMPUTE_USAGE_DISTRIBUTION_PIE_CENTER = ['45%', '52%'];
 const COMPUTE_USAGE_DISTRIBUTION_PIE_RADIUS = ['54%', '86%'];
+const COMPUTE_DEFAULT_LABEL_LINE = { length: 12, length2: 16, smooth: false, };
+const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = { length: 18, length2: 32, smooth: false, };
 const COMPUTE_VERSION_RIGHT_LABEL_SLOTS = {
   '试用版': -82,
   '企业版': -42,
@@ -626,6 +632,7 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
   const isUsageDistributionPie = unitLabel === COMPUTE_USAGE_DISTRIBUTION_UNIT_LABEL;
   const pieCenter = isUsageDistributionPie ? COMPUTE_USAGE_DISTRIBUTION_PIE_CENTER : COMPUTE_DEFAULT_PIE_CENTER;
   const pieRadius = isUsageDistributionPie ? COMPUTE_USAGE_DISTRIBUTION_PIE_RADIUS : COMPUTE_DEFAULT_PIE_RADIUS;
+  const pieLabelLine = isUsageDistributionPie ? COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE : COMPUTE_DEFAULT_LABEL_LINE;
 
   return {
     backgroundColor: 'transparent',
@@ -688,6 +695,9 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
         },
         labelLine: {
           show: true,
+          length: pieLabelLine.length,
+          length2: pieLabelLine.length2,
+          smooth: pieLabelLine.smooth,
           lineStyle: { color: tokens.chartAxis, width: 1, opacity: .72 },
         },
         ...(naturalLabelLayout ? {} : { labelLayout: computePieLabelLayout }),
