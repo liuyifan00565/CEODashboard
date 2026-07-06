@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 17:29:34 CST
+ 更新内容: 年度节奏数据移除折线序列，仅保留胶囊条所需节奏点和剩余率。
+*/
+/*
  更新时间: 2026-07-06 10:48:16 CST
  更新内容: 模拟数据展示色收敛为银紫玫瑰、香槟目标、玫瑰风险与柔和辅助色，移除硬蓝和青绿主视觉。
 */
@@ -109,10 +113,11 @@ export const OPERATING_OVERVIEW_METRICS = {
   riskImpactGap: 36,
   annualTimeProgress: 50.0,
   annualPaceDelta: 3.8,
+  annualRemainingRate: +(100 - KPI_DERIVED.yearCompletion).toFixed(1),
   remainingMonths: 6,
-  remainingMonthlyRequired: 536,
+  remainingMonthlyRequired: Math.round(KPI_DERIVED.yearGap / 6),
   monthJudgement: '本月整体进度正常，但线下华东低于目标节奏，预计影响月度缺口 36万。',
-  annualJudgement: '当前年度完成率略高于时间进度，但线下华东连续低于目标，需优先恢复渠道回款。',
+  annualJudgement: '当前领先时间进度 3.8%，但线下华东连续低于目标节奏。',
 };
 
 // ===== 开户数趋势（经营总览，单位：户）=====
@@ -833,30 +838,6 @@ export function getAnnualRhythmPoints() {
     { label: META.monthLabel.replace(/^2026年/, ''), value: KPI.yearRecovered, tone: 'current' },
     { label: '12月目标', value: KPI.yearTarget, tone: 'target' },
   ];
-}
-
-export function getAnnualRhythmSeries() {
-  const rawCurrent = MONTHLY_TREND.reduce((sum, row) => sum + row.recovered, 0);
-  const scale = rawCurrent ? KPI.yearRecovered / rawCurrent : 1;
-  let cumulative = 0;
-  const actualValues = MONTHLY_TREND.map((row, index) => {
-    cumulative += row.recovered;
-    return index === MONTHLY_TREND.length - 1 ? KPI.yearRecovered : Math.round(cumulative * scale);
-  });
-  const futureLabels = ['7月', '8月', '9月', '10月', '11月', '12月目标'];
-  const labels = [...MONTHLY_TREND.map((row) => row.month), ...futureLabels];
-  const monthlyTargetStep = (KPI.yearTarget - KPI.yearRecovered) / futureLabels.length;
-  const targetValues = futureLabels.map((_, index) => Math.round(KPI.yearRecovered + monthlyTargetStep * (index + 1)));
-
-  return {
-    labels,
-    actual: [...actualValues, ...futureLabels.map(() => null)],
-    target: [
-      ...MONTHLY_TREND.slice(0, -1).map(() => null),
-      KPI.yearRecovered,
-      ...targetValues,
-    ],
-  };
 }
 
 // ===== KPI 二级卡片：按 销售维度 × 订单类型 × 年/月/日 的柱状数据 =====

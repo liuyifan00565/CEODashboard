@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 17:02:49 CST
+ 更新内容: 增加年度节奏胶囊条回归测试，要求移除折线图并展示四项节奏指标、完成/剩余胶囊和下半年月均 447 万。
+*/
+/*
  更新时间: 2026-07-06 10:48:16 CST
  更新内容: 布局守卫测试同步高级果味配色，覆盖银紫玫瑰高亮、玫瑰风险、香槟目标与算力容量冷蓝例外。
 */
@@ -998,32 +1002,35 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">年度经营进度<\/span>/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">年度节奏<\/span>/);
   assert.match(operatingOverviewSource, /年度累计回款/);
+  assert.match(operatingOverviewSource, /年度目标/);
   assert.match(operatingOverviewSource, /年度完成率/);
   assert.match(operatingOverviewSource, /时间进度/);
-  assert.match(operatingOverviewSource, /年度缺口/);
-  assert.match(operatingOverviewSource, /className="op-annual-grid"[\s\S]*?年度累计回款[\s\S]*?年度完成率[\s\S]*?年度缺口[\s\S]*?<\/div>\s*<p className="op-annual-note">/);
-  assert.doesNotMatch(operatingOverviewSource, /<span>时间进度<\/span>\s*<b>\{formatPct\(overviewMetrics\.annualTimeProgress\)\}<\/b>/);
-  assert.doesNotMatch(operatingOverviewSource, /<span>剩余月均需完成<\/span>/);
-  assert.match(operatingOverviewSource, /剩余 \{overviewMetrics\.remainingMonths\} 个月，月均仍需完成/);
-  assert.doesNotMatch(operatingOverviewSource, /<span>年度目标<\/span>/);
+  assert.doesNotMatch(operatingOverviewSource, /年度缺口/);
+  assert.match(operatingOverviewSource, /className="op-annual-grid"[\s\S]*?年度累计回款[\s\S]*?年度目标[\s\S]*?年度完成率[\s\S]*?时间进度[\s\S]*?<\/div>\s*<div className="op-annual-capsule"/);
+  assert.match(operatingOverviewSource, /<span>已完成 \{formatPct\(KPI_DERIVED\.yearCompletion\)\}<\/span>/);
+  assert.match(operatingOverviewSource, /<span>剩余 \{formatPct\(overviewMetrics\.annualRemainingRate\)\}<\/span>/);
+  assert.match(operatingOverviewSource, /当前领先时间进度 \{formatPct\(overviewMetrics\.annualPaceDelta\)\}，但线下华东连续低于目标节奏。/);
+  assert.match(operatingOverviewSource, /下半年月均需完成 \{formatWan\(overviewMetrics\.remainingMonthlyRequired\)\} 万。/);
   assert.doesNotMatch(operatingOverviewSource, /<span>节奏偏差<\/span>/);
-  assert.match(operatingOverviewSource, /function shouldShowActualAnnualLabel/);
-  assert.match(operatingOverviewSource, /dataIndex === 0 \|\| dataIndex === series\.actual\.findLastIndex/);
-  assert.match(operatingOverviewSource, /dataIndex !== series\.labels\.length - 1/);
-  assert.match(operatingOverviewSource, /当前年度完成率略高于时间进度，但线下华东连续低于目标，需优先恢复渠道回款。/);
+  assert.doesNotMatch(operatingOverviewSource, /function shouldShowActualAnnualLabel/);
+  assert.doesNotMatch(operatingOverviewSource, /annualRhythmOption/);
+  assert.doesNotMatch(operatingOverviewSource, /getAnnualRhythmSeries/);
+  assert.doesNotMatch(operatingOverviewSource, /<EChart option=\{annualOption\}/);
+  assert.doesNotMatch(operatingOverviewSource, /当前年度完成率略高于时间进度/);
   assert.match(operatingOverviewSource, /明细 &gt;/);
   assert.doesNotMatch(operatingOverviewSource, /查看年度明细/);
   assert.match(operatingOverviewSource, /onOpenKpi\(yearKpiCard\)/);
   assert.match(operatingOverviewSource, /getOperatingOverviewMetrics/);
-  assert.match(operatingOverviewSource, /getAnnualRhythmSeries/);
   assert.match(operatingOverviewSource, /<ChannelPanel title="渠道完成情况" showPeriodSwitch \/>/);
   assert.match(operatingOverviewCss, /\.op-overview/);
   assert.match(operatingOverviewCss, /background:\s*var\(--dashboard-card-bg\);/);
   assert.match(operatingOverviewCss, /border:\s*1px solid var\(--dashboard-card-border\);/);
   assert.match(operatingOverviewCss, /backdrop-filter:\s*var\(--dashboard-card-blur\);/);
   assert.match(operatingOverviewCss, /box-shadow:\s*var\(--dashboard-card-shadow\);/);
-  assert.match(operatingOverviewCss, /\.op-annual-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/);
-  assert.match(operatingOverviewCss, /\.op-annual-note\s*\{/);
+  assert.match(operatingOverviewCss, /\.op-annual-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-capsule\s*\{/);
+  assert.match(operatingOverviewCss, /\.op-annual-fill\s*\{/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-annual-chart\s*\{/);
   assert.match(operatingOverviewCss, /\.op-summary-cell:nth-child\(2\),\s*\.op-summary-cell:nth-child\(3\)/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-summary-cell\s*\{[\s\S]*?border-left:\s*1px solid var\(--line-2\);/);
   assert.doesNotMatch(appSource, /recoveryKpiCards/);
@@ -1045,16 +1052,15 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   assert.doesNotMatch(summaryGridBlock, /rgba\(255,255,255,\.075\)/);
 });
 
-test('gives the annual rhythm chart softer context and more breathing room', () => {
-  assert.match(operatingOverviewSource, /const annualMutedText = tokens\.theme === 'light' \? 'rgba\(38,42,58,\.45\)' : 'rgba\(247,248,252,\.45\)';/);
-  assert.match(operatingOverviewSource, /const annualGridLine = tokens\.theme === 'light' \? 'rgba\(50,56,78,\.05\)' : 'rgba\(255,255,255,\.04\)';/);
-  assert.match(operatingOverviewSource, /grid:\s*\{ left: 8, right: 28, top: 36, bottom: 30, containLabel: true \}/);
-  assert.match(operatingOverviewSource, /legend:\s*\{[\s\S]*?textStyle:\s*\{ color: annualMutedText, fontSize: 11 \}/);
-  assert.match(operatingOverviewSource, /axisLine:\s*\{ lineStyle:\s*\{ color: annualGridLine \} \}/);
-  assert.match(operatingOverviewSource, /splitLine:\s*\{ lineStyle:\s*\{ color: annualGridLine \} \}/);
-  assert.match(operatingOverviewSource, /offset:\s*\[12, -10\]/);
-  assert.match(operatingOverviewSource, /<EChart option=\{annualOption\} style=\{\{ height: 218 \}\} \/>/);
-  assert.match(operatingOverviewCss, /\.op-annual-chart\s*\{[\s\S]*?min-height:\s*218px;[\s\S]*?margin-bottom:\s*10px;/);
+test('replaces the annual rhythm chart with a glass progress capsule', () => {
+  assert.match(operatingOverviewSource, /const annualCapsuleWidth = `\$\{Math\.min\(KPI_DERIVED\.yearCompletion, 100\)\}%`;/);
+  assert.match(operatingOverviewSource, /className="op-annual-capsule"/);
+  assert.match(operatingOverviewSource, /className="op-annual-fill" style=\{\{ width: annualCapsuleWidth \}\}/);
+  assert.match(operatingOverviewSource, /aria-label=\{`年度完成率 \$\{formatPct\(KPI_DERIVED\.yearCompletion\)\}，剩余 \$\{formatPct\(overviewMetrics\.annualRemainingRate\)\}`\}/);
+  assert.match(operatingOverviewCss, /\.op-annual-capsule\s*\{[\s\S]*?height:\s*42px;[\s\S]*?border-radius:\s*999px;[\s\S]*?background:\s*var\(--bar-track\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-fill\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(142,134,255,\.86\), rgba\(228,184,215,\.72\)\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-capsule-labels\s*\{[\s\S]*?justify-content:\s*space-between;/);
+  assert.doesNotMatch(operatingOverviewSource, /import EChart from '\.\/EChart';/);
 });
 
 test('uses low-saturation dashboard controls in focused secondary interfaces', () => {

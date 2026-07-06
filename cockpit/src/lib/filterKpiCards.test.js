@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 17:29:34 CST
+ 更新内容: 搜索关键词测试同步年度进度胶囊条，覆盖完成率、剩余率和下半年月均。
+*/
+/*
  更新时间: 2026-07-05 22:59:45 CST
  更新内容: 搜索关键词同步年度节奏最终版，保留辅助说明并移除不可见节奏偏差和年度贡献。
 */
@@ -113,10 +117,14 @@ test('adds fused operating overview section text to KPI search keywords', () => 
   assert.ok(month.keywords.includes('影响月度缺口 36万'));
   assert.ok(!month.keywords.includes('本月目标完成情况'));
   assert.ok(annual.keywords.includes('年度节奏'));
-  assert.ok(annual.keywords.includes('年度累计'));
+  assert.ok(annual.keywords.includes('年度累计回款'));
+  assert.ok(annual.keywords.includes('年度完成率'));
   assert.ok(annual.keywords.includes('明细 >'));
-  assert.ok(annual.keywords.includes('月均仍需完成'));
+  assert.ok(annual.keywords.includes('已完成 53.8%'));
+  assert.ok(annual.keywords.includes('剩余 46.2%'));
+  assert.ok(annual.keywords.includes('下半年月均需完成 447 万'));
   assert.ok(!annual.keywords.includes('节奏偏差 +3.8%'));
+  assert.ok(!annual.keywords.includes('月均仍需完成'));
   assert.ok(annual.keywords.includes('渠道完成情况'));
   assert.ok(!annual.keywords.includes('年度贡献'));
   assert.ok(!annual.keywords.includes('本年目标完成情况'));

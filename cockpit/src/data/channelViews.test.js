@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 17:29:34 CST
+ 更新内容: 年度节奏回归测试移除折线序列断言，仅保留胶囊条口径所需数据。
+*/
+/*
  更新时间: 2026-07-05 22:59:45 CST
  更新内容: 增加年度节奏辅助说明剩余月份字段回归测试。
 */
@@ -60,7 +64,6 @@ import {
   getChannelTrend,
   getChannelCompletionRows,
   getAnnualRhythmPoints,
-  getAnnualRhythmSeries,
   getOperatingOverviewMetrics,
   getDashboardChannelKey,
   getDeliveryRows,
@@ -339,28 +342,21 @@ test('returns operating overview pace metrics for dense executive judgement', ()
   assert.equal(metrics.riskImpactGap, 36);
   assert.equal(metrics.annualTimeProgress, 50);
   assert.equal(metrics.annualPaceDelta, 3.8);
+  assert.equal(metrics.annualRemainingRate, 46.2);
   assert.equal(metrics.remainingMonths, 6);
-  assert.equal(metrics.remainingMonthlyRequired, 536);
+  assert.equal(metrics.remainingMonthlyRequired, 447);
   assert.equal(metrics.monthJudgement, '本月整体进度正常，但线下华东低于目标节奏，预计影响月度缺口 36万。');
-  assert.equal(metrics.annualJudgement, '当前年度完成率略高于时间进度，但线下华东连续低于目标，需优先恢复渠道回款。');
+  assert.equal(metrics.annualJudgement, '当前领先时间进度 3.8%，但线下华东连续低于目标节奏。');
 });
 
-test('returns annual rhythm actual and target series anchored to annual KPI values', () => {
+test('returns annual rhythm points anchored to annual KPI values', () => {
   const points = getAnnualRhythmPoints();
-  const series = getAnnualRhythmSeries();
 
   assert.deepEqual(points.map((point) => point.label), ['1月', '6月', '12月目标']);
   assert.equal(points.find((point) => point.label === '6月').value, 3120);
   assert.equal(points.find((point) => point.label === '12月目标').value, 5800);
   assert.equal(points.find((point) => point.label === '6月').tone, 'current');
   assert.equal(points.find((point) => point.label === '12月目标').tone, 'target');
-  assert.deepEqual(series.labels, ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月目标']);
-  assert.equal(series.actual[0], 437);
-  assert.equal(series.actual[5], 3120);
-  assert.equal(series.actual[6], null);
-  assert.equal(series.target[4], null);
-  assert.equal(series.target[5], 3120);
-  assert.equal(series.target.at(-1), 5800);
 });
 
 test('returns sorted sales member rows with personal targets and progress', () => {

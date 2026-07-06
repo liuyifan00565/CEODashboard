@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 17:02:49 CST  更新内容: 年度节奏移除折线图样式，新增玻璃年度进度胶囊条。 */
 /* 更新时间: 2026-07-06 00:20:59 CST  更新内容: 经营总览所有卡片复用月度趋势悬浮亮边玻璃反馈。 */
 /* 更新时间: 2026-07-06 00:00:23 CST  更新内容: 固定经营总览搜索命中外壳的网格区域，避免搜索时卡片位置和尺寸跳变。 */
 /* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 经营进度顶部标题降级、弱化指标分隔线，并增加年度节奏图表底部呼吸空间。 */
@@ -67,7 +68,7 @@
   grid-area: annual;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .op-channel-wrap {
@@ -255,8 +256,8 @@
 
 .op-annual-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 13px 16px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 13px 15px;
   padding-top: 4px;
 }
 
@@ -275,16 +276,50 @@
 }
 
 .op-annual-note {
-  margin: -1px 0 1px;
+  margin: -7px 0 0;
   color: rgba(247,248,252,.56);
   font-size: 13px;
   font-weight: 650;
   line-height: 1.45;
 }
 
-.op-annual-chart {
-  min-height: 218px;
-  margin-bottom: 10px;
+.op-annual-capsule {
+  position: relative;
+  height: 42px;
+  border-radius: 999px;
+  background: var(--bar-track);
+  border: 1px solid rgba(255,255,255,.085);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -16px 30px rgba(0,0,0,.12);
+  overflow: hidden;
+}
+
+.op-annual-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  min-width: 42px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(142,134,255,.86), rgba(228,184,215,.72));
+  box-shadow: 0 0 22px rgba(184,156,255,.16), inset 0 1px 0 rgba(255,255,255,.18);
+}
+
+.op-annual-capsule-labels {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 0 16px;
+  color: rgba(255,255,255,.9);
+  font-size: 13px;
+  font-weight: 760;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.op-annual-capsule-labels span:last-child {
+  color: rgba(247,248,252,.62);
 }
 
 .op-judgement {
@@ -323,7 +358,7 @@
 
 @media (max-width: 860px) {
   .op-annual-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
