@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 13:37:20 CST  更新内容: 月度经营趋势完成率读数增加贴片底色和顶部余量，提升高低波动数据的清晰度。 */
 /* 更新时间: 2026-07-06 12:25:08 CST  更新内容: 月度经营趋势完成率折线新增动态轴、错位标签和异常数据保护。 */
 /* 更新时间: 2026-06-29 10:45:53  更新内容: 月度经营趋势图例改为静态说明，并将目标与回款柱重叠展示。 */
 import EChart from './EChart';
@@ -30,11 +31,16 @@ function normalizeTrendRows(trend) {
 
 function completionAxisMax(values) {
   const maxValue = Math.max(100, ...values.map(safeTrendNumber));
-  return Math.ceil((maxValue + 14) / 20) * 20;
+  const headroom = Math.max(24, maxValue * 0.18);
+  return Math.ceil((maxValue + headroom) / 20) * 20;
 }
 
 function completionLabelLayout(params) {
-  const y = Math.max(6, Number(params.labelRect?.y ?? 6));
+  const labelY = Number(params.labelRect?.y ?? 8);
+  const pointY = Number(params.y ?? labelY);
+  const y = params.dataIndex % 2 === 0
+    ? Math.max(8, labelY)
+    : Math.max(pointY + 10, labelY);
   return {
     y,
     hide: false,
@@ -69,7 +75,7 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
       textStyle: { color: faint, fontSize: 14 },
       data: ['回款', '目标', '完成率%'],
     },
-    grid: { top: 54, left: 8, right: 18, bottom: 10, containLabel: true },
+    grid: { top: 68, left: 8, right: 24, bottom: 12, containLabel: true },
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
@@ -158,13 +164,21 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         showAllSymbol: true,
         clip: false,
         lineStyle: { color: COLOR.good, width: 2 },
-        itemStyle: { color: ({ value }) => progressColor(value, tokens.progressMid), borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
+        itemStyle: { color: ({ value }) => progressColor(value, tokens.progressMid), borderColor: tokens.chartPointBorder, borderWidth: 2 },
+        z: 8,
         label: {
           show: true,
           position: (params) => (params.dataIndex % 2 === 0 ? 'top' : 'bottom'),
           color: ({ value }) => progressColor(value, tokens.progressMid),
+          backgroundColor: tokens.chartTooltipBg,
+          borderColor: tokens.chartTooltipBorder,
+          borderWidth: 1,
+          borderRadius: 5,
+          padding: [3, 6],
           fontSize: 14,
-          distance: 8,
+          fontWeight: 700,
+          lineHeight: 17,
+          distance: 12,
           formatter: ({ value }) => `${Number(value).toFixed(1)}%`,
         },
         labelLayout: completionLabelLayout,
