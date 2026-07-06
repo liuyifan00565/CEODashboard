@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-06 18:50:20 CST
+ 更新内容: KPI 卡片改为每次渲染读取当前运行时数据，消除真实数据版本号在 useMemo 中的多余依赖。
+*/
+/*
+ 更新时间: 2026-07-06 18:37:58 CST
+ 更新内容: 应用启动时先加载真实 MySQL dashboard 数据，成功覆盖运行时数据后再渲染看板。
+*/
+/*
  更新时间: 2026-07-06 10:49:52 CST
  更新内容: 顶部福客品牌胶囊滚动后折叠为一行 sticky 身份标识，并在深滚动时弱化为极简版本。
 */
@@ -114,7 +122,7 @@
  Update time: 2026-07-02 18:16:13 CST
  Update content: Restore DotField to solid purple background dots.
 */
-import { useMemo, useState, useRef, useLayoutEffect } from 'react';
+import { useMemo, useState, useRef, useLayoutEffect, useEffect } from 'react';
 import gsap from 'gsap';
 
 import AIAnalysisWidget from './components/AIAnalysisWidget';
@@ -134,6 +142,7 @@ import MaintenancePage from './components/MaintenancePage';
 import OperatingOverview from './components/OperatingOverview';
 
 import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
+import { loadDashboardData } from './data/liveData';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
 import { matchesSearchTerm } from './lib/searchMatch';
@@ -178,6 +187,8 @@ export default function App() {
   const [openCard, setOpenCard] = useState(null);
   const [companionCue, setCompanionCue] = useState(null);
   const [brandMode, setBrandMode] = useState('full');
+  const [dashboardDataState, setDashboardDataState] = useState({ status: 'loading', error: '' });
+  const [dashboardDataVersion, setDashboardDataVersion] = useState(0);
 
   const gridRef = useRef(null);
   const secondaryGridRef = useRef(null);
@@ -198,10 +209,9 @@ export default function App() {
   const sidebarItems = maintenanceMode ? MAINTENANCE_SIDEBAR_ITEMS : DASHBOARD_SIDEBAR_ITEMS;
   const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const contentKey = maintenanceMode ? activeMaintenanceMenu : activeMenu;
-  const filteredKpiCards = useMemo(
-    () => getFilteredKpiCards({ dim, dateRange, channel: activeChannelKey }),
-    [dim, dateRange, activeChannelKey]
-  );
+  const contentRenderKey = `${contentKey}-${dashboardDataVersion}`;
+  const isDashboardDataReady = dashboardDataState.status === 'ready';
+  const filteredKpiCards = getFilteredKpiCards({ dim, dateRange, channel: activeChannelKey });
   const monthKpiCard = filteredKpiCards.find((card) => card.key === 'month');
   const yearKpiCard = filteredKpiCards.find((card) => card.key === 'year');
   const financeKpiCards = filteredKpiCards.filter((card) => card.key === 'cost');
@@ -209,6 +219,25 @@ export default function App() {
     () => filteredKpiCards.find((card) => card.key === openCard?.key) ?? openCard ?? null,
     [filteredKpiCards, openCard]
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    loadDashboardData()
+      .then(() => {
+        if (cancelled) return;
+        setDashboardDataVersion((version) => version + 1);
+        setDashboardDataState({ status: 'ready', error: '' });
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setDashboardDataState({ status: 'error', error: err.message || '真实数据库数据加载失败' });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -249,7 +278,7 @@ export default function App() {
       window.removeEventListener('scroll', requestBrandMode);
       window.removeEventListener('resize', requestBrandMode);
     };
-  }, [contentKey]);
+  }, [contentKey, dashboardDataVersion]);
 
   function scrollDashboardIntoView() {
     pendingMenuScrollRef.current = false;
@@ -348,7 +377,7 @@ export default function App() {
       matches[currentIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     }
     pendingSearchScrollRef.current = false;
-  }, [searchTerm, activeSearchIndex, contentKey, isComputePage, filteredKpiCards]);
+  }, [searchTerm, activeSearchIndex, contentKey, isComputePage, filteredKpiCards, dashboardDataVersion]);
 
   // GSAP 入场：KPI 卡 + 面板 stagger fade-up（菜单切换时重放）
   useLayoutEffect(() => {
@@ -375,7 +404,23 @@ export default function App() {
       if (scrollFrame) cancelAnimationFrame(scrollFrame);
       ctx.revert();
     };
-  }, [contentKey]);
+  }, [contentKey, dashboardDataVersion]);
+
+  if (!isDashboardDataReady) {
+    return (
+      <div className="app">
+        <div className="bg" aria-hidden="true" />
+        <main className="dash-data-state" role={dashboardDataState.status === 'error' ? 'alert' : 'status'}>
+          <b>{dashboardDataState.status === 'loading' ? '正在加载数据库数据' : '真实数据库数据加载失败'}</b>
+          <span>
+            {dashboardDataState.status === 'loading'
+              ? '正在从 ceo_dashboard 读取经营、渠道、算力和交付数据。'
+              : dashboardDataState.error}
+          </span>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
@@ -459,7 +504,7 @@ export default function App() {
             </div>
           </header>
 
-          <div className="dash-content" ref={gridRef} key={contentKey}>
+          <div className="dash-content" ref={gridRef} key={contentRenderKey}>
             {isMaintenancePage ? (
               <MaintenancePage activePage={activeMaintenanceMenu} onBack={handleMaintenanceBack} />
             ) : isComputePage ? (

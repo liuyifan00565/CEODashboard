@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 18:37:58 CST
+ 更新内容: 生产服务新增 /api/dashboard-data 真实 MySQL 数据接口，供前端替换 mock 数据。
+*/
+/*
  更新时间: 2026-07-01 11:19:49 CST
  更新内容: 生产服务入口新增 /api/ai/hover-cue 千问悬浮气泡接口，并保留静态 dist 与 AI 分析接口。
 */
@@ -9,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 import { handleAiAnalyzeRequest } from './server/dashscope.js';
 import { handleAiHoverCueRequest } from './server/hoverCue.js';
+import { handleDashboardDataRequest } from './server/dashboardData.js';
 import { loadLocalEnv } from './server/env.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -75,6 +80,11 @@ const server = http.createServer((req, res) => {
       }
       res.end(`AI 分析接口异常：${err.message}`);
     });
+    return;
+  }
+
+  if (url.pathname === '/api/dashboard-data') {
+    handleDashboardDataRequest(req, res);
     return;
   }
 

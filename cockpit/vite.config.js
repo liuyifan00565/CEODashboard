@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 18:37:58 CST
+ 更新内容: Vite 开发服务新增 /api/dashboard-data，保证开发与生产都读取真实 MySQL 数据。
+*/
+/*
  更新时间: 2026-07-01 11:19:49 CST
  更新内容: 为 Vite 开发服务接入 /api/ai/analyze 流式分析接口和 /api/ai/hover-cue 悬浮气泡接口；
           保留 @ -> src 路径别名以支持 shadcn registry 组件。
@@ -9,6 +13,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { handleAiAnalyzeRequest } from './server/dashscope.js'
 import { handleAiHoverCueRequest } from './server/hoverCue.js'
+import { handleDashboardDataRequest } from './server/dashboardData.js'
 import { loadLocalEnv } from './server/env.js'
 
 const projectRoot = fileURLToPath(new URL('.', import.meta.url))
@@ -36,6 +41,9 @@ export default defineConfig({
             }
             res.end(JSON.stringify({ error: `AI 悬浮气泡接口异常：${err.message}` }))
           })
+        })
+        server.middlewares.use('/api/dashboard-data', (req, res) => {
+          handleDashboardDataRequest(req, res)
         })
       },
     },

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 18:37:58 CST
+ 更新内容: 支持真实 MySQL dashboard 快照覆盖运行时数据，页面加载后不再固定使用 mock 数字。
+*/
+/*
  更新时间: 2026-07-06 17:29:34 CST
  更新内容: 年度节奏数据移除折线序列，仅保留胶囊条所需节奏点和剩余率。
 */
@@ -728,11 +732,10 @@ const OPENING_ACCOUNT_TRENDS = {
   },
 };
 
-const SALES_KEY_SET = new Set(CHANNELS.map((channel) => channel.key));
-
 function normalizeSalesKeys(salesKeys) {
+  const salesKeySet = new Set(CHANNELS.map((channel) => channel.key));
   const selected = Array.isArray(salesKeys)
-    ? salesKeys.filter((key) => SALES_KEY_SET.has(key))
+    ? salesKeys.filter((key) => salesKeySet.has(key))
     : [];
   return selected.length ? selected : CHANNELS.map((channel) => channel.key);
 }
@@ -901,11 +904,17 @@ const DELIVERY_ENGINEERS = [
   { key: 'delivery-05', name: '周雨晴', orders: 11, prices: [1.68, 1.68, 3.98, 1.68, 3.98, 1.68, 1.68, 3.98, 1.68, 3.98, 1.68] },
 ];
 
+let LIVE_DELIVERY_ROWS = null;
+
 function roundMoney(value) {
   return Math.round(value * 10) / 10;
 }
 
 export function getDeliveryRows() {
+  if (Array.isArray(LIVE_DELIVERY_ROWS)) {
+    return [...LIVE_DELIVERY_ROWS].sort((a, b) => b.completion - a.completion);
+  }
+
   return DELIVERY_ENGINEERS.map((row) => {
     const valuePerPerson = roundMoney(row.prices.reduce((sum, price) => sum + price, 0));
     const averageOrderPrice = roundMoney(valuePerPerson / row.orders);
@@ -1160,4 +1169,153 @@ export function getDashboardChannelKey(menuKey = 'overview') {
 
 export function getDashboardMenuLabel(menuKey = 'overview') {
   return MENU.find((item) => item.key === menuKey)?.name ?? MENU[0].name;
+}
+
+function round0(value) {
+  return Math.round(Number(value) || 0);
+}
+
+function round1(value) {
+  return Math.round((Number(value) || 0) * 10) / 10;
+}
+
+function replaceArray(target, source = []) {
+  target.splice(0, target.length, ...source);
+}
+
+function assignObject(target, source = {}) {
+  Object.keys(target).forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      target[key] = source[key];
+    }
+  });
+}
+
+function withRuntimeCompletion(channel) {
+  const recovered = round0(channel.recovered);
+  const target = round0(channel.target);
+  return {
+    ...channel,
+    recovered,
+    target,
+    completion: target ? round1((recovered / target) * 100) : 0,
+  };
+}
+
+function updateKpiCardsFromRuntimeData() {
+  const renewalOverview = calculateRenewalOverview(RENEWAL_ROWS, { version: 'all', period: 'month' });
+  const updates = {
+    month: {
+      value: KPI.monthRecovered,
+      sub: `本月目标 ${KPI.monthTarget} 万`,
+      progress: KPI_DERIVED.monthCompletion,
+      gap: KPI_DERIVED.monthGap,
+      delta: KPI_DERIVED.monthMoM,
+    },
+    year: {
+      value: KPI.yearRecovered,
+      sub: `年度目标 ${KPI.yearTarget} 万`,
+      progress: KPI_DERIVED.yearCompletion,
+      gap: KPI_DERIVED.yearGap,
+      delta: KPI_DERIVED.yearYoY,
+    },
+    cost: {
+      value: KPI.totalCost,
+      sub: `广告 ${KPI.adCost} 万 + 人力 ${KPI.laborCost} 万 · 费比 ${KPI_DERIVED.costRatio}%`,
+    },
+    renewal: {
+      value: renewalOverview.rate,
+      sub: `到期 ${renewalOverview.due} 单 · 已续 ${renewalOverview.renewed} 单 · 续费 ${renewalOverview.revenue} 万`,
+      progress: renewalOverview.rate,
+      delta: renewalOverview.delta,
+    },
+  };
+
+  KPI_CARDS.forEach((card) => {
+    Object.assign(card, updates[card.key] ?? {});
+  });
+}
+
+function mergeColors(nextRows, existingRows, key = 'name') {
+  const colorByKey = new Map(existingRows.map((row) => [row[key], row.color]));
+  return nextRows.map((row, index) => ({
+    ...row,
+    color: row.color ?? colorByKey.get(row[key]) ?? ['#8E86FF', '#B89CFF', '#D9D1FF', '#E4B8D7', '#F06A8B', '#C9A96B'][index % 6],
+  }));
+}
+
+export function applyDashboardDataSnapshot(snapshot) {
+  if (!snapshot || snapshot.source !== 'mysql') {
+    throw new Error('dashboard snapshot must come from mysql');
+  }
+
+  assignObject(META, snapshot.meta);
+  assignObject(KPI, snapshot.kpi);
+  assignObject(KPI_DERIVED, snapshot.kpiDerived);
+  assignObject(OPERATING_OVERVIEW_METRICS, snapshot.operatingOverviewMetrics);
+
+  if (Array.isArray(snapshot.channels)) {
+    replaceArray(CHANNELS, snapshot.channels.map(withRuntimeCompletion));
+  }
+
+  if (Array.isArray(snapshot.channelRoi)) {
+    replaceArray(CHANNEL_ROI, snapshot.channelRoi);
+  }
+
+  if (Array.isArray(snapshot.salesMemberRows)) {
+    replaceArray(SALES_MEMBER_ROWS, snapshot.salesMemberRows);
+  }
+
+  if (Array.isArray(snapshot.monthlyTrend)) {
+    replaceArray(MONTHLY_TREND, snapshot.monthlyTrend);
+  }
+
+  if (Array.isArray(snapshot.versions)) {
+    replaceArray(VERSIONS, snapshot.versions.map((version) => ({
+      ...version,
+      currentRenewalRate: version.currentRenewalRate ?? (version.currentRenewalDue ? round1((version.currentRenewalPaid / version.currentRenewalDue) * 100) : 0),
+    })));
+  }
+
+  if (Array.isArray(snapshot.renewalRows)) {
+    replaceArray(RENEWAL_ROWS, snapshot.renewalRows);
+  }
+
+  if (Array.isArray(snapshot.openingAccountMetrics)) {
+    replaceArray(OPENING_ACCOUNT_METRICS, snapshot.openingAccountMetrics);
+  }
+
+  if (snapshot.computeOverview) {
+    assignObject(COMPUTE_OVERVIEW, snapshot.computeOverview);
+  }
+
+  if (Array.isArray(snapshot.computeUsageTrend)) {
+    replaceArray(COMPUTE_USAGE_TREND, snapshot.computeUsageTrend);
+    COMPUTE_USAGE_TREND_BY_DATE.clear();
+    snapshot.computeUsageTrend.forEach((row) => {
+      if (row.range) COMPUTE_USAGE_TREND_BY_DATE.set(row.range, row);
+    });
+  }
+
+  if (Array.isArray(snapshot.computeVersionConsumption)) {
+    replaceArray(COMPUTE_VERSION_CONSUMPTION, mergeColors(snapshot.computeVersionConsumption, COMPUTE_VERSION_CONSUMPTION));
+  }
+
+  if (Array.isArray(snapshot.computeUsageDistribution)) {
+    replaceArray(COMPUTE_USAGE_DISTRIBUTION, mergeColors(snapshot.computeUsageDistribution, COMPUTE_USAGE_DISTRIBUTION));
+  }
+
+  if (Array.isArray(snapshot.computeCustomerRows)) {
+    replaceArray(COMPUTE_CUSTOMER_ROWS, snapshot.computeCustomerRows);
+  }
+
+  if (Array.isArray(snapshot.computeResourceHealth)) {
+    replaceArray(COMPUTE_RESOURCE_HEALTH, mergeColors(snapshot.computeResourceHealth, COMPUTE_RESOURCE_HEALTH, 'key'));
+  }
+
+  if (Array.isArray(snapshot.deliveryRows)) {
+    LIVE_DELIVERY_ROWS = snapshot.deliveryRows;
+  }
+
+  updateKpiCardsFromRuntimeData();
 }

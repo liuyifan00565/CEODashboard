@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 18:53:22 CST
+ 更新内容: 经营总览回归测试改为要求风险渠道和年度节奏判断读取运行时真实数据。
+*/
+/*
  更新时间: 2026-07-06 17:02:49 CST
  更新内容: 增加年度节奏胶囊条回归测试，要求移除折线图并展示四项节奏指标、完成/剩余胶囊和下半年月均 447 万。
 */
@@ -994,8 +998,10 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.doesNotMatch(operatingOverviewSource, /预计影响缺口 \{overviewMetrics\.riskImpactGap\}万/);
   assert.match(operatingOverviewSource, /目标缺口/);
   assert.match(operatingOverviewSource, /风险渠道/);
-  assert.match(operatingOverviewSource, /完成率 70%/);
-  assert.match(operatingOverviewSource, /本月整体进度正常，但线下华东低于目标节奏，预计影响月度缺口 36万。/);
+  assert.match(operatingOverviewSource, /getChannelCompletionRows\('month'\)/);
+  assert.match(operatingOverviewSource, /riskChannel\?\.name/);
+  assert.match(operatingOverviewSource, /完成率 \{formatPct\(riskChannel\?\.completion \?\? 0\)\}/);
+  assert.match(operatingOverviewSource, /overviewMetrics\.monthJudgement/);
   assert.match(operatingOverviewSource, /查看近期明细/);
   assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
   assert.match(operatingOverviewSource, /年度节奏/);
@@ -1009,7 +1015,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /className="op-annual-grid"[\s\S]*?年度累计回款[\s\S]*?年度目标[\s\S]*?年度完成率[\s\S]*?时间进度[\s\S]*?<\/div>\s*<div className="op-annual-capsule"/);
   assert.match(operatingOverviewSource, /<span>已完成 \{formatPct\(KPI_DERIVED\.yearCompletion\)\}<\/span>/);
   assert.match(operatingOverviewSource, /<span>剩余 \{formatPct\(overviewMetrics\.annualRemainingRate\)\}<\/span>/);
-  assert.match(operatingOverviewSource, /当前领先时间进度 \{formatPct\(overviewMetrics\.annualPaceDelta\)\}，但线下华东连续低于目标节奏。/);
+  assert.match(operatingOverviewSource, /<p className="op-judgement">\{overviewMetrics\.annualJudgement\}<\/p>/);
   assert.match(operatingOverviewSource, /下半年月均需完成 \{formatWan\(overviewMetrics\.remainingMonthlyRequired\)\} 万。/);
   assert.doesNotMatch(operatingOverviewSource, /<span>节奏偏差<\/span>/);
   assert.doesNotMatch(operatingOverviewSource, /function shouldShowActualAnnualLabel/);

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 18:52:14 CST  更新内容: 风险渠道和年度节奏判断改为读取运行时渠道与节奏数据，不再硬编码线下华东和固定完成率。 */
 /* 更新时间: 2026-07-06 17:02:49 CST  更新内容: 年度节奏移除折线图，改为四项指标和年度进度胶囊条。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: 经营总览年度节奏线改为银紫玫瑰主线与香槟目标虚线的业务语义分层。 */
 /* 更新时间: 2026-07-06 00:00:13 CST  更新内容: 年度目标线的金色阴影同步降为高级哑金强度。 */
@@ -14,6 +15,7 @@ import ChannelPanel from './ChannelPanel';
 import {
   KPI,
   KPI_DERIVED,
+  getChannelCompletionRows,
   getOperatingOverviewMetrics,
 } from '../data/mock';
 import { matchesSearchTerm } from '../lib/searchMatch';
@@ -62,6 +64,10 @@ function formatPaceLead(value) {
 
 export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearKpiCard, onOpenKpi }) {
   const overviewMetrics = getOperatingOverviewMetrics();
+  const monthChannelRows = getChannelCompletionRows('month');
+  const riskChannelRows = monthChannelRows.filter((row) => row.warn);
+  const riskChannel = [...(riskChannelRows.length ? riskChannelRows : monthChannelRows)]
+    .sort((a, b) => a.completion - b.completion)[0];
   const progressWidth = `${Math.min(KPI_DERIVED.monthCompletion, 100)}%`;
   const annualCapsuleWidth = `${Math.min(KPI_DERIVED.yearCompletion, 100)}%`;
 
@@ -106,8 +112,8 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             </div>
             <div className="op-summary-cell op-summary-cell--warn">
               <span className="op-summary-label">风险渠道</span>
-              <b>线下华东</b>
-              <span className="op-summary-sub">完成率 70%</span>
+              <b>{riskChannel?.name ?? '暂无'}</b>
+              <span className="op-summary-sub">完成率 {formatPct(riskChannel?.completion ?? 0)}</span>
             </div>
           </div>
 
@@ -158,9 +164,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             </div>
           </div>
 
-          <p className="op-judgement">
-            当前领先时间进度 {formatPct(overviewMetrics.annualPaceDelta)}，但线下华东连续低于目标节奏。
-          </p>
+          <p className="op-judgement">{overviewMetrics.annualJudgement}</p>
           <p className="op-annual-note">
             下半年月均需完成 {formatWan(overviewMetrics.remainingMonthlyRequired)} 万。
           </p>

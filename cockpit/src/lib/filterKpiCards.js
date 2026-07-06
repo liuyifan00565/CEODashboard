@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-06 18:49:15 CST
+ 更新内容: 修正续费筛选卡片读取运行时维度配置，避免真实数据覆盖后仍引用旧静态常量。
+*/
+/*
+ 更新时间: 2026-07-06 18:37:58 CST
+ 更新内容: KPI 筛选卡片改为按运行时真实数据动态计算，不再缓存模块加载时的 mock KPI。
+*/
+/*
  更新时间: 2026-07-06 17:29:34 CST
  更新内容: 首页搜索关键词同步年度进度胶囊条，移除年度缺口和折线节奏旧词。
 */
@@ -47,38 +55,43 @@ import { CHANNEL_ROI, CHANNELS, KPI, KPI_CARDS, KPI_DERIVED, getRenewalModalData
 export const DEFAULT_FILTER_RANGE = ['2026-06-01', '2026-06-30'];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DIM_CONFIG = {
-  year: {
-    label: '年度',
-    recovered: KPI.yearRecovered,
-    target: KPI.yearTarget,
-    previous: KPI.lastYearSameRecovered,
-    cost: Math.round(KPI.totalCost * (KPI.yearRecovered / KPI.monthRecovered)),
-    adCost: Math.round(KPI.adCost * (KPI.yearRecovered / KPI.monthRecovered)),
-    laborCost: Math.round(KPI.laborCost * (KPI.yearRecovered / KPI.monthRecovered)),
-    renewalPeriod: 'year',
-  },
-  month: {
-    label: '月度',
-    recovered: KPI.monthRecovered,
-    target: KPI.monthTarget,
-    previous: KPI.lastMonthRecovered,
-    cost: KPI.totalCost,
-    adCost: KPI.adCost,
-    laborCost: KPI.laborCost,
-    renewalPeriod: 'month',
-  },
-  day: {
-    label: '日度',
-    recovered: Math.round(KPI.monthRecovered / 7),
-    target: Math.round(KPI.monthTarget / 7),
-    previous: Math.round(KPI.lastMonthRecovered / 7),
-    cost: Math.round(KPI.totalCost / 7),
-    adCost: Math.round(KPI.adCost / 7),
-    laborCost: Math.round(KPI.laborCost / 7),
-    renewalPeriod: 'day',
-  },
-};
+const DIM_KEYS = new Set(['year', 'month', 'day']);
+
+function getDimConfig() {
+  const yearCostScale = KPI.monthRecovered ? KPI.yearRecovered / KPI.monthRecovered : 0;
+  return {
+    year: {
+      label: '年度',
+      recovered: KPI.yearRecovered,
+      target: KPI.yearTarget,
+      previous: KPI.lastYearSameRecovered,
+      cost: Math.round(KPI.totalCost * yearCostScale),
+      adCost: Math.round(KPI.adCost * yearCostScale),
+      laborCost: Math.round(KPI.laborCost * yearCostScale),
+      renewalPeriod: 'year',
+    },
+    month: {
+      label: '月度',
+      recovered: KPI.monthRecovered,
+      target: KPI.monthTarget,
+      previous: KPI.lastMonthRecovered,
+      cost: KPI.totalCost,
+      adCost: KPI.adCost,
+      laborCost: KPI.laborCost,
+      renewalPeriod: 'month',
+    },
+    day: {
+      label: '日度',
+      recovered: Math.round(KPI.monthRecovered / 7),
+      target: Math.round(KPI.monthTarget / 7),
+      previous: Math.round(KPI.lastMonthRecovered / 7),
+      cost: Math.round(KPI.totalCost / 7),
+      adCost: Math.round(KPI.adCost / 7),
+      laborCost: Math.round(KPI.laborCost / 7),
+      renewalPeriod: 'day',
+    },
+  };
+}
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -187,8 +200,8 @@ function getChannelContext(channelKey) {
   };
 }
 
-function getScopedDimConfig(dim, context) {
-  const base = DIM_CONFIG[dim] ?? DIM_CONFIG.month;
+function getScopedDimConfig(dim, context, dimConfig = getDimConfig()) {
+  const base = dimConfig[dim] ?? dimConfig.month;
   if (context.channelKey === 'all') return base;
 
   if (dim === 'month') {
@@ -215,7 +228,8 @@ function getScopedDimConfig(dim, context) {
 }
 
 function createRenewalCard(baseCard, dim, factor, channelKey) {
-  const config = DIM_CONFIG[dim] ?? DIM_CONFIG.month;
+  const dimConfig = getDimConfig();
+  const config = dimConfig[dim] ?? dimConfig.month;
   const overview = getRenewalModalData('all', config.renewalPeriod, channelKey).overview;
   const adjustedRate = round1(clamp(overview.rate + (factor - 1) * 8, 0, 99));
   const adjustedPrevRate = round1(clamp(overview.prevRate + (factor - 1) * 6, 0, 99));
@@ -256,9 +270,10 @@ function recoverySectionKeywords(cardKey) {
 }
 
 export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_RANGE, channel = 'all' } = {}) {
-  const safeDim = DIM_CONFIG[dim] ? dim : 'month';
+  const dimConfig = getDimConfig();
+  const safeDim = DIM_KEYS.has(dim) ? dim : 'month';
   const channelContext = getChannelContext(channel);
-  const config = getScopedDimConfig(safeDim, channelContext);
+  const config = getScopedDimConfig(safeDim, channelContext, dimConfig);
   const factor = getDateRangeFactor(dateRange);
 
   const recovered = scaled(config.recovered, factor);
