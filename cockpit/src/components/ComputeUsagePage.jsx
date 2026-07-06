@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 14:21:24 CST
+ 更新内容: 算力用量分布恢复完整圆环图，仅保留自然外拉折线布局。
+*/
+/*
  更新时间: 2026-07-06 15:29:41 CST
  更新内容: 算力用量分布环图外拉折线显著加长并增强线条可见度。
 */
@@ -81,7 +85,7 @@ const COMPUTE_DEFAULT_PIE_RADIUS = ['58%', '92%'];
 const COMPUTE_USAGE_DISTRIBUTION_PIE_CENTER = ['45%', '52%'];
 const COMPUTE_USAGE_DISTRIBUTION_PIE_RADIUS = ['54%', '86%'];
 const COMPUTE_DEFAULT_LABEL_LINE = { length: 12, length2: 16, smooth: false, width: 1, opacity: .72, };
-const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = { length: 28, length2: 56, smooth: false, width: 1.35, opacity: .9, };
+const COMPUTE_USAGE_DISTRIBUTION_LABEL_LINE = { length: 15, length2: 15, smooth: false, width: 1, opacity: .72, };
 const COMPUTE_VERSION_RIGHT_LABEL_SLOTS = {
   '试用版': -82,
   '企业版': -42,
@@ -932,7 +936,7 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
     [versionPieData, tokens]
   );
   const distributionPieOption = useMemo(
-    () => buildPieOption({ data: distributionPieData, tokens, unitLabel: '客户占比权重' }),
+    () => buildPieOption({ data: distributionPieData, tokens, unitLabel: '客户占比权重', naturalLabelLayout: true }),
     [distributionPieData, tokens]
   );
   const customerRows = useMemo(

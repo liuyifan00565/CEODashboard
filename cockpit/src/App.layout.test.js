@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 14:21:24 CST
+ 更新内容: 要求算力用量分布保持完整圆环图，仅使用自然外拉折线布局。
+*/
+/*
  更新时间: 2026-07-06 11:09:18 CST
  更新内容: 同步目标维护组织侧栏点击后过滤年度目标行的布局断言。
 */
@@ -641,10 +645,13 @@ test('keeps compute pie labels and tooltip cards readable around donut charts', 
   assert.match(computePageSource, /const COMPUTE_DEFAULT_PIE_CENTER = \['55%', '52%'\];/);
   assert.match(computePageSource, /const COMPUTE_USAGE_DISTRIBUTION_PIE_RADIUS = \['54%', '86%'\];/);
   assert.match(computePageSource, /const COMPUTE_USAGE_DISTRIBUTION_PIE_CENTER = \['45%', '52%'\];/);
+  assert.doesNotMatch(computePageSource, /COMPUTE_USAGE_DISTRIBUTION_PIE_ANGLES/);
   assert.match(computePageSource, /const pieCenter = isUsageDistributionPie \? COMPUTE_USAGE_DISTRIBUTION_PIE_CENTER : COMPUTE_DEFAULT_PIE_CENTER;/);
   assert.match(computePageSource, /const pieRadius = isUsageDistributionPie \? COMPUTE_USAGE_DISTRIBUTION_PIE_RADIUS : COMPUTE_DEFAULT_PIE_RADIUS;/);
+  assert.doesNotMatch(computePageSource, /const pieAngles =/);
   assert.match(computePageSource, /radius:\s*pieRadius/);
   assert.match(computePageSource, /center:\s*pieCenter/);
+  assert.doesNotMatch(computePageSource, /\.\.\.pieAngles,/);
   assert.doesNotMatch(computePageSource, /width:\s*126/);
   assert.doesNotMatch(computePageSource, /overflow:\s*'truncate'/);
   assert.doesNotMatch(computePageSource, /ellipsis:\s*'…'/);
@@ -680,7 +687,7 @@ test('uses the overview half-ring palette for compute donut charts', () => {
   assert.match(computePageSource, /const versionPieData = useMemo\(\s*\(\) => applyComputeRingPalette\(versions\),/);
   assert.match(computePageSource, /const distributionPieData = useMemo\(\s*\(\) => applyComputeRingPalette\(distribution\),/);
   assert.match(computePageSource, /buildPieOption\(\{ data: versionPieData, tokens, unitLabel: '消耗权重', naturalLabelLayout: true \}\)/);
-  assert.match(computePageSource, /buildPieOption\(\{ data: distributionPieData, tokens, unitLabel: '客户占比权重' \}\)/);
+  assert.match(computePageSource, /buildPieOption\(\{ data: distributionPieData, tokens, unitLabel: '客户占比权重', naturalLabelLayout: true \}\)/);
   assert.match(computePageSource, /borderRadius:\s*8,[\s\S]*?borderColor:\s*'rgba\(255, 255, 255, \.12\)'[\s\S]*?borderWidth:\s*2,[\s\S]*?shadowBlur:\s*22,[\s\S]*?shadowColor:\s*'rgba\(0, 0, 0, \.32\)'/);
   assert.doesNotMatch(computePageSource, /borderColor:\s*'rgba\(12,12,13,\.72\)'/);
 });
