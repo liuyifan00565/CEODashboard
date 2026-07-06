@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 12:25:08 CST
+ 更新内容: 算力用量分布环图单独左移并收窄外半径，避免右侧标签被裁切。
+*/
+/*
  Update time: 2026-07-02 17:18:50 CST
  Update content: Mark compute KPI cards and panels as searchable matches for top search navigation.
 */
@@ -59,6 +63,11 @@ const COMPUTE_RING_COLORS = [
   '#89dfff',
   '#d7ffe9',
 ];
+const COMPUTE_USAGE_DISTRIBUTION_UNIT_LABEL = '客户占比权重';
+const COMPUTE_DEFAULT_PIE_CENTER = ['55%', '52%'];
+const COMPUTE_DEFAULT_PIE_RADIUS = ['58%', '92%'];
+const COMPUTE_USAGE_DISTRIBUTION_PIE_CENTER = ['45%', '52%'];
+const COMPUTE_USAGE_DISTRIBUTION_PIE_RADIUS = ['54%', '86%'];
 const COMPUTE_VERSION_RIGHT_LABEL_SLOTS = {
   '试用版': -82,
   '企业版': -42,
@@ -607,6 +616,9 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
 
 function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false }) {
   const colors = data.map((item) => item.color);
+  const isUsageDistributionPie = unitLabel === COMPUTE_USAGE_DISTRIBUTION_UNIT_LABEL;
+  const pieCenter = isUsageDistributionPie ? COMPUTE_USAGE_DISTRIBUTION_PIE_CENTER : COMPUTE_DEFAULT_PIE_CENTER;
+  const pieRadius = isUsageDistributionPie ? COMPUTE_USAGE_DISTRIBUTION_PIE_RADIUS : COMPUTE_DEFAULT_PIE_RADIUS;
 
   return {
     backgroundColor: 'transparent',
@@ -629,8 +641,8 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
     series: [
       {
         type: 'pie',
-        radius: ['58%', '92%'],
-        center: ['55%', '52%'],
+        radius: pieRadius,
+        center: pieCenter,
         avoidLabelOverlap: true,
         minShowLabelAngle: 1,
         padAngle: 1,

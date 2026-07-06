@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 14:57:00 CST  更新内容: KPI 二级弹窗版本选项改为优先读取 MySQL 聚合版本数据。 */
 /* 更新时间: 2026-07-02 16:52:00 CST  更新内容: KPI 二级弹窗关闭按钮改用统一 AppIcon 线性图标。 */
 import { useEffect, useRef, useState, useMemo } from 'react';
 import * as echarts from 'echarts';
@@ -5,7 +6,7 @@ import gsap from 'gsap';
 import AppIcon from './AppIcon';
 import MultiSegmented from './MultiSegmented';
 import Segmented from './Segmented';
-import { getKpiSeries, getRenewalModalData, VERSIONS } from '../data/mock';
+import { getKpiSeries, getRenewalModalData, getVersionRows } from '../data/mock';
 import { deltaColor, fmtDelta } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './KpiModal.css';
@@ -21,10 +22,6 @@ const DIM_OPTS = [
   { value: 'month', label: '月' },
   { value: 'day', label: '日' },
 ];
-const VERSION_OPTS = [
-  { value: 'all', label: '全部版本' },
-  ...VERSIONS.map((version) => ({ value: version.key, label: version.name })),
-];
 const MOM_LABEL = { year: '年度环比', month: '月度环比', day: '日度环比' };
 
 export default function KpiModal({ card, onClose }) {
@@ -33,6 +30,13 @@ export default function KpiModal({ card, onClose }) {
   const [version, setVersion] = useState('all');
   const [dim, setDim] = useState('month');
   const isRenewal = card.metric === 'renewalRate';
+  const versionOptions = useMemo(
+    () => [
+      { value: 'all', label: '全部版本' },
+      ...getVersionRows('all').map((item) => ({ value: item.key, label: item.name })),
+    ],
+    []
+  );
   const renewalData = useMemo(
     () => (isRenewal ? getRenewalModalData(version, dim, salesKeys) : null),
     [isRenewal, version, dim, salesKeys]
@@ -165,7 +169,7 @@ export default function KpiModal({ card, onClose }) {
 
         <div className="km-controls">
           {isRenewal ? (
-            <Segmented options={VERSION_OPTS} value={version} onChange={setVersion} />
+            <Segmented options={versionOptions} value={version} onChange={setVersion} />
           ) : null}
           <MultiSegmented options={SALES_FILTER_OPTS} value={salesKeys} onChange={setSalesKeys} />
           <Segmented options={DIM_OPTS} value={dim} onChange={setDim} />

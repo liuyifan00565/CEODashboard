@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 12:25:08 CST  更新内容: 月度经营趋势完成率折线新增动态轴、错位标签和异常数据保护。 */
 /* 更新时间: 2026-06-29 10:45:53  更新内容: 月度经营趋势图例改为静态说明，并将目标与回款柱重叠展示。 */
 import EChart from './EChart';
 import { getChannelTrend } from '../data/mock';
@@ -5,13 +6,50 @@ import { COLOR, progressColor } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './MonthlyTrend.css';
 
+function safeTrendNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(number, 0) : 0;
+}
+
+function normalizeTrendRows(trend) {
+  return (Array.isArray(trend) ? trend : []).map((row, index) => {
+    const recovered = safeTrendNumber(row.recovered);
+    const target = safeTrendNumber(row.target);
+    const completion = row.completion == null
+      ? (target ? (recovered / target) * 100 : 0)
+      : safeTrendNumber(row.completion);
+
+    return {
+      month: row.month ?? `${index + 1}月`,
+      recovered: Math.round(recovered * 10) / 10,
+      target: Math.round(target * 10) / 10,
+      completion: Math.round(completion * 10) / 10,
+    };
+  });
+}
+
+function completionAxisMax(values) {
+  const maxValue = Math.max(100, ...values.map(safeTrendNumber));
+  return Math.ceil((maxValue + 14) / 20) * 20;
+}
+
+function completionLabelLayout(params) {
+  const y = Math.max(6, Number(params.labelRect?.y ?? 6));
+  return {
+    y,
+    hide: false,
+    moveOverlap: 'shiftY',
+  };
+}
+
 export default function MonthlyTrend({ channelKey = 'all' }) {
   const tokens = useThemeTokens();
-  const trend = getChannelTrend(channelKey);
-  const months = trend.map(m => m.month);
-  const recovered = trend.map(m => m.recovered);
-  const target = trend.map(m => m.target);
-  const completion = trend.map(m => m.completion);
+  const normalizedTrend = normalizeTrendRows(getChannelTrend(channelKey));
+  const months = normalizedTrend.map(m => m.month);
+  const recovered = normalizedTrend.map(m => m.recovered);
+  const target = normalizedTrend.map(m => m.target);
+  const completion = normalizedTrend.map(m => m.completion);
+  const completionAxisLimit = completionAxisMax(completion);
 
   const txt = tokens.chartText;
   const muted = tokens.chartMuted;
@@ -31,7 +69,7 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
       textStyle: { color: faint, fontSize: 14 },
       data: ['回款', '目标', '完成率%'],
     },
-    grid: { top: 40, left: 8, right: 8, bottom: 4, containLabel: true },
+    grid: { top: 54, left: 8, right: 18, bottom: 10, containLabel: true },
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
@@ -43,7 +81,8 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
       formatter: (params) => {
         const head = `<div style="color:${faint};margin-bottom:4px">${params[0].axisValue}</div>`;
         const rows = params.map((p) => {
-          const v = p.seriesName === '完成率%' ? `${p.value}%` : `${p.value} 万`;
+          const value = safeTrendNumber(p.value);
+          const v = p.seriesName === '完成率%' ? `${value.toFixed(1)}%` : `${value} 万`;
           return `<div style="display:flex;align-items:center;gap:6px;line-height:1.7">
             <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${p.color}"></span>
             <span style="color:${muted}">${p.seriesName}</span>
@@ -73,7 +112,8 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         type: 'value',
         name: '%',
         min: 0,
-        max: 100,
+        max: completionAxisLimit,
+        scale: true,
         nameTextStyle: { color: faint, fontSize: 14 },
         axisLabel: { color: faint, fontSize: 14, formatter: '{value}%' },
         splitLine: { show: false },
@@ -115,15 +155,19 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         smooth: true,
         symbol: 'circle',
         symbolSize: 6,
+        showAllSymbol: true,
+        clip: false,
         lineStyle: { color: COLOR.good, width: 2 },
         itemStyle: { color: ({ value }) => progressColor(value, tokens.progressMid), borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
         label: {
           show: true,
-          position: 'top',
+          position: (params) => (params.dataIndex % 2 === 0 ? 'top' : 'bottom'),
           color: ({ value }) => progressColor(value, tokens.progressMid),
           fontSize: 14,
-          formatter: '{c}%',
+          distance: 8,
+          formatter: ({ value }) => `${Number(value).toFixed(1)}%`,
         },
+        labelLayout: completionLabelLayout,
         data: completion,
       },
     ],

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 14:57:00 CST
+ 更新内容: KPI 卡片计算改为优先读取驾驶舱 MySQL 聚合覆盖数据，保留原 mock 兜底。
+*/
+/*
  更新时间: 2026-07-03 11:28:32 CST
  更新内容: 将首页本年目标和本年渠道模块标题加入 KPI 搜索关键词，支持按“本年”定位年度卡片。
 */
@@ -14,43 +18,53 @@
  更新时间: 2026-07-01 12:26:40
  更新内容: 回款 KPI 副文案目标标签与目标金额换到同一行，并移除日期后的分隔点。
 */
-import { CHANNEL_ROI, CHANNELS, KPI, KPI_CARDS, KPI_DERIVED, getRenewalModalData } from '../data/mock.js';
+import {
+  getDashboardChannelRoi,
+  getDashboardChannels,
+  getDashboardKpi,
+  getDashboardKpiCards,
+  getDashboardKpiDerived,
+  getRenewalModalData,
+} from '../data/mock.js';
 
 export const DEFAULT_FILTER_RANGE = ['2026-06-01', '2026-06-30'];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DIM_CONFIG = {
-  year: {
-    label: '年度',
-    recovered: KPI.yearRecovered,
-    target: KPI.yearTarget,
-    previous: KPI.lastYearSameRecovered,
-    cost: Math.round(KPI.totalCost * (KPI.yearRecovered / KPI.monthRecovered)),
-    adCost: Math.round(KPI.adCost * (KPI.yearRecovered / KPI.monthRecovered)),
-    laborCost: Math.round(KPI.laborCost * (KPI.yearRecovered / KPI.monthRecovered)),
-    renewalPeriod: 'year',
-  },
-  month: {
-    label: '月度',
-    recovered: KPI.monthRecovered,
-    target: KPI.monthTarget,
-    previous: KPI.lastMonthRecovered,
-    cost: KPI.totalCost,
-    adCost: KPI.adCost,
-    laborCost: KPI.laborCost,
-    renewalPeriod: 'month',
-  },
-  day: {
-    label: '日度',
-    recovered: Math.round(KPI.monthRecovered / 7),
-    target: Math.round(KPI.monthTarget / 7),
-    previous: Math.round(KPI.lastMonthRecovered / 7),
-    cost: Math.round(KPI.totalCost / 7),
-    adCost: Math.round(KPI.adCost / 7),
-    laborCost: Math.round(KPI.laborCost / 7),
-    renewalPeriod: 'day',
-  },
-};
+function getDimConfig(kpi) {
+  const yearCostRatio = kpi.monthRecovered ? kpi.yearRecovered / kpi.monthRecovered : 1;
+  return {
+    year: {
+      label: '年度',
+      recovered: kpi.yearRecovered,
+      target: kpi.yearTarget,
+      previous: kpi.lastYearSameRecovered,
+      cost: Math.round(kpi.totalCost * yearCostRatio),
+      adCost: Math.round(kpi.adCost * yearCostRatio),
+      laborCost: Math.round(kpi.laborCost * yearCostRatio),
+      renewalPeriod: 'year',
+    },
+    month: {
+      label: '月度',
+      recovered: kpi.monthRecovered,
+      target: kpi.monthTarget,
+      previous: kpi.lastMonthRecovered,
+      cost: kpi.totalCost,
+      adCost: kpi.adCost,
+      laborCost: kpi.laborCost,
+      renewalPeriod: 'month',
+    },
+    day: {
+      label: '日度',
+      recovered: Math.round(kpi.monthRecovered / 7),
+      target: Math.round(kpi.monthTarget / 7),
+      previous: Math.round(kpi.lastMonthRecovered / 7),
+      cost: Math.round(kpi.totalCost / 7),
+      adCost: Math.round(kpi.adCost / 7),
+      laborCost: Math.round(kpi.laborCost / 7),
+      renewalPeriod: 'day',
+    },
+  };
+}
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -134,8 +148,8 @@ function delta(current, previous) {
   return previous ? round1(((current - previous) / previous) * 100) : 0;
 }
 
-function getChannelContext(channelKey) {
-  const channel = CHANNELS.find((item) => item.key === channelKey);
+function getChannelContext(channelKey, kpi, channels, channelRoi) {
+  const channel = channels.find((item) => item.key === channelKey);
   if (!channel) {
     return {
       channelKey: 'all',
@@ -143,24 +157,24 @@ function getChannelContext(channelKey) {
       recoveredRatio: 1,
       targetRatio: 1,
       investmentRatio: 1,
-      investment: KPI.totalCost,
+      investment: kpi.totalCost,
     };
   }
 
-  const investment = CHANNEL_ROI.find((item) => item.key === channel.key)?.investment
-    ?? Math.round(KPI.totalCost * (channel.recovered / KPI.monthRecovered));
+  const investment = channelRoi.find((item) => item.key === channel.key)?.investment
+    ?? Math.round(kpi.totalCost * (channel.recovered / kpi.monthRecovered));
   return {
     channelKey: channel.key,
     channel,
-    recoveredRatio: channel.recovered / KPI.monthRecovered,
-    targetRatio: channel.target / KPI.monthTarget,
-    investmentRatio: investment / KPI.totalCost,
+    recoveredRatio: kpi.monthRecovered ? channel.recovered / kpi.monthRecovered : 1,
+    targetRatio: kpi.monthTarget ? channel.target / kpi.monthTarget : 1,
+    investmentRatio: kpi.totalCost ? investment / kpi.totalCost : 1,
     investment,
   };
 }
 
-function getScopedDimConfig(dim, context) {
-  const base = DIM_CONFIG[dim] ?? DIM_CONFIG.month;
+function getScopedDimConfig(dim, context, dimConfig, kpi) {
+  const base = dimConfig[dim] ?? dimConfig.month;
   if (context.channelKey === 'all') return base;
 
   if (dim === 'month') {
@@ -168,7 +182,7 @@ function getScopedDimConfig(dim, context) {
       ...base,
       recovered: context.channel.recovered,
       target: context.channel.target,
-      previous: scaled(KPI.lastMonthRecovered, context.recoveredRatio),
+      previous: scaled(kpi.lastMonthRecovered, context.recoveredRatio),
       cost: context.investment,
       adCost: context.investment,
       laborCost: 0,
@@ -186,8 +200,8 @@ function getScopedDimConfig(dim, context) {
   };
 }
 
-function createRenewalCard(baseCard, dim, factor, channelKey) {
-  const config = DIM_CONFIG[dim] ?? DIM_CONFIG.month;
+function createRenewalCard(baseCard, dim, factor, channelKey, dimConfig) {
+  const config = dimConfig[dim] ?? dimConfig.month;
   const overview = getRenewalModalData('all', config.renewalPeriod, channelKey).overview;
   const adjustedRate = round1(clamp(overview.rate + (factor - 1) * 8, 0, 99));
   const adjustedPrevRate = round1(clamp(overview.prevRate + (factor - 1) * 6, 0, 99));
@@ -224,22 +238,27 @@ function recoverySectionKeywords(cardKey) {
 }
 
 export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_RANGE, channel = 'all' } = {}) {
-  const safeDim = DIM_CONFIG[dim] ? dim : 'month';
-  const channelContext = getChannelContext(channel);
-  const config = getScopedDimConfig(safeDim, channelContext);
+  const kpi = getDashboardKpi();
+  const kpiDerived = getDashboardKpiDerived();
+  const channels = getDashboardChannels();
+  const channelRoi = getDashboardChannelRoi();
+  const dimConfig = getDimConfig(kpi);
+  const safeDim = dimConfig[dim] ? dim : 'month';
+  const channelContext = getChannelContext(channel, kpi, channels, channelRoi);
+  const config = getScopedDimConfig(safeDim, channelContext, dimConfig, kpi);
   const factor = getDateRangeFactor(dateRange);
 
   const recovered = scaled(config.recovered, factor);
   const target = scaled(config.target, factor);
   const previous = scaled(config.previous, factor * (factor === 1 ? 1 : 0.96));
   const cumulativeBase = safeDim === 'month'
-    ? round0(KPI.yearRecovered * channelContext.recoveredRatio)
+    ? round0(kpi.yearRecovered * channelContext.recoveredRatio)
     : config.recovered;
   const cumulativeTargetBase = safeDim === 'month'
-    ? round0(KPI.yearTarget * channelContext.targetRatio)
+    ? round0(kpi.yearTarget * channelContext.targetRatio)
     : config.target;
   const cumulativePrevBase = safeDim === 'month'
-    ? round0(KPI.lastYearSameRecovered * channelContext.recoveredRatio)
+    ? round0(kpi.lastYearSameRecovered * channelContext.recoveredRatio)
     : config.previous;
   const cumulativeRecovered = scaled(cumulativeBase, factor);
   const cumulativeTarget = scaled(cumulativeTargetBase, factor);
@@ -247,12 +266,12 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
   const cost = scaled(config.cost, factor);
   const adCost = scaled(config.adCost, factor);
   const laborCost = scaled(config.laborCost, factor);
-  const costRatio = recovered ? round1((cost / recovered) * 100) : KPI_DERIVED.costRatio;
+  const costRatio = recovered ? round1((cost / recovered) * 100) : kpiDerived.costRatio;
   const costSub = channelContext.channelKey === 'all'
     ? `总投入 ${cost} 万 · 广告 ${adCost} 万 + 人力 ${laborCost} 万`
     : `销售投入 ${cost} 万 · 费比 ${costRatio}%`;
 
-  const cardsByKey = new Map(KPI_CARDS.map((card) => [card.key, card]));
+  const cardsByKey = new Map(getDashboardKpiCards().map((card) => [card.key, card]));
   const monthCard = cardsByKey.get('month');
   const yearCard = cardsByKey.get('year');
   const costCard = cardsByKey.get('cost');
@@ -303,6 +322,6 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
       channelKey: channelContext.channelKey,
       keywords: withVisibleKeywords(costCard.keywords, costTitle, costSub, `${cost} 万`, `${costRatio}%`),
     },
-    createRenewalCard(renewalCard, safeDim, factor, channelContext.channelKey),
+    createRenewalCard(renewalCard, safeDim, factor, channelContext.channelKey, dimConfig),
   ];
 }

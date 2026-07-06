@@ -1,5 +1,8 @@
 # CEO 经营驾驶舱 React Demo
 
+更新时间: 2026-07-06 12:25:08 CST
+更新内容: 补充经营总览和算力用量分析通过 `/api/dashboard/bootstrap` 读取 MySQL 聚合数据的说明。
+
 更新时间: 2026-07-06 11:39:42 CST
 更新内容: 补充数据维护页 UI 与本地数据库双向同步和自动刷新说明。
 
@@ -73,6 +76,36 @@ CEO_DB_NAME=ceo_dashboard
 也可以用 `CEO_DB_DSN=mysql://user:password@127.0.0.1:3306/ceo_dashboard`。如果维护表为空，接口会返回与 MySQL 字段对齐的默认可编辑数据；用户在 UI 中保存后，数据库成为后续展示来源。
 
 维护页保存时会通过 `PUT /api/maintenance/*` 写入本地数据库；页面空闲时每 5 秒无缓存读取一次本地数据库，让 Navicat 或其它工具直接改库后的数据自动回显到 UI。若某个维护页处于“有未保存修改”或“保存中”，自动刷新会保留该页当前编辑内容，避免外部数据库刷新覆盖尚未保存的输入。
+
+## 主驾驶舱 MySQL 聚合
+
+经营总览和算力用量分析会在页面启动时请求：
+
+```bash
+GET /api/dashboard/bootstrap?year=2026&month=6
+```
+
+服务端会从 MySQL 聚合后返回前端可直接展示的数据；如果该接口请求失败，前端会保留 `src/data/mock.js` 中的演示数据作为兜底。
+
+经营总览主要读取：
+
+- `fact_revenue_daily`：按渠道、月份聚合回款和订单数。
+- `biz_target_monthly`：按渠道、月份聚合目标。
+- `biz_channel_cost_monthly`、`biz_labor_cost_monthly`：聚合广告投入、人力成本和总投入。
+- `fact_version_sales_daily`、`fact_renewal_daily`：聚合版本销量、回款和续费数据。
+- `fact_opening_account_daily`：聚合本月开户数和今日开户数。
+- `fact_sales_member_monthly`：聚合销售人员目标完成情况。
+- `fact_delivery_order`、`biz_delivery_target_monthly`：聚合交付人员交付单数、目标和人效。
+
+算力用量分析主要读取：
+
+- `fact_compute_usage_daily`：聚合算力容量、新增和消耗趋势。
+- `fact_compute_customer_daily`：聚合客户算力排行、余额和平均回复率。
+- `fact_compute_version_consumption_daily`：聚合版本算力消耗占比。
+- `fact_compute_usage_distribution_daily`、`dim_compute_usage_bucket`：聚合算力用量分布。
+- `fact_compute_resource_health_daily`、`dim_compute_resource`：聚合资源健康度。
+
+当前本地库已放入 2026 年 6 月演示数据，使用固定 ID 段写入，便于后续替换或回滚；真实业务接入时只要按相同表结构持续同步事实表，前端会按数据库位置自动聚合展示。
 
 ## 筛选联动演示口径
 

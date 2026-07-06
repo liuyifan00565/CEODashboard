@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 14:57:00 CST
+ 更新内容: 增加驾驶舱 MySQL 聚合数据运行时覆盖层，主页面和算力页优先展示数据库同步结果。
+*/
+/*
  更新时间: 2026-07-06 10:28:05 CST
  更新内容: 将维护页兜底数据对齐 ceo_dashboard MySQL 表字段与四个基础渠道。
 */
@@ -31,6 +35,48 @@
  更新内容: 新增数据维护四个界面的前端演示数据结构。
 */
 import { calculateRenewalOverview, getRenewalChannelBreakdown } from '../lib/renewal.js';
+
+let dashboardDataOverride = null;
+
+export function setDashboardDataOverride(data) {
+  dashboardDataOverride = data && typeof data === 'object' ? data : null;
+}
+
+export function getDashboardDataOverride() {
+  return dashboardDataOverride;
+}
+
+function overviewOverride() {
+  return dashboardDataOverride?.overview ?? null;
+}
+
+function computeOverride() {
+  return dashboardDataOverride?.compute ?? null;
+}
+
+function withComputedChannel(channel) {
+  const target = Number(channel.target || 0);
+  const recovered = Number(channel.recovered || 0);
+  return {
+    ...channel,
+    completion: target ? +((recovered / target) * 100).toFixed(1) : 0,
+    warn: channel.warn ?? (target ? recovered / target < 0.8 : false),
+  };
+}
+
+function deriveKpi(kpi) {
+  return {
+    monthCompletion: kpi.monthTarget ? +(kpi.monthRecovered / kpi.monthTarget * 100).toFixed(1) : 0,
+    monthGap: Math.max((kpi.monthTarget || 0) - (kpi.monthRecovered || 0), 0),
+    monthMoM: kpi.lastMonthRecovered ? +(((kpi.monthRecovered || 0) - kpi.lastMonthRecovered) / kpi.lastMonthRecovered * 100).toFixed(1) : 0,
+    yearCompletion: kpi.yearTarget ? +(kpi.yearRecovered / kpi.yearTarget * 100).toFixed(1) : 0,
+    yearGap: Math.max((kpi.yearTarget || 0) - (kpi.yearRecovered || 0), 0),
+    yearYoY: kpi.lastYearSameRecovered ? +(((kpi.yearRecovered || 0) - kpi.lastYearSameRecovered) / kpi.lastYearSameRecovered * 100).toFixed(1) : 0,
+    costRatio: kpi.monthRecovered ? +((kpi.totalCost || 0) / kpi.monthRecovered * 100).toFixed(1) : 0,
+    channelRoi: kpi.totalCost ? +((kpi.monthRecovered || 0) / kpi.totalCost).toFixed(2) : 0,
+    roi: kpi.adCost ? +((kpi.monthRecovered || 0) / kpi.adCost).toFixed(2) : 0,
+  };
+}
 
 export const META = {
   title: 'AI 客服销售经营驾驶舱',
@@ -97,6 +143,36 @@ export const CHANNEL_ROI = CHANNELS.map((channel) => {
   };
 }).sort((a, b) => b.roi - a.roi);
 
+export function getDashboardKpi() {
+  return overviewOverride()?.kpi ?? KPI;
+}
+
+export function getDashboardKpiDerived() {
+  return deriveKpi(getDashboardKpi());
+}
+
+export function getDashboardChannels() {
+  const channels = overviewOverride()?.channels;
+  return Array.isArray(channels) && channels.length
+    ? channels.map(withComputedChannel)
+    : CHANNELS;
+}
+
+export function getDashboardChannelRoi() {
+  const channelRoi = overviewOverride()?.channelRoi;
+  return Array.isArray(channelRoi) && channelRoi.length ? channelRoi : CHANNEL_ROI;
+}
+
+export function getOpeningAccountMetrics() {
+  const metrics = overviewOverride()?.openingAccountMetrics;
+  return Array.isArray(metrics) && metrics.length ? metrics : OPENING_ACCOUNT_METRICS;
+}
+
+export function getDashboardMonthlyTrend() {
+  const trend = overviewOverride()?.monthlyTrend;
+  return Array.isArray(trend) && trend.length ? trend : MONTHLY_TREND;
+}
+
 export const SALES_GROUPS = [
   { key: 'online', name: '线上', salesKeys: ['online'] },
   { key: 'south', name: '线下华南', salesKeys: ['south'] },
@@ -141,8 +217,18 @@ function sortByCompletionDesc(rows) {
   return [...rows].sort((a, b) => b.completion - a.completion);
 }
 
+function getRuntimeSalesGroups() {
+  const groups = overviewOverride()?.salesGroups;
+  return Array.isArray(groups) && groups.length ? groups : SALES_GROUPS;
+}
+
+function getRuntimeSalesMemberRows() {
+  const rows = overviewOverride()?.salesMemberRows;
+  return Array.isArray(rows) && rows.length ? rows : SALES_MEMBER_ROWS;
+}
+
 export function getSalesCompletionRows() {
-  return sortByCompletionDesc(SALES_GROUPS.map((group) => {
+  return sortByCompletionDesc(getRuntimeSalesGroups().map((group) => {
     const target = group.salesKeys.reduce((sum, key) => sum + (findChannel(key)?.target ?? 0), 0);
     const recovered = group.salesKeys.reduce((sum, key) => sum + (findChannel(key)?.recovered ?? 0), 0);
     return withCompletion({
@@ -156,7 +242,7 @@ export function getSalesCompletionRows() {
 }
 
 export function getSalesMemberRows(groupKey = 'online') {
-  return sortByCompletionDesc(SALES_MEMBER_ROWS
+  return sortByCompletionDesc(getRuntimeSalesMemberRows()
     .filter((row) => row.group === groupKey)
     .map((row) => withCompletion({
       key: row.key,
@@ -167,7 +253,7 @@ export function getSalesMemberRows(groupKey = 'online') {
 }
 
 function findChannel(channelKey) {
-  return CHANNELS.find((channel) => channel.key === channelKey) ?? null;
+  return getDashboardChannels().find((channel) => channel.key === channelKey) ?? null;
 }
 
 function ratioFor(channel, field, total) {
@@ -184,7 +270,7 @@ function renewalRate(due, paid) {
 
 export function getChannelRows(channelKey = 'all') {
   const channel = findChannel(channelKey);
-  return channel ? [channel] : CHANNELS;
+  return channel ? [channel] : getDashboardChannels();
 }
 
 // ===== 产品版本（6 个，金额单位：万元）=====
@@ -203,11 +289,13 @@ export const VERSIONS = [
 }));
 
 export function getVersionRows(channelKey = 'all') {
+  const versions = overviewOverride()?.versions;
+  const baseVersions = Array.isArray(versions) && versions.length ? versions : VERSIONS;
   const channel = findChannel(channelKey);
-  if (!channel) return VERSIONS;
+  if (!channel) return baseVersions;
 
-  const recoveredRatio = ratioFor(channel, 'recovered', KPI.monthRecovered);
-  return VERSIONS.map((version) => {
+  const recoveredRatio = ratioFor(channel, 'recovered', getDashboardKpi().monthRecovered);
+  return baseVersions.map((version) => {
     const currentRenewalDue = scaledWhole(version.currentRenewalDue, recoveredRatio);
     const currentRenewalPaid = scaledWhole(version.currentRenewalPaid, recoveredRatio);
     return {
@@ -270,9 +358,11 @@ export const RENEWAL_ROWS = [
 export const RENEWAL_OVERVIEW = calculateRenewalOverview(RENEWAL_ROWS, { version: 'all', period: 'month' });
 
 export function getRenewalModalData(version = 'all', period = 'month', channel = 'all') {
+  const rows = overviewOverride()?.renewalRows;
+  const renewalRows = Array.isArray(rows) && rows.length ? rows : RENEWAL_ROWS;
   return {
-    overview: calculateRenewalOverview(RENEWAL_ROWS, { version, period, channel }),
-    breakdown: getRenewalChannelBreakdown(RENEWAL_ROWS, { version, period, channel }),
+    overview: calculateRenewalOverview(renewalRows, { version, period, channel }),
+    breakdown: getRenewalChannelBreakdown(renewalRows, { version, period, channel }),
   };
 }
 
@@ -369,7 +459,7 @@ export const COMPUTE_RESOURCE_HEALTH = [
 ];
 
 export function getComputeOverview() {
-  return COMPUTE_OVERVIEW;
+  return computeOverride()?.overview ?? COMPUTE_OVERVIEW;
 }
 
 function computeTrendDateKey(day) {
@@ -538,6 +628,11 @@ function getComputeYearRows(dateRange) {
 }
 
 export function getComputeUsageTrend(request = '30d') {
+  const trend = computeOverride()?.usageTrend;
+  if (Array.isArray(trend) && trend.length) {
+    return trend;
+  }
+
   if (request && typeof request === 'object') {
     if (request.dim === 'year') return getComputeYearRows(request.dateRange);
     if (request.dim === 'day') return getComputeDayRows(request.dateRange);
@@ -550,19 +645,23 @@ export function getComputeUsageTrend(request = '30d') {
 }
 
 export function getComputeVersionConsumption() {
-  return COMPUTE_VERSION_CONSUMPTION;
+  const rows = computeOverride()?.versionConsumption;
+  return Array.isArray(rows) && rows.length ? rows : COMPUTE_VERSION_CONSUMPTION;
 }
 
 export function getComputeUsageDistribution() {
-  return COMPUTE_USAGE_DISTRIBUTION;
+  const rows = computeOverride()?.usageDistribution;
+  return Array.isArray(rows) && rows.length ? rows : COMPUTE_USAGE_DISTRIBUTION;
 }
 
 export function getComputeCustomerRows() {
-  return [...COMPUTE_CUSTOMER_ROWS].sort((a, b) => b.usage - a.usage);
+  const rows = computeOverride()?.customerRows;
+  return [...(Array.isArray(rows) && rows.length ? rows : COMPUTE_CUSTOMER_ROWS)].sort((a, b) => b.usage - a.usage);
 }
 
 export function getComputeResourceHealth() {
-  return COMPUTE_RESOURCE_HEALTH.filter((row) => row.usage > 0);
+  const rows = computeOverride()?.resourceHealth;
+  return (Array.isArray(rows) && rows.length ? rows : COMPUTE_RESOURCE_HEALTH).filter((row) => row.usage > 0);
 }
 
 const ORDER_TYPE_TRENDS = {
@@ -623,21 +722,23 @@ const OPENING_ACCOUNT_TRENDS = {
   },
 };
 
-const SALES_KEY_SET = new Set(CHANNELS.map((channel) => channel.key));
-
 function normalizeSalesKeys(salesKeys) {
+  const dashboardChannels = getDashboardChannels();
+  const salesKeySet = new Set(dashboardChannels.map((channel) => channel.key));
   const selected = Array.isArray(salesKeys)
-    ? salesKeys.filter((key) => SALES_KEY_SET.has(key))
+    ? salesKeys.filter((key) => salesKeySet.has(key))
     : [];
-  return selected.length ? selected : CHANNELS.map((channel) => channel.key);
+  return selected.length ? selected : dashboardChannels.map((channel) => channel.key);
 }
 
 function getOrderTypeMonthSeries({ salesKeys, orderType = 'new', metric = 'recovered' } = {}) {
   const safeKeys = normalizeSalesKeys(salesKeys);
   const source = ORDER_TYPE_TRENDS[orderType] ?? ORDER_TYPE_TRENDS.new;
-  const costRatio = KPI.totalCost / KPI.monthRecovered;
+  const dashboardKpi = getDashboardKpi();
+  const costRatio = dashboardKpi.monthRecovered ? dashboardKpi.totalCost / dashboardKpi.monthRecovered : 0;
+  const monthlyTrend = getDashboardMonthlyTrend();
 
-  return MONTHLY_TREND.map((month, index) => {
+  return monthlyTrend.map((month, index) => {
     const recovered = safeKeys.reduce((sum, key) => sum + (source[key]?.[index] ?? 0), 0);
     const value = metric === 'cost' ? Math.round(recovered * costRatio) : recovered;
     return {
@@ -689,7 +790,7 @@ function getOpeningAccountSeries({ metric, salesKeys, dim = 'month' }) {
     ? ['2023', '2024', '2025', '2026']
     : safeDim === 'day'
       ? DAY_BASE.map((_, index) => `06-${String(index * 3 + 1).padStart(2, '0')}`)
-      : MONTHLY_TREND.map((month) => month.month);
+      : getDashboardMonthlyTrend().map((month) => month.month);
   const values = labels.map((_, index) => safeKeys.reduce((sum, key) => sum + (source[safeDim][key]?.[index] ?? 0), 0));
 
   return values.map((value, index) => {
@@ -706,12 +807,14 @@ function getOpeningAccountSeries({ metric, salesKeys, dim = 'month' }) {
 
 export function getChannelTrend(channelKey = 'all') {
   const channel = findChannel(channelKey);
-  if (!channel) return MONTHLY_TREND;
+  const monthlyTrend = getDashboardMonthlyTrend();
+  if (!channel) return monthlyTrend;
 
-  const recoveredRatio = ratioFor(channel, 'recovered', KPI.monthRecovered);
-  const targetRatio = ratioFor(channel, 'target', KPI.monthTarget);
-  return MONTHLY_TREND.map((month, index) => {
-    const isLatest = index === MONTHLY_TREND.length - 1;
+  const dashboardKpi = getDashboardKpi();
+  const recoveredRatio = ratioFor(channel, 'recovered', dashboardKpi.monthRecovered);
+  const targetRatio = ratioFor(channel, 'target', dashboardKpi.monthTarget);
+  return monthlyTrend.map((month, index) => {
+    const isLatest = index === monthlyTrend.length - 1;
     const recovered = isLatest ? channel.recovered : scaledWhole(month.recovered, recoveredRatio);
     const target = isLatest ? channel.target : scaledWhole(month.target, targetRatio);
     return {
@@ -743,11 +846,14 @@ export function getKpiSeries(metric, channelOrOptions = 'all', dim = 'month') {
   }
 
   const channelRow = findChannel(channel);
-  const chMul = channelRow ? ratioFor(channelRow, 'recovered', KPI.monthRecovered) : 1;
+  const dashboardKpi = getDashboardKpi();
+  const chMul = channelRow ? ratioFor(channelRow, 'recovered', dashboardKpi.monthRecovered) : 1;
   if (dim === 'year') {
+    const yearValues = [dashboardKpi.yearRecovered * 0.7, dashboardKpi.yearRecovered * 0.88, dashboardKpi.yearRecovered * 1.08, dashboardKpi.yearRecovered];
+    const prevValues = [dashboardKpi.yearRecovered * 0.58, dashboardKpi.yearRecovered * 0.7, dashboardKpi.yearRecovered * 0.88, dashboardKpi.yearRecovered * 1.08];
     return ['2023', '2024', '2025', '2026'].map((label, i) => ({
-      label, value: Math.round([2180, 2760, 3380, 3120][i] * chMul),
-      prev: Math.round([1800, 2180, 2760, 3380][i] * chMul),
+      label, value: Math.round(yearValues[i] * chMul),
+      prev: Math.round(prevValues[i] * chMul),
     }));
   }
   if (dim === 'day') {
@@ -774,6 +880,19 @@ export const KPI_CARDS = [
   { key: 'renewal', title: '续费率', metric: 'renewalRate', unit: '%', decimals: 1, value: RENEWAL_OVERVIEW.rate, sub: `到期 ${RENEWAL_OVERVIEW.due} 单 · 已续 ${RENEWAL_OVERVIEW.renewed} 单 · 续费 ${RENEWAL_OVERVIEW.revenue} 万`, progress: RENEWAL_OVERVIEW.rate, progressLabel: '当期续费率', gap: null, delta: RENEWAL_OVERVIEW.delta, keywords: ['续费率', '续费', '复购', '版本', '销售'] },
 ];
 
+export function getDashboardKpiCards() {
+  const kpi = getDashboardKpi();
+  const derived = getDashboardKpiDerived();
+  const renewal = getRenewalModalData('all', 'month', 'all').overview;
+
+  return [
+    { key: 'month', title: '本月回款', metric: 'recovered', unit: '万', value: kpi.monthRecovered, sub: `本月目标 ${kpi.monthTarget} 万`, progress: derived.monthCompletion, progressLabel: '本月目标完成率', gap: derived.monthGap, delta: derived.monthMoM, keywords: ['本月回款', '回款', '目标', '完成率', '缺口'] },
+    { key: 'year', title: '年度累计回款', metric: 'recovered', unit: '万', value: kpi.yearRecovered, sub: `年度目标 ${kpi.yearTarget} 万`, progress: derived.yearCompletion, progressLabel: '年度目标完成率', gap: derived.yearGap, delta: derived.yearYoY, keywords: ['年度累计', '年度', '年目标', '缺口'] },
+    { key: 'cost', title: '总投入 · 费比', metric: 'cost', unit: '万', value: kpi.totalCost, sub: `广告 ${kpi.adCost} 万 + 人力 ${kpi.laborCost} 万 · 费比 ${derived.costRatio}%`, gap: null, delta: null, keywords: ['投入', '成本', '费比', '广告', '人力'] },
+    { key: 'renewal', title: '续费率', metric: 'renewalRate', unit: '%', decimals: 1, value: renewal.rate, sub: `到期 ${renewal.due} 单 · 已续 ${renewal.renewed} 单 · 续费 ${renewal.revenue} 万`, progress: renewal.rate, progressLabel: '当期续费率', gap: null, delta: renewal.delta, keywords: ['续费率', '续费', '复购', '版本', '销售'] },
+  ];
+}
+
 export const DELIVERY_TARGET_COUNT = 15;
 
 const DELIVERY_ENGINEERS = [
@@ -789,6 +908,9 @@ function roundMoney(value) {
 }
 
 export function getDeliveryRows() {
+  const rows = overviewOverride()?.deliveryRows;
+  if (Array.isArray(rows) && rows.length) return rows;
+
   return DELIVERY_ENGINEERS.map((row) => {
     const valuePerPerson = roundMoney(row.prices.reduce((sum, price) => sum + price, 0));
     const averageOrderPrice = roundMoney(valuePerPerson / row.orders);
@@ -807,6 +929,9 @@ export function getDeliveryRows() {
 }
 
 export function getDeliverySummary() {
+  const summary = overviewOverride()?.deliverySummary;
+  if (summary) return summary;
+
   const rows = getDeliveryRows();
   const people = rows.length;
   const totalCount = rows.reduce((sum, row) => sum + row.deliveredCount, 0);

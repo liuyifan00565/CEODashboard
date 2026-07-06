@@ -1,3 +1,6 @@
+/* 更新时间: 2026-07-06 12:09:17 CST  更新内容: 回款半环参照 ECharts 官方半环示例恢复自然折线说明，并保留异常数值保护。 */
+/* 更新时间: 2026-07-06 15:09:00 CST  更新内容: 年度回款半环标签按扇区顺序排布，避免数据库占比变化后引导线交叉。 */
+/* 更新时间: 2026-07-06 14:57:00 CST  更新内容: 回款半环渠道占比改为优先读取 MySQL 聚合渠道数据。 */
 /* 更新时间: 2026-07-03 11:05:35 CST  更新内容: 主页回款卡月度/年度目标拆成名称和金额两行展示。 */
 /* Update time: 2026-07-03 10:24:55 CST  Update content: Remove target and completed subtitle text from the recovery half-donut header. */
 /* Update time: 2026-07-02 18:03:34 CST  Update content: Place recovery card target subtitles beside the large KPI value on desktop. */
@@ -6,7 +9,7 @@
 /* 更新时间: 2026-06-30 19:08:00  更新内容: 回款 KPI 半环扇区增加间隙。 */
 import NumberRoll from './NumberRoll';
 import EChart from './EChart';
-import { CHANNELS } from '../data/mock';
+import { getDashboardChannels } from '../data/mock';
 import { fmtDelta, deltaColor, progressColor } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './KpiCard.css';
@@ -16,24 +19,67 @@ const CHANNEL_PERCENT_COLORS = ['#ffffff', '#ffffff', '#ffffff', '#ffffff'];
 const CHANNEL_PIE_LABELS = { south: '线下华南', east: '线下华东' };
 const INCOMPLETE_PIE_COLOR = 'rgba(230, 251, 255, .12)';
 const INCOMPLETE_PERCENT_COLOR = '#ffffff';
-const RECOVERY_YEAR_LABEL_SLOTS = {
-  '线上': { y: 78 },
-  '代理': { y: 118 },
-  '线下华南': { y: 158 },
-  '线下华东': { y: 198 },
-  '未完成': { y: 156 },
-};
+const RECOVERY_PIE_MAX_CHANNELS = 4;
 
 function channelPieName(channel) {
   return CHANNEL_PIE_LABELS[channel.key] ?? channel.name;
 }
 
+function safeRecoveryNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(number, 0) : 0;
+}
+
+function formatRecoveryWan(value) {
+  const safeValue = safeRecoveryNumber(value);
+  if (safeValue > 0 && safeValue < 1) return '<1 万';
+  return `${Math.round(safeValue).toLocaleString('zh-CN')} 万`;
+}
+
+function formatRecoveryPercent(value, total) {
+  const safeValue = safeRecoveryNumber(value);
+  const safeTotal = safeRecoveryNumber(total);
+  if (!safeTotal) return '0%';
+  const percent = (safeValue / safeTotal) * 100;
+  if (percent > 0 && percent < 0.1) return '<0.1%';
+  return `${(Math.round(percent * 10) / 10).toFixed(1)}%`;
+}
+
+function normalizeRecoveryChannels(channels) {
+  const safeChannels = (Array.isArray(channels) ? channels : []).map((channel, index) => ({
+    key: channel.key ?? `channel-${index + 1}`,
+    name: channelPieName(channel),
+    recovered: safeRecoveryNumber(channel.recovered),
+    color: CHANNEL_PIE_COLORS[index % CHANNEL_PIE_COLORS.length],
+    percentColor: CHANNEL_PERCENT_COLORS[index % CHANNEL_PERCENT_COLORS.length],
+  }));
+
+  if (safeChannels.length <= RECOVERY_PIE_MAX_CHANNELS) return safeChannels;
+
+  const visibleChannels = safeChannels.slice(0, RECOVERY_PIE_MAX_CHANNELS - 1);
+  const otherRecovered = safeChannels
+    .slice(RECOVERY_PIE_MAX_CHANNELS - 1)
+    .reduce((sum, channel) => sum + channel.recovered, 0);
+
+  return [
+    ...visibleChannels,
+    {
+      key: 'other',
+      name: '其他',
+      recovered: otherRecovered,
+      color: CHANNEL_PIE_COLORS[(RECOVERY_PIE_MAX_CHANNELS - 1) % CHANNEL_PIE_COLORS.length],
+      percentColor: CHANNEL_PERCENT_COLORS[(RECOVERY_PIE_MAX_CHANNELS - 1) % CHANNEL_PERCENT_COLORS.length],
+    },
+  ];
+}
+
 function recoveryCompletedValue(card) {
-  return Math.max(Number(card.value) || 0, 0);
+  return safeRecoveryNumber(card.value);
 }
 
 function recoveryTargetValue(card) {
-  return recoveryCompletedValue(card) + (Number(card.gap) || 0);
+  const completed = recoveryCompletedValue(card);
+  return Math.max(completed + safeRecoveryNumber(card.gap), completed);
 }
 
 function recoveryPieHeading(card) {
@@ -47,7 +93,7 @@ function splitRecoveryTargetSub(card) {
 }
 
 function recoveryPieLabelFormatter(params) {
-  return `{name|${params.name}}\n{${recoveryPiePercentRichKey(params)}|${params.percent}%}`;
+  return `{name|${params.name}}\n{${recoveryPiePercentRichKey(params)}|${params.data?.displayPercent ?? `${params.percent}%`}}`;
 }
 
 function recoveryPiePercentRichKey(params) {
@@ -57,28 +103,6 @@ function recoveryPiePercentRichKey(params) {
   if (name.includes('代理')) return 'percentAgent';
   if (name.includes('未完成')) return 'percentIncomplete';
   return 'percentOnline';
-}
-
-function recoveryPieLabelSlot(params) {
-  const text = String(params.name ?? params.data?.name ?? params.text ?? '');
-  if (text.includes('华东')) return RECOVERY_YEAR_LABEL_SLOTS['线下华东'];
-  if (text.includes('华南')) return RECOVERY_YEAR_LABEL_SLOTS['线下华南'];
-  if (text.includes('代理')) return RECOVERY_YEAR_LABEL_SLOTS['代理'];
-  if (text.includes('未完成')) return RECOVERY_YEAR_LABEL_SLOTS['未完成'];
-  if (text.includes('线上')) return RECOVERY_YEAR_LABEL_SLOTS['线上'];
-  return null;
-}
-
-function recoveryPieLabelLayout(params, cardKey) {
-  if (cardKey !== 'year') return undefined;
-
-  const slot = recoveryPieLabelSlot(params);
-  if (!slot) return undefined;
-
-  return {
-    y: slot.y,
-    hideOverlap: false,
-  };
 }
 
 function recoveryPieTooltipPosition(point, params, dom, rect, size) {
@@ -130,28 +154,73 @@ function progressOption(pct, tokens) {
 }
 
 function recoveryPieData(card) {
-  const channelTotal = CHANNELS.reduce((sum, channel) => sum + channel.recovered, 0);
+  const channels = normalizeRecoveryChannels(getDashboardChannels());
+  const channelTotal = channels.reduce((sum, channel) => sum + channel.recovered, 0);
   const cardTotal = recoveryCompletedValue(card);
   const targetValue = recoveryTargetValue(card);
   const incompleteValue = Math.max(0, targetValue - cardTotal);
-  const scale = channelTotal ? cardTotal / channelTotal : 1;
+  const scale = channelTotal ? cardTotal / channelTotal : 0;
 
-  const channelData = CHANNELS.map((channel, index) => {
-    const value = Math.max(0.01, Math.round(channel.recovered * scale));
+  if (!targetValue && !cardTotal && !channelTotal) {
+    return [{
+      key: 'empty',
+      value: 1,
+      rawValue: 0,
+      displayValue: 0,
+      valueText: '0 万',
+      displayPercent: '0%',
+      targetValue: 0,
+      name: '暂无数据',
+      isEmpty: true,
+      percentColor: INCOMPLETE_PERCENT_COLOR,
+      itemStyle: {
+        color: INCOMPLETE_PIE_COLOR,
+        opacity: .3,
+        borderColor: 'rgba(230, 251, 255, .14)',
+        shadowBlur: 0,
+      },
+    }];
+  }
+
+  if (cardTotal > 0 && !channelTotal) {
+    return [{
+      key: 'recovered',
+      value: cardTotal,
+      rawValue: Math.round(cardTotal),
+      displayValue: cardTotal,
+      valueText: formatRecoveryWan(cardTotal),
+      displayPercent: formatRecoveryPercent(cardTotal, targetValue),
+      targetValue,
+      name: '已回款',
+      percentColor: CHANNEL_PERCENT_COLORS[0],
+      itemStyle: { color: CHANNEL_PIE_COLORS[0] },
+    }];
+  }
+
+  const channelData = channels.map((channel, index) => {
+    const value = channel.recovered * scale;
 
     return {
+      key: channel.key,
       value,
-      rawValue: value,
+      rawValue: Math.round(value),
+      displayValue: value,
+      valueText: formatRecoveryWan(value),
+      displayPercent: formatRecoveryPercent(value, targetValue),
       targetValue,
-      name: channelPieName(channel),
-      percentColor: CHANNEL_PERCENT_COLORS[index],
-      itemStyle: { color: CHANNEL_PIE_COLORS[index] },
+      name: channel.name,
+      percentColor: channel.percentColor,
+      itemStyle: { color: channel.color ?? CHANNEL_PIE_COLORS[index % CHANNEL_PIE_COLORS.length] },
     };
   });
 
   const incompleteSlice = {
+    key: 'incomplete',
     value: incompleteValue,
-    rawValue: incompleteValue,
+    rawValue: Math.round(incompleteValue),
+    displayValue: incompleteValue,
+    valueText: formatRecoveryWan(incompleteValue),
+    displayPercent: formatRecoveryPercent(incompleteValue, targetValue),
     targetValue,
     name: '未完成',
     isIncomplete: true,
@@ -165,13 +234,15 @@ function recoveryPieData(card) {
   };
 
   return [
-    ...channelData.sort((a, b) => a.value - b.value),
+    ...channelData
+      .filter((item) => item.value > 0)
+      .sort((a, b) => a.value - b.value),
     incompleteSlice,
-  ];
+  ].filter((item) => item.value > 0);
 }
 
-function recoveryPieOption(card, tokens, accentColor) {
-  const pieData = recoveryPieData(card).map((item, index) => ({
+function recoveryPieOption(card, tokens, accentColor, sourceData = recoveryPieData(card)) {
+  const pieData = sourceData.map((item, index) => ({
     ...item,
     itemStyle: {
       ...item.itemStyle,
@@ -195,16 +266,16 @@ function recoveryPieOption(card, tokens, accentColor) {
         lineHeight: 16,
       },
       formatter: (params) => {
-        const value = params.data?.rawValue ?? params.value;
+        const valueText = params.data?.valueText ?? `${params.data?.rawValue ?? params.value} 万`;
         const isIncomplete = params.data?.isIncomplete;
-        const valueLabel = `${isIncomplete ? '缺口' : '回款'} ${value} 万`;
+        const valueLabel = `${isIncomplete ? '缺口' : '回款'} ${valueText}`;
 
         return `
           <div class="kpi-pie-tooltip" aria-label="${valueLabel}">
             <div class="kpi-pie-tooltip__name">${params.seriesName} · ${params.name}</div>
-            <div class="kpi-pie-tooltip__value">${isIncomplete ? '缺口' : '回款'} <strong>${value}</strong> 万</div>
-            <div class="kpi-pie-tooltip__meta">目标 ${params.data?.targetValue ?? '-'} 万 · 完成率 ${card.progress ?? params.percent}%</div>
-            <div class="kpi-pie-tooltip__meta">占比 <strong>${params.percent}%</strong></div>
+            <div class="kpi-pie-tooltip__value">${isIncomplete ? '缺口' : '回款'} <strong>${valueText}</strong></div>
+            <div class="kpi-pie-tooltip__meta">目标 ${formatRecoveryWan(params.data?.targetValue)} · 完成率 ${card.progress ?? params.percent}%</div>
+            <div class="kpi-pie-tooltip__meta">目标占比 <strong>${params.data?.displayPercent ?? `${params.percent}%`}</strong></div>
           </div>
         `;
       },
@@ -231,8 +302,9 @@ function recoveryPieOption(card, tokens, accentColor) {
         center: ['46%', '70%'],
         startAngle: 180,
         endAngle: 360,
-        minShowLabelAngle: 1,
+        minShowLabelAngle: 0,
         padAngle: 3,
+        avoidLabelOverlap: true,
         itemStyle: {
           borderRadius: 8,
           borderColor: 'rgba(255, 255, 255, .12)',
@@ -245,8 +317,9 @@ function recoveryPieOption(card, tokens, accentColor) {
           formatter: recoveryPieLabelFormatter,
           position: 'outside',
           color: 'rgba(239,251,255,.96)',
-          bleedMargin: 0,
-          distanceToLabelLine: 0,
+          alignTo: 'none',
+          bleedMargin: 6,
+          distanceToLabelLine: 4,
           rich: {
             name: {
               color: 'rgba(239,251,255,.96)',
@@ -300,11 +373,11 @@ function recoveryPieOption(card, tokens, accentColor) {
             color: 'rgba(239,251,255,.74)',
             width: 2,
           },
-          smooth: 0.18,
+          smooth: false,
           length: 12,
-          length2: 20,
+          length2: 12,
+          maxSurfaceAngle: 80,
         },
-        labelLayout: (params) => recoveryPieLabelLayout(params, card.key),
         animationType: 'scale',
         animationDelay: (idx) => idx * 45,
         data: pieData,
@@ -318,6 +391,7 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
 
   if (!card) return null;
   const isRecoveryCard = card.key === 'month' || card.key === 'year';
+  const recoveryPieSlices = isRecoveryCard ? recoveryPieData(card) : [];
   const displayValue = card.displayValue ?? card.value;
   const displayUnit = card.displayUnit ?? card.unit;
   const displayDecimals = card.displayDecimals ?? card.decimals;
@@ -401,7 +475,7 @@ export default function KpiCard({ card, onOpen, sidePanel }) {
             <div className="kpi-card__pie-head">
               <div className="kpi-card__pie-title">{recoveryPieHeading(card)}</div>
             </div>
-          <EChart option={recoveryPieOption(card, tokens, recoveryAccent)} className="kpi-card__pie-chart" style={{ height: 326 }} />
+            <EChart option={recoveryPieOption(card, tokens, recoveryAccent, recoveryPieSlices)} className="kpi-card__pie-chart" style={{ height: 326 }} />
           </div>
           <div className="kpi-card__body">{cardContent}</div>
           {sidePanel && (

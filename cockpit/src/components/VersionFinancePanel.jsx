@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 14:57:00 CST  更新内容: 版本情况面板与二级趋势改为优先读取 MySQL 聚合版本数据。 */
 /* 更新时间: 2026-07-03 11:28:32 CST  更新内容: 精准调整版本情况半环图水平中心，使图形对称轴对齐数量/金额切换按钮。 */
 /* 更新时间: 2026-07-03 11:17:34 CST  更新内容: 版本情况半环图右移，使图形对称轴靠近数量/金额切换按钮。 */
 /* 更新时间: 2026-07-02 16:52:00 CST  更新内容: 版本二级弹窗关闭按钮改用统一 AppIcon 线性图标。 */
@@ -10,7 +11,7 @@ import AppIcon from './AppIcon';
 import EChart from './EChart';
 import MultiSegmented from './MultiSegmented';
 import Segmented from './Segmented';
-import { getChannelRows, getVersionRows, MONTHLY_TREND } from '../data/mock';
+import { getChannelRows, getDashboardMonthlyTrend, getVersionRows } from '../data/mock';
 import { fmtDelta, deltaColor, fmtMoney } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './KpiModal.css';
@@ -120,8 +121,9 @@ function buildVersionDetailSeries({ salesKeys, mode, dim, versionKey }) {
     })));
   }
 
-  const latestRecovered = MONTHLY_TREND.at(-1)?.recovered || 1;
-  return withPreviousValues(MONTHLY_TREND.map((month) => ({
+  const monthlyTrend = getDashboardMonthlyTrend();
+  const latestRecovered = monthlyTrend.at(-1)?.recovered || 1;
+  return withPreviousValues(monthlyTrend.map((month) => ({
     label: month.month,
     value: Math.max(1, Math.round(currentTotal * (month.recovered / latestRecovered))),
   })));

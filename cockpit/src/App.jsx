@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 14:57:00 CST
+ 更新内容: 主界面启动时读取 MySQL 驾驶舱聚合数据，经营总览和算力页优先展示数据库内容。
+*/
+/*
  更新时间: 2026-07-03 10:59:56 CST
  更新内容: 顶部搜索支持定位首页开户数卡片，并复用原搜索命中边框效果。
 */
@@ -46,7 +50,7 @@
  Update time: 2026-07-02 18:16:13 CST
  Update content: Restore DotField to solid purple background dots.
 */
-import { useMemo, useState, useRef, useLayoutEffect } from 'react';
+import { useEffect, useMemo, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 
 import AIAnalysisWidget from './components/AIAnalysisWidget';
@@ -67,7 +71,7 @@ import ComputeUsagePage from './components/ComputeUsagePage';
 import OpeningMetricCards from './components/OpeningMetricCards';
 import MaintenancePage from './components/MaintenancePage';
 
-import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
+import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel, setDashboardDataOverride } from './data/mock';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
 import { matchesSearchTerm } from './lib/searchMatch';
@@ -102,6 +106,7 @@ export default function App() {
   const [activeSearchIndex, setActiveSearchIndex] = useState(0);
   const [openCard, setOpenCard] = useState(null);
   const [companionCue, setCompanionCue] = useState(null);
+  const [dashboardDataVersion, setDashboardDataVersion] = useState(0);
 
   const gridRef = useRef(null);
   const pendingMenuScrollRef = useRef(false);
@@ -122,7 +127,7 @@ export default function App() {
     : `dash-grid dash-grid--overview dash-grid--${activeMenu}`;
   const filteredKpiCards = useMemo(
     () => getFilteredKpiCards({ dim, dateRange, channel: activeChannelKey }),
-    [dim, dateRange, activeChannelKey]
+    [dim, dateRange, activeChannelKey, dashboardDataVersion]
   );
   const recoveryKpiCards = filteredKpiCards.filter((card) => ['month', 'year'].includes(card.key));
   const financeKpiCards = filteredKpiCards.filter((card) => card.key === 'cost');
@@ -180,6 +185,33 @@ export default function App() {
     });
   }
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadDashboardData() {
+      try {
+        const response = await fetch('/api/dashboard/bootstrap?year=2026&month=6', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) throw new Error(`驾驶舱数据接口异常：${response.status}`);
+        const data = await response.json();
+        if (!active) return;
+        setDashboardDataOverride(data);
+        setDashboardDataVersion((version) => version + 1);
+      } catch {
+        if (!active) return;
+        setDashboardDataOverride(null);
+        setDashboardDataVersion((version) => version + 1);
+      }
+    }
+
+    loadDashboardData();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   function jumpToNextSearchResult() {
     if (!searchStats.total) return;
     pendingSearchScrollRef.current = true;
@@ -222,7 +254,7 @@ export default function App() {
       matches[currentIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     }
     pendingSearchScrollRef.current = false;
-  }, [searchTerm, activeSearchIndex, contentKey, isComputePage, filteredKpiCards]);
+  }, [searchTerm, activeSearchIndex, contentKey, isComputePage, filteredKpiCards, dashboardDataVersion]);
 
   // GSAP 入场：KPI 卡 + 面板 stagger fade-up（菜单切换时重放）
   useLayoutEffect(() => {

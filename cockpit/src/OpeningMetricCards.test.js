@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 14:57:00 CST
+ 更新内容: 更新开户数卡片断言，匹配 MySQL 聚合数据 getter 入口。
+*/
+/*
  更新时间: 2026-07-03 11:09:47 CST
  更新内容: 增加“今日”搜索只定位今日开户数、不误命中本月开户数的回归测试。
 */
@@ -61,7 +65,8 @@ test('implements compact horizontal opening-account cards', () => {
   const componentSource = readFileSync(componentPath, 'utf8');
   const cssSource = readFileSync(cssPath, 'utf8');
 
-  assert.match(componentSource, /import \{ OPENING_ACCOUNT_METRICS \} from '\.\.\/data\/mock';/);
+  assert.match(componentSource, /import \{ getOpeningAccountMetrics \} from '\.\.\/data\/mock';/);
+  assert.match(componentSource, /const metrics = getOpeningAccountMetrics\(\);/);
   assert.match(componentSource, /import \{ matchesSearchTerm \} from '\.\.\/lib\/searchMatch';/);
   assert.match(componentSource, /import SearchResultBorder from '\.\/SearchResultBorder';/);
   assert.match(componentSource, /className="opening-metric-cards"/);

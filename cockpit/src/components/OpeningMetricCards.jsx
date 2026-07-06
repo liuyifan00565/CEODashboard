@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 14:57:00 CST
+ 更新内容: 开户数小卡片改为优先读取 MySQL 聚合开户数据。
+*/
+/*
  更新时间: 2026-07-03 10:59:56 CST
  更新内容: 开户数卡片接入顶部搜索命中定位，复用原搜索边框效果。
 */
@@ -6,7 +10,7 @@
  更新时间: 2026-07-01 18:32:30 CST
  更新内容: 首页开户数小卡片点击时传入自身指标，打开对应开户数二级数据。
 */
-import { OPENING_ACCOUNT_METRICS } from '../data/mock';
+import { getOpeningAccountMetrics } from '../data/mock';
 import { deltaColor } from '../lib/format';
 import { matchesSearchTerm } from '../lib/searchMatch';
 import SearchResultBorder from './SearchResultBorder';
@@ -21,9 +25,11 @@ function formatDelta(delta) {
 }
 
 export default function OpeningMetricCards({ searchTerm = '', onOpenSecondary }) {
+  const metrics = getOpeningAccountMetrics();
+
   return (
     <section className="opening-metric-cards" aria-label="开户数趋势" data-anim>
-      {OPENING_ACCOUNT_METRICS.map((metric) => (
+      {metrics.map((metric) => (
         <SearchResultBorder active={matchesSearchTerm(metric.keywords, searchTerm)} key={metric.key}>
           <button
             className="opening-metric-card"

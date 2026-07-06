@@ -11,6 +11,10 @@
  更新内容: 同步四个维护页目标数据更新时间位于状态徽标左侧的布局断言。
 */
 /*
+ 更新时间: 2026-07-06 12:25:08 CST
+ 更新内容: 要求算力用量分布环图单独左移，避免右侧标签被裁切。
+*/
+/*
  更新时间: 2026-07-06 10:28:05 CST
  更新内容: 更新维护页数据库读写接入后的字段文案与数据源断言。
 */
@@ -271,7 +275,7 @@ test('adds a topbar data maintenance switch that swaps the sidebar navigation', 
   const maintenanceSwitchBlock = cssRuleBody(dashboardCss, '.dash-maintenance-switch');
   const maintenanceActiveBlock = cssRuleBody(dashboardCss, '.dash-maintenance-switch--active');
 
-  assert.match(appSource, /import \{ META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel \} from '\.\/data\/mock';/);
+  assert.match(appSource, /import \{ META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel, setDashboardDataOverride \} from '\.\/data\/mock';/);
   assert.match(appSource, /const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU\[0\]\?\.key \?\? 'target-maintenance';/);
   assert.match(appSource, /const \[maintenanceMode,\s*setMaintenanceMode\] = useState\(false\);/);
   assert.match(appSource, /const \[activeMaintenanceMenu,\s*setActiveMaintenanceMenu\] = useState\(DEFAULT_MAINTENANCE_MENU\);/);
@@ -633,8 +637,14 @@ test('keeps compute pie labels and tooltip cards readable around donut charts', 
   assert.match(computePageSource, /'padding:12px 14px'/);
   assert.match(computePageSource, /position:\s*'outer'/);
   assert.doesNotMatch(computePageSource, /alignTo:\s*'labelLine'/);
-  assert.match(computePageSource, /radius:\s*\['58%', '92%'\]/);
-  assert.match(computePageSource, /center:\s*\['55%', '52%'\]/);
+  assert.match(computePageSource, /const COMPUTE_DEFAULT_PIE_RADIUS = \['58%', '92%'\];/);
+  assert.match(computePageSource, /const COMPUTE_DEFAULT_PIE_CENTER = \['55%', '52%'\];/);
+  assert.match(computePageSource, /const COMPUTE_USAGE_DISTRIBUTION_PIE_RADIUS = \['54%', '86%'\];/);
+  assert.match(computePageSource, /const COMPUTE_USAGE_DISTRIBUTION_PIE_CENTER = \['45%', '52%'\];/);
+  assert.match(computePageSource, /const pieCenter = isUsageDistributionPie \? COMPUTE_USAGE_DISTRIBUTION_PIE_CENTER : COMPUTE_DEFAULT_PIE_CENTER;/);
+  assert.match(computePageSource, /const pieRadius = isUsageDistributionPie \? COMPUTE_USAGE_DISTRIBUTION_PIE_RADIUS : COMPUTE_DEFAULT_PIE_RADIUS;/);
+  assert.match(computePageSource, /radius:\s*pieRadius/);
+  assert.match(computePageSource, /center:\s*pieCenter/);
   assert.doesNotMatch(computePageSource, /width:\s*126/);
   assert.doesNotMatch(computePageSource, /overflow:\s*'truncate'/);
   assert.doesNotMatch(computePageSource, /ellipsis:\s*'…'/);
