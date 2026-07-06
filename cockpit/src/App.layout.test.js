@@ -23,6 +23,10 @@
  更新内容: 更新维护页数据库读写接入后的字段文案与数据源断言。
 */
 /*
+ 更新时间: 2026-07-06 10:16:26 CST
+ 更新内容: 同步目标维护部门/人员冻结列收窄后的布局回归断言。
+*/
+/*
  更新时间: 2026-07-03 11:55:42 CST
  更新内容: 合并 ttoswar 最新维护页导航、冻结列和选中态回归测试。
 */
@@ -378,7 +382,7 @@ test('renders target maintenance as a single wide horizontal matrix with wider c
   assert.doesNotMatch(maintenancePageSource, /mnt-target-fixed-pane/);
   assert.doesNotMatch(maintenancePageSource, /mnt-matrix--target-fixed/);
   assert.doesNotMatch(maintenancePageSource, /mnt-matrix--target-scroll/);
-  assert.match(targetWrapBlock, /--mnt-target-name-width:\s*186px;/);
+  assert.match(targetWrapBlock, /--mnt-target-name-width:\s*148px;/);
   assert.match(targetWrapBlock, /--mnt-target-period-width:\s*172px;/);
   assert.match(targetWrapBlock, /overflow:\s*hidden;/);
   assert.match(targetScrollPaneBlock, /overflow:\s*auto;/);

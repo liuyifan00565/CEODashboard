@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-06 10:16:26 CST
+ Update content: Require a narrower target maintenance department/person column.
+*/
+/*
  Update time: 2026-07-03 11:49:32 CST
  Update content: Require a soft glass gradient at the target maintenance frozen-name edge.
 */
@@ -19,6 +23,7 @@ function cssRuleBody(source, selector) {
 }
 
 test('keeps the target maintenance name column outside the horizontal period scroller', () => {
+  const targetWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap--target');
   const targetMatrixBlock = cssRuleBody(maintenancePageCss, '.mnt-target-matrix');
   const targetNamePaneBlock = cssRuleBody(maintenancePageCss, '.mnt-target-name-pane');
   const targetNameFadeBlock = cssRuleBody(maintenancePageCss, '.mnt-target-name-pane::after');
@@ -32,6 +37,7 @@ test('keeps the target maintenance name column outside the horizontal period scr
   assert.match(maintenancePageSource, /<div className="mnt-target-scroll-pane" ref=\{targetScrollPaneRef\}>[\s\S]*?<table className="mnt-matrix mnt-matrix--target">/);
   assert.doesNotMatch(maintenancePageSource, /<table className="mnt-matrix mnt-matrix--target">[\s\S]*?<th>部门\/人员<\/th>/);
 
+  assert.match(targetWrapBlock, /--mnt-target-name-width:\s*148px;/);
   assert.match(targetMatrixBlock, /grid-template-columns:\s*var\(--mnt-target-name-width\) minmax\(0,\s*1fr\);/);
   assert.match(targetNamePaneBlock, /position:\s*sticky;/);
   assert.match(targetNamePaneBlock, /left:\s*0;/);

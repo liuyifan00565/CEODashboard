@@ -3,6 +3,10 @@
  更新内容: 为目标维护工具栏增加目标数据更新时间的紧凑状态文案样式。
 */
 /*
+ 更新时间: 2026-07-06 10:16:26 CST
+ 更新内容: 收窄目标维护部门/人员冻结列宽度，减少首列占用空间。
+*/
+/*
  更新时间: 2026-07-03 11:55:42 CST
  更新内容: 合并 ttoswar 最新维护页导航、冻结列柔化和紫色选中态改动。
 */
@@ -560,7 +564,7 @@
 }
 
 .mnt-matrix-wrap--target {
-  --mnt-target-name-width: 186px;
+  --mnt-target-name-width: 148px;
   --mnt-target-period-width: 172px;
   overflow: hidden;
   overflow-y: auto;
