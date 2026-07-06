@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 14:03:06 CST  更新内容: 月度经营趋势完成率读数固定上移，避免数据显示在折线上。 */
 /* 更新时间: 2026-07-06 13:37:20 CST  更新内容: 月度经营趋势完成率读数增加贴片底色和顶部余量，提升高低波动数据的清晰度。 */
 /* 更新时间: 2026-07-06 12:25:08 CST  更新内容: 月度经营趋势完成率折线新增动态轴、错位标签和异常数据保护。 */
 /* 更新时间: 2026-06-29 10:45:53  更新内容: 月度经营趋势图例改为静态说明，并将目标与回款柱重叠展示。 */
@@ -6,6 +7,8 @@ import { getChannelTrend } from '../data/mock';
 import { COLOR, progressColor } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './MonthlyTrend.css';
+
+const COMPLETION_LABEL_OFFSET = [0, -16];
 
 function safeTrendNumber(value) {
   const number = Number(value);
@@ -37,14 +40,10 @@ function completionAxisMax(values) {
 
 function completionLabelLayout(params) {
   const labelY = Number(params.labelRect?.y ?? 8);
-  const pointY = Number(params.y ?? labelY);
-  const y = params.dataIndex % 2 === 0
-    ? Math.max(8, labelY)
-    : Math.max(pointY + 10, labelY);
   return {
-    y,
+    y: Math.max(8, labelY),
     hide: false,
-    moveOverlap: 'shiftY',
+    moveOverlap: 'shiftX',
   };
 }
 
@@ -168,7 +167,8 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         z: 8,
         label: {
           show: true,
-          position: (params) => (params.dataIndex % 2 === 0 ? 'top' : 'bottom'),
+          position: 'top',
+          offset: COMPLETION_LABEL_OFFSET,
           color: ({ value }) => progressColor(value, tokens.progressMid),
           backgroundColor: tokens.chartTooltipBg,
           borderColor: tokens.chartTooltipBorder,
@@ -178,7 +178,7 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
           fontSize: 14,
           fontWeight: 700,
           lineHeight: 17,
-          distance: 12,
+          distance: 18,
           formatter: ({ value }) => `${Number(value).toFixed(1)}%`,
         },
         labelLayout: completionLabelLayout,
