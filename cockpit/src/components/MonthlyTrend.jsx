@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 14:31:30 CST  更新内容: 月度经营趋势完成率读数下移避开折线并增加轻微文字阴影。 */
 /* 更新时间: 2026-07-06 16:26:12 CST  更新内容: 月度经营趋势完成率读数继续上移，贴近折线下方标注位置。 */
 /* 更新时间: 2026-07-06 16:07:18 CST  更新内容: 月度经营趋势完成率读数上移到贴近折线下方的位置。 */
 /* 更新时间: 2026-07-06 15:44:36 CST  更新内容: 月度经营趋势完成率读数移到折线下方并向柱子右侧偏移，避免压在柱状图上。 */
@@ -47,7 +48,7 @@ function completionAxisMax(values) {
 function completionLabelLayout(params) {
   const labelY = Number(params.labelRect?.y ?? 8);
   return {
-    y: Math.max(8, labelY - 16),
+    y: Math.max(8, labelY + 6),
     hide: false,
     moveOverlap: 'shiftX',
   };
@@ -179,6 +180,8 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
           fontSize: 14,
           fontWeight: 700,
           lineHeight: 17,
+          textShadowColor: 'rgba(0, 0, 0, .72)',
+          textShadowBlur: 5,
           align: 'left',
           distance: 2,
           formatter: ({ value }) => `${Number(value).toFixed(1)}%`,

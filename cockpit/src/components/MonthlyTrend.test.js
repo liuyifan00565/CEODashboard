@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 14:31:30 CST
+ 更新内容: 要求月度经营趋势完成率读数避开折线并保留轻微文字阴影。
+*/
+/*
  更新时间: 2026-07-06 16:26:12 CST
  更新内容: 要求月度经营趋势完成率读数从当前下方位置继续上移贴近折线。
 */
@@ -71,7 +75,9 @@ test('keeps the completion line readable for changing monthly trend data', () =>
   assert.doesNotMatch(completionLabelBlock, /padding:/);
   assert.match(source, /fontWeight:\s*700/);
   assert.match(source, /distance:\s*2/);
-  assert.match(source, /Math\.max\(8,\s*labelY - 16\)/);
+  assert.match(source, /textShadowColor:\s*'rgba\(0,\s*0,\s*0,\s*\.72\)'/);
+  assert.match(source, /textShadowBlur:\s*5/);
+  assert.match(source, /Math\.max\(8,\s*labelY \+ 6\)/);
   assert.match(source, /formatter:\s*\(\{ value \}\) => `\$\{Number\(value\)\.toFixed\(1\)\}%`/);
   assert.match(source, /labelLayout:\s*completionLabelLayout/);
   assert.match(source, /showAllSymbol:\s*true/);
