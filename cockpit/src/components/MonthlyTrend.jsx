@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 14:41:51 CST  更新内容: 月度经营趋势完成率蓝色读数横向偏移最终改为 13px，纵向保持上移 2px。 */
 /* 更新时间: 2026-07-06 14:41:51 CST  更新内容: 月度经营趋势完成率蓝色读数横向偏移改为 12，并整体上移 2px。 */
 /* 更新时间: 2026-07-06 14:41:51 CST  更新内容: 月度经营趋势完成率蓝色读数整体向左移动。 */
 /* 更新时间: 2026-07-06 14:31:30 CST  更新内容: 月度经营趋势完成率读数下移避开折线并增加轻微文字阴影。 */
@@ -16,7 +17,7 @@ import { getChannelTrend } from '../data/mock';
 import { useThemeTokens } from '../lib/theme';
 import './MonthlyTrend.css';
 
-const COMPLETION_LABEL_OFFSET = [12, 0];
+const COMPLETION_LABEL_OFFSET = [13, 0];
 const COMPLETION_LINE_COLOR = '#43eaff';
 
 function safeTrendNumber(value) {

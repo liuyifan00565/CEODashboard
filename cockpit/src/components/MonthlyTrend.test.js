@@ -1,5 +1,9 @@
 /*
  更新时间: 2026-07-06 14:41:51 CST
+ 更新内容: 要求月度经营趋势完成率蓝色读数横向偏移最终改为 13px，纵向保持上移 2px。
+*/
+/*
+ 更新时间: 2026-07-06 14:41:51 CST
  更新内容: 要求月度经营趋势完成率蓝色读数横向偏移改为 12，并整体上移 2px。
 */
 /*
@@ -65,7 +69,7 @@ test('keeps the completion line readable for changing monthly trend data', () =>
   assert.match(source, /scale:\s*true/);
   assert.match(source, /completionAxisMax\(values\)[\s\S]*?Math\.max\(24,\s*maxValue \* 0\.18\)/);
   assert.match(source, /grid:\s*\{[\s\S]*?top:\s*68[\s\S]*?right:\s*24[\s\S]*?bottom:\s*12/);
-  assert.match(source, /const COMPLETION_LABEL_OFFSET = \[12,\s*0\];/);
+  assert.match(source, /const COMPLETION_LABEL_OFFSET = \[13,\s*0\];/);
   assert.match(source, /const COMPLETION_LINE_COLOR = '#43eaff';/);
   assert.doesNotMatch(source, /position:\s*\(params\) => \(params\.dataIndex % 2 === 0 \? 'top' : 'bottom'\)/);
   assert.match(source, /label:\s*\{[\s\S]*?position:\s*'bottom'/);
