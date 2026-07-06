@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-01 18:20:15 CST  更新内容: 交付看板背景改为主页续费率 KPI 同款透明玻璃底。 */
+/* 更新时间: 2026-07-06 17:35:00 CST  更新内容: 交付看板面板 CSS 与版本情况 .vf-panel 完全一致。 */
 .dlv-panel {
   position: relative;
   height: 100%;
@@ -7,11 +7,13 @@
   flex-direction: column;
   gap: 14px;
   padding: 22px 24px 24px;
-  border-radius: 18px;
-  background: transparent;
+  border-radius: 16px;
+  background:
+    linear-gradient(120deg, rgba(230,251,255,.055), transparent 48%),
+    transparent;
   border: 1px solid var(--line-2);
-  backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
   overflow: hidden;
 }

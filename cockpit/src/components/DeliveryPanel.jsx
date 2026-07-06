@@ -1,4 +1,4 @@
-/* 更新时间: 2026-06-29 10:45:53  更新内容: 新增交付看板，展示实施工程师交付人效、单价、金额价值和目标完成情况。 */
+/* 更新时间: 2026-07-06 17:35:00 CST  更新内容: 交付看板面板 CSS 与主页开户数卡片统一——透明底、玻璃模糊、hover 上浮加强阴影。 */
 import { getDeliveryRows, getDeliverySummary } from '../data/mock';
 import { progressColor } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
