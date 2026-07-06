@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:49:52 CST
+ 更新内容: 增加顶部品牌胶囊滚动折叠为 sticky 身份标识的回归测试。
+*/
+/*
  更新时间: 2026-07-06 00:20:59 CST
  更新内容: 增加所有仪表盘卡片复用月度趋势悬浮亮边效果的回归测试。
 */
@@ -354,24 +358,43 @@ test('keeps overview card placement stable when search result wrappers appear', 
   assert.match(cssRuleBody(operatingOverviewCss, '.op-search-result--channel'), /grid-area:\s*channel;/);
 });
 
-test('renders the compact FuKe brand capsule in the topbar', () => {
+test('morphs the FuKe brand capsule into compact and minimal sticky identities on scroll', () => {
   const brandBlock = cssRuleBody(dashboardCss, '.dash-topbar .brand');
   const brandTitleBlock = cssRuleBody(dashboardCss, '.dash-topbar .brand b');
   const brandMetaBlock = cssRuleBody(dashboardCss, '.dash-topbar .brand small');
+  const compactBrandBlock = cssRuleBody(dashboardCss, '.dash-topbar .brand-glass--compact');
+  const minimalBrandBlock = cssRuleBody(dashboardCss, '.dash-topbar .brand-glass--minimal');
+  const inlineCopyBlock = cssRuleBody(dashboardCss, '.dash-topbar .brand-copy-inline');
 
   assert.match(mockSource, /monthLabel: '2026年6月'/);
   assert.doesNotMatch(mockSource, /monthLabel: '2026 年 6 月'/);
   assert.match(appSource, /import MetallicPaint from '\.\/components\/MetallicPaint\/MetallicPaint';/);
-  assert.match(appSource, /<GlassSurface[\s\S]*?width=\{328\}[\s\S]*?height=\{66\}[\s\S]*?borderRadius=\{22\}[\s\S]*?className="brand-glass"[\s\S]*?<div className="brand">/);
+  assert.match(appSource, /const \[brandMode, setBrandMode\] = useState\('full'\);/);
+  assert.match(appSource, /const compactMonthLabel = formatCompactMonthLabel\(META\.monthLabel\);/);
+  assert.match(appSource, /const brandIdentityText = brandMode === 'minimal'\s*\?\s*'经营驾驶舱'\s*:\s*`福客经营驾驶舱 · \$\{compactMonthLabel\} · \$\{compactContextLabel\}`;/);
+  assert.match(appSource, /scrollTop <= 80[\s\S]*?'full'[\s\S]*?deepScroll \? 'minimal' : 'compact'/);
+  assert.match(appSource, /window\.addEventListener\('scroll', requestBrandMode, \{ passive: true \}\);/);
+  assert.match(appSource, /<GlassSurface[\s\S]*?width=\{brandMode === 'full' \? 320 : brandMode === 'compact' \? 248 : 180\}[\s\S]*?height=\{brandMode === 'full' \? 62 : brandMode === 'compact' \? 40 : 38\}[\s\S]*?borderRadius=\{brandMode === 'full' \? 22 : 16\}[\s\S]*?backgroundOpacity=\{brandMode === 'full' \? 0\.045 : brandMode === 'compact' \? 0\.03 : 0\.018\}[\s\S]*?className=\{`brand-glass brand-glass--\$\{brandMode\}`\}[\s\S]*?<div className="brand"/);
   assert.match(appSource, /<span className="brand-logo-paint" aria-hidden="true">[\s\S]*?<MetallicPaint[\s\S]*?imageSrc="\/logo-black\.png"[\s\S]*?\/>[\s\S]*?<\/span>/);
-  assert.match(appSource, /<div className="brand-copy">[\s\S]*?<b>福客经营驾驶舱<\/b>[\s\S]*?<small>\{META\.monthLabel\} \/ \{activeContextLabel\}<\/small>[\s\S]*?<\/div>/);
-  assert.match(dashboardCss, /\.dash-topbar \.brand-glass\{[\s\S]*?flex:0 0 328px;[\s\S]*?min-width:328px/);
+  assert.match(appSource, /<div className="brand-copy">[\s\S]*?<span className="brand-copy-full"[\s\S]*?<b>福客经营驾驶舱<\/b>[\s\S]*?<small>\{META\.monthLabel\} \/ \{activeContextLabel\}<\/small>[\s\S]*?<\/span>[\s\S]*?<span className="brand-copy-inline">\{brandIdentityText\}<\/span>[\s\S]*?<\/div>/);
+  assert.match(appSource, /<div className="dash-secondary-grid" ref=\{secondaryGridRef\}>/);
+  assert.match(dashboardCss, /\.dash-topbar \.brand-glass\{[\s\S]*?flex:0 0 320px;[\s\S]*?min-width:320px[\s\S]*?transition:width \.26s cubic-bezier\(\.22,1,\.36,1\),height \.26s cubic-bezier\(\.22,1,\.36,1\),flex-basis \.26s cubic-bezier\(\.22,1,\.36,1\),min-width \.26s cubic-bezier\(\.22,1,\.36,1\),max-width \.26s cubic-bezier\(\.22,1,\.36,1\),opacity \.26s cubic-bezier\(\.22,1,\.36,1\),filter \.26s cubic-bezier\(\.22,1,\.36,1\) !important;/);
+  assert.match(compactBrandBlock, /flex-basis:\s*248px;/);
+  assert.match(compactBrandBlock, /min-width:\s*248px;/);
+  assert.match(compactBrandBlock, /max-width:\s*248px;/);
+  assert.match(minimalBrandBlock, /flex-basis:\s*180px;/);
+  assert.match(minimalBrandBlock, /min-width:\s*180px;/);
+  assert.match(minimalBrandBlock, /max-width:\s*180px;/);
+  assert.match(minimalBrandBlock, /opacity:\s*\.74;/);
   assert.match(brandBlock, /padding:\s*0 18px;/);
   assert.match(brandBlock, /gap:\s*13px;/);
   assert.match(brandTitleBlock, /font-size:\s*20px;/);
   assert.match(brandTitleBlock, /font-weight:\s*760;/);
   assert.match(brandMetaBlock, /font-size:\s*16px;/);
   assert.match(brandMetaBlock, /color:\s*rgba\(247,248,252,\.58\);/);
+  assert.match(inlineCopyBlock, /font-size:\s*14px;/);
+  assert.match(inlineCopyBlock, /white-space:\s*nowrap;/);
+  assert.match(inlineCopyBlock, /text-overflow:\s*ellipsis;/);
   assert.doesNotMatch(appSource, /<div className="dash-title-block">/);
   assert.doesNotMatch(dashboardCss, /\.dash-title-block/);
   assert.doesNotMatch(appSource, /className="dash-page-context"/);
@@ -419,7 +442,7 @@ test('adds a topbar data maintenance switch that swaps the sidebar navigation', 
 });
 
 test('softens the shared glass controls so navigation and top tools stay restrained', () => {
-  assert.match(appSource, /className="brand-glass"/);
+  assert.match(appSource, /className=\{`brand-glass brand-glass--\$\{brandMode\}`\}/);
   assert.match(sidebarSource, /<GlassSurface[\s\S]*?brightness=\{46\}[\s\S]*?blur=\{12\}[\s\S]*?displace=\{0\.22\}[\s\S]*?backgroundOpacity=\{0\.052\}[\s\S]*?distortionScale=\{-44\}[\s\S]*?className="sb-glass"/);
   assert.match(expandableSearchSource, /brightness=\{48\}[\s\S]*?blur=\{7\}[\s\S]*?displace=\{0\.35\}[\s\S]*?backgroundOpacity=\{0\.035\}[\s\S]*?distortionScale=\{-60\}/);
   assert.match(glassSurfaceCss, /\.glass-surface--svg\s*\{[\s\S]*?box-shadow:[\s\S]*?inset 0 0 0 1px[\s\S]*?inset 0 1px 0 rgba\(255, 255, 255, 0\.10\)[\s\S]*?0px 10px 30px rgba\(17, 17, 26, 0\.08\);/);

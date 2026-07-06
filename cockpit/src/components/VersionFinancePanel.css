@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 10:00:00 CST  更新内容: 版本二级明细弹窗尺寸接入高级果味玻璃明细页母版。 */
 /* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 版本情况表格和合计数字进一步降噪，保持半环和表格信息完整。 */
 /* 更新时间: 2026-07-04 01:03:12 CST  更新内容: 版本情况补充轻量经营洞察，表格表头/分割线/环比对齐继续降噪。 */
 /* 更新时间: 2026-07-04 00:21:24 CST  更新内容: 版本情况控制器归位右上并改紫色选中态，半环和表格视觉层级降噪。 */
@@ -402,14 +403,12 @@
 }
 
 .vf-detail-card {
-  width: min(720px, calc(100vw - 48px));
+  width: min(760px, calc(100vw - 48px));
   max-height: calc(100vh - 48px);
-  background:
-    linear-gradient(90deg, rgba(9, 9, 13, .96), rgba(5, 5, 8, .96) 52%, rgba(3, 3, 6, .98)),
-    rgba(4, 4, 7, .96);
-  -webkit-backdrop-filter: blur(26px) saturate(145%);
-  backdrop-filter: blur(26px) saturate(145%);
-  box-shadow: 0 34px 110px rgba(0, 0, 0, .72), inset 0 1px 0 rgba(255, 255, 255, .16);
+}
+
+.vf-detail-summary {
+  margin-top: 18px;
 }
 
 .vf-detail-overlay {

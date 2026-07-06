@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:00:00 CST
+ 更新内容: 增加 KPI 二级明细弹窗高级果味母版的结构与视觉回归测试。
+*/
+/*
  更新时间: 2026-07-06 00:00:13 CST
  更新内容: KPI 完成态金色图表守卫改为灰金/香槟哑金渐变。
 */
@@ -152,6 +156,7 @@ import assert from 'node:assert/strict';
 
 const componentSource = readFileSync(new URL('./KpiCard.jsx', import.meta.url), 'utf8');
 const cssSource = readFileSync(new URL('./KpiCard.css', import.meta.url), 'utf8');
+const modalSource = readFileSync(new URL('./KpiModal.jsx', import.meta.url), 'utf8');
 const modalCssSource = readFileSync(new URL('./KpiModal.css', import.meta.url), 'utf8');
 
 test('uses optional display fields for the large KPI number', () => {
@@ -347,7 +352,7 @@ test('formats recovery pie hover text as name over number instead of inline rows
 });
 
 test('styles the recovery pie mini tooltip with the modal glass frame and a darker readable fill', () => {
-  assert.match(modalCssSource, /\.km-card\s*\{[\s\S]*?linear-gradient\(90deg, rgba\(9,\s*9,\s*13,\s*0\.96\), rgba\(5,\s*5,\s*8,\s*0\.96\) 52%, rgba\(3,\s*3,\s*6,\s*0\.98\)\)[\s\S]*?rgba\(4,\s*4,\s*7,\s*0\.96\);[\s\S]*?border:\s*1px solid var\(--line-2\);[\s\S]*?backdrop-filter:\s*blur\(26px\) saturate\(145%\);[\s\S]*?box-shadow:\s*0 34px 110px rgba\(0,\s*0,\s*0,\s*0\.72\), inset 0 1px 0 rgba\(255,\s*255,\s*255,\s*0\.16\);/);
+  assert.match(modalCssSource, /\.km-card\s*\{[\s\S]*?width:\s*min\(760px,\s*calc\(100vw - 48px\)\);[\s\S]*?border-radius:\s*28px;[\s\S]*?linear-gradient\(180deg,\s*rgba\(28,\s*28,\s*42,\s*0\.78\),\s*rgba\(12,\s*12,\s*20,\s*0\.72\)\)[\s\S]*?border:\s*1px solid rgba\(255,\s*255,\s*255,\s*0\.10\);[\s\S]*?backdrop-filter:\s*blur\(32px\) saturate\(145%\);[\s\S]*?box-shadow:\s*0 32px 96px rgba\(0,\s*0,\s*0,\s*0\.52\),[\s\S]*?inset 0 1px 0 rgba\(255,\s*255,\s*255,\s*0\.10\);/);
   assert.match(modalCssSource, /\.km-mask\s*\{[\s\S]*?background:\s*rgba\(0,\s*0,\s*0,\s*0\.82\);[\s\S]*?backdrop-filter:\s*blur\(14px\) saturate\(120%\);/);
   assert.doesNotMatch(modalCssSource, /\.km-card\s*\{[\s\S]*?background:\s*transparent;/);
   assert.doesNotMatch(modalCssSource, /\.km-card\s*\{[\s\S]*?radial-gradient\(circle at 20% 42%, rgba\(255, 79, 216/);
@@ -359,4 +364,21 @@ test('styles the recovery pie mini tooltip with the modal glass frame and a dark
   assert.doesNotMatch(componentSource, /kpi-pie-tooltip--success/);
   assert.doesNotMatch(cssSource, /kpi-pie-tooltip--success/);
   assert.doesNotMatch(cssSource, /\.km-card/);
+});
+
+test('renders KPI drilldowns with the premium glass detail-page structure', () => {
+  assert.match(modalSource, /function modalSubtitle\(card, dim, isRenewal\)/);
+  assert.match(modalSource, /function buildGoalSummary\(card, sel, cardUnit\)/);
+  assert.match(modalSource, /function trendDescription\(series, selIndex, sel, cardUnit\)/);
+  assert.match(modalSource, /className="km-title-wrap"[\s\S]*?<h3 className="km-title">\{modalTitle\}<\/h3>[\s\S]*?<p className="km-subtitle">\{modalSubtitle\(card, dim, isRenewal\)\}<\/p>/);
+  assert.match(modalSource, /<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">渠道<\/span>[\s\S]*?<MultiSegmented options=\{SALES_FILTER_OPTS\}/);
+  assert.match(modalSource, /<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">粒度<\/span>[\s\S]*?<Segmented options=\{DIM_OPTS\}/);
+  assert.match(modalSource, /className="km-metric-section"/);
+  assert.match(modalSource, /className="km-time-tag">\{sel\.label\}<\/span>/);
+  assert.match(modalSource, /className="km-trend-card"[\s\S]*?className="km-trend-label"[\s\S]*?className="km-trend-value"[\s\S]*?className="km-trend-desc"/);
+  assert.match(modalSource, /className="km-summary"/);
+  assert.match(modalSource, /className="km-summary-progress-fill"[\s\S]*?width:\s*`\$\{Math\.min\(Number\(goalSummary\.rate\) \|\| 0,\s*100\)\}%`/);
+  assert.match(modalSource, /class="km-chart-tooltip"[\s\S]*?\$\{params\[0\]\?\.axisValue/);
+  assert.match(modalCssSource, /\.km-chart-tooltip\s*\{[\s\S]*?background:\s*rgba\(22,\s*22,\s*34,\s*0\.82\);[\s\S]*?backdrop-filter:\s*blur\(18px\);[\s\S]*?box-shadow:\s*0 12px 36px rgba\(0,\s*0,\s*0,\s*0\.35\);/);
+  assert.match(modalCssSource, /\.km-summary\s*\{[\s\S]*?grid-template-columns:\s*1\.1fr 2fr 1fr;[\s\S]*?border-radius:\s*18px;[\s\S]*?background:\s*rgba\(255,\s*255,\s*255,\s*0\.045\);/);
 });

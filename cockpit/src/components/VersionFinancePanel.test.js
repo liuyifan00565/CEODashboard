@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 10:00:00 CST
+ 更新内容: 增加版本二级明细弹窗继承高级果味母版结构的回归测试。
+*/
+/*
  更新时间: 2026-07-05 23:42:14 CST
  更新内容: 版本情况首页高度对齐测试同步到当前 dash-secondary-grid 二级布局。
 */
@@ -145,15 +149,23 @@ test('adds a KPI-style secondary expand entry and version detail modal', () => {
   assert.match(source, /versionKey=\{detailVersionKey\}/);
   assert.match(source, /<MultiSegmented options=\{SALES_FILTER_OPTS\}/);
   assert.match(source, /<Segmented options=\{VERSION_DETAIL_MODES\}/);
-  assert.match(source, /{DIM_FOOTER\[dim\]} · {versionName}{modeMeta\.label}合计/);
+  assert.match(source, /className="km-title-wrap"[\s\S]*?<h3 className="km-title">\{DIM_TITLE\[dim\]\}\{versionName\}\{modeMeta\.label\}<\/h3>[\s\S]*?<p className="km-subtitle">\{versionDetailSubtitle\(dim, versionName, modeMeta\.label\)\}<\/p>/);
+  assert.match(source, /<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">渠道<\/span>[\s\S]*?<MultiSegmented options=\{SALES_FILTER_OPTS\}/);
+  assert.match(source, /<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">口径<\/span>[\s\S]*?<Segmented options=\{VERSION_DETAIL_MODES\}/);
+  assert.match(source, /<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">粒度<\/span>[\s\S]*?<Segmented options=\{DIM_OPTS\}/);
+  assert.match(source, /className="km-metric-section"/);
+  assert.match(source, /className="km-time-tag">\{selected\.label\}<\/span>/);
+  assert.match(source, /versionDetailTrendDescription\(series, selIndex, selected, modeMeta\.unit\)/);
+  assert.match(source, /className="km-summary vf-detail-summary"/);
+  assert.match(source, /className="km-summary-progress-fill"[\s\S]*?width:\s*`\$\{Math\.min\(versionSummary\.rate,\s*100\)\}%`/);
+  assert.doesNotMatch(source, /{DIM_FOOTER\[dim\]} · {versionName}{modeMeta\.label}合计/);
   assert.match(css, /\.vf-detail-card/);
-  assert.match(css, /\.vf-detail-card \{[\s\S]*?width: min\(720px, calc\(100vw - 48px\)\);/);
+  assert.match(css, /\.vf-detail-card \{[\s\S]*?width: min\(760px, calc\(100vw - 48px\)\);/);
   assert.match(css, /\.vf-detail-card \{[\s\S]*?max-height: calc\(100vh - 48px\);/);
-  assert.match(css, /\.vf-detail-card \{[\s\S]*?linear-gradient\(90deg, rgba\(9, 9, 13, \.96\), rgba\(5, 5, 8, \.96\) 52%, rgba\(3, 3, 6, \.98\)\)/);
-  assert.match(css, /\.vf-detail-card \{[\s\S]*?rgba\(4, 4, 7, \.96\);/);
+  assert.doesNotMatch(css, /\.vf-detail-card \{[\s\S]*?linear-gradient\(90deg, rgba\(9, 9, 13, \.96\), rgba\(5, 5, 8, \.96\) 52%, rgba\(3, 3, 6, \.98\)\)/);
+  assert.match(css, /\.vf-detail-summary \{[\s\S]*?margin-top: 18px;/);
   assert.doesNotMatch(css, /\.vf-detail-card \{[\s\S]*?radial-gradient\(circle at 20% 42%, rgba\(255, 79, 216/);
   assert.doesNotMatch(css, /\.vf-detail-card \{[\s\S]*?radial-gradient\(circle at 4% 86%, rgba\(96, 0, 255/);
-  assert.match(css, /\.vf-detail-card \{[\s\S]*?backdrop-filter: blur\(26px\) saturate\(145%\);/);
   assert.match(css, /\.vf-panel \{[\s\S]*?overflow: visible;/);
   assert.match(css, /\.vf-detail-overlay \{[\s\S]*?position: fixed;/);
   assert.match(css, /\.vf-detail-overlay \{[\s\S]*?inset: 0;/);

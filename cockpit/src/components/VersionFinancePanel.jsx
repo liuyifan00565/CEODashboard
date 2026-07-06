@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 10:00:00 CST  更新内容: 版本二级明细弹窗继承高级果味玻璃明细页母版。 */
 /* 更新时间: 2026-07-06 00:00:13 CST  更新内容: 版本情况半环与色点中的金色改为高级哑金。 */
 /* 更新时间: 2026-07-04 01:03:12 CST  更新内容: 版本情况补充经营洞察文案，并让环比列使用独立数字对齐内层。 */
 /* 更新时间: 2026-07-04 00:21:24 CST  更新内容: 版本情况控制器移至右上，半环仅标前两项并降低光晕，表格增加版本色点。 */
@@ -17,7 +18,7 @@ import EChart from './EChart';
 import MultiSegmented from './MultiSegmented';
 import Segmented from './Segmented';
 import { getChannelRows, getVersionRows, MONTHLY_TREND } from '../data/mock';
-import { fmtDelta, deltaColor, fmtMoney } from '../lib/format';
+import { fmtDelta, deltaColor, fmtMoney, progressGradient } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './KpiModal.css';
 import './VersionFinancePanel.css';
@@ -133,6 +134,48 @@ function buildVersionDetailSeries({ salesKeys, mode, dim, versionKey }) {
 function formatModeValue(value, modeMeta) {
   const number = Number(value) || 0;
   return `${number.toLocaleString('zh-CN')}${modeMeta.unit}`;
+}
+
+function versionDetailSubtitle(dim, versionName, modeLabel) {
+  return `按${DIM_TITLE[dim] ?? '本月'}维度查看${versionName}${modeLabel}变化趋势`;
+}
+
+function versionDetailTrendDescription(series, selIndex, selected, unit) {
+  const prevPoint = series[selIndex - 1];
+  const previous = Number(selected.prev ?? prevPoint?.value ?? 0) || 0;
+  const change = Number(selected.value ?? 0) - previous;
+  const direction = change >= 0 ? '增加' : '减少';
+  return `较 ${prevPoint?.label ?? '上期'} ${direction} ${Math.abs(change).toLocaleString('zh-CN')}${unit}`;
+}
+
+function buildVersionSummary(selected, modeMeta, versionName) {
+  const value = Number(selected.value ?? 0) || 0;
+  const previous = Number(selected.prev ?? 0) || 0;
+  const changePct = previous ? +(((value - previous) / previous) * 100).toFixed(1) : 0;
+  const benchmark = Math.max(value, previous);
+  const rate = benchmark ? Math.min(+(value / benchmark * 100).toFixed(1), 100) : 0;
+  return {
+    targetLabel: '当前口径',
+    targetValue: `${versionName}${modeMeta.label}`,
+    completedLabel: '当前值',
+    completedValue: formatModeValue(value, modeMeta),
+    rate,
+    rateValue: fmtDelta(changePct),
+    gapLabel: '上期对比',
+    gapValue: formatModeValue(previous, modeMeta),
+  };
+}
+
+function versionDetailBarColor(active) {
+  return new echarts.graphic.LinearGradient(0, 0, 0, 1, active
+    ? [
+        { offset: 0, color: '#B8A8FF' },
+        { offset: 1, color: '#7B61FF' },
+      ]
+    : [
+        { offset: 0, color: 'rgba(132,118,226,0.58)' },
+        { offset: 1, color: 'rgba(82,72,150,0.42)' },
+      ]);
 }
 
 function versionShare(version, totalUnits) {
@@ -280,12 +323,12 @@ function VersionDetailModal({ channelKey, versionKey, onClose }) {
 
   useEffect(() => {
     const tl = gsap.timeline();
-    tl.fromTo(maskRef.current, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.32, ease: 'power2.out' });
+    tl.fromTo(maskRef.current, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.22, ease: 'power3.out' });
     tl.fromTo(
       cardRef.current,
-      { autoAlpha: 0, scale: 0.82, rotateY: -28, transformPerspective: 1000 },
-      { autoAlpha: 1, scale: 1, rotateY: 0, duration: 0.55, ease: 'back.out(1.4)' },
-      '-=0.18'
+      { autoAlpha: 0, scale: 0.975, y: 10 },
+      { autoAlpha: 1, scale: 1, y: 0, duration: 0.22, ease: 'power3.out' },
+      '-=0.12'
     );
     return () => tl.kill();
   }, []);
@@ -309,27 +352,40 @@ function VersionDetailModal({ channelKey, versionKey, onClose }) {
     const chart = chartRef.current;
     if (!chart) return;
     chart.setOption({
-      grid: { left: 8, right: 12, top: 18, bottom: 8, containLabel: true },
+      grid: { left: 10, right: 12, top: 18, bottom: 6, containLabel: true },
       tooltip: {
         trigger: 'axis',
-        backgroundColor: tokens.chartTooltipBg,
-        borderColor: tokens.chartTooltipBorder,
-        textStyle: { color: tokens.chartText, fontSize: 14 },
-        axisPointer: { type: 'shadow', shadowStyle: { color: tokens.chartPointer } },
-        valueFormatter: (value) => `${value}${modeMeta.unit}`,
+        confine: true,
+        backgroundColor: 'transparent',
+        borderColor: 'transparent',
+        borderWidth: 0,
+        padding: 0,
+        textStyle: { color: tokens.chartText, fontSize: 12, lineHeight: 16 },
+        axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(169,155,255,0.08)' } },
+        formatter: (params) => {
+          const point = params[0] ?? {};
+          const value = point.data?.value ?? point.value ?? 0;
+          return `
+            <div class="km-chart-tooltip" aria-label="${params[0]?.axisValue ?? ''}${formatModeValue(value, modeMeta)}">
+              <div class="km-chart-tooltip__title">${params[0]?.axisValue ?? ''}</div>
+              <div class="km-chart-tooltip__row"><span></span><strong>${formatModeValue(value, modeMeta)}</strong></div>
+            </div>
+          `;
+        },
+        extraCssText: 'padding:0;border:0;background:transparent;box-shadow:none;pointer-events:none;',
       },
       xAxis: {
         type: 'category',
         data: series.map((item) => item.label),
-        axisLine: { lineStyle: { color: tokens.chartAxis } },
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.14)' } },
         axisTick: { show: false },
-        axisLabel: { color: tokens.chartMuted, fontSize: 14 },
+        axisLabel: { color: 'rgba(255,255,255,0.38)', fontSize: 11, margin: 10 },
       },
       yAxis: {
         type: 'value',
         axisLine: { show: false },
-        axisLabel: { color: tokens.chartMuted, fontSize: 14 },
-        splitLine: { lineStyle: { color: tokens.chartGrid } },
+        axisLabel: { color: 'rgba(255,255,255,0.38)', fontSize: 11 },
+        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.045)' } },
       },
       series: [
         {
@@ -339,11 +395,21 @@ function VersionDetailModal({ channelKey, versionKey, onClose }) {
           data: series.map((item, index) => ({
             value: item.value,
             itemStyle: {
-              color: index === selIndex ? tokens.chartBar : tokens.chartBarMuted,
-              borderRadius: [4, 4, 0, 0],
+              color: versionDetailBarColor(index === selIndex),
+              borderRadius: [8, 8, 3, 3],
+              opacity: index === selIndex ? 1 : 0.84,
             },
           })),
-          emphasis: { itemStyle: { color: tokens.chartText } },
+          emphasis: {
+            focus: 'series',
+            itemStyle: {
+              color: versionDetailBarColor(true),
+              opacity: 1,
+            },
+          },
+          animationDuration: 520,
+          animationDelay: (index) => index * 24,
+          animationEasing: 'cubicOut',
         },
       ],
     }, true);
@@ -353,44 +419,88 @@ function VersionDetailModal({ channelKey, versionKey, onClose }) {
     if (closingRef.current) return;
     closingRef.current = true;
     const tl = gsap.timeline({ onComplete: onClose });
-    tl.to(cardRef.current, { autoAlpha: 0, scale: 0.82, rotateY: 24, transformPerspective: 1000, duration: 0.36, ease: 'power2.in' });
-    tl.to(maskRef.current, { autoAlpha: 0, duration: 0.26, ease: 'power2.in' }, '-=0.2');
+    tl.to(cardRef.current, { autoAlpha: 0, scale: 0.975, y: 8, duration: 0.18, ease: 'power2.in' });
+    tl.to(maskRef.current, { autoAlpha: 0, duration: 0.18, ease: 'power2.in' }, '-=0.1');
   };
 
   const selected = series[selIndex] ?? series.at(-1) ?? { label: '', value: 0, prev: 0 };
   const mom = selected.prev ? +(((selected.value - selected.prev) / selected.prev) * 100).toFixed(1) : 0;
+  const versionSummary = buildVersionSummary(selected, modeMeta, versionName);
 
   const modal = (
     <div className="km-overlay vf-detail-overlay" role="dialog" aria-modal="true">
       <div className="km-mask vf-detail-mask" ref={maskRef} onClick={handleClose} />
       <div className="km-card vf-detail-card" ref={cardRef}>
         <div className="km-head">
-          <h3 className="km-title">{DIM_TITLE[dim]}{versionName}{modeMeta.label}</h3>
+          <div className="km-title-wrap">
+            <h3 className="km-title">{DIM_TITLE[dim]}{versionName}{modeMeta.label}</h3>
+            <p className="km-subtitle">{versionDetailSubtitle(dim, versionName, modeMeta.label)}</p>
+          </div>
           <button type="button" className="km-close" aria-label="关闭" onClick={handleClose}>
             <AppIcon name="close" size={17} />
           </button>
         </div>
 
         <div className="km-controls">
-          <MultiSegmented options={SALES_FILTER_OPTS} value={salesKeys} onChange={setSalesKeys} />
-          <Segmented options={VERSION_DETAIL_MODES} value={detailMode} onChange={setDetailMode} />
-          <Segmented options={DIM_OPTS} value={dim} onChange={setDim} />
+          <div className="km-filter-group">
+            <span className="km-filter-label">渠道</span>
+            <MultiSegmented options={SALES_FILTER_OPTS} value={salesKeys} onChange={setSalesKeys} />
+          </div>
+          <div className="km-filter-group">
+            <span className="km-filter-label">口径</span>
+            <Segmented options={VERSION_DETAIL_MODES} value={detailMode} onChange={setDetailMode} />
+          </div>
+          <div className="km-filter-group">
+            <span className="km-filter-label">粒度</span>
+            <Segmented options={DIM_OPTS} value={dim} onChange={setDim} />
+          </div>
         </div>
 
-        <div className="km-headline">
-          <span className="km-hl-label">{selected.label}</span>
-          <span className="km-hl-value">
-            {Number(selected.value || 0).toLocaleString('zh-CN')}
-            <span className="km-hl-unit">{modeMeta.unit}</span>
-          </span>
-          <span className="km-hl-mom">
-            <span className="km-hl-mom-name">{DIM_TITLE[dim]}环比</span>
-            <span className="km-hl-mom-val" style={{ color: deltaColor(mom) }}>{fmtDelta(mom)}</span>
-          </span>
+        <div className="km-metric-section">
+          <div className="km-metric-main">
+            <span className="km-time-tag">{selected.label}</span>
+            <div className="km-metric-copy">
+              <span className="km-hl-value">
+                {Number(selected.value || 0).toLocaleString('zh-CN')}
+                <span className="km-hl-unit">{modeMeta.unit}</span>
+              </span>
+              <span className="km-hl-label">{DIM_TITLE[dim]}{versionName}{modeMeta.label}</span>
+            </div>
+          </div>
+          <div className="km-trend-card">
+            <span className="km-trend-label">{DIM_TITLE[dim]}环比</span>
+            <span className="km-trend-value" style={{ color: deltaColor(mom) }}>{fmtDelta(mom)}</span>
+            <span className="km-trend-desc">{versionDetailTrendDescription(series, selIndex, selected, modeMeta.unit)}</span>
+          </div>
         </div>
 
         <div className="km-chart" ref={chartElRef} />
-        <div className="km-sub">{DIM_FOOTER[dim]} · {versionName}{modeMeta.label}合计</div>
+        <div className="km-summary vf-detail-summary">
+          <div className="km-summary-cell">
+            <span className="km-summary-label">{versionSummary.targetLabel}</span>
+            <b className="km-summary-value">{versionSummary.targetValue}</b>
+          </div>
+          <div className="km-summary-cell km-summary-cell--progress">
+            <span className="km-summary-label">{versionSummary.completedLabel}</span>
+            <b className="km-summary-value">
+              {versionSummary.completedValue}
+              <em>{versionSummary.rateValue}</em>
+            </b>
+            <span className="km-summary-progress" aria-label={`${DIM_FOOTER[dim]} · ${versionName}${modeMeta.label}合计`}>
+              <span
+                className="km-summary-progress-fill"
+                style={{
+                  width: `${Math.min(versionSummary.rate, 100)}%`,
+                  background: progressGradient(versionSummary.rate),
+                }}
+              />
+            </span>
+          </div>
+          <div className="km-summary-cell">
+            <span className="km-summary-label">{versionSummary.gapLabel}</span>
+            <b className="km-summary-value">{versionSummary.gapValue}</b>
+          </div>
+        </div>
       </div>
     </div>
   );
