@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-06 14:18:47 CST  更新内容: 月度经营趋势完成率读数取消黑色贴片，改为折线上方荧光黄文字。 */
 /* 更新时间: 2026-07-06 14:03:06 CST  更新内容: 月度经营趋势完成率读数固定上移，避免数据显示在折线上。 */
 /* 更新时间: 2026-07-06 13:37:20 CST  更新内容: 月度经营趋势完成率读数增加贴片底色和顶部余量，提升高低波动数据的清晰度。 */
 /* 更新时间: 2026-07-06 12:25:08 CST  更新内容: 月度经营趋势完成率折线新增动态轴、错位标签和异常数据保护。 */
@@ -169,12 +170,7 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
           show: true,
           position: 'top',
           offset: COMPLETION_LABEL_OFFSET,
-          color: ({ value }) => progressColor(value, tokens.progressMid),
-          backgroundColor: tokens.chartTooltipBg,
-          borderColor: tokens.chartTooltipBorder,
-          borderWidth: 1,
-          borderRadius: 5,
-          padding: [3, 6],
+          color: COLOR.good,
           fontSize: 14,
           fontWeight: 700,
           lineHeight: 17,

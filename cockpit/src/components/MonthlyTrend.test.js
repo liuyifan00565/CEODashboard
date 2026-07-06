@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-06 14:18:47 CST
+ 更新内容: 要求月度经营趋势完成率读数取消黑色贴片，仅保留荧光黄文字。
+*/
+/*
  更新时间: 2026-07-06 14:03:06 CST
  更新内容: 要求月度经营趋势完成率读数固定悬浮在折线上方，不再显示在线条上。
 */
@@ -15,6 +19,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 const source = readFileSync(new URL('./MonthlyTrend.jsx', import.meta.url), 'utf8');
+const completionLabelBlock = source.match(/label:\s*\{[\s\S]*?formatter:\s*\(\{ value \}\) => `\$\{Number\(value\)\.toFixed\(1\)\}%`,\n\s*\}/)?.[0] ?? '';
 
 test('keeps the completion line readable for changing monthly trend data', () => {
   assert.match(source, /function safeTrendNumber\(value\)/);
@@ -32,9 +37,12 @@ test('keeps the completion line readable for changing monthly trend data', () =>
   assert.doesNotMatch(source, /position:\s*\(params\) => \(params\.dataIndex % 2 === 0 \? 'top' : 'bottom'\)/);
   assert.match(source, /label:\s*\{[\s\S]*?position:\s*'top'/);
   assert.match(source, /offset:\s*COMPLETION_LABEL_OFFSET/);
-  assert.match(source, /backgroundColor:\s*tokens\.chartTooltipBg/);
-  assert.match(source, /borderColor:\s*tokens\.chartTooltipBorder/);
-  assert.match(source, /padding:\s*\[3,\s*6\]/);
+  assert.match(completionLabelBlock, /color:\s*COLOR\.good/);
+  assert.doesNotMatch(completionLabelBlock, /backgroundColor:/);
+  assert.doesNotMatch(completionLabelBlock, /borderColor:/);
+  assert.doesNotMatch(completionLabelBlock, /borderWidth:/);
+  assert.doesNotMatch(completionLabelBlock, /borderRadius:/);
+  assert.doesNotMatch(completionLabelBlock, /padding:/);
   assert.match(source, /fontWeight:\s*700/);
   assert.match(source, /distance:\s*18/);
   assert.match(source, /formatter:\s*\(\{ value \}\) => `\$\{Number\(value\)\.toFixed\(1\)\}%`/);
