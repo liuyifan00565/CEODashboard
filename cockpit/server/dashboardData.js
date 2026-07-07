@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:05:00 CST
+ 更新内容: 修复聚合占位逻辑——月时间进度改为按真实日历推导；开户环比/较昨日、续费上月、算力 overview 的客户余额/平均回复率/新开客户/店铺改用真实来源，移除硬编码 0。
+*/
+/*
  更新时间: 2026-07-07 12:18:57 CST
  更新内容: 首页回款目标改用 biz_target_monthly 维护口径，版本销售查询改为续费先聚合后关联，避免 JOIN 放大。
 */
@@ -103,8 +107,17 @@ function makeKpiDerived(kpi) {
 
 function makeOperatingMetrics({ kpiDerived, latestMonth, channelRows }) {
   const currentMonth = monthNumber(latestMonth);
-  const daysElapsed = currentMonth >= 6 ? 30 : 30;
+  const now = new Date();
+  const todayYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const daysInMonth = 30;
+  let daysElapsed;
+  if (todayYearMonth > latestMonth) {
+    daysElapsed = daysInMonth;
+  } else if (todayYearMonth < latestMonth) {
+    daysElapsed = 0;
+  } else {
+    daysElapsed = Math.min(daysInMonth, now.getDate());
+  }
   const monthTimeProgress = round1((daysElapsed / daysInMonth) * 100);
   const annualTimeProgress = round1((currentMonth / 12) * 100);
   const remainingMonths = Math.max(12 - currentMonth, 1);
@@ -538,37 +551,68 @@ export async function buildDashboardSnapshot(connection) {
     `, [latestMonth, latestMonth]),
     queryRows(connection, `
       SELECT c.channel_key, c.channel_name, v.version_key,
-             SUM(r.due_count) AS due_count,
-             SUM(r.renewed_count) AS renewed_count,
-             ROUND(SUM(r.renewal_amount_yuan) / 10000, 2) AS renewal_wan,
-             0 AS prev_due_count,
-             0 AS prev_renewed_count
-      FROM fact_renewal_daily r
-      LEFT JOIN dim_channel c ON c.channel_id = r.channel_id
-      LEFT JOIN dim_product_version v ON v.version_id = r.version_id
-      WHERE DATE_FORMAT(r.stat_date, '%Y-%m') = ?
-      GROUP BY c.channel_key, c.channel_name, v.version_key
-    `, [latestMonth]),
+             cur.due_count, cur.renewed_count, cur.renewal_wan,
+             COALESCE(p.prev_due_count, 0) AS prev_due_count,
+             COALESCE(p.prev_renewed_count, 0) AS prev_renewed_count
+      FROM (
+        SELECT channel_id, version_id,
+               SUM(due_count) AS due_count,
+               SUM(renewed_count) AS renewed_count,
+               ROUND(SUM(renewal_amount_yuan) / 10000, 2) AS renewal_wan
+        FROM fact_renewal_daily
+        WHERE DATE_FORMAT(stat_date, '%Y-%m') = ?
+        GROUP BY channel_id, version_id
+      ) cur
+      LEFT JOIN dim_channel c ON c.channel_id = cur.channel_id
+      LEFT JOIN dim_product_version v ON v.version_id = cur.version_id
+      LEFT JOIN (
+        SELECT channel_id, version_id,
+               SUM(due_count) AS prev_due_count,
+               SUM(renewed_count) AS prev_renewed_count
+        FROM fact_renewal_daily
+        WHERE DATE_FORMAT(stat_date, '%Y-%m') = ?
+        GROUP BY channel_id, version_id
+      ) p ON p.channel_id = cur.channel_id AND p.version_id = cur.version_id
+      ORDER BY cur.renewal_wan DESC
+    `, [latestMonth, previousMonth]),
     queryRows(connection, `
-      SELECT 'monthOpenings' AS metric, SUM(opening_count) AS value, 0 AS previous
+      SELECT 'monthOpenings' AS metric, SUM(opening_count) AS value,
+             (SELECT COALESCE(SUM(opening_count), 0) FROM fact_opening_account_daily WHERE DATE_FORMAT(stat_date, '%Y-%m') = ?) AS previous
       FROM fact_opening_account_daily
       WHERE DATE_FORMAT(stat_date, '%Y-%m') = ?
       UNION ALL
-      SELECT 'todayOpenings' AS metric, SUM(opening_count) AS value, 0 AS previous
+      SELECT 'todayOpenings' AS metric, SUM(opening_count) AS value,
+             (SELECT COALESCE(SUM(opening_count), 0) FROM fact_opening_account_daily
+              WHERE stat_date = (SELECT MAX(stat_date) FROM fact_opening_account_daily WHERE stat_date < (SELECT MAX(stat_date) FROM fact_opening_account_daily))) AS previous
       FROM fact_opening_account_daily
       WHERE stat_date = (SELECT MAX(stat_date) FROM fact_opening_account_daily)
-    `, [latestMonth]),
+    `, [previousMonth, latestMonth]),
     queryRows(connection, `
-      SELECT SUM(usage_points) AS consumed_capacity,
-             SUM(added_points) AS added_capacity,
-             MAX(capacity_points) AS total_capacity,
-             COUNT(*) AS total_customers,
-             SUM(usage_points) AS customer_usage,
-             MAX(capacity_points) AS customer_balance,
-             0 AS new_customers,
-             0 AS new_stores,
-             0 AS average_reply_rate,
-             (SELECT COUNT(*) FROM fact_compute_customer_daily) AS customer_count
+      SELECT
+        SUM(usage_points) AS consumed_capacity,
+        SUM(added_points) AS added_capacity,
+        MAX(capacity_points) AS total_capacity,
+        (SELECT COUNT(DISTINCT customer_phone_masked) FROM fact_compute_customer_daily WHERE stat_date = (SELECT MAX(stat_date) FROM fact_compute_customer_daily)) AS customer_count,
+        (SELECT COALESCE(SUM(usage_points), 0) FROM fact_compute_customer_daily WHERE stat_date = (SELECT MAX(stat_date) FROM fact_compute_customer_daily)) AS customer_usage,
+        (SELECT COALESCE(SUM(balance_points), 0) FROM fact_compute_customer_daily WHERE stat_date = (SELECT MAX(stat_date) FROM fact_compute_customer_daily)) AS customer_balance,
+        (SELECT COUNT(DISTINCT customer_phone_masked) FROM fact_compute_customer_daily) AS total_customers,
+        (SELECT COUNT(*) FROM fact_compute_customer_daily latest
+         WHERE latest.stat_date = (SELECT MAX(stat_date) FROM fact_compute_customer_daily)
+           AND latest.customer_phone_masked IS NOT NULL
+           AND NOT EXISTS (
+             SELECT 1 FROM fact_compute_customer_daily earlier
+             WHERE earlier.customer_phone_masked = latest.customer_phone_masked
+               AND earlier.stat_date < latest.stat_date
+           )) AS new_customers,
+        (SELECT COUNT(DISTINCT latest.customer_name) FROM fact_compute_customer_daily latest
+         WHERE latest.stat_date = (SELECT MAX(stat_date) FROM fact_compute_customer_daily)
+           AND latest.customer_name IS NOT NULL
+           AND NOT EXISTS (
+             SELECT 1 FROM fact_compute_customer_daily earlier
+             WHERE earlier.customer_name = latest.customer_name
+               AND earlier.stat_date < latest.stat_date
+           )) AS new_stores,
+        (SELECT ROUND(AVG(average_reply_rate), 1) FROM fact_compute_customer_daily WHERE stat_date = (SELECT MAX(stat_date) FROM fact_compute_customer_daily)) AS average_reply_rate
       FROM fact_compute_usage_daily
     `),
     queryRows(connection, `

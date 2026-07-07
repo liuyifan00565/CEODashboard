@@ -1,7 +1,7 @@
 # Dashboard Data Aggregation
 
-更新时间: 2026-07-07 12:18:57 CST
-更新内容: 记录真实数据库导入后的 `/api/dashboard-data` 聚合口径，明确回款、目标、版本、续费、开户、算力和交付模块的数据来源。
+更新时间: 2026-07-07 14:05:00 CST
+更新内容: 补充算力 overview 客户侧指标、开户环比/较昨日、续费上月、月时间进度的真实数据来源，移除硬编码 0 的占位说明。
 
 ## API
 
@@ -25,6 +25,9 @@
 
 - 渠道投入：`biz_channel_cost_monthly.investment_amount_yuan`。
 - 人力成本：`biz_labor_cost_monthly.amount_yuan`。
-- 开户数：`fact_opening_account_daily.opening_count`。
+- 开户数：`fact_opening_account_daily.opening_count`。本月开户环比 `previous` 取上一月同表汇总，今日开户 `previous` 取上一个有数据日期的汇总；当无历史日期时回退 0。
 - 算力趋势、客户排行、资源健康：分别来自 `fact_compute_usage_daily`、`fact_compute_customer_daily`、`fact_compute_resource_health_daily` 等算力事实表。
+- 算力 overview：总容量/新增/已耗来自 `fact_compute_usage_daily`；客户数、客户用量、客户余额、平均回复率、新开客户数、店铺数来自 `fact_compute_customer_daily` 最新快照——新开客户按手机号在更早日期不存在的记录计数，店铺数按 `customer_name` 同理计数；平均回复率取 `AVG(average_reply_rate)`。
+- 续费：`fact_renewal_daily` 按渠道×版本先聚合当月到期/已续/续费金额，再 LEFT JOIN 上一月同口径聚合得到 `prev_due_count`/`prev_renewed_count`；当上一月无数据时回退 0。
+- 经营节奏：月时间进度按真实日历推导（已过完整月=100%、未到月=0%、当月=已过天数/30），不再使用固定 30 的占位分支；年度时间进度仍按 `latestMonth` 月序 / 12。
 - 交付看板：`fact_delivery_order` 聚合交付单数和金额，`biz_delivery_target_monthly` 提供实施工程师月目标。
