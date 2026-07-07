@@ -97,12 +97,7 @@ const MAINTENANCE_TITLE_TEXT = {
   'channel-maintenance': '渠道维护',
 };
 
-const PAGE_RENDERERS = {
-  'target-maintenance': TargetMaintenancePage,
-  'cost-maintenance': CostMaintenancePage,
-  'org-maintenance': OrgMaintenancePage,
-  'channel-maintenance': ChannelMaintenancePage,
-};
+// PAGE_RENDERERS 在文件底部（四个 forwardRef 子页定义之后）声明，避免 const 的 TDZ。
 
 const TARGET_PERIOD_COLUMNS = buildTargetPeriodColumns(MAINTENANCE_PERIOD_COLUMNS, META.monthLabel);
 
@@ -905,6 +900,13 @@ const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ mark
     </section>
   );
 });
+
+const PAGE_RENDERERS = {
+  'target-maintenance': TargetMaintenancePage,
+  'cost-maintenance': CostMaintenancePage,
+  'org-maintenance': OrgMaintenancePage,
+  'channel-maintenance': ChannelMaintenancePage,
+};
 
 export default function MaintenancePage({ activePage = 'target-maintenance', onBack }) {
   const [statusByPage, setStatusByPage] = useState({});
