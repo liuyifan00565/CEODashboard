@@ -658,7 +658,7 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.doesNotMatch(maintenancePageSource, /<h2>\{title\}<\/h2>\s*<span>\{meta\.scope\}<\/span>/);
   assert.match(maintenancePageCss, /\.mnt-title-scope \{[\s\S]*?display:\s*inline;[\s\S]*?font-size:\s*12px;/);
   assert.doesNotMatch(maintenancePageCss, /\.mnt-toolbar \.mnt-title-block span \{/);
-  assert.match(maintenancePageSource, /aria-label="目标年份"[\s\S]*?<\/select>\s*<button className="mnt-btn" type="button" onClick=\{onDirty\}>下载模板<\/button>/);
+  assert.match(maintenancePageSource, /aria-label="目标年份"[\s\S]*?options=\{YEAR_OPTIONS\} \/>\s*<button className="mnt-btn" type="button" onClick=\{onDownloadTemplate\} disabled=\{saving\}>下载模板<\/button>/);
   assert.match(maintenancePageSource, /<div className="mnt-actions">\s*\{actions\[activePage\] \?\? actions\['target-maintenance'\]\}\s*<button className="mnt-btn" type="button" onClick=\{onBack\}>返回看板<\/button>\s*<SaveBadge status=\{status\} \/>/);
   assert.doesNotMatch(maintenancePageSource, /<div className="mnt-actions">\s*<SaveBadge/);
   assert.match(toolbarBlock, /min-height:\s*42px;/);

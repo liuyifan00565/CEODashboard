@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-07 16:50:00 CST  更新内容: 柱状图悬浮框对齐 GlassSelect 面板同体系——银紫描边 + 24px 毛玻璃 + 紫光投影 + 16px 圆角，杜绝与下拉框质感割裂。 */
 /* 更新时间: 2026-07-07 14:40:00 CST  更新内容: 月度经营趋势重构数据语义——目标改为背景宽柱(淡灰紫)、回款改为前景窄柱(银紫玫瑰渐变)，完成率细线+圆点且 y 轴超 100% 自动扩展并加 100% 基准线，图例颜色与序列对齐，移除 6 月高亮，未发生月份用虚线占位。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: 月度趋势按高级果味规则重排图表权重，回款用银紫渐变，目标后退，风险点保留玫瑰红。 */
 /* 更新时间: 2026-07-04 01:03:12 CST  更新内容: 月度经营趋势仅突出当前 6 月柱形和轴标，其余月份继续保持低饱和。 */
@@ -82,8 +83,9 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
       backgroundColor: tokens.chartTooltipBg,
-      borderColor: tokens.chartTooltipBorder,
+      borderColor: 'rgba(190, 175, 255, 0.24)',
       borderWidth: 1,
+      extraCssText: 'border-radius:16px; backdrop-filter:blur(24px) saturate(145%); -webkit-backdrop-filter:blur(24px) saturate(145%); box-shadow:0 18px 60px rgba(0,0,0,.45), 0 0 36px rgba(142,134,255,.18); padding:10px 12px;',
       textStyle: { color: txt, fontSize: 14 },
       valueFormatter: null,
       formatter: (params) => {
