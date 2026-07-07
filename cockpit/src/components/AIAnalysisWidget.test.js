@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 16:26:47 CST
+ 更新内容: AI 小人 guide 改由真实动作帧图表达，移除外层伪指引光束断言。
+*/
+/*
  更新时间: 2026-07-07 15:09:26 CST
  更新内容: 增加 AI 小人 guide 外层指引光束测试，确保点击后明确导向右侧对话框。
 */
@@ -145,11 +149,10 @@ test('plays a one-second guide motion only when opening the AI dialog from the m
   assert.doesNotMatch(componentSource, /playMascotAction\(MASCOT_ACTIONS\.guide,\s*1000,\s*false\)/);
 });
 
-test('shows a widget-level guide beam only while the guide action is active', () => {
+test('keeps the widget action class while relying on real guide frames instead of a fake beam', () => {
   assert.match(componentSource, /className=\{`ai-widget ai-widget--\$\{mascotAction\}/);
-  assert.match(componentCss, /\.ai-widget::after\s*\{[\s\S]*width:\s*120px;[\s\S]*height:\s*22px;[\s\S]*clip-path:\s*polygon\(0 43%, 76% 43%, 76% 22%, 100% 50%, 76% 78%, 76% 57%, 0 57%\);/);
-  assert.match(componentCss, /\.ai-widget--guide::after\s*\{[\s\S]*animation:\s*ai-widget-guide-beam 1s cubic-bezier\(\.2, \.82, \.2, 1\) both;/);
-  assert.match(componentCss, /@keyframes ai-widget-guide-beam/);
+  assert.doesNotMatch(componentCss, /\.ai-widget::after\s*\{/);
+  assert.doesNotMatch(componentCss, /ai-widget-guide-beam/);
   assert.doesNotMatch(componentCss, /content:\s*['"][^'"]+[A-Za-z\u4e00-\u9fff][^'"]*['"]/);
 });
 

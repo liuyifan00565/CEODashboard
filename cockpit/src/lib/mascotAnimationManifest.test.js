@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 16:26:47 CST
+ 更新内容: 将 AI 小人验收改为真实动作帧图资产，要求动作先有独立 sprite sheet 和自审记录再接入前端。
+*/
+/*
  更新时间: 2026-07-07 14:59:16 CST
  更新内容: 增加 AI 小人动作语义回归测试，要求非待机动作使用独立单帧姿态而不是同一张站姿图。
 */
@@ -10,17 +14,16 @@
  更新时间: 2026-07-07 14:03:53 CST
  更新内容: 新增 2D AI 小人帧动画 manifest 验收，约束 48 帧 sprite、四种待机和维护场景动作。
 */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  MASCOT_ACTION_AUDIT,
+  MASCOT_ACTION_SHEETS,
   MASCOT_ANIMATIONS,
   MASCOT_APPROVED_ASSETS,
-  MASCOT_FRAME_ANCHORS,
   MASCOT_IDLE_VARIANTS,
-  MASCOT_SPRITE_SHEET,
-  getMascotFrameAnchor,
   getMascotAnimation,
 } from './mascotAnimationManifest.js';
 import { MASCOT_ACTIONS } from './mascotCompanion.js';
@@ -39,89 +42,100 @@ const requiredActions = [
   'maintenanceReview',
 ];
 
-test('declares the approved 48-frame mascot sprite sheet geometry', () => {
-  assert.equal(MASCOT_SPRITE_SHEET.src, '/ai-mascot-sprite.png');
-  assert.equal(MASCOT_SPRITE_SHEET.columns, 12);
-  assert.equal(MASCOT_SPRITE_SHEET.rows, 4);
-  assert.equal(MASCOT_SPRITE_SHEET.frameCount, 48);
-  assert.equal(MASCOT_SPRITE_SHEET.frameWidth, 224);
-  assert.equal(MASCOT_SPRITE_SHEET.frameHeight, 300);
-  assert.ok(existsSync(new URL('../../public/ai-mascot-sprite.png', import.meta.url)));
+const requiredSheetKeys = [
+  'idleBreathe',
+  'idleLook',
+  'idleBounce',
+  'idlePatrol',
+  'wave',
+  'guide',
+  'talk',
+  'think',
+  'alert',
+  'celebrate',
+  'click',
+  'laptop',
+];
+
+function publicAssetExists(src) {
+  assert.match(src, /^\/mascot-actions\/mascot-[a-z-]+\.png$/);
+  return existsSync(new URL(`../../public${src}`, import.meta.url));
+}
+
+test('declares generated per-action mascot sprite sheets', () => {
+  assert.deepEqual(Object.keys(MASCOT_ACTION_SHEETS).sort(), requiredSheetKeys.sort());
+  for (const key of requiredSheetKeys) {
+    const sheet = MASCOT_ACTION_SHEETS[key];
+    assert.equal(sheet.frameWidth, 224, `${key} should use stable 224px frame width`);
+    assert.equal(sheet.frameHeight, 300, `${key} should use stable 300px frame height`);
+    assert.equal(sheet.rows, 1, `${key} should be a single-row playback sheet`);
+    assert.ok(sheet.columns >= 8, `${key} should have enough frames for smooth motion`);
+    assert.equal(sheet.frameCount, sheet.columns * sheet.rows);
+    assert.ok(publicAssetExists(sheet.src), `${sheet.src} should exist`);
+  }
 });
 
-test('limits the 2D mascot runtime to approved project assets', () => {
+test('limits the 2D mascot runtime to approved generated project assets', () => {
   assert.deepEqual(Object.keys(MASCOT_APPROVED_ASSETS).sort(), [
-    'analysisLaptop',
+    'audit',
     'favicon',
     'icons',
     'logoBlack',
-    'sprite',
-    'transparent',
+    'sheets',
   ]);
-  assert.equal(MASCOT_APPROVED_ASSETS.transparent, '/ai-mascot-transparent.png');
-  assert.equal(MASCOT_APPROVED_ASSETS.analysisLaptop, '/ai-mascot-analysis-laptop.png');
+  assert.equal(MASCOT_APPROVED_ASSETS.audit, '/mascot-actions/mascot-action-audit.json');
   assert.equal(MASCOT_APPROVED_ASSETS.logoBlack, '/logo-black.png');
+  for (const sheet of Object.values(MASCOT_APPROVED_ASSETS.sheets)) {
+    assert.ok(publicAssetExists(sheet));
+  }
 });
 
-test('defines at least four first-class idle variants', () => {
+test('defines at least four first-class idle variants as real frame loops', () => {
   assert.equal(MASCOT_IDLE_VARIANTS.length, 4);
   assert.deepEqual(MASCOT_IDLE_VARIANTS.map((item) => item.key), ['breathe', 'look', 'bounce', 'patrol']);
   for (const variant of MASCOT_IDLE_VARIANTS) {
     assert.ok(Array.isArray(variant.frames), `${variant.key} should declare frame indexes`);
-    assert.equal(variant.playback, 'static', `${variant.key} should not continuously animate in the sidebar`);
-    assert.equal(variant.replacementAsset, 'transparent', `${variant.key} should use the stable transparent mascot still`);
-    assert.equal(variant.frames.length, 1, `${variant.key} should hold one stable pose`);
-    assert.ok(variant.frames.every((frame) => frame >= 0 && frame < MASCOT_SPRITE_SHEET.frameCount));
+    assert.equal(variant.playback, 'frames', `${variant.key} should be a real idle frame sequence`);
+    assert.ok(variant.frames.length >= 8, `${variant.key} should have enough frames to loop smoothly`);
+    assert.ok(variant.sheetKey.startsWith('idle'), `${variant.key} should point to an idle sheet`);
   }
 });
 
 test('maps product actions to explicit frame animation specs', () => {
   for (const action of requiredActions) {
-    assert.ok(MASCOT_ANIMATIONS[action], `${action} should have an animation spec`);
-    assert.ok(Array.isArray(MASCOT_ANIMATIONS[action].frames), `${action} should declare frames`);
-    assert.ok(MASCOT_ANIMATIONS[action].fps >= 12, `${action} should be at least 12fps`);
-    assert.equal(MASCOT_ANIMATIONS[action].playback, 'static', `${action} should not continuously flip frames`);
-    assert.ok(MASCOT_ANIMATIONS[action].frames.every((frame) => frame >= 0 && frame < MASCOT_SPRITE_SHEET.frameCount));
+    const animation = MASCOT_ANIMATIONS[action];
+    assert.ok(animation, `${action} should have an animation spec`);
+    assert.ok(Array.isArray(animation.frames), `${action} should declare frames`);
+    assert.ok(animation.fps >= 12, `${action} should be at least 12fps`);
+    assert.equal(animation.playback, 'frames', `${action} should play actual authored frames`);
+    assert.ok(animation.frames.length >= 8, `${action} should have enough frames for smooth motion`);
+    assert.ok(MASCOT_ACTION_SHEETS[animation.sheetKey], `${action} should reference a generated sheet`);
+    assert.ok(animation.frames.every((frame) => frame >= 0 && frame < MASCOT_ACTION_SHEETS[animation.sheetKey].frameCount));
   }
   assert.equal(MASCOT_ANIMATIONS.guide.durationMs, 1000);
-  assert.equal(MASCOT_ANIMATIONS.idle.replacementAsset, 'transparent');
-  assert.equal(MASCOT_ANIMATIONS.wave.replacementAsset, '');
-  assert.equal(MASCOT_ANIMATIONS.guide.replacementAsset, '');
-  assert.equal(MASCOT_ANIMATIONS.talk.replacementAsset, '');
-  assert.equal(MASCOT_ANIMATIONS.think.replacementAsset, '');
-  assert.equal(MASCOT_ANIMATIONS.alert.replacementAsset, '');
-  assert.equal(MASCOT_ANIMATIONS.celebrate.replacementAsset, '');
-  assert.equal(MASCOT_ANIMATIONS.click.replacementAsset, '');
-  assert.equal(MASCOT_ANIMATIONS.think.overlay, '');
-  assert.equal(MASCOT_ANIMATIONS.maintenance.replacementAsset, 'analysisLaptop');
-  assert.equal(MASCOT_ANIMATIONS.maintenance.overlay, '');
+  assert.equal(MASCOT_ANIMATIONS.guide.loop, false);
+  assert.equal(MASCOT_ANIMATIONS.wave.loop, false);
+  assert.equal(MASCOT_ANIMATIONS.click.loop, false);
+  assert.equal(MASCOT_ANIMATIONS.talk.loop, true);
+  assert.equal(MASCOT_ANIMATIONS.maintenance.sheetKey, 'laptop');
+  assert.equal(MASCOT_ANIMATIONS.maintenanceSave.sheetKey, 'laptop');
+  assert.equal(MASCOT_ANIMATIONS.maintenanceReview.sheetKey, 'laptop');
 });
 
-test('keeps non-idle actions as distinct static sprite poses', () => {
-  assert.deepEqual(MASCOT_ANIMATIONS.wave.frames, [7]);
-  assert.deepEqual(MASCOT_ANIMATIONS.guide.frames, [18]);
-  assert.deepEqual(MASCOT_ANIMATIONS.talk.frames, [13]);
-  assert.deepEqual(MASCOT_ANIMATIONS.think.frames, [27]);
-  assert.deepEqual(MASCOT_ANIMATIONS.alert.frames, [42]);
-  assert.deepEqual(MASCOT_ANIMATIONS.celebrate.frames, [31]);
-  assert.deepEqual(MASCOT_ANIMATIONS.click.frames, [3]);
-  assert.equal(new Set([
-    MASCOT_ANIMATIONS.wave.frames[0],
-    MASCOT_ANIMATIONS.guide.frames[0],
-    MASCOT_ANIMATIONS.talk.frames[0],
-    MASCOT_ANIMATIONS.think.frames[0],
-    MASCOT_ANIMATIONS.alert.frames[0],
-    MASCOT_ANIMATIONS.celebrate.frames[0],
-    MASCOT_ANIMATIONS.click.frames[0],
-  ]).size, 7);
-});
-
-test('declares per-frame anchors to cancel source sprite foot drift', () => {
-  assert.equal(MASCOT_FRAME_ANCHORS.length, MASCOT_SPRITE_SHEET.frameCount);
-  assert.deepEqual(getMascotFrameAnchor(0), { offsetX: 0.5, offsetY: 0 });
-  assert.deepEqual(getMascotFrameAnchor(27), { offsetX: 2, offsetY: 18 });
-  assert.deepEqual(getMascotFrameAnchor(30), { offsetX: 0.5, offsetY: -3 });
-  assert.deepEqual(getMascotFrameAnchor(99), { offsetX: 0, offsetY: 0 });
+test('records self-audit results for smoothness and reasonableness', () => {
+  const auditUrl = new URL('../../public/mascot-actions/mascot-action-audit.json', import.meta.url);
+  assert.ok(existsSync(auditUrl), 'mascot action audit should be generated beside assets');
+  const auditJson = JSON.parse(readFileSync(auditUrl, 'utf8'));
+  assert.deepEqual(Object.keys(MASCOT_ACTION_AUDIT).sort(), requiredSheetKeys.sort());
+  assert.deepEqual(Object.keys(auditJson.actions).sort(), requiredSheetKeys.sort());
+  for (const key of requiredSheetKeys) {
+    const result = MASCOT_ACTION_AUDIT[key];
+    assert.equal(result.smooth, true, `${key} should pass smoothness audit`);
+    assert.equal(result.reasonable, true, `${key} should pass semantic audit`);
+    assert.ok(result.frameCount >= 8, `${key} should keep enough frames`);
+    assert.ok(result.maxFootJitterPx <= 3, `${key} foot jitter should stay stable`);
+    assert.ok(result.maxCenterJitterPx <= 12, `${key} center jitter should stay controlled`);
+  }
 });
 
 test('resolves idle variants and unknown actions deterministically', () => {
@@ -131,7 +145,7 @@ test('resolves idle variants and unknown actions deterministically', () => {
     getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).frames,
     MASCOT_IDLE_VARIANTS.find((variant) => variant.key === 'look').frames,
   );
-  assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).playback, 'static');
-  assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).replacementAsset, 'transparent');
-  assert.equal(getMascotAnimation('maintenanceSave').replacementAsset, 'analysisLaptop');
+  assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).playback, 'frames');
+  assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).sheetKey, 'idleLook');
+  assert.equal(getMascotAnimation('maintenanceSave').sheetKey, 'laptop');
 });

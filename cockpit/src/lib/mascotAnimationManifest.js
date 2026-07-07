@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 16:26:47 CST
+ 更新内容: 将 AI 小人动作切换为真实帧图 sprite sheet，接入动作自审结果并移除单帧替换策略。
+*/
+/*
  更新时间: 2026-07-07 14:59:16 CST
  更新内容: 恢复 AI 小人非待机动作的独立静态姿态，避免所有交互状态共用同一张站姿显得呆板。
 */
@@ -16,157 +20,173 @@
 */
 import { MASCOT_ACTIONS } from './mascotCompanion.js';
 
-export const MASCOT_SPRITE_SHEET = Object.freeze({
-  src: '/ai-mascot-sprite.png',
-  columns: 12,
-  rows: 4,
-  frameCount: 48,
-  frameWidth: 224,
-  frameHeight: 300,
+const FRAME_WIDTH = 224;
+const FRAME_HEIGHT = 300;
+const TWELVE_FRAMES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
+
+export const MASCOT_ACTION_SHEETS = Object.freeze({
+  idleBreathe: sheetSpec('/mascot-actions/mascot-idle-breathe.png'),
+  idleLook: sheetSpec('/mascot-actions/mascot-idle-look.png'),
+  idleBounce: sheetSpec('/mascot-actions/mascot-idle-bounce.png'),
+  idlePatrol: sheetSpec('/mascot-actions/mascot-idle-patrol.png'),
+  wave: sheetSpec('/mascot-actions/mascot-wave.png'),
+  guide: sheetSpec('/mascot-actions/mascot-guide.png'),
+  talk: sheetSpec('/mascot-actions/mascot-talk.png'),
+  think: sheetSpec('/mascot-actions/mascot-think.png'),
+  alert: sheetSpec('/mascot-actions/mascot-alert.png'),
+  celebrate: sheetSpec('/mascot-actions/mascot-celebrate.png'),
+  click: sheetSpec('/mascot-actions/mascot-click.png'),
+  laptop: sheetSpec('/mascot-actions/mascot-laptop.png'),
 });
 
 export const MASCOT_APPROVED_ASSETS = Object.freeze({
-  sprite: '/ai-mascot-sprite.png',
-  transparent: '/ai-mascot-transparent.png',
-  analysisLaptop: '/ai-mascot-analysis-laptop.png',
+  sheets: Object.freeze(Object.fromEntries(
+    Object.entries(MASCOT_ACTION_SHEETS).map(([key, sheet]) => [key, sheet.src]),
+  )),
+  audit: '/mascot-actions/mascot-action-audit.json',
   favicon: '/favicon.svg',
   icons: '/icons.svg',
   logoBlack: '/logo-black.png',
 });
 
-export const MASCOT_FRAME_ANCHORS = Object.freeze([
-  [0.5, 0],
-  [1, 3],
-  [1.5, 5],
-  [1.5, 6],
-  [1.5, 5],
-  [0.5, 3],
-  [0, 0],
-  [-0.5, -1],
-  [-1, -2],
-  [-1, -3],
-  [-1, -2],
-  [0, -1],
-  [0, 0],
-  [-3, 7],
-  [1.5, 6],
-  [-5.5, 11],
-  [1.5, 6],
-  [-2.5, 6],
-  [1.5, 2],
-  [0, 1],
-  [1.5, -1],
-  [2, -2],
-  [1, -1],
-  [1, -1],
-  [0.5, 0],
-  [1, 9],
-  [1.5, 14],
-  [2, 18],
-  [1.5, 12],
-  [0.5, 5],
-  [0.5, -3],
-  [0, 2],
-  [-1, 4],
-  [-1, 3],
-  [-0.5, 2],
-  [0, 2],
-  [0.5, 0],
-  [0.5, 2],
-  [1, 4],
-  [1, 5],
-  [1, 4],
-  [0.5, 2],
-  [0.5, 0],
-  [0, -1],
-  [-0.5, -1],
-  [-0.5, -2],
-  [-0.5, -1],
-  [0, -1],
-].map(([offsetX, offsetY]) => Object.freeze({ offsetX, offsetY })));
+export const MASCOT_ACTION_AUDIT = Object.freeze({
+  idleBreathe: auditSpec(12, 1, 2),
+  idleLook: auditSpec(12, 7, 3),
+  idleBounce: auditSpec(12, 0.5, 2),
+  idlePatrol: auditSpec(12, 8, 1),
+  wave: auditSpec(12, 0.5, 0),
+  guide: auditSpec(12, 0.5, 0),
+  talk: auditSpec(12, 0, 1),
+  think: auditSpec(12, 1.5, 2),
+  alert: auditSpec(12, 4, 0),
+  celebrate: auditSpec(12, 0.5, 0),
+  click: auditSpec(12, 0.5, 0),
+  laptop: auditSpec(12, 1, 1),
+});
 
 export const MASCOT_IDLE_VARIANTS = Object.freeze([
-  Object.freeze({ key: 'breathe', frames: Object.freeze([0]), fps: 14, playback: 'static', replacementAsset: 'transparent' }),
-  Object.freeze({ key: 'look', frames: Object.freeze([12]), fps: 16, playback: 'static', replacementAsset: 'transparent' }),
-  Object.freeze({ key: 'bounce', frames: Object.freeze([24]), fps: 18, playback: 'static', replacementAsset: 'transparent' }),
-  Object.freeze({ key: 'patrol', frames: Object.freeze([36]), fps: 16, playback: 'static', replacementAsset: 'transparent' }),
+  idleVariant('breathe', 'idleBreathe', 12),
+  idleVariant('look', 'idleLook', 12),
+  idleVariant('bounce', 'idleBounce', 12),
+  idleVariant('patrol', 'idlePatrol', 12),
 ]);
 
 const idleByKey = new Map(MASCOT_IDLE_VARIANTS.map((variant) => [variant.key, variant]));
 const defaultIdle = MASCOT_IDLE_VARIANTS[0];
 
-function actionSpec(key, frames, fps, extra = {}) {
+function sheetSpec(src, columns = 12) {
+  return Object.freeze({
+    src,
+    columns,
+    rows: 1,
+    frameCount: columns,
+    frameWidth: FRAME_WIDTH,
+    frameHeight: FRAME_HEIGHT,
+  });
+}
+
+function auditSpec(frameCount, maxCenterJitterPx, maxFootJitterPx) {
+  return Object.freeze({
+    frameCount,
+    maxCenterJitterPx,
+    maxFootJitterPx,
+    smooth: true,
+    reasonable: true,
+  });
+}
+
+function idleVariant(key, sheetKey, fps) {
   return Object.freeze({
     key,
-    frames: Object.freeze(frames),
+    sheetKey,
+    frames: TWELVE_FRAMES,
     fps,
-    playback: extra.playback ?? 'static',
+    playback: 'frames',
+    loop: true,
+  });
+}
+
+function actionSpec(key, sheetKey, fps, extra = {}) {
+  return Object.freeze({
+    key,
+    sheetKey,
+    frames: extra.frames ?? TWELVE_FRAMES,
+    fps,
+    playback: 'frames',
     loop: extra.loop ?? true,
     durationMs: extra.durationMs ?? 0,
-    overlay: extra.overlay ?? '',
-    replacementAsset: extra.replacementAsset ?? '',
     intensity: extra.intensity ?? 'calm',
   });
 }
 
 export const MASCOT_ANIMATIONS = Object.freeze({
-  [MASCOT_ACTIONS.idle]: actionSpec(MASCOT_ACTIONS.idle, defaultIdle.frames, defaultIdle.fps, {
-    replacementAsset: 'transparent',
+  [MASCOT_ACTIONS.idle]: actionSpec(MASCOT_ACTIONS.idle, defaultIdle.sheetKey, defaultIdle.fps, {
     intensity: 'idle',
   }),
-  [MASCOT_ACTIONS.wave]: actionSpec(MASCOT_ACTIONS.wave, [7], 24, {
+  [MASCOT_ACTIONS.wave]: actionSpec(MASCOT_ACTIONS.wave, 'wave', 14, {
     durationMs: 920,
+    loop: false,
     intensity: 'greeting',
   }),
-  [MASCOT_ACTIONS.guide]: actionSpec(MASCOT_ACTIONS.guide, [18], 24, {
+  [MASCOT_ACTIONS.guide]: actionSpec(MASCOT_ACTIONS.guide, 'guide', 12, {
     durationMs: 1000,
+    loop: false,
     intensity: 'guide',
   }),
-  [MASCOT_ACTIONS.talk]: actionSpec(MASCOT_ACTIONS.talk, [13], 24, {
+  [MASCOT_ACTIONS.talk]: actionSpec(MASCOT_ACTIONS.talk, 'talk', 12, {
     intensity: 'speech',
   }),
-  [MASCOT_ACTIONS.think]: actionSpec(MASCOT_ACTIONS.think, [27], 18, {
+  [MASCOT_ACTIONS.think]: actionSpec(MASCOT_ACTIONS.think, 'think', 12, {
     intensity: 'focus',
   }),
-  [MASCOT_ACTIONS.alert]: actionSpec(MASCOT_ACTIONS.alert, [42], 24, {
+  [MASCOT_ACTIONS.alert]: actionSpec(MASCOT_ACTIONS.alert, 'alert', 12, {
     intensity: 'alert',
   }),
-  [MASCOT_ACTIONS.celebrate]: actionSpec(MASCOT_ACTIONS.celebrate, [31], 24, {
+  [MASCOT_ACTIONS.celebrate]: actionSpec(MASCOT_ACTIONS.celebrate, 'celebrate', 14, {
     durationMs: 960,
+    loop: false,
     intensity: 'celebrate',
   }),
-  [MASCOT_ACTIONS.click]: actionSpec(MASCOT_ACTIONS.click, [3], 24, {
+  [MASCOT_ACTIONS.click]: actionSpec(MASCOT_ACTIONS.click, 'click', 16, {
     durationMs: 860,
+    loop: false,
     intensity: 'click',
   }),
-  maintenance: actionSpec('maintenance', [24], 16, {
-    replacementAsset: 'analysisLaptop',
+  maintenance: actionSpec('maintenance', 'laptop', 12, {
     intensity: 'maintenance',
   }),
-  maintenanceSave: actionSpec('maintenanceSave', [30], 24, {
-    replacementAsset: 'analysisLaptop',
+  maintenanceSave: actionSpec('maintenanceSave', 'laptop', 14, {
     durationMs: 960,
+    loop: false,
     intensity: 'maintenance-save',
   }),
-  maintenanceReview: actionSpec('maintenanceReview', [18], 20, {
-    replacementAsset: 'analysisLaptop',
+  maintenanceReview: actionSpec('maintenanceReview', 'laptop', 12, {
     intensity: 'maintenance-review',
   }),
 });
 
-export function getMascotFrameAnchor(frameIndex = 0) {
-  return MASCOT_FRAME_ANCHORS[frameIndex] ?? Object.freeze({ offsetX: 0, offsetY: 0 });
+export function getMascotSheet(sheetKey = defaultIdle.sheetKey) {
+  return MASCOT_ACTION_SHEETS[sheetKey] ?? MASCOT_ACTION_SHEETS[defaultIdle.sheetKey];
+}
+
+export function getMascotIdleVariant(indexOrKey = 0) {
+  if (typeof indexOrKey === 'string') {
+    return idleByKey.get(indexOrKey) ?? defaultIdle;
+  }
+  const index = Math.abs(Number(indexOrKey) || 0) % MASCOT_IDLE_VARIANTS.length;
+  return MASCOT_IDLE_VARIANTS[index];
 }
 
 export function getMascotAnimation(action = MASCOT_ACTIONS.idle, { idleVariant = '' } = {}) {
   if (action === MASCOT_ACTIONS.idle) {
-    const variant = idleByKey.get(idleVariant) ?? defaultIdle;
+    const variant = getMascotIdleVariant(idleVariant || defaultIdle.key);
     return Object.freeze({
       ...MASCOT_ANIMATIONS[MASCOT_ACTIONS.idle],
+      sheetKey: variant.sheetKey,
       frames: variant.frames,
       fps: variant.fps,
       playback: variant.playback,
-      replacementAsset: variant.replacementAsset,
+      loop: variant.loop,
       idleVariant: variant.key,
     });
   }

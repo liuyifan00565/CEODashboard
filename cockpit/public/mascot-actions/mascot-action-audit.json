@@ -1,0 +1,117 @@
+{
+  "updatedAt": "2026-07-07 16:26:47 CST",
+  "criteria": {
+    "smooth": "至少 8 帧，脚底抖动不超过 3px，中心抖动不超过 12px。",
+    "reasonable": "动作语义需要来自帧图本体，允许轻量发光/符号辅助，但不允许用文字说明代替动作。"
+  },
+  "actions": {
+    "idleBreathe": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 1.0,
+      "maxFootJitterPx": 2,
+      "smooth": true,
+      "reasonable": true,
+      "source": "derived-from-reference-frames",
+      "file": "/mascot-actions/mascot-idle-breathe.png"
+    },
+    "idleLook": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 7.0,
+      "maxFootJitterPx": 3,
+      "smooth": true,
+      "reasonable": true,
+      "source": "derived-from-reference-frames",
+      "file": "/mascot-actions/mascot-idle-look.png"
+    },
+    "idleBounce": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 0.5,
+      "maxFootJitterPx": 2,
+      "smooth": true,
+      "reasonable": true,
+      "source": "derived-from-reference-frames",
+      "file": "/mascot-actions/mascot-idle-bounce.png"
+    },
+    "idlePatrol": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 8.0,
+      "maxFootJitterPx": 1,
+      "smooth": true,
+      "reasonable": true,
+      "source": "derived-from-reference-frames",
+      "file": "/mascot-actions/mascot-idle-patrol.png"
+    },
+    "wave": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 0.5,
+      "maxFootJitterPx": 0,
+      "smooth": true,
+      "reasonable": true,
+      "source": "derived-from-reference-frames",
+      "file": "/mascot-actions/mascot-wave.png"
+    },
+    "guide": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 0.5,
+      "maxFootJitterPx": 0,
+      "smooth": true,
+      "reasonable": true,
+      "source": "reference",
+      "file": "/mascot-actions/mascot-guide.png"
+    },
+    "talk": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 0.0,
+      "maxFootJitterPx": 1,
+      "smooth": true,
+      "reasonable": true,
+      "source": "derived-from-reference-frames",
+      "file": "/mascot-actions/mascot-talk.png"
+    },
+    "think": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 1.5,
+      "maxFootJitterPx": 2,
+      "smooth": true,
+      "reasonable": true,
+      "source": "derived-from-reference-frames",
+      "file": "/mascot-actions/mascot-think.png"
+    },
+    "alert": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 4.0,
+      "maxFootJitterPx": 0,
+      "smooth": true,
+      "reasonable": true,
+      "source": "derived-from-reference-frames",
+      "file": "/mascot-actions/mascot-alert.png"
+    },
+    "celebrate": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 0.5,
+      "maxFootJitterPx": 0,
+      "smooth": true,
+      "reasonable": true,
+      "source": "derived-from-reference-frames",
+      "file": "/mascot-actions/mascot-celebrate.png"
+    },
+    "click": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 0.5,
+      "maxFootJitterPx": 0,
+      "smooth": true,
+      "reasonable": true,
+      "source": "derived-from-reference-frames",
+      "file": "/mascot-actions/mascot-click.png"
+    },
+    "laptop": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 1.0,
+      "maxFootJitterPx": 1,
+      "smooth": true,
+      "reasonable": true,
+      "source": "reference",
+      "file": "/mascot-actions/mascot-laptop.png"
+    }
+  }
+}
