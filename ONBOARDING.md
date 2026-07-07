@@ -1,7 +1,7 @@
 # 新同事环境搭建说明
 
-更新时间: 2026-07-07 15:30:00 CST
-更新内容: 补全真实仓库地址（ttoswar 远程，origin 的 liuyifan00565 已失效）；clone 后需切到 codex/ai-mascot-3d-model 分支，因最新代码（数据维护页、本地 Docker 联调环境等）均在该 feature 分支，main 落后。
+更新时间: 2026-07-07 15:45:00 CST
+更新内容: 在启动步骤前补醒目提示——种子 SQL（docker/db-init/ceo_dashboard_full.sql）已 gitignore 不在仓库，clone 后该目录为空，必须向前端负责人索取文件放进 docker/db-init/ 后再 docker compose up，否则数据库为空。
 
 本文档面向**新加入项目的同事**，目标是让你在 20 分钟内把 CEO 经营驾驶舱在本机跑起来，且环境与线上阿里云一致。
 
@@ -35,6 +35,8 @@ docker compose up -d --build
 ```
 
 首次启动会拉 MySQL 8.4 和 Node 20 镜像、安装 npm 依赖、自动导入 `ceo_dashboard` 完整数据，约 3~5 分钟。后续启动只需几秒。
+
+> ⚠️ **启动前先要种子 SQL**：`docker/db-init/ceo_dashboard_full.sql` 含真实业务数据，已 gitignore **不在仓库里**，clone 下来这个目录是空的。**必须向前端负责人索取该文件**，放进 `docker/db-init/` 后再 `docker compose up`，否则数据库是空的、页面没数据。
 
 完成后打开浏览器：**http://127.0.0.1:5173**
 
