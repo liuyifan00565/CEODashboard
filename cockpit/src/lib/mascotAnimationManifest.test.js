@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:59:16 CST
+ 更新内容: 增加 AI 小人动作语义回归测试，要求非待机动作使用独立单帧姿态而不是同一张站姿图。
+*/
+/*
  更新时间: 2026-07-07 14:40:16 CST
  更新内容: 增加常驻 AI 小人使用静态高清图的回归测试，避免 sprite 连续翻帧造成抽动。
 */
@@ -81,11 +85,35 @@ test('maps product actions to explicit frame animation specs', () => {
   }
   assert.equal(MASCOT_ANIMATIONS.guide.durationMs, 1000);
   assert.equal(MASCOT_ANIMATIONS.idle.replacementAsset, 'transparent');
-  assert.equal(MASCOT_ANIMATIONS.talk.replacementAsset, 'transparent');
-  assert.equal(MASCOT_ANIMATIONS.think.replacementAsset, 'transparent');
+  assert.equal(MASCOT_ANIMATIONS.wave.replacementAsset, '');
+  assert.equal(MASCOT_ANIMATIONS.guide.replacementAsset, '');
+  assert.equal(MASCOT_ANIMATIONS.talk.replacementAsset, '');
+  assert.equal(MASCOT_ANIMATIONS.think.replacementAsset, '');
+  assert.equal(MASCOT_ANIMATIONS.alert.replacementAsset, '');
+  assert.equal(MASCOT_ANIMATIONS.celebrate.replacementAsset, '');
+  assert.equal(MASCOT_ANIMATIONS.click.replacementAsset, '');
   assert.equal(MASCOT_ANIMATIONS.think.overlay, '');
   assert.equal(MASCOT_ANIMATIONS.maintenance.replacementAsset, 'analysisLaptop');
   assert.equal(MASCOT_ANIMATIONS.maintenance.overlay, '');
+});
+
+test('keeps non-idle actions as distinct static sprite poses', () => {
+  assert.deepEqual(MASCOT_ANIMATIONS.wave.frames, [7]);
+  assert.deepEqual(MASCOT_ANIMATIONS.guide.frames, [18]);
+  assert.deepEqual(MASCOT_ANIMATIONS.talk.frames, [13]);
+  assert.deepEqual(MASCOT_ANIMATIONS.think.frames, [27]);
+  assert.deepEqual(MASCOT_ANIMATIONS.alert.frames, [42]);
+  assert.deepEqual(MASCOT_ANIMATIONS.celebrate.frames, [31]);
+  assert.deepEqual(MASCOT_ANIMATIONS.click.frames, [3]);
+  assert.equal(new Set([
+    MASCOT_ANIMATIONS.wave.frames[0],
+    MASCOT_ANIMATIONS.guide.frames[0],
+    MASCOT_ANIMATIONS.talk.frames[0],
+    MASCOT_ANIMATIONS.think.frames[0],
+    MASCOT_ANIMATIONS.alert.frames[0],
+    MASCOT_ANIMATIONS.celebrate.frames[0],
+    MASCOT_ANIMATIONS.click.frames[0],
+  ]).size, 7);
 });
 
 test('declares per-frame anchors to cancel source sprite foot drift', () => {

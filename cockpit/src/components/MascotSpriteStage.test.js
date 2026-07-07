@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-07 15:06:40 CST
+ 更新内容: 增加 guide 右向箭头光束测试，避免点击指引退化成不明显细线。
+*/
+/*
+ 更新时间: 2026-07-07 14:59:16 CST
+ 更新内容: 增加 AI 小人动作姿态回归测试，确保 guide/talk/think 等状态不再共用同一张站姿图。
+*/
+/*
  更新时间: 2026-07-07 14:47:15 CST
  更新内容: 增加静态高清图上的丝滑 CSS 动效回归测试，要求有生命感但禁止重新翻帧抽动。
 */
@@ -80,12 +88,31 @@ test('uses approved high-resolution still images for persistent mascot states', 
   assert.match(componentCode, /MASCOT_APPROVED_ASSETS\.analysisLaptop/);
 });
 
+test('shows semantic sprite poses for non-idle actions without frame loops', () => {
+  assert.match(cssCode, /\.mascot-sprite-stage--greeting,\s*[\s\S]*?\.mascot-sprite-stage--click\s*\{[\s\S]*animation:\s*mascot-silk-attention 4\.8s cubic-bezier\(\.45, 0, \.2, 1\) infinite;/);
+  assert.match(cssCode, /\.mascot-sprite-stage--guide\s*\{[\s\S]*animation:\s*mascot-silk-guide 1s cubic-bezier\(\.2, \.82, \.2, 1\) both;/);
+  assert.doesNotMatch(cssCode, /\.mascot-sprite-stage--guide \.mascot-sprite-stage__replacement/);
+  assert.match(cssCode, /@keyframes mascot-silk-attention/);
+});
+
+test('adds intelligent state cues without adding text or frame animation', () => {
+  assert.match(cssCode, /\.mascot-sprite-stage::before,\s*[\s\S]*?\.mascot-sprite-stage::after\s*\{/);
+  assert.match(cssCode, /\.mascot-sprite-stage::after\s*\{[\s\S]*width:\s*58px;[\s\S]*height:\s*18px;[\s\S]*clip-path:\s*polygon\(0 42%, 72% 42%, 72% 20%, 100% 50%, 72% 80%, 72% 58%, 0 58%\);/);
+  assert.match(cssCode, /\.mascot-sprite-stage--guide::after\s*\{[\s\S]*animation:\s*mascot-guide-ray 1s cubic-bezier\(\.2, \.82, \.2, 1\) both;/);
+  assert.match(cssCode, /\.mascot-sprite-stage--guide::before\s*\{[\s\S]*animation:\s*mascot-guide-origin 1s cubic-bezier\(\.2, \.82, \.2, 1\) both;/);
+  assert.match(cssCode, /\.mascot-sprite-stage--speech::before,\s*[\s\S]*?\.mascot-sprite-stage--focus::before\s*\{[\s\S]*animation:\s*mascot-smart-pulse 2\.8s ease-in-out infinite;/);
+  assert.match(cssCode, /@keyframes mascot-guide-ray/);
+  assert.match(cssCode, /@keyframes mascot-guide-origin/);
+  assert.match(cssCode, /@keyframes mascot-smart-pulse/);
+  assert.doesNotMatch(cssCode, /content:\s*['"][^'"]+[A-Za-z\u4e00-\u9fff][^'"]*['"]/);
+});
+
 test('adds silky transform-only mascot motion without sprite-frame twitching', () => {
   assert.match(cssCode, /@keyframes mascot-silk-idle/);
   assert.match(cssCode, /@keyframes mascot-silk-guide/);
   assert.match(cssCode, /@keyframes mascot-silk-maintenance/);
   assert.match(cssCode, /\.mascot-sprite-stage--idle \.mascot-sprite-stage__replacement\s*\{[\s\S]*animation:\s*mascot-silk-idle 5\.8s cubic-bezier\(\.45, 0, \.2, 1\) infinite;/);
-  assert.match(cssCode, /\.mascot-sprite-stage--guide \.mascot-sprite-stage__replacement\s*\{[\s\S]*animation:\s*mascot-silk-guide 1s cubic-bezier\(\.2, \.82, \.2, 1\) both;/);
+  assert.match(cssCode, /\.mascot-sprite-stage--guide\s*\{[\s\S]*animation:\s*mascot-silk-guide 1s cubic-bezier\(\.2, \.82, \.2, 1\) both;/);
   assert.match(cssCode, /\.mascot-sprite-stage--maintenance \.mascot-sprite-stage__replacement\s*\{[\s\S]*animation:\s*mascot-silk-maintenance 6\.4s cubic-bezier\(\.45, 0, \.2, 1\) infinite;/);
   assert.match(cssCode, /will-change:\s*transform;/);
   assert.doesNotMatch(cssCode, /steps\(|background-position[^;]*animation|filter\s+.*animation/);

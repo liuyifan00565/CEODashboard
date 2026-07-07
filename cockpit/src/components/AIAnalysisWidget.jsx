@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 15:09:26 CST
+ 更新内容: 为 AI 小人入口外层增加当前动作类，支持点击 guide 时显示右侧对话框指引光束。
+*/
+/*
  更新时间: 2026-07-07 14:03:53 CST
  更新内容: 将 AI 小人入口从 3D GLB 切换为 2D Sprite 帧动画舞台，并接收页面 context。
 */
@@ -543,7 +547,7 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   }
 
   return (
-    <div className={`ai-widget${open ? ' ai-widget--open' : ''}${bubbleCue && bubbleVisible ? ' ai-widget--speaking' : ''}`} ref={widgetRef}>
+    <div className={`ai-widget ai-widget--${mascotAction}${open ? ' ai-widget--open' : ''}${bubbleCue && bubbleVisible ? ' ai-widget--speaking' : ''}`} ref={widgetRef}>
       {bubbleCue && (
         <div className={`ai-bubble${bubbleVisible ? ' ai-bubble--visible' : ''}`} role="status" aria-live="polite">
           <span>{bubbleCue.text}</span>

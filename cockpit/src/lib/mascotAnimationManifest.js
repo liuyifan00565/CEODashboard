@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:59:16 CST
+ 更新内容: 恢复 AI 小人非待机动作的独立静态姿态，避免所有交互状态共用同一张站姿显得呆板。
+*/
+/*
  更新时间: 2026-07-07 14:40:16 CST
  更新内容: 将 AI 小人常驻动作改为静态高清图策略，停止 sprite 连续翻帧导致的抽动。
 */
@@ -100,13 +104,14 @@ function actionSpec(key, frames, fps, extra = {}) {
     loop: extra.loop ?? true,
     durationMs: extra.durationMs ?? 0,
     overlay: extra.overlay ?? '',
-    replacementAsset: extra.replacementAsset ?? 'transparent',
+    replacementAsset: extra.replacementAsset ?? '',
     intensity: extra.intensity ?? 'calm',
   });
 }
 
 export const MASCOT_ANIMATIONS = Object.freeze({
   [MASCOT_ACTIONS.idle]: actionSpec(MASCOT_ACTIONS.idle, defaultIdle.frames, defaultIdle.fps, {
+    replacementAsset: 'transparent',
     intensity: 'idle',
   }),
   [MASCOT_ACTIONS.wave]: actionSpec(MASCOT_ACTIONS.wave, [7], 24, {
