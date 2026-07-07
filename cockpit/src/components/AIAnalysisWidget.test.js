@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 13:20:49 CST
+ 更新内容: 将 AI 小人入口测试改为固定指针与点击触发动作，防止鼠标悬停或移动导致小人乱跑。
+*/
+/*
  更新时间: 2026-07-07 11:49:34 CST
  更新内容: 约束点击打开 AI 对话框时播放约 1 秒 guide 指引动作，点击关闭不触发指引。
 */
@@ -65,23 +69,23 @@ function themeBlock(theme) {
 test('uses the 3D mascot stage for the AI launcher', () => {
   const stageInvocation = componentCode.match(/<Mascot3DStage\b[\s\S]*?\/>/)?.[0] ?? '';
   const actionState = componentCode.match(/const\s*\[\s*([A-Za-z_$][\w$]*)\s*,\s*[A-Za-z_$][\w$]*\s*\]\s*=\s*useState\(\s*MASCOT_ACTIONS\.idle\s*\)/);
-  const pointerState = componentCode.match(/const\s*\[\s*([A-Za-z_$][\w$]*)\s*,\s*[A-Za-z_$][\w$]*\s*\]\s*=\s*useState\(\s*\{\s*x:\s*0,\s*y:\s*0,\s*active:\s*false\s*\}\s*\)/);
+  const stablePointer = componentCode.match(/const\s+STABLE_MASCOT_POINTER\s*=\s*Object\.freeze\(\{\s*x:\s*0,\s*y:\s*0,\s*active:\s*false\s*\}\);/);
 
   assert.match(componentCode, /Mascot3DStage/);
   assert.ok(stageInvocation, 'AI launcher should render Mascot3DStage');
   assert.ok(actionState, 'AIAnalysisWidget should own the mascot action state');
-  assert.ok(pointerState, 'AIAnalysisWidget should own the mascot pointer state');
+  assert.ok(stablePointer, 'AIAnalysisWidget should pass a fixed pointer so the launcher mascot stays anchored');
   assert.doesNotMatch(componentCode, /spinToken/);
   assert.doesNotMatch(componentCode, /setSpinToken/);
   assert.match(componentCode, /ai-orb/);
   assert.match(stageInvocation, new RegExp(`\\b(?:action|mascotAction)=\\{\\s*${actionState[1]}\\s*\\}`));
-  assert.match(stageInvocation, new RegExp(`\\b(?:pointer|mascotPointer)=\\{\\s*${pointerState[1]}\\s*\\}`));
+  assert.match(stageInvocation, /\bpointer=\{\s*STABLE_MASCOT_POINTER\s*\}/);
   assert.match(stageInvocation, /\b(?:analysisActive|active|analyzing)=\{\s*(?:open\s*\|\|\s*loading|loading\s*\|\|\s*open)\s*\}/);
   assert.match(componentCode, /aria-label=\{[^}]*open[^}]*\}/);
   assert.match(componentCode, /aria-expanded=\{open\}/);
-  assert.match(componentCode, /onPointerMove=\{[^}]+\}/);
-  assert.match(componentCode, /onMouseEnter=\{[^}]+\}/);
-  assert.match(componentCode, /onMouseLeave=\{[^}]+\}/);
+  assert.doesNotMatch(componentCode, /onPointerMove=/);
+  assert.doesNotMatch(componentCode, /onMouseEnter=/);
+  assert.doesNotMatch(componentCode, /onMouseLeave=/);
   assert.match(componentCode, /onClick=\{[^}]+\}/);
   assert.doesNotMatch(componentCode, /ai-mascot-sprite|ai-mascot-stage/);
   assert.doesNotMatch(componentCode, /\/assets\/mascot\//);
@@ -89,13 +93,12 @@ test('uses the 3D mascot stage for the AI launcher', () => {
   assert.doesNotMatch(componentCode, /(?:ai|ceo)-mascot|mascot[^A-Za-z0-9_]*(?:asset|image|png|source)/i);
 });
 
-test('tracks pointer position for Codex-like desktop pet movement', () => {
-  assert.match(componentSource, /function handleMascotPointerMove\(event\)\s*\{/);
-  assert.match(componentSource, /const rect = event\.currentTarget\.getBoundingClientRect\(\);/);
-  assert.match(componentSource, /const centerX = rect\.left \+ rect\.width \/ 2;/);
-  assert.match(componentSource, /const centerY = rect\.top \+ rect\.height \/ 2;/);
-  assert.match(componentSource, /setMascotPointer\(\{\s*x: Math\.max\(-1, Math\.min\(1, \(event\.clientX - centerX\) \/ \(rect\.width \/ 2\)\)\),\s*y: Math\.max\(-1, Math\.min\(1, \(event\.clientY - centerY\) \/ \(rect\.height \/ 2\)\)\),\s*active: true,\s*\}\);/s);
-  assert.match(componentSource, /setMascotPointer\(\{ x: 0, y: 0, active: false \}\);/);
+test('keeps the mascot anchored instead of tracking cursor movement', () => {
+  assert.match(componentSource, /const STABLE_MASCOT_POINTER = Object\.freeze\(\{ x: 0, y: 0, active: false \}\);/);
+  assert.doesNotMatch(componentSource, /function handleMascotPointerMove/);
+  assert.doesNotMatch(componentSource, /setMascotPointer/);
+  assert.doesNotMatch(componentSource, /onPointerMove=/);
+  assert.doesNotMatch(componentSource, /setMascotAction\(MASCOT_ACTIONS\.wave\);/);
 });
 
 test('shows default Fu Xiaoke bubbles every 10 seconds only when no readable text is hovered', () => {
@@ -143,8 +146,11 @@ test('keeps temporary guide motion while the opened dialog state settles', () =>
   assert.match(componentSource, /current === MASCOT_ACTIONS\.click \|\| current === MASCOT_ACTIONS\.guide/);
 });
 
-test('does not interrupt temporary guide motion on mascot hover changes', () => {
-  assert.match(componentSource, /if \(mascotAction === MASCOT_ACTIONS\.click \|\| mascotAction === MASCOT_ACTIONS\.guide\) return;/);
+test('does not use mascot hover handlers that can interrupt temporary guide motion', () => {
+  assert.doesNotMatch(componentSource, /function handleMascotEnter/);
+  assert.doesNotMatch(componentSource, /function handleMascotLeave/);
+  assert.doesNotMatch(componentSource, /onMouseEnter=/);
+  assert.doesNotMatch(componentSource, /onMouseLeave=/);
 });
 
 test('locks guide motion against competing mascot action setters until its timer finishes', () => {

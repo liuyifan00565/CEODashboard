@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 13:22:15 CST
+ 更新内容: 固定 AI 小人入口指针并移除悬停挥手/跟随逻辑，避免待机和鼠标经过时乱跑。
+*/
+/*
  更新时间: 2026-07-07 12:00:52 CST
  更新内容: 为 guide 指引动作增加 1 秒动作锁，避免气泡、悬停或旧计时器提前覆盖。
 */
@@ -78,6 +82,7 @@ const DEFAULT_BUBBLE_INTERVAL = 10000;
 const DEFAULT_BUBBLE_DURATION = 4000;
 const BUBBLE_EXIT_DURATION = 360;
 const fallbackCue = '这处信息建议结合目标完成率、ROI 和续费一起看。';
+const STABLE_MASCOT_POINTER = Object.freeze({ x: 0, y: 0, active: false });
 
 function makeId(prefix) {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -125,7 +130,6 @@ async function readStream(response, onChunk, signal) {
 export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', companionCue }) {
   const [open, setOpen] = useState(false);
   const [mascotAction, setMascotActionState] = useState(MASCOT_ACTIONS.idle);
-  const [mascotPointer, setMascotPointer] = useState({ x: 0, y: 0, active: false });
   const [bubbleCue, setBubbleCue] = useState(null);
   const [bubbleVisible, setBubbleVisible] = useState(false);
   const [renderCard, setRenderCard] = useState(false);
@@ -460,28 +464,6 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
     setOpen(false);
   }
 
-  function handleMascotPointerMove(event) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    setMascotPointer({
-      x: Math.max(-1, Math.min(1, (event.clientX - centerX) / (rect.width / 2))),
-      y: Math.max(-1, Math.min(1, (event.clientY - centerY) / (rect.height / 2))),
-      active: true,
-    });
-  }
-
-  function handleMascotEnter() {
-    if (mascotAction === MASCOT_ACTIONS.click || mascotAction === MASCOT_ACTIONS.guide) return;
-    setMascotAction(MASCOT_ACTIONS.wave);
-  }
-
-  function handleMascotLeave() {
-    setMascotPointer({ x: 0, y: 0, active: false });
-    if (mascotAction === MASCOT_ACTIONS.click || mascotAction === MASCOT_ACTIONS.guide) return;
-    setMascotAction(getRestingMascotAction());
-  }
-
   function handleMascotClick() {
     const nextOpen = !open;
     showCompanionCue({
@@ -570,14 +552,11 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
         type="button"
         aria-label={open ? '收起 AI 分析工具' : '打开 AI 分析工具'}
         aria-expanded={open}
-        onPointerMove={handleMascotPointerMove}
-        onMouseEnter={handleMascotEnter}
-        onMouseLeave={handleMascotLeave}
         onClick={handleMascotClick}
       >
         <Mascot3DStage
           action={mascotAction}
-          pointer={mascotPointer}
+          pointer={STABLE_MASCOT_POINTER}
           analysisActive={open || loading}
           label="福小客 3D 经营助手"
         />

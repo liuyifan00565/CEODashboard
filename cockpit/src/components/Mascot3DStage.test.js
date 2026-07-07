@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 13:20:49 CST
+ 更新内容: 增加高精度配色 GLB 和稳定待机动作验收，修复颜色粗糙与小人乱跑回归风险。
+*/
+/*
  更新时间: 2026-07-07 13:02:18 CST
  更新内容: 增加用户配色 FBX 的顶点色转移验收，确保当前 GLB 不再只是零件均色。
 */
@@ -81,10 +85,18 @@ function glbPrimitives(json) {
   return (json.meshes ?? []).flatMap((mesh) => mesh.primitives ?? []);
 }
 
+function glbAttributeVertexCount(json, attributeName) {
+  return glbPrimitives(json).reduce((sum, primitive) => {
+    const accessorIndex = primitive.attributes?.[attributeName];
+    if (!Number.isInteger(accessorIndex)) return sum;
+    return sum + (json.accessors?.[accessorIndex]?.count ?? 0);
+  }, 0);
+}
+
 test('ships the optimized rigged FBX mascot model instead of the previous generated mascot', () => {
   assert.ok(existsSync(glbUrl), 'GLB mascot model should exist');
-  assert.ok(statSync(glbUrl).size > 3000000, 'Optimized rigged mascot should contain real model data, not the old small placeholder');
-  assert.ok(statSync(glbUrl).size < 8000000, 'Optimized rigged mascot should stay compact enough for dashboard loading');
+  assert.ok(statSync(glbUrl).size > 8000000, 'High-fidelity rigged mascot should contain enough vertex-color detail from the user FBX');
+  assert.ok(statSync(glbUrl).size < 25000000, 'High-fidelity rigged mascot should stay reasonable for dashboard loading');
 
   const header = readGlbHeader(glbUrl);
   assert.equal(header.magic, 'glTF');
@@ -110,7 +122,9 @@ test('ships the optimized rigged FBX mascot model instead of the previous genera
   assert.match(converterCode, /PNG\.sync\.read/);
   assert.match(converterCode, /colorSource/);
   assert.match(converterCode, /compactMesh/);
-  assert.match(converterCode, /DEFAULT_RATIO\s*=\s*0\.05/);
+  assert.match(converterCode, /DEFAULT_RATIO\s*=\s*0\.18/);
+  assert.match(converterCode, /DEFAULT_COLOR_SOURCE_STRIDE\s*=\s*1/);
+  assert.match(converterCode, /MIN_COLOR_SEARCH_RADIUS\s*=\s*1/);
   assert.match(converterCode, /CTRL_Rig_Root:\s*['"]MascotRoot['"]/);
   assert.match(converterCode, /CTRL_Body:\s*['"]BodyCtrl['"]/);
   assert.match(converterCode, /CTRL_Head:\s*['"]HeadCtrl['"]/);
@@ -121,11 +135,16 @@ test('ships the optimized rigged FBX mascot model instead of the previous genera
 
 test('bakes the user color-source FBX texture into GLB vertex colors', () => {
   const primitives = glbPrimitives(glbJson);
+  const positionVertices = glbAttributeVertexCount(glbJson, 'POSITION');
+  const colorVertices = glbAttributeVertexCount(glbJson, 'COLOR_0');
+
   assert.ok(primitives.length > 0, 'Optimized mascot GLB should contain mesh primitives');
   assert.ok(
     primitives.every((primitive) => Number.isInteger(primitive.attributes?.COLOR_0)),
     'Every optimized mascot primitive should carry baked COLOR_0 vertex colors from the color-source FBX',
   );
+  assert.ok(positionVertices > 250000, 'Color transfer should retain enough vertices to preserve the source FBX detail');
+  assert.equal(colorVertices, positionVertices, 'Every exported vertex should have a transferred texture color');
   assert.match(converterCode, /extractBaseColorTexture/);
   assert.match(converterCode, /assignVertexColorsFromSource/);
 });
@@ -244,6 +263,16 @@ test('maps every mascot companion action to control-node motion instead of swapp
   assert.match(stageCode, /clampUnit\(pointer\.x\)/);
   assert.match(stageCode, /clampUnit\(pointer\.y\)/);
   assert.doesNotMatch(stageCode, /frameIndex|poseKey|requestAnimationFrame|setInterval/);
+});
+
+test('keeps launcher idle motion anchored instead of wandering around the card', () => {
+  assert.match(stageCode, /const pointerX = 0;/);
+  assert.match(stageCode, /const pointerY = 0;/);
+  assert.match(stageCode, /const idleFloat = Math\.sin\(t \* 1\.35\) \* 0\.012;/);
+  assert.match(stageCode, /restoreTransform\(controls\.root,\s*base\.root,\s*\[0,\s*rootY,\s*0\]/);
+  assert.doesNotMatch(stageCode, /pointer\.active\s*\?\s*pointer\.x\s*:\s*Math\.sin/);
+  assert.doesNotMatch(stageCode, /pointer\.active\s*\?\s*pointer\.y\s*:\s*Math\.cos/);
+  assert.doesNotMatch(stageCode, /pointerX\s*\*\s*0\.055/);
 });
 
 test('maps guide action to a right-side dialog pointing motion', () => {

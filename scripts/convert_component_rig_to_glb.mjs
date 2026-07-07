@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 13:22:15 CST
+ 更新内容: 提高 AI 小人 GLB 默认几何保留率与配色 FBX 取样密度，改善颜色错配和细节不足。
+*/
+/*
  更新时间: 2026-07-07 13:02:18 CST
  更新内容: 支持从用户配色 FBX 提取 base color 贴图，并将颜色转移为可动 GLB 的顶点色。
 */
@@ -13,9 +17,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DEFAULT_OUTPUT = resolve(ROOT, 'cockpit/public/models/ai-mascot.glb');
-const DEFAULT_RATIO = 0.05;
-const DEFAULT_COLOR_SOURCE_STRIDE = 2;
+const DEFAULT_RATIO = 0.18;
+const DEFAULT_COLOR_SOURCE_STRIDE = 1;
 const COLOR_GRID_SIZE = 0.018;
+const MIN_COLOR_SEARCH_RADIUS = 1;
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const cockpitRequire = createRequire(new URL('../cockpit/package.json', import.meta.url));
 const { PNG } = cockpitRequire('pngjs');
@@ -139,7 +144,7 @@ function parseArgs(argv) {
   }
 
   if (!options.input) {
-    throw new Error('Usage: node scripts/convert_component_rig_to_glb.mjs <input.fbx> [output.glb] [--ratio=0.05] [--color-source=colored.fbx]');
+    throw new Error('Usage: node scripts/convert_component_rig_to_glb.mjs <input.fbx> [output.glb] [--ratio=0.18] [--color-source=colored.fbx]');
   }
 
   if (!Number.isFinite(options.ratio) || options.ratio <= 0 || options.ratio > 1) {
@@ -341,7 +346,7 @@ function createColorSampler(sourceModel, texture, stride) {
           }
         }
 
-        if (bestIndex >= 0) break;
+        if (bestIndex >= 0 && radius >= MIN_COLOR_SEARCH_RADIUS) break;
       }
 
       if (bestIndex < 0) return [1, 1, 1];

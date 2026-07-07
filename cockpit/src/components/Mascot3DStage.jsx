@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 13:22:15 CST
+ 更新内容: 固定 3D 小人根节点位置并压低待机/点击动作幅度，避免入口小人随鼠标或默认动画乱跑。
+*/
+/*
  更新时间: 2026-07-07 12:24:46 CST
  更新内容: 将 3D AI 小人替换为用户 FBX 优化 GLB 后，调整归一化模型在入口舞台中的缩放与落点。
 */
@@ -100,7 +104,7 @@ class MascotCanvasErrorBoundary extends Component {
   }
 }
 
-function MascotGlbModel({ action, pointer, analysisActive, onReady }) {
+function MascotGlbModel({ action, analysisActive, onReady }) {
   const { scene } = useGLTF(MASCOT_GLB_SOURCE);
   const model = useMemo(() => scene.clone(true), [scene]);
   const controlsRef = useRef(null);
@@ -134,19 +138,19 @@ function MascotGlbModel({ action, pointer, analysisActive, onReady }) {
     if (!controls || !base) return;
 
     const t = performance.now() * 0.001 - startTimeRef.current;
-    const pointerX = pointer.active ? pointer.x : Math.sin(t * 0.6) * 0.12;
-    const pointerY = pointer.active ? pointer.y : Math.cos(t * 0.5) * 0.08;
-    const idleFloat = Math.sin(t * 1.35) * 0.045;
+    const pointerX = 0;
+    const pointerY = 0;
+    const idleFloat = Math.sin(t * 1.35) * 0.012;
     const talkPulse = Math.sin(t * 10);
     const bounce = Math.abs(Math.sin(t * 5.2));
     const activeTalk = analysisActive || action === MASCOT_ACTIONS.talk;
 
-    let rootY = idleFloat + pointerY * 0.035;
-    let rootRotZ = pointerX * -0.08;
-    let headRotZ = pointerX * -0.06 + Math.sin(t * 1.3) * 0.018;
-    let bodyRotZ = Math.sin(t * 1.1) * 0.012;
-    let leftArmRotZ = Math.sin(t * 1.6) * 0.025;
-    let rightArmRotZ = -Math.sin(t * 1.6) * 0.025;
+    let rootY = idleFloat + pointerY;
+    let rootRotZ = pointerX;
+    let headRotZ = pointerX + Math.sin(t * 1.3) * 0.01;
+    let bodyRotZ = Math.sin(t * 1.1) * 0.006;
+    let leftArmRotZ = Math.sin(t * 1.6) * 0.012;
+    let rightArmRotZ = -Math.sin(t * 1.6) * 0.012;
     let leftArmPosition = [0, 0, 0];
     let rightArmPosition = [0, 0, 0];
     let leftLegRotZ = 0;
@@ -154,14 +158,14 @@ function MascotGlbModel({ action, pointer, analysisActive, onReady }) {
     let rootScale = 1;
 
     if (action === MASCOT_ACTIONS.wave) {
-      rootY += bounce * 0.055;
-      headRotZ += Math.sin(t * 4.4) * 0.055;
-      rightArmRotZ += -0.38 + Math.sin(t * 8) * 0.26;
+      rootY += bounce * 0.018;
+      headRotZ += Math.sin(t * 4.4) * 0.026;
+      rightArmRotZ += -0.34 + Math.sin(t * 8) * 0.18;
     }
 
     if (action === MASCOT_ACTIONS.guide) {
-      rootY += 0.035 + Math.sin(t * 4.8) * 0.012;
-      rootRotZ -= 0.045;
+      rootY += 0.014 + Math.sin(t * 4.8) * 0.004;
+      rootRotZ -= 0.018;
       bodyRotZ += -0.075;
       headRotZ += -0.12 + Math.sin(t * 4.2) * 0.018;
       rightArmPosition = [0.075, 0.11, 0];
@@ -170,38 +174,38 @@ function MascotGlbModel({ action, pointer, analysisActive, onReady }) {
     }
 
     if (activeTalk) {
-      rootY += Math.abs(talkPulse) * 0.028;
-      headRotZ += Math.sin(t * 8.4) * 0.035;
-      bodyRotZ += Math.sin(t * 7.2) * 0.018;
-      leftArmRotZ += Math.sin(t * 6.5) * 0.06;
-      rightArmRotZ -= Math.sin(t * 6.5) * 0.06;
+      rootY += Math.abs(talkPulse) * 0.008;
+      headRotZ += Math.sin(t * 8.4) * 0.018;
+      bodyRotZ += Math.sin(t * 7.2) * 0.008;
+      leftArmRotZ += Math.sin(t * 6.5) * 0.032;
+      rightArmRotZ -= Math.sin(t * 6.5) * 0.032;
     }
 
     if (action === MASCOT_ACTIONS.think) {
-      rootRotZ -= 0.045;
-      headRotZ -= 0.1;
-      rightArmRotZ -= 0.16;
+      rootRotZ -= 0.018;
+      headRotZ -= 0.055;
+      rightArmRotZ -= 0.1;
     }
 
     if (action === MASCOT_ACTIONS.alert) {
-      rootY += bounce * 0.08;
-      rootRotZ += Math.sin(t * 14) * 0.045;
-      headRotZ += Math.sin(t * 12) * 0.08;
-      leftArmRotZ += 0.12;
-      rightArmRotZ -= 0.12;
+      rootY += bounce * 0.025;
+      rootRotZ += Math.sin(t * 14) * 0.018;
+      headRotZ += Math.sin(t * 12) * 0.035;
+      leftArmRotZ += 0.08;
+      rightArmRotZ -= 0.08;
     }
 
     if (action === MASCOT_ACTIONS.celebrate || action === MASCOT_ACTIONS.click) {
-      rootY += Math.pow(bounce, 1.4) * 0.16;
-      rootRotZ += Math.sin(t * 5.4) * 0.055;
-      leftArmRotZ += 0.24 + Math.sin(t * 7) * 0.16;
-      rightArmRotZ -= 0.28 + Math.sin(t * 7) * 0.16;
-      leftLegRotZ -= Math.sin(t * 7) * 0.035;
-      rightLegRotZ += Math.sin(t * 7) * 0.035;
-      rootScale = 1 + Math.pow(bounce, 1.2) * 0.025;
+      rootY += Math.pow(bounce, 1.4) * 0.045;
+      rootRotZ += Math.sin(t * 5.4) * 0.02;
+      leftArmRotZ += 0.18 + Math.sin(t * 7) * 0.08;
+      rightArmRotZ -= 0.2 + Math.sin(t * 7) * 0.08;
+      leftLegRotZ -= Math.sin(t * 7) * 0.018;
+      rightLegRotZ += Math.sin(t * 7) * 0.018;
+      rootScale = 1 + Math.pow(bounce, 1.2) * 0.01;
     }
 
-    restoreTransform(controls.root, base.root, [pointerX * 0.055, rootY, 0], [0, 0, rootRotZ], rootScale);
+    restoreTransform(controls.root, base.root, [0, rootY, 0], [0, 0, rootRotZ], rootScale);
     restoreTransform(controls.body, base.body, [0, 0, 0], [0, 0, bodyRotZ], 1);
     restoreTransform(controls.head, base.head, [0, activeTalk ? Math.abs(talkPulse) * 0.018 : 0, 0], [0, 0, headRotZ], 1);
     restoreTransform(controls.leftArm, base.leftArm, leftArmPosition, [0, 0, leftArmRotZ], 1);
@@ -253,7 +257,6 @@ export default function Mascot3DStage({
             <Suspense fallback={null}>
               <MascotGlbModel
                 action={safeAction}
-                pointer={stagePointer}
                 analysisActive={analysisActive}
                 onReady={() => setModelReady(true)}
               />
