@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 11:49:34 CST
+ 更新内容: 新增 guide 指引动作姿态，点击打开 AI 对话框时让小人指向右侧对话框约 1 秒。
+*/
+/*
  更新时间: 2026-07-06 12:11:26 CST
  更新内容: 将 AI 小人舞台切换为 Blender 生成 GLB 模型，使用控制节点和 performance 时间驱动动作。
 */
@@ -147,6 +151,15 @@ function MascotGlbModel({ action, pointer, analysisActive, onReady }) {
       rootY += bounce * 0.055;
       headRotZ += Math.sin(t * 4.4) * 0.055;
       rightArmRotZ += -0.38 + Math.sin(t * 8) * 0.26;
+    }
+
+    if (action === MASCOT_ACTIONS.guide) {
+      rootY += 0.035 + Math.sin(t * 4.8) * 0.012;
+      rootRotZ -= 0.045;
+      bodyRotZ += -0.075;
+      headRotZ += -0.12 + Math.sin(t * 4.2) * 0.018;
+      rightArmRotZ += -0.68 + Math.sin(t * 5.4) * 0.045;
+      leftArmRotZ += 0.08;
     }
 
     if (activeTalk) {
