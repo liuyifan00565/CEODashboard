@@ -1032,8 +1032,8 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.doesNotMatch(operatingOverviewSource, /getAnnualRhythmSeries/);
   assert.doesNotMatch(operatingOverviewSource, /<EChart option=\{annualOption\}/);
   assert.doesNotMatch(operatingOverviewSource, /当前年度完成率略高于时间进度/);
-  assert.match(operatingOverviewSource, /明细 &gt;/);
-  assert.doesNotMatch(operatingOverviewSource, /查看年度明细/);
+  assert.match(operatingOverviewSource, /查看年度拆解/);
+  assert.doesNotMatch(operatingOverviewSource, /明细 &gt;/);
   assert.match(operatingOverviewSource, /onOpenKpi\(yearKpiCard\)/);
   assert.match(operatingOverviewSource, /getOperatingOverviewMetrics/);
   assert.match(operatingOverviewSource, /<ChannelPanel title="渠道完成情况" showPeriodSwitch \/>/);

@@ -122,7 +122,7 @@ test('adds fused operating overview section text to KPI search keywords', () => 
   assert.ok(annual.keywords.includes('年度节奏'));
   assert.ok(annual.keywords.includes('年度累计回款'));
   assert.ok(annual.keywords.includes('年度完成率'));
-  assert.ok(annual.keywords.includes('明细 >'));
+  assert.ok(annual.keywords.includes('查看年度拆解'));
   assert.ok(annual.keywords.includes('已完成 53.8%'));
   assert.ok(annual.keywords.includes('剩余 46.2%'));
   assert.ok(annual.keywords.includes('下半年月均需完成 447 万'));
