@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 11:49:34 CST
+ 更新内容: 约束点击打开 AI 对话框时播放约 1 秒 guide 指引动作，点击关闭不触发指引。
+*/
+/*
  更新时间: 2026-07-06 10:49:22 CST
  更新内容: 同步 AI 小人入口测试描述，明确透明参考图重新作为小人舞台资产。
 */
@@ -127,6 +131,12 @@ test('responds to KPI card context with matching speech and motion', () => {
   assert.match(componentSource, /useEffect\(\(\) => \{\s*if \(!companionCue\) return;\s*showCompanionCue\(companionCue, \{ openDialog: false \}\);/s);
   assert.match(componentSource, /setMascotAction\(cue\.action \?\? getSpeechAction\(cue\.text\)\);/);
   assert.match(componentSource, /playMascotAction\(MASCOT_ACTIONS\.click, 860, nextOpen\);/);
+});
+
+test('plays a one-second guide motion only when opening the AI dialog from the mascot', () => {
+  assert.match(componentSource, /if \(nextOpen\) \{\s*playMascotAction\(MASCOT_ACTIONS\.guide,\s*1000,\s*true\);[\s\S]*?openAiDialog\(\);[\s\S]*?return;\s*\}/);
+  assert.match(componentSource, /playMascotAction\(MASCOT_ACTIONS\.click,\s*860,\s*false\);/);
+  assert.doesNotMatch(componentSource, /playMascotAction\(MASCOT_ACTIONS\.guide,\s*1000,\s*false\)/);
 });
 
 test('requests Qwen hover bubble cues from readable page text', () => {

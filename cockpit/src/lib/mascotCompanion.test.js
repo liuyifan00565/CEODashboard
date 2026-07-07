@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 11:49:34 CST
+ 更新内容: 增加 AI 小人 guide 指引动作枚举测试，约束点击打开对话框时使用独立动作语义。
+*/
+/*
  更新时间: 2026-07-01 10:03:00
  更新内容: 新增福小客桌宠对话与动作策略测试，约束随机问候和卡片点击反馈。
 */
@@ -11,6 +15,10 @@ import {
   getIdleCompanionCue,
   getSpeechAction,
 } from './mascotCompanion.js';
+
+test('defines a dedicated guide action for pointing users to the AI dialog', () => {
+  assert.equal(MASCOT_ACTIONS.guide, 'guide');
+});
 
 test('cycles through friendly idle prompts for Fu Xiaoke', () => {
   assert.equal(getIdleCompanionCue(0).text, '您好，我是福小客，有什么可以帮助您的吗？');

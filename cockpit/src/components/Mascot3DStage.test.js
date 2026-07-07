@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 11:49:34 CST
+ 更新内容: 增加 GLB 小人 guide 指引动作测试，约束右臂、头部和身体指向右侧对话框。
+*/
+/*
  更新时间: 2026-07-06 14:19:58 CST
  更新内容: 增加灰模锁定文件和 MASCOT_PART_MAP 分件清单验收，避免后续材质与形体精修覆盖基准。
 */
@@ -203,6 +207,15 @@ test('maps every mascot companion action to control-node motion instead of swapp
   assert.match(stageCode, /clampUnit\(pointer\.x\)/);
   assert.match(stageCode, /clampUnit\(pointer\.y\)/);
   assert.doesNotMatch(stageCode, /frameIndex|poseKey|requestAnimationFrame|setInterval/);
+});
+
+test('maps guide action to a right-side dialog pointing motion', () => {
+  assert.match(stageCode, /MASCOT_ACTIONS\.guide/);
+  assert.match(stageCode, /if \(action === MASCOT_ACTIONS\.guide\) \{/);
+  assert.match(stageCode, /bodyRotZ \+= -0\.075;/);
+  assert.match(stageCode, /headRotZ \+= -0\.12 \+ Math\.sin\(t \* 4\.2\) \* 0\.018;/);
+  assert.match(stageCode, /rightArmRotZ \+= -0\.68 \+ Math\.sin\(t \* 5\.4\) \* 0\.045;/);
+  assert.match(stageCode, /leftArmRotZ \+= 0\.08;/);
 });
 
 test('keeps the GLB mascot compact for the dashboard launcher', () => {
