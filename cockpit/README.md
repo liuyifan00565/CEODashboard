@@ -14,6 +14,8 @@
 
 ## 本地运行
 
+> **新同事首选 Docker 联调方式**（自带 MySQL + 数据，环境与线上一致），见仓库根目录 [`ONBOARDING.md`](../ONBOARDING.md)。下面是裸 npm 备选方式，需自备 MySQL 并手动导数据。
+
 先安装依赖：
 
 ```bash
