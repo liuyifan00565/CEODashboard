@@ -1,3 +1,5 @@
+# 更新时间: 2026-07-07 14:42:00 CST
+# 更新内容: 追加 Docker 联调环境产物与种子数据忽略规则，避免真实业务数据 SQL 进入提交。
 # 更新时间: 2026-07-03 15:18:00 CST
 # 更新内容: 忽略 Superpowers 可视化 companion 本地会话产物，避免视觉评审临时文件进入提交。
 # 更新时间: 2026-07-01 11:07:01 CST
@@ -20,3 +22,6 @@ coverage/
 .vite/
 .cache/
 .superpowers/
+
+# Docker 联调环境
+docker/db-init/*.sql
