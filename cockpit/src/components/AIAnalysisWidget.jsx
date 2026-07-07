@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-07 12:00:52 CST
+ 更新内容: 为 guide 指引动作增加 1 秒动作锁，避免气泡、悬停或旧计时器提前覆盖。
+*/
+/*
+ 更新时间: 2026-07-07 11:59:22 CST
+ 更新内容: 防止鼠标悬停和离开事件打断点击打开对话框时的 guide 指引动作。
+*/
+/*
  更新时间: 2026-07-07 11:49:34 CST
  更新内容: 点击打开 AI 对话框时播放约 1 秒 guide 指引动作，点击关闭时保留轻量点击反馈。
 */
@@ -116,7 +124,7 @@ async function readStream(response, onChunk, signal) {
 
 export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', companionCue }) {
   const [open, setOpen] = useState(false);
-  const [mascotAction, setMascotAction] = useState(MASCOT_ACTIONS.idle);
+  const [mascotAction, setMascotActionState] = useState(MASCOT_ACTIONS.idle);
   const [mascotPointer, setMascotPointer] = useState({ x: 0, y: 0, active: false });
   const [bubbleCue, setBubbleCue] = useState(null);
   const [bubbleVisible, setBubbleVisible] = useState(false);
@@ -130,6 +138,7 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   const listRef = useRef(null);
   const abortRef = useRef(null);
   const mascotTimerRef = useRef(null);
+  const guideLockUntilRef = useRef(0);
   const bubbleTimerRef = useRef(null);
   const bubbleExitTimerRef = useRef(null);
   const bubbleFrameRef = useRef(null);
@@ -371,7 +380,7 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
 
   useEffect(() => {
     setMascotAction((current) => (
-      current === MASCOT_ACTIONS.click ? current : getRestingMascotAction(open)
+      current === MASCOT_ACTIONS.click || current === MASCOT_ACTIONS.guide ? current : getRestingMascotAction(open)
     ));
   }, [open]);
 
@@ -379,13 +388,31 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
     return nextOpen ? MASCOT_ACTIONS.talk : MASCOT_ACTIONS.idle;
   }
 
+  function setMascotAction(nextAction, { force = false } = {}) {
+    setMascotActionState((current) => {
+      const resolvedAction = typeof nextAction === 'function' ? nextAction(current) : nextAction;
+      if (!force && resolvedAction !== MASCOT_ACTIONS.guide && Date.now() < guideLockUntilRef.current) {
+        return current;
+      }
+      return resolvedAction;
+    });
+  }
+
   function playMascotAction(action, duration = 0, nextOpen = open) {
     clearTimeout(mascotTimerRef.current);
-    setMascotAction(action);
+    if (action === MASCOT_ACTIONS.guide && duration) {
+      guideLockUntilRef.current = Date.now() + duration;
+    } else {
+      guideLockUntilRef.current = 0;
+    }
+    setMascotAction(action, { force: action === MASCOT_ACTIONS.guide || action === MASCOT_ACTIONS.click });
     if (!duration) return;
 
     mascotTimerRef.current = setTimeout(() => {
-      setMascotAction(getRestingMascotAction(nextOpen));
+      if (action === MASCOT_ACTIONS.guide) {
+        guideLockUntilRef.current = 0;
+      }
+      setMascotAction(getRestingMascotAction(nextOpen), { force: true });
     }, duration);
   }
 
@@ -445,13 +472,13 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   }
 
   function handleMascotEnter() {
-    if (mascotAction === MASCOT_ACTIONS.click) return;
+    if (mascotAction === MASCOT_ACTIONS.click || mascotAction === MASCOT_ACTIONS.guide) return;
     setMascotAction(MASCOT_ACTIONS.wave);
   }
 
   function handleMascotLeave() {
     setMascotPointer({ x: 0, y: 0, active: false });
-    if (mascotAction === MASCOT_ACTIONS.click) return;
+    if (mascotAction === MASCOT_ACTIONS.click || mascotAction === MASCOT_ACTIONS.guide) return;
     setMascotAction(getRestingMascotAction());
   }
 

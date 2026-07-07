@@ -139,6 +139,21 @@ test('plays a one-second guide motion only when opening the AI dialog from the m
   assert.doesNotMatch(componentSource, /playMascotAction\(MASCOT_ACTIONS\.guide,\s*1000,\s*false\)/);
 });
 
+test('keeps temporary guide motion while the opened dialog state settles', () => {
+  assert.match(componentSource, /current === MASCOT_ACTIONS\.click \|\| current === MASCOT_ACTIONS\.guide/);
+});
+
+test('does not interrupt temporary guide motion on mascot hover changes', () => {
+  assert.match(componentSource, /if \(mascotAction === MASCOT_ACTIONS\.click \|\| mascotAction === MASCOT_ACTIONS\.guide\) return;/);
+});
+
+test('locks guide motion against competing mascot action setters until its timer finishes', () => {
+  assert.match(componentSource, /const guideLockUntilRef = useRef\(0\);/);
+  assert.match(componentSource, /Date\.now\(\) < guideLockUntilRef\.current/);
+  assert.match(componentSource, /guideLockUntilRef\.current = Date\.now\(\) \+ duration;/);
+  assert.match(componentSource, /guideLockUntilRef\.current = 0;/);
+});
+
 test('requests Qwen hover bubble cues from readable page text', () => {
   assert.doesNotMatch(componentSource, /buildInstantHoverCue/);
   assert.match(componentSource, /normalizeHoverCueText/);
