@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:30:00 CST
+ 更新内容: 生产服务新增 POST /api/maintenance/save 数据维护页内编辑保存接口，按页执行部分列 upsert 写库。
+*/
+/*
  更新时间: 2026-07-07 11:00:00 CST
  更新内容: 生产服务新增 GET /api/maintenance/data 数据维护读接口，返回四个维护页的真实 MySQL 快照。
 */
@@ -24,6 +28,7 @@ import { handleAiHoverCueRequest } from './server/hoverCue.js';
 import { handleDashboardDataRequest } from './server/dashboardData.js';
 import { handleMaintenanceImportRequest } from './server/maintenanceImport.js';
 import { handleMaintenanceDataRequest } from './server/maintenanceData.js';
+import { handleMaintenanceSaveRequest } from './server/maintenanceSave.js';
 import { loadLocalEnv } from './server/env.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -109,6 +114,16 @@ const server = http.createServer((req, res) => {
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
       }
       res.end(JSON.stringify({ error: `数据维护导入接口异常：${err.message}` }));
+    });
+    return;
+  }
+
+  if (url.pathname === '/api/maintenance/save' && req.method === 'POST') {
+    handleMaintenanceSaveRequest(req, res).catch((err) => {
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      }
+      res.end(JSON.stringify({ error: `数据维护保存接口异常：${err.message}` }));
     });
     return;
   }

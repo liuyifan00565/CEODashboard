@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:30:00 CST
+ 更新内容: Vite 开发服务新增 POST /api/maintenance/save 数据维护页内编辑保存接口，与生产一致。
+*/
+/*
  更新时间: 2026-07-07 11:00:00 CST
  更新内容: Vite 开发服务新增 GET /api/maintenance/data 数据维护读接口，与生产一致。
 */
@@ -24,6 +28,7 @@ import { handleAiHoverCueRequest } from './server/hoverCue.js'
 import { handleDashboardDataRequest } from './server/dashboardData.js'
 import { handleMaintenanceImportRequest } from './server/maintenanceImport.js'
 import { handleMaintenanceDataRequest } from './server/maintenanceData.js'
+import { handleMaintenanceSaveRequest } from './server/maintenanceSave.js'
 import { loadLocalEnv } from './server/env.js'
 
 const projectRoot = fileURLToPath(new URL('.', import.meta.url))
@@ -64,6 +69,14 @@ export default defineConfig({
               res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' })
             }
             res.end(JSON.stringify({ error: `数据维护导入接口异常：${err.message}` }))
+          })
+        })
+        server.middlewares.use('/api/maintenance/save', (req, res) => {
+          handleMaintenanceSaveRequest(req, res).catch((err) => {
+            if (!res.headersSent) {
+              res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' })
+            }
+            res.end(JSON.stringify({ error: `数据维护保存接口异常：${err.message}` }))
           })
         })
       },

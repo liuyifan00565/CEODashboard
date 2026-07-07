@@ -1,4 +1,10 @@
 /*
+ 更新时间: 2026-07-07 14:30:00 CST
+ 更新内容: 四个维护子页改为 forwardRef + useImperativeHandle 暴露 collect()，用 draftRef/受控 state
+          收集页内编辑；父 MaintenancePage 的"保存"按钮改为 POST /api/maintenance/save 写库后回拉，
+          删除静态"页内未接库"提示，saving 期间遮罩禁编辑。页内编辑与 Excel 导入同样反映到数据库。
+*/
+/*
  更新时间: 2026-07-07 11:00:00 CST
  更新内容: 四个维护子页改为从真实 MySQL（GET /api/maintenance/data）读取数据替换 mock；
           year 状态上提、按 dataVersion 重挂载、导入写库后重拉；保存按钮诚实标注"页内未接库"。
@@ -59,7 +65,7 @@
  更新时间: 2026-07-02 19:13:36 CST
  更新内容: 去除内容区分隔点，标题分隔点保持原样，并将维护页进度百分比单独换行展示。
 */
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import {
   META,
@@ -70,9 +76,17 @@ import { fetchMaintenanceData } from '../data/maintenanceLiveData.js';
 import './MaintenancePage.css';
 import { getImportConfig } from '../lib/maintenanceImportConfig.js';
 import { downloadTemplate } from '../lib/excelImport.js';
+import {
+  buildTargetSaveRows,
+  buildCostSaveRows,
+  buildOrgSaveRows,
+  buildChannelSaveRows,
+} from '../lib/maintenanceSaveBuilders.js';
 import MaintenanceImportDialog from './MaintenanceImportDialog.jsx';
+import GlassSelect from './GlassSelect.jsx';
 
 const YEARS = [2024, 2025, 2026, 2027];
+const YEAR_OPTIONS = YEARS.map((item) => ({ value: String(item), label: String(item) }));
 
 const EMPTY_ARRAY = [];
 
@@ -213,53 +227,49 @@ function SaveBadge({ status }) {
   return <span className={`mnt-save-badge${dirty ? ' mnt-save-badge--dirty' : ''}`}>{status}</span>;
 }
 
-function MaintenanceToolbar({ activePage, status, year, onYearChange, onBack, onDirty, onSave, onImport, onDownloadTemplate }) {
+function MaintenanceToolbar({ activePage, status, year, saving, onYearChange, onBack, onDirty, onSave, onImport, onDownloadTemplate }) {
   const meta = getMaintenancePageMeta(activePage);
   const title = MAINTENANCE_TITLE_TEXT[activePage] ?? meta.title;
 
-  function handleYearChange(event) {
-    onYearChange?.(event.target.value);
+  function handleYearChange(nextYear) {
+    onYearChange?.(nextYear);
     onDirty();
   }
 
   const actions = {
     'target-maintenance': (
       <>
-        <select className="mnt-control mnt-year-control" value={year} onChange={handleYearChange} aria-label="目标年份">
-          {YEARS.map((item) => <option key={item} value={item}>{item}</option>)}
-        </select>
-        <button className="mnt-btn" type="button" onClick={onDownloadTemplate}>下载模板</button>
-        <button className="mnt-btn" type="button" onClick={onImport}>Excel导入</button>
-        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave}>保存目标</button>
+        <GlassSelect className="mnt-control mnt-year-control" value={year} onChange={handleYearChange} aria-label="目标年份" disabled={saving} options={YEAR_OPTIONS} />
+        <button className="mnt-btn" type="button" onClick={onDownloadTemplate} disabled={saving}>下载模板</button>
+        <button className="mnt-btn" type="button" onClick={onImport} disabled={saving}>Excel导入</button>
+        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving}>{saving ? '保存中…' : '保存目标'}</button>
       </>
     ),
     'cost-maintenance': (
       <>
-        <select className="mnt-control mnt-year-control" value={year} onChange={handleYearChange} aria-label="成本维护年份">
-          {YEARS.map((item) => <option key={item} value={item}>{item}</option>)}
-        </select>
-        <button className="mnt-btn" type="button" onClick={onDownloadTemplate}>下载模板</button>
-        <button className="mnt-btn" type="button" onClick={onImport}>Excel导入</button>
-        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave}>保存成本</button>
+        <GlassSelect className="mnt-control mnt-year-control" value={year} onChange={handleYearChange} aria-label="成本维护年份" disabled={saving} options={YEAR_OPTIONS} />
+        <button className="mnt-btn" type="button" onClick={onDownloadTemplate} disabled={saving}>下载模板</button>
+        <button className="mnt-btn" type="button" onClick={onImport} disabled={saving}>Excel导入</button>
+        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving}>{saving ? '保存中…' : '保存成本'}</button>
       </>
     ),
     'org-maintenance': (
       <>
-        <button className="mnt-btn" type="button" onClick={onDownloadTemplate}>下载模板</button>
-        <button className="mnt-btn" type="button" onClick={onImport}>Excel导入</button>
-        <button className="mnt-btn" type="button" onClick={onDirty}>新增组织</button>
-        <button className="mnt-btn" type="button" onClick={onDirty}>更新 BI 销售人员</button>
-        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave}>保存组织</button>
+        <button className="mnt-btn" type="button" onClick={onDownloadTemplate} disabled={saving}>下载模板</button>
+        <button className="mnt-btn" type="button" onClick={onImport} disabled={saving}>Excel导入</button>
+        <button className="mnt-btn" type="button" onClick={onDirty} disabled={saving}>新增组织</button>
+        <button className="mnt-btn" type="button" onClick={onDirty} disabled={saving}>更新 BI 销售人员</button>
+        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving}>{saving ? '保存中…' : '保存组织'}</button>
       </>
     ),
     'channel-maintenance': (
       <>
-        <button className="mnt-btn" type="button" onClick={onDownloadTemplate}>下载模板</button>
-        <button className="mnt-btn" type="button" onClick={onImport}>Excel导入</button>
-        <button className="mnt-btn" type="button" onClick={onDirty}>补齐默认来源</button>
-        <button className="mnt-btn" type="button" onClick={onDirty}>新增大类</button>
-        <button className="mnt-btn" type="button" onClick={onDirty}>新增来源</button>
-        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave}>保存渠道</button>
+        <button className="mnt-btn" type="button" onClick={onDownloadTemplate} disabled={saving}>下载模板</button>
+        <button className="mnt-btn" type="button" onClick={onImport} disabled={saving}>Excel导入</button>
+        <button className="mnt-btn" type="button" onClick={onDirty} disabled={saving}>补齐默认来源</button>
+        <button className="mnt-btn" type="button" onClick={onDirty} disabled={saving}>新增大类</button>
+        <button className="mnt-btn" type="button" onClick={onDirty} disabled={saving}>新增来源</button>
+        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving}>{saving ? '保存中…' : '保存渠道'}</button>
       </>
     ),
   };
@@ -274,7 +284,9 @@ function MaintenanceToolbar({ activePage, status, year, onYearChange, onBack, on
           {actions[activePage] ?? actions['target-maintenance']}
           <button className="mnt-btn" type="button" onClick={onBack}>返回看板</button>
           <SaveBadge status={status} />
-          <span className="mnt-save-hint" title="页内单元格编辑暂未接库，仅 Excel 导入会写库">页内未接库</span>
+          {saving
+            ? <span className="mnt-saving-hint">正在写入数据库…</span>
+            : <span className="mnt-save-hint" title="页内编辑保存后写入数据库；新增组织/大类仅本会话有效">页内可保存</span>}
         </div>
       </section>
     </MaintenanceToolbarSurface>
@@ -406,7 +418,7 @@ function TargetPeriodHeader({ column }) {
   );
 }
 
-function TargetPeriodCell({ row, column, markDirty }) {
+function TargetPeriodCell({ row, column, onEdit }) {
   const period = row.periods[column.key];
   const editable = row.type === 'user' && column.month;
 
@@ -423,7 +435,7 @@ function TargetPeriodCell({ row, column, markDirty }) {
             type="number"
             min="0"
             defaultValue={period.target}
-            onChange={markDirty}
+            onChange={(e) => onEdit?.(row.id, column.key, e.target.value)}
             aria-label={`${row.name}${column.label}目标`}
           />
           <span className="mnt-target-input-unit">万</span>
@@ -438,12 +450,22 @@ function TargetPeriodCell({ row, column, markDirty }) {
   );
 }
 
-function TargetMaintenancePage({ markDirty, status, rows, orgTree }) {
+const TargetMaintenancePage = forwardRef(function TargetMaintenancePage({ markDirty, status, rows, orgTree, year }, ref) {
   const [selectedOrg, setSelectedOrg] = useState('all');
   const [selectedTargetRow, setSelectedTargetRow] = useState(null);
   const targetScrollPaneRef = useTargetCurrentMonthAlignment();
+  const draftRef = useRef({});
   const rowList = rows ?? [];
   const selectedTargetRowIndex = rowList.findIndex((row) => `target:${row.id}` === selectedTargetRow);
+
+  useImperativeHandle(ref, () => ({
+    collect: () => ({ rows: buildTargetSaveRows(rowList, draftRef.current, year), laborRows: [], deletions: [] }),
+  }), [rowList, year]);
+
+  function handleEdit(rowId, monthKey, value) {
+    draftRef.current[`${rowId}|${monthKey}`] = Number(value) || 0;
+    markDirty();
+  }
 
   return (
     <section className="mnt-layout mnt-layout--target">
@@ -489,7 +511,7 @@ function TargetMaintenancePage({ markDirty, status, rows, orgTree }) {
                   {rowList.map((row) => (
                     <tr key={row.id} {...getSelectableRowProps(`target:${row.id}`, selectedTargetRow, setSelectedTargetRow, row.type === 'department' ? 'mnt-row--summary' : '')}>
                       {TARGET_PERIOD_COLUMNS.map((column) => (
-                        <TargetPeriodCell key={column.key} row={row} column={column} markDirty={markDirty} />
+                        <TargetPeriodCell key={column.key} row={row} column={column} onEdit={handleEdit} />
                       ))}
                     </tr>
                   ))}
@@ -501,14 +523,15 @@ function TargetMaintenancePage({ markDirty, status, rows, orgTree }) {
       </Panel>
     </section>
   );
-}
+});
 
-function CostMaintenancePage({ markDirty, status, costChannels, costRows, laborRows }) {
+const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty, status, costChannels, costRows, laborRows, year }, ref) {
   const [selectedChannel, setSelectedChannel] = useState('all');
   const [selectedCostRow, setSelectedCostRow] = useState(null);
   const channels = costChannels ?? EMPTY_ARRAY;
   const allRows = costRows ?? EMPTY_ARRAY;
   const laborList = laborRows ?? EMPTY_ARRAY;
+  const draftRef = useRef({});
   const costNavNodes = useMemo(() => buildMaintenanceNavTree(
     channels.map((channel) => ({
       ...channel,
@@ -525,6 +548,18 @@ function CostMaintenancePage({ markDirty, status, costChannels, costRows, laborR
     ]);
   }, [selectedChannel, channels, allRows]);
   const visibleRows = allRows.filter((row) => selectedIds.has(row.id) || selectedChannel === 'all');
+
+  useImperativeHandle(ref, () => ({
+    collect: () => {
+      const r = buildCostSaveRows({ rows: allRows, laborRows: laborList }, draftRef.current, year);
+      return { rows: r.rows, laborRows: r.laborRows, deletions: [] };
+    },
+  }), [allRows, laborList, year]);
+
+  function handleEdit(rowId, monthKey, value) {
+    draftRef.current[`${rowId}|${monthKey}`] = Number(value) || 0;
+    markDirty();
+  }
 
   return (
     <section className="mnt-layout mnt-layout--cost">
@@ -556,7 +591,7 @@ function CostMaintenancePage({ markDirty, status, costChannels, costRows, laborR
                           {editable ? (
                             <label className="mnt-inline-field">
                               <span>成本</span>
-                              <input className="mnt-control mnt-number-input" type="number" min="0" defaultValue={period.cost} onChange={markDirty} />
+                              <input className="mnt-control mnt-number-input" type="number" min="0" defaultValue={period.cost} onChange={(e) => handleEdit(row.id, column.key, e.target.value)} />
                             </label>
                           ) : (
                             <div className="mnt-mini-line">成本 {formatWan(period.cost)}</div>
@@ -594,7 +629,7 @@ function CostMaintenancePage({ markDirty, status, costChannels, costRows, laborR
                       return (
                         <td key={column.key} className="mnt-period-cell">
                           {column.month ? (
-                            <input className="mnt-control mnt-number-input" type="number" min="0" defaultValue={period.cost} onChange={markDirty} />
+                            <input className="mnt-control mnt-number-input" type="number" min="0" defaultValue={period.cost} onChange={(e) => handleEdit(row.id, column.key, e.target.value)} />
                           ) : (
                             <strong>{formatWan(period.cost)}</strong>
                           )}
@@ -610,7 +645,7 @@ function CostMaintenancePage({ markDirty, status, costChannels, costRows, laborR
       </div>
     </section>
   );
-}
+});
 
 function departmentOptions(departments, currentId = '') {
   return (departments ?? []).map((dept) => (
@@ -620,13 +655,14 @@ function departmentOptions(departments, currentId = '') {
   ));
 }
 
-function OrgMaintenancePage({ markDirty, status, departments: propDepartments, users: propUsers }) {
+const OrgMaintenancePage = forwardRef(function OrgMaintenancePage({ markDirty, status, departments: propDepartments, users: propUsers }, ref) {
   const [departments, setDepartments] = useState(propDepartments ?? []);
   const [users, setUsers] = useState(propUsers ?? []);
   const [selectedDepartment, setSelectedDepartment] = useState(
     () => propDepartments?.find((d) => !d.parentId)?.id ?? 'headquarters'
   );
   const [selectedOrgRow, setSelectedOrgRow] = useState(null);
+  const draftRef = useRef({});
   // 父组件按 dataVersion 用 key 重挂载，props 变化时同步本地状态
   useEffect(() => {
     setDepartments(propDepartments ?? []);
@@ -648,6 +684,15 @@ function OrgMaintenancePage({ markDirty, status, departments: propDepartments, u
   const visibleUsers = selectedDepartment === 'headquarters'
     ? users
     : users.filter((user) => selectedDepartmentIds.has(user.deptId));
+
+  useImperativeHandle(ref, () => ({
+    collect: () => ({ rows: buildOrgSaveRows(users, draftRef.current), laborRows: [], deletions: [] }),
+  }), [users]);
+
+  function editField(userId, field, value) {
+    draftRef.current[`${userId}|${field}`] = value;
+    markDirty();
+  }
 
   function addDepartment() {
     const nextIndex = departments.length + 1;
@@ -684,19 +729,19 @@ function OrgMaintenancePage({ markDirty, status, departments: propDepartments, u
                     <span>{user.sourceName}</span>
                   </td>
                   <td>
-                    <select className="mnt-control" defaultValue={user.deptId} onChange={markDirty} aria-label={`${user.name}所属组织`}>
+                    <select className="mnt-control" defaultValue={user.deptId} onChange={(e) => editField(user.id, 'deptId', e.target.value)} aria-label={`${user.name}所属组织`}>
                       {departmentOptions(departments)}
                     </select>
                   </td>
                   <td>
                     <label className="mnt-check">
-                      <input type="checkbox" defaultChecked={user.isSales} onChange={markDirty} />
+                      <input type="checkbox" defaultChecked={user.isSales} onChange={(e) => editField(user.id, 'isSales', e.target.checked)} />
                       销售
                     </label>
                   </td>
                   <td>
                     <label className="mnt-check">
-                      <input type="checkbox" defaultChecked={user.enabled} onChange={markDirty} />
+                      <input type="checkbox" defaultChecked={user.enabled} onChange={(e) => editField(user.id, 'enabled', e.target.checked)} />
                       启用
                     </label>
                   </td>
@@ -709,7 +754,7 @@ function OrgMaintenancePage({ markDirty, status, departments: propDepartments, u
       </Panel>
     </section>
   );
-}
+});
 
 function groupOptions(groups) {
   return (
@@ -720,14 +765,19 @@ function groupOptions(groups) {
   );
 }
 
-function ChannelMaintenancePage({ markDirty, status, groups: propGroups, sources: propSources }) {
+const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ markDirty, status, groups: propGroups, sources: propSources }, ref) {
   const [groups, setGroups] = useState(propGroups ?? []);
-  const [sources, setSources] = useState(propSources ?? []);
+  const [sources, setSources] = useState(
+    (propSources ?? []).map((s) => ({ ...s, _uid: s.code, _isNew: false })),
+  );
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedSourceRow, setSelectedSourceRow] = useState(null);
+  const deletedCodesRef = useRef([]);
+  const newCounterRef = useRef(0);
   useEffect(() => {
     setGroups(propGroups ?? []);
-    setSources(propSources ?? []);
+    setSources((propSources ?? []).map((s) => ({ ...s, _uid: s.code, _isNew: false })));
+    deletedCodesRef.current = [];
   }, [propGroups, propSources]);
   const sourceCountByGroup = useMemo(() => {
     const counts = new Map();
@@ -757,6 +807,18 @@ function ChannelMaintenancePage({ markDirty, status, groups: propGroups, sources
     ? sources
     : sources.filter((source) => selectedGroupIds.has(source.groupId));
 
+  useImperativeHandle(ref, () => ({
+    collect: () => {
+      const r = buildChannelSaveRows(sources, deletedCodesRef.current);
+      return { rows: r.rows, laborRows: [], deletions: r.deletions };
+    },
+  }), [sources]);
+
+  function updateSource(uid, patch) {
+    setSources(sources.map((s) => (s._uid === uid ? { ...s, ...patch } : s)));
+    markDirty();
+  }
+
   function addGroup(parentId = '') {
     const nextIndex = groups.length + 1;
     setGroups([
@@ -767,16 +829,21 @@ function ChannelMaintenancePage({ markDirty, status, groups: propGroups, sources
   }
 
   function addSource() {
-    const nextIndex = sources.length + 1;
+    newCounterRef.current += 1;
+    const uid = `new-${newCounterRef.current}`;
     setSources([
       ...sources,
-      { code: String(9000 + nextIndex), name: `新增来源 ${nextIndex}`, groupId: groups[0]?.id || '', enabled: true, excluded: false },
+      { _uid: uid, _isNew: true, code: String(9000 + newCounterRef.current), name: `新增来源 ${newCounterRef.current}`, groupId: groups[0]?.id || '', enabled: true, excluded: false },
     ]);
     markDirty();
   }
 
-  function deleteSource(code) {
-    setSources(sources.filter((source) => source.code !== code));
+  function deleteSource(source) {
+    setSources(sources.filter((s) => s._uid !== source._uid));
+    // 仅已落库的来源需要从数据库删除；新增未保存的来源只移除本地行
+    if (!source._isNew && source.code) {
+      deletedCodesRef.current.push(source.code);
+    }
     markDirty();
   }
 
@@ -802,27 +869,33 @@ function ChannelMaintenancePage({ markDirty, status, groups: propGroups, sources
             </thead>
             <tbody>
               {visibleSources.map((source) => (
-                <tr key={source.code} {...getSelectableRowProps(`source:${source.code}`, selectedSourceRow, setSelectedSourceRow, source.excluded ? 'mnt-row--muted' : '')}>
-                  <td><input className="mnt-control" defaultValue={source.code} onChange={markDirty} aria-label={`${source.name}来源编码`} /></td>
-                  <td><input className="mnt-control" defaultValue={source.name} onChange={markDirty} aria-label={`${source.name}来源名称`} /></td>
+                <tr key={source._uid} {...getSelectableRowProps(`source:${source.code}`, selectedSourceRow, setSelectedSourceRow, source.excluded ? 'mnt-row--muted' : '')}>
                   <td>
-                    <select className="mnt-control" defaultValue={source.groupId} onChange={markDirty} aria-label={`${source.name}归属渠道`}>
+                    {source._isNew ? (
+                      <input className="mnt-control" value={source.code} onChange={(e) => updateSource(source._uid, { code: e.target.value })} aria-label={`${source.name}来源编码`} />
+                    ) : (
+                      <code>{source.code}</code>
+                    )}
+                  </td>
+                  <td><input className="mnt-control" value={source.name} onChange={(e) => updateSource(source._uid, { name: e.target.value })} aria-label={`${source.name}来源名称`} /></td>
+                  <td>
+                    <select className="mnt-control" value={source.groupId} onChange={(e) => updateSource(source._uid, { groupId: e.target.value })} aria-label={`${source.name}归属渠道`}>
                       {groupOptions(groups)}
                     </select>
                   </td>
                   <td>
                     <label className="mnt-check">
-                      <input type="checkbox" defaultChecked={source.enabled} onChange={markDirty} />
+                      <input type="checkbox" checked={!!source.enabled} onChange={(e) => updateSource(source._uid, { enabled: e.target.checked })} />
                       启用
                     </label>
                   </td>
                   <td>
                     <label className="mnt-check">
-                      <input type="checkbox" defaultChecked={source.excluded} onChange={markDirty} />
+                      <input type="checkbox" checked={!!source.excluded} onChange={(e) => updateSource(source._uid, { excluded: e.target.checked })} />
                       排除
                     </label>
                   </td>
-                  <td><button className="mnt-btn mnt-btn--danger" type="button" onClick={() => deleteSource(source.code)}>删除</button></td>
+                  <td><button className="mnt-btn mnt-btn--danger" type="button" onClick={() => deleteSource(source)}>删除</button></td>
                 </tr>
               ))}
             </tbody>
@@ -831,7 +904,7 @@ function ChannelMaintenancePage({ markDirty, status, groups: propGroups, sources
       </Panel>
     </section>
   );
-}
+});
 
 export default function MaintenancePage({ activePage = 'target-maintenance', onBack }) {
   const [statusByPage, setStatusByPage] = useState({});
@@ -841,6 +914,9 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
   const [dataVersion, setDataVersion] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const pageRef = useRef(null);
   const Page = PAGE_RENDERERS[activePage] ?? TargetMaintenancePage;
   const status = statusByPage[activePage] ?? '未修改';
   const importConfig = getImportConfig(activePage);
@@ -884,6 +960,46 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
     markDirty();
   }
 
+  async function handleSave() {
+    if (saving) return;
+    const collected = pageRef.current?.collect?.();
+    const payload = {
+      pageKey: activePage,
+      year,
+      rows: collected?.rows ?? [],
+      laborRows: collected?.laborRows ?? [],
+      deletions: collected?.deletions ?? [],
+    };
+    if (!payload.rows.length && !payload.laborRows.length && !payload.deletions.length) {
+      markSaved();
+      return;
+    }
+    setSaving(true);
+    setSaveError('');
+    try {
+      const resp = await fetch('/api/maintenance/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const result = await resp.json().catch(() => null);
+      if (!resp.ok) {
+        setSaveError(result?.error || `保存失败（${resp.status}）`);
+        return;
+      }
+      // 写库后重拉，让表单回显数据库最新值并清空 draft（重挂载）
+      setDataVersion((v) => v + 1);
+      markSaved();
+      if (result?.errors?.length) {
+        setSaveError(`部分行未写入：${result.errors.map((e) => e.message).join('；')}`);
+      }
+    } catch (err) {
+      setSaveError(`网络异常：${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const pageProps = (() => {
     const d = data || {};
     switch (activePage) {
@@ -896,27 +1012,34 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
   })();
 
   return (
-    <div className="mnt-page">
+    <div className={`mnt-page${saving ? ' mnt-page--saving' : ''}`}>
       <MaintenanceToolbar
         activePage={activePage}
         status={status}
         year={year}
+        saving={saving}
         onYearChange={setYear}
         onBack={onBack}
         onDirty={markDirty}
-        onSave={markSaved}
+        onSave={handleSave}
         onImport={() => setImportOpen(true)}
         onDownloadTemplate={handleDownloadTemplate}
       />
       {loading && <div className="mnt-state-line">正在加载真实数据库…</div>}
       {error && <div className="mnt-state-line mnt-state-line--error">加载失败：{error}</div>}
+      {saveError && <div className="mnt-state-line mnt-state-line--error">{saveError}</div>}
       {!loading && !error && data && (
-        <Page
-          key={`${activePage}-${year}-${dataVersion}`}
-          markDirty={markDirty}
-          status={status}
-          {...pageProps}
-        />
+        <>
+          <Page
+            ref={pageRef}
+            key={`${activePage}-${year}-${dataVersion}`}
+            markDirty={markDirty}
+            status={status}
+            year={year}
+            {...pageProps}
+          />
+          {saving && <div className="mnt-saving-overlay" aria-live="polite">正在写入数据库…</div>}
+        </>
       )}
       {importOpen && importConfig && (
         <MaintenanceImportDialog

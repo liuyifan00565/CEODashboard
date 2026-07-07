@@ -4,12 +4,17 @@
           biz_channel_cost_monthly / dim_staff / dim_channel_source，FK 不满足的行跳过不中断整体。
           金额列以"万"录入，写库时 ×10000 转元（与维护页万单位一致）。
 */
+/*
+ 更新时间: 2026-07-07 14:30:00 CST
+ 更新内容: 将 WAN_TO_YUAN / readJsonBody / sendJson 标记为 export，供页内编辑保存接口
+          (maintenanceSave.js) 复用同一份万→元换算与 JSON 读取/响应逻辑，避免两处口径漂移。
+*/
 import { getImportConfig } from '../src/lib/maintenanceImportConfig.js';
 import { mapAndValidate } from '../src/lib/excelImport.js';
 import { createDbConnection, queryRows, nextId } from './db.js';
 
 /** 手写读取 JSON 请求体（后端无 body-parser），限制最大 5MB 防滥用。 */
-function readJsonBody(req, limitBytes = 5 * 1024 * 1024) {
+export function readJsonBody(req, limitBytes = 5 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let size = 0;
@@ -38,12 +43,12 @@ function readJsonBody(req, limitBytes = 5 * 1024 * 1024) {
   });
 }
 
-function sendJson(res, status, payload) {
+export function sendJson(res, status, payload) {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(payload));
 }
 
-const WAN_TO_YUAN = (wan) => Math.round(Number(wan || 0) * 10000);
+export const WAN_TO_YUAN = (wan) => Math.round(Number(wan || 0) * 10000);
 
 async function resolveByName(connection, table, nameCol, nameValue, idCol) {
   if (!nameValue) return null;

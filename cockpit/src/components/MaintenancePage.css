@@ -1229,3 +1229,29 @@
   color: rgba(255, 255, 255, 0.4);
   white-space: nowrap;
 }
+
+.mnt-saving-hint {
+  font-size: 11px;
+  color: rgba(180, 200, 255, 0.85);
+  white-space: nowrap;
+}
+
+.mnt-page--saving {
+  position: relative;
+}
+
+.mnt-saving-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 6, 20, 0.45);
+  backdrop-filter: blur(2px);
+  color: rgba(220, 230, 255, 0.9);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  z-index: 5;
+  pointer-events: all;
+  cursor: progress;
+}
