@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 11:52:53 CST
+ 更新内容: 首页回款、年度累计、渠道回款和月趋势优先使用 fact_revenue_daily 日级事实表聚合。
+*/
+/*
  更新时间: 2026-07-06 18:49:54 CST
  更新内容: 清理经营节奏聚合函数未使用参数，保持真实数据库接口 lint 输出干净。
 */
@@ -46,6 +50,12 @@ function monthLabel(yearMonth) {
 
 function monthName(yearMonth) {
   return `${monthNumber(yearMonth)}月`;
+}
+
+function previousYearMonthValue(yearMonth) {
+  const [year, month] = String(yearMonth || '2026-06').split('-').map(Number);
+  if (month > 1) return `${year}-${String(month - 1).padStart(2, '0')}`;
+  return `${year - 1}-12`;
 }
 
 function sum(rows, field) {
@@ -121,13 +131,16 @@ function makeOperatingMetrics({ kpiDerived, latestMonth, channelRows }) {
   };
 }
 
-function makeChannelRows({ channels, currentSalesRows, yearlyRecovered, annualTarget, monthRecoveredTotal, monthTargetTotal }) {
-  const recoveredByChannel = groupSum(currentSalesRows, 'channel_key', 'recovered_wan');
+function makeChannelRows({ channels, currentRecoveredRows, currentSalesRows, yearlyRecovered, annualTarget, monthRecoveredTotal, monthTargetTotal, yearRecoveredRows = [] }) {
+  const recoveredByChannel = groupSum(currentRecoveredRows, 'channel_key', 'recovered_wan');
   const targetByChannel = groupSum(currentSalesRows, 'channel_key', 'target_wan');
+  const yearRecoveredByChannel = groupSum(yearRecoveredRows, 'channel_key', 'recovered_wan');
   return channels.map((channel) => {
     const recovered = round0(recoveredByChannel.get(channel.channel_key));
     const target = round0(targetByChannel.get(channel.channel_key));
-    const yearRecovered = monthRecoveredTotal ? round0(yearlyRecovered * (recovered / monthRecoveredTotal)) : recovered;
+    const yearRecovered = yearRecoveredRows.length
+      ? round0(yearRecoveredByChannel.get(channel.channel_key))
+      : monthRecoveredTotal ? round0(yearlyRecovered * (recovered / monthRecoveredTotal)) : recovered;
     const yearTarget = monthTargetTotal ? round0(annualTarget * (target / monthTargetTotal)) : target;
     return completionRow({
       key: channel.channel_key,
@@ -160,8 +173,8 @@ function makeChannelRoi({ channelRows, channelCosts }) {
   }).sort((a, b) => b.roi - a.roi);
 }
 
-function makeMonthlyTrend({ monthlyTargets, salesRows, latestMonth, currentMonthTarget }) {
-  const recoveredByMonth = groupSum(salesRows, 'year_month', 'recovered_wan');
+function makeMonthlyTrend({ monthlyTargets, recoveredRows, latestMonth, currentMonthTarget }) {
+  const recoveredByMonth = groupSum(recoveredRows, 'year_month', 'recovered_wan');
   return monthlyTargets
     .filter((row) => monthNumber(row.year_month) <= monthNumber(latestMonth))
     .map((row) => {
@@ -293,19 +306,27 @@ function makeDeliveryRows(rows) {
 export function mapDashboardRowsToSnapshot(rows) {
   const latestMonth = rows.latestMonth || rows.salesMemberMonthly?.[0]?.year_month || '2026-06';
   const latestYear = String(latestMonth).slice(0, 4);
+  const previousMonth = rows.previousMonth || previousYearMonthValue(latestMonth);
   const currentSalesRows = (rows.salesMemberMonthly ?? []).filter((row) => row.year_month === latestMonth);
   const yearSalesRows = (rows.salesMemberMonthly ?? []).filter((row) => String(row.year_month).startsWith(latestYear));
-  const currentMonthRecovered = round0(sum(currentSalesRows, 'recovered_wan'));
+  const revenueRows = rows.revenueDaily ?? [];
+  const useRevenueDaily = revenueRows.length > 0;
+  const currentRevenueRows = revenueRows.filter((row) => row.year_month === latestMonth);
+  const previousRevenueRows = revenueRows.filter((row) => row.year_month === previousMonth);
+  const yearRevenueRows = revenueRows.filter((row) => String(row.year_month).startsWith(latestYear) && monthNumber(row.year_month) <= monthNumber(latestMonth));
+  const recoveredRows = useRevenueDaily ? revenueRows : yearSalesRows;
+  const currentRecoveredRows = useRevenueDaily ? currentRevenueRows : currentSalesRows;
+  const currentMonthRecovered = round0(sum(currentRecoveredRows, 'recovered_wan'));
   const currentMonthTarget = round0(sum(currentSalesRows, 'target_wan'));
   const annualTarget = round0(sum(rows.monthlyTargets ?? [], 'target_wan'));
-  const yearRecovered = round0(sum(yearSalesRows, 'recovered_wan'));
+  const yearRecovered = round0(sum(useRevenueDaily ? yearRevenueRows : yearSalesRows, 'recovered_wan'));
   const adCost = round0(sum(rows.channelCosts ?? [], 'investment_wan'));
   const laborCost = round0(sum(rows.laborCosts ?? [], 'amount_wan'));
   const monthTargetGap = Math.max(0, currentMonthTarget - currentMonthRecovered);
   const kpi = {
     monthRecovered: currentMonthRecovered,
     monthTarget: currentMonthTarget,
-    lastMonthRecovered: round0(sum((rows.previousMonthSales ?? []), 'recovered_wan')),
+    lastMonthRecovered: useRevenueDaily ? round0(sum(previousRevenueRows, 'recovered_wan')) : round0(sum((rows.previousMonthSales ?? []), 'recovered_wan')),
     yearRecovered,
     yearTarget: annualTarget,
     lastYearSameRecovered: round0(sum((rows.lastYearSales ?? []), 'recovered_wan')),
@@ -318,11 +339,13 @@ export function mapDashboardRowsToSnapshot(rows) {
   const kpiDerived = makeKpiDerived(kpi);
   const channels = makeChannelRows({
     channels: rows.channels ?? [],
+    currentRecoveredRows,
     currentSalesRows,
     yearlyRecovered: yearRecovered,
     annualTarget,
     monthRecoveredTotal: currentMonthRecovered,
     monthTargetTotal: currentMonthTarget,
+    yearRecoveredRows: useRevenueDaily ? yearRevenueRows : [],
   });
   const operatingOverviewMetrics = makeOperatingMetrics({ kpiDerived, latestMonth, channelRows: channels });
   const deliveryRows = makeDeliveryRows(rows);
@@ -339,7 +362,7 @@ export function mapDashboardRowsToSnapshot(rows) {
     operatingOverviewMetrics,
     channels,
     channelRoi: makeChannelRoi({ channelRows: channels, channelCosts: rows.channelCosts ?? [] }),
-    monthlyTrend: makeMonthlyTrend({ monthlyTargets: rows.monthlyTargets ?? [], salesRows: yearSalesRows, latestMonth, currentMonthTarget }),
+    monthlyTrend: makeMonthlyTrend({ monthlyTargets: rows.monthlyTargets ?? [], recoveredRows, latestMonth, currentMonthTarget }),
     salesMemberRows: makeSalesMemberRows(currentSalesRows),
     versions: makeVersionRows(rows.versionSales ?? []),
     renewalRows: makeRenewalRows(rows.renewalRows ?? []),
@@ -378,10 +401,12 @@ export async function buildDashboardSnapshot(connection) {
   const previousMonth = prevMonthRows[0]?.previousMonth;
   const latestYear = String(latestMonth).slice(0, 4);
   const lastYearMonth = `${Number(latestYear) - 1}-${String(latestMonth).slice(5, 7)}`;
+  const nextYear = String(Number(latestYear) + 1);
 
   const [
     channels,
     salesMemberMonthly,
+    revenueDaily,
     previousMonthSales,
     lastYearSales,
     monthlyTargets,
@@ -409,6 +434,15 @@ export async function buildDashboardSnapshot(connection) {
       WHERE f.\`year_month\` LIKE CONCAT(?, '%')
       ORDER BY f.\`year_month\`, f.id
     `, [latestYear]),
+    queryRows(connection, `
+      SELECT DATE_FORMAT(r.stat_date, '%Y-%m') AS \`year_month\`, c.channel_key,
+             ROUND(SUM(r.recovered_amount_yuan) / 10000, 2) AS recovered_wan
+      FROM fact_revenue_daily r
+      LEFT JOIN dim_channel c ON c.channel_id = r.channel_id
+      WHERE r.stat_date >= ? AND r.stat_date < ?
+      GROUP BY DATE_FORMAT(r.stat_date, '%Y-%m'), c.channel_key
+      ORDER BY \`year_month\`, c.channel_key
+    `, [`${latestYear}-01-01`, `${nextYear}-01-01`]),
     queryRows(connection, `
       SELECT ROUND(recovered_amount_yuan / 10000, 2) AS recovered_wan
       FROM fact_sales_member_monthly
@@ -540,8 +574,10 @@ export async function buildDashboardSnapshot(connection) {
 
   return mapDashboardRowsToSnapshot({
     latestMonth,
+    previousMonth,
     channels,
     salesMemberMonthly,
+    revenueDaily,
     previousMonthSales,
     lastYearSales,
     monthlyTargets,

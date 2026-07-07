@@ -1,7 +1,7 @@
 # CEO 经营驾驶舱 React Demo
 
-更新时间: 2026-07-06 18:49:15 CST
-更新内容: 经营总览说明移除旧 mock 示例数字，改为描述 /api/dashboard-data 返回的真实数据库指标。
+更新时间: 2026-07-07 11:52:53 CST
+更新内容: 首页回款口径改为优先使用 fact_revenue_daily 日级事实表聚合，并保留销售人员月表兜底说明。
 
 ## 技术栈
 
@@ -58,9 +58,9 @@ DB_PASSWORD=your-mysql-password
 DB_NAME=ceo_dashboard
 ```
 
-当前首页回款实际值优先来自 `fact_sales_member_monthly.recovered_amount_yuan`，月目标来自同表 `target_amount_yuan`，年度目标来自 `biz_target_monthly.target_amount_yuan` 按全年汇总。当前库中 `fact_revenue_daily` 为空，因此年度累计实际按已有销售人员月事实表汇总；如果库里只有 `2026-06`，年度累计实际就只会等于 6 月真实回款，不会再显示旧的 3,120 万 mock。
+当前首页回款实际值优先来自 `fact_revenue_daily.recovered_amount_yuan`，按月份和渠道聚合；当日级回款表没有数据时，才回退到 `fact_sales_member_monthly.recovered_amount_yuan`。月目标和销售人员明细来自 `fact_sales_member_monthly.target_amount_yuan`，年度目标来自 `biz_target_monthly.target_amount_yuan` 按全年汇总。导入完整数据库后，年度累计实际会按当年 1 月到当前月的日级回款累计，不再只等于单月销售人员月表回款，也不会显示旧 mock。
 
-渠道完成来自 `dim_channel` + `fact_sales_member_monthly`，渠道投入来自 `biz_channel_cost_monthly`，人力成本来自 `biz_labor_cost_monthly`。版本、续费、开户、算力和交付模块分别读取 `fact_version_sales_daily`、`fact_renewal_daily`、`fact_opening_account_daily`、算力事实表和 `fact_delivery_order`/`biz_delivery_target_monthly`。
+渠道完成的实际回款优先来自 `dim_channel` + `fact_revenue_daily`，渠道目标仍来自 `fact_sales_member_monthly`；渠道投入来自 `biz_channel_cost_monthly`，人力成本来自 `biz_labor_cost_monthly`。版本、续费、开户、算力和交付模块分别读取 `fact_version_sales_daily`、`fact_renewal_daily`、`fact_opening_account_daily`、算力事实表和 `fact_delivery_order`/`biz_delivery_target_monthly`。
 
 ## 经营总览口径
 

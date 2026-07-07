@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 11:52:53 CST
+ 更新内容: 增加日级回款事实表优先级测试，防止导入完整数据库后年度累计仍只取销售人员月表。
+*/
+/*
  更新时间: 2026-07-06 18:37:58 CST
  更新内容: 增加真实数据库 dashboard snapshot 映射测试，要求首页 KPI、渠道、成本和年度节奏来自 MySQL 行。
 */
@@ -82,4 +86,44 @@ test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
   assert.equal(snapshot.monthlyTrend.at(-1).recovered, 520);
   assert.equal(snapshot.channelRoi.find((row) => row.key === 'online').investment, 31);
   assert.equal(snapshot.salesMemberRows.find((row) => row.key === 'staff-2004').group, 'east');
+});
+
+test('prefers daily revenue facts over sales member monthly rows for recovered metrics', () => {
+  const snapshot = mapDashboardRowsToSnapshot({
+    latestMonth: '2026-06',
+    channels: [
+      { channel_id: 3001, channel_key: 'online', channel_name: '线上' },
+      { channel_id: 3002, channel_key: 'south', channel_name: '华南线下' },
+    ],
+    salesMemberMonthly: [
+      { year_month: '2026-06', staff_id: 2001, staff_name: '王丽英', channel_key: 'online', channel_name: '线上', recovered_wan: 300, target_wan: 240 },
+      { year_month: '2026-06', staff_id: 2002, staff_name: '李思雨', channel_key: 'south', channel_name: '华南线下', recovered_wan: 220, target_wan: 110 },
+    ],
+    revenueDaily: [
+      { year_month: '2026-01', channel_key: 'online', recovered_wan: 100 },
+      { year_month: '2026-05', channel_key: 'online', recovered_wan: 120 },
+      { year_month: '2026-06', channel_key: 'online', recovered_wan: 170.95 },
+      { year_month: '2026-06', channel_key: 'south', recovered_wan: 118.75 },
+    ],
+    monthlyTargets: [
+      { year_month: '2026-01', target_wan: 315.7 },
+      { year_month: '2026-02', target_wan: 338.8 },
+      { year_month: '2026-03', target_wan: 369.6 },
+      { year_month: '2026-04', target_wan: 392.7 },
+      { year_month: '2026-05', target_wan: 361.9 },
+      { year_month: '2026-06', target_wan: 415.8 },
+    ],
+  });
+
+  assert.equal(snapshot.kpi.monthRecovered, 290);
+  assert.equal(snapshot.kpi.lastMonthRecovered, 120);
+  assert.equal(snapshot.kpi.yearRecovered, 510);
+  assert.deepEqual(
+    snapshot.channels.map((channel) => [channel.key, channel.recovered, channel.target]),
+    [['online', 171, 240], ['south', 119, 110]]
+  );
+  assert.deepEqual(
+    snapshot.monthlyTrend.map((row) => [row.month, row.recovered]),
+    [['1月', 100], ['2月', 0], ['3月', 0], ['4月', 0], ['5月', 120], ['6月', 290]]
+  );
 });
