@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 17:45:31 CST
+ 更新内容: 同步 AI 小人动作帧安全边距审计结果，确保挥手、指引和维护帧不会贴边残缺。
+*/
+/*
  更新时间: 2026-07-07 16:26:47 CST
  更新内容: 将 AI 小人动作切换为真实帧图 sprite sheet，接入动作自审结果并移除单帧替换策略。
 */
@@ -50,18 +54,18 @@ export const MASCOT_APPROVED_ASSETS = Object.freeze({
 });
 
 export const MASCOT_ACTION_AUDIT = Object.freeze({
-  idleBreathe: auditSpec(12, 1, 2),
-  idleLook: auditSpec(12, 7, 3),
-  idleBounce: auditSpec(12, 0.5, 2),
-  idlePatrol: auditSpec(12, 8, 1),
-  wave: auditSpec(12, 0.5, 0),
-  guide: auditSpec(12, 0.5, 0),
-  talk: auditSpec(12, 0, 1),
-  think: auditSpec(12, 1.5, 2),
-  alert: auditSpec(12, 4, 0),
-  celebrate: auditSpec(12, 0.5, 0),
-  click: auditSpec(12, 0.5, 0),
-  laptop: auditSpec(12, 1, 1),
+  idleBreathe: auditSpec(12, 0.5, 0, 13),
+  idleLook: auditSpec(12, 1, 0, 12),
+  idleBounce: auditSpec(12, 0, 0, 13),
+  idlePatrol: auditSpec(12, 1, 0, 13),
+  wave: auditSpec(12, 5.5, 0, 12),
+  guide: auditSpec(12, 5.5, 0, 12),
+  talk: auditSpec(12, 0, 0, 13),
+  think: auditSpec(12, 1, 0, 13),
+  alert: auditSpec(12, 0.5, 0, 13),
+  celebrate: auditSpec(12, 1, 0, 13),
+  click: auditSpec(12, 0.5, 0, 13),
+  laptop: auditSpec(12, 1, 0, 12),
 });
 
 export const MASCOT_IDLE_VARIANTS = Object.freeze([
@@ -85,11 +89,12 @@ function sheetSpec(src, columns = 12) {
   });
 }
 
-function auditSpec(frameCount, maxCenterJitterPx, maxFootJitterPx) {
+function auditSpec(frameCount, maxCenterJitterPx, maxFootJitterPx, minTransparentMarginPx) {
   return Object.freeze({
     frameCount,
     maxCenterJitterPx,
     maxFootJitterPx,
+    minTransparentMarginPx,
     smooth: true,
     reasonable: true,
   });

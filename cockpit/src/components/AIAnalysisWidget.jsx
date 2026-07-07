@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 17:45:31 CST
+ 更新内容: 首次挂载 AI 小人后自动播放约 1 秒挥手动作，并避免覆盖用户点击后的 guide 指引。
+*/
+/*
  更新时间: 2026-07-07 15:09:26 CST
  更新内容: 为 AI 小人入口外层增加当前动作类，支持点击 guide 时显示右侧对话框指引光束。
 */
@@ -88,6 +92,8 @@ const HOVER_CUE_DURATION = 4200;
 const HOVER_BUBBLE_COOLDOWN = 6000;
 const DEFAULT_BUBBLE_INTERVAL = 10000;
 const DEFAULT_BUBBLE_DURATION = 4000;
+const GREETING_WAVE_DELAY = 240;
+const GREETING_WAVE_DURATION = 920;
 const BUBBLE_EXIT_DURATION = 360;
 const fallbackCue = '这处信息建议结合目标完成率、ROI 和续费一起看。';
 
@@ -152,6 +158,7 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   const guideLockUntilRef = useRef(0);
   const bubbleTimerRef = useRef(null);
   const bubbleExitTimerRef = useRef(null);
+  const greetingWaveTimerRef = useRef(null);
   const bubbleFrameRef = useRef(null);
   const hoverCueTimerRef = useRef(null);
   const hoverCueAbortRef = useRef(null);
@@ -160,8 +167,13 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   const hoverCueRequestIdRef = useRef(0);
   const idlePromptIndexRef = useRef(0);
   const lastBubbleShownAtRef = useRef(0);
+  const openStateRef = useRef(false);
 
   const snapshot = useMemo(() => buildDashboardSnapshot(activeMenu, dim, channelKey), [activeMenu, dim, channelKey]);
+
+  useEffect(() => {
+    openStateRef.current = open;
+  }, [open]);
 
   useEffect(() => {
     if (!open || !listRef.current) return;
@@ -278,10 +290,20 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
     clearTimeout(mascotTimerRef.current);
     clearTimeout(bubbleTimerRef.current);
     clearTimeout(bubbleExitTimerRef.current);
+    clearTimeout(greetingWaveTimerRef.current);
     clearTimeout(hoverCueTimerRef.current);
     if (bubbleFrameRef.current) {
       window.cancelAnimationFrame(bubbleFrameRef.current);
     }
+  }, []);
+
+  useEffect(() => {
+    greetingWaveTimerRef.current = window.setTimeout(() => {
+      if (openStateRef.current || hoverCueActiveKeyRef.current || Date.now() < guideLockUntilRef.current) return;
+      playMascotAction(MASCOT_ACTIONS.wave, GREETING_WAVE_DURATION, false);
+    }, GREETING_WAVE_DELAY);
+
+    return () => clearTimeout(greetingWaveTimerRef.current);
   }, []);
 
   useEffect(() => {

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-07 17:45:31 CST
+ Update content: Require the AI mascot launcher to play a visible greeting wave on first mount instead of hiding wave behind idle cues.
+*/
+/*
  Update time: 2026-07-07 16:59:41 CST
  Update content: Require the sidebar AI mascot launcher to show the frame mascot at a visibly larger production size.
 */
@@ -110,6 +114,16 @@ test('keeps the mascot anchored instead of tracking cursor movement', () => {
   assert.doesNotMatch(componentSource, /setMascotPointer/);
   assert.doesNotMatch(componentSource, /onPointerMove=/);
   assert.doesNotMatch(componentSource, /setMascotAction\(MASCOT_ACTIONS\.wave\);/);
+});
+
+test('plays a visible greeting wave shortly after the launcher first mounts', () => {
+  assert.match(componentSource, /const GREETING_WAVE_DELAY = 240;/);
+  assert.match(componentSource, /const GREETING_WAVE_DURATION = 920;/);
+  assert.match(componentSource, /const greetingWaveTimerRef = useRef\(null\);/);
+  assert.match(componentSource, /clearTimeout\(greetingWaveTimerRef\.current\);/);
+  assert.match(componentSource, /greetingWaveTimerRef\.current = window\.setTimeout\(\(\) => \{/);
+  assert.match(componentSource, /playMascotAction\(MASCOT_ACTIONS\.wave,\s*GREETING_WAVE_DURATION,\s*false\);/);
+  assert.doesNotMatch(componentSource, /onMouseEnter=\{[^}]*wave/);
 });
 
 test('shows default Fu Xiaoke bubbles every 10 seconds only when no readable text is hovered', () => {

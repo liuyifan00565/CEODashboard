@@ -1,4 +1,7 @@
 """
+更新时间: 2026-07-07 17:45:31 CST
+更新内容: 增加动作帧安全透明边距审计与自动缩放锚定，避免挥手、指引和维护电脑帧贴边残缺。
+
 更新时间: 2026-07-07 16:26:47 CST
 更新内容: 新增 AI 小人动作帧构建流水线，基于参考帧图生成透明 sprite sheet 与流畅性自审报告。
 """
@@ -22,7 +25,8 @@ FRAME_HEIGHT = 300
 REFERENCE_COLUMNS = 4
 REFERENCE_ROWS = 3
 TARGET_FRAME_COUNT = 12
-BASELINE_Y = 292
+SAFE_MARGIN = 12
+BASELINE_Y = FRAME_HEIGHT - SAFE_MARGIN - 2
 BODY_CENTER_X = 112
 
 REFERENCE_SOURCES = {
@@ -151,16 +155,19 @@ def lower_body_center(frame: Image.Image, bbox: tuple[int, int, int, int]) -> tu
 
 def normalize_frames(frames: list[Image.Image]) -> list[Image.Image]:
     bboxes = [alpha_bbox(frame) for frame in frames]
-    max_width = max(right - left for left, _, right, _ in bboxes)
-    max_height = max(bottom - top for _, top, _, bottom in bboxes)
-    scale = min(206 / max_width, 286 / max_height)
+    scale = anchored_safe_scale(frames, bboxes, upper_limit=1)
     normalized: list[Image.Image] = []
 
     for frame, bbox in zip(frames, bboxes):
+        left, top, right, bottom = bbox
         center_x, bottom_y = lower_body_center(frame, bbox)
-        resized = frame.resize((round(frame.width * scale), round(frame.height * scale)), Image.Resampling.LANCZOS)
-        scaled_center_x = center_x * scale
-        scaled_bottom_y = bottom_y * scale
+        cropped = frame.crop(bbox)
+        resized = cropped.resize(
+            (max(1, round(cropped.width * scale)), max(1, round(cropped.height * scale))),
+            Image.Resampling.LANCZOS,
+        )
+        scaled_center_x = (center_x - left) * scale
+        scaled_bottom_y = (bottom_y - top) * scale
         canvas = Image.new("RGBA", (FRAME_WIDTH, FRAME_HEIGHT), (0, 0, 0, 0))
         paste_x = round(BODY_CENTER_X - scaled_center_x)
         paste_y = round(BASELINE_Y - scaled_bottom_y)
@@ -185,15 +192,70 @@ def transform_frame(
     offset_x: int = 0,
     offset_y: int = 0,
 ) -> Image.Image:
-    width = max(1, round(FRAME_WIDTH * scale_x))
-    height = max(1, round(FRAME_HEIGHT * scale_y))
-    resized = frame.resize((width, height), Image.Resampling.LANCZOS)
+    bbox = alpha_bbox(frame)
+    content = frame.crop(bbox)
+    width = max(1, round(content.width * scale_x))
+    height = max(1, round(content.height * scale_y))
+    resized = content.resize((width, height), Image.Resampling.LANCZOS)
     rotated = resized.rotate(rotate, resample=Image.Resampling.BICUBIC, expand=True)
     canvas = Image.new("RGBA", (FRAME_WIDTH, FRAME_HEIGHT), (0, 0, 0, 0))
-    paste_x = round((FRAME_WIDTH - rotated.width) / 2 + offset_x)
-    paste_y = round(BASELINE_Y - rotated.height + 8 + offset_y)
+    paste_x = round(BODY_CENTER_X - rotated.width / 2 + offset_x)
+    paste_y = round(BASELINE_Y - rotated.height + offset_y)
     canvas.alpha_composite(rotated, (paste_x, paste_y))
     return canvas
+
+
+def anchored_safe_scale(
+    frames: list[Image.Image],
+    bboxes: list[tuple[int, int, int, int]] | None = None,
+    *,
+    upper_limit: float = 1,
+) -> float:
+    boxes = bboxes if bboxes is not None else [alpha_bbox(frame) for frame in frames]
+    scale = upper_limit
+    for frame, bbox in zip(frames, boxes):
+        left, top, right, bottom = bbox
+        center_x, bottom_y = lower_body_center(frame, bbox)
+        left_extent = max(center_x - left, 1)
+        right_extent = max(right - center_x, 1)
+        top_extent = max(bottom_y - top, 1)
+        bottom_extent = max(bottom - bottom_y, 1)
+        scale = min(
+            scale,
+            (BODY_CENTER_X - SAFE_MARGIN) / left_extent,
+            (FRAME_WIDTH - SAFE_MARGIN - BODY_CENTER_X) / right_extent,
+            (BASELINE_Y - SAFE_MARGIN) / top_extent,
+            (FRAME_HEIGHT - SAFE_MARGIN - BASELINE_Y) / bottom_extent,
+        )
+    return max(0.1, min(scale, upper_limit))
+
+
+def ensure_safe_margins(frames: list[Image.Image]) -> list[Image.Image]:
+    bboxes = [alpha_bbox(frame) for frame in frames]
+    scale = anchored_safe_scale(frames, bboxes, upper_limit=1)
+    safe_frames: list[Image.Image] = []
+    for frame, bbox in zip(frames, bboxes):
+        left, top, _, _ = bbox
+        center_x, bottom_y = lower_body_center(frame, bbox)
+        cropped = frame.crop(bbox)
+        resized = cropped.resize(
+            (max(1, round(cropped.width * scale)), max(1, round(cropped.height * scale))),
+            Image.Resampling.LANCZOS,
+        )
+        canvas = Image.new("RGBA", (FRAME_WIDTH, FRAME_HEIGHT), (0, 0, 0, 0))
+        paste_x = round(BODY_CENTER_X - (center_x - left) * scale)
+        paste_y = round(BASELINE_Y - (bottom_y - top) * scale)
+        canvas.alpha_composite(resized, (paste_x, paste_y))
+        safe_frames.append(canvas)
+    return safe_frames
+
+
+def min_transparent_margin(frames: list[Image.Image]) -> int:
+    margins: list[int] = []
+    for frame in frames:
+        left, top, right, bottom = alpha_bbox(frame)
+        margins.append(min(left, top, FRAME_WIDTH - right, FRAME_HEIGHT - bottom))
+    return min(margins) if margins else 0
 
 
 def draw_glow(frame: Image.Image, color: tuple[int, int, int, int], radius: int = 22) -> Image.Image:
@@ -324,7 +386,13 @@ def metric_for_frames(frames: list[Image.Image]) -> dict[str, float | int | bool
         "frameCount": len(frames),
         "maxCenterJitterPx": round(max_center_jitter, 2),
         "maxFootJitterPx": round(max_foot_jitter, 2),
-        "smooth": len(frames) >= 8 and max_foot_jitter <= 3 and max_center_jitter <= 12,
+        "minTransparentMarginPx": min_transparent_margin(frames),
+        "smooth": (
+            len(frames) >= 8
+            and max_foot_jitter <= 3
+            and max_center_jitter <= 12
+            and min_transparent_margin(frames) >= 10
+        ),
         "reasonable": True,
     }
 
@@ -347,11 +415,12 @@ def build() -> None:
     }
     all_actions.update(make_idle_variants(neutral))
     all_actions.update(make_derived_actions(neutral, wave, guide))
+    all_actions = {key: ensure_safe_margins(frames) for key, frames in all_actions.items()}
 
     audit = {
-        "updatedAt": "2026-07-07 16:26:47 CST",
+        "updatedAt": "2026-07-07 17:45:31 CST",
         "criteria": {
-            "smooth": "至少 8 帧，脚底抖动不超过 3px，中心抖动不超过 12px。",
+            "smooth": "至少 8 帧，脚底抖动不超过 3px，中心抖动不超过 12px，四边透明安全边距不少于 10px。",
             "reasonable": "动作语义需要来自帧图本体，允许轻量发光/符号辅助，但不允许用文字说明代替动作。",
         },
         "actions": {},

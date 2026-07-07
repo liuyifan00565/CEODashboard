@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-07 17:45:31 CST
+ Update content: Require mascot action audits to include transparent safety margins so no generated frame is clipped.
+*/
+/*
  更新时间: 2026-07-07 16:26:47 CST
  更新内容: 将 AI 小人验收改为真实动作帧图资产，要求动作先有独立 sprite sheet 和自审记录再接入前端。
 */
@@ -135,6 +139,8 @@ test('records self-audit results for smoothness and reasonableness', () => {
     assert.ok(result.frameCount >= 8, `${key} should keep enough frames`);
     assert.ok(result.maxFootJitterPx <= 3, `${key} foot jitter should stay stable`);
     assert.ok(result.maxCenterJitterPx <= 12, `${key} center jitter should stay controlled`);
+    assert.ok(result.minTransparentMarginPx >= 10, `${key} should keep at least 10px transparent safety margin`);
+    assert.ok(auditJson.actions[key].minTransparentMarginPx >= 10, `${key} generated audit should keep transparent safety margin`);
   }
 });
 
