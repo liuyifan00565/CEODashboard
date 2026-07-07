@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 13:02:18 CST
+ 更新内容: 增加用户配色 FBX 的顶点色转移验收，确保当前 GLB 不再只是零件均色。
+*/
+/*
  更新时间: 2026-07-07 12:24:46 CST
  更新内容: 将当前页面 AI 小人验收切换为用户 FBX 优化 GLB，约束转换脚本、控制节点和轻量化体积。
 */
@@ -73,6 +77,10 @@ function glbNames(collection) {
   return new Set((collection ?? []).map((item) => item.name).filter(Boolean));
 }
 
+function glbPrimitives(json) {
+  return (json.meshes ?? []).flatMap((mesh) => mesh.primitives ?? []);
+}
+
 test('ships the optimized rigged FBX mascot model instead of the previous generated mascot', () => {
   assert.ok(existsSync(glbUrl), 'GLB mascot model should exist');
   assert.ok(statSync(glbUrl).size > 3000000, 'Optimized rigged mascot should contain real model data, not the old small placeholder');
@@ -99,6 +107,8 @@ test('ships the optimized rigged FBX mascot model instead of the previous genera
   assert.match(converterCode, /FBXLoader/);
   assert.match(converterCode, /GLTFExporter/);
   assert.match(converterCode, /MeshoptSimplifier/);
+  assert.match(converterCode, /PNG\.sync\.read/);
+  assert.match(converterCode, /colorSource/);
   assert.match(converterCode, /compactMesh/);
   assert.match(converterCode, /DEFAULT_RATIO\s*=\s*0\.05/);
   assert.match(converterCode, /CTRL_Rig_Root:\s*['"]MascotRoot['"]/);
@@ -107,6 +117,17 @@ test('ships the optimized rigged FBX mascot model instead of the previous genera
 
   assert.doesNotMatch(stageCode, /MASCOT_RIG_LAYERS|mascot-rig-layer|MASCOT_ACTION_POSES|ceo-mascot-[\w-]+\.png|ai-mascot-frames|sprite/i);
   assert.doesNotMatch(stageCode, /\/mascot-rig\/(?:head|body|left-arm|right-arm|left-leg|right-leg)\.png/);
+});
+
+test('bakes the user color-source FBX texture into GLB vertex colors', () => {
+  const primitives = glbPrimitives(glbJson);
+  assert.ok(primitives.length > 0, 'Optimized mascot GLB should contain mesh primitives');
+  assert.ok(
+    primitives.every((primitive) => Number.isInteger(primitive.attributes?.COLOR_0)),
+    'Every optimized mascot primitive should carry baked COLOR_0 vertex colors from the color-source FBX',
+  );
+  assert.match(converterCode, /extractBaseColorTexture/);
+  assert.match(converterCode, /assignVertexColorsFromSource/);
 });
 
 test('locks the current graymodel checkpoint before material and detail passes', () => {

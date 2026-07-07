@@ -1,3 +1,6 @@
+更新时间: 2026-07-07 13:02:18 CST
+更新内容: 补充用户配色 FBX 作为 base color 贴图来源，当前 GLB 已烘焙 COLOR_0 顶点色。
+
 更新时间: 2026-07-07 12:24:46 CST
 更新内容: 记录当前页面 AI 小人已替换为用户 FBX 优化 GLB，旧 Blender 灰模保留为历史基准。
 
@@ -7,8 +10,9 @@
 
 - 工作模型: `cockpit/public/models/ai-mascot.glb`
 - 当前页面生成脚本: `scripts/convert_component_rig_to_glb.mjs`
-- 源文件: 用户提供的 rigged FBX，本地路径为 `C:/Users/22720/Downloads/20260706191350_9ab0fe16 (1)_component_rig.fbx`
-- 转换处理: 保留 `CTRL_*` 控制结构，重命名页面动作所需控制节点，烘焙每个零件的顶点色，焊接重复顶点，按默认 `0.05` 比例减面并压实未引用顶点。
+- 动作源文件: 用户提供的 rigged FBX，本地路径为 `C:/Users/22720/Downloads/20260706191350_9ab0fe16 (1)_component_rig.fbx`
+- 配色源文件: 用户提供的 textured FBX，本地路径为 `C:/Users/22720/Downloads/664ed1cdae913be9c494dcaa6a84cac4.fbx`
+- 转换处理: 保留动作源的 `CTRL_*` 控制结构，重命名页面动作所需控制节点，提取配色源的 `base_color_texture`，通过空间最近点把贴图色烘焙为 GLB 的 `COLOR_0` 顶点色，焊接重复顶点，按默认 `0.05` 比例减面并压实未引用顶点。
 - 页面动作控制节点: `MascotRoot`、`BodyCtrl`、`HeadCtrl`、`LeftArmCtrl`、`RightArmCtrl`、`LeftLegCtrl`、`RightLegCtrl`
 
 ## 历史灰模基准

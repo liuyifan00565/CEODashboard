@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 13:02:18 CST
+ 更新内容: 支持从用户配色 FBX 提取 base color 贴图，并将颜色转移为可动 GLB 的顶点色。
+*/
+/*
  更新时间: 2026-07-07 12:24:46 CST
  更新内容: 新增 FBX 小人骨骼模型轻量化转换脚本，输出当前页面使用的可动作 GLB 资产。
 */
@@ -10,7 +14,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DEFAULT_OUTPUT = resolve(ROOT, 'cockpit/public/models/ai-mascot.glb');
 const DEFAULT_RATIO = 0.05;
+const DEFAULT_COLOR_SOURCE_STRIDE = 2;
+const COLOR_GRID_SIZE = 0.018;
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const cockpitRequire = createRequire(new URL('../cockpit/package.json', import.meta.url));
+const { PNG } = cockpitRequire('pngjs');
 let BufferAttribute;
 let Box3;
 let Color;
@@ -50,6 +58,36 @@ globalThis.FileReader ??= class FileReader {
   }
 };
 
+function installFbxBrowserPolyfills() {
+  globalThis.window ??= {};
+  globalThis.window.URL ??= { createObjectURL: () => '' };
+  globalThis.window.webkitURL ??= globalThis.window.URL;
+  globalThis.document ??= {
+    createElementNS: (_namespace, name) => {
+      const listeners = new Map();
+      return {
+        nodeName: name,
+        width: 1,
+        height: 1,
+        complete: true,
+        addEventListener(type, callback) {
+          listeners.set(type, callback);
+        },
+        removeEventListener(type) {
+          listeners.delete(type);
+        },
+        set src(value) {
+          this._src = value;
+          queueMicrotask(() => listeners.get('load')?.({ target: this }));
+        },
+        get src() {
+          return this._src || '';
+        },
+      };
+    },
+  };
+}
+
 async function loadMeshoptSimplifier() {
   try {
     return (await import(pathToFileURL(cockpitRequire.resolve('meshoptimizer')))).MeshoptSimplifier;
@@ -78,6 +116,8 @@ async function loadThreeModules() {
 function parseArgs(argv) {
   const options = {
     input: '',
+    colorSource: '',
+    colorSourceStride: DEFAULT_COLOR_SOURCE_STRIDE,
     output: DEFAULT_OUTPUT,
     ratio: DEFAULT_RATIO,
   };
@@ -85,6 +125,10 @@ function parseArgs(argv) {
   for (const arg of argv) {
     if (arg.startsWith('--ratio=')) {
       options.ratio = Number(arg.slice('--ratio='.length));
+    } else if (arg.startsWith('--color-source=')) {
+      options.colorSource = resolve(arg.slice('--color-source='.length));
+    } else if (arg.startsWith('--color-stride=')) {
+      options.colorSourceStride = Number(arg.slice('--color-stride='.length));
     } else if (arg.startsWith('--output=')) {
       options.output = resolve(ROOT, arg.slice('--output='.length));
     } else if (!options.input) {
@@ -95,14 +139,25 @@ function parseArgs(argv) {
   }
 
   if (!options.input) {
-    throw new Error('Usage: node scripts/convert_component_rig_to_glb.mjs <input.fbx> [output.glb] [--ratio=0.05]');
+    throw new Error('Usage: node scripts/convert_component_rig_to_glb.mjs <input.fbx> [output.glb] [--ratio=0.05] [--color-source=colored.fbx]');
   }
 
   if (!Number.isFinite(options.ratio) || options.ratio <= 0 || options.ratio > 1) {
     throw new Error('--ratio must be a number between 0 and 1');
   }
 
+  if (!Number.isInteger(options.colorSourceStride) || options.colorSourceStride < 1) {
+    throw new Error('--color-stride must be a positive integer');
+  }
+
   return options;
+}
+
+function readFbxModel(input) {
+  installFbxBrowserPolyfills();
+  const bytes = readFileSync(input);
+  const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+  return new FBXLoader().parse(buffer, '');
 }
 
 function getMaterialColor(geometry, fallback) {
@@ -136,6 +191,169 @@ function compactGeometry(geometry, simplifier) {
   return geometry;
 }
 
+function extractPngAt(bytes, offset) {
+  let cursor = offset + PNG_SIGNATURE.length;
+
+  while (cursor < bytes.length) {
+    const length = bytes.readUInt32BE(cursor);
+    const chunkType = bytes.toString('ascii', cursor + 4, cursor + 8);
+    cursor += 8 + length + 4;
+
+    if (chunkType === 'IEND') {
+      return bytes.subarray(offset, cursor);
+    }
+  }
+
+  throw new Error('PNG IEND chunk was not found in color-source FBX');
+}
+
+function extractBaseColorTexture(colorSource) {
+  const bytes = readFileSync(colorSource);
+  const label = Buffer.from('base_color_texture');
+  const labelOffset = bytes.indexOf(label);
+  const searchOffset = labelOffset >= 0 ? labelOffset : 0;
+  const pngOffset = bytes.indexOf(PNG_SIGNATURE, searchOffset);
+
+  if (pngOffset < 0) {
+    throw new Error(`No embedded PNG base color texture found in ${colorSource}`);
+  }
+
+  return PNG.sync.read(extractPngAt(bytes, pngOffset));
+}
+
+function getWorldBounds(model) {
+  model.updateMatrixWorld(true);
+  const box = new Box3().setFromObject(model);
+  const size = new Vector3();
+  const center = new Vector3();
+  box.getSize(size);
+  box.getCenter(center);
+
+  return {
+    box,
+    center,
+    scale: 1 / size.y,
+  };
+}
+
+function getNormalizedPoint(point, bounds) {
+  return [
+    (point.x - bounds.center.x) * bounds.scale,
+    (point.y - bounds.box.min.y) * bounds.scale,
+    (point.z - bounds.center.z) * bounds.scale,
+  ];
+}
+
+function wrapUnit(value) {
+  return value - Math.floor(value);
+}
+
+function sampleTexture(texture, u, v) {
+  const x = Math.min(texture.width - 1, Math.max(0, Math.floor(wrapUnit(u) * texture.width)));
+  const y = Math.min(texture.height - 1, Math.max(0, Math.floor((1 - wrapUnit(v)) * texture.height)));
+  const index = (y * texture.width + x) * 4;
+
+  return [
+    texture.data[index],
+    texture.data[index + 1],
+    texture.data[index + 2],
+  ];
+}
+
+function cellKey(x, y, z) {
+  return `${Math.floor(x / COLOR_GRID_SIZE)},${Math.floor(y / COLOR_GRID_SIZE)},${Math.floor(z / COLOR_GRID_SIZE)}`;
+}
+
+function createColorSampler(sourceModel, texture, stride) {
+  const sourceBounds = getWorldBounds(sourceModel);
+  const meshes = [];
+  let sampleCount = 0;
+
+  sourceModel.traverse((node) => {
+    if (!node.isMesh) return;
+    const position = node.geometry.getAttribute('position');
+    const uv = node.geometry.getAttribute('uv');
+    if (!position || !uv) return;
+
+    meshes.push({ node, position, uv });
+    sampleCount += Math.ceil(position.count / stride);
+  });
+
+  if (sampleCount === 0) {
+    throw new Error('Color-source FBX must contain at least one mesh with UV coordinates');
+  }
+
+  const positions = new Float32Array(sampleCount * 3);
+  const colors = new Uint8Array(sampleCount * 3);
+  const grid = new Map();
+  const point = new Vector3();
+  let writeIndex = 0;
+
+  for (const { node, position, uv } of meshes) {
+    for (let vertexIndex = 0; vertexIndex < position.count; vertexIndex += stride) {
+      point.fromBufferAttribute(position, vertexIndex).applyMatrix4(node.matrixWorld);
+      const normalized = getNormalizedPoint(point, sourceBounds);
+      const color = sampleTexture(texture, uv.getX(vertexIndex), uv.getY(vertexIndex));
+
+      positions[writeIndex * 3] = normalized[0];
+      positions[writeIndex * 3 + 1] = normalized[1];
+      positions[writeIndex * 3 + 2] = normalized[2];
+      colors[writeIndex * 3] = color[0];
+      colors[writeIndex * 3 + 1] = color[1];
+      colors[writeIndex * 3 + 2] = color[2];
+
+      const key = cellKey(normalized[0], normalized[1], normalized[2]);
+      const bucket = grid.get(key);
+      if (bucket) bucket.push(writeIndex);
+      else grid.set(key, [writeIndex]);
+
+      writeIndex += 1;
+    }
+  }
+
+  return {
+    sampleCount,
+    findColor(x, y, z) {
+      const cx = Math.floor(x / COLOR_GRID_SIZE);
+      const cy = Math.floor(y / COLOR_GRID_SIZE);
+      const cz = Math.floor(z / COLOR_GRID_SIZE);
+      let bestIndex = -1;
+      let bestDistance = Infinity;
+
+      for (let radius = 0; radius <= 8; radius += 1) {
+        for (let ix = cx - radius; ix <= cx + radius; ix += 1) {
+          for (let iy = cy - radius; iy <= cy + radius; iy += 1) {
+            for (let iz = cz - radius; iz <= cz + radius; iz += 1) {
+              const bucket = grid.get(`${ix},${iy},${iz}`);
+              if (!bucket) continue;
+
+              for (const index of bucket) {
+                const dx = positions[index * 3] - x;
+                const dy = positions[index * 3 + 1] - y;
+                const dz = positions[index * 3 + 2] - z;
+                const distance = dx * dx + dy * dy + dz * dz;
+                if (distance < bestDistance) {
+                  bestDistance = distance;
+                  bestIndex = index;
+                }
+              }
+            }
+          }
+        }
+
+        if (bestIndex >= 0) break;
+      }
+
+      if (bestIndex < 0) return [1, 1, 1];
+      return [
+        colors[bestIndex * 3] / 255,
+        colors[bestIndex * 3 + 1] / 255,
+        colors[bestIndex * 3 + 2] / 255,
+      ];
+    },
+  };
+}
+
 function simplifyGeometry(geometry, ratio, simplifier) {
   const position = geometry.getAttribute('position');
   const index = geometry.index;
@@ -153,6 +371,28 @@ function simplifyGeometry(geometry, ratio, simplifier) {
   return { geometry, error };
 }
 
+function assignVertexColorsFromSource(node, colorSampler, targetBounds) {
+  const position = node.geometry.getAttribute('position');
+  if (!position) return 0;
+
+  const colors = new Float32Array(position.count * 3);
+  const point = new Vector3();
+
+  node.updateMatrixWorld(true);
+  for (let index = 0; index < position.count; index += 1) {
+    point.fromBufferAttribute(position, index).applyMatrix4(node.matrixWorld);
+    const [x, y, z] = getNormalizedPoint(point, targetBounds);
+    const [r, g, b] = colorSampler.findColor(x, y, z);
+
+    colors[index * 3] = r;
+    colors[index * 3 + 1] = g;
+    colors[index * 3 + 2] = b;
+  }
+
+  node.geometry.setAttribute('color', new BufferAttribute(colors, 3));
+  return position.count;
+}
+
 function normalizeModel(model) {
   const box = new Box3().setFromObject(model);
   const size = new Vector3();
@@ -165,8 +405,9 @@ function normalizeModel(model) {
   model.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
 }
 
-function optimizeModel(model, ratio, simplifier) {
+function optimizeModel(model, ratio, simplifier, colorSampler = null) {
   const stats = [];
+  const targetBounds = colorSampler ? getWorldBounds(model) : null;
 
   model.traverse((node) => {
     if (CONTROL_RENAMES[node.name]) node.name = CONTROL_RENAMES[node.name];
@@ -187,6 +428,7 @@ function optimizeModel(model, ratio, simplifier) {
     const weldedIndices = node.geometry.index?.count || 0;
     const simplified = simplifyGeometry(node.geometry, ratio, simplifier);
     node.geometry = simplified.geometry;
+    const coloredVertices = colorSampler ? assignVertexColorsFromSource(node, colorSampler, targetBounds) : 0;
 
     stats.push({
       name: node.name,
@@ -195,13 +437,15 @@ function optimizeModel(model, ratio, simplifier) {
       weldedIndices,
       finalVertices: node.geometry.getAttribute('position')?.count || 0,
       finalIndices: node.geometry.index?.count || 0,
+      coloredVertices,
       error: simplified.error,
       color: `#${color.getHexString()}`,
     });
 
     node.material = new MeshStandardMaterial({
       name: `${node.name || 'mesh'}-material`,
-      color,
+      color: colorSampler ? new Color(0xffffff) : color,
+      vertexColors: Boolean(colorSampler),
       roughness: 0.58,
       metalness: 0.04,
     });
@@ -231,10 +475,11 @@ async function main() {
   const simplifier = await loadMeshoptSimplifier();
   await simplifier.ready;
 
-  const bytes = readFileSync(options.input);
-  const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-  const model = new FBXLoader().parse(buffer, '');
-  const stats = optimizeModel(model, options.ratio, simplifier);
+  const model = readFbxModel(options.input);
+  const colorSampler = options.colorSource
+    ? createColorSampler(readFbxModel(options.colorSource), extractBaseColorTexture(options.colorSource), options.colorSourceStride)
+    : null;
+  const stats = optimizeModel(model, options.ratio, simplifier, colorSampler);
 
   await exportGlb(model, options.output);
 
@@ -249,6 +494,8 @@ async function main() {
     finalSize,
     totalVertices,
     totalTriangles,
+    colorSource: options.colorSource || null,
+    colorSamples: colorSampler?.sampleCount ?? 0,
     parts: stats,
   }, null, 2));
 }
