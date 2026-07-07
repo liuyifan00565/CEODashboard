@@ -100,7 +100,7 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
       }
       setResult(data);
       setPhase('done');
-      if (data.accepted > 0) onImported?.();
+      if ((data.written ?? 0) > 0) onImported?.();
     } catch (err) {
       setSubmitError(`网络异常：${err.message}`);
       setPhase('parsed');
@@ -245,16 +245,19 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
 
           {phase === 'done' && result && (
             <section className="mnt-import-section mnt-import-result">
-              <h4>导入结果（空跑）</h4>
+              <h4>导入结果{result.dryRun ? '（空跑）' : ''}</h4>
               <p className="mnt-import-summary">
-                {statusBadge(result.dryRun, '空跑未写库')} ·
-                接收 {result.accepted} 行，拒绝 {result.rejected} 行，共 {result.totalRows} 行
+                {result.dryRun
+                  ? statusBadge(false, '空跑未写库')
+                  : statusBadge(true, `已写库 ${result.written ?? 0} 行`)}
+                {result.skipped > 0 && statusBadge(false, `跳过 ${result.skipped} 行`)}
+                · 接收 {result.accepted} 行，拒绝 {result.rejected} 行，共 {result.totalRows} 行
               </p>
               <p className="mnt-import-hint">{result.summary}</p>
               {result.errors?.length > 0 && (
                 <ul className="mnt-import-errors">
                   {result.errors.slice(0, 20).map((e, i) => (
-                    <li key={i}>第 {e.row} 行 · {e.field}：{e.message}</li>
+                    <li key={i}>{e.row ? `第 ${e.row} 行 · ` : ''}{e.field ? `${e.field}：` : ''}{e.message}</li>
                   ))}
                 </ul>
               )}

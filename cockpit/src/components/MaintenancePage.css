@@ -1212,3 +1212,20 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* 更新时间: 2026-07-07 11:00:00 CST  更新内容: 新增维护页接库后的加载/错误状态行与"页内未接库"小字提示，沿用现有玻璃体系不引入新视觉变量。 */
+.mnt-state-line {
+  padding: 10px 20px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.mnt-state-line--error {
+  color: rgba(255, 180, 185, 0.9);
+}
+
+.mnt-save-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+}

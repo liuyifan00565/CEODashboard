@@ -56,7 +56,7 @@ export const MAINTENANCE_IMPORT_CONFIG = {
     columns: [
       { field: 'staff_name', header: '人员名称', aliases: ['销售', '人员', '销售人员'], required: true, type: 'string', description: '对应 dim_staff.staff_name' },
       { field: 'target_month', header: '目标月份', aliases: ['月份'], required: true, type: 'month', description: 'YYYY-MM，对应 biz_target_monthly.target_month' },
-      { field: 'target_amount_yuan', header: '回款目标(元)', aliases: ['回款目标', '目标金额', '回款目标元'], required: true, type: 'number', min: 0, description: '对应 biz_target_monthly.target_amount_yuan' },
+      { field: 'target_amount_yuan', header: '回款目标(万)', aliases: ['回款目标', '目标金额', '回款目标万', '回款目标(元)'], required: true, type: 'number', min: 0, description: '维护页以万为单位录入，写库时×10000转元，对应 biz_target_monthly.target_amount_yuan' },
       { field: 'target_opening_count', header: '开户目标(个)', aliases: ['开户目标', '开户目标个'], required: false, type: 'number', min: 0, description: '对应 biz_target_monthly.target_opening_count' },
       { field: 'target_order_count', header: '订单目标(单)', aliases: ['订单目标', '订单目标单'], required: false, type: 'number', min: 0, description: '对应 biz_target_monthly.target_order_count' },
     ],
@@ -71,7 +71,7 @@ export const MAINTENANCE_IMPORT_CONFIG = {
     columns: [
       { field: 'channel_name', header: '渠道名称', aliases: ['渠道'], required: true, type: 'string', description: '对应 dim_channel.channel_name' },
       { field: 'cost_month', header: '成本月份', aliases: ['月份'], required: true, type: 'month', description: 'YYYY-MM，对应 biz_channel_cost_monthly.cost_month' },
-      { field: 'investment_amount_yuan', header: '投入成本(元)', aliases: ['投入成本', '成本', '投放成本'], required: true, type: 'number', min: 0, description: '对应 biz_channel_cost_monthly.investment_amount_yuan' },
+      { field: 'investment_amount_yuan', header: '投入成本(万)', aliases: ['投入成本', '成本', '投放成本', '投入成本(元)'], required: true, type: 'number', min: 0, description: '维护页以万为单位录入，写库时×10000转元，对应 biz_channel_cost_monthly.investment_amount_yuan' },
     ],
     uniqueKey: ['channel_name', 'cost_month'],
     notes: '待业务确认：人力成本 biz_labor_cost_monthly 需单独导入时，在此新增一条 pageKey（如 labor-cost-maintenance）并挂独立按钮。',

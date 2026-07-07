@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 11:00:00 CST
+ 更新内容: 生产服务新增 GET /api/maintenance/data 数据维护读接口，返回四个维护页的真实 MySQL 快照。
+*/
+/*
  更新时间: 2026-07-07 10:00:00 CST
  更新内容: 生产服务新增 POST /api/maintenance/import 数据维护 Excel 导入空跑校验接口。
 */
@@ -19,6 +23,7 @@ import { handleAiAnalyzeRequest } from './server/dashscope.js';
 import { handleAiHoverCueRequest } from './server/hoverCue.js';
 import { handleDashboardDataRequest } from './server/dashboardData.js';
 import { handleMaintenanceImportRequest } from './server/maintenanceImport.js';
+import { handleMaintenanceDataRequest } from './server/maintenanceData.js';
 import { loadLocalEnv } from './server/env.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -90,6 +95,11 @@ const server = http.createServer((req, res) => {
 
   if (url.pathname === '/api/dashboard-data') {
     handleDashboardDataRequest(req, res);
+    return;
+  }
+
+  if (url.pathname === '/api/maintenance/data' && req.method === 'GET') {
+    handleMaintenanceDataRequest(req, res);
     return;
   }
 

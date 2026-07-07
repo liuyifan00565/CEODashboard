@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 11:00:00 CST
+ 更新内容: Vite 开发服务新增 GET /api/maintenance/data 数据维护读接口，与生产一致。
+*/
+/*
  更新时间: 2026-07-07 10:00:00 CST
  更新内容: Vite 开发服务新增 POST /api/maintenance/import 数据维护 Excel 导入空跑校验接口，与生产一致。
 */
@@ -19,6 +23,7 @@ import { handleAiAnalyzeRequest } from './server/dashscope.js'
 import { handleAiHoverCueRequest } from './server/hoverCue.js'
 import { handleDashboardDataRequest } from './server/dashboardData.js'
 import { handleMaintenanceImportRequest } from './server/maintenanceImport.js'
+import { handleMaintenanceDataRequest } from './server/maintenanceData.js'
 import { loadLocalEnv } from './server/env.js'
 
 const projectRoot = fileURLToPath(new URL('.', import.meta.url))
@@ -49,6 +54,9 @@ export default defineConfig({
         })
         server.middlewares.use('/api/dashboard-data', (req, res) => {
           handleDashboardDataRequest(req, res)
+        })
+        server.middlewares.use('/api/maintenance/data', (req, res) => {
+          handleMaintenanceDataRequest(req, res)
         })
         server.middlewares.use('/api/maintenance/import', (req, res) => {
           handleMaintenanceImportRequest(req, res).catch((err) => {
