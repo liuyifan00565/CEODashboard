@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-07 11:52:53 CST
- 更新内容: 增加日级回款事实表优先级测试，防止导入完整数据库后年度累计仍只取销售人员月表。
+ 更新时间: 2026-07-07 12:18:57 CST
+ 更新内容: 增加目标维护表口径和版本续费预聚合测试，防止真实库聚合被销售月表或续费 JOIN 放大。
 */
 /*
  更新时间: 2026-07-06 18:37:58 CST
@@ -8,6 +8,7 @@
 */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { mapDashboardRowsToSnapshot } from './dashboardData.js';
 
@@ -41,6 +42,18 @@ test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
       { year_month: '2026-11', target_wan: 469.7, opening_target: 35, order_target: 90 },
       { year_month: '2026-12', target_wan: 500.5, opening_target: 39, order_target: 97 },
     ],
+    channelTargets: [
+      { channel_key: 'online', target_wan: 156.6 },
+      { channel_key: 'south', target_wan: 105.84 },
+      { channel_key: 'east', target_wan: 97.2 },
+      { channel_key: 'agent', target_wan: 56.16 },
+    ],
+    yearChannelTargets: [
+      { channel_key: 'online', target_wan: 1835.7 },
+      { channel_key: 'south', target_wan: 1240.68 },
+      { channel_key: 'east', target_wan: 1139.4 },
+      { channel_key: 'agent', target_wan: 658.32 },
+    ],
     channelCosts: [
       { channel_key: 'online', investment_wan: 31.11 },
       { channel_key: 'south', investment_wan: 19.31 },
@@ -70,18 +83,18 @@ test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
     annualTarget: 4874,
   });
   assert.equal(snapshot.kpi.monthRecovered, 520);
-  assert.equal(snapshot.kpi.monthTarget, 580);
+  assert.equal(snapshot.kpi.monthTarget, 416);
   assert.equal(snapshot.kpi.yearRecovered, 520);
   assert.equal(snapshot.kpi.yearTarget, 4874);
   assert.equal(snapshot.kpi.totalCost, 159);
   assert.equal(snapshot.kpi.adCost, 77);
   assert.equal(snapshot.kpi.laborCost, 82);
-  assert.equal(snapshot.kpiDerived.monthCompletion, 89.7);
+  assert.equal(snapshot.kpiDerived.monthCompletion, 125);
   assert.equal(snapshot.kpiDerived.yearCompletion, 10.7);
   assert.equal(snapshot.operatingOverviewMetrics.remainingMonthlyRequired, 726);
   assert.deepEqual(
-    snapshot.channels.map((channel) => [channel.key, channel.recovered, channel.target, channel.warn]),
-    [['online', 244, 240, false], ['south', 98, 110, false], ['east', 86, 120, true], ['agent', 92, 110, false]]
+    snapshot.channels.map((channel) => [channel.key, channel.recovered, channel.target, channel.yearTarget, channel.warn]),
+    [['online', 244, 157, 1836, false], ['south', 98, 106, 1241, false], ['east', 86, 97, 1139, false], ['agent', 92, 56, 658, false]]
   );
   assert.equal(snapshot.monthlyTrend.at(-1).recovered, 520);
   assert.equal(snapshot.channelRoi.find((row) => row.key === 'online').investment, 31);
@@ -113,17 +126,33 @@ test('prefers daily revenue facts over sales member monthly rows for recovered m
       { year_month: '2026-05', target_wan: 361.9 },
       { year_month: '2026-06', target_wan: 415.8 },
     ],
+    channelTargets: [
+      { channel_key: 'online', target_wan: 156.6 },
+      { channel_key: 'south', target_wan: 105.84 },
+    ],
+    yearChannelTargets: [
+      { channel_key: 'online', target_wan: 1835.7 },
+      { channel_key: 'south', target_wan: 1240.68 },
+    ],
   });
 
   assert.equal(snapshot.kpi.monthRecovered, 290);
+  assert.equal(snapshot.kpi.monthTarget, 416);
   assert.equal(snapshot.kpi.lastMonthRecovered, 120);
   assert.equal(snapshot.kpi.yearRecovered, 510);
   assert.deepEqual(
-    snapshot.channels.map((channel) => [channel.key, channel.recovered, channel.target]),
-    [['online', 171, 240], ['south', 119, 110]]
+    snapshot.channels.map((channel) => [channel.key, channel.recovered, channel.target, channel.yearTarget]),
+    [['online', 171, 157, 1836], ['south', 119, 106, 1241]]
   );
   assert.deepEqual(
-    snapshot.monthlyTrend.map((row) => [row.month, row.recovered]),
-    [['1月', 100], ['2月', 0], ['3月', 0], ['4月', 0], ['5月', 120], ['6月', 290]]
+    snapshot.monthlyTrend.map((row) => [row.month, row.target, row.recovered]),
+    [['1月', 316, 100], ['2月', 339, 0], ['3月', 370, 0], ['4月', 393, 0], ['5月', 362, 120], ['6月', 416, 290]]
   );
+});
+
+test('pre-aggregates renewal facts before joining version sales', () => {
+  const source = readFileSync(new URL('./dashboardData.js', import.meta.url), 'utf8');
+
+  assert.doesNotMatch(source, /LEFT JOIN fact_renewal_daily r ON r\.version_id = f\.version_id/);
+  assert.match(source, /FROM fact_renewal_daily[\s\S]*GROUP BY version_id/);
 });

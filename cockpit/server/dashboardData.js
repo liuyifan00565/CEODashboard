@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-07 11:52:53 CST
- 更新内容: 首页回款、年度累计、渠道回款和月趋势优先使用 fact_revenue_daily 日级事实表聚合。
+ 更新时间: 2026-07-07 12:18:57 CST
+ 更新内容: 首页回款目标改用 biz_target_monthly 维护口径，版本销售查询改为续费先聚合后关联，避免 JOIN 放大。
 */
 /*
  更新时间: 2026-07-06 18:49:54 CST
@@ -131,17 +131,32 @@ function makeOperatingMetrics({ kpiDerived, latestMonth, channelRows }) {
   };
 }
 
-function makeChannelRows({ channels, currentRecoveredRows, currentSalesRows, yearlyRecovered, annualTarget, monthRecoveredTotal, monthTargetTotal, yearRecoveredRows = [] }) {
+function makeChannelRows({
+  channels,
+  currentRecoveredRows,
+  currentSalesRows,
+  currentTargetRows,
+  yearlyRecovered,
+  annualTarget,
+  monthRecoveredTotal,
+  monthTargetTotal,
+  yearRecoveredRows = [],
+  yearTargetRows = [],
+}) {
   const recoveredByChannel = groupSum(currentRecoveredRows, 'channel_key', 'recovered_wan');
-  const targetByChannel = groupSum(currentSalesRows, 'channel_key', 'target_wan');
+  const targetRows = currentTargetRows?.length ? currentTargetRows : currentSalesRows;
+  const targetByChannel = groupSum(targetRows, 'channel_key', 'target_wan');
   const yearRecoveredByChannel = groupSum(yearRecoveredRows, 'channel_key', 'recovered_wan');
+  const yearTargetByChannel = groupSum(yearTargetRows, 'channel_key', 'target_wan');
   return channels.map((channel) => {
     const recovered = round0(recoveredByChannel.get(channel.channel_key));
     const target = round0(targetByChannel.get(channel.channel_key));
     const yearRecovered = yearRecoveredRows.length
       ? round0(yearRecoveredByChannel.get(channel.channel_key))
       : monthRecoveredTotal ? round0(yearlyRecovered * (recovered / monthRecoveredTotal)) : recovered;
-    const yearTarget = monthTargetTotal ? round0(annualTarget * (target / monthTargetTotal)) : target;
+    const yearTarget = yearTargetRows.length
+      ? round0(yearTargetByChannel.get(channel.channel_key))
+      : monthTargetTotal ? round0(annualTarget * (target / monthTargetTotal)) : target;
     return completionRow({
       key: channel.channel_key,
       name: channel.channel_name,
@@ -317,7 +332,8 @@ export function mapDashboardRowsToSnapshot(rows) {
   const recoveredRows = useRevenueDaily ? revenueRows : yearSalesRows;
   const currentRecoveredRows = useRevenueDaily ? currentRevenueRows : currentSalesRows;
   const currentMonthRecovered = round0(sum(currentRecoveredRows, 'recovered_wan'));
-  const currentMonthTarget = round0(sum(currentSalesRows, 'target_wan'));
+  const currentMonthlyTarget = (rows.monthlyTargets ?? []).find((row) => row.year_month === latestMonth);
+  const currentMonthTarget = round0(currentMonthlyTarget?.target_wan ?? sum(currentSalesRows, 'target_wan'));
   const annualTarget = round0(sum(rows.monthlyTargets ?? [], 'target_wan'));
   const yearRecovered = round0(sum(useRevenueDaily ? yearRevenueRows : yearSalesRows, 'recovered_wan'));
   const adCost = round0(sum(rows.channelCosts ?? [], 'investment_wan'));
@@ -341,11 +357,13 @@ export function mapDashboardRowsToSnapshot(rows) {
     channels: rows.channels ?? [],
     currentRecoveredRows,
     currentSalesRows,
+    currentTargetRows: rows.channelTargets ?? [],
     yearlyRecovered: yearRecovered,
     annualTarget,
     monthRecoveredTotal: currentMonthRecovered,
     monthTargetTotal: currentMonthTarget,
     yearRecoveredRows: useRevenueDaily ? yearRevenueRows : [],
+    yearTargetRows: rows.yearChannelTargets ?? [],
   });
   const operatingOverviewMetrics = makeOperatingMetrics({ kpiDerived, latestMonth, channelRows: channels });
   const deliveryRows = makeDeliveryRows(rows);
@@ -410,6 +428,8 @@ export async function buildDashboardSnapshot(connection) {
     previousMonthSales,
     lastYearSales,
     monthlyTargets,
+    channelTargets,
+    yearChannelTargets,
     channelCosts,
     laborCosts,
     versionSales,
@@ -464,6 +484,20 @@ export async function buildDashboardSnapshot(connection) {
       ORDER BY \`year_month\`
     `, [latestYear]),
     queryRows(connection, `
+      SELECT s.channel_key, ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
+      FROM biz_target_monthly t
+      JOIN dim_staff s ON s.staff_id = t.staff_id
+      WHERE t.\`year_month\` = ? AND s.channel_key IS NOT NULL
+      GROUP BY s.channel_key
+    `, [latestMonth]),
+    queryRows(connection, `
+      SELECT s.channel_key, ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
+      FROM biz_target_monthly t
+      JOIN dim_staff s ON s.staff_id = t.staff_id
+      WHERE t.\`year_month\` LIKE CONCAT(?, '%') AND s.channel_key IS NOT NULL
+      GROUP BY s.channel_key
+    `, [latestYear]),
+    queryRows(connection, `
       SELECT c.channel_key, ROUND(cost.investment_amount_yuan / 10000, 2) AS investment_wan
       FROM biz_channel_cost_monthly cost
       JOIN dim_channel c ON c.channel_id = cost.channel_id
@@ -476,18 +510,31 @@ export async function buildDashboardSnapshot(connection) {
     `, [latestMonth]),
     queryRows(connection, `
       SELECT v.version_key, v.version_name, v.standard_price_yuan, c.channel_key,
-             SUM(f.units) AS units,
-             ROUND(SUM(f.recovered_amount_yuan) / 10000, 2) AS recovered_wan,
-             MAX(f.mom_rate) AS mom_rate,
-             SUM(r.due_count) AS current_renewal_due,
-             SUM(r.renewed_count) AS current_renewal_paid
-      FROM fact_version_sales_daily f
+             f.units,
+             f.recovered_wan,
+             f.mom_rate,
+             COALESCE(r.current_renewal_due, 0) AS current_renewal_due,
+             COALESCE(r.current_renewal_paid, 0) AS current_renewal_paid
+      FROM (
+        SELECT version_id, channel_id,
+               SUM(units) AS units,
+               ROUND(SUM(recovered_amount_yuan) / 10000, 2) AS recovered_wan,
+               MAX(mom_rate) AS mom_rate
+        FROM fact_version_sales_daily
+        WHERE DATE_FORMAT(stat_date, '%Y-%m') = ?
+        GROUP BY version_id, channel_id
+      ) f
       JOIN dim_product_version v ON v.version_id = f.version_id
       LEFT JOIN dim_channel c ON c.channel_id = f.channel_id
-      LEFT JOIN fact_renewal_daily r ON r.version_id = f.version_id AND DATE_FORMAT(r.stat_date, '%Y-%m') = ?
-      WHERE DATE_FORMAT(f.stat_date, '%Y-%m') = ?
-      GROUP BY v.version_key, v.version_name, v.standard_price_yuan, c.channel_key
-      ORDER BY SUM(f.recovered_amount_yuan) DESC
+      LEFT JOIN (
+        SELECT version_id,
+               SUM(due_count) AS current_renewal_due,
+               SUM(renewed_count) AS current_renewal_paid
+        FROM fact_renewal_daily
+        WHERE DATE_FORMAT(stat_date, '%Y-%m') = ?
+        GROUP BY version_id
+      ) r ON r.version_id = f.version_id
+      ORDER BY f.recovered_wan DESC
     `, [latestMonth, latestMonth]),
     queryRows(connection, `
       SELECT c.channel_key, c.channel_name, v.version_key,
@@ -581,6 +628,8 @@ export async function buildDashboardSnapshot(connection) {
     previousMonthSales,
     lastYearSales,
     monthlyTargets,
+    channelTargets,
+    yearChannelTargets,
     channelCosts,
     laborCosts,
     versionSales,
