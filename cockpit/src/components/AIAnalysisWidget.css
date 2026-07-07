@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:03:53 CST
+ 更新内容: 将 AI 入口小人样式切换为 2D Sprite 舞台选择器，保留原侧栏玻璃卡光影体系。
+*/
+/*
  更新时间: 2026-07-06 10:48:16 CST
  更新内容: AI 助手阴影与气泡呼吸光改为银紫玫瑰高亮，保留告警玫瑰红与庆祝香槟金语义。
 */
@@ -55,11 +59,11 @@
   transform: translateZ(0);
 }
 
-.ai-orb .mascot-3d-stage {
+.ai-orb .mascot-sprite-stage {
   width: 78px;
 }
 
-.ai-orb .mascot-3d-stage--default {
+.ai-orb .mascot-sprite-stage[data-action="idle"] {
   width: 68px;
 }
 
@@ -88,25 +92,25 @@
   outline: none;
 }
 
-.ai-orb:focus-visible .mascot-3d-stage {
+.ai-orb:focus-visible .mascot-sprite-stage {
   filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .38)) drop-shadow(0 0 34px rgba(184, 156, 255, .30));
 }
 
-.ai-orb--wave .mascot-3d-stage {
+.ai-orb--wave .mascot-sprite-stage {
   filter: drop-shadow(0 20px 32px rgba(0, 0, 0, .4)) drop-shadow(0 0 30px rgba(228, 184, 215, .24));
 }
 
-.ai-orb--think .mascot-3d-stage,
-.ai-orb--talk .mascot-3d-stage,
-.ai-orb--click .mascot-3d-stage {
+.ai-orb--think .mascot-sprite-stage,
+.ai-orb--talk .mascot-sprite-stage,
+.ai-orb--click .mascot-sprite-stage {
   filter: drop-shadow(0 22px 36px rgba(0, 0, 0, .4)) drop-shadow(0 0 30px rgba(228, 184, 215, .18)) drop-shadow(0 0 36px rgba(184, 156, 255, .16));
 }
 
-.ai-orb--alert .mascot-3d-stage {
+.ai-orb--alert .mascot-sprite-stage {
   filter: drop-shadow(0 20px 32px rgba(0, 0, 0, .42)) drop-shadow(0 0 30px rgba(var(--warn-rgb), .38));
 }
 
-.ai-orb--celebrate .mascot-3d-stage {
+.ai-orb--celebrate .mascot-sprite-stage {
   filter: drop-shadow(0 22px 34px rgba(0, 0, 0, .42)) drop-shadow(0 0 34px rgba(215, 181, 109, .30));
 }
 

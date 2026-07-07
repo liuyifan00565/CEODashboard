@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:03:53 CST
+ 更新内容: 将 AI 小人入口从 3D GLB 切换为 2D Sprite 帧动画舞台，并接收页面 context。
+*/
+/*
  更新时间: 2026-07-07 13:22:15 CST
  更新内容: 固定 AI 小人入口指针并移除悬停挥手/跟随逻辑，避免待机和鼠标经过时乱跑。
 */
@@ -39,7 +43,7 @@ import gsap from 'gsap';
 
 import AppIcon from './AppIcon';
 import BorderGlow from './BorderGlow/BorderGlow';
-import Mascot3DStage from './Mascot3DStage';
+import MascotSpriteStage from './MascotSpriteStage';
 import ShinyText from './ShinyText/ShinyText';
 import {
   CHANNEL_ROI,
@@ -82,7 +86,6 @@ const DEFAULT_BUBBLE_INTERVAL = 10000;
 const DEFAULT_BUBBLE_DURATION = 4000;
 const BUBBLE_EXIT_DURATION = 360;
 const fallbackCue = '这处信息建议结合目标完成率、ROI 和续费一起看。';
-const STABLE_MASCOT_POINTER = Object.freeze({ x: 0, y: 0, active: false });
 
 function makeId(prefix) {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -127,7 +130,7 @@ async function readStream(response, onChunk, signal) {
   if (tail) onChunk(tail);
 }
 
-export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', companionCue }) {
+export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', companionCue, context = 'dashboard' }) {
   const [open, setOpen] = useState(false);
   const [mascotAction, setMascotActionState] = useState(MASCOT_ACTIONS.idle);
   const [bubbleCue, setBubbleCue] = useState(null);
@@ -554,11 +557,11 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
         aria-expanded={open}
         onClick={handleMascotClick}
       >
-        <Mascot3DStage
+        <MascotSpriteStage
           action={mascotAction}
-          pointer={STABLE_MASCOT_POINTER}
           analysisActive={open || loading}
-          label="福小客 3D 经营助手"
+          context={context}
+          label="福小客 AI 经营助手"
         />
       </button>
       <div className="ai-status-copy" aria-hidden="true">

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:03:53 CST
+ 更新内容: 将 AI 小人布局验收切换为 2D Sprite 舞台，并约束维护页 context 传递。
+*/
+/*
  更新时间: 2026-07-06 18:53:22 CST
  更新内容: 经营总览回归测试改为要求风险渠道和年度节奏判断读取运行时真实数据。
 */
@@ -217,7 +221,7 @@ const kpiModalCss = readFileSync(new URL('./components/KpiModal.css', import.met
 const monthlyTrendSource = readFileSync(new URL('./components/MonthlyTrend.jsx', import.meta.url), 'utf8');
 const aiAnalysisWidgetCss = readFileSync(new URL('./components/AIAnalysisWidget.css', import.meta.url), 'utf8');
 const aiAnalysisWidgetSource = readFileSync(new URL('./components/AIAnalysisWidget.jsx', import.meta.url), 'utf8');
-const mascot3dStageCss = readFileSync(new URL('./components/Mascot3DStage.css', import.meta.url), 'utf8');
+const mascotSpriteStageCss = readFileSync(new URL('./components/MascotSpriteStage.css', import.meta.url), 'utf8');
 const deliveryPanelCss = readFileSync(new URL('./components/DeliveryPanel.css', import.meta.url), 'utf8');
 const channelPanelSource = readFileSync(new URL('./components/ChannelPanel.jsx', import.meta.url), 'utf8');
 const channelPanelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
@@ -969,7 +973,7 @@ test('keeps the operating story overview while restoring secondary KPI companion
   assert.match(appSource, /const monthKpiCard = filteredKpiCards\.find\(\(card\) => card\.key === 'month'\);/);
   assert.match(appSource, /const yearKpiCard = filteredKpiCards\.find\(\(card\) => card\.key === 'year'\);/);
   assert.match(appSource, /<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}[\s\S]*?monthKpiCard=\{monthKpiCard\}[\s\S]*?yearKpiCard=\{yearKpiCard\}[\s\S]*?onOpenKpi=\{handleOpenCard\}[\s\S]*?\/>/);
-  assert.match(appSource, /<AIAnalysisWidget activeMenu=\{activeMenu\} dim=\{dim\} channelKey=\{activeChannelKey\} companionCue=\{companionCue\} \/>/);
+  assert.match(appSource, /<AIAnalysisWidget[\s\S]*?activeMenu=\{activeMenu\}[\s\S]*?dim=\{dim\}[\s\S]*?channelKey=\{activeChannelKey\}[\s\S]*?companionCue=\{companionCue\}[\s\S]*?context=\{maintenanceMode \? 'maintenance' : 'dashboard'\}[\s\S]*?\/>/);
   assert.match(appSource, /buildCardCompanionCue/);
   assert.match(appSource, /function handleOpenCard/);
   assert.match(appSource, /<KpiCard card=\{card\} onOpen=\{handleOpenCard\} \/>/);
@@ -1336,8 +1340,8 @@ test('highlights the current month in the restrained monthly trend instead of br
 test('keeps left ambient glow behind the AI mascot diffused and subordinate', () => {
   assert.match(indexCss, /--bg-radial-d:rgba\(184,156,255,\.042\);/);
   assert.match(indexCss, /radial-gradient\(ellipse at 10% 78%,var\(--bg-radial-d\),transparent 34%\)/);
-  assert.match(aiAnalysisWidgetCss, /\.ai-orb--think \.mascot-3d-stage,[\s\S]*?drop-shadow\(0 0 36px rgba\(184, 156, 255, \.16\)\)/);
-  assert.match(mascot3dStageCss, /drop-shadow\(0 0 30px rgba\(184, 156, 255, \.18\)\)/);
+  assert.match(aiAnalysisWidgetCss, /\.ai-orb--think \.mascot-sprite-stage,[\s\S]*?drop-shadow\(0 0 36px rgba\(184, 156, 255, \.16\)\)/);
+  assert.match(mascotSpriteStageCss, /drop-shadow\(0 0 30px rgba\(184, 156, 255, \.18\)\)/);
   assert.doesNotMatch(indexCss, /--bg-radial-d:rgba\(139,124,255,\.10\);/);
   assert.doesNotMatch(aiAnalysisWidgetCss, /drop-shadow\(0 0 32px rgba\(139, 124, 255, \.28\)\)/);
 });

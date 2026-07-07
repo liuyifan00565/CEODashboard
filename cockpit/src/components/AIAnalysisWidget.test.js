@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:03:53 CST
+ 更新内容: 将 AI 入口集成验收切换为 2D Sprite 小人舞台，并接收页面场景 context。
+*/
+/*
  更新时间: 2026-07-07 13:20:49 CST
  更新内容: 将 AI 小人入口测试改为固定指针与点击触发动作，防止鼠标悬停或移动导致小人乱跑。
 */
@@ -66,20 +70,18 @@ function themeBlock(theme) {
   return match.groups.body;
 }
 
-test('uses the 3D mascot stage for the AI launcher', () => {
-  const stageInvocation = componentCode.match(/<Mascot3DStage\b[\s\S]*?\/>/)?.[0] ?? '';
+test('uses the 2D mascot sprite stage for the AI launcher', () => {
+  const stageInvocation = componentCode.match(/<MascotSpriteStage\b[\s\S]*?\/>/)?.[0] ?? '';
   const actionState = componentCode.match(/const\s*\[\s*([A-Za-z_$][\w$]*)\s*,\s*[A-Za-z_$][\w$]*\s*\]\s*=\s*useState\(\s*MASCOT_ACTIONS\.idle\s*\)/);
-  const stablePointer = componentCode.match(/const\s+STABLE_MASCOT_POINTER\s*=\s*Object\.freeze\(\{\s*x:\s*0,\s*y:\s*0,\s*active:\s*false\s*\}\);/);
 
-  assert.match(componentCode, /Mascot3DStage/);
-  assert.ok(stageInvocation, 'AI launcher should render Mascot3DStage');
+  assert.match(componentCode, /MascotSpriteStage/);
+  assert.ok(stageInvocation, 'AI launcher should render MascotSpriteStage');
   assert.ok(actionState, 'AIAnalysisWidget should own the mascot action state');
-  assert.ok(stablePointer, 'AIAnalysisWidget should pass a fixed pointer so the launcher mascot stays anchored');
   assert.doesNotMatch(componentCode, /spinToken/);
   assert.doesNotMatch(componentCode, /setSpinToken/);
   assert.match(componentCode, /ai-orb/);
   assert.match(stageInvocation, new RegExp(`\\b(?:action|mascotAction)=\\{\\s*${actionState[1]}\\s*\\}`));
-  assert.match(stageInvocation, /\bpointer=\{\s*STABLE_MASCOT_POINTER\s*\}/);
+  assert.match(stageInvocation, /\bcontext=\{context\}/);
   assert.match(stageInvocation, /\b(?:analysisActive|active|analyzing)=\{\s*(?:open\s*\|\|\s*loading|loading\s*\|\|\s*open)\s*\}/);
   assert.match(componentCode, /aria-label=\{[^}]*open[^}]*\}/);
   assert.match(componentCode, /aria-expanded=\{open\}/);
@@ -87,14 +89,11 @@ test('uses the 3D mascot stage for the AI launcher', () => {
   assert.doesNotMatch(componentCode, /onMouseEnter=/);
   assert.doesNotMatch(componentCode, /onMouseLeave=/);
   assert.match(componentCode, /onClick=\{[^}]+\}/);
-  assert.doesNotMatch(componentCode, /ai-mascot-sprite|ai-mascot-stage/);
+  assert.doesNotMatch(componentCode, /Mascot3DStage|mascot-3d-stage|\.glb|useGLTF|Canvas/);
   assert.doesNotMatch(componentCode, /\/assets\/mascot\//);
-  assert.doesNotMatch(componentCode, /['"`][^'"`]*(?:ai-mascot|ceo-mascot|mascot)[^'"`]*\.png[^'"`]*['"`]/i);
-  assert.doesNotMatch(componentCode, /(?:ai|ceo)-mascot|mascot[^A-Za-z0-9_]*(?:asset|image|png|source)/i);
 });
 
 test('keeps the mascot anchored instead of tracking cursor movement', () => {
-  assert.match(componentSource, /const STABLE_MASCOT_POINTER = Object\.freeze\(\{ x: 0, y: 0, active: false \}\);/);
   assert.doesNotMatch(componentSource, /function handleMascotPointerMove/);
   assert.doesNotMatch(componentSource, /setMascotPointer/);
   assert.doesNotMatch(componentSource, /onPointerMove=/);
@@ -205,7 +204,7 @@ test('uses theme-specific AI dialog card backgrounds', () => {
   assert.doesNotMatch(lightBlock, /--ai-card-bg:\s*#120F17;/);
 });
 
-test('styles the launcher as a sidebar status card with a transparent 3D mascot and speech bubble', () => {
+test('styles the launcher as a sidebar status card with a transparent 2D sprite mascot and speech bubble', () => {
   assert.match(componentSource, /<div className="ai-status-copy" aria-hidden="true">[\s\S]*?<span>AI 助手<\/span>[\s\S]*?<b>经营分析<\/b>/);
   assert.match(componentCss, /\.ai-widget\s*\{[^}]*min-height:\s*112px;/s);
   assert.match(componentCss, /\.ai-widget\s*\{[^}]*background:\s*rgba\(255,\s*255,\s*255,\s*\.04\);/s);
@@ -213,8 +212,8 @@ test('styles the launcher as a sidebar status card with a transparent 3D mascot 
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*height:\s*92px;/s);
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*background:\s*transparent;/s);
   assert.match(componentCss, /\.ai-status-copy\s*\{[^}]*display:\s*grid;/s);
-  assert.match(componentCss, /\.ai-orb--wave \.mascot-3d-stage\s*\{[^}]*filter:\s*drop-shadow\(/s);
-  assert.match(componentCss, /\.ai-orb--think \.mascot-3d-stage,[\s\S]*?\.ai-orb--talk \.mascot-3d-stage,[\s\S]*?\.ai-orb--click \.mascot-3d-stage\s*\{[^}]*drop-shadow\(/s);
+  assert.match(componentCss, /\.ai-orb--wave \.mascot-sprite-stage\s*\{[^}]*filter:\s*drop-shadow\(/s);
+  assert.match(componentCss, /\.ai-orb--think \.mascot-sprite-stage,[\s\S]*?\.ai-orb--talk \.mascot-sprite-stage,[\s\S]*?\.ai-orb--click \.mascot-sprite-stage\s*\{[^}]*drop-shadow\(/s);
   assert.doesNotMatch(componentCss, /brightness\(\.92\)|saturate\(\.82\)/);
   assert.match(componentCss, /\.ai-bubble\s*\{/);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*bottom:\s*124px;/s);
@@ -230,9 +229,7 @@ test('styles the launcher as a sidebar status card with a transparent 3D mascot 
   assert.match(componentCss, /\.ai-widget--speaking \.ai-bubble\.ai-bubble--visible/);
   assert.match(componentCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.ai-orb\s*\{[^}]*width:\s*82px;[\s\S]*?height:\s*108px;/);
   assert.match(componentCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.ai-bubble\s*\{[^}]*bottom:\s*160px;/);
-  assert.doesNotMatch(componentCss, /--mascot-frame-count/);
-  assert.doesNotMatch(componentCss, /ai-mascot-frames/);
-  assert.doesNotMatch(componentCss, /ai-mascot-sprite/);
+  assert.doesNotMatch(componentCss, /mascot-3d-stage|canvas/);
 });
 
 test('keeps the reference transparent mascot asset available for the mascot stage', () => {

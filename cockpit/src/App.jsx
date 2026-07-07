@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:03:53 CST
+ 更新内容: 向 AI 小人入口传递 dashboard/maintenance 场景 context，用于 2D 帧动画切换维护状态。
+*/
+/*
  更新时间: 2026-07-06 18:50:20 CST
  更新内容: KPI 卡片改为每次渲染读取当前运行时数据，消除真实数据版本号在 useMemo 中的多余依赖。
 */
@@ -429,7 +433,13 @@ export default function App() {
       <div className="dash-shell">
         <aside className="dash-aside">
           <Sidebar items={sidebarItems} active={sidebarActive} onChange={handleSidebarChange} />
-          <AIAnalysisWidget activeMenu={activeMenu} dim={dim} channelKey={activeChannelKey} companionCue={companionCue} />
+          <AIAnalysisWidget
+            activeMenu={activeMenu}
+            dim={dim}
+            channelKey={activeChannelKey}
+            companionCue={companionCue}
+            context={maintenanceMode ? 'maintenance' : 'dashboard'}
+          />
         </aside>
 
         <div className="dash-main">
