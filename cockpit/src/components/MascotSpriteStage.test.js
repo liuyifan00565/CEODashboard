@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:47:15 CST
+ 更新内容: 增加静态高清图上的丝滑 CSS 动效回归测试，要求有生命感但禁止重新翻帧抽动。
+*/
+/*
  更新时间: 2026-07-07 14:40:16 CST
  更新内容: 增加 AI 小人常驻状态禁止连续翻帧的回归测试，避免入口出现持续抽动。
 */
@@ -74,6 +78,17 @@ test('uses approved high-resolution still images for persistent mascot states', 
   assert.match(componentCode, /MASCOT_APPROVED_ASSETS\.transparent/);
   assert.match(componentCode, /animation\.replacementAsset === 'analysisLaptop'/);
   assert.match(componentCode, /MASCOT_APPROVED_ASSETS\.analysisLaptop/);
+});
+
+test('adds silky transform-only mascot motion without sprite-frame twitching', () => {
+  assert.match(cssCode, /@keyframes mascot-silk-idle/);
+  assert.match(cssCode, /@keyframes mascot-silk-guide/);
+  assert.match(cssCode, /@keyframes mascot-silk-maintenance/);
+  assert.match(cssCode, /\.mascot-sprite-stage--idle \.mascot-sprite-stage__replacement\s*\{[\s\S]*animation:\s*mascot-silk-idle 5\.8s cubic-bezier\(\.45, 0, \.2, 1\) infinite;/);
+  assert.match(cssCode, /\.mascot-sprite-stage--guide \.mascot-sprite-stage__replacement\s*\{[\s\S]*animation:\s*mascot-silk-guide 1s cubic-bezier\(\.2, \.82, \.2, 1\) both;/);
+  assert.match(cssCode, /\.mascot-sprite-stage--maintenance \.mascot-sprite-stage__replacement\s*\{[\s\S]*animation:\s*mascot-silk-maintenance 6\.4s cubic-bezier\(\.45, 0, \.2, 1\) infinite;/);
+  assert.match(cssCode, /will-change:\s*transform;/);
+  assert.doesNotMatch(cssCode, /steps\(|background-position[^;]*animation|filter\s+.*animation/);
 });
 
 test('includes a reduced-motion static-frame fallback', () => {

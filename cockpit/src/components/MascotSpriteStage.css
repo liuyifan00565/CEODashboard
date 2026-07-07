@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:47:15 CST
+ 更新内容: 为静态高清 AI 小人增加 transform-only 丝滑呼吸、指引和维护悬浮动效，保留无帧抽动策略。
+*/
+/*
  更新时间: 2026-07-07 14:28:41 CST
  更新内容: 修复 2D 小人乱抖：增加逐帧锚点位移，维护电脑图改为单张替换图，移除整图叠层。
 */
@@ -55,14 +59,28 @@
   opacity: 1;
   transform: translateZ(0);
   transform-origin: center bottom;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .mascot-sprite-stage--replacement .mascot-sprite-stage__sheet {
   opacity: 0;
 }
 
+.mascot-sprite-stage--idle .mascot-sprite-stage__replacement {
+  animation: mascot-silk-idle 5.8s cubic-bezier(.45, 0, .2, 1) infinite;
+}
+
 .mascot-sprite-stage--guide {
   transform: translateX(2px) rotate(-2deg);
+}
+
+.mascot-sprite-stage--guide .mascot-sprite-stage__replacement {
+  animation: mascot-silk-guide 1s cubic-bezier(.2, .82, .2, 1) both;
+}
+
+.mascot-sprite-stage--maintenance .mascot-sprite-stage__replacement {
+  animation: mascot-silk-maintenance 6.4s cubic-bezier(.45, 0, .2, 1) infinite;
 }
 
 .mascot-sprite-stage--speech,
@@ -79,6 +97,50 @@
 
 .mascot-sprite-stage--celebrate {
   filter: drop-shadow(0 22px 34px rgba(0, 0, 0, .42)) drop-shadow(0 0 34px rgba(215, 181, 109, .3));
+}
+
+@keyframes mascot-silk-idle {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+
+  38% {
+    transform: translate3d(.3px, -1.4px, 0) rotate(.45deg) scale(1.012);
+  }
+
+  70% {
+    transform: translate3d(-.2px, -.55px, 0) rotate(-.18deg) scale(1.005);
+  }
+}
+
+@keyframes mascot-silk-guide {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+
+  45% {
+    transform: translate3d(2.4px, -1px, 0) rotate(-2.8deg) scale(1.018);
+  }
+
+  100% {
+    transform: translate3d(1.5px, -.4px, 0) rotate(-1.8deg) scale(1.01);
+  }
+}
+
+@keyframes mascot-silk-maintenance {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+
+  42% {
+    transform: translate3d(.2px, -1.1px, 0) rotate(.25deg) scale(1.008);
+  }
+
+  76% {
+    transform: translate3d(-.15px, -.35px, 0) rotate(-.12deg) scale(1.003);
+  }
 }
 
 @media (max-width: 760px) {
