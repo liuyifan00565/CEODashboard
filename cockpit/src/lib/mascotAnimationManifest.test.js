@@ -9,8 +9,10 @@ import assert from 'node:assert/strict';
 import {
   MASCOT_ANIMATIONS,
   MASCOT_APPROVED_ASSETS,
+  MASCOT_FRAME_ANCHORS,
   MASCOT_IDLE_VARIANTS,
   MASCOT_SPRITE_SHEET,
+  getMascotFrameAnchor,
   getMascotAnimation,
 } from './mascotAnimationManifest.js';
 import { MASCOT_ACTIONS } from './mascotCompanion.js';
@@ -71,7 +73,18 @@ test('maps product actions to explicit frame animation specs', () => {
     assert.ok(MASCOT_ANIMATIONS[action].frames.every((frame) => frame >= 0 && frame < MASCOT_SPRITE_SHEET.frameCount));
   }
   assert.equal(MASCOT_ANIMATIONS.guide.durationMs, 1000);
-  assert.equal(MASCOT_ANIMATIONS.maintenance.overlay, 'analysisLaptop');
+  assert.equal(MASCOT_ANIMATIONS.think.replacementAsset, '');
+  assert.equal(MASCOT_ANIMATIONS.think.overlay, '');
+  assert.equal(MASCOT_ANIMATIONS.maintenance.replacementAsset, 'analysisLaptop');
+  assert.equal(MASCOT_ANIMATIONS.maintenance.overlay, '');
+});
+
+test('declares per-frame anchors to cancel source sprite foot drift', () => {
+  assert.equal(MASCOT_FRAME_ANCHORS.length, MASCOT_SPRITE_SHEET.frameCount);
+  assert.deepEqual(getMascotFrameAnchor(0), { offsetX: 0.5, offsetY: 0 });
+  assert.deepEqual(getMascotFrameAnchor(27), { offsetX: 2, offsetY: 18 });
+  assert.deepEqual(getMascotFrameAnchor(30), { offsetX: 0.5, offsetY: -3 });
+  assert.deepEqual(getMascotFrameAnchor(99), { offsetX: 0, offsetY: 0 });
 });
 
 test('resolves idle variants and unknown actions deterministically', () => {
@@ -81,5 +94,5 @@ test('resolves idle variants and unknown actions deterministically', () => {
     getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).frames,
     MASCOT_IDLE_VARIANTS.find((variant) => variant.key === 'look').frames,
   );
-  assert.equal(getMascotAnimation('maintenanceSave').overlay, 'analysisLaptop');
+  assert.equal(getMascotAnimation('maintenanceSave').replacementAsset, 'analysisLaptop');
 });

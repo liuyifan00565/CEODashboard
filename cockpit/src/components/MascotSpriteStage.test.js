@@ -20,6 +20,7 @@ function stripSourceComments(source) {
 test('renders a manifest-driven 2D mascot sprite stage', () => {
   assert.match(componentCode, /from\s+['"]\.\.\/lib\/mascotAnimationManifest\.js['"]/);
   assert.match(componentCode, /getMascotAnimation/);
+  assert.match(componentCode, /getMascotFrameAnchor/);
   assert.match(componentCode, /MASCOT_SPRITE_SHEET/);
   assert.match(componentCode, /export default function MascotSpriteStage/);
   assert.match(componentCode, /data-action=\{animation\.key\}/);
@@ -29,6 +30,8 @@ test('renders a manifest-driven 2D mascot sprite stage', () => {
   assert.match(componentCode, /--mascot-frame-y/);
   assert.match(componentCode, /--mascot-bg-x/);
   assert.match(componentCode, /--mascot-bg-y/);
+  assert.match(componentCode, /--mascot-frame-offset-x/);
+  assert.match(componentCode, /--mascot-frame-offset-y/);
   assert.doesNotMatch(componentCode, /@react-three|three|useGLTF|Canvas|MASCOT_GLB_SOURCE|\.glb/);
 });
 
@@ -48,10 +51,19 @@ test('styles the sprite sheet crisply inside the existing sidebar card', () => {
   assert.match(cssCode, /\.mascot-sprite-stage__sheet\s*\{[\s\S]*background-image:\s*url\('\/ai-mascot-sprite\.png'\);/);
   assert.match(cssCode, /background-size:\s*1200%\s*400%;/);
   assert.match(cssCode, /background-position:\s*var\(--mascot-bg-x\) var\(--mascot-bg-y\);/);
+  assert.match(cssCode, /transform:\s*translate\(var\(--mascot-frame-offset-x\),\s*var\(--mascot-frame-offset-y\)\);/);
   assert.doesNotMatch(cssCode, /var\(--mascot-frame-x\)\s*\*\s*-100%/);
   assert.match(cssCode, /image-rendering:\s*auto;/);
-  assert.match(cssCode, /\.mascot-sprite-stage--overlay-laptop/);
+  assert.doesNotMatch(cssCode, /mascot-sprite-stage--overlay-laptop/);
   assert.doesNotMatch(cssCode, /mascot-3d-stage|canvas/);
+});
+
+test('uses the laptop mascot as a replacement image instead of a full-body overlay', () => {
+  assert.match(componentCode, /replacementSrc/);
+  assert.match(componentCode, /mascot-sprite-stage__replacement/);
+  assert.match(cssCode, /\.mascot-sprite-stage--replacement \.mascot-sprite-stage__sheet\s*\{/);
+  assert.match(cssCode, /\.mascot-sprite-stage__replacement\s*\{/);
+  assert.doesNotMatch(componentCode, /mascot-sprite-stage__overlay/);
 });
 
 test('includes a reduced-motion static-frame fallback', () => {

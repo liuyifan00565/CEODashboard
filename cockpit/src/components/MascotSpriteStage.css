@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:28:41 CST
+ 更新内容: 修复 2D 小人乱抖：增加逐帧锚点位移，维护电脑图改为单张替换图，移除整图叠层。
+*/
+/*
  更新时间: 2026-07-07 14:03:53 CST
  更新内容: 新增 2D AI 小人 Sprite 舞台样式，支持 48 帧透明图、维护叠层和降级动画。
 */
@@ -16,7 +20,7 @@
 
 .mascot-sprite-stage__sheet,
 .mascot-sprite-stage__fallback,
-.mascot-sprite-stage__overlay {
+.mascot-sprite-stage__replacement {
   position: absolute;
   inset: 0;
   display: block;
@@ -34,6 +38,7 @@
   background-position: var(--mascot-bg-x) var(--mascot-bg-y);
   image-rendering: auto;
   opacity: 1;
+  transform: translate(var(--mascot-frame-offset-x), var(--mascot-frame-offset-y));
 }
 
 .mascot-sprite-stage__fallback {
@@ -43,19 +48,17 @@
   opacity: 0;
 }
 
-.mascot-sprite-stage__overlay {
+.mascot-sprite-stage__replacement {
   z-index: 3;
   object-fit: contain;
   object-position: center bottom;
-  opacity: 0;
-  transform: translate(14%, 3%) scale(.86);
+  opacity: 1;
+  transform: translateZ(0);
   transform-origin: center bottom;
-  transition: opacity .22s ease, transform .22s ease;
 }
 
-.mascot-sprite-stage--overlay-laptop .mascot-sprite-stage__overlay {
-  opacity: .98;
-  transform: translate(16%, 4%) scale(.88);
+.mascot-sprite-stage--replacement .mascot-sprite-stage__sheet {
+  opacity: 0;
 }
 
 .mascot-sprite-stage--guide {
@@ -86,7 +89,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .mascot-sprite-stage,
-  .mascot-sprite-stage__overlay {
+  .mascot-sprite-stage__replacement {
     animation: none;
     transition: none;
   }

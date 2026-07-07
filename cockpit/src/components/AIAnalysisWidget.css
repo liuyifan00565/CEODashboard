@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:28:41 CST
+ 更新内容: 固定 AI 小人入口宽度，避免 idle、guide、talk、think 动作切换时出现缩放跳动。
+*/
+/*
  更新时间: 2026-07-07 14:03:53 CST
  更新内容: 将 AI 入口小人样式切换为 2D Sprite 舞台选择器，保留原侧栏玻璃卡光影体系。
 */
@@ -60,11 +64,7 @@
 }
 
 .ai-orb .mascot-sprite-stage {
-  width: 78px;
-}
-
-.ai-orb .mascot-sprite-stage[data-action="idle"] {
-  width: 68px;
+  width: 72px;
 }
 
 .ai-status-copy {

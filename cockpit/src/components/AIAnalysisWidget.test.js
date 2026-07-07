@@ -211,6 +211,8 @@ test('styles the launcher as a sidebar status card with a transparent 2D sprite 
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*width:\s*74px;/s);
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*height:\s*92px;/s);
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*background:\s*transparent;/s);
+  assert.match(componentCss, /\.ai-orb \.mascot-sprite-stage\s*\{[^}]*width:\s*72px;/s);
+  assert.doesNotMatch(componentCss, /\.ai-orb \.mascot-sprite-stage\[data-action="idle"\]/);
   assert.match(componentCss, /\.ai-status-copy\s*\{[^}]*display:\s*grid;/s);
   assert.match(componentCss, /\.ai-orb--wave \.mascot-sprite-stage\s*\{[^}]*filter:\s*drop-shadow\(/s);
   assert.match(componentCss, /\.ai-orb--think \.mascot-sprite-stage,[\s\S]*?\.ai-orb--talk \.mascot-sprite-stage,[\s\S]*?\.ai-orb--click \.mascot-sprite-stage\s*\{[^}]*drop-shadow\(/s);

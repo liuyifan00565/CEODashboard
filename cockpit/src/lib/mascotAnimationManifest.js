@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:28:41 CST
+ 更新内容: 修复 2D 小人抖动根因：为 sprite 每帧增加脚底/中心锚点，并将维护电脑图改为整图替换而非叠层。
+*/
+/*
  更新时间: 2026-07-07 14:03:53 CST
  更新内容: 新增 AI 小人 2D 帧动画 manifest，统一 48 帧 sprite、四种待机和维护场景动作。
 */
@@ -22,6 +26,57 @@ export const MASCOT_APPROVED_ASSETS = Object.freeze({
   logoBlack: '/logo-black.png',
 });
 
+export const MASCOT_FRAME_ANCHORS = Object.freeze([
+  [0.5, 0],
+  [1, 3],
+  [1.5, 5],
+  [1.5, 6],
+  [1.5, 5],
+  [0.5, 3],
+  [0, 0],
+  [-0.5, -1],
+  [-1, -2],
+  [-1, -3],
+  [-1, -2],
+  [0, -1],
+  [0, 0],
+  [-3, 7],
+  [1.5, 6],
+  [-5.5, 11],
+  [1.5, 6],
+  [-2.5, 6],
+  [1.5, 2],
+  [0, 1],
+  [1.5, -1],
+  [2, -2],
+  [1, -1],
+  [1, -1],
+  [0.5, 0],
+  [1, 9],
+  [1.5, 14],
+  [2, 18],
+  [1.5, 12],
+  [0.5, 5],
+  [0.5, -3],
+  [0, 2],
+  [-1, 4],
+  [-1, 3],
+  [-0.5, 2],
+  [0, 2],
+  [0.5, 0],
+  [0.5, 2],
+  [1, 4],
+  [1, 5],
+  [1, 4],
+  [0.5, 2],
+  [0.5, 0],
+  [0, -1],
+  [-0.5, -1],
+  [-0.5, -2],
+  [-0.5, -1],
+  [0, -1],
+].map(([offsetX, offsetY]) => Object.freeze({ offsetX, offsetY })));
+
 function range(start, endInclusive) {
   return Array.from({ length: endInclusive - start + 1 }, (_, index) => start + index);
 }
@@ -44,6 +99,7 @@ function actionSpec(key, frames, fps, extra = {}) {
     loop: extra.loop ?? true,
     durationMs: extra.durationMs ?? 0,
     overlay: extra.overlay ?? '',
+    replacementAsset: extra.replacementAsset ?? '',
     intensity: extra.intensity ?? 'calm',
   });
 }
@@ -64,7 +120,6 @@ export const MASCOT_ANIMATIONS = Object.freeze({
     intensity: 'speech',
   }),
   [MASCOT_ACTIONS.think]: actionSpec(MASCOT_ACTIONS.think, [24, 25, 26, 27, 28, 29, 30, 29, 28, 27, 26, 25], 18, {
-    overlay: 'analysisLaptop',
     intensity: 'focus',
   }),
   [MASCOT_ACTIONS.alert]: actionSpec(MASCOT_ACTIONS.alert, [36, 37, 38, 39, 40, 41, 42, 43, 42, 41, 40, 39], 24, {
@@ -79,19 +134,23 @@ export const MASCOT_ANIMATIONS = Object.freeze({
     intensity: 'click',
   }),
   maintenance: actionSpec('maintenance', [24, 25, 26, 27, 28, 29, 30, 31, 30, 29, 28, 27], 16, {
-    overlay: 'analysisLaptop',
+    replacementAsset: 'analysisLaptop',
     intensity: 'maintenance',
   }),
   maintenanceSave: actionSpec('maintenanceSave', [30, 31, 32, 33, 34, 35, 34, 33, 32, 31, 30, 29], 24, {
-    overlay: 'analysisLaptop',
+    replacementAsset: 'analysisLaptop',
     durationMs: 960,
     intensity: 'maintenance-save',
   }),
   maintenanceReview: actionSpec('maintenanceReview', [18, 19, 20, 21, 22, 23, 24, 25, 24, 23, 22, 21], 20, {
-    overlay: 'analysisLaptop',
+    replacementAsset: 'analysisLaptop',
     intensity: 'maintenance-review',
   }),
 });
+
+export function getMascotFrameAnchor(frameIndex = 0) {
+  return MASCOT_FRAME_ANCHORS[frameIndex] ?? Object.freeze({ offsetX: 0, offsetY: 0 });
+}
 
 export function getMascotAnimation(action = MASCOT_ACTIONS.idle, { idleVariant = '' } = {}) {
   if (action === MASCOT_ACTIONS.idle) {
