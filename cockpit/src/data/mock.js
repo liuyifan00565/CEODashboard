@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 15:25:00 CST
+ 更新内容: 移除经营总览 monthJudgement / annualJudgement 摘要字段，页面不再显示模板拼接的摘要句。
+*/
+/*
  更新时间: 2026-07-06 18:37:58 CST
  更新内容: 支持真实 MySQL dashboard 快照覆盖运行时数据，页面加载后不再固定使用 mock 数字。
 */
@@ -120,8 +124,6 @@ export const OPERATING_OVERVIEW_METRICS = {
   annualRemainingRate: +(100 - KPI_DERIVED.yearCompletion).toFixed(1),
   remainingMonths: 6,
   remainingMonthlyRequired: Math.round(KPI_DERIVED.yearGap / 6),
-  monthJudgement: '本月整体进度正常，但线下华东低于目标节奏，预计影响月度缺口 36万。',
-  annualJudgement: '当前领先时间进度 3.8%，但线下华东连续低于目标节奏。',
 };
 
 // ===== 开户数趋势（经营总览，单位：户）=====

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-07 15:25:00 CST  更新内容: 移除月度/年度经营摘要判断文案及其专属搜索关键词，经营总览不再显示模板拼接的摘要句。 */
 /* 更新时间: 2026-07-06 18:52:14 CST  更新内容: 风险渠道和年度节奏判断改为读取运行时渠道与节奏数据，不再硬编码线下华东和固定完成率。 */
 /* 更新时间: 2026-07-06 17:02:49 CST  更新内容: 年度节奏移除折线图，改为四项指标和年度进度胶囊条。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: 经营总览年度节奏线改为银紫玫瑰主线与香槟目标虚线的业务语义分层。 */
@@ -28,10 +29,8 @@ const PROGRESS_KEYWORDS = [
   '时间进度',
   '领先 7.1%',
   '目标缺口',
-  '影响月度缺口 36万',
   '风险渠道',
   '线下华东',
-  '本月整体进度正常，但线下华东低于目标节奏，预计影响月度缺口 36万。',
 ];
 const ANNUAL_KEYWORDS = [
   '年度节奏',
@@ -43,9 +42,6 @@ const ANNUAL_KEYWORDS = [
   '剩余',
   '明细 >',
   '下半年月均需完成',
-  '当前领先时间进度',
-  '线下华东连续低于目标节奏',
-  '当前领先时间进度 3.8%，但线下华东连续低于目标节奏。',
 ];
 const CHANNEL_KEYWORDS = ['渠道完成情况', '本月', '年度', '线上', '线下华南', '线下华东', '代理', '缺口', '需关注'];
 
@@ -116,8 +112,6 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
               <span className="op-summary-sub">完成率 {formatPct(riskChannel?.completion ?? 0)}</span>
             </div>
           </div>
-
-          <p className="op-judgement op-judgement--progress">{overviewMetrics.monthJudgement}</p>
         </section>
       </SearchResultBorder>
 
@@ -164,7 +158,6 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             </div>
           </div>
 
-          <p className="op-judgement">{overviewMetrics.annualJudgement}</p>
           <p className="op-annual-note">
             下半年月均需完成 {formatWan(overviewMetrics.remainingMonthlyRequired)} 万。
           </p>

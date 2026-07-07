@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-07 16:59:41 CST
+ Update content: Add visibility regression tests so frame mascot changes are obvious on the live sidebar launcher.
+*/
+/*
  更新时间: 2026-07-07 16:26:47 CST
  更新内容: 将 AI 小人组件验收改为真实帧动画播放，要求按 manifest 帧表、fps 和待机变体播放。
 */
@@ -70,6 +74,7 @@ test('plays authored frames with requestAnimationFrame and elapsed fps timing', 
 
 test('rotates four idle variants only at loop boundaries', () => {
   assert.match(componentCode, /const \[idleVariantIndex,\s*setIdleVariantIndex\] = useState\(0\);/);
+  assert.match(componentCode, /const IDLE_LOOPS_BEFORE_VARIANT = 1;/);
   assert.match(componentCode, /getMascotIdleVariant\(idleVariantIndex\)/);
   assert.match(componentCode, /setIdleVariantIndex\(\(index\) => index \+ 1\);/);
   assert.match(componentCode, /animation\.key === MASCOT_ACTIONS\.idle/);
@@ -78,7 +83,7 @@ test('rotates four idle variants only at loop boundaries', () => {
 
 test('styles generated action sheets crisply inside the existing sidebar card', () => {
   assert.match(cssCode, /\.mascot-sprite-stage\s*\{/);
-  assert.match(cssCode, /width:\s*112px;/);
+  assert.match(cssCode, /width:\s*128px;/);
   assert.match(cssCode, /aspect-ratio:\s*224\s*\/\s*300;/);
   assert.match(cssCode, /\.mascot-sprite-stage__sheet\s*\{[\s\S]*background-image:\s*var\(--mascot-sheet-url\);/);
   assert.match(cssCode, /background-size:\s*var\(--mascot-sheet-width\) 100%;/);
@@ -92,6 +97,8 @@ test('uses semantic frame motion cues without text-based fake effects', () => {
   assert.match(cssCode, /\.mascot-sprite-stage--guide\s*\{[\s\S]*animation:\s*mascot-guide-lean 1s cubic-bezier\(\.2, \.82, \.2, 1\) both;/);
   assert.match(cssCode, /\.mascot-sprite-stage--speech,\s*[\s\S]*?\.mascot-sprite-stage--focus\s*\{[\s\S]*animation:\s*mascot-live-presence 4\.8s cubic-bezier\(\.45, 0, \.2, 1\) infinite;/);
   assert.match(cssCode, /@keyframes mascot-guide-lean/);
+  assert.match(cssCode, /translate3d\(12px,\s*-4px,\s*0\) rotate\(-4deg\) scale\(1\.16\)/);
+  assert.match(cssCode, /translate3d\(6px,\s*-1px,\s*0\) rotate\(-2deg\) scale\(1\.08\)/);
   assert.match(cssCode, /@keyframes mascot-live-presence/);
   assert.doesNotMatch(cssCode, /content:\s*['"][^'"]+[A-Za-z\u4e00-\u9fff][^'"]*['"]/);
   assert.doesNotMatch(cssCode, /mascot-guide-ray|mascot-smart-pulse|ai-widget-guide-beam/);

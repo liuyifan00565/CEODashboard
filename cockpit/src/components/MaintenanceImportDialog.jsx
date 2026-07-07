@@ -210,7 +210,7 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
                   <h4>校验错误（{mapResult.errors.length}）</h4>
                   <ul className="mnt-import-errors">
                     {mapResult.errors.slice(0, 50).map((e, i) => (
-                      <li key={i}>第 {e.row} 行 · {e.field}：{e.message}</li>
+                      <li key={i}>{e.row ? `第 ${e.row} 行 · ` : ''}{e.field}：{e.message}</li>
                     ))}
                     {mapResult.errors.length > 50 && <li>……还有 {mapResult.errors.length - 50} 条</li>}
                   </ul>

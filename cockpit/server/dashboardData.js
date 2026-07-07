@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 15:25:00 CST
+ 更新内容: 移除经营总览 monthJudgement / annualJudgement 摘要字段及仅服务于该摘要的 riskName 局部变量，服务端不再产出模板拼接的摘要句。
+*/
+/*
  更新时间: 2026-07-07 14:05:00 CST
  更新内容: 修复聚合占位逻辑——月时间进度改为按真实日历推导；开户环比/较昨日、续费上月、算力 overview 的客户余额/平均回复率/新开客户/店铺改用真实来源，移除硬编码 0。
 */
@@ -126,7 +130,6 @@ function makeOperatingMetrics({ kpiDerived, latestMonth, channelRows }) {
   const monthPaceDelta = round1(kpiDerived.monthCompletion - monthTimeProgress);
   const annualPaceDelta = round1(kpiDerived.yearCompletion - annualTimeProgress);
   const remainingMonthlyRequired = Math.max(0, Math.round(kpiDerived.yearGap / remainingMonths));
-  const riskName = weakest?.name ?? '暂无';
 
   return {
     monthTimeProgress,
@@ -137,10 +140,6 @@ function makeOperatingMetrics({ kpiDerived, latestMonth, channelRows }) {
     annualRemainingRate: round1(100 - kpiDerived.yearCompletion),
     remainingMonths,
     remainingMonthlyRequired,
-    monthJudgement: `真实数据库：本月完成率 ${kpiDerived.monthCompletion}%，${riskName}低于目标节奏，预计影响月度缺口 ${riskImpactGap}万。`,
-    annualJudgement: annualPaceDelta >= 0
-      ? `真实数据库：当前领先时间进度 ${annualPaceDelta}%。`
-      : `真实数据库：年度完成率落后时间进度 ${Math.abs(annualPaceDelta)}%。`,
   };
 }
 

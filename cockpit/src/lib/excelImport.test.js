@@ -84,8 +84,21 @@ test('mapAndValidate uniqueKey 去重报错', () => {
   assert.equal(dup.row, 3);
 });
 
-test('mapAndValidate 整行空行跳过', () => {
-  const { rows, errors } = mapAndValidate(
+test('mapAndValidate 必填列整列缺失应阻断（报错而非告警）', () => {
+  // 只给了销售列，缺 目标月份/回款目标 两个必填列
+  const { errors, warnings } = mapAndValidate(
+    ['销售'],
+    [['张三']],
+    TARGET_CONFIG,
+  );
+  assert.ok(errors.some((e) => e.row === 0 && e.field === 'target_month' && /未在 Excel 表头中找到/.test(e.message)));
+  assert.ok(errors.some((e) => e.row === 0 && e.field === 'target_amount_yuan'));
+  // 可选列缺失只进 warnings（不进 errors）
+  assert.ok(warnings.some((w) => w.includes('是否销售')));
+  assert.ok(!errors.some((e) => e.field === 'is_sales'));
+});
+
+test('mapAndValidate 整行空行跳过', () => {  const { rows, errors } = mapAndValidate(
     ['销售', '月份', '回款目标', '是否销售'],
     [['张三', '2026-03', '100', '是'], [null, null, null, null]],
     TARGET_CONFIG,

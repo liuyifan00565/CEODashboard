@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 15:25:00 CST
+ 更新内容: 移除"影响月度缺口 36万"搜索关键词断言，该关键词随经营摘要一并删除。
+*/
+/*
  更新时间: 2026-07-06 17:29:34 CST
  更新内容: 搜索关键词测试同步年度进度胶囊条，覆盖完成率、剩余率和下半年月均。
 */
@@ -114,7 +118,6 @@ test('adds fused operating overview section text to KPI search keywords', () => 
   assert.ok(month.keywords.includes('时间进度'));
   assert.ok(month.keywords.includes('领先 7.1%'));
   assert.ok(month.keywords.includes('完成率 70%'));
-  assert.ok(month.keywords.includes('影响月度缺口 36万'));
   assert.ok(!month.keywords.includes('本月目标完成情况'));
   assert.ok(annual.keywords.includes('年度节奏'));
   assert.ok(annual.keywords.includes('年度累计回款'));

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 15:25:00 CST
+ 更新内容: 移除 monthJudgement / annualJudgement 断言，该摘要字段已随经营摘要删除。
+*/
+/*
  更新时间: 2026-07-06 17:29:34 CST
  更新内容: 年度节奏回归测试移除折线序列断言，仅保留胶囊条口径所需数据。
 */
@@ -345,8 +349,6 @@ test('returns operating overview pace metrics for dense executive judgement', ()
   assert.equal(metrics.annualRemainingRate, 46.2);
   assert.equal(metrics.remainingMonths, 6);
   assert.equal(metrics.remainingMonthlyRequired, 447);
-  assert.equal(metrics.monthJudgement, '本月整体进度正常，但线下华东低于目标节奏，预计影响月度缺口 36万。');
-  assert.equal(metrics.annualJudgement, '当前领先时间进度 3.8%，但线下华东连续低于目标节奏。');
 });
 
 test('returns annual rhythm points anchored to annual KPI values', () => {

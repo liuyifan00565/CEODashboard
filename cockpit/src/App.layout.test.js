@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 15:25:00 CST
+ 更新内容: 经营摘要回归测试改为 doesNotMatch，锁定 monthJudgement / annualJudgement / op-judgement 已从经营总览移除。
+*/
+/*
  更新时间: 2026-07-07 14:03:53 CST
  更新内容: 将 AI 小人布局验收切换为 2D Sprite 舞台，并约束维护页 context 传递。
 */
@@ -1005,7 +1009,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /getChannelCompletionRows\('month'\)/);
   assert.match(operatingOverviewSource, /riskChannel\?\.name/);
   assert.match(operatingOverviewSource, /完成率 \{formatPct\(riskChannel\?\.completion \?\? 0\)\}/);
-  assert.match(operatingOverviewSource, /overviewMetrics\.monthJudgement/);
+  assert.doesNotMatch(operatingOverviewSource, /overviewMetrics\.monthJudgement/);
   assert.match(operatingOverviewSource, /查看近期明细/);
   assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
   assert.match(operatingOverviewSource, /年度节奏/);
@@ -1019,7 +1023,8 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /className="op-annual-grid"[\s\S]*?年度累计回款[\s\S]*?年度目标[\s\S]*?年度完成率[\s\S]*?时间进度[\s\S]*?<\/div>\s*<div className="op-annual-capsule"/);
   assert.match(operatingOverviewSource, /<span>已完成 \{formatPct\(KPI_DERIVED\.yearCompletion\)\}<\/span>/);
   assert.match(operatingOverviewSource, /<span>剩余 \{formatPct\(overviewMetrics\.annualRemainingRate\)\}<\/span>/);
-  assert.match(operatingOverviewSource, /<p className="op-judgement">\{overviewMetrics\.annualJudgement\}<\/p>/);
+  assert.doesNotMatch(operatingOverviewSource, /overviewMetrics\.annualJudgement/);
+  assert.doesNotMatch(operatingOverviewSource, /op-judgement/);
   assert.match(operatingOverviewSource, /下半年月均需完成 \{formatWan\(overviewMetrics\.remainingMonthlyRequired\)\} 万。/);
   assert.doesNotMatch(operatingOverviewSource, /<span>节奏偏差<\/span>/);
   assert.doesNotMatch(operatingOverviewSource, /function shouldShowActualAnnualLabel/);

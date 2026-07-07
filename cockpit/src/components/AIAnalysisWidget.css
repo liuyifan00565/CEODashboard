@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-07 16:59:41 CST
+ Update content: Increase sidebar AI mascot launcher size and guide emphasis so the new frame actions are visibly different on port 5173.
+*/
+/*
  更新时间: 2026-07-07 16:26:47 CST
  更新内容: 移除 guide 外层伪光束，改由 AI 小人真实 guide 帧图表达指引动作。
 */
@@ -43,7 +47,7 @@
   justify-content: flex-start;
   gap: 8px;
   width: 100%;
-  min-height: 112px;
+  min-height: 132px;
   margin-top: auto;
   padding: 10px 12px;
   box-sizing: border-box;
@@ -57,8 +61,8 @@
 
 .ai-orb {
   position: relative;
-  width: 74px;
-  height: 92px;
+  width: 96px;
+  height: 124px;
   padding: 0;
   border: none;
   background: transparent;
@@ -72,7 +76,7 @@
 }
 
 .ai-orb .mascot-sprite-stage {
-  width: 72px;
+  width: 92px;
 }
 
 .ai-status-copy {
@@ -108,6 +112,10 @@
   filter: drop-shadow(0 20px 32px rgba(0, 0, 0, .4)) drop-shadow(0 0 30px rgba(228, 184, 215, .24));
 }
 
+.ai-orb--guide .mascot-sprite-stage {
+  filter: drop-shadow(0 24px 36px rgba(0, 0, 0, .42)) drop-shadow(0 0 34px rgba(184, 156, 255, .26)) drop-shadow(0 0 28px rgba(111, 210, 255, .18));
+}
+
 .ai-orb--think .mascot-sprite-stage,
 .ai-orb--talk .mascot-sprite-stage,
 .ai-orb--click .mascot-sprite-stage {
@@ -125,7 +133,7 @@
 .ai-bubble {
   position: absolute;
   left: 50%;
-  bottom: 124px;
+  bottom: 146px;
   z-index: 4;
   display: grid;
   gap: 4px;
@@ -410,14 +418,14 @@
   }
 
   .ai-orb {
-    width: 82px;
-    height: 108px;
+    width: 98px;
+    height: 128px;
   }
 
   .ai-bubble {
     right: 10px;
     left: auto;
-    bottom: 160px;
+    bottom: 178px;
     transform: translateY(10px) scale(.96);
   }
 

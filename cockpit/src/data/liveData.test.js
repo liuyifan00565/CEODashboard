@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 15:25:00 CST
+ 更新内容: 快照 fixture 移除 monthJudgement / annualJudgement，该摘要字段已随经营摘要删除。
+*/
+/*
  更新时间: 2026-07-06 18:37:58 CST
  更新内容: 增加前端真实数据库快照覆盖测试，要求 KPI、渠道、趋势和卡片元信息不再停留在 mock 数字。
 */
@@ -53,8 +57,6 @@ test('applies mysql dashboard snapshot to mutable dashboard data exports', () =>
       annualRemainingRate: 89.3,
       remainingMonths: 6,
       remainingMonthlyRequired: 726,
-      monthJudgement: '真实数据库：本月完成率 89.7%，华东线下低于目标节奏。',
-      annualJudgement: '真实数据库：年度完成率落后时间进度 39.3%。',
     },
     channels: [
       { key: 'online', name: '线上', recovered: 244, target: 240, warn: false },

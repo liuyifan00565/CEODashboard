@@ -150,8 +150,14 @@ export function mapAndValidate(rawHeaders, rawRows, config) {
   const warnings = [];
   const seen = new Map(); // uniqueKey -> first row index
 
-  if (missing.length) {
-    warnings.push(`以下列未在 Excel 中找到（将被忽略）：${missing.map((c) => c.header).join('、')}`);
+  // 必填列整列缺失 -> 阻断导入的错误；可选列缺失 -> 仅提示
+  const missingRequired = missing.filter((c) => c.required);
+  const missingOptional = missing.filter((c) => !c.required);
+  if (missingOptional.length) {
+    warnings.push(`以下可选列未在 Excel 中找到（将被忽略）：${missingOptional.map((c) => c.header).join('、')}`);
+  }
+  for (const col of missingRequired) {
+    errors.push({ row: 0, field: col.field, message: `必填列【${col.header}】未在 Excel 表头中找到` });
   }
 
   rawRows.forEach((rawRow, rowIdx) => {

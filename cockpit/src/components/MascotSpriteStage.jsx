@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-07 16:59:41 CST
+ Update content: Make idle variant switching visible after each completed loop so the live mascot does not look unchanged.
+*/
+/*
  更新时间: 2026-07-07 16:26:47 CST
  更新内容: 接入真实动作帧 sprite sheet 播放，按 fps 驱动 AI 小人并在待机循环边界切换四种 idle。
 */
@@ -25,7 +29,7 @@ import { MASCOT_ACTIONS } from '../lib/mascotCompanion';
 import './MascotSpriteStage.css';
 
 const DEFAULT_LABEL = '福小客 AI 经营助手';
-const IDLE_LOOPS_BEFORE_VARIANT = 3;
+const IDLE_LOOPS_BEFORE_VARIANT = 1;
 
 function getFramePosition(currentFrame, sheet) {
   return {
