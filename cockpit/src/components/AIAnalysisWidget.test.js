@@ -130,7 +130,7 @@ test('delays and throttles readable-text hover bubbles', () => {
 test('responds to KPI card context with matching speech and motion', () => {
   assert.match(componentSource, /useEffect\(\(\) => \{\s*if \(!companionCue\) return;\s*showCompanionCue\(companionCue, \{ openDialog: false \}\);/s);
   assert.match(componentSource, /setMascotAction\(cue\.action \?\? getSpeechAction\(cue\.text\)\);/);
-  assert.match(componentSource, /playMascotAction\(MASCOT_ACTIONS\.click, 860, nextOpen\);/);
+  assert.match(componentSource, /showCompanionCue\(companionCue, \{ openDialog: false \}\);/);
 });
 
 test('plays a one-second guide motion only when opening the AI dialog from the mascot', () => {

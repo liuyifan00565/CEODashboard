@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 11:49:34 CST
+ 更新内容: 点击打开 AI 对话框时播放约 1 秒 guide 指引动作，点击关闭时保留轻量点击反馈。
+*/
+/*
  更新时间: 2026-07-06 10:48:16 CST
  更新内容: AI 助手流光边框改为银紫玫瑰与香槟点缀，移除默认硬蓝主视觉。
 */
@@ -453,16 +457,18 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
 
   function handleMascotClick() {
     const nextOpen = !open;
-    playMascotAction(MASCOT_ACTIONS.click, 860, nextOpen);
     showCompanionCue({
-      action: MASCOT_ACTIONS.talk,
+      action: nextOpen ? MASCOT_ACTIONS.guide : MASCOT_ACTIONS.talk,
       text: nextOpen ? '我把 AI 经营分析窗口打开了，您可以直接问经营问题。' : '我先收起来，有需要再点我。',
     }, { openDialog: false, duration: 3800 });
 
     if (nextOpen) {
+      playMascotAction(MASCOT_ACTIONS.guide, 1000, true);
       openAiDialog();
       return;
     }
+
+    playMascotAction(MASCOT_ACTIONS.click, 860, false);
     closeAiDialog();
   }
 

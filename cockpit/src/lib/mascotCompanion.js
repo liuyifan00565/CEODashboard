@@ -1,10 +1,15 @@
 /*
+ 更新时间: 2026-07-07 11:49:34 CST
+ 更新内容: 新增 guide 指引动作枚举，用于点击打开 AI 对话框时指向右侧对话框。
+*/
+/*
  更新时间: 2026-07-01 10:06:00
  更新内容: 新增福小客桌宠对话与动作策略，支持随机问候和 KPI 点击反馈。
 */
 export const MASCOT_ACTIONS = Object.freeze({
   idle: 'idle',
   wave: 'wave',
+  guide: 'guide',
   talk: 'talk',
   think: 'think',
   alert: 'alert',
