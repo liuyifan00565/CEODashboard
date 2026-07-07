@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-07 18:12:09 CST
+ Update content: Raise mascot frame transparent margin regression checks so scaled sidebar sprites cannot appear clipped.
+*/
+/*
  Update time: 2026-07-07 17:45:31 CST
  Update content: Require mascot action audits to include transparent safety margins so no generated frame is clipped.
 */
@@ -139,8 +143,8 @@ test('records self-audit results for smoothness and reasonableness', () => {
     assert.ok(result.frameCount >= 8, `${key} should keep enough frames`);
     assert.ok(result.maxFootJitterPx <= 3, `${key} foot jitter should stay stable`);
     assert.ok(result.maxCenterJitterPx <= 12, `${key} center jitter should stay controlled`);
-    assert.ok(result.minTransparentMarginPx >= 10, `${key} should keep at least 10px transparent safety margin`);
-    assert.ok(auditJson.actions[key].minTransparentMarginPx >= 10, `${key} generated audit should keep transparent safety margin`);
+    assert.ok(result.minTransparentMarginPx >= 18, `${key} should keep at least 18px transparent safety margin`);
+    assert.ok(auditJson.actions[key].minTransparentMarginPx >= 18, `${key} generated audit should keep transparent safety margin`);
   }
 });
 

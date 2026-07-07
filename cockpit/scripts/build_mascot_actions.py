@@ -1,4 +1,6 @@
 """
+Update time: 2026-07-07 18:12:09 CST
+Update content: Raise mascot source-frame safe margins for scaled sidebar display so generated sheets cannot appear clipped.
 更新时间: 2026-07-07 17:45:31 CST
 更新内容: 增加动作帧安全透明边距审计与自动缩放锚定，避免挥手、指引和维护电脑帧贴边残缺。
 
@@ -25,7 +27,7 @@ FRAME_HEIGHT = 300
 REFERENCE_COLUMNS = 4
 REFERENCE_ROWS = 3
 TARGET_FRAME_COUNT = 12
-SAFE_MARGIN = 12
+SAFE_MARGIN = 20
 BASELINE_Y = FRAME_HEIGHT - SAFE_MARGIN - 2
 BODY_CENTER_X = 112
 
@@ -391,7 +393,7 @@ def metric_for_frames(frames: list[Image.Image]) -> dict[str, float | int | bool
             len(frames) >= 8
             and max_foot_jitter <= 3
             and max_center_jitter <= 12
-            and min_transparent_margin(frames) >= 10
+            and min_transparent_margin(frames) >= 18
         ),
         "reasonable": True,
     }
@@ -418,9 +420,9 @@ def build() -> None:
     all_actions = {key: ensure_safe_margins(frames) for key, frames in all_actions.items()}
 
     audit = {
-        "updatedAt": "2026-07-07 17:45:31 CST",
+        "updatedAt": "2026-07-07 18:12:09 CST",
         "criteria": {
-            "smooth": "至少 8 帧，脚底抖动不超过 3px，中心抖动不超过 12px，四边透明安全边距不少于 10px。",
+            "smooth": "至少 8 帧，脚底抖动不超过 3px，中心抖动不超过 12px，四边透明安全边距不少于 18px。",
             "reasonable": "动作语义需要来自帧图本体，允许轻量发光/符号辅助，但不允许用文字说明代替动作。",
         },
         "actions": {},

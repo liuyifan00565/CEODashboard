@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-07 18:12:09 CST
+ Update content: Reserve guarded runtime space for the AI mascot launcher so laptop, wave, guide and idle sprites are never clipped.
+*/
+/*
  Update time: 2026-07-07 16:59:41 CST
  Update content: Increase sidebar AI mascot launcher size and guide emphasis so the new frame actions are visibly different on port 5173.
 */
@@ -45,11 +49,11 @@
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
+  gap: 4px;
   width: 100%;
-  min-height: 132px;
+  min-height: 168px;
   margin-top: auto;
-  padding: 10px 12px;
+  padding: 8px 10px;
   box-sizing: border-box;
   border: 1px solid rgba(255, 255, 255, .08);
   border-radius: 18px;
@@ -61,8 +65,9 @@
 
 .ai-orb {
   position: relative;
-  width: 96px;
-  height: 124px;
+  flex: 0 0 116px;
+  width: 116px;
+  height: 152px;
   padding: 0;
   border: none;
   background: transparent;
@@ -76,7 +81,9 @@
 }
 
 .ai-orb .mascot-sprite-stage {
-  width: 92px;
+  --mascot-visible-width: 96px;
+  --mascot-visible-height: 128.58px;
+  --mascot-stage-guard: 10px;
 }
 
 .ai-status-copy {
@@ -133,7 +140,7 @@
 .ai-bubble {
   position: absolute;
   left: 50%;
-  bottom: 146px;
+  bottom: 174px;
   z-index: 4;
   display: grid;
   gap: 4px;
@@ -414,18 +421,24 @@
 @media (max-width: 760px) {
   .ai-widget {
     align-items: flex-end;
-    padding: 8px 14px 0;
+    padding: 8px 10px;
   }
 
   .ai-orb {
-    width: 98px;
-    height: 128px;
+    flex-basis: 122px;
+    width: 122px;
+    height: 158px;
+  }
+
+  .ai-orb .mascot-sprite-stage {
+    --mascot-visible-width: 100px;
+    --mascot-visible-height: 133.93px;
   }
 
   .ai-bubble {
     right: 10px;
     left: auto;
-    bottom: 178px;
+    bottom: 190px;
     transform: translateY(10px) scale(.96);
   }
 

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-07 18:12:09 CST
+ Update content: Preload every generated mascot action sheet to avoid blank frames when switching into laptop, guide or wave states.
+*/
+/*
  Update time: 2026-07-07 16:59:41 CST
  Update content: Make idle variant switching visible after each completed loop so the live mascot does not look unchanged.
 */
@@ -21,6 +25,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
+  MASCOT_ACTION_SHEETS,
   getMascotAnimation,
   getMascotIdleVariant,
   getMascotSheet,
@@ -30,6 +35,20 @@ import './MascotSpriteStage.css';
 
 const DEFAULT_LABEL = '福小客 AI 经营助手';
 const IDLE_LOOPS_BEFORE_VARIANT = 1;
+const preloadedMascotSheets = new Set();
+
+function preloadMascotActionSheets() {
+  if (typeof window === 'undefined' || typeof Image === 'undefined') return;
+
+  Object.values(MASCOT_ACTION_SHEETS).forEach((sheet) => {
+    if (preloadedMascotSheets.has(sheet.src)) return;
+    preloadedMascotSheets.add(sheet.src);
+
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = sheet.src;
+  });
+}
 
 function getFramePosition(currentFrame, sheet) {
   return {
@@ -72,6 +91,10 @@ export default function MascotSpriteStage({
     '--mascot-frame-width': `${sheet.frameWidth}px`,
     '--mascot-frame-height': `${sheet.frameHeight}px`,
   };
+
+  useEffect(() => {
+    preloadMascotActionSheets();
+  }, []);
 
   useEffect(() => {
     setFrameCursor(0);

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-07 18:12:09 CST
+ Update content: Require the sidebar AI launcher to reserve enough guarded stage space so mascot images never appear clipped.
+*/
+/*
  Update time: 2026-07-07 17:45:31 CST
  Update content: Require the AI mascot launcher to play a visible greeting wave on first mount instead of hiding wave behind idle cues.
 */
@@ -239,12 +243,16 @@ test('uses theme-specific AI dialog card backgrounds', () => {
 
 test('styles the launcher as a sidebar status card with a transparent 2D sprite mascot and speech bubble', () => {
   assert.match(componentSource, /<div className="ai-status-copy" aria-hidden="true">[\s\S]*?<span>AI 助手<\/span>[\s\S]*?<b>经营分析<\/b>/);
-  assert.match(componentCss, /\.ai-widget\s*\{[^}]*min-height:\s*132px;/s);
+  assert.match(componentCss, /\.ai-widget\s*\{[^}]*min-height:\s*168px;/s);
+  assert.match(componentCss, /\.ai-widget\s*\{[^}]*gap:\s*4px;/s);
+  assert.match(componentCss, /\.ai-widget\s*\{[^}]*padding:\s*8px 10px;/s);
   assert.match(componentCss, /\.ai-widget\s*\{[^}]*background:\s*rgba\(255,\s*255,\s*255,\s*\.04\);/s);
-  assert.match(componentCss, /\.ai-orb\s*\{[^}]*width:\s*96px;/s);
-  assert.match(componentCss, /\.ai-orb\s*\{[^}]*height:\s*124px;/s);
+  assert.match(componentCss, /\.ai-orb\s*\{[^}]*width:\s*116px;/s);
+  assert.match(componentCss, /\.ai-orb\s*\{[^}]*height:\s*152px;/s);
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*background:\s*transparent;/s);
-  assert.match(componentCss, /\.ai-orb \.mascot-sprite-stage\s*\{[^}]*width:\s*92px;/s);
+  assert.match(componentCss, /\.ai-orb \.mascot-sprite-stage\s*\{[^}]*--mascot-visible-width:\s*96px;/s);
+  assert.match(componentCss, /\.ai-orb \.mascot-sprite-stage\s*\{[^}]*--mascot-visible-height:\s*128\.58px;/s);
+  assert.match(componentCss, /\.ai-orb \.mascot-sprite-stage\s*\{[^}]*--mascot-stage-guard:\s*10px;/s);
   assert.match(componentCss, /\.ai-orb--guide \.mascot-sprite-stage\s*\{[^}]*drop-shadow\(/s);
   assert.doesNotMatch(componentCss, /\.ai-orb \.mascot-sprite-stage\[data-action="idle"\]/);
   assert.match(componentCss, /\.ai-status-copy\s*\{[^}]*display:\s*grid;/s);
@@ -252,7 +260,7 @@ test('styles the launcher as a sidebar status card with a transparent 2D sprite 
   assert.match(componentCss, /\.ai-orb--think \.mascot-sprite-stage,[\s\S]*?\.ai-orb--talk \.mascot-sprite-stage,[\s\S]*?\.ai-orb--click \.mascot-sprite-stage\s*\{[^}]*drop-shadow\(/s);
   assert.doesNotMatch(componentCss, /brightness\(\.92\)|saturate\(\.82\)/);
   assert.match(componentCss, /\.ai-bubble\s*\{/);
-  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*bottom:\s*146px;/s);
+  assert.match(componentCss, /\.ai-bubble\s*\{[^}]*bottom:\s*174px;/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*left:\s*50%;/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*width:\s*min\(186px, calc\(100vw - 32px\)\);/s);
   assert.match(componentCss, /\.ai-bubble\s*\{[^}]*opacity:\s*0;/s);
@@ -263,8 +271,9 @@ test('styles the launcher as a sidebar status card with a transparent 2D sprite 
   assert.doesNotMatch(componentCss, /\.ai-bubble-name/);
   assert.match(componentCss, /\.ai-card-wrap\s*\{[^}]*z-index:\s*1000;/s);
   assert.match(componentCss, /\.ai-widget--speaking \.ai-bubble\.ai-bubble--visible/);
-  assert.match(componentCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.ai-orb\s*\{[^}]*width:\s*98px;[\s\S]*?height:\s*128px;/);
-  assert.match(componentCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.ai-bubble\s*\{[^}]*bottom:\s*178px;/);
+  assert.match(componentCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.ai-orb\s*\{[^}]*width:\s*122px;[\s\S]*?height:\s*158px;/);
+  assert.match(componentCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.ai-orb \.mascot-sprite-stage\s*\{[^}]*--mascot-visible-width:\s*100px;[\s\S]*?--mascot-visible-height:\s*133\.93px;/);
+  assert.match(componentCss, /@media \(max-width:\s*760px\)\s*\{[\s\S]*?\.ai-bubble\s*\{[^}]*bottom:\s*190px;/);
   assert.doesNotMatch(componentCss, /mascot-3d-stage|canvas/);
 });
 

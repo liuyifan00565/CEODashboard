@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 18:12:09 CST
+ 更新内容: 同步 AI 小人动作帧 20px 级安全边距审计结果，配合前端护栏彻底避免图片显示残缺。
+*/
+/*
  更新时间: 2026-07-07 17:45:31 CST
  更新内容: 同步 AI 小人动作帧安全边距审计结果，确保挥手、指引和维护帧不会贴边残缺。
 */
@@ -54,18 +58,18 @@ export const MASCOT_APPROVED_ASSETS = Object.freeze({
 });
 
 export const MASCOT_ACTION_AUDIT = Object.freeze({
-  idleBreathe: auditSpec(12, 0.5, 0, 13),
-  idleLook: auditSpec(12, 1, 0, 12),
-  idleBounce: auditSpec(12, 0, 0, 13),
-  idlePatrol: auditSpec(12, 1, 0, 13),
-  wave: auditSpec(12, 5.5, 0, 12),
-  guide: auditSpec(12, 5.5, 0, 12),
-  talk: auditSpec(12, 0, 0, 13),
-  think: auditSpec(12, 1, 0, 13),
-  alert: auditSpec(12, 0.5, 0, 13),
-  celebrate: auditSpec(12, 1, 0, 13),
-  click: auditSpec(12, 0.5, 0, 13),
-  laptop: auditSpec(12, 1, 0, 12),
+  idleBreathe: auditSpec(12, 1, 0, 21),
+  idleLook: auditSpec(12, 1, 0, 21),
+  idleBounce: auditSpec(12, 0, 0, 21),
+  idlePatrol: auditSpec(12, 1, 0, 21),
+  wave: auditSpec(12, 1, 0, 20),
+  guide: auditSpec(12, 1, 0, 20),
+  talk: auditSpec(12, 0, 0, 21),
+  think: auditSpec(12, 0.5, 0, 21),
+  alert: auditSpec(12, 0.5, 0, 21),
+  celebrate: auditSpec(12, 1, 0, 21),
+  click: auditSpec(12, 0.5, 0, 21),
+  laptop: auditSpec(12, 1, 0, 20),
 });
 
 export const MASCOT_IDLE_VARIANTS = Object.freeze([
