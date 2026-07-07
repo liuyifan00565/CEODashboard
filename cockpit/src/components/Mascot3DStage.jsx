@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 12:24:46 CST
+ 更新内容: 将 3D AI 小人替换为用户 FBX 优化 GLB 后，调整归一化模型在入口舞台中的缩放与落点。
+*/
+/*
  更新时间: 2026-07-07 11:49:34 CST
  更新内容: 新增 guide 指引动作姿态，点击打开 AI 对话框时让小人指向右侧对话框约 1 秒。
 */
@@ -143,6 +147,8 @@ function MascotGlbModel({ action, pointer, analysisActive, onReady }) {
     let bodyRotZ = Math.sin(t * 1.1) * 0.012;
     let leftArmRotZ = Math.sin(t * 1.6) * 0.025;
     let rightArmRotZ = -Math.sin(t * 1.6) * 0.025;
+    let leftArmPosition = [0, 0, 0];
+    let rightArmPosition = [0, 0, 0];
     let leftLegRotZ = 0;
     let rightLegRotZ = 0;
     let rootScale = 1;
@@ -158,7 +164,8 @@ function MascotGlbModel({ action, pointer, analysisActive, onReady }) {
       rootRotZ -= 0.045;
       bodyRotZ += -0.075;
       headRotZ += -0.12 + Math.sin(t * 4.2) * 0.018;
-      rightArmRotZ += -0.68 + Math.sin(t * 5.4) * 0.045;
+      rightArmPosition = [0.075, 0.11, 0];
+      rightArmRotZ += 0.62 + Math.sin(t * 5.4) * 0.045;
       leftArmRotZ += 0.08;
     }
 
@@ -197,13 +204,13 @@ function MascotGlbModel({ action, pointer, analysisActive, onReady }) {
     restoreTransform(controls.root, base.root, [pointerX * 0.055, rootY, 0], [0, 0, rootRotZ], rootScale);
     restoreTransform(controls.body, base.body, [0, 0, 0], [0, 0, bodyRotZ], 1);
     restoreTransform(controls.head, base.head, [0, activeTalk ? Math.abs(talkPulse) * 0.018 : 0, 0], [0, 0, headRotZ], 1);
-    restoreTransform(controls.leftArm, base.leftArm, [0, 0, 0], [0, 0, leftArmRotZ], 1);
-    restoreTransform(controls.rightArm, base.rightArm, [0, 0, 0], [0, 0, rightArmRotZ], 1);
+    restoreTransform(controls.leftArm, base.leftArm, leftArmPosition, [0, 0, leftArmRotZ], 1);
+    restoreTransform(controls.rightArm, base.rightArm, rightArmPosition, [0, 0, rightArmRotZ], 1);
     restoreTransform(controls.leftLeg, base.leftLeg, [0, 0, 0], [0, 0, leftLegRotZ], 1);
     restoreTransform(controls.rightLeg, base.rightLeg, [0, 0, 0], [0, 0, rightLegRotZ], 1);
   });
 
-  return <primitive object={model} position={[0, -1.28, 0]} scale={0.92} />;
+  return <primitive object={model} position={[0, -1.08, 0]} scale={2.16} />;
 }
 
 export default function Mascot3DStage({

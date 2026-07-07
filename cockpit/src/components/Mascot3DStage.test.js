@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 12:24:46 CST
+ 更新内容: 将当前页面 AI 小人验收切换为用户 FBX 优化 GLB，约束转换脚本、控制节点和轻量化体积。
+*/
+/*
  更新时间: 2026-07-07 11:49:34 CST
  更新内容: 增加 GLB 小人 guide 指引动作测试，约束右臂、头部和身体指向右侧对话框。
 */
@@ -13,12 +17,15 @@ import assert from 'node:assert/strict';
 const stageSource = readFileSync(new URL('./Mascot3DStage.jsx', import.meta.url), 'utf8');
 const stageCss = readFileSync(new URL('./Mascot3DStage.css', import.meta.url), 'utf8');
 const generatorSource = readFileSync(new URL('../../../scripts/generate_ai_mascot_glb.py', import.meta.url), 'utf8');
+const converterSource = readFileSync(new URL('../../../scripts/convert_component_rig_to_glb.mjs', import.meta.url), 'utf8');
 const glbUrl = new URL('../../public/models/ai-mascot.glb', import.meta.url);
 const lockedGlbUrl = new URL('../../public/models/mascot_graymodel_v2_locked.glb', import.meta.url);
 const lockedPreviewUrl = new URL('../../public/models/mascot_graymodel_v2_locked_preview.png', import.meta.url);
 const stageCode = stripSourceComments(stageSource);
 const stageCssCode = stripSourceComments(stageCss);
 const generatorCode = stripSourceComments(generatorSource);
+const converterCode = stripSourceComments(converterSource);
+const glbJson = readGlbJson(glbUrl);
 
 function stripSourceComments(source) {
   return source
@@ -42,52 +49,61 @@ function readGlbHeader(url) {
   };
 }
 
-test('ships a real Blender-generated GLB mascot model instead of PNG frame or layer assets', () => {
+function readGlbJson(url) {
+  const bytes = readFileSync(url);
+  let offset = 12;
+
+  while (offset < bytes.length) {
+    const chunkLength = bytes.readUInt32LE(offset);
+    const chunkType = bytes.toString('ascii', offset + 4, offset + 8);
+    const chunkStart = offset + 8;
+    const chunkEnd = chunkStart + chunkLength;
+
+    if (chunkType === 'JSON') {
+      return JSON.parse(bytes.toString('utf8', chunkStart, chunkEnd));
+    }
+
+    offset = chunkEnd;
+  }
+
+  throw new Error('GLB JSON chunk should exist');
+}
+
+function glbNames(collection) {
+  return new Set((collection ?? []).map((item) => item.name).filter(Boolean));
+}
+
+test('ships the optimized rigged FBX mascot model instead of the previous generated mascot', () => {
   assert.ok(existsSync(glbUrl), 'GLB mascot model should exist');
-  assert.ok(statSync(glbUrl).size > 500000, 'GLB mascot should contain real model data, not a placeholder');
+  assert.ok(statSync(glbUrl).size > 3000000, 'Optimized rigged mascot should contain real model data, not the old small placeholder');
+  assert.ok(statSync(glbUrl).size < 8000000, 'Optimized rigged mascot should stay compact enough for dashboard loading');
 
   const header = readGlbHeader(glbUrl);
   assert.equal(header.magic, 'glTF');
   assert.equal(header.version, 2);
   assert.equal(header.length, header.fileSize);
 
-  assert.match(generatorCode, /import\s+bpy/);
-  assert.match(generatorCode, /bpy\.ops\.export_scene\.gltf/);
-  assert.match(generatorCode, /export_format\s*=\s*["']GLB["']/);
-  assert.match(generatorCode, /OUTPUT\s*=\s*ROOT\s*\/\s*["']cockpit["']\s*\/\s*["']public["']\s*\/\s*["']models["']\s*\/\s*["']ai-mascot\.glb["']/);
-  assert.match(generatorCode, /transparent-glass-dome/);
-  assert.match(generatorCode, /helmet-lower-white-support-ring/);
-  assert.match(generatorCode, /helmet-lower-white-left-cap/);
-  assert.match(generatorCode, /helmet-lower-white-right-cap/);
-  assert.doesNotMatch(generatorCode, /shape_panel\(\s*["']helmet-lower-white-band["']/);
-  assert.doesNotMatch(generatorCode, /white-helmet-front-rim/);
-  assert.match(generatorCode, /face-cushion-volume/);
-  assert.match(generatorCode, /shape_panel\(["']soft-face-panel["']/);
-  assert.doesNotMatch(generatorCode, /purple-face-window-rim/);
-  assert.match(generatorCode, /sphere\(["']soft-suit-body["']/);
-  assert.doesNotMatch(generatorCode, /soft-belly-volume/);
-  assert.match(generatorCode, /shape_panel\(["']purple-front-yoke["']/);
-  assert.match(generatorCode, /soft-hip-bridge/);
-  assert.match(generatorCode, /left-shoulder-socket/);
-  assert.match(generatorCode, /right-shoulder-socket/);
-  assert.match(generatorCode, /left-shoulder-flow/);
-  assert.match(generatorCode, /right-shoulder-flow/);
-  assert.match(generatorCode, /left-soft-leg/);
-  assert.match(generatorCode, /right-soft-leg/);
-  assert.match(generatorCode, /ai-badge-recess-ring/);
-  assert.match(generatorCode, /ai-badge-outer-bezel/);
-  assert.match(generatorCode, /ai-badge-glow-core/);
-  assert.doesNotMatch(generatorCode, /visor-brow-soft-highlight/);
-  assert.doesNotMatch(generatorCode, /purple-visor-brow/);
-  assert.doesNotMatch(generatorCode, /blue-glass-front-rim/);
-  assert.doesNotMatch(generatorCode, /helmet-inner-shadow-rim/);
-  assert.doesNotMatch(generatorCode, /glass-top-outer-highlight/);
-  assert.doesNotMatch(generatorCode, /glass-left-side-highlight/);
-  assert.match(generatorCode, /AI-badge-text/);
-  assert.match(generatorCode, /microphone-boom/);
-  assert.match(generatorCode, /LOGO_IMAGE\s*=\s*ROOT\s*\/\s*["']logo\.png["']/);
-  assert.match(generatorCode, /image_plane\(["']helmet-wing-logo["'],\s*LOGO_IMAGE,\s*\(0,\s*-1\.055,\s*2\.19\),\s*0\.245/);
-  assert.doesNotMatch(generatorCode, /helmet-wing-logo["'],\s*["']F["']/);
+  const nodeNames = glbNames(glbJson.nodes);
+  for (const control of ['MascotRoot', 'BodyCtrl', 'HeadCtrl', 'LeftArmCtrl', 'RightArmCtrl', 'LeftLegCtrl', 'RightLegCtrl']) {
+    assert.ok(nodeNames.has(control), `${control} should be present in the optimized rig`);
+  }
+
+  for (const rigNode of ['CTRL_HeadShell', 'CTRL_Face', 'CTRL_L_Ear', 'CTRL_R_Ear', 'CTRL_Mic_Body', 'CTRL_Mic_Boom', 'CTRL_L_Hand', 'CTRL_R_Hand']) {
+    assert.ok(nodeNames.has(rigNode), `${rigNode} should preserve the imported FBX control structure`);
+  }
+
+  for (const meshName of ['part_0', 'part_1', 'part_2', 'part_3', 'part_4', 'part_5', 'part_6', 'part_7', 'part_8', 'part_9', 'part_10', 'part_11', 'part_12']) {
+    assert.ok(nodeNames.has(meshName), `${meshName} should be preserved from the rigged FBX`);
+  }
+
+  assert.match(converterCode, /FBXLoader/);
+  assert.match(converterCode, /GLTFExporter/);
+  assert.match(converterCode, /MeshoptSimplifier/);
+  assert.match(converterCode, /compactMesh/);
+  assert.match(converterCode, /DEFAULT_RATIO\s*=\s*0\.05/);
+  assert.match(converterCode, /CTRL_Rig_Root:\s*['"]MascotRoot['"]/);
+  assert.match(converterCode, /CTRL_Body:\s*['"]BodyCtrl['"]/);
+  assert.match(converterCode, /CTRL_Head:\s*['"]HeadCtrl['"]/);
 
   assert.doesNotMatch(stageCode, /MASCOT_RIG_LAYERS|mascot-rig-layer|MASCOT_ACTION_POSES|ceo-mascot-[\w-]+\.png|ai-mascot-frames|sprite/i);
   assert.doesNotMatch(stageCode, /\/mascot-rig\/(?:head|body|left-arm|right-arm|left-leg|right-leg)\.png/);
@@ -147,7 +163,7 @@ test('loads the GLB through React Three Fiber with an image fallback only for fa
   assert.match(stageCode, /useGLTF\.preload\(MASCOT_GLB_SOURCE\)/);
   assert.match(stageCode, /<Canvas[\s\S]*orthographic/);
   assert.match(stageCode, /preserveDrawingBuffer:\s*true/);
-  assert.match(stageCode, /<primitive\s+object=\{model\}[\s\S]*position=\{\[0,\s*-1\.28,\s*0\]\}[\s\S]*scale=\{0\.92\}/);
+  assert.match(stageCode, /<primitive\s+object=\{model\}[\s\S]*position=\{\[0,\s*-1\.08,\s*0\]\}[\s\S]*scale=\{2\.16\}/);
   assert.match(stageCode, /MascotCanvasErrorBoundary/);
   assert.match(stageCode, /FALLBACK_MASCOT_SOURCE\s*=\s*['"]\/ai-mascot-transparent\.png['"]/);
   assert.match(stageCssCode, /\.mascot-3d-stage--ready\s+\.mascot-reference-fallback\s*\{[\s\S]*visibility:\s*hidden;/);
@@ -214,7 +230,8 @@ test('maps guide action to a right-side dialog pointing motion', () => {
   assert.match(stageCode, /if \(action === MASCOT_ACTIONS\.guide\) \{/);
   assert.match(stageCode, /bodyRotZ \+= -0\.075;/);
   assert.match(stageCode, /headRotZ \+= -0\.12 \+ Math\.sin\(t \* 4\.2\) \* 0\.018;/);
-  assert.match(stageCode, /rightArmRotZ \+= -0\.68 \+ Math\.sin\(t \* 5\.4\) \* 0\.045;/);
+  assert.match(stageCode, /rightArmPosition = \[0\.075,\s*0\.11,\s*0\];/);
+  assert.match(stageCode, /rightArmRotZ \+= 0\.62 \+ Math\.sin\(t \* 5\.4\) \* 0\.045;/);
   assert.match(stageCode, /leftArmRotZ \+= 0\.08;/);
 });
 
