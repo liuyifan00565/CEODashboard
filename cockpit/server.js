@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 10:00:00 CST
+ 更新内容: 生产服务新增 POST /api/maintenance/import 数据维护 Excel 导入空跑校验接口。
+*/
+/*
  更新时间: 2026-07-06 18:37:58 CST
  更新内容: 生产服务新增 /api/dashboard-data 真实 MySQL 数据接口，供前端替换 mock 数据。
 */
@@ -14,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { handleAiAnalyzeRequest } from './server/dashscope.js';
 import { handleAiHoverCueRequest } from './server/hoverCue.js';
 import { handleDashboardDataRequest } from './server/dashboardData.js';
+import { handleMaintenanceImportRequest } from './server/maintenanceImport.js';
 import { loadLocalEnv } from './server/env.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -85,6 +90,16 @@ const server = http.createServer((req, res) => {
 
   if (url.pathname === '/api/dashboard-data') {
     handleDashboardDataRequest(req, res);
+    return;
+  }
+
+  if (url.pathname === '/api/maintenance/import' && req.method === 'POST') {
+    handleMaintenanceImportRequest(req, res).catch((err) => {
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      }
+      res.end(JSON.stringify({ error: `数据维护导入接口异常：${err.message}` }));
+    });
     return;
   }
 

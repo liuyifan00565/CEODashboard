@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 10:00:00 CST
+ 更新内容: Vite 开发服务新增 POST /api/maintenance/import 数据维护 Excel 导入空跑校验接口，与生产一致。
+*/
+/*
  更新时间: 2026-07-06 18:37:58 CST
  更新内容: Vite 开发服务新增 /api/dashboard-data，保证开发与生产都读取真实 MySQL 数据。
 */
@@ -14,6 +18,7 @@ import { fileURLToPath, URL } from 'node:url'
 import { handleAiAnalyzeRequest } from './server/dashscope.js'
 import { handleAiHoverCueRequest } from './server/hoverCue.js'
 import { handleDashboardDataRequest } from './server/dashboardData.js'
+import { handleMaintenanceImportRequest } from './server/maintenanceImport.js'
 import { loadLocalEnv } from './server/env.js'
 
 const projectRoot = fileURLToPath(new URL('.', import.meta.url))
@@ -44,6 +49,14 @@ export default defineConfig({
         })
         server.middlewares.use('/api/dashboard-data', (req, res) => {
           handleDashboardDataRequest(req, res)
+        })
+        server.middlewares.use('/api/maintenance/import', (req, res) => {
+          handleMaintenanceImportRequest(req, res).catch((err) => {
+            if (!res.headersSent) {
+              res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' })
+            }
+            res.end(JSON.stringify({ error: `数据维护导入接口异常：${err.message}` }))
+          })
         })
       },
     },

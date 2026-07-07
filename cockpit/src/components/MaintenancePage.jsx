@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 10:00:00 CST
+ 更新内容: 数据维护四个子页接入 Excel 导入与下载模板按钮，弹出配置驱动的导入弹窗（解析/列映射/预览/空跑校验）。
+*/
+/*
  更新时间: 2026-07-03 17:20:28 CST
  更新内容: 强化目标维护可填单元格状态标记，方便区分可填写目标和只读汇总目标。
 */
@@ -67,6 +71,9 @@ import {
   getMaintenancePageMeta,
 } from '../data/mock';
 import './MaintenancePage.css';
+import { getImportConfig } from '../lib/maintenanceImportConfig.js';
+import { downloadTemplate } from '../lib/excelImport.js';
+import MaintenanceImportDialog from './MaintenanceImportDialog.jsx';
 
 const YEARS = [2024, 2025, 2026, 2027];
 
@@ -207,7 +214,7 @@ function SaveBadge({ status }) {
   return <span className={`mnt-save-badge${dirty ? ' mnt-save-badge--dirty' : ''}`}>{status}</span>;
 }
 
-function MaintenanceToolbar({ activePage, status, onBack, onDirty, onSave }) {
+function MaintenanceToolbar({ activePage, status, onBack, onDirty, onSave, onImport, onDownloadTemplate }) {
   const meta = getMaintenancePageMeta(activePage);
   const title = MAINTENANCE_TITLE_TEXT[activePage] ?? meta.title;
   const [year, setYear] = useState('2026');
@@ -223,8 +230,8 @@ function MaintenanceToolbar({ activePage, status, onBack, onDirty, onSave }) {
         <select className="mnt-control mnt-year-control" value={year} onChange={handleYearChange} aria-label="目标年份">
           {YEARS.map((item) => <option key={item} value={item}>{item}</option>)}
         </select>
-        <button className="mnt-btn" type="button" onClick={onDirty}>下载模板</button>
-        <button className="mnt-btn" type="button" onClick={onDirty}>Excel导入</button>
+        <button className="mnt-btn" type="button" onClick={onDownloadTemplate}>下载模板</button>
+        <button className="mnt-btn" type="button" onClick={onImport}>Excel导入</button>
         <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave}>保存目标</button>
       </>
     ),
@@ -233,11 +240,15 @@ function MaintenanceToolbar({ activePage, status, onBack, onDirty, onSave }) {
         <select className="mnt-control mnt-year-control" value={year} onChange={handleYearChange} aria-label="成本维护年份">
           {YEARS.map((item) => <option key={item} value={item}>{item}</option>)}
         </select>
+        <button className="mnt-btn" type="button" onClick={onDownloadTemplate}>下载模板</button>
+        <button className="mnt-btn" type="button" onClick={onImport}>Excel导入</button>
         <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave}>保存成本</button>
       </>
     ),
     'org-maintenance': (
       <>
+        <button className="mnt-btn" type="button" onClick={onDownloadTemplate}>下载模板</button>
+        <button className="mnt-btn" type="button" onClick={onImport}>Excel导入</button>
         <button className="mnt-btn" type="button" onClick={onDirty}>新增组织</button>
         <button className="mnt-btn" type="button" onClick={onDirty}>更新 BI 销售人员</button>
         <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave}>保存组织</button>
@@ -245,6 +256,8 @@ function MaintenanceToolbar({ activePage, status, onBack, onDirty, onSave }) {
     ),
     'channel-maintenance': (
       <>
+        <button className="mnt-btn" type="button" onClick={onDownloadTemplate}>下载模板</button>
+        <button className="mnt-btn" type="button" onClick={onImport}>Excel导入</button>
         <button className="mnt-btn" type="button" onClick={onDirty}>补齐默认来源</button>
         <button className="mnt-btn" type="button" onClick={onDirty}>新增大类</button>
         <button className="mnt-btn" type="button" onClick={onDirty}>新增来源</button>
@@ -808,8 +821,10 @@ function ChannelMaintenancePage({ markDirty, status }) {
 
 export default function MaintenancePage({ activePage = 'target-maintenance', onBack }) {
   const [statusByPage, setStatusByPage] = useState({});
+  const [importOpen, setImportOpen] = useState(false);
   const Page = PAGE_RENDERERS[activePage] ?? TargetMaintenancePage;
   const status = statusByPage[activePage] ?? '未修改';
+  const importConfig = getImportConfig(activePage);
 
   function markDirty() {
     setStatusByPage((current) => ({ ...current, [activePage]: '有未保存修改' }));
@@ -817,6 +832,10 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
 
   function markSaved() {
     setStatusByPage((current) => ({ ...current, [activePage]: `已保存 ${nowLabel()}` }));
+  }
+
+  function handleDownloadTemplate() {
+    if (importConfig) downloadTemplate(importConfig);
   }
 
   return (
@@ -827,8 +846,17 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
         onBack={onBack}
         onDirty={markDirty}
         onSave={markSaved}
+        onImport={() => setImportOpen(true)}
+        onDownloadTemplate={handleDownloadTemplate}
       />
       <Page markDirty={markDirty} status={status} />
+      {importOpen && importConfig && (
+        <MaintenanceImportDialog
+          config={importConfig}
+          onClose={() => setImportOpen(false)}
+          onImported={markDirty}
+        />
+      )}
     </div>
   );
 }
