@@ -1,7 +1,7 @@
 # 新同事环境搭建说明
 
-更新时间: 2026-07-07 15:00:00 CST
-更新内容: 新增新同事入职环境搭建文档，以 Docker 联调为主线，覆盖拉代码、装 Docker、起服务、配 API Key 全流程。
+更新时间: 2026-07-07 15:30:00 CST
+更新内容: 补全真实仓库地址（ttoswar 远程，origin 的 liuyifan00565 已失效）；clone 后需切到 codex/ai-mascot-3d-model 分支，因最新代码（数据维护页、本地 Docker 联调环境等）均在该 feature 分支，main 落后。
 
 本文档面向**新加入项目的同事**，目标是让你在 20 分钟内把 CEO 经营驾驶舱在本机跑起来，且环境与线上阿里云一致。
 
@@ -10,9 +10,12 @@
 ### 1. 拉取代码
 
 ```bash
-git clone <仓库地址> CEODashboard
+git clone https://github.com/ttoswar/CEODashboard.git CEODashboard
 cd CEODashboard
+git checkout codex/ai-mascot-3d-model
 ```
+
+> ⚠️ **必须切到 `codex/ai-mascot-3d-model` 分支**。最新代码（数据维护页、本地 Docker 联调环境、dashboard 聚合修复等）都在这个 feature 分支上，`main` 是落后的。clone 后默认在 main，不切分支会缺功能。
 
 ### 2. 安装 Docker Desktop
 
