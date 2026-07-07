@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:40:16 CST
+ 更新内容: 增加 AI 小人常驻状态禁止连续翻帧的回归测试，避免入口出现持续抽动。
+*/
+/*
  更新时间: 2026-07-07 14:03:53 CST
  更新内容: 新增 2D Sprite AI 小人舞台验收，约束 manifest 驱动、CSS 帧变量和降级动画策略。
 */
@@ -35,11 +39,10 @@ test('renders a manifest-driven 2D mascot sprite stage', () => {
   assert.doesNotMatch(componentCode, /@react-three|three|useGLTF|Canvas|MASCOT_GLB_SOURCE|\.glb/);
 });
 
-test('uses requestAnimationFrame with integer frame indexes', () => {
-  assert.match(componentCode, /requestAnimationFrame\(tick\)/);
-  assert.match(componentCode, /setFrameIndex\(\(index\) => \{/);
-  assert.match(componentCode, /const nextIndex = index \+ 1;/);
-  assert.match(componentCode, /animation\.frames\[frameIndex % animation\.frames\.length\]/);
+test('keeps the launcher static instead of continuously flipping sprite frames', () => {
+  assert.doesNotMatch(componentCode, /requestAnimationFrame|cancelAnimationFrame|setFrameIndex|frameIndex/);
+  assert.doesNotMatch(componentCode, /setInterval|clearInterval|IDLE_ROTATION_MS|idleVariantIndex/);
+  assert.match(componentCode, /const currentFrame = animation\.frames\[0\] \?\? 0;/);
   assert.match(componentCode, /Math\.floor\(currentFrame % MASCOT_SPRITE_SHEET\.columns\)/);
   assert.match(componentCode, /Math\.floor\(currentFrame \/ MASCOT_SPRITE_SHEET\.columns\)/);
 });
@@ -64,6 +67,13 @@ test('uses the laptop mascot as a replacement image instead of a full-body overl
   assert.match(cssCode, /\.mascot-sprite-stage--replacement \.mascot-sprite-stage__sheet\s*\{/);
   assert.match(cssCode, /\.mascot-sprite-stage__replacement\s*\{/);
   assert.doesNotMatch(componentCode, /mascot-sprite-stage__overlay/);
+});
+
+test('uses approved high-resolution still images for persistent mascot states', () => {
+  assert.match(componentCode, /animation\.replacementAsset === 'transparent'/);
+  assert.match(componentCode, /MASCOT_APPROVED_ASSETS\.transparent/);
+  assert.match(componentCode, /animation\.replacementAsset === 'analysisLaptop'/);
+  assert.match(componentCode, /MASCOT_APPROVED_ASSETS\.analysisLaptop/);
 });
 
 test('includes a reduced-motion static-frame fallback', () => {

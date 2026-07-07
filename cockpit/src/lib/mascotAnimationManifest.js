@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:40:16 CST
+ 更新内容: 将 AI 小人常驻动作改为静态高清图策略，停止 sprite 连续翻帧导致的抽动。
+*/
+/*
  更新时间: 2026-07-07 14:28:41 CST
  更新内容: 修复 2D 小人抖动根因：为 sprite 每帧增加脚底/中心锚点，并将维护电脑图改为整图替换而非叠层。
 */
@@ -77,15 +81,11 @@ export const MASCOT_FRAME_ANCHORS = Object.freeze([
   [0, -1],
 ].map(([offsetX, offsetY]) => Object.freeze({ offsetX, offsetY })));
 
-function range(start, endInclusive) {
-  return Array.from({ length: endInclusive - start + 1 }, (_, index) => start + index);
-}
-
 export const MASCOT_IDLE_VARIANTS = Object.freeze([
-  Object.freeze({ key: 'breathe', frames: Object.freeze(range(0, 11)), fps: 14 }),
-  Object.freeze({ key: 'look', frames: Object.freeze(range(12, 23)), fps: 16 }),
-  Object.freeze({ key: 'bounce', frames: Object.freeze(range(24, 35)), fps: 18 }),
-  Object.freeze({ key: 'patrol', frames: Object.freeze(range(36, 47)), fps: 16 }),
+  Object.freeze({ key: 'breathe', frames: Object.freeze([0]), fps: 14, playback: 'static', replacementAsset: 'transparent' }),
+  Object.freeze({ key: 'look', frames: Object.freeze([12]), fps: 16, playback: 'static', replacementAsset: 'transparent' }),
+  Object.freeze({ key: 'bounce', frames: Object.freeze([24]), fps: 18, playback: 'static', replacementAsset: 'transparent' }),
+  Object.freeze({ key: 'patrol', frames: Object.freeze([36]), fps: 16, playback: 'static', replacementAsset: 'transparent' }),
 ]);
 
 const idleByKey = new Map(MASCOT_IDLE_VARIANTS.map((variant) => [variant.key, variant]));
@@ -96,10 +96,11 @@ function actionSpec(key, frames, fps, extra = {}) {
     key,
     frames: Object.freeze(frames),
     fps,
+    playback: extra.playback ?? 'static',
     loop: extra.loop ?? true,
     durationMs: extra.durationMs ?? 0,
     overlay: extra.overlay ?? '',
-    replacementAsset: extra.replacementAsset ?? '',
+    replacementAsset: extra.replacementAsset ?? 'transparent',
     intensity: extra.intensity ?? 'calm',
   });
 }
@@ -108,41 +109,41 @@ export const MASCOT_ANIMATIONS = Object.freeze({
   [MASCOT_ACTIONS.idle]: actionSpec(MASCOT_ACTIONS.idle, defaultIdle.frames, defaultIdle.fps, {
     intensity: 'idle',
   }),
-  [MASCOT_ACTIONS.wave]: actionSpec(MASCOT_ACTIONS.wave, [6, 7, 8, 9, 10, 11, 10, 9, 8, 7], 24, {
+  [MASCOT_ACTIONS.wave]: actionSpec(MASCOT_ACTIONS.wave, [7], 24, {
     durationMs: 920,
     intensity: 'greeting',
   }),
-  [MASCOT_ACTIONS.guide]: actionSpec(MASCOT_ACTIONS.guide, [18, 19, 20, 21, 22, 23, 22, 21, 20, 19], 24, {
+  [MASCOT_ACTIONS.guide]: actionSpec(MASCOT_ACTIONS.guide, [18], 24, {
     durationMs: 1000,
     intensity: 'guide',
   }),
-  [MASCOT_ACTIONS.talk]: actionSpec(MASCOT_ACTIONS.talk, [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23], 24, {
+  [MASCOT_ACTIONS.talk]: actionSpec(MASCOT_ACTIONS.talk, [13], 24, {
     intensity: 'speech',
   }),
-  [MASCOT_ACTIONS.think]: actionSpec(MASCOT_ACTIONS.think, [24, 25, 26, 27, 28, 29, 30, 29, 28, 27, 26, 25], 18, {
+  [MASCOT_ACTIONS.think]: actionSpec(MASCOT_ACTIONS.think, [27], 18, {
     intensity: 'focus',
   }),
-  [MASCOT_ACTIONS.alert]: actionSpec(MASCOT_ACTIONS.alert, [36, 37, 38, 39, 40, 41, 42, 43, 42, 41, 40, 39], 24, {
+  [MASCOT_ACTIONS.alert]: actionSpec(MASCOT_ACTIONS.alert, [42], 24, {
     intensity: 'alert',
   }),
-  [MASCOT_ACTIONS.celebrate]: actionSpec(MASCOT_ACTIONS.celebrate, [30, 31, 32, 33, 34, 35, 34, 33, 32, 31], 24, {
+  [MASCOT_ACTIONS.celebrate]: actionSpec(MASCOT_ACTIONS.celebrate, [31], 24, {
     durationMs: 960,
     intensity: 'celebrate',
   }),
-  [MASCOT_ACTIONS.click]: actionSpec(MASCOT_ACTIONS.click, [0, 1, 2, 3, 4, 5, 4, 3], 24, {
+  [MASCOT_ACTIONS.click]: actionSpec(MASCOT_ACTIONS.click, [3], 24, {
     durationMs: 860,
     intensity: 'click',
   }),
-  maintenance: actionSpec('maintenance', [24, 25, 26, 27, 28, 29, 30, 31, 30, 29, 28, 27], 16, {
+  maintenance: actionSpec('maintenance', [24], 16, {
     replacementAsset: 'analysisLaptop',
     intensity: 'maintenance',
   }),
-  maintenanceSave: actionSpec('maintenanceSave', [30, 31, 32, 33, 34, 35, 34, 33, 32, 31, 30, 29], 24, {
+  maintenanceSave: actionSpec('maintenanceSave', [30], 24, {
     replacementAsset: 'analysisLaptop',
     durationMs: 960,
     intensity: 'maintenance-save',
   }),
-  maintenanceReview: actionSpec('maintenanceReview', [18, 19, 20, 21, 22, 23, 24, 25, 24, 23, 22, 21], 20, {
+  maintenanceReview: actionSpec('maintenanceReview', [18], 20, {
     replacementAsset: 'analysisLaptop',
     intensity: 'maintenance-review',
   }),
@@ -159,6 +160,8 @@ export function getMascotAnimation(action = MASCOT_ACTIONS.idle, { idleVariant =
       ...MASCOT_ANIMATIONS[MASCOT_ACTIONS.idle],
       frames: variant.frames,
       fps: variant.fps,
+      playback: variant.playback,
+      replacementAsset: variant.replacementAsset,
       idleVariant: variant.key,
     });
   }

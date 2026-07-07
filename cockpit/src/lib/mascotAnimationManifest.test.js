@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:40:16 CST
+ 更新内容: 增加常驻 AI 小人使用静态高清图的回归测试，避免 sprite 连续翻帧造成抽动。
+*/
+/*
  更新时间: 2026-07-07 14:03:53 CST
  更新内容: 新增 2D AI 小人帧动画 manifest 验收，约束 48 帧 sprite、四种待机和维护场景动作。
 */
@@ -60,7 +64,9 @@ test('defines at least four first-class idle variants', () => {
   assert.deepEqual(MASCOT_IDLE_VARIANTS.map((item) => item.key), ['breathe', 'look', 'bounce', 'patrol']);
   for (const variant of MASCOT_IDLE_VARIANTS) {
     assert.ok(Array.isArray(variant.frames), `${variant.key} should declare frame indexes`);
-    assert.ok(variant.frames.length >= 8, `${variant.key} should have enough frames for a smooth loop`);
+    assert.equal(variant.playback, 'static', `${variant.key} should not continuously animate in the sidebar`);
+    assert.equal(variant.replacementAsset, 'transparent', `${variant.key} should use the stable transparent mascot still`);
+    assert.equal(variant.frames.length, 1, `${variant.key} should hold one stable pose`);
     assert.ok(variant.frames.every((frame) => frame >= 0 && frame < MASCOT_SPRITE_SHEET.frameCount));
   }
 });
@@ -70,10 +76,13 @@ test('maps product actions to explicit frame animation specs', () => {
     assert.ok(MASCOT_ANIMATIONS[action], `${action} should have an animation spec`);
     assert.ok(Array.isArray(MASCOT_ANIMATIONS[action].frames), `${action} should declare frames`);
     assert.ok(MASCOT_ANIMATIONS[action].fps >= 12, `${action} should be at least 12fps`);
+    assert.equal(MASCOT_ANIMATIONS[action].playback, 'static', `${action} should not continuously flip frames`);
     assert.ok(MASCOT_ANIMATIONS[action].frames.every((frame) => frame >= 0 && frame < MASCOT_SPRITE_SHEET.frameCount));
   }
   assert.equal(MASCOT_ANIMATIONS.guide.durationMs, 1000);
-  assert.equal(MASCOT_ANIMATIONS.think.replacementAsset, '');
+  assert.equal(MASCOT_ANIMATIONS.idle.replacementAsset, 'transparent');
+  assert.equal(MASCOT_ANIMATIONS.talk.replacementAsset, 'transparent');
+  assert.equal(MASCOT_ANIMATIONS.think.replacementAsset, 'transparent');
   assert.equal(MASCOT_ANIMATIONS.think.overlay, '');
   assert.equal(MASCOT_ANIMATIONS.maintenance.replacementAsset, 'analysisLaptop');
   assert.equal(MASCOT_ANIMATIONS.maintenance.overlay, '');
@@ -94,5 +103,7 @@ test('resolves idle variants and unknown actions deterministically', () => {
     getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).frames,
     MASCOT_IDLE_VARIANTS.find((variant) => variant.key === 'look').frames,
   );
+  assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).playback, 'static');
+  assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).replacementAsset, 'transparent');
   assert.equal(getMascotAnimation('maintenanceSave').replacementAsset, 'analysisLaptop');
 });

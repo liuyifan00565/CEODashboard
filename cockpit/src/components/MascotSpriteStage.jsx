@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 14:40:16 CST
+ 更新内容: 移除 AI 小人常驻 requestAnimationFrame 翻帧和待机自动轮换，改用稳定静态图避免持续抽动。
+*/
+/*
  更新时间: 2026-07-07 14:28:41 CST
  更新内容: 修复 2D 小人乱抖：接入逐帧稳定锚点，并将维护电脑图改为替换渲染以避免整图重影。
 */
@@ -6,7 +10,7 @@
  更新时间: 2026-07-07 14:03:53 CST
  更新内容: 新增 manifest 驱动的 2D AI 小人 Sprite 舞台，替代入口 3D GLB 渲染。
 */
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import {
   MASCOT_APPROVED_ASSETS,
@@ -18,7 +22,6 @@ import { MASCOT_ACTIONS } from '../lib/mascotCompanion';
 import './MascotSpriteStage.css';
 
 const DEFAULT_LABEL = '福小客 AI 经营助手';
-const IDLE_ROTATION_MS = 8200;
 
 function getFramePosition(currentFrame) {
   return {
@@ -43,18 +46,20 @@ export default function MascotSpriteStage({
   context = 'dashboard',
   label = DEFAULT_LABEL,
 }) {
-  const [frameIndex, setFrameIndex] = useState(0);
-  const [idleVariantIndex, setIdleVariantIndex] = useState(0);
-  const idleVariant = ['breathe', 'look', 'bounce', 'patrol'][idleVariantIndex % 4];
+  const idleVariant = 'breathe';
   const resolvedAction = context === 'maintenance' && action === MASCOT_ACTIONS.idle ? 'maintenance' : action;
   const animation = useMemo(
     () => getMascotAnimation(resolvedAction, { idleVariant }),
     [resolvedAction, idleVariant],
   );
-  const currentFrame = animation.frames[frameIndex % animation.frames.length] ?? 0;
+  const currentFrame = animation.frames[0] ?? 0;
   const framePosition = getFramePosition(currentFrame);
   const frameAnchor = getMascotFrameAnchor(currentFrame);
-  const replacementSrc = animation.replacementAsset === 'analysisLaptop' ? MASCOT_APPROVED_ASSETS.analysisLaptop : '';
+  const replacementSrc = animation.replacementAsset === 'transparent'
+    ? MASCOT_APPROVED_ASSETS.transparent
+    : animation.replacementAsset === 'analysisLaptop'
+      ? MASCOT_APPROVED_ASSETS.analysisLaptop
+      : '';
   const stageStyle = {
     '--mascot-frame-x': framePosition.x,
     '--mascot-frame-y': framePosition.y,
@@ -65,41 +70,6 @@ export default function MascotSpriteStage({
     '--mascot-frame-width': `${MASCOT_SPRITE_SHEET.frameWidth}px`,
     '--mascot-frame-height': `${MASCOT_SPRITE_SHEET.frameHeight}px`,
   };
-
-  useEffect(() => {
-    setFrameIndex(0);
-  }, [animation.key, animation.idleVariant]);
-
-  useEffect(() => {
-    if (action !== MASCOT_ACTIONS.idle || analysisActive || context === 'maintenance') return undefined;
-    const timer = window.setInterval(() => {
-      setIdleVariantIndex((index) => (index + 1) % 4);
-    }, IDLE_ROTATION_MS);
-    return () => window.clearInterval(timer);
-  }, [action, analysisActive, context]);
-
-  useEffect(() => {
-    if (!animation.frames.length) return undefined;
-
-    let raf = 0;
-    let lastTime = performance.now();
-    const frameMs = 1000 / animation.fps;
-
-    function tick(now) {
-      if (now - lastTime >= frameMs) {
-        lastTime = now;
-        setFrameIndex((index) => {
-          const nextIndex = index + 1;
-          if (animation.loop) return nextIndex % animation.frames.length;
-          return Math.min(nextIndex, animation.frames.length - 1);
-        });
-      }
-      raf = window.requestAnimationFrame(tick);
-    }
-
-    raf = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(raf);
-  }, [animation]);
 
   return (
     <span
