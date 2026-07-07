@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-07 14:40:00 CST  更新内容: 月度经营趋势重构数据语义——目标改为背景宽柱(淡灰紫)、回款改为前景窄柱(银紫玫瑰渐变)，完成率细线+圆点且 y 轴超 100% 自动扩展并加 100% 基准线，图例颜色与序列对齐，移除 6 月高亮，未发生月份用虚线占位。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: 月度趋势按高级果味规则重排图表权重，回款用银紫渐变，目标后退，风险点保留玫瑰红。 */
 /* 更新时间: 2026-07-04 01:03:12 CST  更新内容: 月度经营趋势仅突出当前 6 月柱形和轴标，其余月份继续保持低饱和。 */
 /* 更新时间: 2026-07-03 23:48:36 CST  更新内容: 月度趋势回款柱统一低饱和紫色，低完成率仅在完成率点位和标签使用风险色。 */
@@ -10,16 +11,11 @@ import { isRiskCompletion } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './MonthlyTrend.css';
 
-const CURRENT_TREND_MONTH = '6月';
-
 function completionPointColor(value, tokens) {
   return isRiskCompletion(value) ? tokens.chartRiskPoint : Number(value) >= 100 ? tokens.semanticGoal : tokens.chartRateLine;
 }
 
-function isCurrentTrendMonth(item) {
-  return item?.month === CURRENT_TREND_MONTH;
-}
-
+// 银紫玫瑰纵向渐变：银(淡薰) → 紫 → 玫瑰
 function actualBarColor(tokens) {
   return {
     type: 'linear',
@@ -28,42 +24,41 @@ function actualBarColor(tokens) {
     x2: 0,
     y2: 1,
     colorStops: [
-      { offset: 0, color: tokens.chartActualBarTop },
-      { offset: 1, color: tokens.chartActualBarBottom },
+      { offset: 0, color: tokens.accentLine },
+      { offset: 0.55, color: tokens.chartActualBarBottom },
+      { offset: 1, color: tokens.accentEnd },
     ],
   };
 }
 
+// 目标柱：淡灰紫（低透明），作为背景宽柱后退
 function targetBarColor(tokens) {
-  return tokens.chartTargetBar;
+  return tokens.chartActualBarBottom;
 }
 
-function currentMonthBarColor(item, tokens) {
-  return isCurrentTrendMonth(item) ? actualBarColor(tokens) : {
-    type: 'linear',
-    x: 0,
-    y: 0,
-    x2: 0,
-    y2: 1,
-    colorStops: [
-      { offset: 0, color: 'rgba(184,156,255,.28)' },
-      { offset: 1, color: 'rgba(142,134,255,.18)' },
-    ],
-  };
+function isPlaceholderMonth(item) {
+  return item == null || item.recovered == null || Number.isNaN(Number(item.recovered));
 }
 
 export default function MonthlyTrend({ channelKey = 'all' }) {
   const tokens = useThemeTokens();
   const trend = getChannelTrend(channelKey);
   const months = trend.map(m => m.month);
-  const recovered = trend.map(m => m.recovered);
   const target = trend.map(m => m.target);
+  const recovered = trend.map(m => m.recovered);
   const completion = trend.map(m => m.completion);
 
   const txt = tokens.chartText;
   const muted = tokens.chartMuted;
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
+
+  // 完成率 y 轴：超过 100% 时按 10% 步进扩展到 110/120...，避免高点被截断
+  const completionValues = completion.map(c => Number(c) || 0);
+  const maxCompletion = completionValues.length ? Math.max(...completionValues) : 100;
+  const rateAxisMax = Math.max(100, Math.ceil(maxCompletion / 10) * 10);
+
+  const targetOpacity = 0.22;
 
   const option = {
     backgroundColor: 'transparent',
@@ -72,11 +67,15 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
       top: 0,
       left: 'center',
       selectedMode: false,
-      itemWidth: 12,
-      itemHeight: 8,
-      itemGap: 18,
-      textStyle: { color: faint, fontSize: 14 },
-      data: ['回款', '目标', '完成率%'],
+      itemWidth: 14,
+      itemHeight: 10,
+      itemGap: 22,
+      textStyle: { color: faint, fontSize: 13 },
+      data: [
+        { name: '目标', icon: 'roundRect', itemStyle: { color: targetBarColor(tokens), opacity: targetOpacity } },
+        { name: '回款', icon: 'roundRect', itemStyle: { color: tokens.accentEnd } },
+        { name: '完成率', icon: 'circle', itemStyle: { color: tokens.chartRateLine } },
+      ],
     },
     grid: { top: 40, left: 8, right: 8, bottom: 4, containLabel: true },
     tooltip: {
@@ -90,7 +89,7 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
       formatter: (params) => {
         const head = `<div style="color:${faint};margin-bottom:4px">${params[0].axisValue}</div>`;
         const rows = params.map((p) => {
-          const v = p.seriesName === '完成率%' ? `${p.value}%` : `${p.value} 万`;
+          const v = p.seriesName === '完成率' ? `${p.value}%` : `${p.value} 万`;
           return `<div style="display:flex;align-items:center;gap:6px;line-height:1.7">
             <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${p.color}"></span>
             <span style="color:${muted}">${p.seriesName}</span>
@@ -106,17 +105,17 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
       axisLine: { lineStyle: { color: line } },
       axisTick: { show: false },
       axisLabel: {
-        color: ({ value }) => (value === '6月' ? tokens.chartText : faint),
-        fontSize: 14,
-        fontWeight: ({ value }) => (value === '6月' ? 760 : 520),
+        color: faint,
+        fontSize: 13,
+        fontWeight: 520,
       },
     },
     yAxis: [
       {
         type: 'value',
         name: '万元',
-        nameTextStyle: { color: faint, fontSize: 14, padding: [0, 0, 0, 8] },
-        axisLabel: { color: faint, fontSize: 14 },
+        nameTextStyle: { color: faint, fontSize: 13, padding: [0, 0, 0, 8] },
+        axisLabel: { color: faint, fontSize: 13 },
         splitLine: { lineStyle: { color: line } },
         axisLine: { show: false },
       },
@@ -124,9 +123,9 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         type: 'value',
         name: '%',
         min: 0,
-        max: 100,
-        nameTextStyle: { color: faint, fontSize: 14 },
-        axisLabel: { color: faint, fontSize: 14, formatter: '{value}%' },
+        max: rateAxisMax,
+        nameTextStyle: { color: faint, fontSize: 13 },
+        axisLabel: { color: faint, fontSize: 13, formatter: '{value}%' },
         splitLine: { show: false },
         axisLine: { show: false },
       },
@@ -135,40 +134,46 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
       {
         name: '目标',
         type: 'bar',
-        barWidth: 22,
+        barWidth: 24,
         barCategoryGap: '42%',
         itemStyle: {
+          color: targetBarColor(tokens),
+          opacity: targetOpacity,
           borderRadius: [3, 3, 0, 0],
         },
         emphasis: { disabled: true },
-        data: target.map((value) => ({
-          value,
-          itemStyle: {
-            color: targetBarColor(tokens),
-            borderRadius: [3, 3, 0, 0],
-          },
-        })),
+        data: target,
       },
       {
         name: '回款',
         type: 'bar',
-        barWidth: 22,
+        barWidth: 12,
         barGap: '-100%',
         barCategoryGap: '42%',
         itemStyle: {
           borderRadius: [3, 3, 0, 0],
+          color: actualBarColor(tokens),
         },
         emphasis: { itemStyle: { color: actualBarColor(tokens) } },
-        data: recovered.map((value, index) => ({
-          value,
-          itemStyle: {
-            color: currentMonthBarColor(trend[index], tokens),
-            borderRadius: [3, 3, 0, 0],
-          },
-        })),
+        data: recovered.map((value, index) => {
+          if (isPlaceholderMonth(trend[index])) {
+            return {
+              value: target[index],
+              itemStyle: {
+                color: 'transparent',
+                borderColor: targetBarColor(tokens),
+                borderType: 'dashed',
+                borderWidth: 1,
+                opacity: 0.5,
+                borderRadius: [3, 3, 0, 0],
+              },
+            };
+          }
+          return { value, itemStyle: { color: actualBarColor(tokens), borderRadius: [3, 3, 0, 0] } };
+        }),
       },
       {
-        name: '完成率%',
+        name: '完成率',
         type: 'line',
         yAxisIndex: 1,
         smooth: true,
@@ -180,11 +185,18 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
           show: true,
           position: 'top',
           color: ({ value }) => completionPointColor(value, tokens),
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: ({ value }) => (isRiskCompletion(value) ? 850 : 650),
           formatter: '{c}%',
         },
-        data: completion,
+        markLine: {
+          symbol: 'none',
+          silent: true,
+          label: { show: false },
+          lineStyle: { color: tokens.chartRateLine, type: 'dashed', width: 1, opacity: 0.35 },
+          data: [{ yAxis: 100 }],
+        },
+        data: completion.map((value, index) => (isPlaceholderMonth(trend[index]) ? null : value)),
       },
     ],
   };

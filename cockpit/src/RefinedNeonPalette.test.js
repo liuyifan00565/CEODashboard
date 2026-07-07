@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 15:50:00 CST
+ 更新内容: 调色板守卫测试同步本轮卡片材质与背景氛围调整——深蓝紫半玻璃卡片底+浅紫白低对比描边、左下冷紫雾面氛围光透明更低扩散更大(bg-radial-d .042→.04、扩散 34%→48%)。
+*/
+/*
  更新时间: 2026-07-06 10:48:16 CST
  更新内容: 调色板守卫测试同步为深紫黑玻璃底、银紫玫瑰高亮、玫瑰风险与香槟目标语义。
 */
@@ -182,24 +186,25 @@ test('uses a static graphite grid and dot background instead of Color Bends', ()
   assert.doesNotMatch(indexCss, /\n\.color-bends-layer/);
   assert.doesNotMatch(indexCss, /\n\.bg-shade/);
 
-  // 深石墨黑蓝底：不能是纯黑，也不能让紫色成为主视觉。
+  // 深海蓝黑底：不能是纯黑，也不能让紫色成为主视觉。
   assert.match(darkThemeBlock(), /--bg:#0B1020;/);
   assert.match(darkThemeBlock(), /--bg-base-1:#0D1324;/);
   assert.match(darkThemeBlock(), /--bg-base-2:#0B1020;/);
   assert.match(darkThemeBlock(), /--bg-base-3:#070B14;/);
-  assert.match(darkThemeBlock(), /--dashboard-card-bg:rgba\(255,\s*255,\s*255,\s*0\.052\);/);
-  assert.match(darkThemeBlock(), /--dashboard-card-border:rgba\(255,\s*255,\s*255,\s*0\.10\);/);
+  // 卡片：深蓝紫半玻璃 + 浅紫白低对比描边，不是纯白玻璃。
+  assert.match(darkThemeBlock(), /--dashboard-card-bg:rgba\(152,\s*160,\s*220,\s*0\.05\);/);
+  assert.match(darkThemeBlock(), /--dashboard-card-border:rgba\(217,\s*209,\s*255,\s*0\.10\);/);
 
-  // 紫色只做远处环境光，左下光晕更低透明、更大扩散，不能成为视觉主角。
-  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(142,134,255,\.14\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(126,167,255,\.09\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-c:rgba\(118,154,206,\.055\);/);
-  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(184,156,255,\.042\);/);
+  // 冷紫-蓝雾化渐变只做远处极轻环境光，透明更低、扩散更大，不能成为视觉主角。
+  assert.match(darkThemeBlock(), /--bg-radial-a:rgba\(142,134,255,\.11\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-b:rgba\(126,167,255,\.075\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-c:rgba\(118,154,206,\.05\);/);
+  assert.match(darkThemeBlock(), /--bg-radial-d:rgba\(184,156,255,\.04\);/);
 
   assert.match(indexCss, /\.bg\{[\s\S]*?linear-gradient\(180deg,var\(--bg-base-1\) 0%,var\(--bg-base-2\) 48%,var\(--bg-base-3\) 100%\);/);
   assert.match(indexCss, /\.bg::before\{[\s\S]*?linear-gradient\(var\(--bg-grid-line\) 1px,transparent 1px\)[\s\S]*?radial-gradient\(var\(--bg-dot\) 1px,transparent 1\.4px\)[\s\S]*?background-size:56px 56px,56px 56px,28px 28px;/);
   assert.match(indexCss, /\.bg::before\{[\s\S]*?mask-image:radial-gradient\(circle at center,#000 0%,transparent 78%\);/);
-  assert.match(indexCss, /\.bg::after\{[\s\S]*?radial-gradient\(ellipse at 10% 78%,var\(--bg-radial-d\),transparent 34%\)/);
+  assert.match(indexCss, /\.bg::after\{[\s\S]*?radial-gradient\(ellipse at 10% 78%,var\(--bg-radial-d\),transparent 48%\)/);
   assert.match(darkThemeBlock(), /--bg-grid-line:rgba\(255,255,255,\.030\);/);
   assert.match(darkThemeBlock(), /--bg-dot:rgba\(255,255,255,\.028\);/);
   assert.match(darkThemeBlock(), /--bg-noise-opacity:\.03;/);

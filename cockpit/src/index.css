@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-07 15:40:00 CST
+ 更新内容: 卡片材质再调一轮——更通透半透明底、更柔浅紫白描边、顶部冷紫内高光、更软双层扩散阴影；背景叠中央蓝紫雾面光并让左下氛围光更自然扩散。
+*/
+/*
+ 更新时间: 2026-07-07 11:02:00 CST
+ 更新内容: 背景叠加极轻冷紫-蓝雾化渐变并扩散径向光晕，卡片升级为深蓝紫半玻璃+浅紫白描边+上沿柔光+极弱氛围光晕，整体走高级柔和环境光而非荧光科技感。
+*/
+/*
  更新时间: 2026-07-06 10:48:16 CST
  更新内容: 将全站主题 token 重构为高级果味银紫玫瑰高亮、业务语义色与图表专用色三层体系。
 */
@@ -131,10 +139,11 @@
   --brand-ice:#7EA7FF;
   --accent-gold:#C9A96B;
   --accent-gold-soft:#E3D2A4;
-  --dashboard-card-bg:rgba(255, 255, 255, 0.052);
-  --dashboard-card-border:rgba(255, 255, 255, 0.10);
-  --dashboard-card-shadow:0 24px 80px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255,255,255,.06);
-  --dashboard-card-blur:blur(24px) saturate(145%);
+  /* 卡片：深蓝紫半玻璃面更通透；浅紫白描边再柔；顶部冷紫内高光 + 内层冷紫氛围 + 双层软扩散阴影，轻盈不实。 */
+  --dashboard-card-bg:rgba(152, 160, 220, 0.05);
+  --dashboard-card-border:rgba(217, 209, 255, 0.10);
+  --dashboard-card-shadow:0 8px 24px rgba(6, 9, 20, 0.22), 0 24px 64px -12px rgba(6, 9, 20, 0.34), 0 0 40px rgba(142, 134, 255, 0.04), inset 0 1px 0 rgba(217, 209, 255, 0.12), inset 0 12px 30px -12px rgba(142, 134, 255, 0.05);
+  --dashboard-card-blur:blur(28px) saturate(150%);
   --panel:rgba(255,255,255,.055);
   --panel-2:rgba(255,255,255,.072);
   --line:rgba(255,255,255,.08);
@@ -162,14 +171,15 @@
   --bar-warn-glow:0 0 14px rgba(240,106,139,.18);
   --bar-gold:linear-gradient(90deg,#8E7040 0%,#C9A96B 58%,#E3D2A4 100%);
   --bar-gold-glow:0 0 14px rgba(201,169,107,.18);
-  /* 背景：柔和深灰蓝底；紫色只做远处环境光，网格/点阵提供秩序感。 */
+  /* 背景：深海蓝黑底；冷紫-蓝雾化渐变只做远处极轻环境光，扩散更大、透明更低，避免成为视觉主角。 */
   --bg-base-1:#0D1324;
   --bg-base-2:#0B1020;
   --bg-base-3:#070B14;
-  --bg-radial-a:rgba(142,134,255,.14);
-  --bg-radial-b:rgba(126,167,255,.09);
-  --bg-radial-c:rgba(118,154,206,.055);
-  --bg-radial-d:rgba(184,156,255,.042);
+  --bg-radial-a:rgba(142,134,255,.11);
+  --bg-radial-b:rgba(126,167,255,.075);
+  --bg-radial-c:rgba(118,154,206,.05);
+  --bg-radial-d:rgba(184,156,255,.04);
+  --bg-fog:rgba(134, 148, 214, 0.05);
   --bg-vignette:radial-gradient(circle at center,transparent 0%,rgba(0,0,0,.24) 100%);
   --bg-grid-line:rgba(255,255,255,.030);
   --bg-dot:rgba(255,255,255,.028);
@@ -316,13 +326,14 @@ body{
 }
 
 .app{position:relative;min-height:100vh}
-/* .bg 基底：深石墨黑蓝线性渐变；弱紫环境光、低透明网格/点阵和噪点托住数据卡片。 */
+/* .bg 基底：深海蓝黑线性渐变；中央叠极轻蓝紫雾面光，远处弱紫环境光更自然扩散，低透明网格/点阵托住数据卡片。 */
 .bg{
   position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(circle at 24% 18%,var(--bg-radial-a),transparent 28%),
-    radial-gradient(circle at 78% 8%,var(--bg-radial-b),transparent 24%),
-    radial-gradient(circle at 50% 92%,var(--bg-radial-c),transparent 30%),
+    radial-gradient(140% 110% at 50% 40%,var(--bg-fog),transparent 62%),
+    radial-gradient(120% 90% at 30% 18%,var(--bg-radial-a),transparent 46%),
+    radial-gradient(120% 90% at 76% 10%,var(--bg-radial-b),transparent 42%),
+    radial-gradient(150% 100% at 50% 102%,var(--bg-radial-c),transparent 52%),
     linear-gradient(180deg,var(--bg-base-1) 0%,var(--bg-base-2) 48%,var(--bg-base-3) 100%);
 }
 /* Magic UI Grid/Dot Pattern 思路：低透明网格和点阵只提供精度感，不抢数据。 */
@@ -341,7 +352,7 @@ body{
 .bg::after{
   content:"";position:fixed;inset:0;pointer-events:none;
   background:
-    radial-gradient(ellipse at 10% 78%,var(--bg-radial-d),transparent 34%),
+    radial-gradient(ellipse at 10% 78%,var(--bg-radial-d),transparent 48%),
     var(--bg-vignette),
     url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.45'/%3E%3C/svg%3E");
   background-size:auto,auto,256px 256px;

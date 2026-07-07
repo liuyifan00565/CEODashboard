@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-07 15:50:00 CST
+ 更新内容: 月度趋势风险语义测试同步新结构——目标背景宽柱(淡灰紫低透明)、回款前景窄柱(银紫玫瑰渐变)、完成率细线+圆点且 y 轴超 100% 自动扩展并加 100% 基准线，移除 6 月高亮相关断言。
+*/
+/*
  更新时间: 2026-07-06 10:48:16 CST
  更新内容: 风险语义测试同步银紫玫瑰主高亮、玫瑰风险、香槟目标与月度趋势图表专用 token。
 */
@@ -122,20 +126,25 @@ test('renders recovery gap chip and its left trend chip with risk semantics', ()
   assert.match(kpiCardSource, /className=\{`kpi-card__gap\$\{isRiskCompletion\(card\.progress\) \? ' kpi-card__gap--risk' : ''\}`\}/);
 });
 
-test('keeps monthly trend bars calm while highlighting only the current month', () => {
+test('layers target behind recovered and avoids current-month highlight in the monthly trend', () => {
   assert.match(monthlyTrendSource, /import \{ isRiskCompletion \} from '\.\.\/lib\/format';/);
   assert.doesNotMatch(monthlyTrendSource, /function recoveredBarColor/);
-  assert.doesNotMatch(monthlyTrendSource, /color:\s*recoveredBarColor\(completion\[index\], tokens\)/);
-  assert.match(monthlyTrendSource, /function isCurrentTrendMonth\(item\)/);
-  assert.match(monthlyTrendSource, /function currentMonthBarColor\(item, tokens\)/);
+  assert.doesNotMatch(monthlyTrendSource, /function isCurrentTrendMonth/);
+  assert.doesNotMatch(monthlyTrendSource, /function currentMonthBarColor/);
+  assert.doesNotMatch(monthlyTrendSource, /value === '6月' \? tokens\.chartText/);
   assert.match(monthlyTrendSource, /function actualBarColor\(tokens\)/);
   assert.match(monthlyTrendSource, /function targetBarColor\(tokens\)/);
-  assert.match(monthlyTrendSource, /return tokens\.chartTargetBar;/);
-  assert.match(monthlyTrendSource, /data:\s*target\.map\(\(value\) => \(\{[\s\S]*?color:\s*targetBarColor\(tokens\),/);
-  assert.doesNotMatch(monthlyTrendSource, /name:\s*'目标'[\s\S]*?borderColor:\s*tokens\.chartAxis/);
-  assert.match(monthlyTrendSource, /data:\s*recovered\.map\(\(value, index\) => \(\{[\s\S]*?color:\s*currentMonthBarColor\(trend\[index\], tokens\),/);
-  assert.match(monthlyTrendSource, /return isCurrentTrendMonth\(item\) \? actualBarColor\(tokens\) : \{/);
+  // 目标：背景宽柱，淡灰紫低透明，后退
+  assert.match(monthlyTrendSource, /return tokens\.chartActualBarBottom;/);
+  assert.match(monthlyTrendSource, /name: '目标',[\s\S]*?type: 'bar'[\s\S]*?barWidth: 24,[\s\S]*?color: targetBarColor\(tokens\),[\s\S]*?opacity: targetOpacity/);
+  // 回款：前景窄柱，银紫玫瑰渐变，与目标重叠
+  assert.match(monthlyTrendSource, /name: '回款',[\s\S]*?type: 'bar'[\s\S]*?barWidth: 12,[\s\S]*?barGap: '-100%'[\s\S]*?color: actualBarColor\(tokens\)/);
   assert.doesNotMatch(monthlyTrendSource, /name:\s*'回款'[\s\S]*?COLOR\.warn/);
+  // 完成率：细线+圆点，y 轴超 100% 自动扩展，100% 基准线
+  assert.match(monthlyTrendSource, /max: rateAxisMax/);
+  assert.match(monthlyTrendSource, /Math\.ceil\(maxCompletion \/ 10\) \* 10/);
+  assert.match(monthlyTrendSource, /data: \[\{ yAxis: 100 \}\]/);
+  // 点位保留风险/目标/常规三态语义
   assert.match(monthlyTrendSource, /function completionPointColor\(value, tokens\)/);
   assert.match(monthlyTrendSource, /isRiskCompletion\(value\) \? tokens\.chartRiskPoint/);
   assert.match(monthlyTrendSource, /Number\(value\) >= 100 \? tokens\.semanticGoal : tokens\.chartRateLine/);
