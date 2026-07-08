@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:58:00 CST
+ 更新内容: 成本维护渠道树新增紧凑删除按钮样式，复用现有玻璃按钮与危险态配色。
+*/
+/*
  更新时间: 2026-07-08 14:47:03 CST
  更新内容: 柔化目标维护表部门/人员固定列与年月列之间的边界渐隐，减少固定列交界的硬切感。
 */
@@ -439,6 +443,14 @@
   border-left: 1px dashed var(--line);
 }
 
+.mnt-side-nav-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
 .mnt-side-nav__button {
   width: 100%;
   min-height: 34px;
@@ -641,6 +653,14 @@
   width: 40px;
   pointer-events: none;
   background: linear-gradient(90deg, rgba(142, 134, 255, .055) 0%, rgba(184, 156, 255, .034) 42%, rgba(228, 184, 215, .018) 72%, rgba(0, 0, 0, 0) 100%);
+}
+
+.mnt-side-nav-row .mnt-side-nav__button {
+  margin-bottom: 0;
+}
+
+.mnt-nav-delete {
+  min-width: 48px;
 }
 
 .mnt-target-scroll-pane {

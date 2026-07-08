@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:58:00 CST
+ 更新内容: 成本维护渠道树新增删除按钮，未保存渠道直接移除，已落库渠道保存时提交删除列表。
+*/
+/*
  更新时间: 2026-07-08 18:45:00 CST
  更新内容: 成本维护左侧渠道树与顶部工具栏新增“新增渠道”入口，新增渠道可编辑名称并随成本保存落库。
 */
@@ -371,34 +375,38 @@ function MatrixShell({ className = '', children }) {
   return <div className={`mnt-matrix-wrap ${className}`.trim()}>{children}</div>;
 }
 
-function MaintenanceSideNav({ nodes, activeId, onSelect }) {
+function MaintenanceSideNav({ nodes, activeId, onSelect, renderAction }) {
   return (
     <nav className="mnt-side-nav" aria-label="维护侧栏导航">
       <ul>
         {nodes.map((node) => (
-          <MaintenanceSideNavNode key={node.id} node={node} activeId={activeId} onSelect={onSelect} />
+          <MaintenanceSideNavNode key={node.id} node={node} activeId={activeId} onSelect={onSelect} renderAction={renderAction} />
         ))}
       </ul>
     </nav>
   );
 }
 
-function MaintenanceSideNavNode({ node, activeId, onSelect }) {
+function MaintenanceSideNavNode({ node, activeId, onSelect, renderAction }) {
   const active = node.id === activeId;
+  const action = renderAction?.(node);
   return (
     <li>
-      <button
-        type="button"
-        className={`mnt-side-nav__button${active ? ' mnt-side-nav__button--active' : ''}${node.disabled ? ' mnt-side-nav__button--muted' : ''}`}
-        onClick={() => onSelect(node.id)}
-      >
-        <span>{node.name}</span>
-        {node.meta && <small>{node.meta}</small>}
-      </button>
+      <div className="mnt-side-nav-row">
+        <button
+          type="button"
+          className={`mnt-side-nav__button${active ? ' mnt-side-nav__button--active' : ''}${node.disabled ? ' mnt-side-nav__button--muted' : ''}`}
+          onClick={() => onSelect(node.id)}
+        >
+          <span>{node.name}</span>
+          {node.meta && <small>{node.meta}</small>}
+        </button>
+        {action}
+      </div>
       {node.children?.length > 0 && (
         <ul>
           {node.children.map((child) => (
-            <MaintenanceSideNavNode key={child.id} node={child} activeId={activeId} onSelect={onSelect} />
+            <MaintenanceSideNavNode key={child.id} node={child} activeId={activeId} onSelect={onSelect} renderAction={renderAction} />
           ))}
         </ul>
       )}
@@ -601,10 +609,12 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
   const [selectedCostRow, setSelectedCostRow] = useState(null);
   const laborList = laborRows ?? EMPTY_ARRAY;
   const draftRef = useRef({});
+  const deletedChannelIdsRef = useRef([]);
   useEffect(() => {
     setChannels(costChannels ?? EMPTY_ARRAY);
     setAllRows(costRows ?? EMPTY_ARRAY);
     draftRef.current = {};
+    deletedChannelIdsRef.current = [];
   }, [costChannels, costRows]);
   const costNavNodes = useMemo(() => buildMaintenanceNavTree(
     channels.map((channel) => ({
@@ -629,7 +639,7 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
   useImperativeHandle(ref, () => ({
     collect: () => {
       const r = buildCostSaveRows({ rows: allRows, laborRows: laborList }, draftRef.current, year);
-      return { rows: r.rows, laborRows: r.laborRows, groups: buildChannelGroupSaveRows(channels), deletions: [] };
+      return { rows: r.rows, laborRows: r.laborRows, groups: buildChannelGroupSaveRows(channels), deletions: deletedChannelIdsRef.current };
     },
     addCostChannel,
   }), [allRows, channels, laborList, selectedChannel, year]);
@@ -675,6 +685,37 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
     markDirty();
   }
 
+  function deleteCostChannel(channelId) {
+    if (channelId === 'all') return;
+    const deleteIds = getDescendantIds(channels, channelId);
+    setChannels((current) => current.filter((channel) => !deleteIds.has(channel.id)));
+    setAllRows((current) => current.filter((row) => !deleteIds.has(row.id)));
+    Object.keys(draftRef.current).forEach((key) => {
+      const rowId = key.split('|')[0];
+      if (deleteIds.has(rowId)) delete draftRef.current[key];
+    });
+    deletedChannelIdsRef.current = Array.from(new Set([
+      ...deletedChannelIdsRef.current,
+      ...Array.from(deleteIds).filter((id) => !String(id).startsWith('new-channel-') && id !== 'all'),
+    ]));
+    if (deleteIds.has(selectedChannel)) setSelectedChannel('all');
+    markDirty();
+  }
+
+  function renderCostChannelAction(node) {
+    if (node.id === 'all') return null;
+    return (
+      <button
+        className="mnt-btn mnt-btn--danger mnt-btn--tiny mnt-nav-delete"
+        type="button"
+        onClick={() => deleteCostChannel(node.id)}
+        title={`删除${node.name}`}
+      >
+        删除
+      </button>
+    );
+  }
+
   return (
     <section className="mnt-layout mnt-layout--cost">
       <Panel title="渠道树" meta={`${channels.length - 1} 个渠道`} className="mnt-side-panel">
@@ -690,7 +731,7 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
             />
           </label>
         )}
-        <MaintenanceSideNav nodes={costNavNodes} activeId={selectedChannel} onSelect={setSelectedChannel} />
+        <MaintenanceSideNav nodes={costNavNodes} activeId={selectedChannel} onSelect={setSelectedChannel} renderAction={renderCostChannelAction} />
       </Panel>
       <div className="mnt-cost-stack">
         <Panel title="渠道成本维护" meta={<SaveBadge status={status} />} className="mnt-main-panel">

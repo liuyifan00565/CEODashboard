@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:58:00 CST
+ 更新内容: 成本维护保存支持删除渠道：停用 dim_channel，并清理当前年份渠道成本记录。
+*/
+/*
  更新时间: 2026-07-08 18:45:00 CST
  更新内容: 成本维护保存支持新增 dim_channel，并把临时渠道 ID 映射到渠道成本行后再写入成本表。
 */
@@ -128,14 +132,39 @@ export async function saveTarget(connection, rows) {
   return { written, skipped, errors };
 }
 
-/** 成本维护：可先新增 dim_channel，再按 (year_month, channel_id) upsert biz_channel_cost_monthly。 */
-export async function saveCost(connection, rows, groups = []) {
+async function deleteCostChannels(connection, deletions = [], year) {
+  let deleted = 0;
+  let skipped = 0;
+  const errors = [];
+  const deleteIds = Array.from(new Set((Array.isArray(deletions) ? deletions : []).filter(Boolean).map((id) => String(id))));
+  const yearText = String(year || '');
+  for (const idText of deleteIds) {
+    const channelId = Number(idText);
+    if (!Number.isInteger(channelId)) {
+      skipped += 1;
+      errors.push({ field: 'channel_id', message: `删除渠道 ID 非法，跳过：${idText}` });
+      continue;
+    }
+    const [updateResult] = await connection.execute('UPDATE dim_channel SET is_enabled = 0 WHERE channel_id = ?', [channelId]);
+    deleted += Number(updateResult?.affectedRows || 0);
+    if (/^\d{4}$/.test(yearText)) {
+      const [costResult] = await connection.execute('DELETE FROM biz_channel_cost_monthly WHERE channel_id = ? AND `year_month` LIKE ?', [channelId, `${yearText}-%`]);
+      deleted += Number(costResult?.affectedRows || 0);
+    }
+  }
+  return { deleted, skipped, errors };
+}
+
+/** 成本维护：可先新增 dim_channel，再按 (year_month, channel_id) upsert biz_channel_cost_monthly，最后处理渠道删除。 */
+export async function saveCost(connection, rows, groups = [], deletions = [], year) {
   const errors = [];
   const channelRes = await saveNewChannelGroups(connection, groups, errors);
   let written = channelRes.written;
   let skipped = channelRes.skipped;
+  const deletingIds = new Set((Array.isArray(deletions) ? deletions : []).filter(Boolean).map((id) => String(id)));
   for (const row of rows) {
     const rawChannelId = normalizeNullableId(row.channel_id);
+    if (rawChannelId && deletingIds.has(rawChannelId)) continue;
     const mappedChannelId = rawChannelId == null ? null : (channelRes.tempChannelIdMap.get(rawChannelId) || rawChannelId);
     const channelId = Number(mappedChannelId);
     const yearMonth = String(row.year_month || '');
@@ -154,7 +183,8 @@ export async function saveCost(connection, rows, groups = []) {
     }
     written += 1;
   }
-  return { written, skipped, errors };
+  const deletionRes = await deleteCostChannels(connection, deletions, year);
+  return { written, skipped: skipped + deletionRes.skipped, deleted: deletionRes.deleted, errors: [...errors, ...deletionRes.errors] };
 }
 
 /** 人力成本维护：按 (year_month, cost_type) upsert biz_labor_cost_monthly，仅写 amount_yuan。 */
@@ -328,12 +358,12 @@ export async function saveChannel(connection, rows, deletions = [], groups = [])
 const SAVERS = {
   'target-maintenance': (conn, body) => saveTarget(conn, body.rows || []),
   'cost-maintenance': async (conn, body) => {
-    const costRes = await saveCost(conn, body.rows || [], body.groups || []);
+    const costRes = await saveCost(conn, body.rows || [], body.groups || [], body.deletions || [], body.year);
     const laborRes = await saveLabor(conn, body.laborRows || []);
     return {
       written: costRes.written + laborRes.written,
       skipped: costRes.skipped + laborRes.skipped,
-      deleted: 0,
+      deleted: costRes.deleted || 0,
       errors: [...costRes.errors, ...laborRes.errors],
     };
   },

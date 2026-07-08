@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:58:00 CST
+ 更新内容: 成本维护读取只展示启用渠道，配合成本页删除渠道后的回拉隐藏。
+*/
+/*
  更新时间: 2026-07-08 11:45:00 CST
  更新内容: 目标维护读取口径继续收紧为启用销售且有部门，确保组织维护停用人员后目标页和看板分母同步排除。
 */
@@ -43,7 +47,7 @@ async function readTarget(connection, year) {
 
 async function readCost(connection, year) {
   const [channels, costs, revenue, labor] = await Promise.all([
-    queryRows(connection, 'SELECT channel_id, channel_name, parent_id, is_enabled FROM dim_channel'),
+    queryRows(connection, 'SELECT channel_id, channel_name, parent_id, is_enabled FROM dim_channel WHERE is_enabled = 1'),
     queryRows(connection, 'SELECT `year_month`, channel_id, investment_amount_yuan FROM biz_channel_cost_monthly WHERE `year_month` LIKE ?', [`${year}-%`]),
     queryRows(connection, "SELECT DATE_FORMAT(stat_date, '%Y-%m') AS ym, channel_id, SUM(recovered_amount_yuan) AS amt, SUM(order_count) AS deals FROM fact_revenue_daily WHERE stat_date BETWEEN ? AND ? GROUP BY channel_id, ym", [`${year}-01-01`, `${year}-12-31`]),
     queryRows(connection, 'SELECT `year_month`, cost_type, amount_yuan FROM biz_labor_cost_monthly WHERE `year_month` LIKE ?', [`${year}-%`]),

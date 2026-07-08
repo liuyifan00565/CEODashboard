@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:58:00 CST
+ 更新内容: 单测覆盖成本维护删除渠道时停用 dim_channel 并删除当前年份成本。
+*/
+/*
  更新时间: 2026-07-08 18:45:00 CST
  更新内容: 单测覆盖成本维护新增渠道后映射临时 channel_id，再写入渠道成本。
 */
@@ -42,6 +46,7 @@ function makeConn(selectFn) {
         return [rows];
       }
       execs.push({ sql: normalized, params });
+      if (/^UPDATE dim_channel SET is_enabled/i.test(normalized)) return [{ affectedRows: 1 }];
       if (/^DELETE/i.test(normalized)) return [{ affectedRows: 1 }];
       return [{}];
     },
@@ -126,6 +131,18 @@ test('saveCost: 新增渠道后映射临时 channel_id 再写成本', async () =
   const costInsert = execs.find((e) => e.sql.startsWith('INSERT INTO biz_channel_cost_monthly'));
   assert.ok(costInsert);
   assert.deepEqual(costInsert.params, [5100, '2026-03', 3100, 120000]);
+});
+
+test('saveCost: 删除渠道会停用渠道并清理当前年份成本', async () => {
+  const { conn, execs } = makeConn(() => []);
+  const r = await saveCost(conn, [], [], ['3002'], 2026);
+  assert.equal(r.deleted, 2);
+  const channelUpdate = execs.find((e) => e.sql.startsWith('UPDATE dim_channel SET is_enabled'));
+  assert.ok(channelUpdate);
+  assert.deepEqual(channelUpdate.params, [3002]);
+  const costDelete = execs.find((e) => e.sql.startsWith('DELETE FROM biz_channel_cost_monthly'));
+  assert.ok(costDelete);
+  assert.deepEqual(costDelete.params, [3002, '2026-%']);
 });
 
 test('saveLabor: upsert 键为 (year_month, cost_type)，仅写 amount_yuan', async () => {
