@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 14:46:29 CST
+ 更新内容: 维护模式左侧返回入口改为导航分组里的“经营总览”，移除独立大按钮。
+*/
+/*
  更新时间: 2026-07-08 14:11:07 CST
  更新内容: 主界面侧边导航移除搜索占位入口，维护页继续保留左侧全局返回入口。
 */
@@ -177,7 +181,11 @@ const DASHBOARD_SIDEBAR_ITEMS = [
   { key: 'data-maintenance', name: '数据维护', icon: 'target', section: '系统' },
 ];
 
-const MAINTENANCE_SIDEBAR_ITEMS = MAINTENANCE_MENU.map((item) => ({ ...item, section: '系统' }));
+const MAINTENANCE_HOME_ITEM = { key: 'dashboard-home', name: '经营总览', icon: 'return', section: '导航' };
+const MAINTENANCE_SIDEBAR_ITEMS = [
+  MAINTENANCE_HOME_ITEM,
+  ...MAINTENANCE_MENU.map((item) => ({ ...item, section: '数据维护' })),
+];
 
 const PANEL_KEYWORDS = {
   trend: ['趋势', '月度', '回款', '目标', '完成率'],
@@ -321,6 +329,11 @@ export default function App() {
       return;
     }
 
+    if (nextMenu === 'dashboard-home') {
+      handleMaintenanceBack();
+      return;
+    }
+
     if (maintenanceMode) {
       setActiveMaintenanceMenu(nextMenu);
       return;
@@ -449,28 +462,6 @@ export default function App() {
       <div className="dash-shell">
         <aside className="dash-aside">
           <Sidebar items={sidebarItems} active={sidebarActive} onChange={handleSidebarChange} />
-          {maintenanceMode ? (
-            <GlassSurface
-              width="100%"
-              height={48}
-              borderRadius={24}
-              brightness={46}
-              blur={7}
-              displace={0.35}
-              backgroundOpacity={0.035}
-              distortionScale={-55}
-              className="maintenance-back-glass"
-            >
-              <button
-                type="button"
-                className="dash-maintenance-switch dash-maintenance-switch--active dash-maintenance-switch--sidebar"
-                onClick={handleMaintenanceBack}
-                aria-label="返回主界面"
-              >
-                <span>返回主界面</span>
-              </button>
-            </GlassSurface>
-          ) : null}
           <AIAnalysisWidget
             activeMenu={activeMenu}
             dim={dim}
