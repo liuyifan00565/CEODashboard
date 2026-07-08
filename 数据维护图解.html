@@ -1,3 +1,7 @@
+<!--
+ 更新时间: 2026-07-08 12:00:00 CST
+ 更新内容: 补充主界面经营总览、趋势、成本、版本、交付和算力模块的数据来源图解，标明与四个维护页的联动关系。
+-->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -88,12 +92,39 @@
   .pit .body{font-size:13px}
   .pit .body b{color:var(--amber)}
   .pit.you{border-color:var(--red);box-shadow:0 0 0 1px var(--red) inset}
+
+  /* ====== 5. 主界面快照 ====== */
+  .dash-screen{display:grid;grid-template-columns:156px 1fr;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px}
+  .dash-top{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#232838;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--dim)}
+  .dash-top b{color:var(--txt)}
+  .dash-side{background:#181c26;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12px;color:var(--dim)}
+  .dash-side div{padding:7px 8px;border-radius:6px;margin-bottom:5px}
+  .dash-side .on{background:var(--accent);color:#fff}
+  .dash-board{display:grid;grid-template-columns:1.2fr .9fr;gap:10px}
+  .dash-tile{background:#10141d;border:1px solid var(--line);border-radius:10px;padding:12px;min-height:78px;font-size:12px;color:var(--dim)}
+  .dash-tile b{display:block;color:var(--txt);font-size:15px;margin-bottom:3px}
+  .dash-tile.primary{border-color:var(--accent);box-shadow:0 0 0 1px rgba(124,92,255,.18) inset}
+  .dash-tile.wide{grid-column:1/-1}
+  .snap-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+  .snap-card{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12px}
+  .snap-card strong{display:block;color:var(--accent2);margin-bottom:6px}
+  .impact-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+  .impact-card{background:#11141d;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12px}
+  .impact-card b{display:block;color:var(--green);margin-bottom:5px}
+  .impact-card small{display:block;color:var(--dim);line-height:1.5}
+
+  @media (max-width: 900px){
+    .layout,.dash-screen{grid-template-columns:1fr}
+    .toolbar,.dash-top{grid-column:auto}
+    .flow,.trace,.snap-flow,.impact-grid,.dash-board{grid-template-columns:1fr}
+    .dash-tile.wide{grid-column:auto}
+  }
 </style>
 </head>
 <body>
 
 <h1>数据维护界面 · 图解</h1>
-<div class="sub">看板底层 MySQL（ceo_dashboard）的手工维护入口。前端 <span class="mono">MaintenancePage.jsx</span> + 后端 <span class="mono">cockpit/server/maintenance*.js</span>。<br>更新于 2026-07-08 11:45：目标维护口径已收紧为“启用销售且有部门”；新增组织/渠道大类可落库并映射；来源启用通过 is_excluded 反向保存。</div>
+<div class="sub">看板底层 MySQL（ceo_dashboard）的手工维护入口与主界面消费链路。前端 <span class="mono">MaintenancePage.jsx</span> / <span class="mono">App.jsx</span> + 后端 <span class="mono">cockpit/server/maintenance*.js</span> / <span class="mono">dashboardData.js</span>。<br>更新于 2026-07-08 12:00：目标维护口径已收紧为“启用销售且有部门”；新增组织/渠道大类可落库并映射；来源启用通过 is_excluded 反向保存；补充主界面经营总览、趋势、成本、版本、交付与算力模块的数据来源图解。</div>
 
 <!-- ============ 1. 布局 ============ -->
 <h2>① 界面长什么样</h2>
@@ -242,8 +273,159 @@
 <div class="sub" style="margin-top:14px">口径已统一：导入、页内保存、列表显示和首页目标分母都认「is_sales=1、is_enabled=1 且有部门」。无部门/非销售/停用人员既看不到也导不进，旧目标也不会继续进入看板分母。</div>
 </div>
 
-<!-- ============ 5. 所有坑 ============ -->
-<h2>⑤ 这套界面的口径坑（核心联动已修复）</h2>
+<!-- ============ 5. 主界面快照 ============ -->
+<h2>⑤ 主界面怎么被数据库喂起来</h2>
+<div class="card">
+<div class="dash-screen">
+  <div class="dash-top">
+    <span><b>福客经营驾驶舱</b> / 当前业务月份 / 渠道上下文</span>
+    <span>更新数据入口 → 四个维护页；页面加载 → <span class="mono">/api/dashboard-data</span></span>
+  </div>
+  <div class="dash-side">
+    <div class="on">经营总览</div>
+    <div>算力用量分析</div>
+    <div>数据维护</div>
+    <div>目标 / 成本 / 组织 / 渠道</div>
+  </div>
+  <div class="dash-board">
+    <div class="dash-tile primary">
+      <b>经营总览</b>
+      本月回款、月目标完成率、目标缺口、风险渠道、年度节奏。
+    </div>
+    <div class="dash-tile">
+      <b>渠道完成情况</b>
+      本月/年度切换，按渠道展示完成、目标、完成率和缺口。
+    </div>
+    <div class="dash-tile">
+      <b>月度趋势</b>
+      按月展示目标 vs 回款，渠道筛选时按渠道比例/渠道数据切换。
+    </div>
+    <div class="dash-tile">
+      <b>总投入 · 费比</b>
+      广告成本 + 人力成本，结合本月回款计算费比和 ROI。
+    </div>
+    <div class="dash-tile">
+      <b>开户 / 版本 / 续费</b>
+      开户实际、版本销量、版本续费到期与已续。
+    </div>
+    <div class="dash-tile">
+      <b>交付 / 算力</b>
+      交付订单、工程师目标；算力消耗、余额、版本消耗和资源健康。
+    </div>
+  </div>
+</div>
+
+<div class="snap-flow">
+  <div class="snap-card">
+    <strong>1. 前端加载</strong>
+    <span class="mono">loadDashboardData()</span> 请求 <span class="mono">GET /api/dashboard-data</span>，禁止缓存，拿到真实 MySQL 快照。
+  </div>
+  <div class="snap-card">
+    <strong>2. 后端聚合</strong>
+    <span class="mono">buildDashboardSnapshot()</span> 同时查询事实表、维护表和维表，再组装统一 snapshot。
+  </div>
+  <div class="snap-card">
+    <strong>3. 覆盖运行时数据</strong>
+    <span class="mono">applyDashboardDataSnapshot()</span> 把 KPI、渠道、趋势、版本、算力等数组替换为数据库结果。
+  </div>
+  <div class="snap-card">
+    <strong>4. 主界面渲染</strong>
+    <span class="mono">OperatingOverview</span>、<span class="mono">MonthlyTrend</span>、<span class="mono">KpiCard</span>、<span class="mono">VersionFinancePanel</span> 等组件直接消费运行时数据。
+  </div>
+</div>
+
+<div class="note">重点：维护页保存后会重拉维护页自身数据；主界面看到新口径，需要回到主界面后重新加载 <span class="mono">/api/dashboard-data</span>。当前代码没有单独的“只刷新某张卡片”接口。</div>
+</div>
+
+<!-- ============ 6. 主界面映射 ============ -->
+<h2>⑥ 主界面模块 ↔ 数据库表 / 维护页</h2>
+<div class="card">
+<table class="map-table">
+<thead><tr>
+  <th>主界面区域</th><th>主要读哪些表</th><th>关键计算口径</th><th>受哪个维护页影响</th><th>备注</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td class="pg">经营总览：本月/年度回款、完成率、缺口</td>
+  <td><span class="pill tbl">fact_revenue_daily</span><span class="pill tbl">biz_target_monthly</span><span class="pill tbl">dim_staff</span></td>
+  <td>实际回款按日期聚合；目标只统计 <b>启用销售+有部门</b> 人员的 <span class="mono">target_amount_yuan</span>。</td>
+  <td><span class="pill yes">目标维护</span><span class="pill yes">组织维护</span></td>
+  <td>组织页停用、转非销售、移除部门后，旧目标不再进入首页目标分母。</td>
+</tr>
+<tr>
+  <td class="pg">渠道完成情况 / 风险渠道</td>
+  <td><span class="pill tbl">dim_channel</span><span class="pill tbl">fact_revenue_daily</span><span class="pill tbl">biz_target_monthly</span><span class="pill tbl">dim_staff.channel_key</span></td>
+  <td>渠道实际来自回款事实表；渠道目标来自销售人员目标按 <span class="mono">channel_key</span> 汇总。</td>
+  <td><span class="pill yes">目标维护</span><span class="pill yes">组织维护</span><span class="pill yes">渠道维护</span></td>
+  <td>只展示启用渠道。渠道大类/名称维护会影响展示维度；销售人员所属渠道影响目标归因。</td>
+</tr>
+<tr>
+  <td class="pg">月度趋势</td>
+  <td><span class="pill tbl">biz_target_monthly</span><span class="pill tbl">fact_revenue_daily</span></td>
+  <td>每月目标与回款按月份对齐；当前月目标优先使用维护表汇总值。</td>
+  <td><span class="pill yes">目标维护</span><span class="pill yes">组织维护</span></td>
+  <td>目标改动后会直接改变柱状图目标线/目标柱。</td>
+</tr>
+<tr>
+  <td class="pg">总投入 · 费比 / 渠道 ROI</td>
+  <td><span class="pill tbl">biz_channel_cost_monthly</span><span class="pill tbl">biz_labor_cost_monthly</span><span class="pill tbl">fact_revenue_daily</span><span class="pill tbl">dim_channel</span></td>
+  <td>总投入 = 渠道广告成本 + 人力成本；费比 = 总投入 / 本月回款；渠道 ROI = 渠道回款 / 渠道成本。</td>
+  <td><span class="pill yes">成本维护</span><span class="pill yes">渠道维护</span></td>
+  <td>成本页新年份默认给销售/市场人力成本行，避免首页费比缺少人力项。</td>
+</tr>
+<tr>
+  <td class="pg">开户卡片</td>
+  <td><span class="pill tbl">fact_opening_account_daily</span></td>
+  <td>本月开户、今日开户和环比/较昨日来自实际开户事实表。</td>
+  <td><span class="pill no">暂不由四个维护页直接改</span></td>
+  <td>目标维护导入会写开户/订单目标，但当前首页开户卡主要展示实际值和变化率。</td>
+</tr>
+<tr>
+  <td class="pg">版本销售 / 续费面板</td>
+  <td><span class="pill tbl">fact_version_sales_daily</span><span class="pill tbl">fact_renewal_daily</span><span class="pill tbl">dim_product_version</span><span class="pill tbl">dim_channel</span></td>
+  <td>版本销量、回款、环比、当月应续/已续按版本和渠道聚合。</td>
+  <td><span class="pill yes">渠道维护</span></td>
+  <td>渠道维表影响渠道名称/筛选；版本本身暂不在四个维护页维护。</td>
+</tr>
+<tr>
+  <td class="pg">交付看板</td>
+  <td><span class="pill tbl">fact_delivery_order</span><span class="pill tbl">biz_delivery_target_monthly</span><span class="pill tbl">dim_staff</span></td>
+  <td>交付数按订单计数；交付目标按工程师和月份读取。</td>
+  <td><span class="pill no">暂不由四个维护页直接改</span><span class="pill yes">组织维护影响姓名维表</span></td>
+  <td>如果后续要让交付目标可维护，应单独加交付目标维护入口或导入配置。</td>
+</tr>
+<tr>
+  <td class="pg">算力用量分析</td>
+  <td><span class="pill tbl">fact_compute_usage_daily</span><span class="pill tbl">fact_compute_customer_daily</span><span class="pill tbl">fact_compute_version_consumption_daily</span><span class="pill tbl">fact_compute_resource_health_daily</span><span class="pill tbl">dim_compute_*</span></td>
+  <td>算力消耗、充值、容量、客户余额、版本消耗分布和资源健康来自算力事实表。</td>
+  <td><span class="pill no">不受四个维护页影响</span></td>
+  <td>这块由同步/采集链路维护，不走目标、成本、组织、渠道四页。</td>
+</tr>
+</tbody>
+</table>
+
+<div class="impact-grid">
+  <div class="impact-card">
+    <b>目标维护会改什么</b>
+    <small>月/年目标、完成率、缺口、月度趋势目标、渠道目标、风险渠道排序。</small>
+  </div>
+  <div class="impact-card">
+    <b>成本维护会改什么</b>
+    <small>总投入、费比、广告/人力拆分、渠道 ROI 和成本占比。</small>
+  </div>
+  <div class="impact-card">
+    <b>组织维护会改什么</b>
+    <small>哪些人员进入目标分母；人员姓名、销售身份、启停和部门归属。</small>
+  </div>
+  <div class="impact-card">
+    <b>渠道维护会改什么</b>
+    <small>首页渠道列表、渠道名称/层级、后续线索来源归因和启用状态。</small>
+  </div>
+</div>
+</div>
+
+<!-- ============ 7. 所有坑 ============ -->
+<h2>⑦ 这套界面的口径坑（核心联动已修复）</h2>
 <div class="card">
 <div class="pit you" style="border-color:var(--green);box-shadow:0 0 0 1px var(--green) inset">
   <div class="idx" style="background:var(--green)">✓</div>
@@ -267,7 +449,7 @@
 </div>
 </div>
 
-<div class="sub" style="margin-top:30px;text-align:center">生成于 2026-07-08 11:45 · 对应代码 MaintenancePage.jsx / maintenanceData.js / maintenanceImport.js / maintenanceSave.js / maintenanceMappers.js / dashboardData.js</div>
+<div class="sub" style="margin-top:30px;text-align:center">生成于 2026-07-08 12:00 · 对应代码 App.jsx / liveData.js / mock.js / MaintenancePage.jsx / maintenanceData.js / maintenanceImport.js / maintenanceSave.js / maintenanceMappers.js / dashboardData.js</div>
 
 </body>
 </html>
