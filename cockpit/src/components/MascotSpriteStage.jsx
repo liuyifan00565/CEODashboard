@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-08 15:24:00 CST
+ Update content: Mount an optional Live2D renderer above the Fu Xiaoke sprite sheets while keeping sprite fallback active.
+*/
+/*
  Update time: 2026-07-08 11:47:40 CST
  Update content: Keep maintenance-page idle on full mascot frames instead of forcing the laptop action.
 */
@@ -35,6 +39,7 @@ import {
   getMascotSheet,
 } from '../lib/mascotAnimationManifest.js';
 import { MASCOT_ACTIONS } from '../lib/mascotCompanion';
+import Live2DMascotStage from './Live2DMascotStage';
 import './MascotSpriteStage.css';
 
 const DEFAULT_LABEL = '福小客 AI 经营助手';
@@ -73,6 +78,7 @@ export default function MascotSpriteStage({
 }) {
   const [frameCursor, setFrameCursor] = useState(0);
   const [idleVariantIndex, setIdleVariantIndex] = useState(0);
+  const [live2dStatus, setLive2dStatus] = useState('idle');
   const animationFrameRef = useRef(0);
   const idleLoopCountRef = useRef(0);
   const lastLoopRef = useRef(0);
@@ -151,15 +157,22 @@ export default function MascotSpriteStage({
       className={[
         'mascot-sprite-stage',
         `mascot-sprite-stage--${animation.intensity}`,
+        live2dStatus === 'ready' ? 'mascot-sprite-stage--live2d-ready' : '',
         analysisActive ? 'mascot-sprite-stage--active' : '',
       ].filter(Boolean).join(' ')}
       role="img"
       aria-label={label}
       data-action={animation.key}
       data-idle-variant={animation.idleVariant ?? ''}
+      data-live2d-state={live2dStatus}
       style={stageStyle}
     >
       <span className="mascot-sprite-stage__sheet" aria-hidden="true" />
+      <Live2DMascotStage
+        action={animation.key}
+        label={label}
+        onLoadStateChange={setLive2dStatus}
+      />
     </span>
   );
 }

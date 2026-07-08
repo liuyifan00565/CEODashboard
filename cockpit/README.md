@@ -1,5 +1,8 @@
 # CEO 经营驾驶舱 React Demo
 
+更新时间: 2026-07-08 15:24:00 CST
+更新内容: 左下角福小客 AI 小人新增可选 Pixi Live2D 渲染层，缺少正式授权模型时自动保留现有 sprite 帧动画兜底。
+
 更新时间: 2026-07-08 11:45:00 CST
 更新内容: 首页目标口径继续与数据维护同步，只统计启用销售且有部门的人员目标；补充组织/渠道维护新增维表联动说明。
 
@@ -10,6 +13,7 @@
 
 - React + Vite
 - Three.js / @react-three/fiber / @react-three/drei / maath
+- PixiJS / pixi-live2d-display（左下角 AI 小人可选 Live2D 渲染层）
 - ECharts
 - GSAP
 - flatpickr
@@ -128,6 +132,7 @@ DASHSCOPE_ENABLE_THINKING=false
 - `src/components/GlassCursor.jsx`：基于 FluidGlass lens 模型做的玻璃球鼠标指针
 - `public/ai-mascot-transparent.png`：AI 分析入口透明小人素材
 - `public/ai-mascot-sprite.png`：AI 分析入口 4 行 × 12 帧 sprite sheet 动作素材
+- `public/live2d/`：福小客 Live2D 模型目标目录；放入 `live2dcubismcore.min.js` 和 `fuxiaoke/fuxiaoke.model3.json` 后，左下角小人会优先使用 Live2D，缺失时自动降级到 sprite
 - `public/assets/mascot/`：福小客 KPI 引导、汇报、风险提醒和达成庆祝场景形象
 - `src/components/BorderGlow/`：AI 对话卡片辉光边框
 - `src/components/ShinyText/`：AI 流式等待状态闪光文字

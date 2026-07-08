@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-08 15:24:00 CST
+ Update content: Require the sprite mascot stage to mount Live2D as an optional layer without removing the Fu Xiaoke fallback.
+*/
+/*
  Update time: 2026-07-08 11:47:40 CST
  Update content: Guard against maintenance-page idle being remapped to laptop frames that look incomplete at sidebar size.
 */
@@ -55,6 +59,7 @@ function stripSourceComments(source) {
 
 test('renders a manifest-driven generated mascot sprite stage', () => {
   assert.match(componentCode, /from\s+['"]\.\.\/lib\/mascotAnimationManifest\.js['"]/);
+  assert.match(componentCode, /from\s+['"]\.\/Live2DMascotStage['"]/);
   assert.match(componentCode, /MASCOT_ACTION_SHEETS/);
   assert.match(componentCode, /getMascotAnimation/);
   assert.match(componentCode, /getMascotSheet/);
@@ -62,6 +67,7 @@ test('renders a manifest-driven generated mascot sprite stage', () => {
   assert.match(componentCode, /export default function MascotSpriteStage/);
   assert.match(componentCode, /data-action=\{animation\.key\}/);
   assert.match(componentCode, /data-idle-variant=\{animation\.idleVariant \?\? ''\}/);
+  assert.match(componentCode, /data-live2d-state=\{live2dStatus\}/);
   assert.match(componentCode, /style=\{stageStyle\}/);
   assert.match(componentCode, /--mascot-sheet-url/);
   assert.match(componentCode, /--mascot-bg-x/);
@@ -69,7 +75,16 @@ test('renders a manifest-driven generated mascot sprite stage', () => {
   assert.match(componentCode, /--mascot-frame-width/);
   assert.match(componentCode, /--mascot-frame-height/);
   assert.match(componentCode, /--mascot-sheet-width/);
+  assert.match(componentCode, /<Live2DMascotStage/);
+  assert.match(componentCode, /onLoadStateChange=\{setLive2dStatus\}/);
   assert.doesNotMatch(componentCode, /@react-three|three|useGLTF|Canvas|MASCOT_GLB_SOURCE|\.glb/);
+});
+
+test('keeps the generated Fu Xiaoke sprite visible until the Live2D model is ready', () => {
+  assert.match(componentCode, /const \[live2dStatus,\s*setLive2dStatus\] = useState\('idle'\);/);
+  assert.match(componentCode, /live2dStatus === 'ready' \? 'mascot-sprite-stage--live2d-ready' : ''/);
+  assert.match(componentCode, /<span className="mascot-sprite-stage__sheet" aria-hidden="true" \/>/);
+  assert.match(componentCode, /<Live2DMascotStage[\s\S]*?action=\{animation\.key\}[\s\S]*?label=\{label\}[\s\S]*?onLoadStateChange=\{setLive2dStatus\}/);
 });
 
 test('preloads all generated action sheets before action switches need them', () => {
