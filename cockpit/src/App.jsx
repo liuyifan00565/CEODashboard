@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 14:00:14 CST
+ 更新内容: 主界面侧边导航移除“渠道分析”和“客户转化”禁用入口，仅保留当前有效页面。
+*/
+/*
  更新时间: 2026-07-08 11:47:38 CST
  更新内容: 将维护模式“返回主界面”从右上角工具栏移到左侧导航栏下方。
 */
@@ -160,8 +164,6 @@ const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance
 
 const DASHBOARD_SIDEBAR_ITEMS = [
   ...MENU.map((item) => ({ ...item, section: '导航', icon: item.icon ?? item.key })),
-  { key: 'channel-analysis', name: '渠道分析', icon: 'channel', section: '导航', disabled: true },
-  { key: 'customer-conversion', name: '客户转化', icon: 'organization', section: '导航', disabled: true },
   { key: 'data-maintenance', name: '数据维护', icon: 'target', section: '系统' },
   { key: 'search-history', name: '搜索记录', icon: 'search', section: '系统', disabled: true },
 ];

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 14:00:14 CST
+ 更新内容: 回归测试锁定主界面侧边导航移除渠道分析和客户转化禁用入口。
+*/
+/*
  更新时间: 2026-07-08 11:47:38 CST
  更新内容: 回归测试同步维护模式“返回主界面”按钮移到左侧导航栏下方。
 */
@@ -495,7 +499,11 @@ test('uses a 220px icon and text management sidebar with restrained hierarchy', 
   const sidebarNameBlock = cssRuleBody(sidebarCss, '.sb-name');
   const sidebarSectionBlock = cssRuleBody(sidebarCss, '.sb-section-title');
 
-  assert.match(appSource, /const DASHBOARD_SIDEBAR_ITEMS = \[[\s\S]*?section: '导航'[\s\S]*?name: '渠道分析'[\s\S]*?disabled: true[\s\S]*?key: 'data-maintenance'[\s\S]*?section: '系统'[\s\S]*?name: '搜索记录'/);
+  assert.match(appSource, /const DASHBOARD_SIDEBAR_ITEMS = \[[\s\S]*?\.\.\.MENU\.map[\s\S]*?key: 'data-maintenance'[\s\S]*?section: '系统'[\s\S]*?name: '搜索记录'/);
+  assert.doesNotMatch(appSource, /channel-analysis/);
+  assert.doesNotMatch(appSource, /customer-conversion/);
+  assert.doesNotMatch(appSource, /name: '渠道分析'/);
+  assert.doesNotMatch(appSource, /name: '客户转化'/);
   assert.match(appSource, /const MAINTENANCE_SIDEBAR_ITEMS = MAINTENANCE_MENU\.map\(\(item\) => \(\{ \.\.\.item, section: '系统' \}\)\);/);
   assert.match(dashboardCss, /\.dash-aside\{[\s\S]*?width:220px;[\s\S]*?padding:18px 12px;/);
   assert.match(sidebarSource, /<nav className="sb-root" aria-label="主导航">/);
