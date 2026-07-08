@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:15:00 CST
+ 更新内容: 业务月份回归改为要求首页使用中国时区当前自然月，不再用事实表最大月份冒充“本月”。
+*/
+/*
  更新时间: 2026-07-08 16:37:08 CST
  更新内容: 增加渠道人员明细口径回归，要求目标维护新增销售即使没有销售月表也能进入本月/年度下钻。
 */
@@ -228,4 +232,13 @@ test('filters maintained targets to active sales with departments', () => {
   assert.match(source, /s\.department_id IS NOT NULL/);
   assert.match(source, /s\.is_enabled = 1/);
   assert.match(source, /d\.department_code = 'online-sales'/);
+});
+
+test('selects dashboard business month from the current China calendar month', () => {
+  const source = readFileSync(new URL('./dashboardData.js', import.meta.url), 'utf8');
+
+  assert.match(source, /function currentBusinessMonth/);
+  assert.match(source, /return chinaTodayYMD\(\)\.yearMonth;/);
+  assert.match(source, /const latestMonth = currentBusinessMonth\(\);/);
+  assert.doesNotMatch(source, /SELECT MAX\(`year_month`\) AS latestMonth FROM fact_sales_member_monthly/);
 });

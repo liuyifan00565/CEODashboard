@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-08 17:11:00 CST  更新内容: 经营进度标题和搜索关键词改为读取运行时月份，避免真实数据切月后标题仍显示 6 月。 */
 /* 更新时间: 2026-07-07 17:33:00 CST  更新内容: 年度节奏 CTA 由"明细 >"升级为更产品化的"查看年度拆解"，并同步搜索关键词与测试。 */
 /* 更新时间: 2026-07-07 15:25:00 CST  更新内容: 移除月度/年度经营摘要判断文案及其专属搜索关键词，经营总览不再显示模板拼接的摘要句。 */
 /* 更新时间: 2026-07-06 18:52:14 CST  更新内容: 风险渠道和年度节奏判断改为读取运行时渠道与节奏数据，不再硬编码线下华东和固定完成率。 */
@@ -15,6 +16,7 @@
 import SearchResultBorder from './SearchResultBorder';
 import ChannelPanel from './ChannelPanel';
 import {
+  META,
   KPI,
   KPI_DERIVED,
   getChannelCompletionRows,
@@ -23,8 +25,7 @@ import {
 import { matchesSearchTerm } from '../lib/searchMatch';
 import './OperatingOverview.css';
 
-const PROGRESS_KEYWORDS = [
-  '2026年6月经营进度',
+const PROGRESS_KEYWORDS_BASE = [
   '本月回款',
   '月度完成率',
   '时间进度',
@@ -60,6 +61,8 @@ function formatPaceLead(value) {
 }
 
 export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearKpiCard, onOpenKpi }) {
+  const progressTitle = `${META.monthLabel}经营进度`;
+  const progressKeywords = [progressTitle, ...PROGRESS_KEYWORDS_BASE];
   const overviewMetrics = getOperatingOverviewMetrics();
   const monthChannelRows = getChannelCompletionRows('month');
   const riskChannelRows = monthChannelRows.filter((row) => row.warn);
@@ -70,11 +73,11 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
 
   return (
     <div className="op-overview">
-      <SearchResultBorder active={matchesSearchTerm(PROGRESS_KEYWORDS, searchTerm)} className="op-search-result op-search-result--progress">
+      <SearchResultBorder active={matchesSearchTerm(progressKeywords, searchTerm)} className="op-search-result op-search-result--progress">
         <section className="op-panel op-panel--progress" data-anim>
           <header className="op-progress-head">
             <div>
-              <h1>2026年6月经营进度</h1>
+              <h1>{progressTitle}</h1>
             </div>
             <button
               type="button"

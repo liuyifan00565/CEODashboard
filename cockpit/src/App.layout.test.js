@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:15:00 CST
+ 更新内容: 回归测试要求经营进度标题和搜索命中读取运行时月份，不再把 2026 年 6 月写死在组件中。
+*/
+/*
  更新时间: 2026-07-08 16:57:24 CST
  更新内容: 回归测试同步顶部右侧删除“更新数据”按钮，仅保留搜索控件。
 */
@@ -407,7 +411,7 @@ test('counts searchable matches and cycles the current result from the top searc
 
 test('keeps overview card placement stable when search result wrappers appear', () => {
   assert.match(searchResultBorderSource, /export default function SearchResultBorder\(\{ active, children, className = '' \}\)/);
-  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(PROGRESS_KEYWORDS, searchTerm\)\} className="op-search-result op-search-result--progress">/);
+  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(progressKeywords, searchTerm\)\} className="op-search-result op-search-result--progress">/);
   assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(ANNUAL_KEYWORDS, searchTerm\)\} className="op-search-result op-search-result--annual">/);
   assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(CHANNEL_KEYWORDS, searchTerm\)\} className="op-search-result op-search-result--channel">/);
   assert.match(cssRuleBody(operatingOverviewCss, '.op-search-result--progress'), /grid-area:\s*progress;/);
@@ -1060,7 +1064,9 @@ test('places the AI mascot inside a subdued sidebar status card', () => {
 });
 
 test('uses one fused operating story instead of duplicated monthly and yearly recovery cards', () => {
-  assert.match(operatingOverviewSource, /<h1>2026年6月经营进度<\/h1>/);
+  assert.match(operatingOverviewSource, /const progressTitle = `\$\{META\.monthLabel\}经营进度`;/);
+  assert.match(operatingOverviewSource, /<h1>\{progressTitle\}<\/h1>/);
+  assert.doesNotMatch(operatingOverviewSource, /<h1>2026年6月经营进度<\/h1>/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">经营进度总览<\/span>/);
   assert.match(operatingOverviewSource, /本月回款/);
   assert.match(operatingOverviewSource, /月度完成率/);
@@ -1187,7 +1193,7 @@ test('keeps search result boxes highlighted with persistent edge borders', () =>
   assert.doesNotMatch(searchResultBorderSource, /<canvas/);
   assert.doesNotMatch(appSource, /import HighlightBeam/);
   assert.doesNotMatch(appSource, /<HighlightBeam/);
-  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(PROGRESS_KEYWORDS,\s*searchTerm\)\} className="op-search-result op-search-result--progress">/);
+  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(progressKeywords,\s*searchTerm\)\} className="op-search-result op-search-result--progress">/);
   assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(ANNUAL_KEYWORDS,\s*searchTerm\)\} className="op-search-result op-search-result--annual">/);
   assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(CHANNEL_KEYWORDS,\s*searchTerm\)\} className="op-search-result op-search-result--channel">/);
   assert.match(searchResultBorderSource, /data-search-match=\{active \? 'true' : undefined\}/);

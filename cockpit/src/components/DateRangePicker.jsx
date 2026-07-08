@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-08 17:15:00 CST  更新内容: 日期选择器默认范围改为复用当前自然月，避免控件恢复时仍默认 2026 年 6 月。 */
 /* 更新时间: 2026-07-02 16:28:00 CST  更新内容: 日期选择器日历入口改用统一 AppIcon 线性图标。 */
 import { useEffect, useRef } from 'react'
 import flatpickr from 'flatpickr'
@@ -6,6 +7,7 @@ import 'flatpickr/dist/themes/dark.css'
 import * as zhMod from 'flatpickr/dist/l10n/zh.js'
 import GlassSurface from './GlassSurface/GlassSurface'
 import AppIcon from './AppIcon';
+import { DEFAULT_FILTER_RANGE } from '../lib/filterKpiCards';
 import './DateRangePicker.css'
 
 // 健壮地解析中文本地化对象，兼容 CommonJS / ESM 不同的 import 形态
@@ -14,7 +16,7 @@ if (zh) {
   try { flatpickr.localize(zh) } catch { /* 本地化失败时静默降级为默认英文 */ }
 }
 
-const DEFAULT_RANGE = ['2026-06-01', '2026-06-30']
+const DEFAULT_RANGE = DEFAULT_FILTER_RANGE
 
 export default function DateRangePicker({ value, onChange }) {
   const inputRef = useRef(null)

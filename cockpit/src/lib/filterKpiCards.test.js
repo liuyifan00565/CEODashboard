@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:15:00 CST
+ 更新内容: 增加默认日期范围跟随当前自然月、经营进度搜索关键词跟随运行时月份的回归测试。
+*/
+/*
  更新时间: 2026-07-07 15:25:00 CST
  更新内容: 移除"影响月度缺口 36万"搜索关键词断言，该关键词随经营摘要一并删除。
 */
@@ -49,7 +53,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { getFilteredKpiCards, formatDateRangeLabel } from './filterKpiCards.js';
+import { META } from '../data/mock.js';
+import { DEFAULT_FILTER_RANGE, getCurrentMonthFilterRange, getFilteredKpiCards, formatDateRangeLabel } from './filterKpiCards.js';
 
 function byKey(cards, key) {
   return cards.find((card) => card.key === key);
@@ -134,6 +139,24 @@ test('adds fused operating overview section text to KPI search keywords', () => 
   assert.ok(!annual.keywords.includes('年度风险预测'));
 });
 
+test('uses runtime month label in operating overview search keywords', () => {
+  const previousMonthLabel = META.monthLabel;
+  META.monthLabel = '2026年7月';
+  try {
+    const cards = getFilteredKpiCards({ dim: 'month', dateRange: ['2026-06-01', '2026-06-30'] });
+    const month = byKey(cards, 'month');
+
+    assert.ok(month.keywords.includes('2026年7月经营进度'));
+    assert.ok(!month.keywords.includes('2026年6月经营进度'));
+  } finally {
+    META.monthLabel = previousMonthLabel;
+  }
+});
+
+test('builds the default filter range from the current China calendar month', () => {
+  assert.deepEqual(getCurrentMonthFilterRange(Date.UTC(2026, 6, 8, 1)), ['2026-07-01', '2026-07-31']);
+});
+
 test('changes KPI card values when the calendar range changes', () => {
   const defaultCards = getFilteredKpiCards({ dim: 'month', dateRange: ['2026-06-01', '2026-06-30'] });
   const shortRangeCards = getFilteredKpiCards({ dim: 'month', dateRange: ['2026-06-01', '2026-06-10'] });
@@ -156,6 +179,6 @@ test('changes KPI card values when the year-month-day granularity changes', () =
 });
 
 test('formats incomplete or empty calendar selections for card subtitles', () => {
-  assert.equal(formatDateRangeLabel([]), '2026-06-01 至 2026-06-30');
+  assert.equal(formatDateRangeLabel([]), `${DEFAULT_FILTER_RANGE[0]} 至 ${DEFAULT_FILTER_RANGE[1]}`);
   assert.equal(formatDateRangeLabel(['2026-06-08']), '2026-06-08');
 });

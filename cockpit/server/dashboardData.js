@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:15:00 CST
+ 更新内容: 首页业务月份改为中国时区当前自然月，避免 7 月访问时因事实表尚未同步而把 6 月显示为“本月”。
+*/
+/*
  更新时间: 2026-07-08 16:37:08 CST
  更新内容: 渠道目标和人员明细增加部门编码兜底渠道口径，年度/本月下钻改用维护目标与日级回款聚合，避免新增销售漏显。
 */
@@ -550,9 +554,12 @@ async function queryRows(connection, sql, params = []) {
   return rows;
 }
 
+function currentBusinessMonth() {
+  return chinaTodayYMD().yearMonth;
+}
+
 export async function buildDashboardSnapshot(connection) {
-  const latestRows = await queryRows(connection, 'SELECT MAX(`year_month`) AS latestMonth FROM fact_sales_member_monthly');
-  const latestMonth = latestRows[0]?.latestMonth || '2026-06';
+  const latestMonth = currentBusinessMonth();
   const prevMonthRows = await queryRows(connection, "SELECT DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(?, '-01'), '%Y-%m-%d'), INTERVAL 1 MONTH), '%Y-%m') AS previousMonth", [latestMonth]);
   const previousMonth = prevMonthRows[0]?.previousMonth;
   const latestYear = String(latestMonth).slice(0, 4);

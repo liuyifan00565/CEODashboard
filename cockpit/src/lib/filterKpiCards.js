@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:15:00 CST
+ 更新内容: 默认日期范围改为中国时区当前自然月，并让经营进度搜索关键词读取运行时月份。
+*/
+/*
  更新时间: 2026-07-07 17:33:00 CST
  更新内容: 年度节奏搜索关键词由"明细 >"同步为"查看年度拆解"，与新版 CTA 一致。
 */
@@ -58,12 +62,35 @@
  更新时间: 2026-07-01 12:26:40
  更新内容: 回款 KPI 副文案目标标签与目标金额换到同一行，并移除日期后的分隔点。
 */
-import { CHANNEL_ROI, CHANNELS, KPI, KPI_CARDS, KPI_DERIVED, getRenewalModalData } from '../data/mock.js';
-
-export const DEFAULT_FILTER_RANGE = ['2026-06-01', '2026-06-30'];
+import { CHANNEL_ROI, CHANNELS, KPI, KPI_CARDS, KPI_DERIVED, META, getRenewalModalData } from '../data/mock.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DIM_KEYS = new Set(['year', 'month', 'day']);
+
+function pad2(value) {
+  return String(value).padStart(2, '0');
+}
+
+function chinaTodayParts(now = Date.now()) {
+  const shifted = new Date(now + 8 * 3600 * 1000);
+  return {
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth() + 1,
+  };
+}
+
+function monthRange(year, month) {
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const prefix = `${year}-${pad2(month)}`;
+  return [`${prefix}-01`, `${prefix}-${pad2(lastDay)}`];
+}
+
+export function getCurrentMonthFilterRange(now = Date.now()) {
+  const { year, month } = chinaTodayParts(now);
+  return monthRange(year, month);
+}
+
+export const DEFAULT_FILTER_RANGE = getCurrentMonthFilterRange();
 
 function getDimConfig() {
   const yearCostScale = KPI.monthRecovered ? KPI.yearRecovered / KPI.monthRecovered : 0;
@@ -154,13 +181,17 @@ export function formatDateRangeLabel(dateRange) {
   return `${range[0]} 至 ${range[1]}`;
 }
 
-function isDefaultRange(range) {
-  return range.length === 2 && range[0] === DEFAULT_FILTER_RANGE[0] && range[1] === DEFAULT_FILTER_RANGE[1];
+function isFullMonthRange(range) {
+  if (range.length !== 2) return false;
+  const [startYear, startMonth, startDay] = range[0].split('-').map(Number);
+  const [endYear, endMonth, endDay] = range[1].split('-').map(Number);
+  if (startYear !== endYear || startMonth !== endMonth || startDay !== 1) return false;
+  return endDay === new Date(Date.UTC(endYear, endMonth, 0)).getUTCDate();
 }
 
 function getDateRangeFactor(dateRange) {
   const range = normalizeDateRange(dateRange);
-  if (isDefaultRange(range)) return 1;
+  if (isFullMonthRange(range)) return 1;
 
   const start = parseDateKey(range[0]);
   const end = parseDateKey(range[1] ?? range[0]);
@@ -272,7 +303,7 @@ function recoverySectionKeywords(cardKey) {
     return ['年度节奏', '查看年度拆解', '年度累计回款', '年度目标', '年度完成率', '时间进度', '已完成 53.8%', '剩余 46.2%', '下半年月均需完成 447 万', '渠道完成情况'];
   }
   if (cardKey === 'month') {
-    return ['2026年6月经营进度', '查看近期明细', '本月回款', '月度完成率', '时间进度', '领先 7.1%', '风险渠道', '完成率 70%', '渠道完成情况'];
+    return [`${META.monthLabel}经营进度`, '查看近期明细', '本月回款', '月度完成率', '时间进度', '领先 7.1%', '风险渠道', '完成率 70%', '渠道完成情况'];
   }
   return [];
 }
