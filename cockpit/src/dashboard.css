@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 16:57:24 CST
+ 更新内容: 删除顶部“更新数据”按钮残留样式，右侧工具栏只保留搜索控件。
+*/
+/*
  更新时间: 2026-07-08 14:46:29 CST
  更新内容: 移除维护模式独立返回胶囊样式，让返回主界面入口复用侧边导航行样式。
 */
@@ -232,40 +236,6 @@
 .dash-tools .fp-glass{flex:0 0 244px;max-width:244px;min-width:244px}
 .dash-tools .sgm-btn{padding:6px 12px}
 
-.dash-tools .maintenance-glass{
-  flex:0 0 auto;
-}
-.dash-topbar .maintenance-glass .glass-surface__content{padding:0}
-.dash-maintenance-switch{
-  width:100%;
-  height:100%;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:0;
-  min-width:96px;
-  padding:0 14px;
-  border:none;
-  border-radius:27px;
-  background:transparent;
-  color:var(--txt);
-  font:inherit;
-  font-size:14px;
-  font-weight:700;
-  line-height:1;
-  white-space:nowrap;
-  cursor:pointer;
-  transition:color .22s ease, transform .22s ease;
-}
-.dash-maintenance-switch:hover{
-  color:var(--txt);
-  transform:translateY(-1px);
-}
-.dash-maintenance-switch:focus-visible{
-  outline:2px solid var(--focus-outline);
-  outline-offset:3px;
-}
-
 /* ===== 内容区 ===== */
 .dash-content{
   flex:1;min-height:0;display:flex;flex-direction:column;gap:18px;
@@ -447,7 +417,6 @@
   .dash-topbar .brand-glass--compact{flex-basis:min(248px,100%);min-width:min(100%,248px);max-width:min(100%,248px)}
   .dash-topbar .brand-glass--minimal{flex-basis:min(180px,100%);min-width:min(100%,180px);max-width:min(100%,180px)}
   .dash-tools{flex:1 1 100%;width:100%;max-width:100%;margin-left:0;justify-content:flex-end}
-  .dash-tools .maintenance-glass{max-width:126px}
   .dash-token-grid{grid-template-columns:1fr}
 }
 

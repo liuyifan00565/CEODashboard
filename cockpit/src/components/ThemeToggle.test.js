@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 16:57:24 CST
+ 更新内容: 顶部工具栏断言同步删除“更新数据”按钮，继续确认主题切换不在顶栏渲染。
+*/
+/*
  更新时间: 2026-07-06 10:48:16 CST
  更新内容: 亮色主题回归测试同步银紫玫瑰 fallback、高级果味语义色与图表用途 token。
 */
@@ -102,7 +106,9 @@ test('defines a circular GlassSurface theme toggle with persistent theme state',
 test('does not render the theme toggle in the top toolbar', () => {
   assert.doesNotMatch(appSource, /import ThemeToggle from '\.\/components\/ThemeToggle';/);
   assert.doesNotMatch(appSource, /<ThemeToggle\s*\/>/);
-  assert.match(appSource, /<div className="dash-tools">\s*<GlassSurface[\s\S]*?className="maintenance-glass"[\s\S]*?<\/GlassSurface>\s*<ExpandableSearch[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
+  assert.match(appSource, /<div className="dash-tools">\s*<ExpandableSearch[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
+  assert.doesNotMatch(appSource, /aria-label="更新数据"/);
+  assert.doesNotMatch(appSource, /<span>更新数据<\/span>/);
 });
 
 test('provides dark and light theme variable contracts', () => {

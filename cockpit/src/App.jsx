@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 16:57:24 CST
+ 更新内容: 移除顶部右侧“更新数据”按钮，维护入口仅保留左侧导航的数据维护菜单。
+*/
+/*
  更新时间: 2026-07-08 14:46:29 CST
  更新内容: 维护模式左侧返回入口改为导航分组里的“经营总览”，移除独立大按钮。
 */
@@ -348,18 +352,6 @@ export default function App() {
     setActiveMaintenanceMenu(DEFAULT_MAINTENANCE_MENU);
   }
 
-  function handleMaintenanceModeToggle() {
-    if (maintenanceMode) {
-      setMaintenanceMode(false);
-      setActiveMenu('overview');
-      setActiveMaintenanceMenu(DEFAULT_MAINTENANCE_MENU);
-      return;
-    }
-
-    setMaintenanceMode(true);
-    setActiveMaintenanceMenu(DEFAULT_MAINTENANCE_MENU);
-  }
-
   function handleOpenCard(card) {
     setOpenCard(card);
     setCompanionCue({
@@ -514,28 +506,6 @@ export default function App() {
               </div>
             </GlassSurface>
             <div className="dash-tools">
-              {!maintenanceMode ? (
-                <GlassSurface
-                  width={126}
-                  height={54}
-                  borderRadius={27}
-                  brightness={46}
-                  blur={7}
-                  displace={0.35}
-                  backgroundOpacity={0.035}
-                  distortionScale={-55}
-                  className="maintenance-glass"
-                >
-                  <button
-                    type="button"
-                    className="dash-maintenance-switch"
-                    onClick={handleMaintenanceModeToggle}
-                    aria-label="更新数据"
-                  >
-                    <span>更新数据</span>
-                  </button>
-                </GlassSurface>
-              ) : null}
               <ExpandableSearch
                 onChange={setSearchTerm}
                 currentIndex={searchStats.current}
