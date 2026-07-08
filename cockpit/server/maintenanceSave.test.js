@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:45:00 CST
+ 更新内容: 单测覆盖成本维护新增渠道后映射临时 channel_id，再写入渠道成本。
+*/
+/*
  更新时间: 2026-07-08 16:37:08 CST
  更新内容: 单测补充组织保存自动维护销售 channel_key，验证调入线上销售部写 online、转非销售清空渠道。
 */
@@ -101,6 +105,27 @@ test('saveCost: 按 (year_month, channel_id) upsert investment_amount_yuan', asy
   const update = execs.find((e) => e.sql.startsWith('UPDATE'));
   assert.match(update.sql, /SET investment_amount_yuan = /);
   assert.equal(update.params[0], 500000);
+});
+
+test('saveCost: 新增渠道后映射临时 channel_id 再写成本', async () => {
+  const { conn, execs } = makeConn((sql) => {
+    if (sql === 'SELECT channel_id FROM dim_channel') return [{ channel_id: 3001 }];
+    if (sql.includes('COALESCE(MAX') && sql.includes('dim_channel')) return [{ nextId: 3100 }];
+    if (sql.includes('COALESCE(MAX') && sql.includes('biz_channel_cost_monthly')) return [{ nextId: 5100 }];
+    return [];
+  });
+  const r = await saveCost(
+    conn,
+    [{ channel_id: 'new-channel-5', year_month: '2026-03', investment_amount_wan: 12 }],
+    [{ channel_id: 'new-channel-5', channel_name: '新增渠道 5', parent_id: '', is_enabled: 1 }],
+  );
+  assert.equal(r.written, 2);
+  const channelInsert = execs.find((e) => e.sql.startsWith('INSERT INTO dim_channel '));
+  assert.ok(channelInsert);
+  assert.equal(channelInsert.params[0], 3100);
+  const costInsert = execs.find((e) => e.sql.startsWith('INSERT INTO biz_channel_cost_monthly'));
+  assert.ok(costInsert);
+  assert.deepEqual(costInsert.params, [5100, '2026-03', 3100, 120000]);
 });
 
 test('saveLabor: upsert 键为 (year_month, cost_type)，仅写 amount_yuan', async () => {

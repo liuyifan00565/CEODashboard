@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:45:00 CST
+ 更新内容: 单测覆盖成本维护新增渠道时保留临时渠道 ID，确保保存接口可映射后写入成本。
+*/
+/*
  更新时间: 2026-07-08 11:45:00 CST
  更新内容: 覆盖新增组织/渠道大类保存 payload，以及来源启用=false 转 is_excluded=1 的映射。
 */
@@ -82,6 +86,21 @@ test('buildCostSaveRows: draft 空时双数组皆空', () => {
   const { rows, laborRows } = buildCostSaveRows(COST_SNAPSHOT, {}, 2026);
   assert.deepEqual(rows, []);
   assert.deepEqual(laborRows, []);
+});
+
+test('buildCostSaveRows: 新增渠道成本保留临时 channel_id 交给后端映射', () => {
+  const snapshot = {
+    ...COST_SNAPSHOT,
+    rows: [
+      ...COST_SNAPSHOT.rows,
+      { id: 'new-channel-5', type: 'channel', name: '新增渠道 5', periods: { m03: { cost: 0 } } },
+    ],
+  };
+  const { rows } = buildCostSaveRows(snapshot, { 'new-channel-5|m03': 12 }, 2026);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].channel_id, 'new-channel-5');
+  assert.equal(rows[0].channel_name, '新增渠道 5');
+  assert.equal(rows[0].investment_amount_wan, 12);
 });
 
 const ORG_USERS = [

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:45:00 CST
+ 更新内容: 成本维护保存支持新增 dim_channel，并把临时渠道 ID 映射到渠道成本行后再写入成本表。
+*/
+/*
  更新时间: 2026-07-08 16:37:08 CST
  更新内容: 组织保存根据部门编码自动维护 dim_staff.channel_key，销售调岗同步换渠道，转非销售或无组织时清空渠道。
 */
@@ -29,6 +33,44 @@ function isTempId(value, prefix) {
 
 function normalizeNullableId(value) {
   return value == null || value === '' ? null : String(value);
+}
+
+async function saveNewChannelGroups(connection, groups = [], errors = []) {
+  let written = 0;
+  let skipped = 0;
+  const newGroups = (Array.isArray(groups) ? groups : []).filter((group) => isTempId(group?.channel_id, 'new-channel-'));
+  if (!newGroups.length) return { written, skipped, validChannelIds: new Set(), tempChannelIdMap: new Map() };
+  const channelRows = await queryRows(connection, 'SELECT channel_id FROM dim_channel');
+  const validChannelIds = new Set(channelRows.map((c) => String(c.channel_id)));
+  const tempChannelIdMap = new Map();
+
+  for (const group of newGroups) {
+    const tempId = String(group.channel_id || '');
+    if (!isTempId(tempId, 'new-channel-')) continue;
+    const name = String(group.channel_name || '').trim();
+    if (!name) {
+      skipped += 1;
+      errors.push({ field: 'channel_name', message: `新增渠道名称为空，跳过：${tempId}` });
+      continue;
+    }
+    const rawParentId = normalizeNullableId(group.parent_id);
+    const parentId = rawParentId == null ? null : (tempChannelIdMap.get(rawParentId) || rawParentId);
+    if (parentId !== null && !validChannelIds.has(parentId)) {
+      skipped += 1;
+      errors.push({ field: 'parent_id', message: `上级渠道尚未落库（${parentId}），跳过新增渠道：${name}` });
+      continue;
+    }
+    const id = await nextId(connection, 'dim_channel', 'channel_id');
+    await connection.execute(
+      'INSERT INTO dim_channel (channel_id, channel_key, channel_name, parent_id, is_enabled) VALUES (?, ?, ?, ?, ?)',
+      [id, `channel_${id}`, name, parentId, group.is_enabled == null ? 1 : (group.is_enabled ? 1 : 0)],
+    );
+    validChannelIds.add(String(id));
+    tempChannelIdMap.set(tempId, String(id));
+    written += 1;
+  }
+
+  return { written, skipped, validChannelIds, tempChannelIdMap };
 }
 
 /** 目标维护：按 (year_month, staff_id) 部分列 upsert，仅写 target_amount_yuan。人员须 is_sales=1 且有部门。 */
@@ -86,13 +128,16 @@ export async function saveTarget(connection, rows) {
   return { written, skipped, errors };
 }
 
-/** 成本维护：按 (year_month, channel_id) upsert biz_channel_cost_monthly，仅写 investment_amount_yuan。 */
-export async function saveCost(connection, rows) {
-  let written = 0;
-  let skipped = 0;
+/** 成本维护：可先新增 dim_channel，再按 (year_month, channel_id) upsert biz_channel_cost_monthly。 */
+export async function saveCost(connection, rows, groups = []) {
   const errors = [];
+  const channelRes = await saveNewChannelGroups(connection, groups, errors);
+  let written = channelRes.written;
+  let skipped = channelRes.skipped;
   for (const row of rows) {
-    const channelId = Number(row.channel_id);
+    const rawChannelId = normalizeNullableId(row.channel_id);
+    const mappedChannelId = rawChannelId == null ? null : (channelRes.tempChannelIdMap.get(rawChannelId) || rawChannelId);
+    const channelId = Number(mappedChannelId);
     const yearMonth = String(row.year_month || '');
     if (!Number.isInteger(channelId) || !/^\d{4}-\d{2}$/.test(yearMonth)) {
       skipped += 1;
@@ -283,7 +328,7 @@ export async function saveChannel(connection, rows, deletions = [], groups = [])
 const SAVERS = {
   'target-maintenance': (conn, body) => saveTarget(conn, body.rows || []),
   'cost-maintenance': async (conn, body) => {
-    const costRes = await saveCost(conn, body.rows || []);
+    const costRes = await saveCost(conn, body.rows || [], body.groups || []);
     const laborRes = await saveLabor(conn, body.laborRows || []);
     return {
       written: costRes.written + laborRes.written,

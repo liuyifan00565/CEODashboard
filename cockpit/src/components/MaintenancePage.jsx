@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:45:00 CST
+ 更新内容: 成本维护左侧渠道树与顶部工具栏新增“新增渠道”入口，新增渠道可编辑名称并随成本保存落库。
+*/
+/*
  更新时间: 2026-07-08 14:11:07 CST
  更新内容: 维护页保存按钮改为仅有未保存修改时启用，移除页内返回入口和无实际变更按钮；
           渠道新增大类支持保存前改名，新增来源默认归入当前选中大类。
@@ -308,6 +312,7 @@ function MaintenanceToolbar({ activePage, status, year, saving, canSave, onYearC
         <GlassSelect className="mnt-control mnt-year-control" value={year} onChange={handleYearChange} aria-label="成本维护年份" disabled={saving} options={YEAR_OPTIONS} />
         <button className="mnt-btn" type="button" onClick={onDownloadTemplate} disabled={saving}>下载模板</button>
         <button className="mnt-btn" type="button" onClick={onImport} disabled={saving}>Excel导入</button>
+        <button className="mnt-btn" type="button" onClick={() => onPageAction('addCostChannel')} disabled={saving}>新增渠道</button>
         <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving || !canSave}>{saving ? '保存中…' : '保存成本'}</button>
       </>
     ),
@@ -590,12 +595,17 @@ const TargetMaintenancePage = forwardRef(function TargetMaintenancePage({ markDi
 });
 
 const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty, status, costChannels, costRows, laborRows, year }, ref) {
+  const [channels, setChannels] = useState(costChannels ?? EMPTY_ARRAY);
+  const [allRows, setAllRows] = useState(costRows ?? EMPTY_ARRAY);
   const [selectedChannel, setSelectedChannel] = useState('all');
   const [selectedCostRow, setSelectedCostRow] = useState(null);
-  const channels = costChannels ?? EMPTY_ARRAY;
-  const allRows = costRows ?? EMPTY_ARRAY;
   const laborList = laborRows ?? EMPTY_ARRAY;
   const draftRef = useRef({});
+  useEffect(() => {
+    setChannels(costChannels ?? EMPTY_ARRAY);
+    setAllRows(costRows ?? EMPTY_ARRAY);
+    draftRef.current = {};
+  }, [costChannels, costRows]);
   const costNavNodes = useMemo(() => buildMaintenanceNavTree(
     channels.map((channel) => ({
       ...channel,
@@ -612,22 +622,74 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
     ]);
   }, [selectedChannel, channels, allRows]);
   const visibleRows = allRows.filter((row) => selectedIds.has(row.id) || selectedChannel === 'all');
+  const selectedNewChannel = channels.find((channel) => (
+    String(channel.id) === String(selectedChannel) && String(channel.id).startsWith('new-channel-')
+  ));
 
   useImperativeHandle(ref, () => ({
     collect: () => {
       const r = buildCostSaveRows({ rows: allRows, laborRows: laborList }, draftRef.current, year);
-      return { rows: r.rows, laborRows: r.laborRows, deletions: [] };
+      return { rows: r.rows, laborRows: r.laborRows, groups: buildChannelGroupSaveRows(channels), deletions: [] };
     },
-  }), [allRows, laborList, year]);
+    addCostChannel,
+  }), [allRows, channels, laborList, selectedChannel, year]);
 
   function handleEdit(rowId, monthKey, value) {
     draftRef.current[`${rowId}|${monthKey}`] = Number(value) || 0;
     markDirty();
   }
 
+  function buildEmptyCostPeriods() {
+    return MAINTENANCE_PERIOD_COLUMNS.reduce((periods, column) => ({
+      ...periods,
+      [column.key]: { cost: 0, actual: 0, deals: 0, roi: 0 },
+    }), {});
+  }
+
+  function addCostChannel() {
+    const index = channels.filter((channel) => channel.id !== 'all').length + 1;
+    const id = `new-channel-${index}`;
+    const name = `新增渠道 ${index}`;
+    const parentId = selectedChannel === 'all' ? '' : selectedChannel;
+    setChannels((current) => [
+      ...current,
+      { id, name, kind: '明细', parentId, enabled: true },
+    ]);
+    setAllRows((current) => [
+      ...current,
+      { id, type: 'channel', name, parentId: 'summary-all', periods: buildEmptyCostPeriods() },
+    ]);
+    setSelectedChannel(id);
+    markDirty();
+  }
+
+  function updateCostChannel(channelId, patch) {
+    setChannels((current) => current.map((channel) => (
+      String(channel.id) === String(channelId) ? { ...channel, ...patch } : channel
+    )));
+    if ('name' in patch) {
+      setAllRows((current) => current.map((row) => (
+        String(row.id) === String(channelId) ? { ...row, name: patch.name } : row
+      )));
+    }
+    markDirty();
+  }
+
   return (
     <section className="mnt-layout mnt-layout--cost">
       <Panel title="渠道树" meta={`${channels.length - 1} 个渠道`} className="mnt-side-panel">
+        <button className="mnt-btn mnt-local-action" type="button" onClick={addCostChannel}>新增渠道</button>
+        {selectedNewChannel && (
+          <label className="mnt-channel-group-editor">
+            <span>新增渠道名称</span>
+            <input
+              className="mnt-control"
+              value={selectedNewChannel.name}
+              onChange={(e) => updateCostChannel(selectedNewChannel.id, { name: e.target.value })}
+              aria-label="新增渠道名称"
+            />
+          </label>
+        )}
         <MaintenanceSideNav nodes={costNavNodes} activeId={selectedChannel} onSelect={setSelectedChannel} />
       </Panel>
       <div className="mnt-cost-stack">
