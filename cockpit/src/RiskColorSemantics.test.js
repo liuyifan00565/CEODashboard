@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-08 16:57:13 CST
- 更新内容: 交付看板超额交付守卫改为 100% 及以上，并补充 106.7% 进度金色语义。
+ 更新时间: 2026-07-08 17:06:01 CST
+ 更新内容: 交付看板超额交付测试改为 120% 及以上才显示金色标签，100%-119.9% 保持普通完成态。
 */
 /*
  更新时间: 2026-07-07 15:50:00 CST
@@ -178,14 +178,17 @@ test('keeps channel and delivery progress bars on the same risk rule', () => {
   assert.match(deliveryCss, /\.dlv-progress-pct--warn\s*\{[\s\S]*?color:\s*var\(--warn\);/);
 });
 
-test('keeps over-target delivery rows gold and labels them as excess delivery', () => {
+test('keeps only 120-percent delivery rows gold and labels them as excess delivery', () => {
   assert.match(deliverySource, /import \{ progressGradient \} from '\.\.\/lib\/format';/);
-  assert.match(deliverySource, /const isOverDelivery = Number\(pct\) >= 100;/);
+  assert.match(deliverySource, /const deliveryProgressPct = Number\(pct\) \|\| 0;/);
+  assert.match(deliverySource, /const isOverDelivery = deliveryProgressPct >= 120;/);
   assert.match(deliverySource, /const deliveryTag = isOverDelivery \? '超额交付' : isUnderDelivery \? '交付预警' : null;/);
   assert.match(deliverySource, /const deliveryRowClassName = `dlv-row\$\{isRiskDelivery \? ' dlv-row--warn' : ''\}\$\{isOverDelivery \? ' dlv-row--over' : ''\}`;/);
   assert.match(deliverySource, /const deliveryTagClassName = `dlv-tag\$\{isOverDelivery \? ' dlv-tag--over' : ''\}`;/);
   assert.match(deliverySource, /const deliveryProgressPctClassName = `dlv-progress-pct\$\{isRiskDelivery \? ' dlv-progress-pct--warn' : ''\}\$\{isOverDelivery \? ' dlv-progress-pct--over' : ''\}`;/);
-  assert.match(deliverySource, /const deliveryProgressBackground = progressGradient\(pct, tokens\.progressMid\);/);
+  assert.match(deliverySource, /const deliveryVisualPct = isOverDelivery \? deliveryProgressPct : Math\.min\(deliveryProgressPct, 99\.9\);/);
+  assert.match(deliverySource, /const deliveryProgressBackground = progressGradient\(deliveryVisualPct, tokens\.progressMid\);/);
+  assert.doesNotMatch(deliverySource, />= 100/);
   assert.match(deliverySource, /\{deliveryTag && <span className=\{deliveryTagClassName\}>\{deliveryTag\}<\/span>\}/);
   assert.doesNotMatch(deliverySource, /COLOR\.warnGradient/);
   assert.match(deliveryCss, /\.dlv-row--over\s*\{[\s\S]*?color-mix\(in srgb, var\(--accent-gold\) 7%, transparent\)[\s\S]*?color-mix\(in srgb, var\(--accent-gold\) 3%, var\(--glass-cell\)\)[\s\S]*?border-color:\s*color-mix\(in srgb, var\(--accent-gold\) 18%, var\(--line\)\);[\s\S]*?box-shadow:\s*inset 0 1px 0 color-mix\(in srgb, var\(--accent-gold-soft\) 8%, transparent\);/);

@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-08 16:57:13 CST  更新内容: 交付看板 100% 及以上即进入金色超额交付状态，避免仅 120% 样例显示超额。 */
+/* 更新时间: 2026-07-08 17:06:01 CST  更新内容: 交付看板超额交付恢复为 120% 及以上才显示金色和标签，100%-119.9% 保持普通完成态。 */
 /* 更新时间: 2026-07-03 23:33:15 CST  更新内容: 交付看板超额完成行新增金色背景、标签与百分比状态类。 */
 /* 更新时间: 2026-07-03 23:27:50 CST  更新内容: 交付看板超额完成行保留金色完成态，并显示超额交付标签。 */
 /* 更新时间: 2026-07-03 23:22:16 CST  更新内容: 交付看板超额完成行复用红色预警视觉，并显示超额交付标签。 */
@@ -42,14 +42,16 @@ export default function DeliveryPanel() {
       <div className="dlv-list">
         {rows.map((row) => {
           const pct = row.completion;
+          const deliveryProgressPct = Number(pct) || 0;
           const isUnderDelivery = row.warn;
-          const isOverDelivery = Number(pct) >= 100;
+          const isOverDelivery = deliveryProgressPct >= 120;
           const isRiskDelivery = isUnderDelivery;
           const deliveryTag = isOverDelivery ? '超额交付' : isUnderDelivery ? '交付预警' : null;
           const deliveryRowClassName = `dlv-row${isRiskDelivery ? ' dlv-row--warn' : ''}${isOverDelivery ? ' dlv-row--over' : ''}`;
           const deliveryTagClassName = `dlv-tag${isOverDelivery ? ' dlv-tag--over' : ''}`;
           const deliveryProgressPctClassName = `dlv-progress-pct${isRiskDelivery ? ' dlv-progress-pct--warn' : ''}${isOverDelivery ? ' dlv-progress-pct--over' : ''}`;
-          const deliveryProgressBackground = progressGradient(pct, tokens.progressMid);
+          const deliveryVisualPct = isOverDelivery ? deliveryProgressPct : Math.min(deliveryProgressPct, 99.9);
+          const deliveryProgressBackground = progressGradient(deliveryVisualPct, tokens.progressMid);
 
           return (
             <div className={deliveryRowClassName} key={row.key}>

@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-08 16:57:13 CST
- 更新内容: 增加交付看板 106.7% 与 100% 目标完成边界样例，配合超额交付金色状态调整。
+ 更新时间: 2026-07-08 17:06:01 CST
+ 更新内容: 交付看板样例边界改为 120% 才是超额交付，保留 106.7% 与 100% 非超额样例。
 */
 /*
  更新时间: 2026-07-07 15:25:00 CST
@@ -395,6 +395,7 @@ test('returns delivery rows and summary against the 15 order monthly target', ()
   assert.equal(DELIVERY_TARGET_COUNT, 15);
   assert.ok(rows.every((row) => row.targetCount === DELIVERY_TARGET_COUNT));
   assert.ok(rows.every((row) => row.averageOrderPrice > 0 && row.valuePerPerson > 0));
+  assert.equal(byKey(rows, 'delivery-01').completion, 120);
   assert.equal(byKey(rows, 'delivery-02').completion, 106.7);
   assert.equal(byKey(rows, 'delivery-03').completion, 100);
   assert.ok(rows.some((row) => row.completion < 80));
