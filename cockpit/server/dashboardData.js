@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-08 17:15:00 CST
- 更新内容: 首页业务月份改为中国时区当前自然月，避免 7 月访问时因事实表尚未同步而把 6 月显示为“本月”。
+ 更新时间: 2026-07-08 17:23:00 CST
+ 更新内容: 首页业务月份增加临时 2026-06 覆盖；其它原因处理完后移除覆盖即可恢复自动月份。
 */
 /*
  更新时间: 2026-07-08 16:37:08 CST
@@ -43,6 +43,9 @@ const DB_DEFAULTS = {
   port: 3306,
   database: 'ceo_dashboard',
 };
+
+// 临时锁定 2026-06：其它数据原因处理完后，把这里改为空字符串即可恢复自动月份。
+const TEMP_DASHBOARD_MONTH_OVERRIDE = '2026-06';
 
 const STAFF_CHANNEL_KEY_SQL = `COALESCE(NULLIF(s.channel_key, ''), CASE
   WHEN d.department_code = 'online-sales' THEN 'online'
@@ -554,12 +557,26 @@ async function queryRows(connection, sql, params = []) {
   return rows;
 }
 
-function currentBusinessMonth() {
-  return chinaTodayYMD().yearMonth;
+async function loadLatestActualMonth(connection) {
+  const latestRows = await queryRows(connection, `
+    SELECT MAX(actual_month) AS latestMonth
+    FROM (
+      SELECT DATE_FORMAT(MAX(stat_date), '%Y-%m') AS actual_month
+      FROM fact_revenue_daily
+      UNION ALL
+      SELECT MAX(\`year_month\`) AS actual_month
+      FROM fact_sales_member_monthly
+    ) actual_months
+  `);
+  return latestRows[0]?.latestMonth || chinaTodayYMD().yearMonth;
+}
+
+async function selectDashboardBusinessMonth(connection) {
+  return process.env.DASHBOARD_MONTH_OVERRIDE || TEMP_DASHBOARD_MONTH_OVERRIDE || await loadLatestActualMonth(connection);
 }
 
 export async function buildDashboardSnapshot(connection) {
-  const latestMonth = currentBusinessMonth();
+  const latestMonth = await selectDashboardBusinessMonth(connection);
   const prevMonthRows = await queryRows(connection, "SELECT DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(?, '-01'), '%Y-%m-%d'), INTERVAL 1 MONTH), '%Y-%m') AS previousMonth", [latestMonth]);
   const previousMonth = prevMonthRows[0]?.previousMonth;
   const latestYear = String(latestMonth).slice(0, 4);

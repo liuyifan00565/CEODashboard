@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-08 17:15:00 CST
- 更新内容: 默认日期范围改为中国时区当前自然月，并让经营进度搜索关键词读取运行时月份。
+ 更新时间: 2026-07-08 17:23:00 CST
+ 更新内容: 默认日期范围临时恢复到 2026 年 6 月整月，并保留经营进度搜索关键词读取运行时月份。
 */
 /*
  更新时间: 2026-07-07 17:33:00 CST
@@ -67,30 +67,7 @@ import { CHANNEL_ROI, CHANNELS, KPI, KPI_CARDS, KPI_DERIVED, META, getRenewalMod
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DIM_KEYS = new Set(['year', 'month', 'day']);
 
-function pad2(value) {
-  return String(value).padStart(2, '0');
-}
-
-function chinaTodayParts(now = Date.now()) {
-  const shifted = new Date(now + 8 * 3600 * 1000);
-  return {
-    year: shifted.getUTCFullYear(),
-    month: shifted.getUTCMonth() + 1,
-  };
-}
-
-function monthRange(year, month) {
-  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  const prefix = `${year}-${pad2(month)}`;
-  return [`${prefix}-01`, `${prefix}-${pad2(lastDay)}`];
-}
-
-export function getCurrentMonthFilterRange(now = Date.now()) {
-  const { year, month } = chinaTodayParts(now);
-  return monthRange(year, month);
-}
-
-export const DEFAULT_FILTER_RANGE = getCurrentMonthFilterRange();
+export const DEFAULT_FILTER_RANGE = ['2026-06-01', '2026-06-30'];
 
 function getDimConfig() {
   const yearCostScale = KPI.monthRecovered ? KPI.yearRecovered / KPI.monthRecovered : 0;

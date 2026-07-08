@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-08 17:15:00 CST
- 更新内容: 增加默认日期范围跟随当前自然月、经营进度搜索关键词跟随运行时月份的回归测试。
+ 更新时间: 2026-07-08 17:23:00 CST
+ 更新内容: 默认日期范围回归到 2026 年 6 月整月，并保留经营进度搜索关键词跟随运行时月份的回归测试。
 */
 /*
  更新时间: 2026-07-07 15:25:00 CST
@@ -54,7 +54,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { META } from '../data/mock.js';
-import { DEFAULT_FILTER_RANGE, getCurrentMonthFilterRange, getFilteredKpiCards, formatDateRangeLabel } from './filterKpiCards.js';
+import { DEFAULT_FILTER_RANGE, getFilteredKpiCards, formatDateRangeLabel } from './filterKpiCards.js';
 
 function byKey(cards, key) {
   return cards.find((card) => card.key === key);
@@ -153,8 +153,8 @@ test('uses runtime month label in operating overview search keywords', () => {
   }
 });
 
-test('builds the default filter range from the current China calendar month', () => {
-  assert.deepEqual(getCurrentMonthFilterRange(Date.UTC(2026, 6, 8, 1)), ['2026-07-01', '2026-07-31']);
+test('keeps the temporary default filter range on June while reviewing June facts', () => {
+  assert.deepEqual(DEFAULT_FILTER_RANGE, ['2026-06-01', '2026-06-30']);
 });
 
 test('changes KPI card values when the calendar range changes', () => {
