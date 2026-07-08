@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-08 17:04:41 CST",
+  "updatedAt": "2026-07-08 17:20:26 CST",
   "criteria": {
     "smooth": "至少 8 帧，脚底抖动不超过 3px，中心抖动不超过 12px，四边透明安全边距不少于 18px。",
     "reasonable": "动作语义需要来自帧图本体，允许轻量发光/符号辅助，但不允许用文字说明代替动作。"
@@ -7,12 +7,12 @@
   "actions": {
     "idleFukeRich": {
       "frameCount": 12,
-      "maxCenterJitterPx": 0.5,
-      "maxFootJitterPx": 0,
-      "minTransparentMarginPx": 18,
+      "maxCenterJitterPx": 2,
+      "maxFootJitterPx": 2,
+      "minTransparentMarginPx": 19,
       "smooth": true,
       "reasonable": true,
-      "source": "imagegen-derived-from-fuke-ai-reference",
+      "source": "stabilized-from-official-fuke-ai-reference",
       "file": "/mascot-actions/mascot-idle-fuke-rich.png"
     },
     "idleBreathe": {

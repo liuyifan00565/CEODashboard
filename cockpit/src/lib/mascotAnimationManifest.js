@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:20:26 CST
+ 更新内容: 将福客 AI 待机帧改为同源稳定慢呼吸，降低 fps 并移除快速眨眼，避免左下角小人忽大忽小和鬼畜感。
+*/
+/*
  更新时间: 2026-07-08 17:04:41 CST
  更新内容: 接入 imagegen 生成的福客 AI 富待机帧作为默认待机循环，避免左下角入口继续显示旧小帧待机效果。
 */
@@ -66,7 +70,7 @@ export const MASCOT_APPROVED_ASSETS = Object.freeze({
 });
 
 export const MASCOT_ACTION_AUDIT = Object.freeze({
-  idleFukeRich: auditSpec(12, 0.5, 0, 18),
+  idleFukeRich: auditSpec(12, 2, 2, 19),
   idleBreathe: auditSpec(12, 1, 0, 21),
   idleLook: auditSpec(12, 1, 0, 21),
   idleBounce: auditSpec(12, 0, 0, 21),
@@ -81,7 +85,7 @@ export const MASCOT_ACTION_AUDIT = Object.freeze({
 });
 
 export const MASCOT_IDLE_VARIANTS = Object.freeze([
-  idleVariant('fukeRich', 'idleFukeRich', 12),
+  idleVariant('fukeRich', 'idleFukeRich', 6),
 ]);
 
 const idleByKey = new Map(MASCOT_IDLE_VARIANTS.map((variant) => [variant.key, variant]));

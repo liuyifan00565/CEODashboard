@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:20:26 CST
+ 更新内容: 要求默认待机保持慢速同源帧循环，避免快速眨眼和跨帧尺寸漂移。
+*/
+/*
  更新时间: 2026-07-08 17:04:41 CST
  更新内容: 要求默认待机使用 imagegen 生成的福客 AI 富帧图，避免回退到旧小帧待机效果。
 */
@@ -108,13 +112,14 @@ test('limits the 2D mascot runtime to approved generated project assets', () => 
   assert.ok(!Object.values(MASCOT_APPROVED_ASSETS.sheets).includes('/mascot-actions/mascot-laptop.png'));
 });
 
-test('uses the imagegen Fu Xiaoke rich idle sheet as the default real frame loop', () => {
+test('uses the stabilized Fu Xiaoke slow idle sheet as the default real frame loop', () => {
   assert.equal(MASCOT_IDLE_VARIANTS.length, 1);
   assert.deepEqual(MASCOT_IDLE_VARIANTS.map((item) => item.key), ['fukeRich']);
   for (const variant of MASCOT_IDLE_VARIANTS) {
     assert.ok(Array.isArray(variant.frames), `${variant.key} should declare frame indexes`);
     assert.equal(variant.playback, 'frames', `${variant.key} should be a real idle frame sequence`);
     assert.ok(variant.frames.length >= 8, `${variant.key} should have enough frames to loop smoothly`);
+    assert.equal(variant.fps, 6, `${variant.key} should idle slowly enough to avoid frantic blinking`);
     assert.equal(variant.sheetKey, 'idleFukeRich', `${variant.key} should point to the rich Fu Xiaoke idle sheet`);
   }
 });
@@ -124,7 +129,11 @@ test('maps product actions to explicit frame animation specs', () => {
     const animation = MASCOT_ANIMATIONS[action];
     assert.ok(animation, `${action} should have an animation spec`);
     assert.ok(Array.isArray(animation.frames), `${action} should declare frames`);
-    assert.ok(animation.fps >= 12, `${action} should be at least 12fps`);
+    if (action === MASCOT_ACTIONS.idle) {
+      assert.equal(animation.fps, 6, `${action} should be a calm slow idle loop`);
+    } else {
+      assert.ok(animation.fps >= 12, `${action} should be at least 12fps`);
+    }
     assert.equal(animation.playback, 'frames', `${action} should play actual authored frames`);
     assert.ok(animation.frames.length >= 8, `${action} should have enough frames for smooth motion`);
     assert.ok(MASCOT_ACTION_SHEETS[animation.sheetKey], `${action} should reference a generated sheet`);
