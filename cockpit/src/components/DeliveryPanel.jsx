@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-08 16:57:13 CST  更新内容: 交付看板 100% 及以上即进入金色超额交付状态，避免仅 120% 样例显示超额。 */
 /* 更新时间: 2026-07-03 23:33:15 CST  更新内容: 交付看板超额完成行新增金色背景、标签与百分比状态类。 */
 /* 更新时间: 2026-07-03 23:27:50 CST  更新内容: 交付看板超额完成行保留金色完成态，并显示超额交付标签。 */
 /* 更新时间: 2026-07-03 23:22:16 CST  更新内容: 交付看板超额完成行复用红色预警视觉，并显示超额交付标签。 */
@@ -42,7 +43,7 @@ export default function DeliveryPanel() {
         {rows.map((row) => {
           const pct = row.completion;
           const isUnderDelivery = row.warn;
-          const isOverDelivery = pct > 100;
+          const isOverDelivery = Number(pct) >= 100;
           const isRiskDelivery = isUnderDelivery;
           const deliveryTag = isOverDelivery ? '超额交付' : isUnderDelivery ? '交付预警' : null;
           const deliveryRowClassName = `dlv-row${isRiskDelivery ? ' dlv-row--warn' : ''}${isOverDelivery ? ' dlv-row--over' : ''}`;

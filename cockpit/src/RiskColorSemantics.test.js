@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 16:57:13 CST
+ 更新内容: 交付看板超额交付守卫改为 100% 及以上，并补充 106.7% 进度金色语义。
+*/
+/*
  更新时间: 2026-07-07 15:50:00 CST
  更新内容: 月度趋势风险语义测试同步新结构——目标背景宽柱(淡灰紫低透明)、回款前景窄柱(银紫玫瑰渐变)、完成率细线+圆点且 y 轴超 100% 自动扩展并加 100% 基准线，移除 6 月高亮相关断言。
 */
@@ -103,8 +107,10 @@ test('uses rose risk below 80, silver rose from 80 to 99, and champagne at 100 p
   assert.equal(format.progressGradient(80, '#E4B8D7'), format.COLOR.goodGradient);
   assert.equal(format.progressGradient(99.9, '#E4B8D7'), format.COLOR.goodGradient);
   assert.equal(format.progressColor(100, format.COLOR.good, format.COLOR.gold), format.COLOR.gold);
+  assert.equal(format.progressColor(106.7, format.COLOR.good, format.COLOR.gold), format.COLOR.gold);
   assert.equal(format.progressColor(118, format.COLOR.good, format.COLOR.gold), format.COLOR.gold);
   assert.equal(format.progressGradient(100, '#E4B8D7'), format.COLOR.goldGradient);
+  assert.equal(format.progressGradient(106.7, '#E4B8D7'), format.COLOR.goldGradient);
   assert.equal(format.progressGradient(118, '#E4B8D7'), format.COLOR.goldGradient);
 });
 
@@ -174,7 +180,7 @@ test('keeps channel and delivery progress bars on the same risk rule', () => {
 
 test('keeps over-target delivery rows gold and labels them as excess delivery', () => {
   assert.match(deliverySource, /import \{ progressGradient \} from '\.\.\/lib\/format';/);
-  assert.match(deliverySource, /const isOverDelivery = pct > 100;/);
+  assert.match(deliverySource, /const isOverDelivery = Number\(pct\) >= 100;/);
   assert.match(deliverySource, /const deliveryTag = isOverDelivery \? '超额交付' : isUnderDelivery \? '交付预警' : null;/);
   assert.match(deliverySource, /const deliveryRowClassName = `dlv-row\$\{isRiskDelivery \? ' dlv-row--warn' : ''\}\$\{isOverDelivery \? ' dlv-row--over' : ''\}`;/);
   assert.match(deliverySource, /const deliveryTagClassName = `dlv-tag\$\{isOverDelivery \? ' dlv-tag--over' : ''\}`;/);

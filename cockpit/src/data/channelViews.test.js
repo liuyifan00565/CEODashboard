@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 16:57:13 CST
+ 更新内容: 增加交付看板 106.7% 与 100% 目标完成边界样例，配合超额交付金色状态调整。
+*/
+/*
  更新时间: 2026-07-07 15:25:00 CST
  更新内容: 移除 monthJudgement / annualJudgement 断言，该摘要字段已随经营摘要删除。
 */
@@ -391,6 +395,8 @@ test('returns delivery rows and summary against the 15 order monthly target', ()
   assert.equal(DELIVERY_TARGET_COUNT, 15);
   assert.ok(rows.every((row) => row.targetCount === DELIVERY_TARGET_COUNT));
   assert.ok(rows.every((row) => row.averageOrderPrice > 0 && row.valuePerPerson > 0));
+  assert.equal(byKey(rows, 'delivery-02').completion, 106.7);
+  assert.equal(byKey(rows, 'delivery-03').completion, 100);
   assert.ok(rows.some((row) => row.completion < 80));
   assert.equal(summary.targetCount, DELIVERY_TARGET_COUNT);
   assert.equal(summary.people, rows.length);
