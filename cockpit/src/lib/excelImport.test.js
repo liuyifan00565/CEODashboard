@@ -107,6 +107,53 @@ test('mapAndValidate 整行空行跳过', () => {  const { rows, errors } = mapA
   assert.equal(errors.length, 0);
 });
 
+test('mapAndValidate 日期单元格（Excel 序列号）按 UTC 还原，不受本地时区拉偏', () => {
+  // 真实场景：用户在「目标月份」列填了 2026-09-01 的日期单元格。
+  // cellDates:false 下 xlsx 读出的是 Excel 序列号 46266；在 UTC+8 时区下若用本地 getMonth()
+  // 会被错算成 8 月。此处直接喂序列号，验证得到 2026-09。
+  const { rows, errors } = mapAndValidate(
+    ['销售', '月份', '回款目标', '是否销售'],
+    [['照样', 46266, '100', '是']],
+    TARGET_CONFIG,
+  );
+  assert.equal(errors.length, 0, `不应有错误：${JSON.stringify(errors)}`);
+  assert.equal(rows[0].target_month, '2026-09');
+});
+
+test('mapAndValidate 经 JSON 序列化传到后端的 ISO 时间串也能还原正确月份', () => {
+  // 前端 Date 经 JSON.stringify 变成 ISO 串发给后端。UTC+8 下 9 月 1 日的日期单元格会序列化成
+  // 2026-08-31T15:59:17.000Z 这种 instant，字符串前缀正好落在 8 月——验证不会被它带偏。
+  const { rows, errors } = mapAndValidate(
+    ['销售', '月份', '回款目标', '是否销售'],
+    [['照样', '2026-08-31T15:59:17.000Z', '100', '是']],
+    TARGET_CONFIG,
+  );
+  assert.equal(errors.length, 0, `不应有错误：${JSON.stringify(errors)}`);
+  assert.equal(rows[0].target_month, '2026-09');
+});
+
+test('mapAndValidate 误填的纯小数字不当日期静默通过', () => {
+  // 9 不是合法月份，也不在业务年份区间，应报错而非当成 1900-01-09
+  const { errors } = mapAndValidate(
+    ['销售', '月份', '回款目标', '是否销售'],
+    [['张三', 9, '100', '是']],
+    TARGET_CONFIG,
+  );
+  assert.ok(errors.some((e) => e.field === 'target_month' && /不是合法月份/.test(e.message)));
+});
+
+test('mapAndValidate 日期类型列（withDay）从序列号还原完整日期', () => {
+  const cfg = {
+    pageKey: 'date-col',
+    sheetName: null,
+    columns: [{ field: 'd', header: '日期', required: true, type: 'date' }],
+    uniqueKey: ['d'],
+  };
+  const { rows, errors } = mapAndValidate(['日期'], [[46266]], cfg);
+  assert.equal(errors.length, 0);
+  assert.equal(rows[0].d, '2026-09-01');
+});
+
 test('buildTemplateWorkbook 生成表头与示例并可被重新解析', () => {
   const bytes = buildTemplateWorkbook(TARGET_CONFIG);
   const wb = XLSX.read(bytes, { type: 'array' });

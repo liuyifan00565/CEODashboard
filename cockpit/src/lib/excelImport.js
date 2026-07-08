@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-08 14:30:00 CST
+ 更新内容: 修复日期单元格月份错位（9 月被识别成 8 月）。
+          根因：xlsx cellDates:true 把 Excel 日期格构造成带时区的 JS Date，
+          在 UTC+8 等时区叠加 1900 闰年修正后，getMonth() 会把「9 月 1 日」拉到「8 月 31 日」。
+          改为 cellDates:false 让日期格以 Excel 序列号（纯数字）读出，再用与时区无关的
+          序列号→年月日换算；Date / ISO 串分支一并改为 UTC 取值作防御。
+*/
+/*
  更新时间: 2026-07-07 10:00:00 CST
  更新内容: 新增 Excel 导入纯函数逻辑（读取/抽取/映射校验/模板生成/下载），完全由配置驱动，
           前端与后端共享，不含任何硬编码列名。
@@ -7,11 +15,13 @@ import * as XLSX from 'xlsx';
 
 /**
  * 读取 Excel 文件为 workbook。
- * cellDates:true 让日期单元格解析成 JS Date，便于 month/date 类型归一化。
+ * 注意：刻意不使用 cellDates。Excel 日期格本身没有时区，cellDates:true 会让 xlsx 用本地时区
+ * 构造 JS Date，再叠加 1900 闰年修正，在 UTC+8 等时区下会把「9 月 1 日」错算成「8 月 31 日」。
+ * 关闭后日期格以 Excel 序列号（纯数字）读出，由 excelSerialToYMD 做与时区无关的换算。
  */
 export async function readWorkbook(file) {
   const buffer = await file.arrayBuffer();
-  return XLSX.read(buffer, { type: 'array', cellDates: true });
+  return XLSX.read(buffer, { type: 'array', cellDates: false });
 }
 
 /** 取 workbook 的所有 sheet 名。 */
@@ -95,16 +105,62 @@ function pad2(n) {
   return String(n).padStart(2, '0');
 }
 
+/**
+ * Excel 序列号 -> { y, m, d }（与时区无关的纯整数换算）。
+ * xlsx（cellDates:false）读出的日期格 v 即 Excel 1900 日期系统的序列号：
+ * 以 1899-12-30 为 serial=0 基准，serial*1天 按 UTC 整天换算即可还原日历日期，
+ * 全程不碰本地时区（经实测：serial 46266 == 2026-09-01）。
+ * 仅当换算出的年份落在业务区间 [2000, 2100] 内才视为合法日期，避免把误填的纯小数字（如 9）
+ * 当成 1900 年的序列号静默通过。
+ */
+function excelSerialToYMD(serial) {
+  const s = Number(serial);
+  if (!Number.isFinite(s)) return null;
+  const epochMs = Date.UTC(1899, 11, 30); // 1899-12-30 00:00 UTC == serial 0
+  const d = new Date(epochMs + Math.floor(s) * 86400000);
+  const y = d.getUTCFullYear();
+  if (y < 2000 || y > 2100) return null;
+  return { y, m: d.getUTCMonth() + 1, d: d.getUTCDate() };
+}
+
+/**
+ * 把一个表示“某一天”的 JS Date instant 归一化为 { y, m, d }。
+ * Excel 日期格没有时区，但 xlsx/cellDates 会把它构造成本地时区的 Date，再叠加 1900 修正，
+ * 导致 instant 落在前后一天的 15:59 / 16:00 附近。按 UTC 整天四舍五入恢复原日历日期。
+ */
+function instantToYMD(date) {
+  const day = Math.round(date.getTime() / 86400000);
+  const d = new Date(day * 86400000);
+  return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate() };
+}
+
 function toDateMonth(value, withDay) {
-  // JS Date（Excel 日期单元格）
+  // Excel 日期单元格以序列号读出（cellDates:false）—— 与时区无关，最可靠。
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const ymd = excelSerialToYMD(value);
+    if (ymd) {
+      if (withDay) return `${ymd.y}-${pad2(ymd.m)}-${pad2(ymd.d)}`;
+      return `${ymd.y}-${pad2(ymd.m)}`;
+    }
+  }
+  // JS Date（万一别处开启 cellDates）—— 按 UTC 整天四舍五入，避免本地时区拉偏月份。
   if (value instanceof Date) {
-    const y = value.getFullYear();
-    const m = value.getMonth() + 1;
-    if (withDay) return `${y}-${pad2(m)}-${pad2(value.getDate())}`;
-    return `${y}-${pad2(m)}`;
+    const ymd = instantToYMD(value);
+    if (withDay) return `${ymd.y}-${pad2(ymd.m)}-${pad2(ymd.d)}`;
+    return `${ymd.y}-${pad2(ymd.m)}`;
   }
   const s = String(value).trim();
-  // 2026-03 / 2026/03 / 2026.03 / 2026年3月
+  // 经 JSON 序列化传到后端的 ISO 时间串（如 2026-08-31T15:59:17.000Z），同样存在时区偏移，
+  // 按 instant 归一化，避免字符串前缀正好落在错的那一天。
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+    const parsed = new Date(s);
+    if (!Number.isNaN(parsed.getTime())) {
+      const ymd = instantToYMD(parsed);
+      if (withDay) return `${ymd.y}-${pad2(ymd.m)}-${pad2(ymd.d)}`;
+      return `${ymd.y}-${pad2(ymd.m)}`;
+    }
+  }
+  // 用户手填的纯文本：2026-03 / 2026/03 / 2026.03 / 2026年3月
   const m = s.match(/^(\d{4})\s*[-/.年]\s*(\d{1,2})/);
   if (m) {
     const y = Number(m[1]);
