@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 12:09:25 CST
+ 更新内容: 让目标维护页左侧组织架构点击后同步过滤右侧年度目标表，避免只切换选中态但数据范围不变。
+*/
+/*
  更新时间: 2026-07-08 11:45:00 CST
  更新内容: 维护页保存 payload 补齐 departments/groups；新增组织/渠道大类可落库并映射给人员/来源；
           渠道来源“启用/排除”改为互斥状态，保存时真实写入 is_excluded。
@@ -220,6 +224,42 @@ function getDescendantIds(items, selectedId) {
   }
 
   return ids;
+}
+
+function collectNestedNodeIds(node, ids) {
+  if (!node) return;
+  ids.add(String(node.id));
+  node.children?.forEach((child) => collectNestedNodeIds(child, ids));
+}
+
+function findNestedNodeById(node, selectedId) {
+  if (!node) return null;
+  if (String(node.id) === String(selectedId)) return node;
+
+  for (const child of node.children ?? []) {
+    const found = findNestedNodeById(child, selectedId);
+    if (found) return found;
+  }
+
+  return null;
+}
+
+function getNestedDescendantIds(rootNode, selectedId) {
+  const selectedNode = findNestedNodeById(rootNode, selectedId);
+  const ids = new Set();
+  collectNestedNodeIds(selectedNode, ids);
+  return ids;
+}
+
+function targetRowBelongsToOrg(row, selectedOrgIds) {
+  if (row.type === 'department') {
+    const rowId = String(row.id ?? '');
+    const summaryPrefix = 'summary-';
+    return selectedOrgIds.has(rowId)
+      || (rowId.startsWith(summaryPrefix) && selectedOrgIds.has(rowId.slice(summaryPrefix.length)));
+  }
+
+  return selectedOrgIds.has(String(row.deptId ?? ''));
 }
 
 function MaintenanceToolbarSurface({ className = '', children }) {
@@ -470,7 +510,16 @@ const TargetMaintenancePage = forwardRef(function TargetMaintenancePage({ markDi
   const targetScrollPaneRef = useTargetCurrentMonthAlignment();
   const draftRef = useRef({});
   const rowList = rows ?? [];
-  const selectedTargetRowIndex = rowList.findIndex((row) => `target:${row.id}` === selectedTargetRow);
+  const selectedOrgIds = useMemo(
+    () => getNestedDescendantIds(orgTree, selectedOrg),
+    [orgTree, selectedOrg]
+  );
+  const visibleTargetRows = useMemo(() => {
+    if (!orgTree || selectedOrg === orgTree.id || selectedOrgIds.size === 0) return rowList;
+    return rowList.filter((row) => targetRowBelongsToOrg(row, selectedOrgIds));
+  }, [orgTree, rowList, selectedOrg, selectedOrgIds]);
+  const visibleTargetUserCount = visibleTargetRows.filter((row) => row.type === 'user').length;
+  const selectedTargetRowIndex = visibleTargetRows.findIndex((row) => `target:${row.id}` === selectedTargetRow);
 
   useImperativeHandle(ref, () => ({
     collect: () => ({ rows: buildTargetSaveRows(rowList, draftRef.current, year), laborRows: [], deletions: [] }),
@@ -483,7 +532,7 @@ const TargetMaintenancePage = forwardRef(function TargetMaintenancePage({ markDi
 
   return (
     <section className="mnt-layout mnt-layout--target">
-      <Panel title="组织架构" meta={`${rowList.filter((row) => row.type === 'user').length} 人`} className="mnt-side-panel">
+      <Panel title="组织架构" meta={`${visibleTargetUserCount} 人`} className="mnt-side-panel">
         <MaintenanceSideNav nodes={orgTree ? [orgTree] : []} activeId={selectedOrg} onSelect={setSelectedOrg} />
       </Panel>
       <Panel title="年度目标" meta={<SaveBadge status={status} />} className="mnt-main-panel">
@@ -497,7 +546,7 @@ const TargetMaintenancePage = forwardRef(function TargetMaintenancePage({ markDi
                   </tr>
                 </thead>
                 <tbody>
-                  {rowList.map((row) => (
+                  {visibleTargetRows.map((row) => (
                     <tr key={row.id} {...getSelectableRowProps(`target:${row.id}`, selectedTargetRow, setSelectedTargetRow, row.type === 'department' ? 'mnt-row--summary' : '')}>
                       <td className="mnt-name-cell">
                         <strong>{row.name}</strong>
@@ -522,7 +571,7 @@ const TargetMaintenancePage = forwardRef(function TargetMaintenancePage({ markDi
                   </tr>
                 </thead>
                 <tbody>
-                  {rowList.map((row) => (
+                  {visibleTargetRows.map((row) => (
                     <tr key={row.id} {...getSelectableRowProps(`target:${row.id}`, selectedTargetRow, setSelectedTargetRow, row.type === 'department' ? 'mnt-row--summary' : '')}>
                       {TARGET_PERIOD_COLUMNS.map((column) => (
                         <TargetPeriodCell key={column.key} row={row} column={column} onEdit={handleEdit} />
