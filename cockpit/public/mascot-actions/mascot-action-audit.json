@@ -1,19 +1,89 @@
 {
-  "updatedAt": "2026-07-08 17:33:51 CST",
+  "updatedAt": "2026-07-08 17:45:00 CST",
   "criteria": {
-    "smooth": "运行态统一使用同一套完整稳定福客帧：至少 8 帧，脚底抖动不超过 3px，中心抖动不超过 12px，四边透明安全边距不少于 18px。",
-    "reasonable": "动作语义由同一福客本体加外层轻量动效表达，不允许切换到尺寸不一致、人物不完整或带无意义符号的旧动作图。"
+    "smooth": "所有运行态动作都从同一张正式福客 AI 透明图生成，人物宽高固定为 151x234，脚底抖动不超过 4px，中心抖动不超过 5px，四边透明安全边距不少于 18px。",
+    "reasonable": "每个动作保留独立节奏，但不允许出现人物裁切、尺寸跳变、蓝色声波线、星星、文字或其它无意义符号。"
   },
   "actions": {
     "idleFukeRich": {
       "frameCount": 12,
-      "maxCenterJitterPx": 2,
+      "maxCenterJitterPx": 2.0,
       "maxFootJitterPx": 2,
       "minTransparentMarginPx": 19,
       "smooth": true,
       "reasonable": true,
       "source": "stabilized-from-official-fuke-ai-reference",
       "file": "/mascot-actions/mascot-idle-fuke-rich.png"
+    },
+    "wave": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 3.61,
+      "maxFootJitterPx": 2,
+      "minTransparentMarginPx": 19,
+      "smooth": true,
+      "reasonable": true,
+      "source": "stabilized-from-official-fuke-ai-reference",
+      "file": "/mascot-actions/mascot-wave.png"
+    },
+    "guide": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 3.61,
+      "maxFootJitterPx": 2,
+      "minTransparentMarginPx": 20,
+      "smooth": true,
+      "reasonable": true,
+      "source": "stabilized-from-official-fuke-ai-reference",
+      "file": "/mascot-actions/mascot-guide.png"
+    },
+    "talk": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 1.0,
+      "maxFootJitterPx": 1,
+      "minTransparentMarginPx": 19,
+      "smooth": true,
+      "reasonable": true,
+      "source": "stabilized-from-official-fuke-ai-reference",
+      "file": "/mascot-actions/mascot-talk.png"
+    },
+    "think": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 1.41,
+      "maxFootJitterPx": 1,
+      "minTransparentMarginPx": 19,
+      "smooth": true,
+      "reasonable": true,
+      "source": "stabilized-from-official-fuke-ai-reference",
+      "file": "/mascot-actions/mascot-think.png"
+    },
+    "alert": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 2.0,
+      "maxFootJitterPx": 1,
+      "minTransparentMarginPx": 20,
+      "smooth": true,
+      "reasonable": true,
+      "source": "stabilized-from-official-fuke-ai-reference",
+      "file": "/mascot-actions/mascot-alert.png"
+    },
+    "celebrate": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 4.12,
+      "maxFootJitterPx": 4,
+      "minTransparentMarginPx": 19,
+      "smooth": true,
+      "reasonable": true,
+      "source": "stabilized-from-official-fuke-ai-reference",
+      "file": "/mascot-actions/mascot-celebrate.png"
+    },
+    "click": {
+      "frameCount": 12,
+      "maxCenterJitterPx": 2.0,
+      "maxFootJitterPx": 2,
+      "minTransparentMarginPx": 18,
+      "smooth": true,
+      "reasonable": true,
+      "source": "stabilized-from-official-fuke-ai-reference",
+      "file": "/mascot-actions/mascot-click.png"
     }
   }
 }

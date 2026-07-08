@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-08 18:02:17 CST
+ 更新内容: 验收小人外层不再使用 rotate/translate 动效，避免动作切换时边界框变化造成视觉大小跳变。
+*/
+/*
+ 更新时间: 2026-07-08 17:45:00 CST
+ 更新内容: 验收福客动作恢复为稳定独立帧，并禁止状态动效使用 scale 造成小人忽大忽小。
+*/
+/*
  更新时间: 2026-07-08 17:04:41 CST
  更新内容: 验收默认待机使用 imagegen 福客 AI 富帧循环，避免左下角入口继续退回旧小帧待机。
 */
@@ -143,14 +151,13 @@ test('styles generated action sheets crisply inside the existing sidebar card', 
   assert.doesNotMatch(cssCode, /mascot-3d-stage|canvas/);
 });
 
-test('uses semantic frame motion cues without text-based fake effects', () => {
-  assert.match(cssCode, /\.mascot-sprite-stage--guide\s*\{[\s\S]*animation:\s*mascot-guide-lean 1s cubic-bezier\(\.2, \.82, \.2, 1\) both;/);
-  assert.match(cssCode, /\.mascot-sprite-stage--speech,\s*[\s\S]*?\.mascot-sprite-stage--focus\s*\{[\s\S]*animation:\s*mascot-live-presence 4\.8s cubic-bezier\(\.45, 0, \.2, 1\) infinite;/);
-  assert.match(cssCode, /@keyframes mascot-guide-lean/);
-  assert.match(cssCode, /translate3d\(4px,\s*-2px,\s*0\) rotate\(-1\.5deg\) scale\(1\.025\)/);
-  assert.match(cssCode, /translate3d\(2px,\s*0,\s*0\) rotate\(-1deg\) scale\(1\.015\)/);
-  assert.doesNotMatch(cssCode, /scale\(1\.(?:1[0-9]|2[0-9])\)/);
-  assert.match(cssCode, /@keyframes mascot-live-presence/);
+test('uses authored action frames without text-based fake effects or outer size-changing motion', () => {
+  assert.doesNotMatch(cssCode, /@keyframes mascot-guide-lean/);
+  assert.doesNotMatch(cssCode, /@keyframes mascot-live-presence/);
+  assert.doesNotMatch(cssCode, /\.mascot-sprite-stage--guide\s*\{[\s\S]*animation:/);
+  assert.doesNotMatch(cssCode, /\.mascot-sprite-stage--speech,\s*[\s\S]*?\.mascot-sprite-stage--focus\s*\{[\s\S]*animation:/);
+  assert.doesNotMatch(cssCode, /scale\(/);
+  assert.doesNotMatch(cssCode, /rotate\(/);
   assert.doesNotMatch(cssCode, /content:\s*['"][^'"]+[A-Za-z\u4e00-\u9fff][^'"]*['"]/);
   assert.doesNotMatch(cssCode, /mascot-guide-ray|mascot-smart-pulse|ai-widget-guide-beam/);
 });

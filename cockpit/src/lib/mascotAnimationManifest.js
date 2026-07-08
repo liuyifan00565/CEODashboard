@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:45:00 CST
+ 更新内容: 逐个接回稳定完整的福客动作帧，每个动作同源同尺寸并保留独立节奏，避免旧素材裁切、跳变和符号残留。
+*/
+/*
  更新时间: 2026-07-08 17:33:51 CST
  更新内容: 统一所有运行态小人动作到同一套完整稳定福客帧，避免动作切换时出现人物裁切、大小跳变或无意义符号。
 */
@@ -50,6 +54,13 @@ const TWELVE_FRAMES = Object.freeze(Array.from({ length: 12 }, (_, index) => ind
 
 export const MASCOT_ACTION_SHEETS = Object.freeze({
   idleFukeRich: sheetSpec('/mascot-actions/mascot-idle-fuke-rich.png'),
+  wave: sheetSpec('/mascot-actions/mascot-wave.png'),
+  guide: sheetSpec('/mascot-actions/mascot-guide.png'),
+  talk: sheetSpec('/mascot-actions/mascot-talk.png'),
+  think: sheetSpec('/mascot-actions/mascot-think.png'),
+  alert: sheetSpec('/mascot-actions/mascot-alert.png'),
+  celebrate: sheetSpec('/mascot-actions/mascot-celebrate.png'),
+  click: sheetSpec('/mascot-actions/mascot-click.png'),
 });
 
 export const MASCOT_APPROVED_ASSETS = Object.freeze({
@@ -64,6 +75,13 @@ export const MASCOT_APPROVED_ASSETS = Object.freeze({
 
 export const MASCOT_ACTION_AUDIT = Object.freeze({
   idleFukeRich: auditSpec(12, 2, 2, 19),
+  wave: auditSpec(12, 3.61, 2, 19),
+  guide: auditSpec(12, 3.61, 2, 20),
+  talk: auditSpec(12, 1, 1, 19),
+  think: auditSpec(12, 1.41, 1, 19),
+  alert: auditSpec(12, 2, 1, 20),
+  celebrate: auditSpec(12, 4.12, 4, 19),
+  click: auditSpec(12, 2, 2, 18),
 });
 
 export const MASCOT_IDLE_VARIANTS = Object.freeze([
@@ -123,44 +141,44 @@ export const MASCOT_ANIMATIONS = Object.freeze({
   [MASCOT_ACTIONS.idle]: actionSpec(MASCOT_ACTIONS.idle, defaultIdle.sheetKey, defaultIdle.fps, {
     intensity: 'idle',
   }),
-  [MASCOT_ACTIONS.wave]: actionSpec(MASCOT_ACTIONS.wave, defaultIdle.sheetKey, defaultIdle.fps, {
-    durationMs: 920,
+  [MASCOT_ACTIONS.wave]: actionSpec(MASCOT_ACTIONS.wave, 'wave', 8, {
+    durationMs: 1200,
     loop: false,
     intensity: 'greeting',
   }),
-  [MASCOT_ACTIONS.guide]: actionSpec(MASCOT_ACTIONS.guide, defaultIdle.sheetKey, defaultIdle.fps, {
-    durationMs: 1000,
+  [MASCOT_ACTIONS.guide]: actionSpec(MASCOT_ACTIONS.guide, 'guide', 8, {
+    durationMs: 1200,
     loop: false,
     intensity: 'guide',
   }),
-  [MASCOT_ACTIONS.talk]: actionSpec(MASCOT_ACTIONS.talk, defaultIdle.sheetKey, defaultIdle.fps, {
+  [MASCOT_ACTIONS.talk]: actionSpec(MASCOT_ACTIONS.talk, 'talk', 6, {
     intensity: 'speech',
   }),
-  [MASCOT_ACTIONS.think]: actionSpec(MASCOT_ACTIONS.think, defaultIdle.sheetKey, defaultIdle.fps, {
+  [MASCOT_ACTIONS.think]: actionSpec(MASCOT_ACTIONS.think, 'think', 6, {
     intensity: 'focus',
   }),
-  [MASCOT_ACTIONS.alert]: actionSpec(MASCOT_ACTIONS.alert, defaultIdle.sheetKey, defaultIdle.fps, {
+  [MASCOT_ACTIONS.alert]: actionSpec(MASCOT_ACTIONS.alert, 'alert', 8, {
     intensity: 'alert',
   }),
-  [MASCOT_ACTIONS.celebrate]: actionSpec(MASCOT_ACTIONS.celebrate, defaultIdle.sheetKey, defaultIdle.fps, {
-    durationMs: 960,
+  [MASCOT_ACTIONS.celebrate]: actionSpec(MASCOT_ACTIONS.celebrate, 'celebrate', 8, {
+    durationMs: 1200,
     loop: false,
     intensity: 'celebrate',
   }),
-  [MASCOT_ACTIONS.click]: actionSpec(MASCOT_ACTIONS.click, defaultIdle.sheetKey, defaultIdle.fps, {
-    durationMs: 860,
+  [MASCOT_ACTIONS.click]: actionSpec(MASCOT_ACTIONS.click, 'click', 8, {
+    durationMs: 900,
     loop: false,
     intensity: 'click',
   }),
   maintenance: actionSpec('maintenance', defaultIdle.sheetKey, defaultIdle.fps, {
     intensity: 'maintenance',
   }),
-  maintenanceSave: actionSpec('maintenanceSave', defaultIdle.sheetKey, defaultIdle.fps, {
-    durationMs: 960,
+  maintenanceSave: actionSpec('maintenanceSave', 'celebrate', 8, {
+    durationMs: 1200,
     loop: false,
     intensity: 'maintenance-save',
   }),
-  maintenanceReview: actionSpec('maintenanceReview', defaultIdle.sheetKey, defaultIdle.fps, {
+  maintenanceReview: actionSpec('maintenanceReview', 'think', 6, {
     intensity: 'maintenance-review',
   }),
 });

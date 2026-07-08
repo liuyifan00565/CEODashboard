@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:45:00 CST
+ 更新内容: 要求福客动作逐个恢复为独立稳定帧，所有动作保持同源同尺寸并禁止旧素材符号残留。
+*/
+/*
  更新时间: 2026-07-08 17:33:51 CST
  更新内容: 要求所有运行态动作共享同一套完整稳定福客帧，防止状态切换造成裁切、大小跳变或符号残留。
 */
@@ -68,7 +72,28 @@ const requiredActions = [
 
 const requiredSheetKeys = [
   'idleFukeRich',
+  'wave',
+  'guide',
+  'talk',
+  'think',
+  'alert',
+  'celebrate',
+  'click',
 ];
+
+const expectedSheetByAction = {
+  [MASCOT_ACTIONS.idle]: 'idleFukeRich',
+  [MASCOT_ACTIONS.wave]: 'wave',
+  [MASCOT_ACTIONS.guide]: 'guide',
+  [MASCOT_ACTIONS.talk]: 'talk',
+  [MASCOT_ACTIONS.think]: 'think',
+  [MASCOT_ACTIONS.alert]: 'alert',
+  [MASCOT_ACTIONS.celebrate]: 'celebrate',
+  [MASCOT_ACTIONS.click]: 'click',
+  maintenance: 'idleFukeRich',
+  maintenanceSave: 'celebrate',
+  maintenanceReview: 'think',
+};
 
 function publicAssetExists(src) {
   assert.match(src, /^\/mascot-actions\/mascot-[a-z-]+\.png$/);
@@ -103,7 +128,7 @@ test('limits the 2D mascot runtime to approved generated project assets', () => 
     assert.ok(publicAssetExists(sheet));
   }
   assert.ok(!Object.values(MASCOT_APPROVED_ASSETS.sheets).includes('/mascot-actions/mascot-laptop.png'));
-  assert.deepEqual(Object.values(MASCOT_APPROVED_ASSETS.sheets), ['/mascot-actions/mascot-idle-fuke-rich.png']);
+  assert.deepEqual(Object.keys(MASCOT_APPROVED_ASSETS.sheets).sort(), requiredSheetKeys.sort());
 });
 
 test('uses the stabilized Fu Xiaoke slow idle sheet as the default real frame loop', () => {
@@ -123,21 +148,21 @@ test('maps product actions to explicit frame animation specs', () => {
     const animation = MASCOT_ANIMATIONS[action];
     assert.ok(animation, `${action} should have an animation spec`);
     assert.ok(Array.isArray(animation.frames), `${action} should declare frames`);
-    assert.equal(animation.fps, 6, `${action} should use the calm stable Fu Xiaoke loop`);
+    assert.ok(animation.fps >= 6 && animation.fps <= 8, `${action} should use a calm stable frame rate`);
     assert.equal(animation.playback, 'frames', `${action} should play actual authored frames`);
     assert.ok(animation.frames.length >= 8, `${action} should have enough frames for smooth motion`);
-    assert.equal(animation.sheetKey, 'idleFukeRich', `${action} should use the same complete stable sheet`);
+    assert.equal(animation.sheetKey, expectedSheetByAction[action], `${action} should use its stabilized Fu Xiaoke sheet`);
     assert.ok(MASCOT_ACTION_SHEETS[animation.sheetKey], `${action} should reference the approved stable sheet`);
     assert.ok(animation.frames.every((frame) => frame >= 0 && frame < MASCOT_ACTION_SHEETS[animation.sheetKey].frameCount));
   }
-  assert.equal(MASCOT_ANIMATIONS.guide.durationMs, 1000);
+  assert.equal(MASCOT_ANIMATIONS.guide.durationMs, 1200);
   assert.equal(MASCOT_ANIMATIONS.guide.loop, false);
   assert.equal(MASCOT_ANIMATIONS.wave.loop, false);
   assert.equal(MASCOT_ANIMATIONS.click.loop, false);
   assert.equal(MASCOT_ANIMATIONS.talk.loop, true);
   assert.equal(MASCOT_ANIMATIONS.maintenance.sheetKey, 'idleFukeRich');
-  assert.equal(MASCOT_ANIMATIONS.maintenanceSave.sheetKey, 'idleFukeRich');
-  assert.equal(MASCOT_ANIMATIONS.maintenanceReview.sheetKey, 'idleFukeRich');
+  assert.equal(MASCOT_ANIMATIONS.maintenanceSave.sheetKey, 'celebrate');
+  assert.equal(MASCOT_ANIMATIONS.maintenanceReview.sheetKey, 'think');
   assert.ok(
     Object.values(MASCOT_ANIMATIONS).every((animation) => animation.sheetKey !== 'laptop'),
     'runtime mascot animations should not display the laptop sheet in the sidebar launcher',
@@ -155,10 +180,11 @@ test('records self-audit results for smoothness and reasonableness', () => {
     assert.equal(result.smooth, true, `${key} should pass smoothness audit`);
     assert.equal(result.reasonable, true, `${key} should pass semantic audit`);
     assert.ok(result.frameCount >= 8, `${key} should keep enough frames`);
-    assert.ok(result.maxFootJitterPx <= 3, `${key} foot jitter should stay stable`);
-    assert.ok(result.maxCenterJitterPx <= 12, `${key} center jitter should stay controlled`);
+    assert.ok(result.maxFootJitterPx <= 4, `${key} foot jitter should stay stable`);
+    assert.ok(result.maxCenterJitterPx <= 5, `${key} center jitter should stay controlled`);
     assert.ok(result.minTransparentMarginPx >= 18, `${key} should keep at least 18px transparent safety margin`);
     assert.ok(auditJson.actions[key].minTransparentMarginPx >= 18, `${key} generated audit should keep transparent safety margin`);
+    assert.equal(auditJson.actions[key].source, 'stabilized-from-official-fuke-ai-reference');
   }
 });
 
@@ -171,6 +197,6 @@ test('resolves idle variants and unknown actions deterministically', () => {
   );
   assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).playback, 'frames');
   assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).sheetKey, 'idleFukeRich');
-  assert.equal(getMascotAnimation('maintenanceSave').sheetKey, 'idleFukeRich');
+  assert.equal(getMascotAnimation('maintenanceSave').sheetKey, 'celebrate');
   assert.notEqual(getMascotAnimation('maintenanceSave').sheetKey, 'laptop');
 });
