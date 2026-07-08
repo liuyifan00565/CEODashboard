@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-08 14:45:22 CST
+ Update content: Require search result boxes to keep a persistent edge border highlight instead of a short-lived glow.
+*/
+/*
  更新时间: 2026-07-08 14:11:07 CST
  更新内容: 回归测试同步移除搜索占位、维护页返回入口和无实际变更按钮，并锁定保存按钮脏状态启用与渠道新增归属。
 */
@@ -1178,7 +1182,7 @@ test('gives every dashboard card the shared hover halo', () => {
   assert.match(computePageCss, /\.cpu-panel:hover,\s*[\s\S]*?\.cpu-panel:focus-within\s*\{[\s\S]*?border-color:\s*rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
 });
 
-test('uses one-shot soft glow for search result highlighting instead of electric borders', () => {
+test('keeps search result boxes highlighted with persistent edge borders', () => {
   assert.match(operatingOverviewSource, /import SearchResultBorder from '\.\/SearchResultBorder';/);
   assert.match(operatingOverviewSource, /import \{ matchesSearchTerm \} from '\.\.\/lib\/searchMatch';/);
   assert.doesNotMatch(searchResultBorderSource, /ElectricBorder/);
@@ -1191,16 +1195,20 @@ test('uses one-shot soft glow for search result highlighting instead of electric
   assert.match(searchResultBorderSource, /data-search-match=\{active \? 'true' : undefined\}/);
   assert.match(searchResultBorderSource, /aria-label=\{active \? '搜索命中结果' : undefined\}/);
   assert.match(searchResultBorderSource, /className="search-result-border__content"/);
-  assert.match(dashboardCss, /@keyframes searchResultSoftGlow/);
-  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\]::before\{[\s\S]*?animation:searchResultSoftGlow 960ms cubic-bezier\(\.22,1,\.36,1\) both;/);
-  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\]::after\{[\s\S]*?animation:searchResultSoftFill 960ms cubic-bezier\(\.22,1,\.36,1\) both;/);
-  assert.doesNotMatch(dashboardCss, /searchResultSoftGlow[\s\S]*?infinite/);
+  assert.match(dashboardCss, /\.search-result-border\[data-search-match="true"\]::before\{[\s\S]*?opacity:\.78;/);
+  assert.match(dashboardCss, /\.search-result-border\[data-search-match="true"\]::after\{[\s\S]*?opacity:\.22;/);
+  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\]::before\{[\s\S]*?opacity:1;[\s\S]*?border-color:rgba\(228,184,215,\.62\);/);
+  assert.match(dashboardCss, /\.search-result-border\[data-search-current="true"\]::after\{[\s\S]*?opacity:\.32;/);
+  assert.doesNotMatch(dashboardCss, /@keyframes searchResultSoftGlow|@keyframes searchResultSoftFill/);
+  assert.doesNotMatch(dashboardCss, /animation:searchResultSoft/);
   assert.doesNotMatch(dashboardCss, /\.eb-/);
   assert.doesNotMatch(dashboardCss, /jitter|zigzag/i);
 });
 
 test('keeps the current search result highlight edge-only without full-card purple wash', () => {
   const currentSearchBlock = cssRuleBody(dashboardCss, '.search-result-border[data-search-current="true"]');
+  const matchSearchBorderBlock = cssRuleBody(dashboardCss, '.search-result-border[data-search-match="true"]::before');
+  const currentSearchBorderBlock = cssRuleBody(dashboardCss, '.search-result-border[data-search-current="true"]::before');
   const currentSearchContentBlock = cssRuleBody(
     dashboardCss,
     '.search-result-border[data-search-current="true"] .search-result-border__content'
@@ -1211,6 +1219,8 @@ test('keeps the current search result highlight edge-only without full-card purp
   );
 
   assert.doesNotMatch(currentSearchBlock, /filter:\s*drop-shadow/);
+  assert.doesNotMatch(matchSearchBorderBlock, /animation:/);
+  assert.doesNotMatch(currentSearchBorderBlock, /animation:/);
   assert.doesNotMatch(currentSearchContentBlock, /box-shadow:/);
   assert.doesNotMatch(currentSearchBackgroundBlock, /transform:\s*scale/);
   assert.match(dashboardCss, /\.search-result-border::before\{[\s\S]*?border:1px solid rgba\(228,184,215,\.38\);/);
