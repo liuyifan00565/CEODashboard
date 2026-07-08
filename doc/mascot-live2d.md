@@ -1,5 +1,5 @@
-更新时间: 2026-07-08 19:31:00 CST
-更新内容: 补充开发环境官方 Haru 样例回退，用于福小客正式 Live2D 模型到位前验证渲染链路。
+更新时间: 2026-07-08 20:29:00 CST
+更新内容: 移除外部样例人物回退，明确左下角入口只使用福客 AI 彩色素材或本地授权福客 Live2D 模型；白模废稿不接入运行链路。
 
 更新时间: 2026-07-08 18:55:00 CST
 更新内容: 新增左下角福小客 Live2D 可选渲染层的接入边界、资产要求与降级规则说明。
@@ -21,17 +21,9 @@
 
 任一文件缺失、内容类型异常、Cubism Core 初始化失败或模型加载失败时，组件会保持 sprite 小人可见并把状态切到 fallback。此过程不影响左下角入口点击，也不会隐藏原有小人。
 
-## 开发样例回退
+## 禁用素材
 
-开发环境中，本地福小客模型缺失时会尝试加载 Live2D 官方 Haru 样例模型和官方 Cubism Core 直链，用来肉眼验证 Pixi + Live2D 渲染链路是否真实可用。这个样例不是最终福小客形象，只能作为开发验证态。
-
-如需关闭样例回退，在前端环境变量中设置:
-
-```bash
-VITE_MASCOT_LIVE2D_SAMPLE_FALLBACK=false
-```
-
-正式交付应替换为 `cockpit/public/live2d/fuxiaoke/fuxiaoke.model3.json` 和本地 `live2dcubismcore.min.js`，避免依赖外部网络和样例角色授权边界。
+`cockpit/public/models/` 下的白模、灰模和预览图属于废稿或建模过程文件，不接入左下角入口运行链路。正式福客小人只允许使用项目内彩色福客 AI sprite/PNG，或 `cockpit/public/live2d/fuxiaoke/` 下的本地授权福客 Live2D 模型。
 
 ## 选型边界
 

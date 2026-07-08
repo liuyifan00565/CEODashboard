@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-08 20:29:00 CST
+ Update content: Remove external sample-character fallback so the sidebar always shows Fu Xiaoke assets unless a local Fu Xiaoke Live2D model is installed.
+*/
+/*
  Update time: 2026-07-08 20:02:00 CST
  Update content: Fit Live2D models by local bounds so full-body sample models stay visible inside the compact sidebar mascot stage.
 */
@@ -9,10 +13,6 @@
 /*
  Update time: 2026-07-08 19:43:00 CST
  Update content: Recheck same-origin Live2D assets with GET when HEAD lacks a content type so Vite HTML fallbacks are not mistaken for model files.
-*/
-/*
- Update time: 2026-07-08 19:31:00 CST
- Update content: Use an official Live2D sample model in development when the local Fu Xiaoke model is not installed, making the Live2D pipeline visibly verifiable.
 */
 /*
  Update time: 2026-07-08 18:55:00 CST
@@ -41,11 +41,6 @@ import './Live2DMascotStage.css';
 
 export const MASCOT_LIVE2D_MODEL_SOURCE = '/live2d/fuxiaoke/fuxiaoke.model3.json';
 export const MASCOT_LIVE2D_CORE_SOURCE = '/live2d/live2dcubismcore.min.js';
-export const MASCOT_LIVE2D_SAMPLE_MODEL_SOURCE = 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@develop/Samples/Resources/Haru/Haru.model3.json';
-export const MASCOT_LIVE2D_SAMPLE_CORE_SOURCE = 'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js';
-
-const LIVE2D_SAMPLE_FALLBACK_ENABLED =
-  import.meta.env.DEV && import.meta.env.VITE_MASCOT_LIVE2D_SAMPLE_FALLBACK !== 'false';
 
 const LIVE2D_ACTION_MOTION_GROUPS = Object.freeze({
   [MASCOT_ACTIONS.idle]: ['Idle', 'idle'],
@@ -107,24 +102,6 @@ async function canUseLive2DAssets(coreSource, modelSource) {
     isLive2DAssetReachable(modelSource, 'model'),
   ]);
   return coreAvailable && modelAvailable;
-}
-
-async function resolveLive2DAssetPair({
-  coreSource,
-  modelSource,
-  sampleCoreSource,
-  sampleModelSource,
-  sampleFallbackEnabled,
-}) {
-  if (await canUseLive2DAssets(coreSource, modelSource)) {
-    return { coreSource, modelSource, sourceType: 'local' };
-  }
-
-  if (sampleFallbackEnabled && await canUseLive2DAssets(sampleCoreSource, sampleModelSource)) {
-    return { coreSource: sampleCoreSource, modelSource: sampleModelSource, sourceType: 'sample' };
-  }
-
-  return null;
 }
 
 function loadScriptOnce(src) {
@@ -208,9 +185,6 @@ export default function Live2DMascotStage({
   label = 'Fu Xiaoke Live2D mascot',
   modelSource = MASCOT_LIVE2D_MODEL_SOURCE,
   coreSource = MASCOT_LIVE2D_CORE_SOURCE,
-  sampleModelSource = MASCOT_LIVE2D_SAMPLE_MODEL_SOURCE,
-  sampleCoreSource = MASCOT_LIVE2D_SAMPLE_CORE_SOURCE,
-  sampleFallbackEnabled = LIVE2D_SAMPLE_FALLBACK_ENABLED,
   onLoadStateChange,
 }) {
   const containerRef = useRef(null);
@@ -236,20 +210,14 @@ export default function Live2DMascotStage({
 
       try {
         onLoadStateChange?.('checking');
-        const assetPair = await resolveLive2DAssetPair({
-          coreSource,
-          modelSource,
-          sampleCoreSource,
-          sampleModelSource,
-          sampleFallbackEnabled,
-        });
-        if (!assetPair) {
+        const assetsAvailable = await canUseLive2DAssets(coreSource, modelSource);
+        if (!assetsAvailable) {
           onLoadStateChange?.('fallback');
           return;
         }
 
-        onLoadStateChange?.(assetPair.sourceType === 'sample' ? 'sample-loading' : 'loading');
-        await loadScriptOnce(assetPair.coreSource);
+        onLoadStateChange?.('loading');
+        await loadScriptOnce(coreSource);
         if (!window.Live2DCubismCore) {
           throw new Error('Live2D Cubism Core did not initialize');
         }
@@ -269,7 +237,7 @@ export default function Live2DMascotStage({
           autoDensity: true,
           resolution: Math.min(window.devicePixelRatio || 1, 2),
         });
-        const model = await Live2DModel.from(assetPair.modelSource);
+        const model = await Live2DModel.from(modelSource);
         if (cancelled) {
           model.destroy?.();
           app.destroy(false);
@@ -307,7 +275,7 @@ export default function Live2DMascotStage({
       appRef.current?.destroy(false, { children: true });
       appRef.current = null;
     };
-  }, [coreSource, modelSource, onLoadStateChange, sampleCoreSource, sampleFallbackEnabled, sampleModelSource]);
+  }, [coreSource, modelSource, onLoadStateChange]);
 
   useEffect(() => {
     if (!modelRef.current || action === lastActionRef.current) return;

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-08 20:29:00 CST
+ Update content: Forbid external sample-character fallback so the visible sidebar mascot remains Fu Xiaoke.
+*/
+/*
  Update time: 2026-07-08 20:02:00 CST
  Update content: Require Live2D fitting to use local bounds so compact sidebar rendering stays visible.
 */
@@ -9,10 +13,6 @@
 /*
  Update time: 2026-07-08 19:43:00 CST
  Update content: Require same-origin Live2D asset probes to recheck with GET when HEAD cannot prove the content type.
-*/
-/*
- Update time: 2026-07-08 19:31:00 CST
- Update content: Require the development sample Live2D fallback to make the renderer visibly verifiable before Fu Xiaoke assets arrive.
 */
 /*
  Update time: 2026-07-08 18:55:00 CST
@@ -54,7 +54,7 @@ test('loads Live2D through Pixi without owning mascot click behavior', () => {
   assert.match(componentCode, /new PIXI\.Application\(\{/);
   assert.match(componentCode, /view:\s*canvasRef\.current/);
   assert.match(componentCode, /backgroundAlpha:\s*0/);
-  assert.match(componentCode, /Live2DModel\.from\(assetPair\.modelSource\)/);
+  assert.match(componentCode, /Live2DModel\.from\(modelSource\)/);
   assert.doesNotMatch(componentCode, /onClick|onPointerDown|onPointerMove|addEventListener\('click'/);
 });
 
@@ -72,24 +72,20 @@ test('fits full-body Live2D models inside the compact sidebar stage', () => {
 test('uses local Fu Xiaoke Live2D paths and falls back when assets are absent', () => {
   assert.match(componentCode, /MASCOT_LIVE2D_MODEL_SOURCE = '\/live2d\/fuxiaoke\/fuxiaoke\.model3\.json';/);
   assert.match(componentCode, /MASCOT_LIVE2D_CORE_SOURCE = '\/live2d\/live2dcubismcore\.min\.js';/);
-  assert.match(componentCode, /resolveLive2DAssetPair\(\{/);
-  assert.match(componentCode, /loadScriptOnce\(assetPair\.coreSource\)/);
+  assert.match(componentCode, /canUseLive2DAssets\(coreSource,\s*modelSource\)/);
+  assert.match(componentCode, /loadScriptOnce\(coreSource\)/);
   assert.match(componentCode, /if \(!window\.Live2DCubismCore\) \{/);
   assert.match(componentCode, /onLoadStateChange\?\.\('checking'\);/);
-  assert.match(componentCode, /onLoadStateChange\?\.\(assetPair\.sourceType === 'sample' \? 'sample-loading' : 'loading'\);/);
+  assert.match(componentCode, /onLoadStateChange\?\.\('loading'\);/);
   assert.match(componentCode, /onLoadStateChange\?\.\('ready'\);/);
   assert.match(componentCode, /onLoadStateChange\?\.\('fallback'\);/);
 });
 
-test('uses the official sample model only as a development fallback', () => {
-  assert.match(componentCode, /MASCOT_LIVE2D_SAMPLE_MODEL_SOURCE = 'https:\/\/cdn\.jsdelivr\.net\/gh\/Live2D\/CubismWebSamples@develop\/Samples\/Resources\/Haru\/Haru\.model3\.json';/);
-  assert.match(componentCode, /MASCOT_LIVE2D_SAMPLE_CORE_SOURCE = 'https:\/\/cubism\.live2d\.com\/sdk-web\/cubismcore\/live2dcubismcore\.min\.js';/);
-  assert.match(componentCode, /const LIVE2D_SAMPLE_FALLBACK_ENABLED =\s*import\.meta\.env\.DEV && import\.meta\.env\.VITE_MASCOT_LIVE2D_SAMPLE_FALLBACK !== 'false';/);
-  assert.match(componentCode, /sampleFallbackEnabled = LIVE2D_SAMPLE_FALLBACK_ENABLED/);
-  assert.match(componentCode, /sampleFallbackEnabled && await canUseLive2DAssets\(sampleCoreSource,\s*sampleModelSource\)/);
-  assert.match(componentCode, /sourceType:\s*'sample'/);
-  assert.match(componentCode, /onLoadStateChange\?\.\(assetPair\.sourceType === 'sample' \? 'sample-loading' : 'loading'\);/);
-  assert.match(componentCode, /Live2DModel\.from\(assetPair\.modelSource\)/);
+test('does not show an external sample character when Fu Xiaoke Live2D assets are missing', () => {
+  assert.doesNotMatch(componentCode, /Haru|CubismWebSamples|cdn\.jsdelivr\.net|cubism\.live2d\.com/);
+  assert.doesNotMatch(componentCode, /SAMPLE_MODEL_SOURCE|SAMPLE_CORE_SOURCE|SAMPLE_FALLBACK/);
+  assert.doesNotMatch(componentCode, /sampleFallbackEnabled|sampleModelSource|sampleCoreSource|sample-loading/);
+  assert.match(componentCode, /if \(!assetsAvailable\) \{\s*onLoadStateChange\?\.\('fallback'\);\s*return;/);
 });
 
 test('checks same-origin Live2D assets before loading runtime code', () => {
@@ -104,7 +100,7 @@ test('checks same-origin Live2D assets before loading runtime code', () => {
   assert.match(componentCode, /contentType\.includes\('text\/html'\)/);
   assert.match(componentCode, /LIVE2D_ASSET_CONTENT_TYPES\[kind\]\.some/);
   assert.match(componentCode, /Promise\.all\(\[\s*isLive2DAssetReachable\(coreSource,\s*'core'\),\s*isLive2DAssetReachable\(modelSource,\s*'model'\),/);
-  assert.match(componentCode, /if \(!assetPair\) \{\s*onLoadStateChange\?\.\('fallback'\);\s*return;/);
+  assert.match(componentCode, /if \(!assetsAvailable\) \{\s*onLoadStateChange\?\.\('fallback'\);\s*return;/);
 });
 
 test('guards optional resize observation after Live2D has loaded', () => {
