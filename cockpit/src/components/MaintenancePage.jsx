@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 11:28:12 CST
+ 更新内容: 将组织维护、渠道维护表格内的原生下拉统一替换为 GlassSelect，并让组织归属选择改为受控本地状态。
+*/
+/*
  更新时间: 2026-07-07 14:30:00 CST
  更新内容: 四个维护子页改为 forwardRef + useImperativeHandle 暴露 collect()，用 draftRef/受控 state
           收集页内编辑；父 MaintenancePage 的"保存"按钮改为 POST /api/maintenance/save 写库后回拉，
@@ -89,6 +93,14 @@ const YEARS = [2024, 2025, 2026, 2027];
 const YEAR_OPTIONS = YEARS.map((item) => ({ value: String(item), label: String(item) }));
 
 const EMPTY_ARRAY = [];
+
+function makeSelectOptions(items, emptyLabel = '') {
+  const choices = (items ?? []).map((item) => ({
+    value: String(item.id ?? ''),
+    label: item.name ?? String(item.id ?? ''),
+  }));
+  return emptyLabel ? [{ value: '', label: emptyLabel }, ...choices] : choices;
+}
 
 const MAINTENANCE_TITLE_TEXT = {
   'target-maintenance': '目标维护',
@@ -642,14 +654,6 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
   );
 });
 
-function departmentOptions(departments, currentId = '') {
-  return (departments ?? []).map((dept) => (
-    <option key={dept.id} value={dept.id} disabled={dept.id === currentId}>
-      {dept.name}
-    </option>
-  ));
-}
-
 const OrgMaintenancePage = forwardRef(function OrgMaintenancePage({ markDirty, status, departments: propDepartments, users: propUsers }, ref) {
   const [departments, setDepartments] = useState(propDepartments ?? []);
   const [users, setUsers] = useState(propUsers ?? []);
@@ -679,6 +683,7 @@ const OrgMaintenancePage = forwardRef(function OrgMaintenancePage({ markDirty, s
   const visibleUsers = selectedDepartment === 'headquarters'
     ? users
     : users.filter((user) => selectedDepartmentIds.has(user.deptId));
+  const departmentChoices = useMemo(() => makeSelectOptions(departments), [departments]);
 
   useImperativeHandle(ref, () => ({
     collect: () => ({ rows: buildOrgSaveRows(users, draftRef.current), laborRows: [], deletions: [] }),
@@ -686,6 +691,9 @@ const OrgMaintenancePage = forwardRef(function OrgMaintenancePage({ markDirty, s
 
   function editField(userId, field, value) {
     draftRef.current[`${userId}|${field}`] = value;
+    setUsers((currentUsers) => currentUsers.map((user) => (
+      String(user.id) === String(userId) ? { ...user, [field]: value } : user
+    )));
     markDirty();
   }
 
@@ -724,9 +732,7 @@ const OrgMaintenancePage = forwardRef(function OrgMaintenancePage({ markDirty, s
                     <span>{user.sourceName}</span>
                   </td>
                   <td>
-                    <select className="mnt-control" defaultValue={user.deptId} onChange={(e) => editField(user.id, 'deptId', e.target.value)} aria-label={`${user.name}所属组织`}>
-                      {departmentOptions(departments)}
-                    </select>
+                    <GlassSelect className="mnt-control" value={String(user.deptId ?? '')} onChange={(value) => editField(user.id, 'deptId', value)} aria-label={`${user.name}所属组织`} options={departmentChoices} />
                   </td>
                   <td>
                     <label className="mnt-check">
@@ -750,15 +756,6 @@ const OrgMaintenancePage = forwardRef(function OrgMaintenancePage({ markDirty, s
     </section>
   );
 });
-
-function groupOptions(groups) {
-  return (
-    <>
-      <option value="">选择渠道大类</option>
-      {groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
-    </>
-  );
-}
 
 const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ markDirty, status, groups: propGroups, sources: propSources }, ref) {
   const [groups, setGroups] = useState(propGroups ?? []);
@@ -801,6 +798,7 @@ const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ mark
   const visibleSources = selectedGroup === 'all'
     ? sources
     : sources.filter((source) => selectedGroupIds.has(source.groupId));
+  const channelGroupChoices = useMemo(() => makeSelectOptions(groups, '选择渠道大类'), [groups]);
 
   useImperativeHandle(ref, () => ({
     collect: () => {
@@ -874,9 +872,7 @@ const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ mark
                   </td>
                   <td><input className="mnt-control" value={source.name} onChange={(e) => updateSource(source._uid, { name: e.target.value })} aria-label={`${source.name}来源名称`} /></td>
                   <td>
-                    <select className="mnt-control" value={source.groupId} onChange={(e) => updateSource(source._uid, { groupId: e.target.value })} aria-label={`${source.name}归属渠道`}>
-                      {groupOptions(groups)}
-                    </select>
+                    <GlassSelect className="mnt-control" value={String(source.groupId ?? '')} onChange={(value) => updateSource(source._uid, { groupId: value })} aria-label={`${source.name}归属渠道`} options={channelGroupChoices} />
                   </td>
                   <td>
                     <label className="mnt-check">

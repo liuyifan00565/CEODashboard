@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 11:28:12 CST
+ 更新内容: 将 Excel 导入弹窗的工作表原生下拉替换为 GlassSelect，避免多工作表选择时出现系统白底下拉。
+*/
+/*
  更新时间: 2026-07-07 10:00:00 CST
  更新内容: 新增数据维护 Excel 导入弹窗，完全由配置驱动：选文件/解析/列映射预览/错误/确认上传空跑。
 */
@@ -12,6 +16,7 @@ import {
   downloadTemplate,
 } from '../lib/excelImport.js';
 import './MaintenanceImportDialog.css';
+import GlassSelect from './GlassSelect.jsx';
 
 const PREVIEW_ROWS = 8;
 
@@ -39,6 +44,10 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
 
   const hasErrors = mapResult?.errors?.length > 0;
   const previewRows = mapResult?.rows?.slice(0, PREVIEW_ROWS) ?? [];
+  const sheetOptions = useMemo(
+    () => sheetNames.map((name) => ({ value: name, label: name })),
+    [sheetNames],
+  );
 
   async function handleFile(file) {
     if (!file) return;
@@ -70,8 +79,7 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
     setRawRows(rows);
   }
 
-  function handleSheetChange(event) {
-    const name = event.target.value;
+  function handleSheetChange(name) {
     setSheetName(name);
     if (workbook) loadSheet(workbook, name);
   }
@@ -164,9 +172,7 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
                 {sheetNames.length > 1 && (
                   <label className="mnt-import-sheet">
                     工作表：
-                    <select className="mnt-control" value={sheetName} onChange={handleSheetChange}>
-                      {sheetNames.map((n) => <option key={n} value={n}>{n}</option>)}
-                    </select>
+                    <GlassSelect className="mnt-control" value={sheetName} onChange={handleSheetChange} aria-label="选择工作表" options={sheetOptions} />
                   </label>
                 )}
                 <button

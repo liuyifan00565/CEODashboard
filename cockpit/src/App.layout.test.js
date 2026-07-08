@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 11:28:12 CST
+ 更新内容: 增加维护页与导入弹窗下拉框统一使用 GlassSelect 的回归测试，防止原生白底 select 回流。
+*/
+/*
  更新时间: 2026-07-07 15:25:00 CST
  更新内容: 经营摘要回归测试改为 doesNotMatch，锁定 monthJudgement / annualJudgement / op-judgement 已从经营总览移除。
 */
@@ -240,6 +244,7 @@ const computePageSource = readFileSync(new URL('./components/ComputeUsagePage.js
 const computePageCss = readFileSync(new URL('./components/ComputeUsagePage.css', import.meta.url), 'utf8');
 const maintenancePageSource = readFileSync(new URL('./components/MaintenancePage.jsx', import.meta.url), 'utf8');
 const maintenancePageCss = readFileSync(new URL('./components/MaintenancePage.css', import.meta.url), 'utf8');
+const maintenanceImportDialogSource = readFileSync(new URL('./components/MaintenanceImportDialog.jsx', import.meta.url), 'utf8');
 const searchResultBorderSource = readFileSync(new URL('./components/SearchResultBorder.jsx', import.meta.url), 'utf8');
 const sidebarSource = readFileSync(new URL('./components/Sidebar.jsx', import.meta.url), 'utf8');
 const expandableSearchSource = readFileSync(new URL('./components/ExpandableSearch.jsx', import.meta.url), 'utf8');
@@ -740,6 +745,21 @@ test('keeps the maintenance year dropdown compact in the toolbar', () => {
   assert.match(maintenancePageSource, /className="mnt-control mnt-year-control" value=\{year\} onChange=\{handleYearChange\} aria-label="成本维护年份"/);
   assert.match(yearControlBlock, /width:\s*116px;/);
   assert.match(yearControlBlock, /flex-basis:\s*116px;/);
+});
+
+test('uses GlassSelect for maintenance and import dropdown controls', () => {
+  assert.match(maintenancePageSource, /import GlassSelect from '\.\/GlassSelect\.jsx';/);
+  assert.match(maintenanceImportDialogSource, /import GlassSelect from '\.\/GlassSelect\.jsx';/);
+  assert.doesNotMatch(maintenancePageSource, /<select[\s>]/);
+  assert.doesNotMatch(maintenancePageSource, /<option[\s>]/);
+  assert.doesNotMatch(maintenanceImportDialogSource, /<select[\s>]/);
+  assert.doesNotMatch(maintenanceImportDialogSource, /<option[\s>]/);
+  assert.match(maintenancePageSource, /const departmentChoices = useMemo\(\(\) => makeSelectOptions\(departments\), \[departments\]\);/);
+  assert.match(maintenancePageSource, /aria-label=\{`\$\{user\.name\}所属组织`\} options=\{departmentChoices\}/);
+  assert.match(maintenancePageSource, /const channelGroupChoices = useMemo\(\(\) => makeSelectOptions\(groups, '选择渠道大类'\), \[groups\]\);/);
+  assert.match(maintenancePageSource, /aria-label=\{`\$\{source\.name\}归属渠道`\} options=\{channelGroupChoices\}/);
+  assert.match(maintenanceImportDialogSource, /const sheetOptions = useMemo\(/);
+  assert.match(maintenanceImportDialogSource, /aria-label="选择工作表" options=\{sheetOptions\}/);
 });
 
 test('uses full-width compute trend sliders that resize from 3 to 15 bars', () => {

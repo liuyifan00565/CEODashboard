@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 11:28:12 CST
+ 更新内容: 为 Excel 导入弹窗工作表 GlassSelect 设置紧凑宽度，保持与维护页玻璃控件体系一致。
+*/
+/*
  更新时间: 2026-07-07 10:00:00 CST
  更新内容: 新增 Excel 导入弹窗样式，沿用 KpiModal 玻璃体系与 MaintenancePage 的 mnt- 控件变量，不引入新视觉变量。
 */
@@ -128,6 +132,14 @@
   gap: 6px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.6);
+}
+
+.mnt-import-sheet .glass-select {
+  width: 180px;
+}
+
+.mnt-import-sheet .glass-select .mnt-control {
+  width: 100%;
 }
 
 .mnt-import-section {
