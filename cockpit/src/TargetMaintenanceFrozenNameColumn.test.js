@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 14:47:03 CST
+ 更新内容: 固定部门/人员列边缘测试改为要求银紫玫瑰轻渐隐和低存在感右边线，弱化与年月列之间的硬边界。
+*/
+/*
  Update time: 2026-07-03 11:49:32 CST
  Update content: Require a soft glass gradient at the target maintenance frozen-name edge.
 */
@@ -38,10 +42,12 @@ test('keeps the target maintenance name column outside the horizontal period scr
   assert.match(targetNamePaneBlock, /z-index:\s*4;/);
   assert.match(targetNamePaneBlock, /background:\s*transparent;/);
   assert.match(targetNameFadeBlock, /content:\s*'';/);
-  assert.match(targetNameFadeBlock, /right:\s*-28px;/);
-  assert.match(targetNameFadeBlock, /width:\s*28px;/);
+  assert.match(targetNameFadeBlock, /right:\s*-40px;/);
+  assert.match(targetNameFadeBlock, /bottom:\s*0;/);
+  assert.match(targetNameFadeBlock, /width:\s*40px;/);
   assert.match(targetNameFadeBlock, /pointer-events:\s*none;/);
-  assert.match(targetNameFadeBlock, /linear-gradient\(90deg,\s*rgba\(0,\s*0,\s*0,\s*\.22\)\s*0%,\s*rgba\(0,\s*0,\s*0,\s*\.1\)\s*48%,\s*rgba\(0,\s*0,\s*0,\s*0\)\s*100%\)/);
+  assert.match(targetNameFadeBlock, /linear-gradient\(90deg,\s*rgba\(142,\s*134,\s*255,\s*\.055\)\s*0%,\s*rgba\(184,\s*156,\s*255,\s*\.034\)\s*42%,\s*rgba\(228,\s*184,\s*215,\s*\.018\)\s*72%,\s*rgba\(0,\s*0,\s*0,\s*0\)\s*100%\)/);
+  assert.match(maintenancePageCss, /\.mnt-matrix--target-name th:last-child,\s*[\s\S]*?\.mnt-matrix--target-name td:last-child\s*\{[\s\S]*?border-right:\s*1px solid rgba\(217,\s*209,\s*255,\s*\.045\);/);
   assert.match(targetNameTableBlock, /width:\s*var\(--mnt-target-name-width\);/);
   assert.match(targetScrollPaneBlock, /overflow-x:\s*auto;/);
   assert.match(targetScrollPaneBlock, /overflow-y:\s*hidden;/);

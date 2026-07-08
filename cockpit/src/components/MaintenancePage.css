@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 14:47:03 CST
+ 更新内容: 柔化目标维护表部门/人员固定列与年月列之间的边界渐隐，减少固定列交界的硬切感。
+*/
+/*
  更新时间: 2026-07-08 14:11:07 CST
  更新内容: 为维护页未修改状态的保存按钮增加禁用态，并补充新增渠道大类名称编辑区样式。
 */
@@ -631,12 +635,12 @@
   content: '';
   position: absolute;
   top: 0;
-  right: -28px;
-  bottom: 8px;
+  right: -40px;
+  bottom: 0;
   z-index: 2;
-  width: 28px;
+  width: 40px;
   pointer-events: none;
-  background: linear-gradient(90deg, rgba(0, 0, 0, .22) 0%, rgba(0, 0, 0, .1) 48%, rgba(0, 0, 0, 0) 100%);
+  background: linear-gradient(90deg, rgba(142, 134, 255, .055) 0%, rgba(184, 156, 255, .034) 42%, rgba(228, 184, 215, .018) 72%, rgba(0, 0, 0, 0) 100%);
 }
 
 .mnt-target-scroll-pane {
@@ -875,16 +879,16 @@
   backdrop-filter: none;
 }
 
-.mnt-matrix--target-name th:last-child,
-.mnt-matrix--target-name td:last-child {
-  border-right: 1px solid var(--line);
-}
-
 .mnt-matrix th:last-child,
 .mnt-matrix td:last-child,
 .mnt-user-table th:last-child,
 .mnt-user-table td:last-child {
   border-right: 0;
+}
+
+.mnt-matrix--target-name th:last-child,
+.mnt-matrix--target-name td:last-child {
+  border-right: 1px solid rgba(217, 209, 255, .045);
 }
 
 .mnt-matrix tbody tr:last-child td,
