@@ -1,4 +1,20 @@
 /*
+ Update time: 2026-07-08 20:02:00 CST
+ Update content: Fit Live2D models by local bounds so full-body sample models stay visible inside the compact sidebar mascot stage.
+*/
+/*
+ Update time: 2026-07-08 19:51:00 CST
+ Update content: Preserve the React-owned Live2D canvas during Pixi cleanup so development remounts do not leave a ready state with an empty stage.
+*/
+/*
+ Update time: 2026-07-08 19:43:00 CST
+ Update content: Recheck same-origin Live2D assets with GET when HEAD lacks a content type so Vite HTML fallbacks are not mistaken for model files.
+*/
+/*
+ Update time: 2026-07-08 19:31:00 CST
+ Update content: Use an official Live2D sample model in development when the local Fu Xiaoke model is not installed, making the Live2D pipeline visibly verifiable.
+*/
+/*
  Update time: 2026-07-08 18:55:00 CST
  Update content: Check local Live2D model and Cubism Core assets before loading Pixi so missing files fall back quietly.
 */
@@ -25,6 +41,11 @@ import './Live2DMascotStage.css';
 
 export const MASCOT_LIVE2D_MODEL_SOURCE = '/live2d/fuxiaoke/fuxiaoke.model3.json';
 export const MASCOT_LIVE2D_CORE_SOURCE = '/live2d/live2dcubismcore.min.js';
+export const MASCOT_LIVE2D_SAMPLE_MODEL_SOURCE = 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@develop/Samples/Resources/Haru/Haru.model3.json';
+export const MASCOT_LIVE2D_SAMPLE_CORE_SOURCE = 'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js';
+
+const LIVE2D_SAMPLE_FALLBACK_ENABLED =
+  import.meta.env.DEV && import.meta.env.VITE_MASCOT_LIVE2D_SAMPLE_FALLBACK !== 'false';
 
 const LIVE2D_ACTION_MOTION_GROUPS = Object.freeze({
   [MASCOT_ACTIONS.idle]: ['Idle', 'idle'],
@@ -60,14 +81,18 @@ function hasExpectedContentType(response, kind) {
   return LIVE2D_ASSET_CONTENT_TYPES[kind].some((token) => contentType.includes(token));
 }
 
+function hasContentType(response) {
+  return Boolean(response.headers?.get?.('content-type'));
+}
+
 async function isLive2DAssetReachable(src, kind) {
   if (!src) return false;
   if (typeof fetch !== 'function' || !isSameOriginAsset(src)) return true;
 
   try {
     const response = await fetch(src, { method: 'HEAD', cache: 'no-store' });
-    if (response.ok) return hasExpectedContentType(response, kind);
-    if (response.status !== 405 && response.status !== 501) return false;
+    if (response.ok && hasContentType(response)) return hasExpectedContentType(response, kind);
+    if (!response.ok && response.status !== 405 && response.status !== 501) return false;
 
     const fallbackResponse = await fetch(src, { method: 'GET', cache: 'no-store' });
     return fallbackResponse.ok && hasExpectedContentType(fallbackResponse, kind);
@@ -82,6 +107,24 @@ async function canUseLive2DAssets(coreSource, modelSource) {
     isLive2DAssetReachable(modelSource, 'model'),
   ]);
   return coreAvailable && modelAvailable;
+}
+
+async function resolveLive2DAssetPair({
+  coreSource,
+  modelSource,
+  sampleCoreSource,
+  sampleModelSource,
+  sampleFallbackEnabled,
+}) {
+  if (await canUseLive2DAssets(coreSource, modelSource)) {
+    return { coreSource, modelSource, sourceType: 'local' };
+  }
+
+  if (sampleFallbackEnabled && await canUseLive2DAssets(sampleCoreSource, sampleModelSource)) {
+    return { coreSource: sampleCoreSource, modelSource: sampleModelSource, sourceType: 'sample' };
+  }
+
+  return null;
 }
 
 function loadScriptOnce(src) {
@@ -124,14 +167,27 @@ function getStageSize(container) {
   };
 }
 
-function fitModel(model, app) {
-  const width = model.width || 1;
-  const height = model.height || 1;
-  const scale = Math.min(app.screen.width / width, app.screen.height / height) * 0.98;
+function getModelBounds(model) {
+  const bounds = model.getLocalBounds?.();
+  const width = Math.abs(bounds?.width || 0) || model.width || 1;
+  const height = Math.abs(bounds?.height || 0) || model.height || 1;
+  return {
+    x: Number.isFinite(bounds?.x) ? bounds.x : 0,
+    y: Number.isFinite(bounds?.y) ? bounds.y : 0,
+    width,
+    height,
+  };
+}
 
-  model.anchor?.set?.(0.5, 0.5);
+function fitModel(model, app) {
+  const bounds = getModelBounds(model);
+  const scale = Math.min(app.screen.width / bounds.width, app.screen.height / bounds.height) * 0.94;
+
   model.scale.set(scale);
-  model.position.set(app.screen.width / 2, app.screen.height * 0.92);
+  model.position.set(
+    app.screen.width / 2 - (bounds.x + bounds.width / 2) * scale,
+    app.screen.height / 2 - (bounds.y + bounds.height / 2) * scale,
+  );
 }
 
 function playFirstAvailableMotion(model, action) {
@@ -152,6 +208,9 @@ export default function Live2DMascotStage({
   label = 'Fu Xiaoke Live2D mascot',
   modelSource = MASCOT_LIVE2D_MODEL_SOURCE,
   coreSource = MASCOT_LIVE2D_CORE_SOURCE,
+  sampleModelSource = MASCOT_LIVE2D_SAMPLE_MODEL_SOURCE,
+  sampleCoreSource = MASCOT_LIVE2D_SAMPLE_CORE_SOURCE,
+  sampleFallbackEnabled = LIVE2D_SAMPLE_FALLBACK_ENABLED,
   onLoadStateChange,
 }) {
   const containerRef = useRef(null);
@@ -177,14 +236,20 @@ export default function Live2DMascotStage({
 
       try {
         onLoadStateChange?.('checking');
-        const assetsAvailable = await canUseLive2DAssets(coreSource, modelSource);
-        if (!assetsAvailable) {
+        const assetPair = await resolveLive2DAssetPair({
+          coreSource,
+          modelSource,
+          sampleCoreSource,
+          sampleModelSource,
+          sampleFallbackEnabled,
+        });
+        if (!assetPair) {
           onLoadStateChange?.('fallback');
           return;
         }
 
-        onLoadStateChange?.('loading');
-        await loadScriptOnce(coreSource);
+        onLoadStateChange?.(assetPair.sourceType === 'sample' ? 'sample-loading' : 'loading');
+        await loadScriptOnce(assetPair.coreSource);
         if (!window.Live2DCubismCore) {
           throw new Error('Live2D Cubism Core did not initialize');
         }
@@ -204,10 +269,10 @@ export default function Live2DMascotStage({
           autoDensity: true,
           resolution: Math.min(window.devicePixelRatio || 1, 2),
         });
-        const model = await Live2DModel.from(modelSource);
+        const model = await Live2DModel.from(assetPair.modelSource);
         if (cancelled) {
           model.destroy?.();
-          app.destroy(true);
+          app.destroy(false);
           return;
         }
 
@@ -239,10 +304,10 @@ export default function Live2DMascotStage({
       cancelled = true;
       resizeObserver?.disconnect();
       modelRef.current = null;
-      appRef.current?.destroy(true, { children: true });
+      appRef.current?.destroy(false, { children: true });
       appRef.current = null;
     };
-  }, [coreSource, modelSource, onLoadStateChange]);
+  }, [coreSource, modelSource, onLoadStateChange, sampleCoreSource, sampleFallbackEnabled, sampleModelSource]);
 
   useEffect(() => {
     if (!modelRef.current || action === lastActionRef.current) return;
