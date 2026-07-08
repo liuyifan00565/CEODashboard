@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-08
+ 更新内容: buildTargetSnapshot 的 sales 过滤补 department_id 非空判断，与读取口径一致：
+          目标维护只认「销售 + 有部门」的人员，防御性兜底，避免无部门人员混入目标行/组织树人数。
+*/
+/*
  更新时间: 2026-07-07 11:00:00 CST
  更新内容: 新增数据维护 DB→页面形状的纯函数映射器（target/cost/org/channel 四个 build*Snapshot），
           无需 DB 即可单测；输出形状刻意与 mock.js 导出一致，前端子页可直接换 props。
@@ -140,7 +145,7 @@ function descendantDeptIds(departments, deptId) {
  * @returns {{orgTree, rows}}
  */
 export function buildTargetSnapshot({ departments = [], staff = [], targets = [], revenue = [] } = {}) {
-  const sales = staff.filter((s) => s.is_sales === 1 || s.is_sales === true || Number(s.is_sales) === 1);
+  const sales = staff.filter((s) => (s.is_sales === 1 || s.is_sales === true || Number(s.is_sales) === 1) && s.department_id != null);
 
   // 按人按月索引
   const targetByStaff = new Map(); // staff_id -> {m01..target_wan}

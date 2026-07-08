@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-08
+ 更新内容: readTarget 的 dim_staff 查询收紧为 is_sales=1 且 department_id IS NOT NULL，
+          目标维护只显示「在销售组织里」的人员，无部门人员不再出现。
+*/
+/*
  更新时间: 2026-07-07 11:00:00 CST
  更新内容: 新增数据维护读接口 GET /api/maintenance/data?page=&year=，按 pageKey 查 MySQL 并用
           maintenanceMappers 拼成与 mock 同形状的快照返回，供前端四个维护页替换 mock。
@@ -25,7 +30,7 @@ function parseYear(yearStr) {
 async function readTarget(connection, year) {
   const [departments, staff, targets, revenue] = await Promise.all([
     queryRows(connection, 'SELECT department_id, department_name, parent_id, is_enabled FROM dim_department'),
-    queryRows(connection, 'SELECT staff_id, staff_name, department_id, is_sales, is_delivery, is_success, is_enabled, external_bi_user_id FROM dim_staff WHERE is_sales = 1'),
+    queryRows(connection, 'SELECT staff_id, staff_name, department_id, is_sales, is_delivery, is_success, is_enabled, external_bi_user_id FROM dim_staff WHERE is_sales = 1 AND department_id IS NOT NULL'),
     queryRows(connection, "SELECT `year_month`, staff_id, target_amount_yuan, target_opening_count, target_order_count FROM biz_target_monthly WHERE `year_month` LIKE ? AND staff_id IS NOT NULL", [`${year}-%`]),
     queryRows(connection, "SELECT DATE_FORMAT(stat_date, '%Y-%m') AS ym, staff_id, SUM(recovered_amount_yuan) AS amt, SUM(order_count) AS deals FROM fact_revenue_daily WHERE stat_date BETWEEN ? AND ? GROUP BY staff_id, ym", [`${year}-01-01`, `${year}-12-31`]),
   ]);

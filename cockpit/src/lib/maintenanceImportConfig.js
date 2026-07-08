@@ -1,4 +1,10 @@
 /*
+ 更新时间: 2026-07-08
+ 更新内容: target-maintenance 导入新增「所属组织」必填列（department_name）。
+          目标维护口径收紧为「人员必须是销售(is_sales=1)且有部门」，
+          导入时校验 Excel 写的部门与人员实际部门一致，无部门/非销售/部门不符一律拒绝。
+*/
+/*
  更新时间: 2026-07-07 10:00:00 CST
  更新内容: 新增数据维护 Excel 导入配置注册表，作为"导入什么表/哪些列/怎么校验"的单一数据源，
           前端与后端共享，业务确认后只改本文件即可调整导入口径。
@@ -55,13 +61,16 @@ export const MAINTENANCE_IMPORT_CONFIG = {
     sheetName: null,
     columns: [
       { field: 'staff_name', header: '人员名称', aliases: ['销售', '人员', '销售人员'], required: true, type: 'string', description: '对应 dim_staff.staff_name' },
+      // 更新时间: 2026-07-08 — 新增「所属组织」必填列：目标维护要求人员必须在销售组织里，
+      // 导入时后端校验该人确实属于此部门（直系部门名一致），无部门/非销售/部门不符一律拒绝。
+      { field: 'department_name', header: '所属组织', aliases: ['组织', '部门', 'BI组织'], required: true, type: 'string', description: '对应 dim_department.department_name；必须与该人员实际所属部门一致，否则拒绝。人员须为销售(is_sales=1)且有部门才能导入目标。' },
       { field: 'target_month', header: '目标月份', aliases: ['月份'], required: true, type: 'month', description: 'YYYY-MM，对应 biz_target_monthly.target_month' },
       { field: 'target_amount_yuan', header: '回款目标(万)', aliases: ['回款目标', '目标金额', '回款目标万', '回款目标(元)'], required: true, type: 'number', min: 0, description: '维护页以万为单位录入，写库时×10000转元，对应 biz_target_monthly.target_amount_yuan' },
       { field: 'target_opening_count', header: '开户目标(个)', aliases: ['开户目标', '开户目标个'], required: false, type: 'number', min: 0, description: '对应 biz_target_monthly.target_opening_count' },
       { field: 'target_order_count', header: '订单目标(单)', aliases: ['订单目标', '订单目标单'], required: false, type: 'number', min: 0, description: '对应 biz_target_monthly.target_order_count' },
     ],
     uniqueKey: ['staff_name', 'target_month'],
-    notes: '待业务确认：是否需要按组织汇总行导入、月份口径是否含季度/年度列。',
+    notes: '口径：目标维护只认 is_sales=1 且有部门的人员。导入时「所属组织」必须与人员实际部门一致；无部门/非销售/部门不符的行拒绝。旧模板（无「所属组织」列）会被拒，需重新下载模板。',
   },
 
   'cost-maintenance': {

@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-08
+ 更新内容: saveTarget 加门槛：upsert 前校验 staff 是销售(is_sales=1)且有部门，否则 skipped+errors，
+          与导入写库口径一致，避免页内编辑给无部门/非销售人员写目标。
+*/
+/*
  更新时间: 2026-07-07 14:30:00 CST
  更新内容: 新增页内编辑保存接口 POST /api/maintenance/save，按 pageKey 事务执行"部分列 upsert"：
           只更新维护页实际可编辑的列，绝不覆盖未编辑列（target 的 opening/order、org 的 external_bi_user_id）。
@@ -8,7 +13,7 @@
 import { createDbConnection, queryRows, nextId } from './db.js';
 import { WAN_TO_YUAN, readJsonBody, sendJson } from './maintenanceImport.js';
 
-/** 目标维护：按 (year_month, staff_id) 部分列 upsert，仅写 target_amount_yuan。 */
+/** 目标维护：按 (year_month, staff_id) 部分列 upsert，仅写 target_amount_yuan。人员须 is_sales=1 且有部门。 */
 export async function saveTarget(connection, rows) {
   let written = 0;
   let skipped = 0;
@@ -19,6 +24,24 @@ export async function saveTarget(connection, rows) {
     if (!Number.isInteger(staffId) || !/^\d{4}-\d{2}$/.test(yearMonth)) {
       skipped += 1;
       errors.push({ field: 'staff_id|year_month', message: `目标行键非法，跳过：staff_id=${row.staff_id} year_month=${yearMonth}` });
+      continue;
+    }
+    // 口径与导入一致：只允许销售且有部门的人员保存目标
+    const staffRows = await queryRows(connection, 'SELECT is_sales, department_id FROM dim_staff WHERE staff_id = ? LIMIT 1', [staffId]);
+    const st = staffRows[0];
+    if (!st) {
+      skipped += 1;
+      errors.push({ field: 'staff_id', message: `人员不存在，跳过：staff_id=${staffId}` });
+      continue;
+    }
+    if (Number(st.is_sales) !== 1) {
+      skipped += 1;
+      errors.push({ field: 'staff_id', message: `staff_id=${staffId} 不是销售，无法保存目标` });
+      continue;
+    }
+    if (st.department_id == null) {
+      skipped += 1;
+      errors.push({ field: 'staff_id', message: `staff_id=${staffId} 无所属组织，无法保存目标` });
       continue;
     }
     const amountYuan = WAN_TO_YUAN(row.target_amount_wan);

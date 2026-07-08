@@ -1,4 +1,11 @@
 /*
+ 更新时间: 2026-07-08
+ 更新内容: persistTarget 收紧口径：人员须 is_sales=1 且有部门，且 Excel「所属组织」与实际部门一致才写入；
+          无部门/非销售/部门不符的行 skipped 并给出明确原因。新增 resolveTargetStaff 连带取部门信息。
+          同时修复 handleMaintenanceImportRequest 整列必填缺失(row:0)被 filter 误丢、仍写库的 bug：
+          row:0/null 视为整文件阻断，有则 acceptedRows 为空，一行都不写。
+*/
+/*
  更新时间: 2026-07-07 11:00:00 CST
  更新内容: persistImport 由空跑翻转为真写库：按 pageKey 事务 upsert 到 biz_target_monthly /
           biz_channel_cost_monthly / dim_staff / dim_channel_source，FK 不满足的行跳过不中断整体。
@@ -56,18 +63,49 @@ async function resolveByName(connection, table, nameCol, nameValue, idCol) {
   return rows[0]?.id ?? null;
 }
 
-/** 目标维护：按 (year_month, staff_id) upsert biz_target_monthly。 */
+/**
+ * 目标导入专用：按姓名解析人员，连带取 is_sales / department_id / department_name。
+ * 用于校验「人员必须是销售且有部门，且 Excel 写的部门与实际部门一致」。
+ */
+async function resolveTargetStaff(connection, staffName) {
+  const rows = await queryRows(
+    connection,
+    'SELECT s.staff_id AS id, s.is_sales AS is_sales, s.department_id AS department_id, d.department_name AS department_name FROM dim_staff s LEFT JOIN dim_department d ON d.department_id = s.department_id WHERE s.staff_name = ? LIMIT 1',
+    [staffName],
+  );
+  return rows[0] ?? null;
+}
+
+/** 目标维护：按 (year_month, staff_id) upsert biz_target_monthly。人员须 is_sales=1 且有部门，且 Excel 部门须与实际一致。 */
 async function persistTarget(connection, rows) {
   let written = 0;
   let skipped = 0;
   const errors = [];
   for (const row of rows) {
-    const staffId = await resolveByName(connection, 'dim_staff', 'staff_name', row.staff_name, 'staff_id');
-    if (!staffId) {
+    const staff = await resolveTargetStaff(connection, row.staff_name);
+    if (!staff) {
       skipped += 1;
       errors.push({ row: null, field: 'staff_name', message: `人员不存在，跳过：${row.staff_name}` });
       continue;
     }
+    if (Number(staff.is_sales) !== 1) {
+      skipped += 1;
+      errors.push({ row: null, field: 'staff_name', message: `${row.staff_name} 不是销售，无法导入目标。请先在组织维护页将其设为销售` });
+      continue;
+    }
+    if (staff.department_id == null) {
+      skipped += 1;
+      errors.push({ row: null, field: 'department_name', message: `${row.staff_name} 无所属组织，无法导入目标。请先在组织维护页分配部门` });
+      continue;
+    }
+    const claimed = String(row.department_name || '').trim();
+    const actual = staff.department_name ? String(staff.department_name).trim() : '';
+    if (claimed && actual && claimed !== actual) {
+      skipped += 1;
+      errors.push({ row: null, field: 'department_name', message: `${row.staff_name} 不属于「${claimed}」，实际属于「${actual}」，跳过` });
+      continue;
+    }
+    const staffId = staff.id;
     const existing = await queryRows(connection, 'SELECT target_id FROM biz_target_monthly WHERE `year_month` = ? AND staff_id = ?', [row.target_month, staffId]);
     const amountYuan = WAN_TO_YUAN(row.target_amount_yuan);
     const opening = Number(row.target_opening_count || 0);
@@ -270,8 +308,11 @@ export async function handleMaintenanceImportRequest(req, res) {
     });
   }
 
-  const errorRows = new Set(errors.map((e) => e.row).filter((r) => r));
-  const acceptedRows = rows.filter((_, idx) => !errorRows.has(idx + 2));
+  // row:0/null 的错误是整文件级阻断（如必填列整列缺失），有则一行都不写；
+  // row>=2 的错误是行级阻断，只剔除对应行。
+  const blockingErrors = errors.filter((e) => !e.row);
+  const errorRows = new Set(errors.map((e) => e.row).filter((r) => r && r > 1));
+  const acceptedRows = blockingErrors.length ? [] : rows.filter((_, idx) => !errorRows.has(idx + 2));
 
   const persist = await persistImport(pageKey, acceptedRows);
   const allErrors = [...errors, ...persist.errors];
