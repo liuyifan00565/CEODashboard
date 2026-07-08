@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:49:56 CST
+ 更新内容: 增加目标维护真实数据 110% 仍 warning、120% 才 good 的状态边界回归。
+*/
+/*
  更新时间: 2026-07-08 11:45:00 CST
  更新内容: 覆盖目标页启用销售过滤、成本页空年份默认 sales/marketing 人力成本行、渠道父级映射。
 */
@@ -68,6 +72,24 @@ test('buildTargetSnapshot: 目标为 0 时 status=unset', () => {
   const user = rows.find((r) => r.id === 'user-2001');
   assert.equal(user.periods.m02.target, 0);
   assert.equal(user.periods.m02.status, 'unset');
+});
+
+test('buildTargetSnapshot: 目标完成率 120% 及以上才进入 good 状态', () => {
+  const targets = [
+    { year_month: '2026-01', staff_id: 2001, target_amount_yuan: 1000000 },
+    { year_month: '2026-02', staff_id: 2001, target_amount_yuan: 1000000 },
+  ];
+  const revenue = [
+    { ym: '2026-01', staff_id: 2001, amt: 1100000, deals: 3 },
+    { ym: '2026-02', staff_id: 2001, amt: 1200000, deals: 4 },
+  ];
+  const { rows } = buildTargetSnapshot({ departments: DEPARTMENTS, staff: STAFF, targets, revenue });
+  const user = rows.find((r) => r.id === 'user-2001');
+
+  assert.equal(user.periods.m01.pct, 110);
+  assert.equal(user.periods.m01.status, 'warning');
+  assert.equal(user.periods.m02.pct, 120);
+  assert.equal(user.periods.m02.status, 'good');
 });
 
 test('buildCostSnapshot: 渠道行 + 全部汇总 + roi + 人力行', () => {

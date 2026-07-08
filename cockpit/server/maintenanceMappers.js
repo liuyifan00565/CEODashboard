@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:49:56 CST
+ 更新内容: 目标维护真实数据状态改为 120% 及以上才标记 good，100%-119.9% 继续显示普通完成色。
+*/
+/*
  更新时间: 2026-07-08 11:45:00 CST
  更新内容: 维护快照补齐联动口径：目标人员只取启用销售且有部门；成本页空年份默认生成 sales/marketing 人力成本行；
           渠道/成本导航保留 dim_channel.parent_id，新增渠道大类后可形成树。
@@ -29,7 +33,7 @@ function roundWan(yuan) {
 
 function maintenanceStatus(pct, target) {
   if (!target) return 'unset';
-  if (pct >= 100) return 'good';
+  if (pct >= 120) return 'good';
   if (pct >= 80) return 'warning';
   return 'danger';
 }

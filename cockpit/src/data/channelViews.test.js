@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:49:56 CST
+ 更新内容: 数据维护目标完成率状态回归改为 120% 及以上才 good，100%-119.9% 保持 warning。
+*/
+/*
  更新时间: 2026-07-08 17:06:01 CST
  更新内容: 交付看板样例边界改为 120% 才是超额交付，保留 106.7% 与 100% 非超额样例。
 */
@@ -28,7 +32,7 @@
 */
 /*
  更新时间: 2026-07-03 18:54:17 CST
- 更新内容: 将维护页目标完成率状态断言调整为 80 以下 danger、80-99 warning、100 及以上 good。
+ 更新内容: 将维护页目标完成率状态断言调整为 80 以下 danger、80-99 warning、100 及以上 good；当前最新口径已调整为 120 及以上 good。
 */
 /*
  更新时间: 2026-07-03 10:25:18 CST
@@ -44,6 +48,7 @@
 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 
 import {
   CHANNELS,
@@ -83,6 +88,8 @@ import {
   getVersionRows,
 } from './mock.js';
 import { getFilteredKpiCards } from '../lib/filterKpiCards.js';
+
+const mockSource = readFileSync(new URL('./mock.js', import.meta.url), 'utf8');
 
 function byKey(rows, key) {
   return rows.find((row) => row.key === key);
@@ -150,7 +157,7 @@ test('provides target maintenance organization tree and editable user rows', () 
   assert.ok(TARGET_MAINTENANCE_ROWS.filter((row) => row.type === 'user').every((row) => row.periods.m06.actual >= 0));
 });
 
-test('classifies target maintenance progress as red, purple, or gold by completion tier', () => {
+test('classifies target maintenance progress with gold reserved for 120 percent or above', () => {
   const onlineSales = TARGET_MAINTENANCE_ROWS.find((row) => row.id === 'online-sales');
   const allDepartments = TARGET_MAINTENANCE_ROWS.find((row) => row.id === 'summary-all');
 
@@ -162,6 +169,8 @@ test('classifies target maintenance progress as red, purple, or gold by completi
   assert.equal(allDepartments.periods.m05.status, 'danger');
   assert.equal(allDepartments.periods.m06.pct, 83.8);
   assert.equal(allDepartments.periods.m06.status, 'warning');
+  assert.match(mockSource, /function maintenanceStatus\(pct\) \{[\s\S]*?if \(pct >= 120\) return 'good';/);
+  assert.doesNotMatch(mockSource, /if \(pct >= 100\) return 'good';/);
 });
 
 test('provides cost maintenance channel rows and labor cost rows', () => {

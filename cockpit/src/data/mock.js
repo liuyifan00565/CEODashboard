@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:49:56 CST
+ 更新内容: 数据维护目标完成率状态改为 120% 及以上才进入金色 good，100%-119.9% 保持 warning 普通完成色。
+*/
+/*
  更新时间: 2026-07-08 16:37:08 CST
  更新内容: 渠道人员明细支持按本月/年度选择目标与回款字段，匹配真实库下钻口径。
 */
@@ -44,7 +48,7 @@
 */
 /*
  更新时间: 2026-07-03 18:54:17 CST
- 更新内容: 维护页目标完成率状态改为 80 以下 danger、80-99 warning、100 及以上 good。
+ 更新内容: 维护页目标完成率状态曾按 80 以下 danger、80-99 warning、100 及以上 good 拆分；当前最新口径已调整为 120 及以上 good。
 */
 /*
  更新时间: 2026-07-03 18:19:59 CST
@@ -995,7 +999,7 @@ export const MAINTENANCE_PERIOD_COLUMNS = [
 ];
 
 function maintenanceStatus(pct) {
-  if (pct >= 100) return 'good';
+  if (pct >= 120) return 'good';
   if (pct >= 80) return 'warning';
   return 'danger';
 }

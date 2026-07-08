@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:49:56 CST
+ 更新内容: 数据维护目标完成率回归说明同步为 120% 及以上才使用金色 good 状态。
+*/
+/*
  更新时间: 2026-07-08 17:28:57 CST
  更新内容: 渠道完成情况回归测试要求进度条复用 120% 超额阈值工具函数，避免 100%-119.9% 显示金色。
 */
@@ -120,7 +124,7 @@
 */
 /*
  Update time: 2026-07-03 18:54:17 CST
- Update content: Require maintenance progress colors to use red below 80, purple below target, and gold at target.
+ Update content: Require maintenance progress colors to use red below 80, purple below the 120 percent over-target line, and gold at 120 percent or above.
 */
 /*
  Update time: 2026-07-03 18:31:29 CST
