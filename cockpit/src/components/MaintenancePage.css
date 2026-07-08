@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 19:12:00 CST
+ 更新内容: 新增删除二级确认按钮组样式，供成本维护与渠道维护共用。
+*/
+/*
  更新时间: 2026-07-08 18:58:00 CST
  更新内容: 成本维护渠道树新增紧凑删除按钮样式，复用现有玻璃按钮与危险态配色。
 */
@@ -661,6 +665,17 @@
 
 .mnt-nav-delete {
   min-width: 48px;
+}
+
+.mnt-delete-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mnt-delete-confirm .mnt-btn {
+  min-width: 42px;
+  padding-inline: 7px;
 }
 
 .mnt-target-scroll-pane {

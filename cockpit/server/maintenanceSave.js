@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 19:12:00 CST
+ 更新内容: 渠道维护保存支持渠道大类删除列表，软删除 dim_channel 并兜底排除其来源。
+*/
+/*
  更新时间: 2026-07-08 18:58:00 CST
  更新内容: 成本维护保存支持删除渠道：停用 dim_channel，并清理当前年份渠道成本记录。
 */
@@ -278,8 +282,26 @@ export async function saveOrg(connection, rows, departments = []) {
   return { written, skipped, errors };
 }
 
-/** 渠道维护：先新增 dim_channel，再按 source_code upsert dim_channel_source，支持新增来源 INSERT 与删除来源 DELETE。 */
-export async function saveChannel(connection, rows, deletions = [], groups = []) {
+async function deleteChannelGroups(connection, groupDeletions = [], errors = []) {
+  let deleted = 0;
+  let skipped = 0;
+  const deleteIds = Array.from(new Set((Array.isArray(groupDeletions) ? groupDeletions : []).filter(Boolean).map((id) => String(id))));
+  for (const idText of deleteIds) {
+    const channelId = Number(idText);
+    if (!Number.isInteger(channelId)) {
+      skipped += 1;
+      errors.push({ field: 'channel_id', message: `删除渠道大类 ID 非法，跳过：${idText}` });
+      continue;
+    }
+    const [sourceResult] = await connection.execute('UPDATE dim_channel_source SET channel_id = NULL, is_excluded = 1 WHERE channel_id = ?', [channelId]);
+    const [channelResult] = await connection.execute('UPDATE dim_channel SET is_enabled = 0 WHERE channel_id = ?', [channelId]);
+    deleted += Number(sourceResult?.affectedRows || 0) + Number(channelResult?.affectedRows || 0);
+  }
+  return { deleted, skipped };
+}
+
+/** 渠道维护：先新增 dim_channel，再按 source_code upsert dim_channel_source，支持来源删除和渠道大类软删除。 */
+export async function saveChannel(connection, rows, deletions = [], groups = [], groupDeletions = []) {
   let written = 0;
   let skipped = 0;
   let deleted = 0;
@@ -352,6 +374,10 @@ export async function saveChannel(connection, rows, deletions = [], groups = [])
     deleted += Number(result?.affectedRows || 0);
   }
 
+  const groupDeleteRes = await deleteChannelGroups(connection, groupDeletions, errors);
+  deleted += groupDeleteRes.deleted;
+  skipped += groupDeleteRes.skipped;
+
   return { written, skipped, deleted, errors };
 }
 
@@ -368,13 +394,13 @@ const SAVERS = {
     };
   },
   'org-maintenance': (conn, body) => saveOrg(conn, body.rows || [], body.departments || []),
-  'channel-maintenance': (conn, body) => saveChannel(conn, body.rows || [], body.deletions || [], body.groups || []),
+  'channel-maintenance': (conn, body) => saveChannel(conn, body.rows || [], body.deletions || [], body.groups || [], body.groupDeletions || []),
 };
 
 /**
  * 真写库：单事务执行页专属部分列 upsert，FK 不满足的行跳过不中断。
  * @param {string} pageKey
- * @param {object} body { rows, laborRows?, departments?, groups?, deletions? }
+ * @param {object} body { rows, laborRows?, departments?, groups?, deletions?, groupDeletions? }
  * @returns {Promise<{written:number, skipped:number, deleted:number, errors:object[], summary:string}>}
  */
 export async function persistSave(pageKey, body) {
@@ -410,7 +436,7 @@ export async function persistSave(pageKey, body) {
 
 /**
  * POST /api/maintenance/save
- * 请求体：{ pageKey, year, rows, laborRows?, departments?, groups?, deletions? }
+ * 请求体：{ pageKey, year, rows, laborRows?, departments?, groups?, deletions?, groupDeletions? }
  * 响应：{ pageKey, year, written, skipped, deleted, errors, summary }
  */
 export async function handleMaintenanceSaveRequest(req, res) {

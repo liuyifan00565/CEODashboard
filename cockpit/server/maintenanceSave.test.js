@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 19:12:00 CST
+ 更新内容: 单测覆盖渠道维护删除渠道大类时停用 dim_channel 并排除解绑来源。
+*/
+/*
  更新时间: 2026-07-08 18:58:00 CST
  更新内容: 单测覆盖成本维护删除渠道时停用 dim_channel 并删除当前年份成本。
 */
@@ -46,6 +50,7 @@ function makeConn(selectFn) {
         return [rows];
       }
       execs.push({ sql: normalized, params });
+      if (/^UPDATE dim_channel_source SET channel_id = NULL/i.test(normalized)) return [{ affectedRows: 2 }];
       if (/^UPDATE dim_channel SET is_enabled/i.test(normalized)) return [{ affectedRows: 1 }];
       if (/^DELETE/i.test(normalized)) return [{ affectedRows: 1 }];
       return [{}];
@@ -284,4 +289,16 @@ test('saveChannel: 新增渠道大类后映射临时 channel_id 给来源', asyn
   assert.equal(groupInsert.params[0], 3100);
   const sourceInsert = execs.find((e) => e.sql.startsWith('INSERT INTO dim_channel_source'));
   assert.equal(sourceInsert.params[3], '3100');
+});
+
+test('saveChannel: 删除渠道大类会停用渠道并排除解绑来源', async () => {
+  const { conn, execs } = makeConn(() => []);
+  const r = await saveChannel(conn, [], [], [], ['3002']);
+  assert.equal(r.deleted, 3);
+  const sourceUpdate = execs.find((e) => e.sql.startsWith('UPDATE dim_channel_source SET channel_id = NULL'));
+  assert.ok(sourceUpdate);
+  assert.deepEqual(sourceUpdate.params, [3002]);
+  const channelUpdate = execs.find((e) => e.sql.startsWith('UPDATE dim_channel SET is_enabled'));
+  assert.ok(channelUpdate);
+  assert.deepEqual(channelUpdate.params, [3002]);
 });

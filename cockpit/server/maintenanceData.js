@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 19:12:00 CST
+ 更新内容: 渠道维护读取只展示启用渠道大类，配合渠道大类删除后的回拉隐藏。
+*/
+/*
  更新时间: 2026-07-08 18:58:00 CST
  更新内容: 成本维护读取只展示启用渠道，配合成本页删除渠道后的回拉隐藏。
 */
@@ -65,7 +69,7 @@ async function readOrg(connection) {
 
 async function readChannel(connection) {
   const [channels, sources] = await Promise.all([
-    queryRows(connection, 'SELECT channel_id, channel_name, parent_id, is_enabled FROM dim_channel'),
+    queryRows(connection, 'SELECT channel_id, channel_name, parent_id, is_enabled FROM dim_channel WHERE is_enabled = 1'),
     queryRows(connection, 'SELECT source_id, source_code, source_name, channel_id, is_excluded FROM dim_channel_source'),
   ]);
   return buildChannelSnapshot({ channels, sources });

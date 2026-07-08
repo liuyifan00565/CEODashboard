@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 19:12:00 CST
+ 更新内容: 成本维护与渠道维护删除按钮统一改为二级确认；渠道维护渠道大类支持删除并提交软删除。
+*/
+/*
  更新时间: 2026-07-08 18:58:00 CST
  更新内容: 成本维护渠道树新增删除按钮，未保存渠道直接移除，已落库渠道保存时提交删除列表。
 */
@@ -414,6 +418,22 @@ function MaintenanceSideNavNode({ node, activeId, onSelect, renderAction }) {
   );
 }
 
+function ConfirmDeleteAction({ id, pendingId, setPendingId, onConfirm, title }) {
+  if (pendingId === id) {
+    return (
+      <span className="mnt-delete-confirm">
+        <button className="mnt-btn mnt-btn--danger mnt-btn--tiny" type="button" onClick={onConfirm}>确认删除</button>
+        <button className="mnt-btn mnt-btn--tiny" type="button" onClick={() => setPendingId('')}>取消</button>
+      </span>
+    );
+  }
+  return (
+    <button className="mnt-btn mnt-btn--danger mnt-btn--tiny mnt-nav-delete" type="button" onClick={() => setPendingId(id)} title={title}>
+      删除
+    </button>
+  );
+}
+
 function ProgressLine({ period }) {
   const width = Math.max(0, Math.min(100, Number(period?.pct || 0)));
   const progressText = period?.target ? formatPct(period.pct) : '未设目标';
@@ -607,12 +627,14 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
   const [allRows, setAllRows] = useState(costRows ?? EMPTY_ARRAY);
   const [selectedChannel, setSelectedChannel] = useState('all');
   const [selectedCostRow, setSelectedCostRow] = useState(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState('');
   const laborList = laborRows ?? EMPTY_ARRAY;
   const draftRef = useRef({});
   const deletedChannelIdsRef = useRef([]);
   useEffect(() => {
     setChannels(costChannels ?? EMPTY_ARRAY);
     setAllRows(costRows ?? EMPTY_ARRAY);
+    setPendingDeleteId('');
     draftRef.current = {};
     deletedChannelIdsRef.current = [];
   }, [costChannels, costRows]);
@@ -705,14 +727,16 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
   function renderCostChannelAction(node) {
     if (node.id === 'all') return null;
     return (
-      <button
-        className="mnt-btn mnt-btn--danger mnt-btn--tiny mnt-nav-delete"
-        type="button"
-        onClick={() => deleteCostChannel(node.id)}
+      <ConfirmDeleteAction
+        id={`cost:${node.id}`}
+        pendingId={pendingDeleteId}
+        setPendingId={setPendingDeleteId}
+        onConfirm={() => {
+          deleteCostChannel(node.id);
+          setPendingDeleteId('');
+        }}
         title={`删除${node.name}`}
-      >
-        删除
-      </button>
+      />
     );
   }
 
@@ -929,12 +953,16 @@ const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ mark
   );
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedSourceRow, setSelectedSourceRow] = useState(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState('');
   const deletedCodesRef = useRef([]);
+  const deletedGroupIdsRef = useRef([]);
   const newCounterRef = useRef(0);
   useEffect(() => {
     setGroups(propGroups ?? []);
     setSources((propSources ?? []).map((s) => ({ ...s, _uid: s.code, _isNew: false })));
+    setPendingDeleteId('');
     deletedCodesRef.current = [];
+    deletedGroupIdsRef.current = [];
   }, [propGroups, propSources]);
   const sourceCountByGroup = useMemo(() => {
     const counts = new Map();
@@ -971,7 +999,7 @@ const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ mark
   useImperativeHandle(ref, () => ({
     collect: () => {
       const r = buildChannelSaveRows(sources, deletedCodesRef.current);
-      return { rows: r.rows, groups: buildChannelGroupSaveRows(groups), laborRows: [], deletions: r.deletions };
+      return { rows: r.rows, groups: buildChannelGroupSaveRows(groups), laborRows: [], deletions: r.deletions, groupDeletions: deletedGroupIdsRef.current };
     },
     addChannelGroup: () => addGroup(selectedGroup === 'all' ? '' : selectedGroup),
     addSource,
@@ -1020,6 +1048,39 @@ const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ mark
     markDirty();
   }
 
+  function deleteGroup(groupId) {
+    if (groupId === 'all') return;
+    const deleteIds = getDescendantIds(groups, groupId);
+    setGroups(groups.filter((group) => !deleteIds.has(group.id)));
+    setSources(sources.filter((source) => {
+      if (!deleteIds.has(source.groupId)) return true;
+      if (!source._isNew && source.code) deletedCodesRef.current.push(source.code);
+      return false;
+    }));
+    deletedGroupIdsRef.current = Array.from(new Set([
+      ...deletedGroupIdsRef.current,
+      ...Array.from(deleteIds).filter((id) => !String(id).startsWith('new-channel-')),
+    ]));
+    if (deleteIds.has(selectedGroup)) setSelectedGroup('all');
+    markDirty();
+  }
+
+  function renderChannelGroupAction(node) {
+    if (node.id === 'all') return null;
+    return (
+      <ConfirmDeleteAction
+        id={`channel:${node.id}`}
+        pendingId={pendingDeleteId}
+        setPendingId={setPendingDeleteId}
+        onConfirm={() => {
+          deleteGroup(node.id);
+          setPendingDeleteId('');
+        }}
+        title={`删除${node.name}`}
+      />
+    );
+  }
+
   return (
     <section className="mnt-layout mnt-layout--channel">
       <Panel title="渠道大类" meta={`${groups.length} 个大类`} className="mnt-side-panel">
@@ -1035,7 +1096,7 @@ const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ mark
             />
           </label>
         )}
-        <MaintenanceSideNav nodes={channelGroupNavNodes} activeId={selectedGroup} onSelect={setSelectedGroup} />
+        <MaintenanceSideNav nodes={channelGroupNavNodes} activeId={selectedGroup} onSelect={setSelectedGroup} renderAction={renderChannelGroupAction} />
       </Panel>
       <Panel title="卫瓴线索来源" meta={<SaveBadge status={status} />} className="mnt-main-panel">
         <button className="mnt-btn mnt-local-action" type="button" onClick={addSource}>新增来源</button>
@@ -1077,7 +1138,18 @@ const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ mark
                       排除
                     </label>
                   </td>
-                  <td><button className="mnt-btn mnt-btn--danger" type="button" onClick={() => deleteSource(source)}>删除</button></td>
+                  <td>
+                    <ConfirmDeleteAction
+                      id={`source:${source._uid}`}
+                      pendingId={pendingDeleteId}
+                      setPendingId={setPendingDeleteId}
+                      onConfirm={() => {
+                        deleteSource(source);
+                        setPendingDeleteId('');
+                      }}
+                      title={`删除${source.name}`}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1170,8 +1242,9 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
       departments: collected?.departments ?? [],
       groups: collected?.groups ?? [],
       deletions: collected?.deletions ?? [],
+      groupDeletions: collected?.groupDeletions ?? [],
     };
-    if (!payload.rows.length && !payload.laborRows.length && !payload.departments.length && !payload.groups.length && !payload.deletions.length) {
+    if (!payload.rows.length && !payload.laborRows.length && !payload.departments.length && !payload.groups.length && !payload.deletions.length && !payload.groupDeletions.length) {
       markSaved();
       return;
     }
