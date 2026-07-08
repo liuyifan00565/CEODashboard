@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:22:00 CST
+ 更新内容: 总投入费比卡片改用成本月趋势和当前渠道投放成本口径，同时在副文案中标清当前投入与全渠道构成。
+*/
+/*
  更新时间: 2026-07-08 17:23:00 CST
  更新内容: 默认日期范围临时恢复到 2026 年 6 月整月，并保留经营进度搜索关键词读取运行时月份。
 */
@@ -62,7 +66,7 @@
  更新时间: 2026-07-01 12:26:40
  更新内容: 回款 KPI 副文案目标标签与目标金额换到同一行，并移除日期后的分隔点。
 */
-import { CHANNEL_ROI, CHANNELS, KPI, KPI_CARDS, KPI_DERIVED, META, getRenewalModalData } from '../data/mock.js';
+import { CHANNEL_ROI, CHANNELS, COST_TREND, KPI, KPI_CARDS, KPI_DERIVED, META, getRenewalModalData } from '../data/mock.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DIM_KEYS = new Set(['year', 'month', 'day']);
@@ -205,14 +209,24 @@ function getChannelContext(channelKey) {
   }
 
   const investment = CHANNEL_ROI.find((item) => item.key === channel.key)?.investment
-    ?? Math.round(KPI.totalCost * (channel.recovered / KPI.monthRecovered));
+    ?? latestCostTrendRow().channels?.[channel.key]
+    ?? Math.round(KPI.adCost * (channel.recovered / KPI.monthRecovered));
   return {
     channelKey: channel.key,
     channel,
     recoveredRatio: channel.recovered / KPI.monthRecovered,
     targetRatio: channel.target / KPI.monthTarget,
-    investmentRatio: investment / KPI.totalCost,
+    investmentRatio: KPI.adCost ? investment / KPI.adCost : 0,
     investment,
+  };
+}
+
+function latestCostTrendRow() {
+  return COST_TREND.at(-1) ?? {
+    adCost: KPI.adCost,
+    laborCost: KPI.laborCost,
+    totalCost: KPI.totalCost,
+    channels: {},
   };
 }
 
@@ -312,8 +326,8 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
   const laborCost = scaled(config.laborCost, factor);
   const costRatio = recovered ? round1((cost / recovered) * 100) : KPI_DERIVED.costRatio;
   const costSub = channelContext.channelKey === 'all'
-    ? `总投入 ${cost} 万 · 广告 ${adCost} 万 + 人力 ${laborCost} 万`
-    : `销售投入 ${cost} 万 · 费比 ${costRatio}%`;
+    ? `全渠道总投入 ${cost} 万 · 广告 ${adCost} 万 + 人力 ${laborCost} 万`
+    : `当前渠道投入 ${cost} 万 · 全渠道总投入 ${KPI.totalCost} 万 · 费比 ${costRatio}%`;
 
   const cardsByKey = new Map(KPI_CARDS.map((card) => [card.key, card]));
   const monthCard = cardsByKey.get('month');

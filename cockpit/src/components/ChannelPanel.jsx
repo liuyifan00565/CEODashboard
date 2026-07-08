@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-08 18:22:00 CST  更新内容: 渠道人员明细弹窗标题补齐本月/年度口径，副标题明确当前渠道、单位和完成率排序规则。 */
 /* 更新时间: 2026-07-08 17:28:57 CST  更新内容: 渠道完成进度条接入 120% 超额阈值，100%-119.9% 不再显示金色。 */
 /* 更新时间: 2026-07-08 16:37:08 CST  更新内容: 渠道二级人员明细跟随本月/年度切换读取对应周期数据。 */
 /* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 渠道完成率单元格内联进度条，避免最右独立进度列造成语义分裂。 */
@@ -62,6 +63,8 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
     : title;
   const openRow = rows.find((row) => row.key === openKey);
   const members = openKey ? getSalesMemberRows(openKey, period) : [];
+  const periodLabel = period === 'year' ? '年度' : '本月';
+  const modalTitle = openRow ? `${openRow.name}${periodLabel}人员完成明细` : '';
 
   return (
     <section className="ch-panel">
@@ -124,13 +127,13 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
       </div>
 
       {openRow && createPortal(
-        <div className="ch-modal" role="dialog" aria-modal="true" aria-label={`${openRow.name}人员完成明细`}>
+        <div className="ch-modal" role="dialog" aria-modal="true" aria-label={modalTitle}>
           <button type="button" className="ch-modal-mask" aria-label="关闭" onClick={() => setOpenKey(null)} />
           <div className="ch-modal-card">
             <div className="ch-modal-head">
               <div>
-                <h3>{openRow.name}人员完成明细</h3>
-                <span>数据权限允许时展开 · 按完成率降序排列</span>
+                <h3>{modalTitle}</h3>
+                <span>当前口径：{openRow.name} · {periodLabel} · 单位：万元 · 按完成率降序排列</span>
               </div>
               <button type="button" className="ch-modal-close" aria-label="关闭" onClick={() => setOpenKey(null)}>
                 <AppIcon name="close" size={17} />

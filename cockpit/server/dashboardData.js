@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:22:00 CST
+ 更新内容: dashboard 快照新增成本月趋势 costTrend，按渠道投放成本与人力成本聚合，供总投入费比二级下钻使用。
+*/
+/*
  更新时间: 2026-07-08 17:23:00 CST
  更新内容: 首页业务月份增加临时 2026-06 覆盖；其它原因处理完后移除覆盖即可恢复自动月份。
 */
@@ -279,6 +283,48 @@ function makeMonthlyTrend({ monthlyTargets, recoveredRows, latestMonth, currentM
     });
 }
 
+function makeCostTrend({ channelCosts = [], laborCosts = [], latestMonth }) {
+  const months = new Set();
+  const channelByMonth = new Map();
+  const laborByMonth = new Map();
+
+  for (const row of channelCosts) {
+    const yearMonth = row.year_month || latestMonth;
+    if (!yearMonth) continue;
+    months.add(yearMonth);
+    const channels = channelByMonth.get(yearMonth) ?? {};
+    channels[row.channel_key] = num(channels[row.channel_key]) + num(row.investment_wan);
+    channelByMonth.set(yearMonth, channels);
+  }
+
+  for (const row of laborCosts) {
+    const yearMonth = row.year_month || latestMonth;
+    if (!yearMonth) continue;
+    months.add(yearMonth);
+    laborByMonth.set(yearMonth, num(laborByMonth.get(yearMonth)) + num(row.amount_wan));
+  }
+
+  return [...months]
+    .filter((yearMonth) => !latestMonth || yearMonth <= latestMonth)
+    .sort()
+    .map((yearMonth) => {
+      const channels = channelByMonth.get(yearMonth) ?? {};
+      const roundedChannels = Object.fromEntries(
+        Object.entries(channels).map(([channelKey, value]) => [channelKey, round0(value)])
+      );
+      const adCost = round0(Object.values(channels).reduce((total, value) => total + num(value), 0));
+      const laborCost = round0(laborByMonth.get(yearMonth));
+      return {
+        yearMonth,
+        label: monthName(yearMonth),
+        adCost,
+        laborCost,
+        totalCost: adCost + laborCost,
+        channels: roundedChannels,
+      };
+    });
+}
+
 function addMemberMetric(map, row, field) {
   const staffId = row.staff_id;
   const channelKey = row.channel_key;
@@ -505,6 +551,11 @@ export function mapDashboardRowsToSnapshot(rows) {
   });
   const operatingOverviewMetrics = makeOperatingMetrics({ kpiDerived, latestMonth, channelRows: channels });
   const deliveryRows = makeDeliveryRows(rows);
+  const costTrend = makeCostTrend({
+    channelCosts: rows.channelCostTrend ?? rows.channelCosts ?? [],
+    laborCosts: rows.laborCostTrend ?? rows.laborCosts ?? [],
+    latestMonth,
+  });
 
   return {
     source: 'mysql',
@@ -519,6 +570,7 @@ export function mapDashboardRowsToSnapshot(rows) {
     channels,
     channelRoi: makeChannelRoi({ channelRows: channels, channelCosts: rows.channelCosts ?? [] }),
     monthlyTrend: makeMonthlyTrend({ monthlyTargets: rows.monthlyTargets ?? [], recoveredRows, latestMonth, currentMonthTarget }),
+    costTrend,
     salesMemberRows: makeSalesMemberRows({
       salesRows: yearSalesRows,
       targetRows: rows.memberTargets ?? [],
@@ -596,6 +648,8 @@ export async function buildDashboardSnapshot(connection) {
     memberRecovered,
     channelCosts,
     laborCosts,
+    channelCostTrend,
+    laborCostTrend,
     versionSales,
     renewalRows,
     openingRows,
@@ -724,6 +778,23 @@ export async function buildDashboardSnapshot(connection) {
       FROM biz_labor_cost_monthly
       WHERE \`year_month\` = ?
     `, [latestMonth]),
+    queryRows(connection, `
+      SELECT cost.\`year_month\`, c.channel_key, ROUND(SUM(cost.investment_amount_yuan) / 10000, 2) AS investment_wan
+      FROM biz_channel_cost_monthly cost
+      JOIN dim_channel c ON c.channel_id = cost.channel_id
+      WHERE cost.\`year_month\` LIKE CONCAT(?, '%')
+        AND cost.\`year_month\` <= ?
+      GROUP BY cost.\`year_month\`, c.channel_key
+      ORDER BY cost.\`year_month\`, c.channel_key
+    `, [latestYear, latestMonth]),
+    queryRows(connection, `
+      SELECT \`year_month\`, cost_type, ROUND(SUM(amount_yuan) / 10000, 2) AS amount_wan
+      FROM biz_labor_cost_monthly
+      WHERE \`year_month\` LIKE CONCAT(?, '%')
+        AND \`year_month\` <= ?
+      GROUP BY \`year_month\`, cost_type
+      ORDER BY \`year_month\`, cost_type
+    `, [latestYear, latestMonth]),
     queryRows(connection, `
       SELECT v.version_key, v.version_name, v.standard_price_yuan, c.channel_key,
              f.units,
@@ -881,6 +952,8 @@ export async function buildDashboardSnapshot(connection) {
     memberRecovered,
     channelCosts,
     laborCosts,
+    channelCostTrend,
+    laborCostTrend,
     versionSales,
     renewalRows,
     openingRows,

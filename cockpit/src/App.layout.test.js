@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:22:00 CST
+ 更新内容: 经营总览二级弹窗回归同步成本月度口径、当前筛选提示和渠道人员明细标题。
+*/
+/*
  更新时间: 2026-07-08 17:49:56 CST
  更新内容: 数据维护目标完成率回归说明同步为 120% 及以上才使用金色 good 状态。
 */
@@ -1322,6 +1326,8 @@ test('uses one channel completion panel with month and year switching', () => {
   assert.doesNotMatch(channelPanelSource, /本月销售完成/);
   assert.match(channelPanelSource, /createPortal/);
   assert.match(channelPanelSource, /document\.body/);
+  assert.match(channelPanelSource, /const modalTitle = openRow \? `\$\{openRow\.name\}\$\{periodLabel\}人员完成明细` : '';/);
+  assert.match(channelPanelSource, /当前口径：\{openRow\.name\} · \{periodLabel\} · 单位：万元 · 按完成率降序排列/);
   assert.match(channelPanelSource, /formatChannelAmount/);
   assert.match(channelPanelSource, /fmtPct/);
   assert.match(channelPanelSource, /ch-row-arrow/);
@@ -1342,9 +1348,11 @@ test('opens monthly and annual drilldowns from the operating overview with conte
   assert.match(operatingOverviewSource, /function OperatingOverview\(\{ searchTerm = '', monthKpiCard, yearKpiCard, onOpenKpi \}\)/);
   assert.match(operatingOverviewSource, /disabled=\{!monthKpiCard \|\| !onOpenKpi\}/);
   assert.match(operatingOverviewSource, /disabled=\{!yearKpiCard \|\| !onOpenKpi\}/);
-  assert.match(kpiModalSource, /const initialDim = card\.key === 'year' \? 'year' : 'month';/);
-  assert.match(kpiModalSource, /const modalTitle = card\.key === 'year' \? '年度回款明细' : card\.key === 'month' \? '月度回款明细' : card\.title;/);
+  assert.match(kpiModalSource, /const initialDim = isCost \? 'month' : card\.key === 'year' \? 'year' : 'month';/);
+  assert.match(kpiModalSource, /const modalTitle = isCost \? '投入趋势与环比' : card\.key === 'year' \? '年度回款明细' : card\.key === 'month' \? '月度回款明细' : card\.title;/);
   assert.match(kpiModalSource, /<h3 className="km-title">\{modalTitle\}<\/h3>/);
+  assert.match(kpiModalSource, /className="km-scope-line">当前筛选：\{scope\}<\/span>/);
+  assert.match(kpiModalSource, /const COST_DIM_OPTS = \[/);
 });
 
 test('removes the yearly risk forecast block so recovery cards stay on channel completion', () => {
@@ -1449,7 +1457,7 @@ test('gives the top brand capsule more breathing room before the main chart', ()
 test('uses sales filters followed directly by year month day in the KPI modal', () => {
   assert.match(kpiModalSource, /import MultiSegmented from '\.\/MultiSegmented';/);
   assert.match(kpiModalSource, /salesKeys/);
-  assert.match(kpiModalSource, /<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">渠道<\/span>[\s\S]*?<MultiSegmented options=\{SALES_FILTER_OPTS\} value=\{salesKeys\} onChange=\{setSalesKeys\} \/>[\s\S]*?<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">粒度<\/span>[\s\S]*?<Segmented options=\{DIM_OPTS\} value=\{dim\} onChange=\{setDim\} \/>/);
+  assert.match(kpiModalSource, /<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">渠道<\/span>[\s\S]*?<MultiSegmented options=\{SALES_FILTER_OPTS\} value=\{salesKeys\} onChange=\{setSalesKeys\} \/>[\s\S]*?<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">粒度<\/span>[\s\S]*?<Segmented options=\{isCost \? COST_DIM_OPTS : DIM_OPTS\} value=\{dim\} onChange=\{setDim\} \/>/);
   assert.doesNotMatch(kpiModalSource, /ORDER_TYPE_OPTS/);
   assert.doesNotMatch(kpiModalSource, /orderType/);
   assert.doesNotMatch(kpiModalSource, /新签/);

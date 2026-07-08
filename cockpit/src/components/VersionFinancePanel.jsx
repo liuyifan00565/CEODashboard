@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-08 18:22:00 CST  更新内容: 版本二级明细补齐当前筛选与主结论，底部改为纯文字对比摘要，避免重要口径脚注化。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: 版本情况色板改为银紫玫瑰与香槟/柔和辅助色，移除青蓝主视觉。 */
 /* 更新时间: 2026-07-06 10:00:00 CST  更新内容: 版本二级明细弹窗继承高级果味玻璃明细页母版。 */
 /* 更新时间: 2026-07-06 00:00:13 CST  更新内容: 版本情况半环与色点中的金色改为高级哑金。 */
@@ -18,8 +19,8 @@ import AppIcon from './AppIcon';
 import EChart from './EChart';
 import MultiSegmented from './MultiSegmented';
 import Segmented from './Segmented';
-import { getChannelRows, getVersionRows, MONTHLY_TREND } from '../data/mock';
-import { fmtDelta, deltaColor, fmtMoney, progressGradient } from '../lib/format';
+import { getChannelRows, getVersionRows, META, MONTHLY_TREND } from '../data/mock';
+import { fmtDelta, deltaColor, fmtMoney } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './KpiModal.css';
 import './VersionFinancePanel.css';
@@ -52,11 +53,7 @@ const DIM_OPTS = [
   { value: 'day', label: '日' },
 ];
 const DIM_TITLE = { year: '年度', month: '本月', day: '本日' };
-const DIM_FOOTER = {
-  year: '2026-01-01 至 2026-06-30 年度累计',
-  month: '2026-06-01 至 2026-06-30 月度',
-  day: '2026-06-30 当日',
-};
+const DIM_SCOPE = { year: '年度', month: '月度', day: '日度' };
 const DAY_WEIGHTS = [62, 70, 55, 81, 74, 90, 68, 77, 84, 96];
 
 function getModeMeta(mode) {
@@ -137,6 +134,12 @@ function formatModeValue(value, modeMeta) {
   return `${number.toLocaleString('zh-CN')}${modeMeta.unit}`;
 }
 
+function signedModeValue(value, modeMeta) {
+  const number = Number(value) || 0;
+  const prefix = number > 0 ? '+' : number < 0 ? '-' : '';
+  return `${prefix}${formatModeValue(Math.abs(number), modeMeta)}`;
+}
+
 function versionDetailSubtitle(dim, versionName, modeLabel) {
   return `按${DIM_TITLE[dim] ?? '本月'}维度查看${versionName}${modeLabel}变化趋势`;
 }
@@ -149,22 +152,53 @@ function versionDetailTrendDescription(series, selIndex, selected, unit) {
   return `较 ${prevPoint?.label ?? '上期'} ${direction} ${Math.abs(change).toLocaleString('zh-CN')}${unit}`;
 }
 
+function versionDetailInsight(trendText, mom) {
+  const direction = mom >= 0 ? '环比上涨' : '环比下降';
+  return `${trendText}，${direction} ${Math.abs(Number(mom) || 0).toFixed(1)}%`;
+}
+
+function modalDeltaColor(value) {
+  return value >= 0 ? deltaColor(value) : '#D86C87';
+}
+
+function selectedPeriodLabel(label, dim) {
+  if (dim === 'year') return label;
+  if (dim === 'day') return /^\d{2}-\d{2}$/.test(label) ? `2026-${label}` : label;
+  const year = String(META.monthLabel || '2026年').match(/^\d{4}/)?.[0] ?? '2026';
+  const month = String(label || '').match(/^(\d+)月$/)?.[1];
+  return month ? `${year}年${Number(month)}月` : label;
+}
+
+function salesSelectionLabel(salesKeys) {
+  const labels = SALES_FILTER_OPTS
+    .filter((option) => salesKeys.includes(option.value))
+    .map((option) => option.label);
+  return labels.length === SALES_FILTER_OPTS.length ? '全渠道' : labels.join(' + ');
+}
+
+function versionScopeText({ salesKeys, modeMeta, dim, selectedLabel }) {
+  return [
+    salesSelectionLabel(salesKeys),
+    modeMeta.label,
+    DIM_SCOPE[dim] ?? '月度',
+    selectedPeriodLabel(selectedLabel, dim),
+  ].filter(Boolean).join(' · ');
+}
+
 function buildVersionSummary(selected, modeMeta, versionName) {
   const value = Number(selected.value ?? 0) || 0;
   const previous = Number(selected.prev ?? 0) || 0;
-  const changePct = previous ? +(((value - previous) / previous) * 100).toFixed(1) : 0;
-  const benchmark = Math.max(value, previous);
-  const rate = benchmark ? Math.min(+(value / benchmark * 100).toFixed(1), 100) : 0;
-  return {
-    targetLabel: '当前口径',
-    targetValue: `${versionName}${modeMeta.label}`,
-    completedLabel: '当前值',
-    completedValue: formatModeValue(value, modeMeta),
-    rate,
-    rateValue: fmtDelta(changePct),
-    gapLabel: '上期对比',
-    gapValue: formatModeValue(previous, modeMeta),
-  };
+  const diff = value - previous;
+  return [
+    { label: '当前筛选', value: `${versionName}${modeMeta.label}` },
+    { label: '当前值', value: formatModeValue(value, modeMeta) },
+    { label: '上期', value: formatModeValue(previous, modeMeta) },
+    {
+      label: '差额',
+      value: signedModeValue(diff, modeMeta),
+      tone: diff < 0 ? 'risk' : 'positive',
+    },
+  ];
 }
 
 function versionDetailBarColor(active) {
@@ -174,8 +208,8 @@ function versionDetailBarColor(active) {
         { offset: 1, color: '#8E86FF' },
       ]
     : [
-        { offset: 0, color: 'rgba(184,156,255,0.36)' },
-        { offset: 1, color: 'rgba(142,134,255,0.26)' },
+        { offset: 0, color: 'rgba(184,156,255,0.22)' },
+        { offset: 1, color: 'rgba(142,134,255,0.12)' },
       ]);
 }
 
@@ -362,7 +396,7 @@ function VersionDetailModal({ channelKey, versionKey, onClose }) {
         borderWidth: 0,
         padding: 0,
         textStyle: { color: tokens.chartText, fontSize: 12, lineHeight: 16 },
-        axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(184,156,255,0.08)' } },
+        axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(184,156,255,0.05)' } },
         formatter: (params) => {
           const point = params[0] ?? {};
           const value = point.data?.value ?? point.value ?? 0;
@@ -378,15 +412,15 @@ function VersionDetailModal({ channelKey, versionKey, onClose }) {
       xAxis: {
         type: 'category',
         data: series.map((item) => item.label),
-        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.14)' } },
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
         axisTick: { show: false },
-        axisLabel: { color: 'rgba(255,255,255,0.38)', fontSize: 11, margin: 10 },
+        axisLabel: { color: 'rgba(255,255,255,0.30)', fontSize: 11, margin: 10 },
       },
       yAxis: {
         type: 'value',
         axisLine: { show: false },
-        axisLabel: { color: 'rgba(255,255,255,0.38)', fontSize: 11 },
-        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.045)' } },
+        axisLabel: { color: 'rgba(255,255,255,0.30)', fontSize: 11 },
+        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.028)' } },
       },
       series: [
         {
@@ -398,7 +432,9 @@ function VersionDetailModal({ channelKey, versionKey, onClose }) {
             itemStyle: {
               color: versionDetailBarColor(index === selIndex),
               borderRadius: [8, 8, 3, 3],
-              opacity: index === selIndex ? 1 : 0.84,
+              opacity: index === selIndex ? 1 : 0.48,
+              shadowBlur: index === selIndex ? 12 : 0,
+              shadowColor: index === selIndex ? 'rgba(184,156,255,0.18)' : 'transparent',
             },
           })),
           emphasis: {
@@ -406,6 +442,8 @@ function VersionDetailModal({ channelKey, versionKey, onClose }) {
             itemStyle: {
               color: versionDetailBarColor(true),
               opacity: 1,
+              shadowBlur: 14,
+              shadowColor: 'rgba(184,156,255,0.22)',
             },
           },
           animationDuration: 520,
@@ -427,6 +465,8 @@ function VersionDetailModal({ channelKey, versionKey, onClose }) {
   const selected = series[selIndex] ?? series.at(-1) ?? { label: '', value: 0, prev: 0 };
   const mom = selected.prev ? +(((selected.value - selected.prev) / selected.prev) * 100).toFixed(1) : 0;
   const versionSummary = buildVersionSummary(selected, modeMeta, versionName);
+  const trendText = versionDetailTrendDescription(series, selIndex, selected, modeMeta.unit);
+  const scope = versionScopeText({ salesKeys, modeMeta, dim, selectedLabel: selected.label });
 
   const modal = (
     <div className="km-overlay vf-detail-overlay" role="dialog" aria-modal="true">
@@ -466,41 +506,25 @@ function VersionDetailModal({ channelKey, versionKey, onClose }) {
                 <span className="km-hl-unit">{modeMeta.unit}</span>
               </span>
               <span className="km-hl-label">{DIM_TITLE[dim]}{versionName}{modeMeta.label}</span>
+              <span className="km-scope-line">当前筛选：{scope}</span>
+              <span className="km-hl-insight">{versionDetailInsight(trendText, mom)}</span>
             </div>
           </div>
           <div className="km-trend-card">
             <span className="km-trend-label">{DIM_TITLE[dim]}环比</span>
-            <span className="km-trend-value" style={{ color: deltaColor(mom) }}>{fmtDelta(mom)}</span>
-            <span className="km-trend-desc">{versionDetailTrendDescription(series, selIndex, selected, modeMeta.unit)}</span>
+            <span className="km-trend-value" style={{ color: modalDeltaColor(mom) }}>{fmtDelta(mom)}</span>
+            <span className="km-trend-desc">{trendText}</span>
           </div>
         </div>
 
         <div className="km-chart" ref={chartElRef} />
-        <div className="km-summary vf-detail-summary">
-          <div className="km-summary-cell">
-            <span className="km-summary-label">{versionSummary.targetLabel}</span>
-            <b className="km-summary-value">{versionSummary.targetValue}</b>
-          </div>
-          <div className="km-summary-cell km-summary-cell--progress">
-            <span className="km-summary-label">{versionSummary.completedLabel}</span>
-            <b className="km-summary-value">
-              {versionSummary.completedValue}
-              <em>{versionSummary.rateValue}</em>
-            </b>
-            <span className="km-summary-progress" aria-label={`${DIM_FOOTER[dim]} · ${versionName}${modeMeta.label}合计`}>
-              <span
-                className="km-summary-progress-fill"
-                style={{
-                  width: `${Math.min(versionSummary.rate, 100)}%`,
-                  background: progressGradient(versionSummary.rate),
-                }}
-              />
-            </span>
-          </div>
-          <div className="km-summary-cell">
-            <span className="km-summary-label">{versionSummary.gapLabel}</span>
-            <b className="km-summary-value">{versionSummary.gapValue}</b>
-          </div>
+        <div className="km-summary km-summary--plain vf-detail-summary">
+          {versionSummary.map((item) => (
+            <div className={`km-summary-cell${item.tone ? ` km-summary-cell--${item.tone}` : ''}`} key={item.label}>
+              <span className="km-summary-label">{item.label}</span>
+              <b className="km-summary-value">{item.value}</b>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:22:00 CST
+ 更新内容: KPI 二级弹窗回归同步当前筛选、主结论和成本纯文字摘要结构。
+*/
+/*
  更新时间: 2026-07-06 10:48:16 CST
  更新内容: KPI 卡片测试同步银紫玫瑰半环与三档进度渐变，移除青绿和旧亮紫断言。
 */
@@ -374,16 +378,22 @@ test('styles the recovery pie mini tooltip with the modal glass frame and a dark
 test('renders KPI drilldowns with the premium glass detail-page structure', () => {
   assert.match(modalSource, /function modalSubtitle\(card, dim, isRenewal\)/);
   assert.match(modalSource, /function buildGoalSummary\(card, sel, cardUnit\)/);
+  assert.match(modalSource, /function buildCostSummary\(sel, cardUnit\)/);
   assert.match(modalSource, /function trendDescription\(series, selIndex, sel, cardUnit\)/);
-  assert.match(modalSource, /className="km-title-wrap"[\s\S]*?<h3 className="km-title">\{modalTitle\}<\/h3>[\s\S]*?<p className="km-subtitle">\{modalSubtitle\(card, dim, isRenewal\)\}<\/p>/);
+  assert.match(modalSource, /function scopeText\(\{ salesKeys, dim, selectedLabel, extra = \[\] \}\)/);
+  assert.match(modalSource, /className="km-title-wrap"[\s\S]*?<h3 className="km-title">\{modalTitle\}<\/h3>[\s\S]*?<p className="km-subtitle">\{modalSubtitle\(card, dimForSeries, isRenewal\)\}<\/p>/);
   assert.match(modalSource, /<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">渠道<\/span>[\s\S]*?<MultiSegmented options=\{SALES_FILTER_OPTS\}/);
-  assert.match(modalSource, /<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">粒度<\/span>[\s\S]*?<Segmented options=\{DIM_OPTS\}/);
+  assert.match(modalSource, /<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">粒度<\/span>[\s\S]*?<Segmented options=\{isCost \? COST_DIM_OPTS : DIM_OPTS\}/);
   assert.match(modalSource, /className="km-metric-section"/);
   assert.match(modalSource, /className="km-time-tag">\{sel\.label\}<\/span>/);
+  assert.match(modalSource, /className="km-scope-line">当前筛选：\{scope\}<\/span>/);
+  assert.match(modalSource, /className="km-hl-insight">\{insight\}<\/span>/);
   assert.match(modalSource, /className="km-trend-card"[\s\S]*?className="km-trend-label"[\s\S]*?className="km-trend-value"[\s\S]*?className="km-trend-desc"/);
   assert.match(modalSource, /className="km-summary"/);
+  assert.match(modalSource, /className="km-summary km-summary--plain"/);
   assert.match(modalSource, /className="km-summary-progress-fill"[\s\S]*?width:\s*`\$\{Math\.min\(Number\(goalSummary\.rate\) \|\| 0,\s*100\)\}%`/);
   assert.match(modalSource, /class="km-chart-tooltip"[\s\S]*?\$\{params\[0\]\?\.axisValue/);
   assert.match(modalCssSource, /\.km-chart-tooltip\s*\{[\s\S]*?background:\s*rgba\(22,\s*22,\s*34,\s*0\.82\);[\s\S]*?backdrop-filter:\s*blur\(18px\);[\s\S]*?box-shadow:\s*0 12px 36px rgba\(0,\s*0,\s*0,\s*0\.35\);/);
   assert.match(modalCssSource, /\.km-summary\s*\{[\s\S]*?grid-template-columns:\s*1\.1fr 2fr 1fr;[\s\S]*?border-radius:\s*18px;[\s\S]*?background:\s*rgba\(255,\s*255,\s*255,\s*0\.045\);/);
+  assert.match(modalCssSource, /\.km-summary--plain\s*\{[\s\S]*?grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\);/);
 });

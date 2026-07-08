@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:22:00 CST
+ 更新内容: 版本二级明细测试同步当前筛选、主结论和纯文字对比摘要结构。
+*/
+/*
  更新时间: 2026-07-06 10:48:16 CST
  更新内容: 版本情况测试同步银紫玫瑰半环阴影与切换器选中态。
 */
@@ -159,10 +163,13 @@ test('adds a KPI-style secondary expand entry and version detail modal', () => {
   assert.match(source, /<div className="km-filter-group">[\s\S]*?<span className="km-filter-label">粒度<\/span>[\s\S]*?<Segmented options=\{DIM_OPTS\}/);
   assert.match(source, /className="km-metric-section"/);
   assert.match(source, /className="km-time-tag">\{selected\.label\}<\/span>/);
-  assert.match(source, /versionDetailTrendDescription\(series, selIndex, selected, modeMeta\.unit\)/);
-  assert.match(source, /className="km-summary vf-detail-summary"/);
-  assert.match(source, /className="km-summary-progress-fill"[\s\S]*?width:\s*`\$\{Math\.min\(versionSummary\.rate,\s*100\)\}%`/);
-  assert.doesNotMatch(source, /{DIM_FOOTER\[dim\]} · {versionName}{modeMeta\.label}合计/);
+  assert.match(source, /className="km-scope-line">当前筛选：\{scope\}<\/span>/);
+  assert.match(source, /className="km-hl-insight">\{versionDetailInsight\(trendText, mom\)\}<\/span>/);
+  assert.match(source, /const trendText = versionDetailTrendDescription\(series, selIndex, selected, modeMeta\.unit\);/);
+  assert.match(source, /className="km-summary km-summary--plain vf-detail-summary"/);
+  assert.match(source, /versionSummary\.map\(\(item\) =>/);
+  assert.doesNotMatch(source, /className="km-summary-progress-fill"[\s\S]*?versionSummary\.rate/);
+  assert.doesNotMatch(source, /DIM_FOOTER/);
   assert.match(css, /\.vf-detail-card/);
   assert.match(css, /\.vf-detail-card \{[\s\S]*?width: min\(760px, calc\(100vw - 48px\)\);/);
   assert.match(css, /\.vf-detail-card \{[\s\S]*?max-height: calc\(100vh - 48px\);/);

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-08 18:22:00 CST  更新内容: 总投入费比二级弹窗改为投入趋势与环比，补齐当前筛选、主结论和全渠道广告/人力构成口径。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: KPI 二级弹窗柱形高亮改为银紫玫瑰，未选中柱回退为低透明银紫。 */
 /* 更新时间: 2026-07-06 10:00:00 CST  更新内容: KPI 二级弹窗升级为高级果味玻璃明细页母版，补充副标题、主指标、图表 tooltip 和摘要条。 */
 /* 更新时间: 2026-07-05 19:10:30 CST  更新内容: KPI 二级弹窗按本月/年度入口默认切换维度，并将回款弹窗标题改为月度/年度明细。 */
@@ -8,7 +9,7 @@ import gsap from 'gsap';
 import AppIcon from './AppIcon';
 import MultiSegmented from './MultiSegmented';
 import Segmented from './Segmented';
-import { getKpiSeries, getRenewalModalData, VERSIONS } from '../data/mock';
+import { KPI, META, getKpiSeries, getRenewalModalData, VERSIONS } from '../data/mock';
 import { deltaColor, fmtDelta, progressGradient } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './KpiModal.css';
@@ -23,6 +24,9 @@ const DIM_OPTS = [
   { value: 'year', label: '年' },
   { value: 'month', label: '月' },
   { value: 'day', label: '日' },
+];
+const COST_DIM_OPTS = [
+  { value: 'month', label: '月' },
 ];
 const VERSION_OPTS = [
   { value: 'all', label: '全部版本' },
@@ -43,18 +47,53 @@ function metricNoun(card, isRenewal = false) {
   return card.title ?? '指标';
 }
 
+function isCostCard(card) {
+  return card.metric === 'cost';
+}
+
 function modalSubtitle(card, dim, isRenewal) {
+  if (isCostCard(card)) return '按月度成本表查看当前筛选投入、环比和全渠道构成';
   return `按${DIM_COPY[dim] ?? '月度'}维度查看${metricNoun(card, isRenewal)}变化趋势`;
 }
 
 function metricLabel(card, dim, isRenewal) {
   if (isRenewal) return `${DIM_COPY[dim] ?? '当前'}续费率`;
   if (card.metric === 'recovered') return `${DIM_COPY[dim] ?? '当前'}回款金额`;
-  if (card.metric === 'cost') return `${DIM_COPY[dim] ?? '当前'}投入金额`;
+  if (card.metric === 'cost') return '当前筛选投入';
   if (card.metric === 'todayOpenings' || card.metric === 'monthOpenings') {
     return dim === 'day' ? '当日开户数' : dim === 'year' ? '当年开户总数' : '当月开户总数';
   }
   return card.title ?? '当前指标';
+}
+
+function initialSalesKeys(channelKey) {
+  return channelKey && channelKey !== 'all'
+    ? [channelKey]
+    : SALES_FILTER_OPTS.map((opt) => opt.value);
+}
+
+function salesSelectionLabel(salesKeys) {
+  const labels = SALES_FILTER_OPTS
+    .filter((option) => salesKeys.includes(option.value))
+    .map((option) => option.label);
+  return labels.length === SALES_FILTER_OPTS.length ? '全渠道' : labels.join(' + ');
+}
+
+function selectedPeriodLabel(label, dim) {
+  if (dim === 'year') return label;
+  if (dim === 'day') return /^\d{2}-\d{2}$/.test(label) ? `2026-${label}` : label;
+  const year = String(META.monthLabel || '2026年').match(/^\d{4}/)?.[0] ?? '2026';
+  const month = String(label || '').match(/^(\d+)月$/)?.[1];
+  return month ? `${year}年${Number(month)}月` : label;
+}
+
+function scopeText({ salesKeys, dim, selectedLabel, extra = [] }) {
+  return [
+    salesSelectionLabel(salesKeys),
+    ...extra,
+    DIM_COPY[dim] ?? '月度',
+    selectedPeriodLabel(selectedLabel, dim),
+  ].filter(Boolean).join(' · ');
 }
 
 function formatMetricNumber(value, unit, decimals = 0) {
@@ -76,6 +115,22 @@ function trendDescription(series, selIndex, sel, cardUnit) {
   const change = Number(sel.value ?? 0) - previous;
   const direction = change >= 0 ? '增加' : '减少';
   return `较 ${prevLabel} ${direction} ${formatMetricWithUnit(Math.abs(change), cardUnit, cardUnit === '%' ? 1 : 0)}`;
+}
+
+function trendInsight(trendText, mom, isRenewal = false) {
+  const direction = mom >= 0 ? '环比上涨' : '环比下降';
+  const suffix = isRenewal ? '个百分点' : '%';
+  return `${trendText}，${direction} ${Math.abs(Number(mom) || 0).toFixed(1)}${suffix}`;
+}
+
+function modalDeltaColor(value) {
+  return value >= 0 ? deltaColor(value) : '#D86C87';
+}
+
+function signedMetricWithUnit(value, unit, decimals = 0) {
+  const number = Number(value) || 0;
+  const prefix = number > 0 ? '+' : number < 0 ? '-' : '';
+  return `${prefix}${formatMetricWithUnit(Math.abs(number), unit, decimals)}`;
 }
 
 function targetLabelForCard(card) {
@@ -137,6 +192,26 @@ function buildGoalSummary(card, sel, cardUnit) {
   };
 }
 
+function buildCostSummary(sel, cardUnit) {
+  const current = Number(sel.value ?? 0) || 0;
+  const previous = Number(sel.prev ?? 0) || 0;
+  const diff = current - previous;
+  return [
+    { label: '当前口径', value: formatMetricWithUnit(current, cardUnit) },
+    { label: '上期', value: formatMetricWithUnit(previous, cardUnit) },
+    {
+      label: '差额',
+      value: signedMetricWithUnit(diff, cardUnit),
+      tone: diff < 0 ? 'risk' : 'positive',
+    },
+    {
+      label: '全渠道构成',
+      value: `全渠道总投入 ${KPI.totalCost} 万 · 广告 ${KPI.adCost} 万 / 人力 ${KPI.laborCost} 万`,
+      tone: 'neutral',
+    },
+  ];
+}
+
 function modalBarColor(active) {
   return new echarts.graphic.LinearGradient(0, 0, 0, 1, active
     ? [
@@ -144,22 +219,24 @@ function modalBarColor(active) {
         { offset: 1, color: '#8E86FF' },
       ]
     : [
-        { offset: 0, color: 'rgba(184,156,255,0.36)' },
-        { offset: 1, color: 'rgba(142,134,255,0.26)' },
+        { offset: 0, color: 'rgba(184,156,255,0.22)' },
+        { offset: 1, color: 'rgba(142,134,255,0.12)' },
       ]);
 }
 
 export default function KpiModal({ card, onClose }) {
   const tokens = useThemeTokens();
-  const [salesKeys, setSalesKeys] = useState(() => SALES_FILTER_OPTS.map((opt) => opt.value));
+  const isCost = isCostCard(card);
+  const [salesKeys, setSalesKeys] = useState(() => initialSalesKeys(card.channelKey));
   const [version, setVersion] = useState('all');
-  const initialDim = card.key === 'year' ? 'year' : 'month';
+  const initialDim = isCost ? 'month' : card.key === 'year' ? 'year' : 'month';
   const [dim, setDim] = useState(initialDim);
   const isRenewal = card.metric === 'renewalRate';
-  const modalTitle = card.key === 'year' ? '年度回款明细' : card.key === 'month' ? '月度回款明细' : card.title;
+  const dimForSeries = isCost ? 'month' : dim;
+  const modalTitle = isCost ? '投入趋势与环比' : card.key === 'year' ? '年度回款明细' : card.key === 'month' ? '月度回款明细' : card.title;
   const renewalData = useMemo(
-    () => (isRenewal ? getRenewalModalData(version, dim, salesKeys) : null),
-    [isRenewal, version, dim, salesKeys]
+    () => (isRenewal ? getRenewalModalData(version, dimForSeries, salesKeys) : null),
+    [isRenewal, version, dimForSeries, salesKeys]
   );
   const series = useMemo(() => {
     if (isRenewal) {
@@ -173,8 +250,8 @@ export default function KpiModal({ card, onClose }) {
         delta: item.delta,
       }));
     }
-    return getKpiSeries(card.metric, { salesKeys, dim });
-  }, [card.metric, dim, isRenewal, renewalData, salesKeys]);
+    return getKpiSeries(card.metric, { salesKeys, dim: dimForSeries });
+  }, [card.metric, dimForSeries, isRenewal, renewalData, salesKeys]);
   const [selIndex, setSelIndex] = useState(series.length - 1);
 
   const cardRef = useRef(null);
@@ -238,7 +315,7 @@ export default function KpiModal({ card, onClose }) {
         borderWidth: 0,
         padding: 0,
         textStyle: { color: tokens.chartText, fontSize: 12, lineHeight: 16 },
-        axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(169,155,255,0.08)' } },
+        axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(169,155,255,0.05)' } },
         formatter: (params) => {
           const point = params[0] ?? {};
           const value = point.data?.value ?? point.value ?? 0;
@@ -254,15 +331,15 @@ export default function KpiModal({ card, onClose }) {
       xAxis: {
         type: 'category',
         data: series.map((d) => d.label),
-        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.14)' } },
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
         axisTick: { show: false },
-        axisLabel: { color: 'rgba(255,255,255,0.38)', fontSize: 11, margin: 10 },
+        axisLabel: { color: 'rgba(255,255,255,0.30)', fontSize: 11, margin: 10 },
       },
       yAxis: {
         type: 'value',
         axisLine: { show: false },
-        axisLabel: { color: 'rgba(255,255,255,0.38)', fontSize: 11, formatter: isRenewal ? '{value}%' : undefined },
-        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.045)' } },
+        axisLabel: { color: 'rgba(255,255,255,0.30)', fontSize: 11, formatter: isRenewal ? '{value}%' : undefined },
+        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.028)' } },
       },
       series: [
         {
@@ -273,7 +350,9 @@ export default function KpiModal({ card, onClose }) {
             itemStyle: {
               color: modalBarColor(i === selIndex),
               borderRadius: [8, 8, 3, 3],
-              opacity: i === selIndex ? 1 : 0.84,
+              opacity: i === selIndex ? 1 : 0.48,
+              shadowBlur: i === selIndex ? 16 : 0,
+              shadowColor: i === selIndex ? 'rgba(184,156,255,0.22)' : 'transparent',
             },
           })),
           emphasis: {
@@ -300,7 +379,17 @@ export default function KpiModal({ card, onClose }) {
   const headlineValue = card.unit === '%' ? Number(sel.value ?? 0).toFixed(card.decimals ?? 1) : sel.value;
   const renewalOverview = renewalData?.overview;
   const goalSummary = buildGoalSummary(card, sel, card.unit);
+  const costSummary = isCost ? buildCostSummary(sel, card.unit) : [];
   const trendText = trendDescription(series, selIndex, sel, card.unit);
+  const scope = scopeText({
+    salesKeys,
+    dim: dimForSeries,
+    selectedLabel: sel.label,
+    extra: isRenewal && version !== 'all'
+      ? [VERSION_OPTS.find((option) => option.value === version)?.label]
+      : [],
+  });
+  const insight = trendInsight(trendText, mom, isRenewal);
 
   return (
     <div className="km-overlay" role="dialog" aria-modal="true">
@@ -309,7 +398,7 @@ export default function KpiModal({ card, onClose }) {
         <div className="km-head">
           <div className="km-title-wrap">
             <h3 className="km-title">{modalTitle}</h3>
-            <p className="km-subtitle">{modalSubtitle(card, dim, isRenewal)}</p>
+            <p className="km-subtitle">{modalSubtitle(card, dimForSeries, isRenewal)}</p>
           </div>
           <button type="button" className="km-close" aria-label="关闭" onClick={handleClose}>
             <AppIcon name="close" size={17} />
@@ -329,7 +418,7 @@ export default function KpiModal({ card, onClose }) {
           </div>
           <div className="km-filter-group">
             <span className="km-filter-label">粒度</span>
-            <Segmented options={DIM_OPTS} value={dim} onChange={setDim} />
+            <Segmented options={isCost ? COST_DIM_OPTS : DIM_OPTS} value={dim} onChange={setDim} />
           </div>
         </div>
 
@@ -341,44 +430,57 @@ export default function KpiModal({ card, onClose }) {
                 {formatMetricNumber(headlineValue, card.unit, card.decimals ?? 0)}
                 <span className="km-hl-unit">{card.unit}</span>
               </span>
-              <span className="km-hl-label">{metricLabel(card, dim, isRenewal)}</span>
+              <span className="km-hl-label">{metricLabel(card, dimForSeries, isRenewal)}</span>
+              <span className="km-scope-line">当前筛选：{scope}</span>
+              <span className="km-hl-insight">{insight}</span>
             </div>
           </div>
           <div className="km-trend-card">
-            <span className="km-trend-label">{isRenewal ? '较上期' : MOM_LABEL[dim]}</span>
-            <span className="km-trend-value" style={{ color: deltaColor(mom) }}>{fmtDelta(mom)}</span>
+            <span className="km-trend-label">{isRenewal ? '较上期' : MOM_LABEL[dimForSeries]}</span>
+            <span className="km-trend-value" style={{ color: modalDeltaColor(mom) }}>{fmtDelta(mom)}</span>
             <span className="km-trend-desc">{trendText}</span>
           </div>
         </div>
 
         <div className={`km-chart${isRenewal ? ' km-chart--renewal' : ''}`} ref={chartElRef} />
 
-        <div className="km-summary">
-          <div className="km-summary-cell">
-            <span className="km-summary-label">{goalSummary.targetLabel}</span>
-            <b className="km-summary-value">{goalSummary.targetValue}</b>
+        {isCost ? (
+          <div className="km-summary km-summary--plain">
+            {costSummary.map((item) => (
+              <div className={`km-summary-cell${item.tone ? ` km-summary-cell--${item.tone}` : ''}`} key={item.label}>
+                <span className="km-summary-label">{item.label}</span>
+                <b className="km-summary-value">{item.value}</b>
+              </div>
+            ))}
           </div>
-          <div className="km-summary-cell km-summary-cell--progress">
-            <span className="km-summary-label">{goalSummary.completedLabel}</span>
-            <b className="km-summary-value">
-              {goalSummary.completedValue}
-              <em>{goalSummary.rateValue}</em>
-            </b>
-            <span className="km-summary-progress" aria-label={`${goalSummary.rateLabel} ${goalSummary.rateValue}`}>
-              <span
-                className="km-summary-progress-fill"
-                style={{
-                  width: `${Math.min(Number(goalSummary.rate) || 0, 100)}%`,
-                  background: progressGradient(goalSummary.rate),
-                }}
-              />
-            </span>
+        ) : (
+          <div className="km-summary">
+            <div className="km-summary-cell">
+              <span className="km-summary-label">{goalSummary.targetLabel}</span>
+              <b className="km-summary-value">{goalSummary.targetValue}</b>
+            </div>
+            <div className="km-summary-cell km-summary-cell--progress">
+              <span className="km-summary-label">{goalSummary.completedLabel}</span>
+              <b className="km-summary-value">
+                {goalSummary.completedValue}
+                <em>{goalSummary.rateValue}</em>
+              </b>
+              <span className="km-summary-progress" aria-label={`${goalSummary.rateLabel} ${goalSummary.rateValue}`}>
+                <span
+                  className="km-summary-progress-fill"
+                  style={{
+                    width: `${Math.min(Number(goalSummary.rate) || 0, 100)}%`,
+                    background: progressGradient(goalSummary.rate),
+                  }}
+                />
+              </span>
+            </div>
+            <div className={`km-summary-cell km-summary-cell--${goalSummary.gapTone}`}>
+              <span className="km-summary-label">{goalSummary.gapLabel}</span>
+              <b className="km-summary-value">{goalSummary.gapValue}</b>
+            </div>
           </div>
-          <div className={`km-summary-cell km-summary-cell--${goalSummary.gapTone}`}>
-            <span className="km-summary-label">{goalSummary.gapLabel}</span>
-            <b className="km-summary-value">{goalSummary.gapValue}</b>
-          </div>
-        </div>
+        )}
 
         {isRenewal && (
           <>

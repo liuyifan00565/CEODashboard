@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:22:00 CST
+ 更新内容: 新增成本月趋势口径，KPI 成本二级下钻改用渠道投放成本和全渠道广告/人力构成，不再按回款趋势推算投入。
+*/
+/*
  更新时间: 2026-07-08 17:49:56 CST
  更新内容: 数据维护目标完成率状态改为 120% 及以上才进入金色 good，100%-119.9% 保持 warning 普通完成色。
 */
@@ -104,7 +108,7 @@ export const KPI = {
   yearTarget: 5800,        // 年度目标
   lastYearSameRecovered: 2760, // 去年同期（年度环比用）
   totalCost: 156,          // 总投入费用（广告+人力）
-  adCost: 96,              // 线上广告费
+  adCost: 96,              // 渠道广告/投放成本
   laborCost: 60,           // 人力成本
   received: 486,           // 已回款
   receivable: 96,          // 应收/未回款
@@ -149,8 +153,15 @@ export const CHANNELS = [
   { key: 'agent',   name: '代理',     recovered: 96,  target: 110, warn: false },
 ].map(c => ({ ...c, completion: +(c.recovered / c.target * 100).toFixed(1) }));
 
+const CHANNEL_INVESTMENT_BY_KEY = {
+  online: 48,
+  south: 18,
+  east: 20,
+  agent: 10,
+};
+
 export const CHANNEL_ROI = CHANNELS.map((channel) => {
-  const investment = { online: 74, south: 28, east: 38, agent: 16 }[channel.key];
+  const investment = CHANNEL_INVESTMENT_BY_KEY[channel.key] ?? 0;
   const roi = +(channel.recovered / investment).toFixed(2);
   return {
     key: channel.key,
@@ -405,6 +416,23 @@ export const MONTHLY_TREND = [
   { month: '5月', target: 560, recovered: 432 },
   { month: '6月', target: 580, recovered: 486 },
 ].map(m => ({ ...m, completion: +(m.recovered / m.target * 100).toFixed(1) }));
+
+export const COST_TREND = [
+  { yearMonth: '2026-01', label: '1月', channels: { online: 38, south: 14, east: 16, agent: 8 }, laborCost: 50 },
+  { yearMonth: '2026-02', label: '2月', channels: { online: 40, south: 15, east: 17, agent: 9 }, laborCost: 52 },
+  { yearMonth: '2026-03', label: '3月', channels: { online: 42, south: 16, east: 18, agent: 10 }, laborCost: 54 },
+  { yearMonth: '2026-04', label: '4月', channels: { online: 45, south: 17, east: 19, agent: 10 }, laborCost: 56 },
+  { yearMonth: '2026-05', label: '5月', channels: { online: 50, south: 18, east: 20, agent: 10 }, laborCost: 58 },
+  { yearMonth: '2026-06', label: '6月', channels: CHANNEL_INVESTMENT_BY_KEY, laborCost: KPI.laborCost },
+].map((row) => {
+  const adCost = Object.values(row.channels).reduce((sum, value) => sum + Number(value || 0), 0);
+  return {
+    ...row,
+    adCost,
+    laborCost: Number(row.laborCost) || 0,
+    totalCost: adCost + (Number(row.laborCost) || 0),
+  };
+});
 
 // ===== 算力用量分析（参考原算力看板，算力单位为点，趋势单位为万点）=====
 export const COMPUTE_OVERVIEW = {
@@ -751,18 +779,16 @@ function normalizeSalesKeys(salesKeys) {
   return selected.length ? selected : CHANNELS.map((channel) => channel.key);
 }
 
-function getOrderTypeMonthSeries({ salesKeys, orderType = 'new', metric = 'recovered' } = {}) {
+function getOrderTypeMonthSeries({ salesKeys, orderType = 'new' } = {}) {
   const safeKeys = normalizeSalesKeys(salesKeys);
   const source = ORDER_TYPE_TRENDS[orderType] ?? ORDER_TYPE_TRENDS.new;
-  const costRatio = KPI.totalCost / KPI.monthRecovered;
 
   return MONTHLY_TREND.map((month, index) => {
     const recovered = safeKeys.reduce((sum, key) => sum + (source[key]?.[index] ?? 0), 0);
-    const value = metric === 'cost' ? Math.round(recovered * costRatio) : recovered;
     return {
       label: month.month,
-      value,
-      prev: index === 0 ? Math.round(value * 0.9) : null,
+      value: recovered,
+      prev: index === 0 ? Math.round(recovered * 0.9) : null,
     };
   }).map((point, index, list) => ({
     ...point,
@@ -770,9 +796,40 @@ function getOrderTypeMonthSeries({ salesKeys, orderType = 'new', metric = 'recov
   }));
 }
 
+function costTrendValue(row, salesKeys) {
+  const safeKeys = normalizeSalesKeys(salesKeys);
+  const costChannelKeys = Object.keys(row.channels ?? {});
+  const isAllCostChannels = costChannelKeys.length > 0
+    ? costChannelKeys.every((key) => safeKeys.includes(key))
+    : safeKeys.length === CHANNELS.length;
+  if (isAllCostChannels) return Number(row.totalCost) || 0;
+  return safeKeys.reduce((sum, key) => sum + (Number(row.channels?.[key]) || 0), 0);
+}
+
+function getCostSeries({ salesKeys, dim = 'month' } = {}) {
+  const monthSeries = COST_TREND.map((row) => ({
+    label: row.label,
+    value: costTrendValue(row, salesKeys),
+  })).map((point, index, list) => ({
+    ...point,
+    prev: index === 0 ? Math.round(point.value * 0.9) : list[index - 1].value,
+  }));
+
+  if (dim === 'year') {
+    const value = monthSeries.reduce((sum, point) => sum + Number(point.value || 0), 0);
+    return [{ label: '2026', value, prev: Math.round(value * 0.9) }];
+  }
+
+  return monthSeries;
+}
+
 function getOrderTypeSeries({ metric, salesKeys, orderType, dim }) {
   if (OPENING_ACCOUNT_TRENDS[metric]) {
     return getOpeningAccountSeries({ metric, salesKeys, dim });
+  }
+
+  if (metric === 'cost') {
+    return getCostSeries({ salesKeys, dim });
   }
 
   const monthSeries = getOrderTypeMonthSeries({ metric, salesKeys, orderType });
@@ -1279,6 +1336,10 @@ export function applyDashboardDataSnapshot(snapshot) {
 
   if (Array.isArray(snapshot.monthlyTrend)) {
     replaceArray(MONTHLY_TREND, snapshot.monthlyTrend);
+  }
+
+  if (Array.isArray(snapshot.costTrend)) {
+    replaceArray(COST_TREND, snapshot.costTrend);
   }
 
   if (Array.isArray(snapshot.versions)) {

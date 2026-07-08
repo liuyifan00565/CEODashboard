@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:22:00 CST
+ 更新内容: 总投入费比搜索与卡片文案回归同步当前渠道投入、全渠道总投入和广告/人力构成口径。
+*/
+/*
  更新时间: 2026-07-08 17:23:00 CST
  更新内容: 默认日期范围回归到 2026 年 6 月整月，并保留经营进度搜索关键词跟随运行时月份的回归测试。
 */
@@ -100,8 +104,17 @@ test('shows the cost ratio percentage as the main value on the cost card', () =>
   assert.equal(cost.displayValue, 32.1);
   assert.equal(cost.displayUnit, '%');
   assert.equal(cost.displayDecimals, 1);
-  assert.match(cost.sub, /总投入 156 万/);
+  assert.match(cost.sub, /全渠道总投入 156 万/);
   assert.match(cost.sub, /广告 96 万 \+ 人力 60 万/);
+});
+
+test('marks channel cost cards as current channel investment with all-channel total context', () => {
+  const cards = getFilteredKpiCards({ dim: 'month', dateRange: ['2026-06-01', '2026-06-30'], channel: 'online' });
+  const cost = byKey(cards, 'cost');
+
+  assert.equal(cost.value, 48);
+  assert.match(cost.sub, /当前渠道投入 48 万/);
+  assert.match(cost.sub, /全渠道总投入 156 万/);
 });
 
 test('adds visible card text to KPI search keywords so total investment can be located', () => {
@@ -109,7 +122,7 @@ test('adds visible card text to KPI search keywords so total investment can be l
   const cost = byKey(cards, 'cost');
 
   assert.ok(cost.keywords.some((keyword) => String(keyword).includes('总投入')));
-  assert.ok(cost.keywords.some((keyword) => String(keyword).includes('总投入 156 万')));
+  assert.ok(cost.keywords.some((keyword) => String(keyword).includes('全渠道总投入 156 万')));
 });
 
 test('adds fused operating overview section text to KPI search keywords', () => {

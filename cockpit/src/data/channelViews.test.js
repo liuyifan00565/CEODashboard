@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:22:00 CST
+ 更新内容: 增加成本趋势与当前渠道投入回归，要求总投入费比不再用回款趋势推算成本。
+*/
+/*
  更新时间: 2026-07-08 17:49:56 CST
  更新内容: 数据维护目标完成率状态回归改为 120% 及以上才 good，100%-119.9% 保持 warning。
 */
@@ -54,6 +58,7 @@ import {
   CHANNELS,
   CHANNEL_MAINTENANCE_GROUPS,
   CHANNEL_MAINTENANCE_SOURCES,
+  COST_TREND,
   COST_MAINTENANCE_CHANNELS,
   COST_MAINTENANCE_ROWS,
   DELIVERY_TARGET_COUNT,
@@ -290,9 +295,22 @@ test('filters KPI cards to the selected channel while overview keeps all-channel
   assert.equal(byKey(overviewCards, 'month').value, 486);
   assert.equal(byKey(onlineCards, 'month').value, online.recovered);
   assert.equal(byKey(onlineCards, 'month').progress, online.completion);
-  assert.match(byKey(onlineCards, 'cost').sub, /销售投入 74 万/);
+  assert.match(byKey(onlineCards, 'cost').sub, /当前渠道投入 48 万/);
   assert.notEqual(byKey(eastCards, 'year').value, byKey(overviewCards, 'year').value);
   assert.equal(byKey(eastCards, 'year').value, Math.round(3120 * (84 / 486)));
+});
+
+test('returns cost trend from maintained monthly cost instead of recovered trend scaling', () => {
+  const allCostSeries = getKpiSeries('cost', { dim: 'month' });
+  const onlineCostSeries = getKpiSeries('cost', { dim: 'month', salesKeys: ['online'] });
+
+  assert.equal(COST_TREND.at(-1).totalCost, 156);
+  assert.equal(COST_TREND.at(-1).adCost, 96);
+  assert.equal(COST_TREND.at(-1).laborCost, 60);
+  assert.deepEqual(COST_TREND.at(-1).channels, { online: 48, south: 18, east: 20, agent: 10 });
+  assert.equal(allCostSeries.at(-1).value, 156);
+  assert.equal(onlineCostSeries.at(-1).value, 48);
+  assert.equal(onlineCostSeries.at(-1).prev, 50);
 });
 
 test('returns channel-scoped trend, channel completion, and version rows', () => {

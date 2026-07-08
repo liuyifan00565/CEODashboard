@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:22:00 CST
+ 更新内容: 增加 dashboard costTrend 快照映射回归，覆盖渠道投放成本、人力成本和全渠道总投入构成。
+*/
+/*
  更新时间: 2026-07-08 17:23:00 CST
  更新内容: 业务月份回归锁定临时 2026-06 覆盖，并保留其它原因处理完后的自动月份回退路径。
 */
@@ -76,6 +80,20 @@ test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
       { cost_type: 'sales', amount_wan: 54.41 },
       { cost_type: 'marketing', amount_wan: 27.21 },
     ],
+    channelCostTrend: [
+      { year_month: '2026-05', channel_key: 'online', investment_wan: 35 },
+      { year_month: '2026-05', channel_key: 'south', investment_wan: 20 },
+      { year_month: '2026-06', channel_key: 'online', investment_wan: 31.11 },
+      { year_month: '2026-06', channel_key: 'south', investment_wan: 19.31 },
+      { year_month: '2026-06', channel_key: 'east', investment_wan: 17.7 },
+      { year_month: '2026-06', channel_key: 'agent', investment_wan: 9.12 },
+    ],
+    laborCostTrend: [
+      { year_month: '2026-05', cost_type: 'sales', amount_wan: 50 },
+      { year_month: '2026-05', cost_type: 'marketing', amount_wan: 22 },
+      { year_month: '2026-06', cost_type: 'sales', amount_wan: 54.41 },
+      { year_month: '2026-06', cost_type: 'marketing', amount_wan: 27.21 },
+    ],
     versionSales: [
       { version_key: 'qihang', version_name: '启航版', standard_price_yuan: 16800, units: 36, recovered_wan: 98, mom_rate: 8.2, channel_key: 'online' },
       { version_key: 'zhuoyue', version_name: '卓越版', standard_price_yuan: 39800, units: 27, recovered_wan: 136, mom_rate: 12.4, channel_key: 'south' },
@@ -110,6 +128,11 @@ test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
   );
   assert.equal(snapshot.monthlyTrend.at(-1).recovered, 520);
   assert.equal(snapshot.channelRoi.find((row) => row.key === 'online').investment, 31);
+  assert.deepEqual(snapshot.costTrend.map((row) => [row.yearMonth, row.adCost, row.laborCost, row.totalCost]), [
+    ['2026-05', 55, 72, 127],
+    ['2026-06', 77, 82, 159],
+  ]);
+  assert.deepEqual(snapshot.costTrend.at(-1).channels, { online: 31, south: 19, east: 18, agent: 9 });
   assert.equal(snapshot.salesMemberRows.find((row) => row.key === 'staff-2004').group, 'east');
 });
 

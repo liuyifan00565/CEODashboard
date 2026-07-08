@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:22:00 CST
+ 更新内容: 增加真实快照 costTrend 覆盖回归，确保前端成本二级下钻使用 MySQL 成本趋势。
+*/
+/*
  更新时间: 2026-07-08 16:37:08 CST
  更新内容: 增加真实快照覆盖后渠道人员明细按本月/年度取不同字段的回归测试。
 */
@@ -15,6 +19,7 @@ import assert from 'node:assert/strict';
 
 import {
   CHANNELS,
+  COST_TREND,
   KPI,
   KPI_CARDS,
   KPI_DERIVED,
@@ -22,6 +27,7 @@ import {
   OPERATING_OVERVIEW_METRICS,
   applyDashboardDataSnapshot,
   getChannelCompletionRows,
+  getKpiSeries,
   getSalesMemberRows,
 } from './mock.js';
 
@@ -66,6 +72,7 @@ test('applies mysql dashboard snapshot to mutable dashboard data exports', () =>
     channels: [
       { key: 'online', name: '线上', recovered: 244, target: 240, warn: false },
       { key: 'east', name: '华东线下', recovered: 86, target: 120, warn: true },
+      { key: 'channel_3005', name: '新增渠道', recovered: 0, target: 0, warn: true },
     ],
     channelRoi: [
       { key: 'online', name: '线上', recovered: 244, investment: 31, roi: 7.87, costRatio: 12.7, warn: false, strong: true },
@@ -74,6 +81,10 @@ test('applies mysql dashboard snapshot to mutable dashboard data exports', () =>
     monthlyTrend: [
       { month: '5月', target: 362, recovered: 0, completion: 0 },
       { month: '6月', target: 580, recovered: 520, completion: 89.7 },
+    ],
+    costTrend: [
+      { yearMonth: '2026-05', label: '5月', adCost: 49, laborCost: 76, totalCost: 125, channels: { online: 30, east: 19 } },
+      { yearMonth: '2026-06', label: '6月', adCost: 77, laborCost: 82, totalCost: 159, channels: { online: 31, east: 18 } },
     ],
     salesMemberRows: [
       { key: 'staff-2004', group: 'east', name: '马骏', target: 120, recovered: 86, monthTarget: 120, monthRecovered: 86, yearTarget: 720, yearRecovered: 430 },
@@ -85,6 +96,10 @@ test('applies mysql dashboard snapshot to mutable dashboard data exports', () =>
   assert.equal(OPERATING_OVERVIEW_METRICS.remainingMonthlyRequired, 726);
   assert.equal(CHANNELS.find((channel) => channel.key === 'east').completion, 71.7);
   assert.equal(MONTHLY_TREND.at(-1).recovered, 520);
+  assert.equal(COST_TREND.at(-1).totalCost, 159);
+  assert.equal(COST_TREND.at(-1).channels.online, 31);
+  assert.equal(getKpiSeries('cost', { salesKeys: ['online', 'east'] }).at(-1).value, 159);
+  assert.equal(getKpiSeries('cost', { salesKeys: ['online'] }).at(-1).value, 31);
   assert.equal(KPI_CARDS.find((card) => card.key === 'month').value, 520);
   assert.equal(KPI_CARDS.find((card) => card.key === 'year').sub, '年度目标 4874 万');
   assert.equal(getChannelCompletionRows('month').find((row) => row.key === 'east').monthGap, 34);
