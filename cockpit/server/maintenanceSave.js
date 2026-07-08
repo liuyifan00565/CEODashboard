@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 16:37:08 CST
+ 更新内容: 组织保存根据部门编码自动维护 dim_staff.channel_key，销售调岗同步换渠道，转非销售或无组织时清空渠道。
+*/
+/*
  更新时间: 2026-07-08 11:45:00 CST
  更新内容: 保存接口补齐维护联动：目标保存校验启用销售；组织保存支持新增 dim_department 并映射临时部门 ID；
           渠道保存支持新增 dim_channel 并映射临时渠道 ID，来源“启用/排除”统一落 is_excluded。
@@ -17,6 +21,7 @@
 */
 import { createDbConnection, queryRows, nextId } from './db.js';
 import { WAN_TO_YUAN, readJsonBody, sendJson } from './maintenanceImport.js';
+import { buildDepartmentChannelKeyMap } from './departmentChannel.js';
 
 function isTempId(value, prefix) {
   return String(value || '').startsWith(prefix);
@@ -138,7 +143,8 @@ export async function saveOrg(connection, rows, departments = []) {
   let written = 0;
   let skipped = 0;
   const errors = [];
-  const deptRows = await queryRows(connection, 'SELECT department_id FROM dim_department');
+  const deptRows = await queryRows(connection, 'SELECT department_id, department_code, parent_id FROM dim_department');
+  const departmentRecords = [...deptRows];
   const validDeptIds = new Set(deptRows.map((d) => String(d.department_id)));
   const tempDeptIdMap = new Map();
 
@@ -163,10 +169,13 @@ export async function saveOrg(connection, rows, departments = []) {
       'INSERT INTO dim_department (department_id, department_code, department_name, parent_id, sort_order, is_enabled) VALUES (?, ?, ?, ?, 0, ?)',
       [id, `dept_${id}`, name, parentId, dept.is_enabled == null ? 1 : (dept.is_enabled ? 1 : 0)],
     );
+    departmentRecords.push({ department_id: id, department_code: `dept_${id}`, parent_id: parentId });
     validDeptIds.add(String(id));
     tempDeptIdMap.set(tempId, String(id));
     written += 1;
   }
+
+  const departmentChannelKeys = buildDepartmentChannelKeyMap(departmentRecords);
 
   for (const row of rows) {
     const staffId = Number(row.staff_id);
@@ -184,9 +193,10 @@ export async function saveOrg(connection, rows, departments = []) {
     }
     const isSales = row.is_sales ? 1 : 0;
     const isEnabled = row.is_enabled == null ? 1 : (row.is_enabled ? 1 : 0);
+    const channelKey = isSales && deptId !== null ? (departmentChannelKeys.get(String(deptId)) ?? null) : null;
     await connection.execute(
-      'UPDATE dim_staff SET department_id = ?, is_sales = ?, is_enabled = ? WHERE staff_id = ?',
-      [deptId, isSales, isEnabled, staffId],
+      'UPDATE dim_staff SET department_id = ?, channel_key = ?, is_sales = ?, is_enabled = ? WHERE staff_id = ?',
+      [deptId, channelKey, isSales, isEnabled, staffId],
     );
     written += 1;
   }

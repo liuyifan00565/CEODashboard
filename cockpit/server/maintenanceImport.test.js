@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 16:37:08 CST
+ 更新内容: 覆盖陌生销售新增时自动按线上销售部写入 channel_key=online 的回归场景。
+*/
+/*
  更新时间: 2026-07-08 13:05:31 CST
  更新内容: 覆盖目标导入陌生员工确认逻辑，校验未确认时只返回待确认项、确认后新增员工并写入目标。
 */
@@ -51,7 +55,13 @@ test('persistTarget returns pending confirmation when staff is unknown', async (
 test('persistTarget creates enabled sales staff and inserts target after confirmation', async () => {
   const { conn, execs } = makeConn((sql) => {
     if (sql.includes('FROM dim_staff s')) return [];
-    if (sql.includes('FROM dim_department')) return [{ id: 1002, name: '线上销售部' }];
+    if (sql.includes('SELECT department_id, department_code, parent_id FROM dim_department')) {
+      return [
+        { department_id: 1001, department_code: 'headquarters', parent_id: null },
+        { department_id: 1002, department_code: 'online-sales', parent_id: 1001 },
+      ];
+    }
+    if (sql.includes('FROM dim_department')) return [{ id: 1002, name: '线上销售部', department_code: 'online-sales', parent_id: 1001 }];
     if (sql.includes('COALESCE(MAX') && sql.includes('FROM `dim_staff`')) return [{ nextId: 2006 }];
     if (sql.includes('COALESCE(MAX') && sql.includes('FROM `biz_target_monthly`')) return [{ nextId: 9001 }];
     if (sql.includes('FROM biz_target_monthly')) return [];
@@ -68,9 +78,9 @@ test('persistTarget creates enabled sales staff and inserts target after confirm
 
   const staffInsert = execs.find((e) => e.sql.startsWith('INSERT INTO dim_staff'));
   assert.ok(staffInsert);
-  assert.deepEqual(staffInsert.params, [2006, 'staff_2006', '照祥', 1002, null]);
-  assert.match(staffInsert.sql, /is_sales, is_delivery, is_success, is_enabled/);
-  assert.match(staffInsert.sql, /VALUES \(\?, \?, \?, \?, \?, 1, 0, 0, 1\)/);
+  assert.deepEqual(staffInsert.params, [2006, 'staff_2006', '照祥', 1002, 'online', null]);
+  assert.match(staffInsert.sql, /channel_key, external_bi_user_id, is_sales/);
+  assert.match(staffInsert.sql, /VALUES \(\?, \?, \?, \?, \?, \?, 1, 0, 0, 1\)/);
 
   const targetInsert = execs.find((e) => e.sql.startsWith('INSERT INTO biz_target_monthly'));
   assert.ok(targetInsert);

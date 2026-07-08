@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 16:37:08 CST
+ 更新内容: 增加渠道人员明细口径回归，要求目标维护新增销售即使没有销售月表也能进入本月/年度下钻。
+*/
+/*
  更新时间: 2026-07-08 11:45:00 CST
  更新内容: 增加首页目标 SQL 口径回归，要求目标分母只统计启用销售且有部门的 staff 目标。
 */
@@ -170,6 +174,45 @@ test('prefers daily revenue facts over sales member monthly rows for recovered m
   );
 });
 
+test('includes maintained target staff in channel member details without sales monthly facts', () => {
+  const snapshot = mapDashboardRowsToSnapshot({
+    latestMonth: '2026-07',
+    channels: [
+      { channel_id: 3001, channel_key: 'online', channel_name: '线上' },
+    ],
+    salesMemberMonthly: [],
+    revenueDaily: [
+      { year_month: '2026-06', channel_key: 'online', recovered_wan: 12 },
+      { year_month: '2026-07', channel_key: 'online', recovered_wan: 0 },
+    ],
+    monthlyTargets: [
+      { year_month: '2026-07', target_wan: 100 },
+      { year_month: '2026-12', target_wan: 80 },
+    ],
+    channelTargets: [
+      { channel_key: 'online', target_wan: 100 },
+    ],
+    yearChannelTargets: [
+      { channel_key: 'online', target_wan: 180 },
+    ],
+    memberTargets: [
+      { year_month: '2026-07', staff_id: 2010, staff_name: '照样', channel_key: 'online', target_wan: 100 },
+      { year_month: '2026-12', staff_id: 2010, staff_name: '照样', channel_key: 'online', target_wan: 80 },
+    ],
+    memberRecovered: [
+      { year_month: '2026-06', staff_id: 2010, staff_name: '照样', channel_key: 'online', recovered_wan: 12 },
+    ],
+  });
+
+  const zhaoyang = snapshot.salesMemberRows.find((row) => row.name === '照样');
+  assert.ok(zhaoyang);
+  assert.equal(zhaoyang.group, 'online');
+  assert.equal(zhaoyang.target, 100);
+  assert.equal(zhaoyang.recovered, 0);
+  assert.equal(zhaoyang.yearTarget, 180);
+  assert.equal(zhaoyang.yearRecovered, 12);
+});
+
 test('pre-aggregates renewal facts before joining version sales', () => {
   const source = readFileSync(new URL('./dashboardData.js', import.meta.url), 'utf8');
 
@@ -184,4 +227,5 @@ test('filters maintained targets to active sales with departments', () => {
   assert.match(source, /s\.is_sales = 1/);
   assert.match(source, /s\.department_id IS NOT NULL/);
   assert.match(source, /s\.is_enabled = 1/);
+  assert.match(source, /d\.department_code = 'online-sales'/);
 });

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 16:37:08 CST
+ 更新内容: 目标导入和组织导入新增/调整销售人员时，按所属组织编码自动写入 dim_staff.channel_key。
+*/
+/*
  更新时间: 2026-07-08 13:05:31 CST
  更新内容: 目标导入遇到陌生员工时先返回“是否新增员工”确认项；确认后自动新增启用销售员工到所属组织，再继续写入目标。
 */
@@ -27,6 +31,7 @@
 import { getImportConfig } from '../src/lib/maintenanceImportConfig.js';
 import { mapAndValidate } from '../src/lib/excelImport.js';
 import { createDbConnection, queryRows, nextId } from './db.js';
+import { resolveDepartmentChannelKey } from './departmentChannel.js';
 
 /** 手写读取 JSON 请求体（后端无 body-parser），限制最大 5MB 防滥用。 */
 export function readJsonBody(req, limitBytes = 5 * 1024 * 1024) {
@@ -88,10 +93,15 @@ async function resolveDepartmentByName(connection, departmentName) {
   if (!departmentName) return null;
   const rows = await queryRows(
     connection,
-    'SELECT department_id AS id, department_name AS name FROM dim_department WHERE department_name = ? AND is_enabled = 1 LIMIT 1',
+    'SELECT department_id AS id, department_name AS name, department_code, parent_id FROM dim_department WHERE department_name = ? AND is_enabled = 1 LIMIT 1',
     [departmentName],
   );
   return rows[0] ?? null;
+}
+
+async function resolveDepartmentChannelKeyFromDb(connection, departmentId) {
+  const departments = await queryRows(connection, 'SELECT department_id, department_code, parent_id FROM dim_department');
+  return resolveDepartmentChannelKey(departments, departmentId);
 }
 
 function makePendingNewStaff(row) {
@@ -107,9 +117,10 @@ function makePendingNewStaff(row) {
 async function createTargetStaff(connection, row, department) {
   const id = await nextId(connection, 'dim_staff', 'staff_id');
   const code = `staff_${id}`;
+  const channelKey = await resolveDepartmentChannelKeyFromDb(connection, department.id);
   await connection.execute(
-    'INSERT INTO dim_staff (staff_id, staff_code, staff_name, department_id, external_bi_user_id, is_sales, is_delivery, is_success, is_enabled) VALUES (?, ?, ?, ?, ?, 1, 0, 0, 1)',
-    [id, code, row.staff_name, department.id, null],
+    'INSERT INTO dim_staff (staff_id, staff_code, staff_name, department_id, channel_key, external_bi_user_id, is_sales, is_delivery, is_success, is_enabled) VALUES (?, ?, ?, ?, ?, ?, 1, 0, 0, 1)',
+    [id, code, row.staff_name, department.id, channelKey, null],
   );
   return {
     id,
@@ -117,6 +128,7 @@ async function createTargetStaff(connection, row, department) {
     is_enabled: 1,
     department_id: department.id,
     department_name: department.name,
+    channel_key: channelKey,
   };
 }
 
@@ -221,26 +233,28 @@ async function persistOrg(connection, rows) {
   let skipped = 0;
   const errors = [];
   for (const row of rows) {
-    const deptId = await resolveByName(connection, 'dim_department', 'department_name', row.department_name, 'department_id');
-    if (!deptId) {
+    const department = await resolveDepartmentByName(connection, row.department_name);
+    if (!department) {
       skipped += 1;
       errors.push({ row: null, field: 'department_name', message: `组织不存在，跳过：${row.department_name}` });
       continue;
     }
+    const deptId = department.id;
     const isSales = row.is_sales ? 1 : 0;
     const isEnabled = row.is_enabled == null ? 1 : (row.is_enabled ? 1 : 0);
+    const channelKey = isSales ? await resolveDepartmentChannelKeyFromDb(connection, deptId) : null;
     const existing = await queryRows(connection, 'SELECT staff_id FROM dim_staff WHERE staff_name = ?', [row.staff_name]);
     if (existing[0]?.staff_id) {
       await connection.execute(
-        'UPDATE dim_staff SET department_id = ?, is_sales = ?, is_enabled = ?, external_bi_user_id = ? WHERE staff_id = ?',
-        [deptId, isSales, isEnabled, row.external_bi_user_id || null, existing[0].staff_id],
+        'UPDATE dim_staff SET department_id = ?, channel_key = ?, is_sales = ?, is_enabled = ?, external_bi_user_id = ? WHERE staff_id = ?',
+        [deptId, channelKey, isSales, isEnabled, row.external_bi_user_id || null, existing[0].staff_id],
       );
     } else {
       const id = await nextId(connection, 'dim_staff', 'staff_id');
       const code = row.external_bi_user_id || `staff_${id}`;
       await connection.execute(
-        'INSERT INTO dim_staff (staff_id, staff_code, staff_name, department_id, external_bi_user_id, is_sales, is_delivery, is_success, is_enabled) VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?)',
-        [id, code, row.staff_name, deptId, row.external_bi_user_id || null, isSales, isEnabled],
+        'INSERT INTO dim_staff (staff_id, staff_code, staff_name, department_id, channel_key, external_bi_user_id, is_sales, is_delivery, is_success, is_enabled) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, ?)',
+        [id, code, row.staff_name, deptId, channelKey, row.external_bi_user_id || null, isSales, isEnabled],
       );
     }
     written += 1;

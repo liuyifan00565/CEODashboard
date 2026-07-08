@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 16:37:08 CST
+ 更新内容: 单测补充组织保存自动维护销售 channel_key，验证调入线上销售部写 online、转非销售清空渠道。
+*/
+/*
  更新时间: 2026-07-08 11:45:00 CST
  更新内容: 单测同步维护联动新口径：目标保存需启用销售且有部门；组织/渠道新增维表会映射临时 ID 后再保存人员/来源。
 */
@@ -105,7 +109,6 @@ test('saveLabor: upsert 键为 (year_month, cost_type)，仅写 amount_yuan', as
     return [];
   });
   await saveLabor(conn, [{ cost_type: 'sales', year_month: '2026-03', amount_wan: 53 }]);
-  const sel = execs.find((e) => false); // SELECTs 不进 execs（提前 return），这里只验写
   const update = execs.find((e) => e.sql.startsWith('UPDATE'));
   assert.ok(update);
   assert.match(update.sql, /SET amount_yuan = /);
@@ -121,8 +124,10 @@ test('saveLabor: 不存在则 INSERT (labor_cost_id, year_month, cost_type, amou
   assert.match(ins.sql, /INSERT INTO biz_labor_cost_monthly \(labor_cost_id, `year_month`, cost_type, amount_yuan\)/);
 });
 
-test('saveOrg: UPDATE 只写 department_id/is_sales/is_enabled，不碰 external_bi_user_id；跳过合成部门', async () => {
-  const { conn, execs } = makeConn(() => [{ department_id: 1002 }]);
+test('saveOrg: UPDATE 只写 department_id/channel_key/is_sales/is_enabled，不碰 external_bi_user_id；跳过合成部门', async () => {
+  const { conn, execs } = makeConn(() => [
+    { department_id: 1002, department_code: 'online-sales', parent_id: 1001 },
+  ]);
   const r = await saveOrg(conn, [
     { staff_id: 2001, department_id: '1002', is_sales: true, is_enabled: false },
     { staff_id: 2002, department_id: 'new-dept-1', is_sales: false, is_enabled: true },
@@ -131,13 +136,16 @@ test('saveOrg: UPDATE 只写 department_id/is_sales/is_enabled，不碰 external
   assert.equal(r.skipped, 1);
   const update = execs.find((e) => e.sql.startsWith('UPDATE'));
   assert.ok(update);
-  assert.match(update.sql, /SET department_id = \?, is_sales = \?, is_enabled = \? WHERE staff_id = \?/);
+  assert.match(update.sql, /SET department_id = \?, channel_key = \?, is_sales = \?, is_enabled = \? WHERE staff_id = \?/);
   assert.doesNotMatch(update.sql, /external_bi_user_id/);
+  assert.deepEqual(update.params, ['1002', 'online', 1, 0, 2001]);
 });
 
 test('saveOrg: 新增组织后映射临时 department_id 给人员', async () => {
   const { conn, execs } = makeConn((sql) => {
-    if (sql === 'SELECT department_id FROM dim_department') return [{ department_id: 1001 }];
+    if (sql === 'SELECT department_id, department_code, parent_id FROM dim_department') {
+      return [{ department_id: 1001, department_code: 'online-sales', parent_id: null }];
+    }
     if (sql.includes('COALESCE(MAX')) return [{ nextId: 1100 }];
     return [];
   });
@@ -152,6 +160,20 @@ test('saveOrg: 新增组织后映射临时 department_id 给人员', async () =>
   assert.equal(deptInsert.params[0], 1100);
   const staffUpdate = execs.find((e) => e.sql.startsWith('UPDATE dim_staff'));
   assert.equal(staffUpdate.params[0], '1100');
+  assert.equal(staffUpdate.params[1], 'online');
+});
+
+test('saveOrg: 转非销售或清空组织时清空 channel_key', async () => {
+  const { conn, execs } = makeConn(() => [
+    { department_id: 1002, department_code: 'online-sales', parent_id: 1001 },
+  ]);
+  const r = await saveOrg(conn, [
+    { staff_id: 2001, department_id: '1002', is_sales: false, is_enabled: true },
+  ]);
+
+  assert.equal(r.written, 1);
+  const update = execs.find((e) => e.sql.startsWith('UPDATE dim_staff'));
+  assert.deepEqual(update.params, ['1002', null, 0, 1, 2001]);
 });
 
 test('saveChannel: 已存在来源 UPDATE source_name/channel_id/is_excluded', async () => {

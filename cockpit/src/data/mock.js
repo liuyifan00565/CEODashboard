@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 16:37:08 CST
+ 更新内容: 渠道人员明细支持按本月/年度选择目标与回款字段，匹配真实库下钻口径。
+*/
+/*
  更新时间: 2026-07-07 15:25:00 CST
  更新内容: 移除经营总览 monthJudgement / annualJudgement 摘要字段，页面不再显示模板拼接的摘要句。
 */
@@ -266,14 +270,15 @@ export function getOperatingOverviewMetrics() {
   return { ...OPERATING_OVERVIEW_METRICS };
 }
 
-export function getSalesMemberRows(groupKey = 'online') {
+export function getSalesMemberRows(groupKey = 'online', period = 'month') {
+  const safePeriod = period === 'year' ? 'year' : 'month';
   return sortByCompletionDesc(SALES_MEMBER_ROWS
     .filter((row) => row.group === groupKey)
     .map((row) => withCompletion({
       key: row.key,
       name: row.name,
-      target: row.target,
-      recovered: row.recovered,
+      target: safePeriod === 'year' ? (row.yearTarget ?? row.target) : (row.monthTarget ?? row.target),
+      recovered: safePeriod === 'year' ? (row.yearRecovered ?? row.recovered) : (row.monthRecovered ?? row.recovered),
     })));
 }
 

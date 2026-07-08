@@ -3,6 +3,9 @@
 更新时间: 2026-07-08 19:31:00 CST
 更新内容: 左下角福小客 Live2D 在开发环境新增官方样例模型回退，正式模型缺失时也能肉眼验证渲染链路。
 
+更新时间: 2026-07-08 16:37:08 CST
+更新内容: 渠道目标和渠道二级人员明细补齐部门编码兜底渠道口径，新增销售只要维护了目标即可出现在本月/年度下钻。
+
 更新时间: 2026-07-08 18:55:00 CST
 更新内容: 左下角福小客 Live2D 渲染前新增本地资源预检测，并补充桌宠接入说明文档入口。
 
@@ -73,11 +76,11 @@ DB_PASSWORD=your-mysql-password
 DB_NAME=ceo_dashboard
 ```
 
-当前首页回款实际值优先来自 `fact_revenue_daily.recovered_amount_yuan`，按月份和渠道聚合；当日级回款表没有数据时，才回退到 `fact_sales_member_monthly.recovered_amount_yuan`。月目标、年度目标和渠道目标统一来自 `biz_target_monthly.target_amount_yuan`，且只统计关联到 `dim_staff` 后满足 `is_sales=1`、`is_enabled=1`、`department_id IS NOT NULL` 的人员目标；渠道目标再按 `dim_staff.channel_key` 汇总。销售人员明细仍来自 `fact_sales_member_monthly`。导入完整数据库后，年度累计实际会按当年 1 月到当前月的日级回款累计，不再只等于单月销售人员月表回款，也不会显示旧 mock。
+当前首页回款实际值优先来自 `fact_revenue_daily.recovered_amount_yuan`，按月份和渠道聚合；当日级回款表没有数据时，才回退到 `fact_sales_member_monthly.recovered_amount_yuan`。月目标、年度目标和渠道目标统一来自 `biz_target_monthly.target_amount_yuan`，且只统计关联到 `dim_staff` 后满足 `is_sales=1`、`is_enabled=1`、`department_id IS NOT NULL` 的人员目标；渠道目标优先按 `dim_staff.channel_key` 汇总，若为空则按 `dim_department.department_code` 兜底映射到 `online/south/east/agent`。渠道二级销售人员明细按本月/年度分别使用目标维护与日级回款聚合，新增销售只要有维护目标，即使销售月表尚未生成也会出现在对应渠道下钻中。导入完整数据库后，年度累计实际会按当年 1 月到当前月的日级回款累计，不再只等于单月销售人员月表回款，也不会显示旧 mock。
 
 渠道完成的实际回款优先来自 `dim_channel` + `fact_revenue_daily`，渠道投入来自 `biz_channel_cost_monthly`，人力成本来自 `biz_labor_cost_monthly`。版本销售先按 `fact_version_sales_daily` 聚合版本套数和回款，续费数据先按 `fact_renewal_daily.version_id` 聚合后再关联版本销售，避免一对多 JOIN 放大销售金额。开户、算力和交付模块分别读取 `fact_opening_account_daily`、算力事实表和 `fact_delivery_order`/`biz_delivery_target_monthly`。
 
-数据维护页内保存支持新增组织和渠道大类：前端临时 ID 会在后端先落 `dim_department` / `dim_channel`，再映射给人员或来源；渠道来源的“启用”按 `is_excluded` 的反向视图保存。
+数据维护页内保存支持新增组织和渠道大类：前端临时 ID 会在后端先落 `dim_department` / `dim_channel`，再映射给人员或来源；组织保存与目标导入新增销售时会按组织编码自动维护 `dim_staff.channel_key`，渠道来源的“启用”按 `is_excluded` 的反向视图保存。
 
 ## 经营总览口径
 
@@ -97,7 +100,7 @@ DB_NAME=ceo_dashboard
 
 左侧菜单当前包含 `经营总览`、`算力用量分析`，以及系统区的 `数据维护` 入口。顶部右侧按钮显示为 `更新数据`，当前复用数据维护入口行为；进入维护模式后按钮显示 `返回主界面`。
 
-渠道完成情况按数据库 `dim_channel.channel_key` 汇总，当前支持 `线上`、`线下华南`、`代理`、`线下华东`，点击后在屏幕正中间弹出人员明细卡片，人员按目标完成率降序排列。
+渠道完成情况按数据库 `dim_channel.channel_key` 汇总，当前支持 `线上`、`线下华南`、`代理`、`线下华东`，点击后在屏幕正中间弹出人员明细卡片；人员明细跟随本月/年度切换，按对应周期目标完成率降序排列。
 
 KPI 二级弹窗、月度经营趋势、版本情况和交付面板继续在经营总览下方展示，顶部主故事负责本月和年度节奏判断，下方模块负责进一步拆解原因。
 

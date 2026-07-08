@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-08 16:37:08 CST  更新内容: 渠道二级人员明细跟随本月/年度切换读取对应周期数据。 */
 /* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 渠道完成率单元格内联进度条，避免最右独立进度列造成语义分裂。 */
 /* 更新时间: 2026-07-05 22:45:24 CST  更新内容: 渠道完成表移除状态列，改为按当前维度完成率展示进度条，并配合表头数值列对齐。 */
 /* 更新时间: 2026-07-05 21:45:08 CST  更新内容: 渠道完成情况改为本月/年度互斥列展示，完成率固定一位小数，并移除渠道名旁重复风险标签。 */
@@ -58,7 +59,7 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
     ? (period === 'year' ? '年度渠道完成情况' : `本月${title}`)
     : title;
   const openRow = rows.find((row) => row.key === openKey);
-  const members = openKey ? getSalesMemberRows(openKey) : [];
+  const members = openKey ? getSalesMemberRows(openKey, period) : [];
 
   return (
     <section className="ch-panel">

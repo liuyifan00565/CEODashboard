@@ -1,5 +1,8 @@
 # Dashboard Data Aggregation
 
+更新时间: 2026-07-08 16:37:08 CST
+更新内容: 渠道目标和人员明细补齐部门编码到渠道键的兜底规则；渠道二级本月/年度明细改用目标维护与日级回款口径。
+
 更新时间: 2026-07-08 11:45:00 CST
 更新内容: 首页目标聚合与目标维护口径对齐，只统计启用销售且有部门的人员目标；停用/非销售/无部门人员目标不再进入分母。
 
@@ -15,8 +18,8 @@
 - 本月回款、年度累计回款、月趋势实际值：优先使用 `fact_revenue_daily.recovered_amount_yuan`，按 `stat_date` 的年月聚合。
 - 当 `fact_revenue_daily` 没有数据时，回退使用 `fact_sales_member_monthly.recovered_amount_yuan`。
 - 本月目标、年度目标、月趋势目标：使用 `biz_target_monthly.target_amount_yuan`，仅统计关联到 `dim_staff` 且满足 `is_sales=1`、`is_enabled=1`、`department_id IS NOT NULL` 的人员目标。
-- 渠道目标：`biz_target_monthly.staff_id` 关联 `dim_staff.channel_key` 后按渠道汇总，同样只统计启用销售且有部门的人员。
-- 销售人员明细：使用 `fact_sales_member_monthly`，只作为人员完成明细，不作为公司级目标分母。
+- 渠道目标：`biz_target_monthly.staff_id` 关联销售人员渠道后按渠道汇总，同样只统计启用销售且有部门的人员；当 `dim_staff.channel_key` 为空时，按 `dim_department.department_code` 兜底映射：`online-sales -> online`、`south-sales -> south`、`east-sales -> east`、`agent-sales -> agent`。
+- 渠道二级销售人员明细：本月/年度目标来自 `biz_target_monthly`，实际回款优先来自 `fact_revenue_daily.staff_id` 聚合；没有日级回款时才回退 `fact_sales_member_monthly`。因此新销售只要已在目标维护中有目标，即使销售月表尚未生成，也会出现在对应渠道的二级明细中。
 
 ## 版本与续费
 

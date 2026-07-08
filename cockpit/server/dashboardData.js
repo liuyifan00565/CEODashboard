@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 16:37:08 CST
+ 更新内容: 渠道目标和人员明细增加部门编码兜底渠道口径，年度/本月下钻改用维护目标与日级回款聚合，避免新增销售漏显。
+*/
+/*
  更新时间: 2026-07-08 15:10:00 CST
  更新内容: 修复经营节奏「本月时间进度/已过天数」在 UTC 容器里跨月凌晨错位的问题：
           原用服务端 new Date() 取今天，容器跑 UTC，北京时间月初凌晨会把「今天」算成上个月、天数也错。
@@ -35,6 +39,30 @@ const DB_DEFAULTS = {
   port: 3306,
   database: 'ceo_dashboard',
 };
+
+const STAFF_CHANNEL_KEY_SQL = `COALESCE(NULLIF(s.channel_key, ''), CASE
+  WHEN d.department_code = 'online-sales' THEN 'online'
+  WHEN d.department_code = 'south-sales' THEN 'south'
+  WHEN d.department_code = 'east-sales' THEN 'east'
+  WHEN d.department_code = 'agent-sales' THEN 'agent'
+  ELSE NULL
+END)`;
+
+const STAFF_OR_FACT_CHANNEL_KEY_SQL = `COALESCE(NULLIF(s.channel_key, ''), CASE
+  WHEN d.department_code = 'online-sales' THEN 'online'
+  WHEN d.department_code = 'south-sales' THEN 'south'
+  WHEN d.department_code = 'east-sales' THEN 'east'
+  WHEN d.department_code = 'agent-sales' THEN 'agent'
+  ELSE NULL
+END, c.channel_key)`;
+
+const CHANNEL_NAME_BY_KEY_SQL = (keySql) => `CASE ${keySql}
+  WHEN 'online' THEN '线上'
+  WHEN 'south' THEN '华南线下'
+  WHEN 'east' THEN '华东线下'
+  WHEN 'agent' THEN '代理'
+  ELSE NULL
+END`;
 
 function num(value, fallback = 0) {
   const parsed = Number(value);
@@ -244,13 +272,76 @@ function makeMonthlyTrend({ monthlyTargets, recoveredRows, latestMonth, currentM
     });
 }
 
-function makeSalesMemberRows(rows) {
-  return rows.map((row) => completionRow({
-    key: `staff-${row.staff_id}`,
-    group: row.channel_key,
+function addMemberMetric(map, row, field) {
+  const staffId = row.staff_id;
+  const channelKey = row.channel_key;
+  if (staffId == null || !channelKey) return;
+  const key = `${channelKey}:${staffId}`;
+  const current = map.get(key) ?? {
+    key: `staff-${staffId}`,
+    group: channelKey,
     name: row.staff_name,
-    target: round0(row.target_wan),
-    recovered: round0(row.recovered_wan),
+    monthTarget: 0,
+    monthRecovered: 0,
+    yearTarget: 0,
+    yearRecovered: 0,
+  };
+  current[field] += num(row.value_wan);
+  map.set(key, current);
+}
+
+function makeSalesMemberRows({
+  salesRows,
+  targetRows = [],
+  recoveredRows = [],
+  latestMonth,
+  latestYear,
+  useRevenueDaily,
+}) {
+  if (!targetRows.length && !recoveredRows.length) {
+    return salesRows.map((row) => completionRow({
+      key: `staff-${row.staff_id}`,
+      group: row.channel_key,
+      name: row.staff_name,
+      target: round0(row.target_wan),
+      recovered: round0(row.recovered_wan),
+      monthTarget: round0(row.target_wan),
+      monthRecovered: round0(row.recovered_wan),
+      yearTarget: round0(row.target_wan),
+      yearRecovered: round0(row.recovered_wan),
+    }));
+  }
+
+  const memberMap = new Map();
+  const recoverySourceRows = useRevenueDaily ? recoveredRows : salesRows;
+  const normalizeTarget = (row) => ({ ...row, value_wan: row.target_wan });
+  const normalizeRecovered = (row) => ({ ...row, value_wan: row.recovered_wan });
+
+  targetRows
+    .filter((row) => row.year_month === latestMonth)
+    .map(normalizeTarget)
+    .forEach((row) => addMemberMetric(memberMap, row, 'monthTarget'));
+  targetRows
+    .filter((row) => String(row.year_month).startsWith(latestYear))
+    .map(normalizeTarget)
+    .forEach((row) => addMemberMetric(memberMap, row, 'yearTarget'));
+  recoverySourceRows
+    .filter((row) => row.year_month === latestMonth)
+    .map(normalizeRecovered)
+    .forEach((row) => addMemberMetric(memberMap, row, 'monthRecovered'));
+  recoverySourceRows
+    .filter((row) => String(row.year_month).startsWith(latestYear) && String(row.year_month) <= latestMonth)
+    .map(normalizeRecovered)
+    .forEach((row) => addMemberMetric(memberMap, row, 'yearRecovered'));
+
+  return [...memberMap.values()].map((row) => completionRow({
+    ...row,
+    target: round0(row.monthTarget),
+    recovered: round0(row.monthRecovered),
+    monthTarget: round0(row.monthTarget),
+    monthRecovered: round0(row.monthRecovered),
+    yearTarget: round0(row.yearTarget),
+    yearRecovered: round0(row.yearRecovered),
   }));
 }
 
@@ -421,7 +512,14 @@ export function mapDashboardRowsToSnapshot(rows) {
     channels,
     channelRoi: makeChannelRoi({ channelRows: channels, channelCosts: rows.channelCosts ?? [] }),
     monthlyTrend: makeMonthlyTrend({ monthlyTargets: rows.monthlyTargets ?? [], recoveredRows, latestMonth, currentMonthTarget }),
-    salesMemberRows: makeSalesMemberRows(currentSalesRows),
+    salesMemberRows: makeSalesMemberRows({
+      salesRows: yearSalesRows,
+      targetRows: rows.memberTargets ?? [],
+      recoveredRows: rows.memberRecovered ?? [],
+      latestMonth,
+      latestYear,
+      useRevenueDaily,
+    }),
     versions: makeVersionRows(rows.versionSales ?? []),
     renewalRows: makeRenewalRows(rows.renewalRows ?? []),
     openingAccountMetrics: makeOpeningMetrics(rows.openingRows ?? []),
@@ -470,6 +568,8 @@ export async function buildDashboardSnapshot(connection) {
     monthlyTargets,
     channelTargets,
     yearChannelTargets,
+    memberTargets,
+    memberRecovered,
     channelCosts,
     laborCosts,
     versionSales,
@@ -485,14 +585,21 @@ export async function buildDashboardSnapshot(connection) {
   ] = await Promise.all([
     queryRows(connection, 'SELECT channel_id, channel_key, channel_name, zone_name FROM dim_channel WHERE is_enabled = 1 ORDER BY channel_id'),
     queryRows(connection, `
-      SELECT f.\`year_month\`, f.staff_id, s.staff_name, c.channel_key, c.channel_name,
-             ROUND(f.recovered_amount_yuan / 10000, 2) AS recovered_wan,
-             ROUND(f.target_amount_yuan / 10000, 2) AS target_wan
-      FROM fact_sales_member_monthly f
-      JOIN dim_staff s ON s.staff_id = f.staff_id
-      JOIN dim_channel c ON c.channel_id = f.channel_id
-      WHERE f.\`year_month\` LIKE CONCAT(?, '%')
-      ORDER BY f.\`year_month\`, f.id
+      SELECT *
+      FROM (
+        SELECT f.\`year_month\`, f.staff_id, s.staff_name,
+               ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
+               COALESCE(c.channel_name, ${CHANNEL_NAME_BY_KEY_SQL(STAFF_OR_FACT_CHANNEL_KEY_SQL)}) AS channel_name,
+               ROUND(f.recovered_amount_yuan / 10000, 2) AS recovered_wan,
+               ROUND(f.target_amount_yuan / 10000, 2) AS target_wan
+        FROM fact_sales_member_monthly f
+        JOIN dim_staff s ON s.staff_id = f.staff_id
+        LEFT JOIN dim_department d ON d.department_id = s.department_id
+        LEFT JOIN dim_channel c ON c.channel_id = f.channel_id
+        WHERE f.\`year_month\` LIKE CONCAT(?, '%')
+      ) member_monthly
+      WHERE channel_key IS NOT NULL
+      ORDER BY \`year_month\`, staff_id
     `, [latestYear]),
     queryRows(connection, `
       SELECT DATE_FORMAT(r.stat_date, '%Y-%m') AS \`year_month\`, c.channel_key,
@@ -528,27 +635,60 @@ export async function buildDashboardSnapshot(connection) {
       ORDER BY t.\`year_month\`
     `, [latestYear]),
     queryRows(connection, `
-      SELECT s.channel_key, ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
+      SELECT ${STAFF_CHANNEL_KEY_SQL} AS channel_key, ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
       FROM biz_target_monthly t
       JOIN dim_staff s ON s.staff_id = t.staff_id
+      LEFT JOIN dim_department d ON d.department_id = s.department_id
       WHERE t.\`year_month\` = ?
-        AND s.channel_key IS NOT NULL
         AND s.is_sales = 1
         AND s.department_id IS NOT NULL
         AND s.is_enabled = 1
-      GROUP BY s.channel_key
+      GROUP BY ${STAFF_CHANNEL_KEY_SQL}
+      HAVING channel_key IS NOT NULL
     `, [latestMonth]),
     queryRows(connection, `
-      SELECT s.channel_key, ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
+      SELECT ${STAFF_CHANNEL_KEY_SQL} AS channel_key, ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
       FROM biz_target_monthly t
       JOIN dim_staff s ON s.staff_id = t.staff_id
+      LEFT JOIN dim_department d ON d.department_id = s.department_id
       WHERE t.\`year_month\` LIKE CONCAT(?, '%')
-        AND s.channel_key IS NOT NULL
         AND s.is_sales = 1
         AND s.department_id IS NOT NULL
         AND s.is_enabled = 1
-      GROUP BY s.channel_key
+      GROUP BY ${STAFF_CHANNEL_KEY_SQL}
+      HAVING channel_key IS NOT NULL
     `, [latestYear]),
+    queryRows(connection, `
+      SELECT t.\`year_month\`, s.staff_id, s.staff_name,
+             ${STAFF_CHANNEL_KEY_SQL} AS channel_key,
+             ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
+      FROM biz_target_monthly t
+      JOIN dim_staff s ON s.staff_id = t.staff_id
+      LEFT JOIN dim_department d ON d.department_id = s.department_id
+      WHERE t.\`year_month\` LIKE CONCAT(?, '%')
+        AND s.is_sales = 1
+        AND s.department_id IS NOT NULL
+        AND s.is_enabled = 1
+      GROUP BY t.\`year_month\`, s.staff_id, s.staff_name, ${STAFF_CHANNEL_KEY_SQL}
+      HAVING channel_key IS NOT NULL
+      ORDER BY t.\`year_month\`, channel_key, s.staff_id
+    `, [latestYear]),
+    queryRows(connection, `
+      SELECT DATE_FORMAT(r.stat_date, '%Y-%m') AS \`year_month\`, s.staff_id, s.staff_name,
+             ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
+             ROUND(SUM(r.recovered_amount_yuan) / 10000, 2) AS recovered_wan
+      FROM fact_revenue_daily r
+      JOIN dim_staff s ON s.staff_id = r.staff_id
+      LEFT JOIN dim_department d ON d.department_id = s.department_id
+      LEFT JOIN dim_channel c ON c.channel_id = r.channel_id
+      WHERE r.stat_date >= ? AND r.stat_date < ?
+        AND s.is_sales = 1
+        AND s.department_id IS NOT NULL
+        AND s.is_enabled = 1
+      GROUP BY DATE_FORMAT(r.stat_date, '%Y-%m'), s.staff_id, s.staff_name, ${STAFF_OR_FACT_CHANNEL_KEY_SQL}
+      HAVING channel_key IS NOT NULL
+      ORDER BY \`year_month\`, channel_key, s.staff_id
+    `, [`${latestYear}-01-01`, `${nextYear}-01-01`]),
     queryRows(connection, `
       SELECT c.channel_key, ROUND(cost.investment_amount_yuan / 10000, 2) AS investment_wan
       FROM biz_channel_cost_monthly cost
@@ -713,6 +853,8 @@ export async function buildDashboardSnapshot(connection) {
     monthlyTargets,
     channelTargets,
     yearChannelTargets,
+    memberTargets,
+    memberRecovered,
     channelCosts,
     laborCosts,
     versionSales,
