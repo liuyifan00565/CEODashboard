@@ -1,89 +1,158 @@
 {
-  "updatedAt": "2026-07-08 17:45:00 CST",
+  "updatedAt": "2026-07-08 18:16:34 CST",
   "criteria": {
-    "smooth": "所有运行态动作都从同一张正式福客 AI 透明图生成，人物宽高固定为 151x234，脚底抖动不超过 4px，中心抖动不超过 5px，四边透明安全边距不少于 18px。",
-    "reasonable": "每个动作保留独立节奏，但不允许出现人物裁切、尺寸跳变、蓝色声波线、星星、文字或其它无意义符号。"
+    "source": "Runtime actions now use visible official Fu Xiaoke pose art instead of near-identical standing frames.",
+    "frameSize": [
+      224,
+      300
+    ],
+    "frameCount": 12,
+    "maxCenterJitterPx": 4,
+    "maxFootJitterPx": 3,
+    "minTransparentMarginPx": 18,
+    "visibleActionDeltaFromIdle": "Non-idle actions must be visually distinct from the idle standing pose at sidebar size.",
+    "forbidden": [
+      "white draft model assets",
+      "gray model assets",
+      "meaningless wave symbols as the primary action"
+    ]
   },
   "actions": {
     "idleFukeRich": {
       "frameCount": 12,
-      "maxCenterJitterPx": 2.0,
+      "bodyWidthRange": [
+        151,
+        151
+      ],
+      "bodyHeightRange": [
+        234,
+        234
+      ],
+      "maxCenterJitterPx": 2,
       "maxFootJitterPx": 2,
       "minTransparentMarginPx": 19,
       "smooth": true,
       "reasonable": true,
-      "source": "stabilized-from-official-fuke-ai-reference",
-      "file": "/mascot-actions/mascot-idle-fuke-rich.png"
+      "source": "stabilized-from-official-fuke-ai-reference"
     },
     "wave": {
       "frameCount": 12,
-      "maxCenterJitterPx": 3.61,
-      "maxFootJitterPx": 2,
-      "minTransparentMarginPx": 19,
+      "bodyWidthRange": [
+        163,
+        163
+      ],
+      "bodyHeightRange": [
+        234,
+        234
+      ],
+      "maxCenterJitterPx": 3.16,
+      "maxFootJitterPx": 3,
+      "minTransparentMarginPx": 29,
       "smooth": true,
       "reasonable": true,
-      "source": "stabilized-from-official-fuke-ai-reference",
-      "file": "/mascot-actions/mascot-wave.png"
+      "source": "official-fuke-target-achieved-pose-with-symbols-removed"
     },
     "guide": {
       "frameCount": 12,
-      "maxCenterJitterPx": 3.61,
-      "maxFootJitterPx": 2,
-      "minTransparentMarginPx": 20,
+      "bodyWidthRange": [
+        165,
+        165
+      ],
+      "bodyHeightRange": [
+        234,
+        234
+      ],
+      "maxCenterJitterPx": 2.24,
+      "maxFootJitterPx": 1,
+      "minTransparentMarginPx": 27,
       "smooth": true,
       "reasonable": true,
-      "source": "stabilized-from-official-fuke-ai-reference",
-      "file": "/mascot-actions/mascot-guide.png"
+      "source": "official-fuke-kpi-guide-pose"
     },
     "talk": {
       "frameCount": 12,
-      "maxCenterJitterPx": 1.0,
+      "bodyWidthRange": [
+        145,
+        145
+      ],
+      "bodyHeightRange": [
+        234,
+        234
+      ],
+      "maxCenterJitterPx": 1,
       "maxFootJitterPx": 1,
-      "minTransparentMarginPx": 19,
+      "minTransparentMarginPx": 32,
       "smooth": true,
       "reasonable": true,
-      "source": "stabilized-from-official-fuke-ai-reference",
-      "file": "/mascot-actions/mascot-talk.png"
+      "source": "official-fuke-report-presenter-pose"
     },
     "think": {
       "frameCount": 12,
+      "bodyWidthRange": [
+        173,
+        173
+      ],
+      "bodyHeightRange": [
+        234,
+        234
+      ],
       "maxCenterJitterPx": 1.41,
       "maxFootJitterPx": 1,
-      "minTransparentMarginPx": 19,
+      "minTransparentMarginPx": 24,
       "smooth": true,
       "reasonable": true,
-      "source": "stabilized-from-official-fuke-ai-reference",
-      "file": "/mascot-actions/mascot-think.png"
+      "source": "official-fuke-risk-analysis-pose-with-warning-removed"
     },
     "alert": {
       "frameCount": 12,
-      "maxCenterJitterPx": 2.0,
-      "maxFootJitterPx": 1,
-      "minTransparentMarginPx": 20,
+      "bodyWidthRange": [
+        173,
+        173
+      ],
+      "bodyHeightRange": [
+        234,
+        234
+      ],
+      "maxCenterJitterPx": 1,
+      "maxFootJitterPx": 0,
+      "minTransparentMarginPx": 24,
       "smooth": true,
       "reasonable": true,
-      "source": "stabilized-from-official-fuke-ai-reference",
-      "file": "/mascot-actions/mascot-alert.png"
+      "source": "official-fuke-risk-analysis-pose-with-warning-removed"
     },
     "celebrate": {
       "frameCount": 12,
-      "maxCenterJitterPx": 4.12,
-      "maxFootJitterPx": 4,
-      "minTransparentMarginPx": 19,
+      "bodyWidthRange": [
+        173,
+        173
+      ],
+      "bodyHeightRange": [
+        234,
+        234
+      ],
+      "maxCenterJitterPx": 3.16,
+      "maxFootJitterPx": 3,
+      "minTransparentMarginPx": 24,
       "smooth": true,
       "reasonable": true,
-      "source": "stabilized-from-official-fuke-ai-reference",
-      "file": "/mascot-actions/mascot-celebrate.png"
+      "source": "official-fuke-target-achieved-pose"
     },
     "click": {
       "frameCount": 12,
-      "maxCenterJitterPx": 2.0,
-      "maxFootJitterPx": 2,
-      "minTransparentMarginPx": 18,
+      "bodyWidthRange": [
+        165,
+        165
+      ],
+      "bodyHeightRange": [
+        234,
+        234
+      ],
+      "maxCenterJitterPx": 2.24,
+      "maxFootJitterPx": 1,
+      "minTransparentMarginPx": 27,
       "smooth": true,
       "reasonable": true,
-      "source": "stabilized-from-official-fuke-ai-reference",
-      "file": "/mascot-actions/mascot-click.png"
+      "source": "official-fuke-kpi-guide-pose"
     }
   }
 }

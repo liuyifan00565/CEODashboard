@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:16:34 CST
+ 更新内容: 增加非待机动作与待机关键帧的可见差异验收，避免动作图退化成同一站姿。
+*/
+/*
  更新时间: 2026-07-08 17:45:00 CST
  更新内容: 要求福客动作逐个恢复为独立稳定帧，所有动作保持同源同尺寸并禁止旧素材符号残留。
 */
@@ -43,6 +47,7 @@
  更新内容: 新增 2D AI 小人帧动画 manifest 验收，约束 48 帧 sprite、四种待机和维护场景动作。
 */
 import { existsSync, readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -55,6 +60,9 @@ import {
   getMascotAnimation,
 } from './mascotAnimationManifest.js';
 import { MASCOT_ACTIONS } from './mascotCompanion.js';
+
+const require = createRequire(import.meta.url);
+const { PNG } = require('pngjs');
 
 const requiredActions = [
   MASCOT_ACTIONS.idle,
@@ -95,9 +103,47 @@ const expectedSheetByAction = {
   maintenanceReview: 'think',
 };
 
+const expectedSourceBySheet = {
+  idleFukeRich: 'stabilized-from-official-fuke-ai-reference',
+  wave: 'official-fuke-target-achieved-pose-with-symbols-removed',
+  guide: 'official-fuke-kpi-guide-pose',
+  talk: 'official-fuke-report-presenter-pose',
+  think: 'official-fuke-risk-analysis-pose-with-warning-removed',
+  alert: 'official-fuke-risk-analysis-pose-with-warning-removed',
+  celebrate: 'official-fuke-target-achieved-pose',
+  click: 'official-fuke-kpi-guide-pose',
+};
+
 function publicAssetExists(src) {
   assert.match(src, /^\/mascot-actions\/mascot-[a-z-]+\.png$/);
   return existsSync(new URL(`../../public${src}`, import.meta.url));
+}
+
+function readMascotSheet(sheetKey) {
+  const sheet = MASCOT_ACTION_SHEETS[sheetKey];
+  return PNG.sync.read(readFileSync(new URL(`../../public${sheet.src}`, import.meta.url)));
+}
+
+function getVisibleDifferenceRatio(baseSheet, actionSheet, frameIndex = 6) {
+  const frameWidth = 224;
+  const frameHeight = 300;
+  let changedPixels = 0;
+  let visiblePixels = 0;
+  for (let y = 0; y < frameHeight; y += 1) {
+    for (let x = 0; x < frameWidth; x += 1) {
+      const baseIndex = (baseSheet.width * y + frameIndex * frameWidth + x) * 4;
+      const actionIndex = (actionSheet.width * y + frameIndex * frameWidth + x) * 4;
+      const baseAlpha = baseSheet.data[baseIndex + 3];
+      const actionAlpha = actionSheet.data[actionIndex + 3];
+      if (baseAlpha > 0 || actionAlpha > 0) visiblePixels += 1;
+      const alphaDelta = Math.abs(baseAlpha - actionAlpha);
+      const rgbDelta = Math.abs(baseSheet.data[baseIndex] - actionSheet.data[actionIndex])
+        + Math.abs(baseSheet.data[baseIndex + 1] - actionSheet.data[actionIndex + 1])
+        + Math.abs(baseSheet.data[baseIndex + 2] - actionSheet.data[actionIndex + 2]);
+      if (alphaDelta > 24 || rgbDelta > 60) changedPixels += 1;
+    }
+  }
+  return changedPixels / visiblePixels;
 }
 
 test('declares generated per-action mascot sprite sheets', () => {
@@ -180,11 +226,23 @@ test('records self-audit results for smoothness and reasonableness', () => {
     assert.equal(result.smooth, true, `${key} should pass smoothness audit`);
     assert.equal(result.reasonable, true, `${key} should pass semantic audit`);
     assert.ok(result.frameCount >= 8, `${key} should keep enough frames`);
-    assert.ok(result.maxFootJitterPx <= 4, `${key} foot jitter should stay stable`);
-    assert.ok(result.maxCenterJitterPx <= 5, `${key} center jitter should stay controlled`);
+    assert.ok(result.maxFootJitterPx <= 3, `${key} foot jitter should stay stable`);
+    assert.ok(result.maxCenterJitterPx <= 4, `${key} center jitter should stay controlled`);
     assert.ok(result.minTransparentMarginPx >= 18, `${key} should keep at least 18px transparent safety margin`);
     assert.ok(auditJson.actions[key].minTransparentMarginPx >= 18, `${key} generated audit should keep transparent safety margin`);
-    assert.equal(auditJson.actions[key].source, 'stabilized-from-official-fuke-ai-reference');
+    assert.equal(auditJson.actions[key].source, expectedSourceBySheet[key]);
+  }
+});
+
+test('keeps non-idle action sheets visibly different from the idle standing loop', () => {
+  const idleSheet = readMascotSheet('idleFukeRich');
+  for (const key of requiredSheetKeys.filter((sheetKey) => sheetKey !== 'idleFukeRich')) {
+    const actionSheet = readMascotSheet(key);
+    const differenceRatio = getVisibleDifferenceRatio(idleSheet, actionSheet);
+    assert.ok(
+      differenceRatio >= 0.55,
+      `${key} should be visibly different from idle at sidebar size; got ${differenceRatio.toFixed(3)}`,
+    );
   }
 });
 

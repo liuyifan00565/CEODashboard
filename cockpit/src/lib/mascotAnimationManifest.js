@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:16:34 CST
+ 更新内容: 将非待机动作切换为可明显区分的正式福客姿态图，并同步新的稳定性审计数值。
+*/
+/*
  更新时间: 2026-07-08 17:45:00 CST
  更新内容: 逐个接回稳定完整的福客动作帧，每个动作同源同尺寸并保留独立节奏，避免旧素材裁切、跳变和符号残留。
 */
@@ -75,13 +79,13 @@ export const MASCOT_APPROVED_ASSETS = Object.freeze({
 
 export const MASCOT_ACTION_AUDIT = Object.freeze({
   idleFukeRich: auditSpec(12, 2, 2, 19),
-  wave: auditSpec(12, 3.61, 2, 19),
-  guide: auditSpec(12, 3.61, 2, 20),
-  talk: auditSpec(12, 1, 1, 19),
-  think: auditSpec(12, 1.41, 1, 19),
-  alert: auditSpec(12, 2, 1, 20),
-  celebrate: auditSpec(12, 4.12, 4, 19),
-  click: auditSpec(12, 2, 2, 18),
+  wave: auditSpec(12, 3.16, 3, 29),
+  guide: auditSpec(12, 2.24, 1, 27),
+  talk: auditSpec(12, 1, 1, 32),
+  think: auditSpec(12, 1.41, 1, 24),
+  alert: auditSpec(12, 1, 0, 24),
+  celebrate: auditSpec(12, 3.16, 3, 24),
+  click: auditSpec(12, 2.24, 1, 27),
 });
 
 export const MASCOT_IDLE_VARIANTS = Object.freeze([
