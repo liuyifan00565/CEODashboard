@@ -1,4 +1,10 @@
 /*
+ 更新时间: 2026-07-08 15:10:00 CST
+ 更新内容: 修复经营节奏「本月时间进度/已过天数」在 UTC 容器里跨月凌晨错位的问题：
+          原用服务端 new Date() 取今天，容器跑 UTC，北京时间月初凌晨会把「今天」算成上个月、天数也错。
+          改用 chinaTodayYMD() 按 UTC+8 取今天年月日，与进程时区无关（与 Excel 月份错位同类根因）。
+*/
+/*
  更新时间: 2026-07-08 11:45:00 CST
  更新内容: 首页目标聚合与目标维护口径对齐，只统计启用销售且有部门的 staff 目标，避免组织维护停用/转非销售后旧目标继续进入分母。
 */
@@ -64,6 +70,24 @@ function monthName(yearMonth) {
   return `${monthNumber(yearMonth)}月`;
 }
 
+/**
+ * 中国当地（UTC+8）今天的年月日，与服务进程时区无关。
+ * 容器默认跑 UTC，直接 new Date() 会在北京时间月初凌晨把「今天」算成上个月（与 Excel 日期单元格
+ * 月份错位同类根因）。这里把时间戳加 8 小时后取 UTC 分量，任何时区下都得到北京时间当地的日历日期。
+ */
+export function chinaTodayYMD() {
+  const shifted = new Date(Date.now() + 8 * 3600 * 1000);
+  const year = shifted.getUTCFullYear();
+  const month = shifted.getUTCMonth() + 1;
+  const day = shifted.getUTCDate();
+  return {
+    year,
+    month,
+    day,
+    yearMonth: `${year}-${String(month).padStart(2, '0')}`,
+  };
+}
+
 function previousYearMonthValue(yearMonth) {
   const [year, month] = String(yearMonth || '2026-06').split('-').map(Number);
   if (month > 1) return `${year}-${String(month - 1).padStart(2, '0')}`;
@@ -115,8 +139,8 @@ function makeKpiDerived(kpi) {
 
 function makeOperatingMetrics({ kpiDerived, latestMonth, channelRows }) {
   const currentMonth = monthNumber(latestMonth);
-  const now = new Date();
-  const todayYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const today = chinaTodayYMD();
+  const todayYearMonth = today.yearMonth;
   const daysInMonth = 30;
   let daysElapsed;
   if (todayYearMonth > latestMonth) {
@@ -124,7 +148,7 @@ function makeOperatingMetrics({ kpiDerived, latestMonth, channelRows }) {
   } else if (todayYearMonth < latestMonth) {
     daysElapsed = 0;
   } else {
-    daysElapsed = Math.min(daysInMonth, now.getDate());
+    daysElapsed = Math.min(daysInMonth, today.day);
   }
   const monthTimeProgress = round1((daysElapsed / daysInMonth) * 100);
   const annualTimeProgress = round1((currentMonth / 12) * 100);

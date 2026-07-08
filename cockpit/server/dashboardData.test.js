@@ -14,7 +14,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { mapDashboardRowsToSnapshot } from './dashboardData.js';
+import { mapDashboardRowsToSnapshot, chinaTodayYMD } from './dashboardData.js';
 
 test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
   const snapshot = mapDashboardRowsToSnapshot({
@@ -103,6 +103,22 @@ test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
   assert.equal(snapshot.monthlyTrend.at(-1).recovered, 520);
   assert.equal(snapshot.channelRoi.find((row) => row.key === 'online').investment, 31);
   assert.equal(snapshot.salesMemberRows.find((row) => row.key === 'staff-2004').group, 'east');
+});
+
+test('chinaTodayYMD 在任意进程时区下都返回北京时间当地的今天', () => {
+  // 容器默认跑 UTC，但业务在中国（UTC+8）。构造一个「北京时间月初凌晨」的时间戳：
+  // 2026-09-01 00:30 北京时间 == 2026-08-31 16:30 UTC。直接 new Date() 在 UTC 进程里会算成 8 月 31，
+  // chinaTodayYMD 必须仍给出 2026-09-01。
+  const beijingMidnightEarlySep = Date.UTC(2026, 8, 1, 0, 30) - 8 * 3600 * 1000; // == 2026-08-31T16:30:00Z
+  const realNow = Date.now;
+  globalThis.Date.now = () => beijingMidnightEarlySep;
+  try {
+    const today = chinaTodayYMD();
+    assert.equal(today.yearMonth, '2026-09');
+    assert.equal(today.day, 1);
+  } finally {
+    globalThis.Date.now = realNow;
+  }
 });
 
 test('prefers daily revenue facts over sales member monthly rows for recovered metrics', () => {
