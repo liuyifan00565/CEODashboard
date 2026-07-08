@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 14:11:07 CST
+ 更新内容: 主界面侧边导航移除搜索占位入口，维护页继续保留左侧全局返回入口。
+*/
+/*
  更新时间: 2026-07-08 14:08:42 CST
  更新内容: 为顶部品牌胶囊滚动折叠增加滞回阈值，并避免搜索命中标记随无关渲染重复刷新导致抖动。
 */
@@ -171,7 +175,6 @@ const BRAND_FULL_EXIT_SCROLL = 104;
 const DASHBOARD_SIDEBAR_ITEMS = [
   ...MENU.map((item) => ({ ...item, section: '导航', icon: item.icon ?? item.key })),
   { key: 'data-maintenance', name: '数据维护', icon: 'target', section: '系统' },
-  { key: 'search-history', name: '搜索记录', icon: 'search', section: '系统', disabled: true },
 ];
 
 const MAINTENANCE_SIDEBAR_ITEMS = MAINTENANCE_MENU.map((item) => ({ ...item, section: '系统' }));

@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-08 14:11:07 CST
+ 更新内容: 维护页保存按钮改为仅有未保存修改时启用，移除页内返回入口和无实际变更按钮；
+          渠道新增大类支持保存前改名，新增来源默认归入当前选中大类。
+*/
+/*
  更新时间: 2026-07-08 12:09:25 CST
  更新内容: 让目标维护页左侧组织架构点击后同步过滤右侧年度目标表，避免只切换选中态但数据范围不变。
 */
@@ -281,13 +286,12 @@ function SaveBadge({ status }) {
   return <span className={`mnt-save-badge${dirty ? ' mnt-save-badge--dirty' : ''}`}>{status}</span>;
 }
 
-function MaintenanceToolbar({ activePage, status, year, saving, onYearChange, onBack, onDirty, onSave, onImport, onDownloadTemplate, onPageAction }) {
+function MaintenanceToolbar({ activePage, status, year, saving, canSave, onYearChange, onSave, onImport, onDownloadTemplate, onPageAction }) {
   const meta = getMaintenancePageMeta(activePage);
   const title = MAINTENANCE_TITLE_TEXT[activePage] ?? meta.title;
 
   function handleYearChange(nextYear) {
     onYearChange?.(nextYear);
-    onDirty();
   }
 
   const actions = {
@@ -296,7 +300,7 @@ function MaintenanceToolbar({ activePage, status, year, saving, onYearChange, on
         <GlassSelect className="mnt-control mnt-year-control" value={year} onChange={handleYearChange} aria-label="目标年份" disabled={saving} options={YEAR_OPTIONS} />
         <button className="mnt-btn" type="button" onClick={onDownloadTemplate} disabled={saving}>下载模板</button>
         <button className="mnt-btn" type="button" onClick={onImport} disabled={saving}>Excel导入</button>
-        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving}>{saving ? '保存中…' : '保存目标'}</button>
+        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving || !canSave}>{saving ? '保存中…' : '保存目标'}</button>
       </>
     ),
     'cost-maintenance': (
@@ -304,7 +308,7 @@ function MaintenanceToolbar({ activePage, status, year, saving, onYearChange, on
         <GlassSelect className="mnt-control mnt-year-control" value={year} onChange={handleYearChange} aria-label="成本维护年份" disabled={saving} options={YEAR_OPTIONS} />
         <button className="mnt-btn" type="button" onClick={onDownloadTemplate} disabled={saving}>下载模板</button>
         <button className="mnt-btn" type="button" onClick={onImport} disabled={saving}>Excel导入</button>
-        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving}>{saving ? '保存中…' : '保存成本'}</button>
+        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving || !canSave}>{saving ? '保存中…' : '保存成本'}</button>
       </>
     ),
     'org-maintenance': (
@@ -312,18 +316,16 @@ function MaintenanceToolbar({ activePage, status, year, saving, onYearChange, on
         <button className="mnt-btn" type="button" onClick={onDownloadTemplate} disabled={saving}>下载模板</button>
         <button className="mnt-btn" type="button" onClick={onImport} disabled={saving}>Excel导入</button>
         <button className="mnt-btn" type="button" onClick={() => onPageAction('addDepartment')} disabled={saving}>新增组织</button>
-        <button className="mnt-btn" type="button" onClick={onDirty} disabled={saving}>更新 BI 销售人员</button>
-        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving}>{saving ? '保存中…' : '保存组织'}</button>
+        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving || !canSave}>{saving ? '保存中…' : '保存组织'}</button>
       </>
     ),
     'channel-maintenance': (
       <>
         <button className="mnt-btn" type="button" onClick={onDownloadTemplate} disabled={saving}>下载模板</button>
         <button className="mnt-btn" type="button" onClick={onImport} disabled={saving}>Excel导入</button>
-        <button className="mnt-btn" type="button" onClick={onDirty} disabled={saving}>补齐默认来源</button>
         <button className="mnt-btn" type="button" onClick={() => onPageAction('addChannelGroup')} disabled={saving}>新增大类</button>
         <button className="mnt-btn" type="button" onClick={() => onPageAction('addSource')} disabled={saving}>新增来源</button>
-        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving}>{saving ? '保存中…' : '保存渠道'}</button>
+        <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving || !canSave}>{saving ? '保存中…' : '保存渠道'}</button>
       </>
     ),
   };
@@ -336,7 +338,6 @@ function MaintenanceToolbar({ activePage, status, year, saving, onYearChange, on
         </div>
         <div className="mnt-actions">
           {actions[activePage] ?? actions['target-maintenance']}
-          <button className="mnt-btn" type="button" onClick={onBack}>返回看板</button>
           <SaveBadge status={status} />
           {saving
             ? <span className="mnt-saving-hint">正在写入数据库…</span>
@@ -860,6 +861,9 @@ const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ mark
     ? sources
     : sources.filter((source) => selectedGroupIds.has(source.groupId));
   const channelGroupChoices = useMemo(() => makeSelectOptions(groups, '选择渠道大类'), [groups]);
+  const selectedNewGroup = groups.find((group) => (
+    String(group.id) === String(selectedGroup) && String(group.id).startsWith('new-channel-')
+  ));
 
   useImperativeHandle(ref, () => ({
     collect: () => {
@@ -870,26 +874,36 @@ const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ mark
     addSource,
   }), [groups, selectedGroup, sources]);
 
+  function updateGroup(groupId, patch) {
+    setGroups((currentGroups) => currentGroups.map((group) => (
+      String(group.id) === String(groupId) ? { ...group, ...patch } : group
+    )));
+    markDirty();
+  }
+
   function updateSource(uid, patch) {
-    setSources(sources.map((s) => (s._uid === uid ? { ...s, ...patch } : s)));
+    setSources((currentSources) => currentSources.map((s) => (s._uid === uid ? { ...s, ...patch } : s)));
     markDirty();
   }
 
   function addGroup(parentId = '') {
     const nextIndex = groups.length + 1;
+    const id = `new-channel-${nextIndex}`;
     setGroups([
       ...groups,
-      { id: `new-channel-${nextIndex}`, name: `新增大类 ${nextIndex}`, parentId, enabled: true },
+      { id, name: `新增大类 ${nextIndex}`, parentId, enabled: true },
     ]);
+    setSelectedGroup(id);
     markDirty();
   }
 
   function addSource() {
     newCounterRef.current += 1;
     const uid = `new-${newCounterRef.current}`;
+    const groupId = selectedGroup === 'all' ? (groups[0]?.id || '') : selectedGroup;
     setSources([
       ...sources,
-      { _uid: uid, _isNew: true, code: String(9000 + newCounterRef.current), name: `新增来源 ${newCounterRef.current}`, groupId: groups[0]?.id || '', enabled: true, excluded: false },
+      { _uid: uid, _isNew: true, code: String(9000 + newCounterRef.current), name: `新增来源 ${newCounterRef.current}`, groupId, enabled: true, excluded: false },
     ]);
     markDirty();
   }
@@ -907,6 +921,17 @@ const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ mark
     <section className="mnt-layout mnt-layout--channel">
       <Panel title="渠道大类" meta={`${groups.length} 个大类`} className="mnt-side-panel">
         <button className="mnt-btn mnt-local-action" type="button" onClick={() => addGroup(selectedGroup === 'all' ? '' : selectedGroup)}>新增大类</button>
+        {selectedNewGroup && (
+          <label className="mnt-channel-group-editor">
+            <span>新增大类名称</span>
+            <input
+              className="mnt-control"
+              value={selectedNewGroup.name}
+              onChange={(e) => updateGroup(selectedNewGroup.id, { name: e.target.value })}
+              aria-label="新增大类名称"
+            />
+          </label>
+        )}
         <MaintenanceSideNav nodes={channelGroupNavNodes} activeId={selectedGroup} onSelect={setSelectedGroup} />
       </Panel>
       <Panel title="卫瓴线索来源" meta={<SaveBadge status={status} />} className="mnt-main-panel">
@@ -967,7 +992,7 @@ const PAGE_RENDERERS = {
   'channel-maintenance': ChannelMaintenancePage,
 };
 
-export default function MaintenancePage({ activePage = 'target-maintenance', onBack }) {
+export default function MaintenancePage({ activePage = 'target-maintenance' }) {
   const [statusByPage, setStatusByPage] = useState({});
   const [importOpen, setImportOpen] = useState(false);
   const [year, setYear] = useState('2026');
@@ -980,6 +1005,7 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
   const pageRef = useRef(null);
   const Page = PAGE_RENDERERS[activePage] ?? TargetMaintenancePage;
   const status = statusByPage[activePage] ?? '未修改';
+  const dirty = status === '有未保存修改';
   const importConfig = getImportConfig(activePage);
 
   useEffect(() => {
@@ -1018,7 +1044,7 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
   function handleImported() {
     // 导入写库后重拉数据，让表单显示新行
     setDataVersion((v) => v + 1);
-    markDirty();
+    markSaved();
   }
 
   function handlePageAction(action) {
@@ -1031,7 +1057,7 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
   }
 
   async function handleSave() {
-    if (saving) return;
+    if (saving || !dirty) return;
     const collected = pageRef.current?.collect?.();
     const payload = {
       pageKey: activePage,
@@ -1090,9 +1116,8 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
         status={status}
         year={year}
         saving={saving}
+        canSave={dirty}
         onYearChange={setYear}
-        onBack={onBack}
-        onDirty={markDirty}
         onSave={handleSave}
         onImport={() => setImportOpen(true)}
         onDownloadTemplate={handleDownloadTemplate}

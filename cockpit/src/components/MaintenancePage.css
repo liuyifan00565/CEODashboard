@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 14:11:07 CST
+ 更新内容: 为维护页未修改状态的保存按钮增加禁用态，并补充新增渠道大类名称编辑区样式。
+*/
+/*
  更新时间: 2026-07-08 11:28:12 CST
  更新内容: 为维护页表格内的 GlassSelect 增加满宽布局，复用年份下拉组件时保持表格单元格宽度一致。
 */
@@ -235,6 +239,21 @@
   transform: translateY(-1px);
   border-color: var(--line-2);
   background: var(--glass-cell-hover);
+}
+
+.mnt-btn:disabled {
+  border-color: var(--line);
+  background: var(--glass-cell);
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: .58;
+  transform: none;
+}
+
+.mnt-btn:disabled:hover {
+  border-color: var(--line);
+  background: var(--glass-cell);
+  transform: none;
 }
 
 .mnt-btn:focus-visible,
@@ -1121,6 +1140,19 @@
 .mnt-local-action {
   align-self: flex-start;
   margin-bottom: 2px;
+}
+
+.mnt-channel-group-editor {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.mnt-channel-group-editor span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .mnt-edit-list {

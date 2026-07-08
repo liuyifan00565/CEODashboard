@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 14:11:07 CST
+ 更新内容: 回归测试同步移除搜索占位、维护页返回入口和无实际变更按钮，并锁定保存按钮脏状态启用与渠道新增归属。
+*/
+/*
  更新时间: 2026-07-08 14:08:42 CST
  更新内容: 回归测试锁定顶部品牌胶囊滚动折叠滞回阈值，并避免搜索命中标记随无关渲染重复刷新。
 */
@@ -508,7 +512,8 @@ test('uses a 220px icon and text management sidebar with restrained hierarchy', 
   const sidebarNameBlock = cssRuleBody(sidebarCss, '.sb-name');
   const sidebarSectionBlock = cssRuleBody(sidebarCss, '.sb-section-title');
 
-  assert.match(appSource, /const DASHBOARD_SIDEBAR_ITEMS = \[[\s\S]*?\.\.\.MENU\.map[\s\S]*?key: 'data-maintenance'[\s\S]*?section: '系统'[\s\S]*?name: '搜索记录'/);
+  assert.match(appSource, /const DASHBOARD_SIDEBAR_ITEMS = \[[\s\S]*?\.\.\.MENU\.map[\s\S]*?key: 'data-maintenance'[\s\S]*?section: '系统'/);
+  assert.doesNotMatch(appSource, /search-history|搜索记录/);
   assert.doesNotMatch(appSource, /channel-analysis/);
   assert.doesNotMatch(appSource, /customer-conversion/);
   assert.doesNotMatch(appSource, /name: '渠道分析'/);
@@ -543,7 +548,7 @@ test('renders data maintenance as four independent pages instead of the dashboar
   assert.match(appSource, /const isMaintenancePage = maintenanceMode;/);
   assert.match(appSource, /function handleMaintenanceBack\(\) \{[\s\S]*?setMaintenanceMode\(false\);[\s\S]*?setActiveMenu\('overview'\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?\}/);
   assert.match(appSource, /isMaintenancePage \? \([\s\S]*?<MaintenancePage activePage=\{activeMaintenanceMenu\} onBack=\{handleMaintenanceBack\} \/>[\s\S]*?\) : isComputePage \? \(/);
-  assert.match(maintenancePageSource, /export default function MaintenancePage\(\{ activePage = 'target-maintenance', onBack \}\)/);
+  assert.match(maintenancePageSource, /export default function MaintenancePage\(\{ activePage = 'target-maintenance' \}\)/);
   assert.match(maintenancePageSource, /const PAGE_RENDERERS = \{/);
   assert.match(maintenancePageSource, /'target-maintenance': TargetMaintenancePage/);
   assert.match(maintenancePageSource, /'cost-maintenance': CostMaintenancePage/);
@@ -553,16 +558,14 @@ test('renders data maintenance as four independent pages instead of the dashboar
 
 test('builds the target and cost maintenance pages from reference matrix content', () => {
   assert.match(maintenancePageSource, /MAINTENANCE_PERIOD_COLUMNS/);
-  assert.match(maintenancePageSource, /TARGET_MAINTENANCE_ORG_TREE/);
-  assert.match(maintenancePageSource, /TARGET_MAINTENANCE_ROWS/);
+  assert.match(maintenancePageSource, /import \{ fetchMaintenanceData \} from '\.\.\/data\/maintenanceLiveData\.js';/);
+  assert.match(maintenancePageSource, /case 'target-maintenance': return \{ rows: d\.rows, orgTree: d\.orgTree \};/);
   assert.match(maintenancePageSource, /下载模板/);
   assert.match(maintenancePageSource, /Excel导入/);
   assert.match(maintenancePageSource, /保存目标/);
   assert.match(maintenancePageSource, /年度目标/);
   assert.match(maintenancePageSource, /目标维护/);
-  assert.match(maintenancePageSource, /COST_MAINTENANCE_CHANNELS/);
-  assert.match(maintenancePageSource, /COST_MAINTENANCE_ROWS/);
-  assert.match(maintenancePageSource, /LABOR_COST_MAINTENANCE_ROWS/);
+  assert.match(maintenancePageSource, /case 'cost-maintenance': return \{ costChannels: d\.channels, costRows: d\.rows, laborRows: d\.laborRows \};/);
   assert.match(maintenancePageSource, /渠道成本维护/);
   assert.match(maintenancePageSource, /人力成本维护/);
   assert.match(maintenancePageSource, /保存成本/);
@@ -619,18 +622,20 @@ test('renders target maintenance as a single wide horizontal matrix with wider c
 });
 
 test('builds the org and channel maintenance pages from reference tree and table content', () => {
-  assert.match(maintenancePageSource, /ORG_MAINTENANCE_DEPARTMENTS/);
-  assert.match(maintenancePageSource, /ORG_MAINTENANCE_USERS/);
+  assert.match(maintenancePageSource, /case 'org-maintenance': return \{ departments: d\.departments, users: d\.users \};/);
   assert.match(maintenancePageSource, /新增组织/);
-  assert.match(maintenancePageSource, /更新 BI 销售人员/);
+  assert.doesNotMatch(maintenancePageSource, /更新 BI 销售人员/);
   assert.match(maintenancePageSource, /BI组织架构/);
   assert.match(maintenancePageSource, /BI人员范围/);
   assert.match(maintenancePageSource, /卫瓴ID/);
-  assert.match(maintenancePageSource, /CHANNEL_MAINTENANCE_GROUPS/);
-  assert.match(maintenancePageSource, /CHANNEL_MAINTENANCE_SOURCES/);
-  assert.match(maintenancePageSource, /补齐默认来源/);
+  assert.match(maintenancePageSource, /case 'channel-maintenance': return \{ groups: d\.groups, sources: d\.sources \};/);
+  assert.doesNotMatch(maintenancePageSource, /补齐默认来源/);
   assert.match(maintenancePageSource, /新增大类/);
   assert.match(maintenancePageSource, /新增来源/);
+  assert.match(maintenancePageSource, /新增大类名称/);
+  assert.match(maintenancePageSource, /const selectedNewGroup = groups\.find/);
+  assert.match(maintenancePageSource, /setSelectedGroup\(id\);/);
+  assert.match(maintenancePageSource, /const groupId = selectedGroup === 'all' \? \(groups\[0\]\?\.id \|\| ''\) : selectedGroup;/);
   assert.match(maintenancePageSource, /卫瓴线索来源/);
 });
 
@@ -643,7 +648,7 @@ test('uses one organization-style side navigation across all maintenance pages',
   assert.match(maintenancePageSource, /function MaintenanceSideNav\(\{ nodes, activeId, onSelect \}\)/);
   assert.match(maintenancePageSource, /function MaintenanceSideNavNode\(\{ node, activeId, onSelect \}\)/);
   assert.match(maintenancePageSource, /function buildMaintenanceNavTree\(items, \{ rootId = 'all', countText = '项' \} = \{\}\) \{/);
-  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{\[TARGET_MAINTENANCE_ORG_TREE\]\} activeId=\{selectedOrg\} onSelect=\{setSelectedOrg\} \/>/);
+  assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{orgTree \? \[orgTree\] : \[\]\} activeId=\{selectedOrg\} onSelect=\{setSelectedOrg\} \/>/);
   assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{costNavNodes\} activeId=\{selectedChannel\} onSelect=\{setSelectedChannel\} \/>/);
   assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{departmentNavNodes\} activeId=\{selectedDepartment\} onSelect=\{setSelectedDepartment\} \/>/);
   assert.match(maintenancePageSource, /<MaintenanceSideNav nodes=\{channelGroupNavNodes\} activeId=\{selectedGroup\} onSelect=\{setSelectedGroup\} \/>/);
@@ -697,7 +702,11 @@ test('keeps data maintenance cards buttons and controls on the dashboard glass s
   assert.match(maintenancePageCss, /\.mnt-title-scope \{[\s\S]*?display:\s*inline;[\s\S]*?font-size:\s*12px;/);
   assert.doesNotMatch(maintenancePageCss, /\.mnt-toolbar \.mnt-title-block span \{/);
   assert.match(maintenancePageSource, /aria-label="目标年份"[\s\S]*?options=\{YEAR_OPTIONS\} \/>\s*<button className="mnt-btn" type="button" onClick=\{onDownloadTemplate\} disabled=\{saving\}>下载模板<\/button>/);
-  assert.match(maintenancePageSource, /<div className="mnt-actions">\s*\{actions\[activePage\] \?\? actions\['target-maintenance'\]\}\s*<button className="mnt-btn" type="button" onClick=\{onBack\}>返回看板<\/button>\s*<SaveBadge status=\{status\} \/>/);
+  assert.match(maintenancePageSource, /const dirty = status === '有未保存修改';/);
+  assert.match(maintenancePageSource, /disabled=\{saving \|\| !canSave\}>\{saving \? '保存中…' : '保存目标'\}<\/button>/);
+  assert.match(maintenancePageSource, /if \(saving \|\| !dirty\) return;/);
+  assert.match(maintenancePageSource, /<div className="mnt-actions">\s*\{actions\[activePage\] \?\? actions\['target-maintenance'\]\}\s*<SaveBadge status=\{status\} \/>/);
+  assert.doesNotMatch(maintenancePageSource, /返回看板/);
   assert.doesNotMatch(maintenancePageSource, /<div className="mnt-actions">\s*<SaveBadge/);
   assert.match(toolbarBlock, /min-height:\s*42px;/);
   assert.match(toolbarBlock, /padding:\s*6px 10px;/);
