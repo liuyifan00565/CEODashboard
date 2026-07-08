@@ -1,5 +1,8 @@
 # Dashboard Data Aggregation
 
+更新时间: 2026-07-08 11:45:00 CST
+更新内容: 首页目标聚合与目标维护口径对齐，只统计启用销售且有部门的人员目标；停用/非销售/无部门人员目标不再进入分母。
+
 更新时间: 2026-07-07 14:05:00 CST
 更新内容: 补充算力 overview 客户侧指标、开户环比/较昨日、续费上月、月时间进度的真实数据来源，移除硬编码 0 的占位说明。
 
@@ -11,8 +14,8 @@
 
 - 本月回款、年度累计回款、月趋势实际值：优先使用 `fact_revenue_daily.recovered_amount_yuan`，按 `stat_date` 的年月聚合。
 - 当 `fact_revenue_daily` 没有数据时，回退使用 `fact_sales_member_monthly.recovered_amount_yuan`。
-- 本月目标、年度目标、月趋势目标：使用 `biz_target_monthly.target_amount_yuan`。
-- 渠道目标：`biz_target_monthly.staff_id` 关联 `dim_staff.channel_key` 后按渠道汇总。
+- 本月目标、年度目标、月趋势目标：使用 `biz_target_monthly.target_amount_yuan`，仅统计关联到 `dim_staff` 且满足 `is_sales=1`、`is_enabled=1`、`department_id IS NOT NULL` 的人员目标。
+- 渠道目标：`biz_target_monthly.staff_id` 关联 `dim_staff.channel_key` 后按渠道汇总，同样只统计启用销售且有部门的人员。
 - 销售人员明细：使用 `fact_sales_member_monthly`，只作为人员完成明细，不作为公司级目标分母。
 
 ## 版本与续费

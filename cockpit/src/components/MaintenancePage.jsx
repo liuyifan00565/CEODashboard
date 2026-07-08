@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-08 11:45:00 CST
+ 更新内容: 维护页保存 payload 补齐 departments/groups；新增组织/渠道大类可落库并映射给人员/来源；
+          渠道来源“启用/排除”改为互斥状态，保存时真实写入 is_excluded。
+*/
+/*
  更新时间: 2026-07-08 11:28:12 CST
  更新内容: 将组织维护、渠道维护表格内的原生下拉统一替换为 GlassSelect，并让组织归属选择改为受控本地状态。
 */
@@ -84,7 +89,9 @@ import {
   buildTargetSaveRows,
   buildCostSaveRows,
   buildOrgSaveRows,
+  buildDepartmentSaveRows,
   buildChannelSaveRows,
+  buildChannelGroupSaveRows,
 } from '../lib/maintenanceSaveBuilders.js';
 import MaintenanceImportDialog from './MaintenanceImportDialog.jsx';
 import GlassSelect from './GlassSelect.jsx';
@@ -234,7 +241,7 @@ function SaveBadge({ status }) {
   return <span className={`mnt-save-badge${dirty ? ' mnt-save-badge--dirty' : ''}`}>{status}</span>;
 }
 
-function MaintenanceToolbar({ activePage, status, year, saving, onYearChange, onBack, onDirty, onSave, onImport, onDownloadTemplate }) {
+function MaintenanceToolbar({ activePage, status, year, saving, onYearChange, onBack, onDirty, onSave, onImport, onDownloadTemplate, onPageAction }) {
   const meta = getMaintenancePageMeta(activePage);
   const title = MAINTENANCE_TITLE_TEXT[activePage] ?? meta.title;
 
@@ -264,7 +271,7 @@ function MaintenanceToolbar({ activePage, status, year, saving, onYearChange, on
       <>
         <button className="mnt-btn" type="button" onClick={onDownloadTemplate} disabled={saving}>下载模板</button>
         <button className="mnt-btn" type="button" onClick={onImport} disabled={saving}>Excel导入</button>
-        <button className="mnt-btn" type="button" onClick={onDirty} disabled={saving}>新增组织</button>
+        <button className="mnt-btn" type="button" onClick={() => onPageAction('addDepartment')} disabled={saving}>新增组织</button>
         <button className="mnt-btn" type="button" onClick={onDirty} disabled={saving}>更新 BI 销售人员</button>
         <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving}>{saving ? '保存中…' : '保存组织'}</button>
       </>
@@ -274,8 +281,8 @@ function MaintenanceToolbar({ activePage, status, year, saving, onYearChange, on
         <button className="mnt-btn" type="button" onClick={onDownloadTemplate} disabled={saving}>下载模板</button>
         <button className="mnt-btn" type="button" onClick={onImport} disabled={saving}>Excel导入</button>
         <button className="mnt-btn" type="button" onClick={onDirty} disabled={saving}>补齐默认来源</button>
-        <button className="mnt-btn" type="button" onClick={onDirty} disabled={saving}>新增大类</button>
-        <button className="mnt-btn" type="button" onClick={onDirty} disabled={saving}>新增来源</button>
+        <button className="mnt-btn" type="button" onClick={() => onPageAction('addChannelGroup')} disabled={saving}>新增大类</button>
+        <button className="mnt-btn" type="button" onClick={() => onPageAction('addSource')} disabled={saving}>新增来源</button>
         <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving}>{saving ? '保存中…' : '保存渠道'}</button>
       </>
     ),
@@ -672,9 +679,13 @@ const OrgMaintenancePage = forwardRef(function OrgMaintenancePage({ markDirty, s
     count: users.filter((user) => user.deptId === dept.id && user.enabled).length,
     countText: '人',
   })), [departments, users]);
+  const rootDepartmentId = useMemo(
+    () => departments.find((dept) => !dept.parentId)?.id ?? departments[0]?.id ?? 'headquarters',
+    [departments],
+  );
   const departmentNavNodes = useMemo(
-    () => buildMaintenanceNavTree(departmentNavItems, { rootId: 'headquarters', countText: '人' }),
-    [departmentNavItems]
+    () => buildMaintenanceNavTree(departmentNavItems, { rootId: rootDepartmentId, countText: '人' }),
+    [departmentNavItems, rootDepartmentId]
   );
   const selectedDepartmentIds = useMemo(
     () => getDescendantIds(departments, selectedDepartment),
@@ -686,8 +697,9 @@ const OrgMaintenancePage = forwardRef(function OrgMaintenancePage({ markDirty, s
   const departmentChoices = useMemo(() => makeSelectOptions(departments), [departments]);
 
   useImperativeHandle(ref, () => ({
-    collect: () => ({ rows: buildOrgSaveRows(users, draftRef.current), laborRows: [], deletions: [] }),
-  }), [users]);
+    collect: () => ({ rows: buildOrgSaveRows(users, draftRef.current), departments: buildDepartmentSaveRows(departments), laborRows: [], deletions: [] }),
+    addDepartment,
+  }), [departments, users]);
 
   function editField(userId, field, value) {
     draftRef.current[`${userId}|${field}`] = value;
@@ -701,7 +713,7 @@ const OrgMaintenancePage = forwardRef(function OrgMaintenancePage({ markDirty, s
     const nextIndex = departments.length + 1;
     setDepartments([
       ...departments,
-      { id: `new-dept-${nextIndex}`, name: `新增组织 ${nextIndex}`, parentId: 'headquarters', enabled: true },
+      { id: `new-dept-${nextIndex}`, name: `新增组织 ${nextIndex}`, parentId: rootDepartmentId, enabled: true },
     ]);
     markDirty();
   }
@@ -803,9 +815,11 @@ const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ mark
   useImperativeHandle(ref, () => ({
     collect: () => {
       const r = buildChannelSaveRows(sources, deletedCodesRef.current);
-      return { rows: r.rows, laborRows: [], deletions: r.deletions };
+      return { rows: r.rows, groups: buildChannelGroupSaveRows(groups), laborRows: [], deletions: r.deletions };
     },
-  }), [sources]);
+    addChannelGroup: () => addGroup(selectedGroup === 'all' ? '' : selectedGroup),
+    addSource,
+  }), [groups, selectedGroup, sources]);
 
   function updateSource(uid, patch) {
     setSources(sources.map((s) => (s._uid === uid ? { ...s, ...patch } : s)));
@@ -876,13 +890,13 @@ const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ mark
                   </td>
                   <td>
                     <label className="mnt-check">
-                      <input type="checkbox" checked={!!source.enabled} onChange={(e) => updateSource(source._uid, { enabled: e.target.checked })} />
+                      <input type="checkbox" checked={!!source.enabled} onChange={(e) => updateSource(source._uid, { enabled: e.target.checked, excluded: !e.target.checked })} />
                       启用
                     </label>
                   </td>
                   <td>
                     <label className="mnt-check">
-                      <input type="checkbox" checked={!!source.excluded} onChange={(e) => updateSource(source._uid, { excluded: e.target.checked })} />
+                      <input type="checkbox" checked={!!source.excluded} onChange={(e) => updateSource(source._uid, { excluded: e.target.checked, enabled: !e.target.checked })} />
                       排除
                     </label>
                   </td>
@@ -958,6 +972,15 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
     markDirty();
   }
 
+  function handlePageAction(action) {
+    const handler = pageRef.current?.[action];
+    if (typeof handler === 'function') {
+      handler();
+      return;
+    }
+    markDirty();
+  }
+
   async function handleSave() {
     if (saving) return;
     const collected = pageRef.current?.collect?.();
@@ -966,9 +989,11 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
       year,
       rows: collected?.rows ?? [],
       laborRows: collected?.laborRows ?? [],
+      departments: collected?.departments ?? [],
+      groups: collected?.groups ?? [],
       deletions: collected?.deletions ?? [],
     };
-    if (!payload.rows.length && !payload.laborRows.length && !payload.deletions.length) {
+    if (!payload.rows.length && !payload.laborRows.length && !payload.departments.length && !payload.groups.length && !payload.deletions.length) {
       markSaved();
       return;
     }
@@ -1022,6 +1047,7 @@ export default function MaintenancePage({ activePage = 'target-maintenance', onB
         onSave={handleSave}
         onImport={() => setImportOpen(true)}
         onDownloadTemplate={handleDownloadTemplate}
+        onPageAction={handlePageAction}
       />
       {loading && <div className="mnt-state-line">正在加载真实数据库…</div>}
       {error && <div className="mnt-state-line mnt-state-line--error">加载失败：{error}</div>}

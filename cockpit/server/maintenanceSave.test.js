@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 11:45:00 CST
+ 更新内容: 单测同步维护联动新口径：目标保存需启用销售且有部门；组织/渠道新增维表会映射临时 ID 后再保存人员/来源。
+*/
+/*
  更新时间: 2026-07-07 14:30:00 CST
  更新内容: 新增 maintenanceSave saver 单测：用假 connection 驱动真实 saver，断言"部分列 upsert"
           语义——target UPDATE 不含 opening/order；org UPDATE 不含 external_bi_user_id；
@@ -38,7 +42,11 @@ function makeConn(selectFn) {
 }
 
 test('saveTarget: UPDATE 只写 target_amount_yuan，不碰 opening/order', async () => {
-  const { conn, execs } = makeConn(() => [{ target_id: 999 }]);
+  const { conn, execs } = makeConn((sql) => {
+    if (sql.includes('FROM dim_staff')) return [{ is_sales: 1, is_enabled: 1, department_id: 1002 }];
+    if (sql.includes('FROM biz_target_monthly')) return [{ target_id: 999 }];
+    return [];
+  });
   const r = await saveTarget(conn, [{ staff_id: 2001, year_month: '2026-03', target_amount_wan: 150 }]);
   assert.equal(r.written, 1);
   const update = execs.find((e) => e.sql.startsWith('UPDATE'));
@@ -49,7 +57,11 @@ test('saveTarget: UPDATE 只写 target_amount_yuan，不碰 opening/order', asyn
 });
 
 test('saveTarget: 不存在则 INSERT，opening/order 默认 0', async () => {
-  const { conn, execs } = makeConn(() => []);
+  const { conn, execs } = makeConn((sql) => {
+    if (sql.includes('FROM dim_staff')) return [{ is_sales: 1, is_enabled: 1, department_id: 1002 }];
+    if (sql.includes('COALESCE(MAX')) return [{ nextId: 10001 }];
+    return [];
+  });
   await saveTarget(conn, [{ staff_id: 2001, year_month: '2026-03', target_amount_wan: 12 }]);
   const ins = execs.find((e) => e.sql.startsWith('INSERT'));
   assert.ok(ins);
@@ -64,6 +76,17 @@ test('saveTarget: 非法 staff_id/年份被跳过', async () => {
   ]);
   assert.equal(r.written, 0);
   assert.equal(r.skipped, 2);
+  assert.equal(execs.length, 0);
+});
+
+test('saveTarget: 停用人员被跳过', async () => {
+  const { conn, execs } = makeConn((sql) => {
+    if (sql.includes('FROM dim_staff')) return [{ is_sales: 1, is_enabled: 0, department_id: 1002 }];
+    return [];
+  });
+  const r = await saveTarget(conn, [{ staff_id: 2001, year_month: '2026-03', target_amount_wan: 1 }]);
+  assert.equal(r.written, 0);
+  assert.equal(r.skipped, 1);
   assert.equal(execs.length, 0);
 });
 
@@ -112,6 +135,25 @@ test('saveOrg: UPDATE 只写 department_id/is_sales/is_enabled，不碰 external
   assert.doesNotMatch(update.sql, /external_bi_user_id/);
 });
 
+test('saveOrg: 新增组织后映射临时 department_id 给人员', async () => {
+  const { conn, execs } = makeConn((sql) => {
+    if (sql === 'SELECT department_id FROM dim_department') return [{ department_id: 1001 }];
+    if (sql.includes('COALESCE(MAX')) return [{ nextId: 1100 }];
+    return [];
+  });
+  const r = await saveOrg(
+    conn,
+    [{ staff_id: 2001, department_id: 'new-dept-1', is_sales: true, is_enabled: true }],
+    [{ department_id: 'new-dept-1', department_name: '新销售组', parent_id: '1001', is_enabled: 1 }],
+  );
+  assert.equal(r.written, 2);
+  const deptInsert = execs.find((e) => e.sql.startsWith('INSERT INTO dim_department'));
+  assert.ok(deptInsert);
+  assert.equal(deptInsert.params[0], 1100);
+  const staffUpdate = execs.find((e) => e.sql.startsWith('UPDATE dim_staff'));
+  assert.equal(staffUpdate.params[0], '1100');
+});
+
 test('saveChannel: 已存在来源 UPDATE source_name/channel_id/is_excluded', async () => {
   const { conn, execs } = makeConn((sql) => {
     if (sql.includes('SELECT channel_id FROM dim_channel')) return [{ channel_id: 3001 }];
@@ -157,4 +199,25 @@ test('saveChannel: 合成大类 channel_id 被跳过', async () => {
   assert.equal(r.written, 0);
   assert.equal(r.skipped, 1);
   assert.equal(execs.length, 0);
+});
+
+test('saveChannel: 新增渠道大类后映射临时 channel_id 给来源', async () => {
+  const { conn, execs } = makeConn((sql) => {
+    if (sql === 'SELECT channel_id FROM dim_channel') return [{ channel_id: 3001 }];
+    if (sql.includes('COALESCE(MAX') && sql.includes('dim_channel')) return [{ nextId: 3100 }];
+    if (sql.includes('COALESCE(MAX') && sql.includes('dim_channel_source')) return [{ nextId: 7100 }];
+    return [];
+  });
+  const r = await saveChannel(
+    conn,
+    [{ source_code: '9002', source_name: '新大类来源', channel_id: 'new-channel-1', is_excluded: 0 }],
+    [],
+    [{ channel_id: 'new-channel-1', channel_name: '新渠道', parent_id: '', is_enabled: 1 }],
+  );
+  assert.equal(r.written, 2);
+  const groupInsert = execs.find((e) => e.sql.startsWith('INSERT INTO dim_channel '));
+  assert.ok(groupInsert);
+  assert.equal(groupInsert.params[0], 3100);
+  const sourceInsert = execs.find((e) => e.sql.startsWith('INSERT INTO dim_channel_source'));
+  assert.equal(sourceInsert.params[3], '3100');
 });

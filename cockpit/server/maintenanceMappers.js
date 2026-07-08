@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-08 11:45:00 CST
+ 更新内容: 维护快照补齐联动口径：目标人员只取启用销售且有部门；成本页空年份默认生成 sales/marketing 人力成本行；
+          渠道/成本导航保留 dim_channel.parent_id，新增渠道大类后可形成树。
+*/
+/*
  更新时间: 2026-07-08
  更新内容: buildTargetSnapshot 的 sales 过滤补 department_id 非空判断，与读取口径一致：
           目标维护只认「销售 + 有部门」的人员，防御性兜底，避免无部门人员混入目标行/组织树人数。
@@ -145,7 +150,11 @@ function descendantDeptIds(departments, deptId) {
  * @returns {{orgTree, rows}}
  */
 export function buildTargetSnapshot({ departments = [], staff = [], targets = [], revenue = [] } = {}) {
-  const sales = staff.filter((s) => (s.is_sales === 1 || s.is_sales === true || Number(s.is_sales) === 1) && s.department_id != null);
+  const sales = staff.filter((s) => (
+    (s.is_sales === 1 || s.is_sales === true || Number(s.is_sales) === 1)
+    && s.department_id != null
+    && Number(s.is_enabled) === 1
+  ));
 
   // 按人按月索引
   const targetByStaff = new Map(); // staff_id -> {m01..target_wan}
@@ -221,6 +230,7 @@ export function buildTargetSnapshot({ departments = [], staff = [], targets = []
  * @returns {{channels, rows, laborRows}}
  */
 const LABOR_NAME = { sales: '销售部人力成本', marketing: '市场部人力成本', delivery: '实施部人力成本' };
+const DEFAULT_LABOR_TYPES = ['sales', 'marketing'];
 
 export function buildCostSnapshot({ channels = [], costs = [], revenue = [], labor = [] } = {}) {
   const costByChannel = new Map();
@@ -267,7 +277,13 @@ export function buildCostSnapshot({ channels = [], costs = [], revenue = [], lab
 
   const navChannels = [
     { id: 'all', name: '全部渠道', kind: '全部', parentId: '' },
-    ...channels.map((c) => ({ id: String(c.channel_id), name: c.channel_name, kind: '明细', parentId: 'all' })),
+    ...channels.map((c) => ({
+      id: String(c.channel_id),
+      name: c.channel_name,
+      kind: '明细',
+      parentId: c.parent_id != null ? String(c.parent_id) : 'all',
+      enabled: Number(c.is_enabled) === 1,
+    })),
   ];
 
   // 人力成本按 cost_type 聚合
@@ -278,11 +294,15 @@ export function buildCostSnapshot({ channels = [], costs = [], revenue = [], lab
     if (!laborByType.has(l.cost_type)) laborByType.set(l.cost_type, {});
     laborByType.get(l.cost_type)[mk] = roundWan(l.amount_yuan);
   });
-  const laborRows = [...laborByType.entries()].map(([costType, bucket]) => ({
+  const laborTypes = [...new Set([...DEFAULT_LABOR_TYPES, ...laborByType.keys()])];
+  const laborRows = laborTypes.map((costType) => {
+    const bucket = laborByType.get(costType) || {};
+    return {
     id: `labor-${costType}`,
     name: LABOR_NAME[costType] || `${costType} 人力成本`,
     periods: buildLaborPeriods(ALL_MONTH_KEYS.map((mk) => bucket[mk] || 0)),
-  }));
+    };
+  });
 
   return { channels: navChannels, rows, laborRows };
 }
@@ -320,7 +340,7 @@ export function buildChannelSnapshot({ channels = [], sources = [] } = {}) {
   const groups = channels.map((c) => ({
     id: String(c.channel_id),
     name: c.channel_name,
-    parentId: '',
+    parentId: c.parent_id != null ? String(c.parent_id) : '',
     enabled: Number(c.is_enabled) === 1,
   }));
   const srcs = sources.map((s) => ({

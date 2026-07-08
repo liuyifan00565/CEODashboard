@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 11:45:00 CST
+ 更新内容: 首页目标聚合与目标维护口径对齐，只统计启用销售且有部门的 staff 目标，避免组织维护停用/转非销售后旧目标继续进入分母。
+*/
+/*
  更新时间: 2026-07-07 15:25:00 CST
  更新内容: 移除经营总览 monthJudgement / annualJudgement 摘要字段及仅服务于该摘要的 riskName 局部变量，服务端不再产出模板拼接的摘要句。
 */
@@ -486,27 +490,39 @@ export async function buildDashboardSnapshot(connection) {
       WHERE \`year_month\` <= ? AND \`year_month\` LIKE CONCAT(?, '%')
     `, [lastYearMonth, Number(latestYear) - 1]),
     queryRows(connection, `
-      SELECT \`year_month\`,
-             ROUND(SUM(target_amount_yuan) / 10000, 2) AS target_wan,
-             SUM(target_opening_count) AS opening_target,
-             SUM(target_order_count) AS order_target
-      FROM biz_target_monthly
-      WHERE \`year_month\` LIKE CONCAT(?, '%')
-      GROUP BY \`year_month\`
-      ORDER BY \`year_month\`
+      SELECT t.\`year_month\`,
+             ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan,
+             SUM(t.target_opening_count) AS opening_target,
+             SUM(t.target_order_count) AS order_target
+      FROM biz_target_monthly t
+      JOIN dim_staff s ON s.staff_id = t.staff_id
+      WHERE t.\`year_month\` LIKE CONCAT(?, '%')
+        AND s.is_sales = 1
+        AND s.department_id IS NOT NULL
+        AND s.is_enabled = 1
+      GROUP BY t.\`year_month\`
+      ORDER BY t.\`year_month\`
     `, [latestYear]),
     queryRows(connection, `
       SELECT s.channel_key, ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
       FROM biz_target_monthly t
       JOIN dim_staff s ON s.staff_id = t.staff_id
-      WHERE t.\`year_month\` = ? AND s.channel_key IS NOT NULL
+      WHERE t.\`year_month\` = ?
+        AND s.channel_key IS NOT NULL
+        AND s.is_sales = 1
+        AND s.department_id IS NOT NULL
+        AND s.is_enabled = 1
       GROUP BY s.channel_key
     `, [latestMonth]),
     queryRows(connection, `
       SELECT s.channel_key, ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
       FROM biz_target_monthly t
       JOIN dim_staff s ON s.staff_id = t.staff_id
-      WHERE t.\`year_month\` LIKE CONCAT(?, '%') AND s.channel_key IS NOT NULL
+      WHERE t.\`year_month\` LIKE CONCAT(?, '%')
+        AND s.channel_key IS NOT NULL
+        AND s.is_sales = 1
+        AND s.department_id IS NOT NULL
+        AND s.is_enabled = 1
       GROUP BY s.channel_key
     `, [latestYear]),
     queryRows(connection, `

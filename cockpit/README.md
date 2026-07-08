@@ -1,5 +1,8 @@
 # CEO 经营驾驶舱 React Demo
 
+更新时间: 2026-07-08 11:45:00 CST
+更新内容: 首页目标口径继续与数据维护同步，只统计启用销售且有部门的人员目标；补充组织/渠道维护新增维表联动说明。
+
 更新时间: 2026-07-07 12:18:57 CST
 更新内容: 首页目标口径统一到 biz_target_monthly，版本销售聚合说明补充续费事实表预聚合规则。
 
@@ -60,9 +63,11 @@ DB_PASSWORD=your-mysql-password
 DB_NAME=ceo_dashboard
 ```
 
-当前首页回款实际值优先来自 `fact_revenue_daily.recovered_amount_yuan`，按月份和渠道聚合；当日级回款表没有数据时，才回退到 `fact_sales_member_monthly.recovered_amount_yuan`。月目标、年度目标和渠道目标统一来自 `biz_target_monthly.target_amount_yuan`，渠道目标通过 `biz_target_monthly.staff_id` 关联 `dim_staff.channel_key` 汇总；销售人员明细仍来自 `fact_sales_member_monthly`。导入完整数据库后，年度累计实际会按当年 1 月到当前月的日级回款累计，不再只等于单月销售人员月表回款，也不会显示旧 mock。
+当前首页回款实际值优先来自 `fact_revenue_daily.recovered_amount_yuan`，按月份和渠道聚合；当日级回款表没有数据时，才回退到 `fact_sales_member_monthly.recovered_amount_yuan`。月目标、年度目标和渠道目标统一来自 `biz_target_monthly.target_amount_yuan`，且只统计关联到 `dim_staff` 后满足 `is_sales=1`、`is_enabled=1`、`department_id IS NOT NULL` 的人员目标；渠道目标再按 `dim_staff.channel_key` 汇总。销售人员明细仍来自 `fact_sales_member_monthly`。导入完整数据库后，年度累计实际会按当年 1 月到当前月的日级回款累计，不再只等于单月销售人员月表回款，也不会显示旧 mock。
 
 渠道完成的实际回款优先来自 `dim_channel` + `fact_revenue_daily`，渠道投入来自 `biz_channel_cost_monthly`，人力成本来自 `biz_labor_cost_monthly`。版本销售先按 `fact_version_sales_daily` 聚合版本套数和回款，续费数据先按 `fact_renewal_daily.version_id` 聚合后再关联版本销售，避免一对多 JOIN 放大销售金额。开户、算力和交付模块分别读取 `fact_opening_account_daily`、算力事实表和 `fact_delivery_order`/`biz_delivery_target_monthly`。
+
+数据维护页内保存支持新增组织和渠道大类：前端临时 ID 会在后端先落 `dim_department` / `dim_channel`，再映射给人员或来源；渠道来源的“启用”按 `is_excluded` 的反向视图保存。
 
 ## 经营总览口径
 

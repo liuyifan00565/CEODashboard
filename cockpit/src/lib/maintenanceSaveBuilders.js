@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 11:45:00 CST
+ 更新内容: 保存构建器新增组织/渠道大类 payload，支持新增维表落库；渠道来源启用=false 会转换为 is_excluded=1。
+*/
+/*
  更新时间: 2026-07-07 14:30:00 CST
  更新内容: 新增数据维护页内编辑保存的纯函数行构建器（target/cost+labor/org/channel）。
           只把 draftRef 里出现过的已编辑格转成保存接口所需行，过滤 summary/department 行，
@@ -123,6 +127,36 @@ export function buildOrgSaveRows(users, draft) {
 }
 
 /**
+ * 组织维护：把本地新增组织（new-dept-*）转成后端可落库行。
+ * @returns {Array<{department_id, department_name, parent_id, is_enabled}>}
+ */
+export function buildDepartmentSaveRows(departments) {
+  return (Array.isArray(departments) ? departments : [])
+    .filter((dept) => dept && String(dept.id || '').startsWith('new-dept-'))
+    .map((dept) => ({
+      department_id: String(dept.id),
+      department_name: String(dept.name ?? ''),
+      parent_id: dept.parentId == null || dept.parentId === '' ? null : String(dept.parentId),
+      is_enabled: dept.enabled == null ? 1 : (dept.enabled ? 1 : 0),
+    }));
+}
+
+/**
+ * 渠道维护：把本地新增渠道大类（new-channel-*）转成后端可落库行。
+ * @returns {Array<{channel_id, channel_name, parent_id, is_enabled}>}
+ */
+export function buildChannelGroupSaveRows(groups) {
+  return (Array.isArray(groups) ? groups : [])
+    .filter((group) => group && String(group.id || '').startsWith('new-channel-'))
+    .map((group) => ({
+      channel_id: String(group.id),
+      channel_name: String(group.name ?? ''),
+      parent_id: group.parentId == null || group.parentId === '' ? null : String(group.parentId),
+      is_enabled: group.enabled == null ? 1 : (group.enabled ? 1 : 0),
+    }));
+}
+
+/**
  * 渠道维护：从受控 sources state 映射成保存行 + 删除列表。
  * @param {Array} sources 当前 sources 本地 state（含新增/编辑后的最新值）
  * @param {string[]} deletedCodes 待删除的 source_code 列表
@@ -133,7 +167,7 @@ export function buildChannelSaveRows(sources, deletedCodes) {
     source_code: String(s.code ?? ''),
     source_name: String(s.name ?? ''),
     channel_id: s.groupId == null || s.groupId === '' ? null : String(s.groupId),
-    is_excluded: s.excluded ? 1 : 0,
+    is_excluded: s.excluded || s.enabled === false ? 1 : 0,
   }));
   return { rows, deletions: Array.isArray(deletedCodes) ? deletedCodes.filter(Boolean) : [] };
 }

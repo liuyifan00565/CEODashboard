@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 11:45:00 CST
+ 更新内容: 增加首页目标 SQL 口径回归，要求目标分母只统计启用销售且有部门的 staff 目标。
+*/
+/*
  更新时间: 2026-07-07 12:18:57 CST
  更新内容: 增加目标维护表口径和版本续费预聚合测试，防止真实库聚合被销售月表或续费 JOIN 放大。
 */
@@ -155,4 +159,13 @@ test('pre-aggregates renewal facts before joining version sales', () => {
 
   assert.doesNotMatch(source, /LEFT JOIN fact_renewal_daily r ON r\.version_id = f\.version_id/);
   assert.match(source, /FROM fact_renewal_daily[\s\S]*GROUP BY version_id/);
+});
+
+test('filters maintained targets to active sales with departments', () => {
+  const source = readFileSync(new URL('./dashboardData.js', import.meta.url), 'utf8');
+
+  assert.match(source, /JOIN dim_staff s ON s\.staff_id = t\.staff_id/);
+  assert.match(source, /s\.is_sales = 1/);
+  assert.match(source, /s\.department_id IS NOT NULL/);
+  assert.match(source, /s\.is_enabled = 1/);
 });

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 11:45:00 CST
+ 更新内容: 目标导入新增 is_enabled 校验，只有启用销售且有部门、部门名一致的人员才能写入目标。
+*/
+/*
  更新时间: 2026-07-08
  更新内容: persistTarget 收紧口径：人员须 is_sales=1 且有部门，且 Excel「所属组织」与实际部门一致才写入；
           无部门/非销售/部门不符的行 skipped 并给出明确原因。新增 resolveTargetStaff 连带取部门信息。
@@ -70,7 +74,7 @@ async function resolveByName(connection, table, nameCol, nameValue, idCol) {
 async function resolveTargetStaff(connection, staffName) {
   const rows = await queryRows(
     connection,
-    'SELECT s.staff_id AS id, s.is_sales AS is_sales, s.department_id AS department_id, d.department_name AS department_name FROM dim_staff s LEFT JOIN dim_department d ON d.department_id = s.department_id WHERE s.staff_name = ? LIMIT 1',
+    'SELECT s.staff_id AS id, s.is_sales AS is_sales, s.is_enabled AS is_enabled, s.department_id AS department_id, d.department_name AS department_name FROM dim_staff s LEFT JOIN dim_department d ON d.department_id = s.department_id WHERE s.staff_name = ? LIMIT 1',
     [staffName],
   );
   return rows[0] ?? null;
@@ -96,6 +100,11 @@ async function persistTarget(connection, rows) {
     if (staff.department_id == null) {
       skipped += 1;
       errors.push({ row: null, field: 'department_name', message: `${row.staff_name} 无所属组织，无法导入目标。请先在组织维护页分配部门` });
+      continue;
+    }
+    if (Number(staff.is_enabled) !== 1) {
+      skipped += 1;
+      errors.push({ row: null, field: 'staff_name', message: `${row.staff_name} 已停用，无法导入目标。请先在组织维护页启用该人员` });
       continue;
     }
     const claimed = String(row.department_name || '').trim();

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 11:45:00 CST
+ 更新内容: 覆盖新增组织/渠道大类保存 payload，以及来源启用=false 转 is_excluded=1 的映射。
+*/
+/*
  更新时间: 2026-07-07 14:30:00 CST
  更新内容: 新增 maintenanceSaveBuilders 纯函数单测：只发已编辑格、过滤 summary、解析 id 前缀、
           channel deletions 透传、draft 空时产 0 行、单位为万。
@@ -10,7 +14,9 @@ import {
   buildTargetSaveRows,
   buildCostSaveRows,
   buildOrgSaveRows,
+  buildDepartmentSaveRows,
   buildChannelSaveRows,
+  buildChannelGroupSaveRows,
 } from './maintenanceSaveBuilders.js';
 
 const TARGET_ROWS = [
@@ -107,6 +113,19 @@ test('buildOrgSaveRows: draft 空时产 0 行', () => {
   assert.deepEqual(buildOrgSaveRows(ORG_USERS, {}), []);
 });
 
+test('buildDepartmentSaveRows: 只发送新增组织并保留临时父子关系', () => {
+  const out = buildDepartmentSaveRows([
+    { id: '1001', name: '总部', parentId: '', enabled: true },
+    { id: 'new-dept-1', name: '新增组织 1', parentId: '1001', enabled: true },
+    { id: 'new-dept-2', name: '新增组织 2', parentId: 'new-dept-1', enabled: false },
+  ]);
+  assert.equal(out.length, 2);
+  assert.equal(out[0].department_id, 'new-dept-1');
+  assert.equal(out[0].parent_id, '1001');
+  assert.equal(out[1].parent_id, 'new-dept-1');
+  assert.equal(out[1].is_enabled, 0);
+});
+
 const SOURCES = [
   { code: '1001', name: '百度搜索', groupId: '3001', enabled: true, excluded: false },
   { code: '9001', name: '新增来源 1', groupId: '3001', enabled: true, excluded: false },
@@ -127,4 +146,22 @@ test('buildChannelSaveRows: 空 groupId 转 null', () => {
   const { rows } = buildChannelSaveRows([{ code: 'c1', name: 'n', groupId: '', excluded: true }], []);
   assert.equal(rows[0].channel_id, null);
   assert.equal(rows[0].is_excluded, 1);
+});
+
+test('buildChannelSaveRows: 启用=false 会落为 is_excluded=1', () => {
+  const { rows } = buildChannelSaveRows([{ code: 'c2', name: 'n', groupId: '3001', enabled: false, excluded: false }], []);
+  assert.equal(rows[0].is_excluded, 1);
+});
+
+test('buildChannelGroupSaveRows: 只发送新增渠道大类', () => {
+  const out = buildChannelGroupSaveRows([
+    { id: '3001', name: '线上', parentId: '', enabled: true },
+    { id: 'new-channel-1', name: '新增大类 1', parentId: '3001', enabled: true },
+  ]);
+  assert.deepEqual(out, [{
+    channel_id: 'new-channel-1',
+    channel_name: '新增大类 1',
+    parent_id: '3001',
+    is_enabled: 1,
+  }]);
 });
