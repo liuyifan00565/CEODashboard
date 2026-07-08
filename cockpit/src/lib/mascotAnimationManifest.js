@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 13:07:28 CST
+ 更新内容: 将维护场景动作从 laptop 残缺感帧切回完整小人动作，避免左下角入口再显示抱电脑小人。
+*/
+/*
  更新时间: 2026-07-07 18:12:09 CST
  更新内容: 同步 AI 小人动作帧 20px 级安全边距审计结果，配合前端护栏彻底避免图片显示残缺。
 */
@@ -44,7 +48,6 @@ export const MASCOT_ACTION_SHEETS = Object.freeze({
   alert: sheetSpec('/mascot-actions/mascot-alert.png'),
   celebrate: sheetSpec('/mascot-actions/mascot-celebrate.png'),
   click: sheetSpec('/mascot-actions/mascot-click.png'),
-  laptop: sheetSpec('/mascot-actions/mascot-laptop.png'),
 });
 
 export const MASCOT_APPROVED_ASSETS = Object.freeze({
@@ -69,7 +72,6 @@ export const MASCOT_ACTION_AUDIT = Object.freeze({
   alert: auditSpec(12, 0.5, 0, 21),
   celebrate: auditSpec(12, 1, 0, 21),
   click: auditSpec(12, 0.5, 0, 21),
-  laptop: auditSpec(12, 1, 0, 20),
 });
 
 export const MASCOT_IDLE_VARIANTS = Object.freeze([
@@ -161,15 +163,15 @@ export const MASCOT_ANIMATIONS = Object.freeze({
     loop: false,
     intensity: 'click',
   }),
-  maintenance: actionSpec('maintenance', 'laptop', 12, {
+  maintenance: actionSpec('maintenance', 'idleBreathe', 12, {
     intensity: 'maintenance',
   }),
-  maintenanceSave: actionSpec('maintenanceSave', 'laptop', 14, {
+  maintenanceSave: actionSpec('maintenanceSave', 'celebrate', 14, {
     durationMs: 960,
     loop: false,
     intensity: 'maintenance-save',
   }),
-  maintenanceReview: actionSpec('maintenanceReview', 'laptop', 12, {
+  maintenanceReview: actionSpec('maintenanceReview', 'think', 12, {
     intensity: 'maintenance-review',
   }),
 });

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-08 13:07:28 CST
+ Update content: Require maintenance mascot actions to use full-body frames instead of laptop frames.
+*/
+/*
  Update time: 2026-07-07 18:12:09 CST
  Update content: Raise mascot frame transparent margin regression checks so scaled sidebar sprites cannot appear clipped.
 */
@@ -62,7 +66,6 @@ const requiredSheetKeys = [
   'alert',
   'celebrate',
   'click',
-  'laptop',
 ];
 
 function publicAssetExists(src) {
@@ -72,6 +75,7 @@ function publicAssetExists(src) {
 
 test('declares generated per-action mascot sprite sheets', () => {
   assert.deepEqual(Object.keys(MASCOT_ACTION_SHEETS).sort(), requiredSheetKeys.sort());
+  assert.ok(!Object.hasOwn(MASCOT_ACTION_SHEETS, 'laptop'), 'runtime sheets should not preload the laptop mascot asset');
   for (const key of requiredSheetKeys) {
     const sheet = MASCOT_ACTION_SHEETS[key];
     assert.equal(sheet.frameWidth, 224, `${key} should use stable 224px frame width`);
@@ -96,6 +100,7 @@ test('limits the 2D mascot runtime to approved generated project assets', () => 
   for (const sheet of Object.values(MASCOT_APPROVED_ASSETS.sheets)) {
     assert.ok(publicAssetExists(sheet));
   }
+  assert.ok(!Object.values(MASCOT_APPROVED_ASSETS.sheets).includes('/mascot-actions/mascot-laptop.png'));
 });
 
 test('defines at least four first-class idle variants as real frame loops', () => {
@@ -125,9 +130,13 @@ test('maps product actions to explicit frame animation specs', () => {
   assert.equal(MASCOT_ANIMATIONS.wave.loop, false);
   assert.equal(MASCOT_ANIMATIONS.click.loop, false);
   assert.equal(MASCOT_ANIMATIONS.talk.loop, true);
-  assert.equal(MASCOT_ANIMATIONS.maintenance.sheetKey, 'laptop');
-  assert.equal(MASCOT_ANIMATIONS.maintenanceSave.sheetKey, 'laptop');
-  assert.equal(MASCOT_ANIMATIONS.maintenanceReview.sheetKey, 'laptop');
+  assert.equal(MASCOT_ANIMATIONS.maintenance.sheetKey, 'idleBreathe');
+  assert.equal(MASCOT_ANIMATIONS.maintenanceSave.sheetKey, 'celebrate');
+  assert.equal(MASCOT_ANIMATIONS.maintenanceReview.sheetKey, 'think');
+  assert.ok(
+    Object.values(MASCOT_ANIMATIONS).every((animation) => animation.sheetKey !== 'laptop'),
+    'runtime mascot animations should not display the laptop sheet in the sidebar launcher',
+  );
 });
 
 test('records self-audit results for smoothness and reasonableness', () => {
@@ -135,7 +144,7 @@ test('records self-audit results for smoothness and reasonableness', () => {
   assert.ok(existsSync(auditUrl), 'mascot action audit should be generated beside assets');
   const auditJson = JSON.parse(readFileSync(auditUrl, 'utf8'));
   assert.deepEqual(Object.keys(MASCOT_ACTION_AUDIT).sort(), requiredSheetKeys.sort());
-  assert.deepEqual(Object.keys(auditJson.actions).sort(), requiredSheetKeys.sort());
+  assert.ok(!Object.hasOwn(MASCOT_ACTION_AUDIT, 'laptop'), 'runtime audit should not include unused laptop sheet');
   for (const key of requiredSheetKeys) {
     const result = MASCOT_ACTION_AUDIT[key];
     assert.equal(result.smooth, true, `${key} should pass smoothness audit`);
@@ -157,5 +166,6 @@ test('resolves idle variants and unknown actions deterministically', () => {
   );
   assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).playback, 'frames');
   assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).sheetKey, 'idleLook');
-  assert.equal(getMascotAnimation('maintenanceSave').sheetKey, 'laptop');
+  assert.equal(getMascotAnimation('maintenanceSave').sheetKey, 'celebrate');
+  assert.notEqual(getMascotAnimation('maintenanceSave').sheetKey, 'laptop');
 });
