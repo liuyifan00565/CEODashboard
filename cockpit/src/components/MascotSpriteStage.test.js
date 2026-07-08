@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-08 11:47:40 CST
+ Update content: Guard against maintenance-page idle being remapped to laptop frames that look incomplete at sidebar size.
+*/
+/*
  Update time: 2026-07-07 18:12:09 CST
  Update content: Require mascot action sheets to preload so switching to laptop, guide or wave never flashes a blank sprite.
 */
@@ -98,6 +102,11 @@ test('rotates four idle variants only at loop boundaries', () => {
   assert.match(componentCode, /setIdleVariantIndex\(\(index\) => index \+ 1\);/);
   assert.match(componentCode, /animation\.key === MASCOT_ACTIONS\.idle/);
   assert.doesNotMatch(componentCode, /setInterval|clearInterval|IDLE_ROTATION_MS/);
+});
+
+test('keeps maintenance-page idle on full mascot frames instead of laptop frames', () => {
+  assert.match(componentCode, /getMascotAnimation\(action,\s*\{\s*idleVariant:\s*idleVariant\.key\s*\}\)/);
+  assert.doesNotMatch(componentCode, /context\s*===\s*['"]maintenance['"][\s\S]*MASCOT_ACTIONS\.idle[\s\S]*\?\s*['"]maintenance['"]/);
 });
 
 test('styles generated action sheets crisply inside the existing sidebar card', () => {

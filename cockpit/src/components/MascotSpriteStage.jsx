@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-08 11:47:40 CST
+ Update content: Keep maintenance-page idle on full mascot frames instead of forcing the laptop action.
+*/
+/*
  Update time: 2026-07-07 18:12:09 CST
  Update content: Preload every generated mascot action sheet to avoid blank frames when switching into laptop, guide or wave states.
 */
@@ -65,7 +69,6 @@ function getBackgroundPercent(index, total) {
 export default function MascotSpriteStage({
   action = MASCOT_ACTIONS.idle,
   analysisActive = false,
-  context = 'dashboard',
   label = DEFAULT_LABEL,
 }) {
   const [frameCursor, setFrameCursor] = useState(0);
@@ -74,10 +77,9 @@ export default function MascotSpriteStage({
   const idleLoopCountRef = useRef(0);
   const lastLoopRef = useRef(0);
   const idleVariant = getMascotIdleVariant(idleVariantIndex);
-  const resolvedAction = context === 'maintenance' && action === MASCOT_ACTIONS.idle ? 'maintenance' : action;
   const animation = useMemo(
-    () => getMascotAnimation(resolvedAction, { idleVariant: idleVariant.key }),
-    [resolvedAction, idleVariant.key],
+    () => getMascotAnimation(action, { idleVariant: idleVariant.key }),
+    [action, idleVariant.key],
   );
   const sheet = getMascotSheet(animation.sheetKey);
   const currentFrame = animation.frames[frameCursor] ?? animation.frames[0] ?? 0;
