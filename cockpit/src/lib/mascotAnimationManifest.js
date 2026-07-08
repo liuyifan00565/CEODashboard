@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:04:41 CST
+ 更新内容: 接入 imagegen 生成的福客 AI 富待机帧作为默认待机循环，避免左下角入口继续显示旧小帧待机效果。
+*/
+/*
  更新时间: 2026-07-08 13:07:28 CST
  更新内容: 将维护场景动作从 laptop 残缺感帧切回完整小人动作，避免左下角入口再显示抱电脑小人。
 */
@@ -37,6 +41,7 @@ const FRAME_HEIGHT = 300;
 const TWELVE_FRAMES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 
 export const MASCOT_ACTION_SHEETS = Object.freeze({
+  idleFukeRich: sheetSpec('/mascot-actions/mascot-idle-fuke-rich.png'),
   idleBreathe: sheetSpec('/mascot-actions/mascot-idle-breathe.png'),
   idleLook: sheetSpec('/mascot-actions/mascot-idle-look.png'),
   idleBounce: sheetSpec('/mascot-actions/mascot-idle-bounce.png'),
@@ -61,6 +66,7 @@ export const MASCOT_APPROVED_ASSETS = Object.freeze({
 });
 
 export const MASCOT_ACTION_AUDIT = Object.freeze({
+  idleFukeRich: auditSpec(12, 0.5, 0, 18),
   idleBreathe: auditSpec(12, 1, 0, 21),
   idleLook: auditSpec(12, 1, 0, 21),
   idleBounce: auditSpec(12, 0, 0, 21),
@@ -75,10 +81,7 @@ export const MASCOT_ACTION_AUDIT = Object.freeze({
 });
 
 export const MASCOT_IDLE_VARIANTS = Object.freeze([
-  idleVariant('breathe', 'idleBreathe', 12),
-  idleVariant('look', 'idleLook', 12),
-  idleVariant('bounce', 'idleBounce', 12),
-  idleVariant('patrol', 'idlePatrol', 12),
+  idleVariant('fukeRich', 'idleFukeRich', 12),
 ]);
 
 const idleByKey = new Map(MASCOT_IDLE_VARIANTS.map((variant) => [variant.key, variant]));

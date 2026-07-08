@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:04:41 CST
+ 更新内容: 要求默认待机使用 imagegen 生成的福客 AI 富帧图，避免回退到旧小帧待机效果。
+*/
+/*
  Update time: 2026-07-08 13:07:28 CST
  Update content: Require maintenance mascot actions to use full-body frames instead of laptop frames.
 */
@@ -55,6 +59,7 @@ const requiredActions = [
 ];
 
 const requiredSheetKeys = [
+  'idleFukeRich',
   'idleBreathe',
   'idleLook',
   'idleBounce',
@@ -103,14 +108,14 @@ test('limits the 2D mascot runtime to approved generated project assets', () => 
   assert.ok(!Object.values(MASCOT_APPROVED_ASSETS.sheets).includes('/mascot-actions/mascot-laptop.png'));
 });
 
-test('defines at least four first-class idle variants as real frame loops', () => {
-  assert.equal(MASCOT_IDLE_VARIANTS.length, 4);
-  assert.deepEqual(MASCOT_IDLE_VARIANTS.map((item) => item.key), ['breathe', 'look', 'bounce', 'patrol']);
+test('uses the imagegen Fu Xiaoke rich idle sheet as the default real frame loop', () => {
+  assert.equal(MASCOT_IDLE_VARIANTS.length, 1);
+  assert.deepEqual(MASCOT_IDLE_VARIANTS.map((item) => item.key), ['fukeRich']);
   for (const variant of MASCOT_IDLE_VARIANTS) {
     assert.ok(Array.isArray(variant.frames), `${variant.key} should declare frame indexes`);
     assert.equal(variant.playback, 'frames', `${variant.key} should be a real idle frame sequence`);
     assert.ok(variant.frames.length >= 8, `${variant.key} should have enough frames to loop smoothly`);
-    assert.ok(variant.sheetKey.startsWith('idle'), `${variant.key} should point to an idle sheet`);
+    assert.equal(variant.sheetKey, 'idleFukeRich', `${variant.key} should point to the rich Fu Xiaoke idle sheet`);
   }
 });
 
@@ -159,13 +164,13 @@ test('records self-audit results for smoothness and reasonableness', () => {
 
 test('resolves idle variants and unknown actions deterministically', () => {
   assert.equal(getMascotAnimation('not-real').key, MASCOT_ACTIONS.idle);
-  assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).idleVariant, 'look');
+  assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).idleVariant, 'fukeRich');
   assert.deepEqual(
     getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).frames,
-    MASCOT_IDLE_VARIANTS.find((variant) => variant.key === 'look').frames,
+    MASCOT_IDLE_VARIANTS.find((variant) => variant.key === 'fukeRich').frames,
   );
   assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).playback, 'frames');
-  assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).sheetKey, 'idleLook');
+  assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).sheetKey, 'idleFukeRich');
   assert.equal(getMascotAnimation('maintenanceSave').sheetKey, 'celebrate');
   assert.notEqual(getMascotAnimation('maintenanceSave').sheetKey, 'laptop');
 });

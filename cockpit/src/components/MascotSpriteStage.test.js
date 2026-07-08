@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:04:41 CST
+ 更新内容: 验收默认待机使用 imagegen 福客 AI 富帧循环，避免左下角入口继续退回旧小帧待机。
+*/
+/*
  Update time: 2026-07-08 15:24:00 CST
  Update content: Require the sprite mascot stage to mount Live2D as an optional layer without removing the Fu Xiaoke fallback.
 */
@@ -110,7 +114,7 @@ test('plays authored frames with requestAnimationFrame and elapsed fps timing', 
   assert.doesNotMatch(componentCode, /replacementSrc|mascot-sprite-stage__replacement/);
 });
 
-test('rotates four idle variants only at loop boundaries', () => {
+test('keeps idle playback on a real rich Fu Xiaoke frame loop', () => {
   assert.match(componentCode, /const \[idleVariantIndex,\s*setIdleVariantIndex\] = useState\(0\);/);
   assert.match(componentCode, /const IDLE_LOOPS_BEFORE_VARIANT = 1;/);
   assert.match(componentCode, /getMascotIdleVariant\(idleVariantIndex\)/);
