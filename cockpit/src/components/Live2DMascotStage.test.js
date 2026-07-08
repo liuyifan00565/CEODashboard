@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-08 18:55:00 CST
+ Update content: Require Live2D assets to be checked before Pixi and Cubism are loaded.
+*/
+/*
  Update time: 2026-07-08 15:48:00 CST
  Update content: Require Live2D resize handling to be guarded when ResizeObserver is unavailable.
 */
@@ -41,11 +45,25 @@ test('loads Live2D through Pixi without owning mascot click behavior', () => {
 test('uses local Fu Xiaoke Live2D paths and falls back when assets are absent', () => {
   assert.match(componentCode, /MASCOT_LIVE2D_MODEL_SOURCE = '\/live2d\/fuxiaoke\/fuxiaoke\.model3\.json';/);
   assert.match(componentCode, /MASCOT_LIVE2D_CORE_SOURCE = '\/live2d\/live2dcubismcore\.min\.js';/);
+  assert.match(componentCode, /canUseLive2DAssets\(coreSource,\s*modelSource\)/);
   assert.match(componentCode, /loadScriptOnce\(coreSource\)/);
   assert.match(componentCode, /if \(!window\.Live2DCubismCore\) \{/);
+  assert.match(componentCode, /onLoadStateChange\?\.\('checking'\);/);
   assert.match(componentCode, /onLoadStateChange\?\.\('loading'\);/);
   assert.match(componentCode, /onLoadStateChange\?\.\('ready'\);/);
   assert.match(componentCode, /onLoadStateChange\?\.\('fallback'\);/);
+});
+
+test('checks same-origin Live2D assets before loading runtime code', () => {
+  assert.match(componentCode, /function isSameOriginAsset\(src\)/);
+  assert.match(componentCode, /function hasExpectedContentType\(response,\s*kind\)/);
+  assert.match(componentCode, /function isLive2DAssetReachable\(src,\s*kind\)/);
+  assert.match(componentCode, /fetch\(src,\s*\{\s*method:\s*'HEAD',\s*cache:\s*'no-store'\s*\}\)/);
+  assert.match(componentCode, /fetch\(src,\s*\{\s*method:\s*'GET',\s*cache:\s*'no-store'\s*\}\)/);
+  assert.match(componentCode, /contentType\.includes\('text\/html'\)/);
+  assert.match(componentCode, /LIVE2D_ASSET_CONTENT_TYPES\[kind\]\.some/);
+  assert.match(componentCode, /Promise\.all\(\[\s*isLive2DAssetReachable\(coreSource,\s*'core'\),\s*isLive2DAssetReachable\(modelSource,\s*'model'\),/);
+  assert.match(componentCode, /if \(!assetsAvailable\) \{\s*onLoadStateChange\?\.\('fallback'\);\s*return;/);
 });
 
 test('guards optional resize observation after Live2D has loaded', () => {

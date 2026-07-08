@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-08 18:55:00 CST
+ Update content: Check local Live2D model and Cubism Core assets before loading Pixi so missing files fall back quietly.
+*/
+/*
  Update time: 2026-07-08 15:48:00 CST
  Update content: Guard Live2D resize handling so older browsers without ResizeObserver keep the loaded mascot visible.
 */
@@ -33,7 +37,52 @@ const LIVE2D_ACTION_MOTION_GROUPS = Object.freeze({
   [MASCOT_ACTIONS.click]: ['Tap', 'tap_body'],
 });
 
+const LIVE2D_ASSET_CONTENT_TYPES = Object.freeze({
+  core: ['javascript', 'ecmascript', 'octet-stream', 'text/plain'],
+  model: ['json', 'octet-stream', 'text/plain'],
+});
+
 const scriptLoaders = new Map();
+
+function isSameOriginAsset(src) {
+  if (typeof window === 'undefined') return true;
+  try {
+    return new URL(src, window.location.href).origin === window.location.origin;
+  } catch {
+    return true;
+  }
+}
+
+function hasExpectedContentType(response, kind) {
+  const contentType = response.headers?.get?.('content-type')?.toLowerCase() ?? '';
+  if (!contentType) return true;
+  if (contentType.includes('text/html')) return false;
+  return LIVE2D_ASSET_CONTENT_TYPES[kind].some((token) => contentType.includes(token));
+}
+
+async function isLive2DAssetReachable(src, kind) {
+  if (!src) return false;
+  if (typeof fetch !== 'function' || !isSameOriginAsset(src)) return true;
+
+  try {
+    const response = await fetch(src, { method: 'HEAD', cache: 'no-store' });
+    if (response.ok) return hasExpectedContentType(response, kind);
+    if (response.status !== 405 && response.status !== 501) return false;
+
+    const fallbackResponse = await fetch(src, { method: 'GET', cache: 'no-store' });
+    return fallbackResponse.ok && hasExpectedContentType(fallbackResponse, kind);
+  } catch {
+    return false;
+  }
+}
+
+async function canUseLive2DAssets(coreSource, modelSource) {
+  const [coreAvailable, modelAvailable] = await Promise.all([
+    isLive2DAssetReachable(coreSource, 'core'),
+    isLive2DAssetReachable(modelSource, 'model'),
+  ]);
+  return coreAvailable && modelAvailable;
+}
 
 function loadScriptOnce(src) {
   if (!src) return Promise.reject(new Error('Missing Live2D Cubism Core source'));
@@ -127,6 +176,13 @@ export default function Live2DMascotStage({
       }
 
       try {
+        onLoadStateChange?.('checking');
+        const assetsAvailable = await canUseLive2DAssets(coreSource, modelSource);
+        if (!assetsAvailable) {
+          onLoadStateChange?.('fallback');
+          return;
+        }
+
         onLoadStateChange?.('loading');
         await loadScriptOnce(coreSource);
         if (!window.Live2DCubismCore) {
