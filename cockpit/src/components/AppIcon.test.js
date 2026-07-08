@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 13:28:16 CST
+ 更新内容: 增加渠道图标语义回归测试，要求使用来源节点汇入中心节点的图形。
+*/
+/*
  更新时间: 2026-07-02 17:02:00 CST
  更新内容: 调整 AppIcon 名称列表测试，验证组件静态属性而非命名导出。
 */
@@ -56,6 +60,14 @@ test('renders sidebar navigation icons through the shared AppIcon system', () =>
   assert.doesNotMatch(sidebarSource, /const ICONS = \[/);
   assert.match(sidebarSource, /<AppIcon name=\{item\.icon \?\? item\.key\}/);
   assert.match(sidebarSource, /className="sb-icon"/);
+});
+
+test('draws the channel glyph as source nodes mapped into a channel hub', () => {
+  assert.match(iconSource, /channel:\s*\([\s\S]*?<circle cx="12" cy="12" r="3\.2" \/>/);
+  assert.match(iconSource, /<circle cx="5\.2" cy="6" r="2\.1" \/>/);
+  assert.match(iconSource, /<circle cx="5\.2" cy="18" r="2\.1" \/>/);
+  assert.match(iconSource, /<circle cx="18\.8" cy="12" r="2\.1" \/>/);
+  assert.doesNotMatch(iconSource, /M17\.5 6l-3\.5 2\.5 3\.5 2\.5/);
 });
 
 test('uses shared AppIcon glyphs for topbar utility controls', () => {
