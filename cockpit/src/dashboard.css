@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 11:47:38 CST
+ 更新内容: 为维护模式左侧导航下方的“返回主界面”按钮增加玻璃布局样式。
+*/
+/*
  更新时间: 2026-07-06 18:37:58 CST
  更新内容: 新增真实数据库加载/失败状态卡片样式，避免看板在加载前显示 mock 数据。
 */
@@ -136,6 +140,15 @@
   display:flex;flex-direction:column;align-items:stretch;gap:14px;
 }
 .dash-aside .sb-root{width:100%}
+.dash-aside .maintenance-back-glass{
+  flex:none;
+  width:100%;
+}
+.dash-aside .maintenance-back-glass .glass-surface__content{
+  align-items:stretch;
+  justify-content:stretch;
+  padding:0;
+}
 
 .dash-main{
   flex:1;min-width:0;display:flex;flex-direction:column;
@@ -255,6 +268,11 @@
 }
 .dash-maintenance-switch--active{
   color:var(--txt);
+}
+.dash-maintenance-switch--sidebar{
+  min-width:0;
+  padding:0 16px;
+  border-radius:24px;
 }
 
 /* ===== 内容区 ===== */

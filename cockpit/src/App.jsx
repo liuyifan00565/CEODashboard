@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 11:47:38 CST
+ 更新内容: 将维护模式“返回主界面”从右上角工具栏移到左侧导航栏下方。
+*/
+/*
  更新时间: 2026-07-07 14:03:53 CST
  更新内容: 向 AI 小人入口传递 dashboard/maintenance 场景 context，用于 2D 帧动画切换维护状态。
 */
@@ -433,6 +437,28 @@ export default function App() {
       <div className="dash-shell">
         <aside className="dash-aside">
           <Sidebar items={sidebarItems} active={sidebarActive} onChange={handleSidebarChange} />
+          {maintenanceMode ? (
+            <GlassSurface
+              width="100%"
+              height={48}
+              borderRadius={24}
+              brightness={46}
+              blur={7}
+              displace={0.35}
+              backgroundOpacity={0.035}
+              distortionScale={-55}
+              className="maintenance-back-glass"
+            >
+              <button
+                type="button"
+                className="dash-maintenance-switch dash-maintenance-switch--active dash-maintenance-switch--sidebar"
+                onClick={handleMaintenanceBack}
+                aria-label="返回主界面"
+              >
+                <span>返回主界面</span>
+              </button>
+            </GlassSurface>
+          ) : null}
           <AIAnalysisWidget
             activeMenu={activeMenu}
             dim={dim}
@@ -485,26 +511,28 @@ export default function App() {
               </div>
             </GlassSurface>
             <div className="dash-tools">
-              <GlassSurface
-                width={126}
-                height={54}
-                borderRadius={27}
-                brightness={46}
-                blur={7}
-                displace={0.35}
-                backgroundOpacity={0.035}
-                distortionScale={-55}
-                className="maintenance-glass"
-              >
-                <button
-                  type="button"
-                  className={`dash-maintenance-switch${maintenanceMode ? ' dash-maintenance-switch--active' : ''}`}
-                  onClick={handleMaintenanceModeToggle}
-                  aria-pressed={maintenanceMode}
+              {!maintenanceMode ? (
+                <GlassSurface
+                  width={126}
+                  height={54}
+                  borderRadius={27}
+                  brightness={46}
+                  blur={7}
+                  displace={0.35}
+                  backgroundOpacity={0.035}
+                  distortionScale={-55}
+                  className="maintenance-glass"
                 >
-                  <span>{maintenanceMode ? '返回主界面' : '更新数据'}</span>
-                </button>
-              </GlassSurface>
+                  <button
+                    type="button"
+                    className="dash-maintenance-switch"
+                    onClick={handleMaintenanceModeToggle}
+                    aria-label="更新数据"
+                  >
+                    <span>更新数据</span>
+                  </button>
+                </GlassSurface>
+              ) : null}
               <ExpandableSearch
                 onChange={setSearchTerm}
                 currentIndex={searchStats.current}

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 11:47:38 CST
+ 更新内容: 回归测试同步维护模式“返回主界面”按钮移到左侧导航栏下方。
+*/
+/*
  更新时间: 2026-07-08 11:28:12 CST
  更新内容: 增加维护页与导入弹窗下拉框统一使用 GlassSelect 的回归测试，防止原生白底 select 回流。
 */
@@ -344,7 +348,7 @@ test('keeps only compute usage in the compute trend chart with clear non-fluores
   assert.doesNotMatch(computePageSource, /name:\s*'总容量'[\s\S]*?type:\s*'line'/);
 });
 
-test('keeps the right toolbar focused on data maintenance and search while data keeps default monthly filters', () => {
+test('keeps the right toolbar focused on the dashboard maintenance entry and search while data keeps default monthly filters', () => {
   assert.doesNotMatch(appSource, /import ThemeToggle/);
   assert.doesNotMatch(appSource, /import DateRangePicker/);
   assert.doesNotMatch(appSource, /import Segmented/);
@@ -353,7 +357,7 @@ test('keeps the right toolbar focused on data maintenance and search while data 
   assert.doesNotMatch(appSource, /computePeriod/);
   assert.match(appSource, /const dim = 'month';/);
   assert.match(appSource, /const dateRange = DEFAULT_FILTER_RANGE;/);
-  assert.match(appSource, /<div className="dash-tools">\s*<GlassSurface[\s\S]*?className="maintenance-glass"[\s\S]*?<\/GlassSurface>\s*<ExpandableSearch[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
+  assert.match(appSource, /<div className="dash-tools">\s*\{!maintenanceMode \? \(\s*<GlassSurface[\s\S]*?className="maintenance-glass"[\s\S]*?<\/GlassSurface>\s*\) : null\}\s*<ExpandableSearch[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
   assert.doesNotMatch(appSource, /<DateRangePicker/);
   assert.doesNotMatch(appSource, /<Segmented options=\{DIM_OPTS\}/);
   assert.doesNotMatch(appSource, /<ThemeToggle/);
@@ -431,9 +435,12 @@ test('morphs the FuKe brand capsule into compact and minimal sticky identities o
   assert.doesNotMatch(appSource, /\{META\.monthLabel\} · \{activeMenu === 'overview' \? '月度视角' : activeMenuLabel\}/);
 });
 
-test('adds a topbar data maintenance switch that swaps the sidebar navigation', () => {
+test('adds a dashboard maintenance entry and a sidebar return button that swaps the sidebar navigation', () => {
   const maintenanceSwitchBlock = cssRuleBody(dashboardCss, '.dash-maintenance-switch');
   const maintenanceActiveBlock = cssRuleBody(dashboardCss, '.dash-maintenance-switch--active');
+  const maintenanceSidebarBlock = cssRuleBody(dashboardCss, '.dash-maintenance-switch--sidebar');
+  const maintenanceBackGlassBlock = cssRuleBody(dashboardCss, '.dash-aside .maintenance-back-glass');
+  const maintenanceBackContentBlock = cssRuleBody(dashboardCss, '.dash-aside .maintenance-back-glass .glass-surface__content');
 
   assert.match(appSource, /import \{ META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel \} from '\.\/data\/mock';/);
   assert.match(appSource, /const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU\[0\]\?\.key \?\? 'target-maintenance';/);
@@ -446,15 +453,21 @@ test('adds a topbar data maintenance switch that swaps the sidebar navigation', 
   assert.match(appSource, /function handleSidebarChange\(nextMenu\) \{[\s\S]*?if \(nextMenu === 'data-maintenance'\) \{[\s\S]*?setMaintenanceMode\(true\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setActiveMaintenanceMenu\(nextMenu\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?handleMenuChange\(nextMenu\);[\s\S]*?\}/);
   assert.match(appSource, /function handleMaintenanceModeToggle\(\) \{[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setMaintenanceMode\(false\);[\s\S]*?setActiveMenu\('overview'\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?setMaintenanceMode\(true\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?\}/);
   assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} \/>/);
+  assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} \/>\s*\{maintenanceMode \? \(\s*<GlassSurface[\s\S]*?width="100%"[\s\S]*?height=\{48\}[\s\S]*?className="maintenance-back-glass"[\s\S]*?className="dash-maintenance-switch dash-maintenance-switch--active dash-maintenance-switch--sidebar"[\s\S]*?onClick=\{handleMaintenanceBack\}[\s\S]*?aria-label="返回主界面"[\s\S]*?<span>返回主界面<\/span>[\s\S]*?<\/GlassSurface>\s*\) : null\}/);
   assert.match(appSource, /className="maintenance-glass"/);
-  assert.match(appSource, /<div className="dash-tools">\s*<GlassSurface[\s\S]*?width=\{126\}[\s\S]*?height=\{54\}[\s\S]*?borderRadius=\{27\}[\s\S]*?brightness=\{46\}[\s\S]*?blur=\{7\}[\s\S]*?displace=\{0\.35\}[\s\S]*?backgroundOpacity=\{0\.035\}[\s\S]*?distortionScale=\{-55\}[\s\S]*?className="maintenance-glass"[\s\S]*?<button[\s\S]*?<\/GlassSurface>\s*<ExpandableSearch/);
-  assert.match(appSource, /className=\{`dash-maintenance-switch\$\{maintenanceMode \? ' dash-maintenance-switch--active' : ''\}`\}/);
-  assert.match(appSource, /aria-pressed=\{maintenanceMode\}/);
-  assert.match(appSource, /\{maintenanceMode \? '返回主界面' : '更新数据'\}/);
+  assert.match(appSource, /<div className="dash-tools">\s*\{!maintenanceMode \? \(\s*<GlassSurface[\s\S]*?width=\{126\}[\s\S]*?height=\{54\}[\s\S]*?borderRadius=\{27\}[\s\S]*?brightness=\{46\}[\s\S]*?blur=\{7\}[\s\S]*?displace=\{0\.35\}[\s\S]*?backgroundOpacity=\{0\.035\}[\s\S]*?distortionScale=\{-55\}[\s\S]*?className="maintenance-glass"[\s\S]*?className="dash-maintenance-switch"[\s\S]*?aria-label="更新数据"[\s\S]*?<span>更新数据<\/span>[\s\S]*?<\/GlassSurface>\s*\) : null\}\s*<ExpandableSearch/);
+  assert.doesNotMatch(appSource, /className=\{`dash-maintenance-switch\$\{maintenanceMode \? ' dash-maintenance-switch--active' : ''\}`\}/);
+  assert.doesNotMatch(appSource, /aria-pressed=\{maintenanceMode\}/);
+  assert.doesNotMatch(appSource, /\{maintenanceMode \? '返回主界面' : '更新数据'\}/);
   assert.doesNotMatch(appSource, /dash-maintenance-switch__icon/);
   assert.match(dashboardCss, /\.dash-tools \.maintenance-glass\{[\s\S]*?flex:0 0 auto;/);
   assert.doesNotMatch(dashboardCss, /\.dash-topbar \.maintenance-glass\{[\s\S]*?margin-left:auto;/);
   assert.match(dashboardCss, /\.dash-topbar \.maintenance-glass \.glass-surface__content\{padding:0\}/);
+  assert.match(maintenanceBackGlassBlock, /flex:none;/);
+  assert.match(maintenanceBackGlassBlock, /width:100%;/);
+  assert.match(maintenanceBackContentBlock, /align-items:stretch;/);
+  assert.match(maintenanceBackContentBlock, /justify-content:stretch;/);
+  assert.match(maintenanceBackContentBlock, /padding:0;/);
   assert.match(maintenanceSwitchBlock, /width:100%;/);
   assert.match(maintenanceSwitchBlock, /height:100%;/);
   assert.match(maintenanceSwitchBlock, /gap:0;/);
@@ -463,6 +476,9 @@ test('adds a topbar data maintenance switch that swaps the sidebar navigation', 
   assert.match(maintenanceSwitchBlock, /background:transparent;/);
   assert.doesNotMatch(maintenanceSwitchBlock, /background:var\(--ai-chip-bg\);/);
   assert.doesNotMatch(maintenanceActiveBlock, /background:var\(--ai-chip-hover\);/);
+  assert.match(maintenanceSidebarBlock, /min-width:0;/);
+  assert.match(maintenanceSidebarBlock, /padding:0 16px;/);
+  assert.match(maintenanceSidebarBlock, /border-radius:24px;/);
   assert.match(projectAgentGuidance, /所有卡片和按钮的背景、边框、模糊、阴影与圆角必须优先复用项目既有统一玻璃体系/);
 });
 
