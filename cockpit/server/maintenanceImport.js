@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 13:05:31 CST
+ 更新内容: 目标导入遇到陌生员工时先返回“是否新增员工”确认项；确认后自动新增启用销售员工到所属组织，再继续写入目标。
+*/
+/*
  更新时间: 2026-07-08 11:45:00 CST
  更新内容: 目标导入新增 is_enabled 校验，只有启用销售且有部门、部门名一致的人员才能写入目标。
 */
@@ -80,17 +84,67 @@ async function resolveTargetStaff(connection, staffName) {
   return rows[0] ?? null;
 }
 
+async function resolveDepartmentByName(connection, departmentName) {
+  if (!departmentName) return null;
+  const rows = await queryRows(
+    connection,
+    'SELECT department_id AS id, department_name AS name FROM dim_department WHERE department_name = ? AND is_enabled = 1 LIMIT 1',
+    [departmentName],
+  );
+  return rows[0] ?? null;
+}
+
+function makePendingNewStaff(row) {
+  const staffName = String(row.staff_name || '').trim();
+  const departmentName = String(row.department_name || '').trim();
+  return {
+    staff_name: staffName,
+    department_name: departmentName,
+    message: `员工「${staffName}」并不在「${departmentName || '未填写组织'}」组织里，是否新增员工？`,
+  };
+}
+
+async function createTargetStaff(connection, row, department) {
+  const id = await nextId(connection, 'dim_staff', 'staff_id');
+  const code = `staff_${id}`;
+  await connection.execute(
+    'INSERT INTO dim_staff (staff_id, staff_code, staff_name, department_id, external_bi_user_id, is_sales, is_delivery, is_success, is_enabled) VALUES (?, ?, ?, ?, ?, 1, 0, 0, 1)',
+    [id, code, row.staff_name, department.id, null],
+  );
+  return {
+    id,
+    is_sales: 1,
+    is_enabled: 1,
+    department_id: department.id,
+    department_name: department.name,
+  };
+}
+
 /** 目标维护：按 (year_month, staff_id) upsert biz_target_monthly。人员须 is_sales=1 且有部门，且 Excel 部门须与实际一致。 */
-async function persistTarget(connection, rows) {
+export async function persistTarget(connection, rows, options = {}) {
   let written = 0;
   let skipped = 0;
+  let createdStaff = 0;
   const errors = [];
+  const pendingNewStaff = [];
+  const createMissingStaff = options.createMissingStaff === true;
   for (const row of rows) {
-    const staff = await resolveTargetStaff(connection, row.staff_name);
+    let staff = await resolveTargetStaff(connection, row.staff_name);
     if (!staff) {
       skipped += 1;
-      errors.push({ row: null, field: 'staff_name', message: `人员不存在，跳过：${row.staff_name}` });
-      continue;
+      if (!createMissingStaff) {
+        pendingNewStaff.push(makePendingNewStaff(row));
+        continue;
+      }
+      const claimedDepartment = String(row.department_name || '').trim();
+      const department = await resolveDepartmentByName(connection, claimedDepartment);
+      if (!department) {
+        errors.push({ row: null, field: 'department_name', message: `组织不存在，无法新增员工「${row.staff_name}」：${claimedDepartment || '未填写组织'}` });
+        continue;
+      }
+      staff = await createTargetStaff(connection, row, department);
+      createdStaff += 1;
+      skipped -= 1;
     }
     if (Number(staff.is_sales) !== 1) {
       skipped += 1;
@@ -133,7 +187,7 @@ async function persistTarget(connection, rows) {
     }
     written += 1;
   }
-  return { written, skipped, errors };
+  return { written, skipped, createdStaff, pendingNewStaff, errors };
 }
 
 /** 成本维护：按 (year_month, channel_id) upsert biz_channel_cost_monthly。 */
@@ -234,24 +288,32 @@ const PERSISTERS = {
 
 /**
  * 真写库钩子：事务 upsert 校验通过的 rows 到对应表，FK 不满足的行跳过不中断。
- * @returns {Promise<{dryRun:boolean, written:number, skipped:number, errors:object[], note:string}>}
+ * @returns {Promise<{dryRun:boolean, written:number, skipped:number, createdStaff:number, pendingNewStaff:object[], errors:object[], note:string}>}
  */
-export async function persistImport(pageKey, rows) {
+export async function persistImport(pageKey, rows, options = {}) {
   const persister = PERSISTERS[pageKey];
   if (!persister) {
-    return { dryRun: false, written: 0, skipped: rows.length, errors: [{ row: null, field: '', message: `未配置的导入页：${pageKey}` }], note: `未配置的导入页：${pageKey}` };
+    return { dryRun: false, written: 0, skipped: rows.length, createdStaff: 0, pendingNewStaff: [], errors: [{ row: null, field: '', message: `未配置的导入页：${pageKey}` }], note: `未配置的导入页：${pageKey}` };
   }
   const connection = await createDbConnection();
   try {
     await connection.beginTransaction();
-    const result = await persister(connection, rows);
+    const result = await persister(connection, rows, pageKey === 'target-maintenance' ? {
+      createMissingStaff: options.createMissingTargetStaff === true,
+    } : {});
     await connection.commit();
+    const createdStaff = result.createdStaff ?? 0;
+    const pendingNewStaff = result.pendingNewStaff ?? [];
+    const pendingNote = pendingNewStaff.length ? ` 待确认新增员工 ${pendingNewStaff.length} 人。` : '';
+    const createdNote = createdStaff ? ` 新增员工 ${createdStaff} 人。` : '';
     return {
       dryRun: false,
       written: result.written,
       skipped: result.skipped,
+      createdStaff,
+      pendingNewStaff,
       errors: result.errors,
-      note: `已写入 ${result.written} 行到 ${pageKey} 对应表，跳过 ${result.skipped} 行。`,
+      note: `已写入 ${result.written} 行到 ${pageKey} 对应表，跳过 ${result.skipped} 行。${createdNote}${pendingNote}`,
     };
   } catch (err) {
     await connection.rollback();
@@ -259,6 +321,8 @@ export async function persistImport(pageKey, rows) {
       dryRun: false,
       written: 0,
       skipped: rows.length,
+      createdStaff: 0,
+      pendingNewStaff: [],
       errors: [{ row: null, field: '', message: `写库失败已回滚：${err.message}` }],
       note: `写库失败已回滚：${err.message}`,
     };
@@ -269,8 +333,8 @@ export async function persistImport(pageKey, rows) {
 
 /**
  * POST /api/maintenance/import
- * 请求体：{ pageKey, rows, rawHeaders, rawRows, meta }
- * 响应：{ dryRun, pageKey, accepted, rejected, written, skipped, errors, warnings, summary }
+ * 请求体：{ pageKey, rows, rawHeaders, rawRows, meta, options }
+ * 响应：{ dryRun, pageKey, accepted, rejected, written, skipped, createdStaff, pendingNewStaff, errors, warnings, summary }
  */
 export async function handleMaintenanceImportRequest(req, res) {
   let body;
@@ -281,7 +345,7 @@ export async function handleMaintenanceImportRequest(req, res) {
     return;
   }
 
-  const { pageKey, rows: incomingRows = [], rawHeaders, rawRows } = body || {};
+  const { pageKey, rows: incomingRows = [], rawHeaders, rawRows, options = {} } = body || {};
   if (!pageKey) {
     sendJson(res, 400, { error: '缺少 pageKey' });
     return;
@@ -323,7 +387,7 @@ export async function handleMaintenanceImportRequest(req, res) {
   const errorRows = new Set(errors.map((e) => e.row).filter((r) => r && r > 1));
   const acceptedRows = blockingErrors.length ? [] : rows.filter((_, idx) => !errorRows.has(idx + 2));
 
-  const persist = await persistImport(pageKey, acceptedRows);
+  const persist = await persistImport(pageKey, acceptedRows, options);
   const allErrors = [...errors, ...persist.errors];
 
   sendJson(res, 200, {
@@ -333,6 +397,8 @@ export async function handleMaintenanceImportRequest(req, res) {
     rejected: errors.length,
     written: persist.written,
     skipped: persist.skipped,
+    createdStaff: persist.createdStaff ?? 0,
+    pendingNewStaff: persist.pendingNewStaff ?? [],
     totalRows: rows.length,
     errors: allErrors,
     warnings,

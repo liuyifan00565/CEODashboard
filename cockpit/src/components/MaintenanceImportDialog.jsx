@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 13:05:31 CST
+ 更新内容: 目标导入遇到未找到员工时展示新增员工确认项，确认后携带新增员工选项再次提交并刷新维护数据。
+*/
+/*
  更新时间: 2026-07-08 11:28:12 CST
  更新内容: 将 Excel 导入弹窗的工作表原生下拉替换为 GlassSelect，避免多工作表选择时出现系统白底下拉。
 */
@@ -44,6 +48,7 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
 
   const hasErrors = mapResult?.errors?.length > 0;
   const previewRows = mapResult?.rows?.slice(0, PREVIEW_ROWS) ?? [];
+  const pendingNewStaff = result?.pendingNewStaff ?? [];
   const sheetOptions = useMemo(
     () => sheetNames.map((name) => ({ value: name, label: name })),
     [sheetNames],
@@ -84,8 +89,9 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
     if (workbook) loadSheet(workbook, name);
   }
 
-  async function handleConfirm() {
+  async function handleConfirm(options = {}) {
     if (!config || hasErrors) return;
+    const createMissingStaff = options?.createMissingStaff === true;
     setPhase('submitting');
     setSubmitError('');
     try {
@@ -98,6 +104,7 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
           rawHeaders,
           rawRows,
           rows: mapResult.rows,
+          options: { createMissingTargetStaff: createMissingStaff },
         }),
       });
       const data = await resp.json();
@@ -108,7 +115,7 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
       }
       setResult(data);
       setPhase('done');
-      if ((data.written ?? 0) > 0) onImported?.();
+      if ((data.written ?? 0) > 0 || (data.createdStaff ?? 0) > 0) onImported?.();
     } catch (err) {
       setSubmitError(`网络异常：${err.message}`);
       setPhase('parsed');
@@ -260,6 +267,27 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
                 · 接收 {result.accepted} 行，拒绝 {result.rejected} 行，共 {result.totalRows} 行
               </p>
               <p className="mnt-import-hint">{result.summary}</p>
+              {pendingNewStaff.length > 0 && (
+                <div className="mnt-import-pending">
+                  <h5>新增员工确认</h5>
+                  <p>以下人员不在 Excel 填写的组织里，确认后会新增为启用销售员工，并继续导入本次目标。</p>
+                  <ul>
+                    {pendingNewStaff.map((item, i) => (
+                      <li key={`${item.staff_name || 'staff'}-${item.department_name || 'dept'}-${i}`}>
+                        {item.message || `员工「${item.staff_name}」并不在「${item.department_name || '未填写组织'}」组织里，是否新增员工？`}
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    className="mnt-btn mnt-btn--primary"
+                    type="button"
+                    onClick={() => handleConfirm({ createMissingStaff: true })}
+                    disabled={phase === 'submitting'}
+                  >
+                    新增员工并继续导入
+                  </button>
+                </div>
+              )}
               {result.errors?.length > 0 && (
                 <ul className="mnt-import-errors">
                   {result.errors.slice(0, 20).map((e, i) => (
@@ -285,7 +313,7 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
           <button
             className="mnt-btn mnt-btn--primary"
             type="button"
-            onClick={handleConfirm}
+            onClick={() => handleConfirm()}
             disabled={phase !== 'parsed' || hasErrors}
           >
             {phase === 'submitting' ? '上传中…' : '确认导入'}
