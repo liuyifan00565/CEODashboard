@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 14:08:42 CST
+ 更新内容: 为顶部品牌胶囊滚动折叠增加滞回阈值，并避免搜索命中标记随无关渲染重复刷新导致抖动。
+*/
+/*
  更新时间: 2026-07-08 14:00:14 CST
  更新内容: 主界面侧边导航移除“渠道分析”和“客户转化”禁用入口，仅保留当前有效页面。
 */
@@ -161,6 +165,8 @@ import { matchesSearchTerm } from './lib/searchMatch';
 import './dashboard.css';
 
 const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance';
+const BRAND_FULL_ENTER_SCROLL = 56;
+const BRAND_FULL_EXIT_SCROLL = 104;
 
 const DASHBOARD_SIDEBAR_ITEMS = [
   ...MENU.map((item) => ({ ...item, section: '导航', icon: item.icon ?? item.key })),
@@ -254,9 +260,10 @@ export default function App() {
 
     let animationFrame = 0;
 
-    function resolveBrandMode() {
+    function resolveBrandMode(currentMode) {
       const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
-      if (scrollTop <= 80) {
+      const fullThreshold = currentMode === 'full' ? BRAND_FULL_EXIT_SCROLL : BRAND_FULL_ENTER_SCROLL;
+      if (scrollTop <= fullThreshold) {
         return 'full';
       }
 
@@ -267,7 +274,7 @@ export default function App() {
 
     function updateBrandMode() {
       setBrandMode((currentMode) => {
-        const nextMode = resolveBrandMode();
+        const nextMode = resolveBrandMode(currentMode);
         return currentMode === nextMode ? currentMode : nextMode;
       });
     }
@@ -387,7 +394,7 @@ export default function App() {
       matches[currentIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     }
     pendingSearchScrollRef.current = false;
-  }, [searchTerm, activeSearchIndex, contentKey, isComputePage, filteredKpiCards, dashboardDataVersion]);
+  }, [searchTerm, activeSearchIndex, contentKey, isComputePage, dashboardDataVersion]);
 
   // GSAP 入场：KPI 卡 + 面板 stagger fade-up（菜单切换时重放）
   useLayoutEffect(() => {

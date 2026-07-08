@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 14:08:42 CST
+ 更新内容: 回归测试锁定顶部品牌胶囊滚动折叠滞回阈值，并避免搜索命中标记随无关渲染重复刷新。
+*/
+/*
  更新时间: 2026-07-08 14:00:14 CST
  更新内容: 回归测试锁定主界面侧边导航移除渠道分析和客户转化禁用入口。
 */
@@ -379,6 +383,8 @@ test('counts searchable matches and cycles the current result from the top searc
   assert.match(appSource, /querySelectorAll\('\[data-search-match="true"\]'\)/);
   assert.match(appSource, /node\.dataset\.searchCurrent = index === currentIndex \? 'true' : 'false';/);
   assert.match(appSource, /scrollIntoView\(\{ behavior: 'smooth', block: 'center', inline: 'nearest' \}\)/);
+  assert.match(appSource, /\}, \[searchTerm, activeSearchIndex, contentKey, isComputePage, dashboardDataVersion\]\);/);
+  assert.doesNotMatch(appSource, /\}, \[searchTerm, activeSearchIndex, contentKey, isComputePage, filteredKpiCards, dashboardDataVersion\]\);/);
 });
 
 test('keeps overview card placement stable when search result wrappers appear', () => {
@@ -405,7 +411,10 @@ test('morphs the FuKe brand capsule into compact and minimal sticky identities o
   assert.match(appSource, /const \[brandMode, setBrandMode\] = useState\('full'\);/);
   assert.match(appSource, /const compactMonthLabel = formatCompactMonthLabel\(META\.monthLabel\);/);
   assert.match(appSource, /const brandIdentityText = brandMode === 'minimal'\s*\?\s*'经营驾驶舱'\s*:\s*`福客经营驾驶舱 · \$\{compactMonthLabel\} · \$\{compactContextLabel\}`;/);
-  assert.match(appSource, /scrollTop <= 80[\s\S]*?'full'[\s\S]*?deepScroll \? 'minimal' : 'compact'/);
+  assert.match(appSource, /const BRAND_FULL_ENTER_SCROLL = 56;/);
+  assert.match(appSource, /const BRAND_FULL_EXIT_SCROLL = 104;/);
+  assert.match(appSource, /const fullThreshold = currentMode === 'full' \? BRAND_FULL_EXIT_SCROLL : BRAND_FULL_ENTER_SCROLL;/);
+  assert.match(appSource, /scrollTop <= fullThreshold[\s\S]*?'full'[\s\S]*?deepScroll \? 'minimal' : 'compact'/);
   assert.match(appSource, /window\.addEventListener\('scroll', requestBrandMode, \{ passive: true \}\);/);
   assert.match(appSource, /<GlassSurface[\s\S]*?width=\{brandMode === 'full' \? 320 : brandMode === 'compact' \? 248 : 180\}[\s\S]*?height=\{brandMode === 'full' \? 62 : brandMode === 'compact' \? 40 : 38\}[\s\S]*?borderRadius=\{brandMode === 'full' \? 22 : 16\}[\s\S]*?backgroundOpacity=\{brandMode === 'full' \? 0\.045 : brandMode === 'compact' \? 0\.03 : 0\.018\}[\s\S]*?className=\{`brand-glass brand-glass--\$\{brandMode\}`\}[\s\S]*?<div className="brand"/);
   assert.match(appSource, /<span className="brand-logo-paint" aria-hidden="true">[\s\S]*?<MetallicPaint[\s\S]*?imageSrc="\/logo-black\.png"[\s\S]*?\/>[\s\S]*?<\/span>/);
