@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:28:57 CST
+ 更新内容: 渠道完成情况回归测试要求进度条复用 120% 超额阈值工具函数，避免 100%-119.9% 显示金色。
+*/
+/*
  更新时间: 2026-07-08 17:15:00 CST
  更新内容: 回归测试要求经营进度标题和搜索命中读取运行时月份，不再把 2026 年 6 月写死在组件中。
 */
@@ -1296,6 +1300,10 @@ test('uses one channel completion panel with month and year switching', () => {
   assert.match(channelPanelSource, /className="ch-progress"/);
   assert.match(channelPanelSource, /className="ch-progress-fill"/);
   assert.match(channelPanelSource, /width:\s*`\$\{Math\.min\(pct, 100\)\}%`/);
+  assert.match(channelPanelSource, /import \{ channelCompletionBarBackground \} from '\.\.\/lib\/channelCompletionBar';/);
+  assert.match(channelPanelSource, /const progressBackground = channelCompletionBarBackground\(\{ completion: pct \}, tokens\.progressMid\);/);
+  assert.match(channelPanelSource, /const progressBackground = channelCompletionBarBackground\(member, tokens\.progressMid\);/);
+  assert.doesNotMatch(channelPanelSource, /progressGradient\(pct, tokens\.progressMid\)/);
   assert.match(channelPanelSource, /aria-label=\{`\$\{c\.name\}完成进度 \$\{formatChannelPct\(pct\)\}`\}/);
   assert.doesNotMatch(channelPanelSource, /className=\{`ch-status/);
   assert.doesNotMatch(channelPanelSource, /\{c\.status\}/);

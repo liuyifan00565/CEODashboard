@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:28:57 CST
+ 更新内容: 渠道完成进度条颜色断言改为 120% 及以上才金色，100%-119.9% 保持普通完成色。
+*/
+/*
  更新时间: 2026-07-03 18:54:17 CST
  更新内容: 补充渠道完成进度条 80 以下红色、80-99 紫色、100 及以上金色三档断言。
 */
@@ -18,10 +22,22 @@ import {
   shouldUseChannelCompletionWarnFill,
 } from './channelCompletionBar.js';
 
-test('uses red below 80, purple from 80 to 99, and gold at 100 percent or above', () => {
+test('uses red below 80, purple from 80 to 119.9, and gold at 120 percent or above', () => {
+  assert.equal(
+    channelCompletionBarBackground({ key: 'online', completion: 120 }, '#E7E2FF'),
+    COLOR.goldGradient
+  );
+  assert.equal(
+    channelCompletionBarBackground({ key: 'online', completion: 119.9 }, '#E7E2FF'),
+    COLOR.goodGradient
+  );
   assert.equal(
     channelCompletionBarBackground({ key: 'online', completion: 112 }, '#E7E2FF'),
-    COLOR.goldGradient
+    COLOR.goodGradient
+  );
+  assert.equal(
+    channelCompletionBarBackground({ key: 'online', completion: 100 }, '#E7E2FF'),
+    COLOR.goodGradient
   );
   assert.equal(
     channelCompletionBarBackground({ key: 'online', completion: 87.5 }, '#E7E2FF'),

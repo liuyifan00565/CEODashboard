@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:28:57 CST
+ 更新内容: 渠道完成条风险语义同步 120% 超额阈值，防止 100%-119.9% 渠道显示金色。
+*/
+/*
  更新时间: 2026-07-08 17:06:01 CST
  更新内容: 交付看板超额交付测试改为 120% 及以上才显示金色标签，100%-119.9% 保持普通完成态。
 */
@@ -169,6 +173,14 @@ test('keeps channel and delivery progress bars on the same risk rule', () => {
   );
   assert.equal(
     channelCompletionBarBackground({ key: 'online', completion: 100 }, '#E4B8D7'),
+    format.COLOR.goodGradient
+  );
+  assert.equal(
+    channelCompletionBarBackground({ key: 'online', completion: 112.3 }, '#E4B8D7'),
+    format.COLOR.goodGradient
+  );
+  assert.equal(
+    channelCompletionBarBackground({ key: 'online', completion: 120 }, '#E4B8D7'),
     format.COLOR.goldGradient
   );
   assert.equal(shouldUseChannelCompletionWarnFill({ key: 'east', completion: 70, warn: true }), true);

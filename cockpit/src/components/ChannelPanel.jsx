@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-08 17:28:57 CST  更新内容: 渠道完成进度条接入 120% 超额阈值，100%-119.9% 不再显示金色。 */
 /* 更新时间: 2026-07-08 16:37:08 CST  更新内容: 渠道二级人员明细跟随本月/年度切换读取对应周期数据。 */
 /* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 渠道完成率单元格内联进度条，避免最右独立进度列造成语义分裂。 */
 /* 更新时间: 2026-07-05 22:45:24 CST  更新内容: 渠道完成表移除状态列，改为按当前维度完成率展示进度条，并配合表头数值列对齐。 */
@@ -17,7 +18,8 @@ import { createPortal } from 'react-dom';
 import AppIcon from './AppIcon';
 import Segmented from './Segmented';
 import { getChannelCompletionRows, getSalesMemberRows } from '../data/mock';
-import { fmtPct, fmtWan, progressGradient } from '../lib/format';
+import { fmtPct, fmtWan } from '../lib/format';
+import { channelCompletionBarBackground } from '../lib/channelCompletionBar';
 import { useThemeTokens } from '../lib/theme';
 import './ChannelPanel.css';
 
@@ -81,6 +83,7 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
       <div className="ch-list">
         {rows.map((c) => {
           const pct = period === 'year' ? c.yearCompletion : c.monthCompletion;
+          const progressBackground = channelCompletionBarBackground({ completion: pct }, tokens.progressMid);
           return (
             <button
               type="button"
@@ -105,7 +108,7 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
                             className="ch-progress-fill"
                             style={{
                               width: `${Math.min(pct, 100)}%`,
-                              background: progressGradient(pct, tokens.progressMid),
+                              background: progressBackground,
                             }}
                           />
                         </span>
@@ -137,6 +140,7 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
             <div className="ch-member-list">
               {members.map((member) => {
                 const pct = member.completion;
+                const progressBackground = channelCompletionBarBackground(member, tokens.progressMid);
                 return (
                   <div className={`ch-member-row${pct < 80 ? ' ch-member-row--warn' : ''}`} key={member.key}>
                     <div className="ch-member-main">
@@ -150,7 +154,7 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
                         <span
                           style={{
                             width: `${Math.min(pct, 100)}%`,
-                            background: progressGradient(pct, tokens.progressMid),
+                            background: progressBackground,
                           }}
                         />
                       </div>

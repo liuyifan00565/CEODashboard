@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:28:57 CST
+ 更新内容: 渠道完成进度条改为 120% 及以上才使用金色超额态，100%-119.9% 保持普通完成色。
+*/
+/*
  更新时间: 2026-07-03 18:19:59 CST
  更新内容: 四区域渠道进度条恢复 80% 以下风险色规则，所有渠道与交付进度统一语义。
 */
@@ -18,8 +22,9 @@ export function isFourRegionChannel(channelKey) {
 
 export function channelCompletionBarBackground(row, midColor) {
   const pct = Number(row?.completion) || 0;
+  const visualPct = pct >= 120 ? pct : Math.min(pct, 99.9);
 
-  return progressGradient(pct, midColor);
+  return progressGradient(visualPct, midColor);
 }
 
 export function shouldUseChannelCompletionWarnFill(row) {
