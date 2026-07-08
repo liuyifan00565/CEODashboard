@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:51:50 CST
+ 更新内容: 算力页升级为经营健康驾驶舱，新增利用率、风险客户、供需关系、版本效率洞察与客户动作标签。
+*/
+/*
  更新时间: 2026-07-06 10:48:16 CST
  更新内容: 算力页图表色板收敛为银紫玫瑰用量、香槟峰值与冷蓝容量语义，移除青绿色和硬蓝主视觉。
 */
@@ -41,11 +45,11 @@ import { useThemeTokens } from '../lib/theme';
 import './ComputeUsagePage.css';
 
 const SEARCH_KEYWORDS = {
-  overview: ['算力', '总容量', '新增', '消耗', '客户', '回复率', '余额'],
-  trend: ['趋势', '年', '月', '日', '日期', '自动回复', '商品同步', '容量'],
-  version: ['版本', '试用版', '企业版', '旗舰版', '卓越版', '创世版', '启航版'],
-  distribution: ['分布', '用量', '客户占比', '高消耗', '零用量'],
-  customer: ['客户', '排行', '手机号', '负责人', '平均回复率'],
+  overview: ['算力', '总容量', '新增', '消耗', '客户', '回复率', '余额', '利用率', '风险客户', '经营判断'],
+  trend: ['趋势', '年', '月', '日', '日期', '自动回复', '商品同步', '容量', '供需', '利用率', '峰值'],
+  version: ['版本', '试用版', '企业版', '旗舰版', '卓越版', '创世版', '启航版', '版本效率'],
+  distribution: ['分布', '用量', '客户占比', '高消耗', '零用量', '激活'],
+  customer: ['客户', '排行', '手机号', '负责人', '平均回复率', '风险', '建议动作', '低余额', '高消耗'],
 };
 
 const DIM_TREND_LABELS = {
@@ -87,9 +91,18 @@ const COMPUTE_VERSION_RIGHT_LABEL_SLOTS = {
   '卓越版': 86,
 };
 const COMPUTE_STACKED_PIE_LABELS = new Set(['卓越版']);
+const LOW_REPLY_RATE = 60;
+const LOW_BALANCE_POINTS = 1000000;
+const HIGH_USAGE_POINTS = 400000;
+const BALANCE_COVERAGE_RISK = 3;
 
 function formatInt(value) {
   return Number(value).toLocaleString('zh-CN');
+}
+
+function formatSignedInt(value) {
+  const numericValue = Number(value) || 0;
+  return `${numericValue > 0 ? '+' : ''}${formatInt(numericValue)}`;
 }
 
 function formatWan(value) {
@@ -98,6 +111,16 @@ function formatWan(value) {
 
 function formatPct(value) {
   return `${Number(value).toFixed(Number.isInteger(value) ? 0 : 1)}%`;
+}
+
+function round1(value) {
+  return Math.round((Number(value) || 0) * 10) / 10;
+}
+
+function percentOf(numerator, denominator) {
+  const base = Number(denominator) || 0;
+  if (!base) return 0;
+  return round1((Number(numerator) || 0) / base * 100);
 }
 
 function formatPieLabelName(name) {
@@ -134,6 +157,56 @@ function getCustomerPageNumbers(currentPage, pageCount) {
   return [1, 'ellipsis-start', currentPage - 1, currentPage, currentPage + 1, 'ellipsis-end', pageCount];
 }
 
+function buildCustomerRiskProfile(row) {
+  const usage = Number(row.usage) || 0;
+  const balance = Number(row.balance) || 0;
+  const replyRate = Number(row.averageReplyRate) || 0;
+  const lowBalance = balance <= LOW_BALANCE_POINTS || (usage > 0 && balance / usage <= BALANCE_COVERAGE_RISK);
+  const highUsage = usage >= HIGH_USAGE_POINTS;
+  const lowReply = replyRate > 0 && replyRate < LOW_REPLY_RATE;
+  const zeroUsage = usage <= 0;
+  const riskTags = [];
+
+  if (zeroUsage) riskTags.push({ label: '零用量', tone: 'idle' });
+  if (highUsage) riskTags.push({ label: '高消耗', tone: 'warn' });
+  if (lowBalance) riskTags.push({ label: '低余额', tone: 'risk' });
+  if (lowReply) riskTags.push({ label: '低回复', tone: 'warn' });
+
+  const riskScore = [zeroUsage, highUsage, lowBalance, lowReply].filter(Boolean).length;
+  const riskTone = riskScore >= 2 || (highUsage && lowBalance) ? 'risk' : riskScore === 1 ? 'warn' : 'stable';
+  let action = '保持观察';
+
+  if (zeroUsage) {
+    action = '客成激活';
+  } else if (highUsage && lowBalance) {
+    action = '销售提醒充值';
+  } else if (lowReply) {
+    action = '客成排查配置';
+  } else if (highUsage) {
+    action = '复盘高价值场景';
+  } else if (lowBalance) {
+    action = '余额预警跟进';
+  }
+
+  return {
+    riskTags: riskTags.length ? riskTags : [{ label: '健康使用', tone: 'stable' }],
+    riskTone,
+    action,
+    isHighRisk: riskTone === 'risk',
+    isLowBalance: lowBalance,
+    isLowReply: lowReply,
+    isHighUsage: highUsage,
+  };
+}
+
+function decorateCustomerRow(row, index) {
+  return {
+    ...row,
+    rowKey: row.rowKey ?? `${row.phone}-${index}`,
+    ...buildCustomerRiskProfile(row),
+  };
+}
+
 function buildCustomerTableRows(rows, totalCount) {
   const sortedRows = [...rows].sort((a, b) => b.usage - a.usage);
   if (!sortedRows.length) return [];
@@ -143,7 +216,7 @@ function buildCustomerTableRows(rows, totalCount) {
 
   return Array.from({ length: totalRows }, (_, index) => {
     if (index < sortedRows.length) {
-      return { ...sortedRows[index], rowKey: `${sortedRows[index].phone}-${index}` };
+      return decorateCustomerRow(sortedRows[index], index);
     }
 
     const source = sortedRows[index % sortedRows.length];
@@ -152,13 +225,12 @@ function buildCustomerTableRows(rows, totalCount) {
     const balance = Math.max(0, source.balance + ((index % 13) - 6) * 24860 - tailIndex * 19);
     const averageReplyRate = Math.max(42, Math.min(96, source.averageReplyRate + ((index % 7) - 3)));
 
-    return {
+    return decorateCustomerRow({
       ...source,
       usage,
       balance,
       averageReplyRate,
-      rowKey: `${source.phone}-${index}`,
-    };
+    }, index);
   });
 }
 
@@ -209,6 +281,87 @@ function getCustomerSortState(sortKey = 'usage-desc') {
     sortField,
     sortDirection,
     sortValue: `${sortField.key}-${sortDirection}`,
+  };
+}
+
+function getDistributionValue(distribution, matcher) {
+  return distribution.find((item) => matcher(String(item.name || '')))?.value ?? 0;
+}
+
+function buildVersionInsight(data) {
+  if (!data.length) return '暂无版本消耗数据';
+
+  const sorted = [...data].sort((a, b) => b.value - a.value);
+  const total = sorted.reduce((sum, item) => sum + Number(item.value || 0), 0);
+  const top = sorted[0];
+  const second = sorted[1];
+  const topValue = Number(top?.value) || 0;
+  const secondValue = Number(second?.value) || 0;
+  const topShare = percentOf(topValue, total);
+  const pairShare = percentOf(topValue + secondValue, total);
+
+  return `${top.name}贡献 ${formatPct(topShare)}，前两版本合计 ${formatPct(pairShare)}，优先看高版本客户的回复效率与余额覆盖。`;
+}
+
+function buildDistributionInsight(distribution) {
+  const zeroUsage = getDistributionValue(distribution, (name) => name.includes('=0'));
+  const highUsage = getDistributionValue(distribution, (name) => name.includes('>10000'));
+
+  return `零用量 ${formatInt(zeroUsage)} 档、高用量 ${formatInt(highUsage)} 档；建议把沉默客户激活和超高消耗客户预警拆成两条运营清单。`;
+}
+
+function buildExecutiveSnapshot({ overview, trend, distribution, customerRows }) {
+  const latest = trend[0] ?? { usage: 0, capacity: 0, addOn: 0 };
+  const previous = trend[1] ?? latest;
+  const utilizationRate = percentOf(overview.consumedCapacity, overview.totalCapacity);
+  const netCapacity = (Number(overview.addedCapacity) || 0) - (Number(overview.consumedCapacity) || 0);
+  const highRiskCount = customerRows.filter((row) => row.isHighRisk).length;
+  const lowBalanceCount = customerRows.filter((row) => row.isLowBalance).length;
+  const lowReplyCount = customerRows.filter((row) => row.isLowReply).length;
+  const highUsageCount = customerRows.filter((row) => row.isHighUsage).length;
+  const zeroUsage = getDistributionValue(distribution, (name) => name.includes('=0'));
+  const usageDelta = (Number(latest.usage) || 0) - (Number(previous.usage) || 0);
+  const usageDeltaRate = percentOf(usageDelta, previous.usage || latest.usage);
+  const averageCustomerUsage = Math.round((Number(overview.customerUsage) || 0) / Math.max(Number(overview.customerCount) || 1, 1));
+
+  let status = '健康';
+  let tone = 'healthy';
+  let cause = `容量消耗率 ${formatPct(utilizationRate)}，当前容量池仍有余量。`;
+  let action = '继续观察新增算力与消耗峰值是否同步抬升。';
+
+  if (utilizationRate >= 75 || highRiskCount >= 20) {
+    status = '偏紧';
+    tone = 'risk';
+    cause = `高风险客户 ${formatInt(highRiskCount)} 个，低余额 ${formatInt(lowBalanceCount)} 个，容量消耗需要前置管控。`;
+    action = '先处理低余额高消耗客户，再评估是否追加容量池。';
+  } else if (zeroUsage >= 50 || lowReplyCount >= 10) {
+    status = '低效待激活';
+    tone = 'warn';
+    cause = `零用量分布 ${formatInt(zeroUsage)} 档，低回复客户 ${formatInt(lowReplyCount)} 个，消耗质量仍有提升空间。`;
+    action = '客成优先激活沉默客户，并排查低回复账号配置。';
+  }
+
+  return {
+    status,
+    tone,
+    cause,
+    action,
+    utilizationRate,
+    netCapacity,
+    highRiskCount,
+    lowBalanceCount,
+    lowReplyCount,
+    highUsageCount,
+    zeroUsage,
+    peakUsage: Math.max(...trend.map((point) => Number(point.usage) || 0), 0),
+    averageCustomerUsage,
+    usageDeltaLabel: `${usageDelta >= 0 ? '较前期 +' : '较前期 '}${formatPct(usageDeltaRate)}`,
+    metrics: [
+      { label: '供需差', value: formatSignedInt(netCapacity) },
+      { label: '日峰值', value: formatWan(Math.max(...trend.map((point) => Number(point.usage) || 0), 0)) },
+      { label: '高消耗客户', value: formatInt(highUsageCount) },
+      { label: '零用量分布', value: formatInt(zeroUsage) },
+    ],
   };
 }
 
@@ -490,13 +643,28 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
   const days = buckets.map((point) => point.label);
   const latestCapacityBase = buckets[0]?.capacity || 1;
   const capacityScale = totalCapacity / latestCapacityBase;
-  const capacity = buckets.map((point) => Math.round(point.capacity * capacityScale));
+  const capacity = buckets.map((point) => Math.round(point.capacity * capacityScale / 10000));
+  const usage = buckets.map((point) => Number(point.usage) || 0);
+  const utilization = buckets.map((point, index) => percentOf(usage[index], capacity[index]));
   const showSlider = days.length > MAX_VISIBLE_TREND_BARS;
   const { sliderEndValue, minValueSpan, maxValueSpan } = getTrendZoomRange(days.length);
   const txt = tokens.chartText;
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
   const capacityColor = tokens.semanticCapacity;
+  const usageColor = tokens.chartActualBarBottom;
+  const utilizationColor = tokens.semanticGoal;
+  const usageBarColor = {
+    type: 'linear',
+    x: 0,
+    y: 0,
+    x2: 0,
+    y2: 1,
+    colorStops: [
+      { offset: 0, color: tokens.chartActualBarTop },
+      { offset: 1, color: tokens.chartActualBarBottom },
+    ],
+  };
 
   return {
     backgroundColor: 'transparent',
@@ -515,7 +683,7 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
         textShadowColor: 'rgba(0,0,0,.55)',
         textShadowBlur: 8,
       },
-      data: ['算力总容量'],
+      data: ['算力总容量', '算力用量', '利用率'],
     },
     grid: { top: 42, left: 10, right: 12, bottom: showSlider ? 44 : 8, containLabel: true },
     dataZoom: showSlider ? [
@@ -573,9 +741,14 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
       textStyle: { color: txt, fontSize: 13 },
       formatter: (params) => {
         const bucket = buckets[params[0]?.dataIndex] ?? null;
+        const capacityValue = params.find((item) => item.seriesName === '算力总容量')?.value || 0;
+        const usageValue = params.find((item) => item.seriesName === '算力用量')?.value || 0;
+        const utilizationValue = params.find((item) => item.seriesName === '利用率')?.value || 0;
         return [
-          tooltipHeader(`${bucket?.range || params[0]?.axisValue || ''} 算力总容量`),
-          tooltipRow({ color: capacityColor, label: '算力总容量', value: formatInt(params[0]?.value || 0) }),
+          tooltipHeader(`${bucket?.range || params[0]?.axisValue || ''} 算力供需`),
+          tooltipRow({ color: capacityColor, label: '算力总容量', value: formatWan(capacityValue) }),
+          tooltipRow({ color: usageColor, label: '算力用量', value: formatWan(usageValue) }),
+          tooltipRow({ color: utilizationColor, label: '利用率', value: formatPct(utilizationValue) }),
         ].join('');
       },
     },
@@ -587,15 +760,27 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
       axisTick: { show: false },
       axisLabel: { color: faint, fontSize: 12, interval: 0, hideOverlap: false, margin: 12 },
     },
-    yAxis: {
-      type: 'value',
-      name: '点',
-      scale: true,
-      nameTextStyle: { color: faint, fontSize: 12, padding: [0, 0, 0, 8] },
-      axisLabel: { color: faint, fontSize: 12 },
-      splitLine: { lineStyle: { color: line } },
-      axisLine: { show: false },
-    },
+    yAxis: [
+      {
+        type: 'value',
+        name: '万点',
+        scale: true,
+        nameTextStyle: { color: faint, fontSize: 12, padding: [0, 0, 0, 8] },
+        axisLabel: { color: faint, fontSize: 12 },
+        splitLine: { lineStyle: { color: line } },
+        axisLine: { show: false },
+      },
+      {
+        type: 'value',
+        name: '利用率%',
+        min: 0,
+        max: (value) => Math.max(12, Math.ceil(value.max + 4)),
+        nameTextStyle: { color: faint, fontSize: 12, padding: [0, 8, 0, 0] },
+        axisLabel: { color: faint, fontSize: 12, formatter: '{value}%' },
+        splitLine: { show: false },
+        axisLine: { show: false },
+      },
+    ],
     series: [
       {
         name: '算力总容量',
@@ -621,6 +806,29 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
         },
         emphasis: { focus: 'series' },
         data: capacity,
+      },
+      {
+        name: '算力用量',
+        type: 'bar',
+        barWidth: 18,
+        itemStyle: {
+          color: usageBarColor,
+          borderRadius: [4, 4, 0, 0],
+        },
+        emphasis: { itemStyle: { color: '#ffffff' } },
+        data: usage,
+      },
+      {
+        name: '利用率',
+        type: 'line',
+        yAxisIndex: 1,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 7,
+        lineStyle: { color: utilizationColor, width: 2.2, shadowBlur: 12, shadowColor: 'rgba(201,169,107,.24)' },
+        itemStyle: { color: utilizationColor, borderColor: 'rgba(255,255,255,.92)', borderWidth: 1.5 },
+        emphasis: { focus: 'series' },
+        data: utilization,
       },
     ],
     media: [
@@ -874,40 +1082,47 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
   const versions = getComputeVersionConsumption();
   const distribution = getComputeUsageDistribution();
   const customers = getComputeCustomerRows();
-  const latestTrend = trend[0] ?? { capacity: 0, usage: 0, addOn: 0 };
+  const customerRows = useMemo(
+    () => buildCustomerTableRows(customers, overview.totalCustomers),
+    [customers, overview.totalCustomers]
+  );
+  const executive = useMemo(
+    () => buildExecutiveSnapshot({ overview, trend, distribution, customerRows }),
+    [overview, trend, distribution, customerRows]
+  );
 
   const kpis = [
     {
-      label: '算力总容量',
+      label: '可用算力池',
       value: formatInt(overview.totalCapacity),
-      sub: '当前可调度容量池',
-      meta: `${periodLabel}容量 ${formatWan(latestTrend.capacity)}`,
+      sub: '当前可调度总容量',
+      meta: `净增 ${formatSignedInt(executive.netCapacity)}`,
       tone: 'capacity',
-      keywords: ['算力总容量', '容量', '余额'],
+      keywords: ['可用算力池', '算力总容量', '容量', '余额'],
     },
     {
-      label: '消耗算力',
+      label: '本期消耗算力',
       value: formatInt(overview.consumedCapacity),
       sub: `${periodLabel}累计消耗`,
-      meta: `日峰值 ${formatWan(latestTrend.usage)}`,
+      meta: `峰值 ${formatWan(executive.peakUsage)} · ${executive.usageDeltaLabel}`,
       tone: 'burn',
-      keywords: ['消耗算力', '用量', '趋势'],
+      keywords: ['本期消耗算力', '消耗算力', '用量', '趋势'],
     },
     {
-      label: '新增算力',
-      value: formatInt(overview.addedCapacity),
-      sub: '充值与扩容入池',
-      meta: `最近一日增量 ${formatWan(latestTrend.addOn)}`,
-      tone: 'add',
-      keywords: ['新增算力', '扩容', '充值'],
-    },
-    {
-      label: '客户回复效率',
-      value: formatPct(overview.averageReplyRate),
-      sub: `${formatInt(overview.customerCount)} 个客户纳入统计`,
-      meta: `新开客户 ${overview.newCustomers} · 店铺 ${overview.newStores}`,
+      label: '算力利用率',
+      value: formatPct(executive.utilizationRate),
+      sub: '消耗 / 总容量',
+      meta: `客户均用 ${formatInt(executive.averageCustomerUsage)} 点`,
       tone: 'reply',
-      keywords: ['客户', '平均回复率', '店铺'],
+      keywords: ['算力利用率', '利用率', '供需', '效率'],
+    },
+    {
+      label: '高风险客户',
+      value: formatInt(executive.highRiskCount),
+      sub: '低余额 / 低回复 / 高消耗',
+      meta: `低余额 ${formatInt(executive.lowBalanceCount)} · 低回复 ${formatInt(executive.lowReplyCount)}`,
+      tone: 'add',
+      keywords: ['高风险客户', '风险客户', '低余额', '低回复', '高消耗'],
     },
   ];
 
@@ -932,10 +1147,8 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
     () => buildPieOption({ data: distributionPieData, tokens, unitLabel: '客户占比权重' }),
     [distributionPieData, tokens]
   );
-  const customerRows = useMemo(
-    () => buildCustomerTableRows(customers, overview.totalCustomers),
-    [customers, overview.totalCustomers]
-  );
+  const versionInsight = useMemo(() => buildVersionInsight(versionPieData), [versionPieData]);
+  const distributionInsight = useMemo(() => buildDistributionInsight(distributionPieData), [distributionPieData]);
   const customerColumnFilterOptions = useMemo(
     () => CUSTOMER_COLUMN_FILTERS.reduce((options, field) => ({
       ...options,
@@ -1019,6 +1232,27 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
         ))}
       </div>
 
+      <section
+        className={`cpu-command cpu-command--${executive.tone}`}
+        data-anim
+        data-search-match={matchesTerm(SEARCH_KEYWORDS.overview, searchTerm) ? 'true' : undefined}
+      >
+        <div className="cpu-command__copy">
+          <span className="cpu-command__eyebrow">经营判断 · {periodLabel}口径</span>
+          <strong className="cpu-command__status">{executive.status}</strong>
+          <span className="cpu-command__text">{executive.cause}</span>
+          <span className="cpu-command__action">{executive.action}</span>
+        </div>
+        <div className="cpu-command__metrics" aria-label="算力经营判断指标">
+          {executive.metrics.map((metric) => (
+            <span className="cpu-command__metric" key={metric.label}>
+              <b>{metric.value}</b>
+              <em>{metric.label}</em>
+            </span>
+          ))}
+        </div>
+      </section>
+
       <div className="cpu-grid">
         <Panel
           className="cpu-panel--trend"
@@ -1033,8 +1267,8 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
 
         <Panel
           className="cpu-panel--capacity-trend"
-          title={`${periodLabel}算力总容量趋势`}
-          sub="容量池变化 · 可调度算力"
+          title={`${periodLabel}算力供需关系`}
+          sub="容量池 · 消耗 · 利用率"
           active={matchesTerm(SEARCH_KEYWORDS.trend, searchTerm)}
         >
           <div className="cpu-capacity-chart">
@@ -1050,6 +1284,7 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
           <div className="cpu-pie-wrap">
             <EChart option={versionPieOption} style={{ height: '100%' }} />
           </div>
+          <div className="cpu-panel-insight">{versionInsight}</div>
         </Panel>
 
         <Panel
@@ -1060,6 +1295,7 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
           <div className="cpu-pie-wrap">
             <EChart option={distributionPieOption} style={{ height: '100%' }} />
           </div>
+          <div className="cpu-panel-insight">{distributionInsight}</div>
         </Panel>
       </div>
 
@@ -1129,11 +1365,13 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
                   activeSortDirection={activeSortDirection}
                   onSortChange={updateCustomerSort}
                 />
+                <th>风险标签</th>
+                <th>建议动作</th>
               </tr>
             </thead>
             <tbody>
               {customerPageRows.map((customer) => (
-                <tr key={customer.rowKey}>
+                <tr key={customer.rowKey} className={`cpu-table-row cpu-table-row--${customer.riskTone}`}>
                   <td>{customer.phone}</td>
                   <td className="cpu-table__owner">{customer.owner}</td>
                   <td>{customer.accountType}</td>
@@ -1142,6 +1380,14 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
                   <td>{formatInt(customer.usage)}</td>
                   <td>{formatInt(customer.balance)}</td>
                   <td>{formatPct(customer.averageReplyRate)}</td>
+                  <td>
+                    <span className="cpu-risk-tags">
+                      {customer.riskTags.map((tag) => (
+                        <span className={`cpu-risk-tag cpu-risk-tag--${tag.tone}`} key={tag.label}>{tag.label}</span>
+                      ))}
+                    </span>
+                  </td>
+                  <td className="cpu-table__action">{customer.action}</td>
                 </tr>
               ))}
             </tbody>

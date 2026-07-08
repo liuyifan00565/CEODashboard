@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 18:51:50 CST
+ 更新内容: 算力页回归测试同步经营健康驾驶舱改版，覆盖利用率、风险客户、供需关系和客户建议动作。
+*/
+/*
  更新时间: 2026-07-08 18:22:00 CST
  更新内容: 经营总览二级弹窗回归同步成本月度口径、当前筛选提示和渠道人员明细标题。
 */
@@ -378,7 +382,8 @@ test('keeps only compute usage in the compute trend chart with clear non-fluores
   assert.doesNotMatch(computePageSource, /完成率%/);
   assert.doesNotMatch(computePageSource, /label:\s*'完成率'/);
   assert.doesNotMatch(computePageSource, /barGap:\s*'-100%'/);
-  assert.doesNotMatch(computePageSource, /yAxisIndex:\s*1/);
+  const usageTrendSource = computePageSource.match(/function buildTrendOption[\s\S]*?function buildCapacityTrendOption/)?.[0] ?? '';
+  assert.doesNotMatch(usageTrendSource, /yAxisIndex:\s*1/);
   assert.doesNotMatch(computePageSource, /const completionColor = '#f472b6';/);
   assert.doesNotMatch(computePageSource, /#dfff00/);
   assert.doesNotMatch(computePageSource, /#ff4d5f/);
@@ -859,22 +864,26 @@ test('uses full-width compute trend sliders that resize from 3 to 15 bars', () =
   assert.match(computePageCss, /\.cpu-trend-chart \{[\s\S]*?min-height:\s*420px;/);
 });
 
-test('adds a linked full-width compute capacity trend card below usage trend', () => {
+test('adds a linked full-width compute supply-demand card below usage trend', () => {
   assert.match(computePageSource, /function buildCapacityTrendOption\(\{ trend, tokens, totalCapacity \}\)/);
   assert.match(computePageSource, /const capacityColor = tokens\.semanticCapacity;/);
   assert.match(computePageSource, /capacity:\s*point\.capacity \?\? 0/);
   assert.match(computePageSource, /const latestCapacityBase = buckets\[0\]\?\.capacity \|\| 1;/);
   assert.match(computePageSource, /const capacityScale = totalCapacity \/ latestCapacityBase;/);
-  assert.match(computePageSource, /const capacity = buckets\.map\(\(point\) => Math\.round\(point\.capacity \* capacityScale\)\);/);
-  assert.match(computePageSource, /value: formatInt\(params\[0\]\?\.value \|\| 0\)/);
+  assert.match(computePageSource, /const capacity = buckets\.map\(\(point\) => Math\.round\(point\.capacity \* capacityScale \/ 10000\)\);/);
+  assert.match(computePageSource, /const usage = buckets\.map\(\(point\) => Number\(point\.usage\) \|\| 0\);/);
+  assert.match(computePageSource, /const utilization = buckets\.map\(\(point, index\) => percentOf\(usage\[index\], capacity\[index\]\)\);/);
   assert.match(computePageSource, /const capacityTrendOption = useMemo\([\s\S]*?buildCapacityTrendOption\(\{ trend, tokens, totalCapacity: overview\.totalCapacity \}\),[\s\S]*?\[trend, tokens, overview\.totalCapacity\]/);
-  assert.match(computePageSource, /title=\{`\$\{periodLabel\}算力总容量趋势`\}/);
-  assert.match(computePageSource, /sub="容量池变化 · 可调度算力"/);
+  assert.match(computePageSource, /title=\{`\$\{periodLabel\}算力供需关系`\}/);
+  assert.match(computePageSource, /sub="容量池 · 消耗 · 利用率"/);
   assert.match(computePageSource, /className="cpu-panel--capacity-trend"/);
   assert.match(computePageSource, /className="cpu-capacity-chart"/);
   assert.match(computePageSource, /className="cpu-capacity-echart"/);
   assert.match(computePageSource, /option=\{capacityTrendOption\}/);
   assert.match(computePageSource, /name:\s*'算力总容量'[\s\S]*?type:\s*'line'[\s\S]*?smooth:\s*true[\s\S]*?areaStyle:/);
+  assert.match(computePageSource, /name:\s*'算力用量'[\s\S]*?type:\s*'bar'/);
+  assert.match(computePageSource, /name:\s*'利用率'[\s\S]*?type:\s*'line'[\s\S]*?yAxisIndex:\s*1/);
+  assert.match(computePageSource, /tooltipRow\(\{ color: utilizationColor, label: '利用率', value: formatPct\(utilizationValue\) \}\)/);
   assert.match(computePageSource, /fillerColor:\s*'rgba\(126,167,255,\.22\)'/);
   assert.match(computePageSource, /borderColor:\s*'rgba\(126,167,255,\.34\)'/);
   assert.match(computePageSource, /shadowColor:\s*'rgba\(126,167,255,\.42\)'/);
@@ -948,6 +957,31 @@ test('uses the overview half-ring palette for compute donut charts', () => {
   assert.match(computePageSource, /buildPieOption\(\{ data: distributionPieData, tokens, unitLabel: '客户占比权重' \}\)/);
   assert.match(computePageSource, /borderRadius:\s*8,[\s\S]*?borderColor:\s*'rgba\(255, 255, 255, \.12\)'[\s\S]*?borderWidth:\s*2,[\s\S]*?shadowBlur:\s*22,[\s\S]*?shadowColor:\s*'rgba\(0, 0, 0, \.32\)'/);
   assert.doesNotMatch(computePageSource, /borderColor:\s*'rgba\(12,12,13,\.72\)'/);
+});
+
+test('surfaces compute executive judgement, utilization, and customer actions', () => {
+  assert.match(computePageSource, /label:\s*'算力利用率'/);
+  assert.match(computePageSource, /value:\s*formatPct\(executive\.utilizationRate\)/);
+  assert.match(computePageSource, /label:\s*'高风险客户'/);
+  assert.match(computePageSource, /value:\s*formatInt\(executive\.highRiskCount\)/);
+  assert.match(computePageSource, /function buildExecutiveSnapshot\(\{ overview, trend, distribution, customerRows \}\)/);
+  assert.match(computePageSource, /className=\{`cpu-command cpu-command--\$\{executive\.tone\}`\}/);
+  assert.match(computePageSource, /经营判断 · \{periodLabel\}口径/);
+  assert.match(computePageSource, /executive\.metrics\.map\(\(metric\) =>/);
+  assert.match(computePageSource, /const LOW_BALANCE_POINTS = 1000000;/);
+  assert.match(computePageSource, /const HIGH_USAGE_POINTS = 400000;/);
+  assert.match(computePageSource, /const LOW_REPLY_RATE = 60;/);
+  assert.match(computePageSource, /function buildCustomerRiskProfile\(row\)/);
+  assert.match(computePageSource, /<th>风险标签<\/th>/);
+  assert.match(computePageSource, /<th>建议动作<\/th>/);
+  assert.match(computePageSource, /className=\{`cpu-risk-tag cpu-risk-tag--\$\{tag\.tone\}`\}/);
+  assert.match(computePageSource, /className="cpu-table__action"/);
+  assert.match(computePageSource, /const versionInsight = useMemo\(\(\) => buildVersionInsight\(versionPieData\), \[versionPieData\]\);/);
+  assert.match(computePageSource, /const distributionInsight = useMemo\(\(\) => buildDistributionInsight\(distributionPieData\), \[distributionPieData\]\);/);
+  assert.match(computePageCss, /\.cpu-command \{[\s\S]*?background:\s*var\(--dashboard-card-bg\);[\s\S]*?border:\s*1px solid var\(--dashboard-card-border\);/);
+  assert.match(computePageCss, /\.cpu-panel-insight \{/);
+  assert.match(computePageCss, /\.cpu-risk-tag--risk \{/);
+  assert.match(computePageCss, /\.cpu-table__action \{/);
 });
 
 test('uses mutually exclusive table-header sorting and pagination in compute customer ranking', () => {
