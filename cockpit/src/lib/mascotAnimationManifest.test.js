@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-08 17:33:51 CST
+ 更新内容: 要求所有运行态动作共享同一套完整稳定福客帧，防止状态切换造成裁切、大小跳变或符号残留。
+*/
+/*
  更新时间: 2026-07-08 17:20:26 CST
  更新内容: 要求默认待机保持慢速同源帧循环，避免快速眨眼和跨帧尺寸漂移。
 */
@@ -64,17 +68,6 @@ const requiredActions = [
 
 const requiredSheetKeys = [
   'idleFukeRich',
-  'idleBreathe',
-  'idleLook',
-  'idleBounce',
-  'idlePatrol',
-  'wave',
-  'guide',
-  'talk',
-  'think',
-  'alert',
-  'celebrate',
-  'click',
 ];
 
 function publicAssetExists(src) {
@@ -110,6 +103,7 @@ test('limits the 2D mascot runtime to approved generated project assets', () => 
     assert.ok(publicAssetExists(sheet));
   }
   assert.ok(!Object.values(MASCOT_APPROVED_ASSETS.sheets).includes('/mascot-actions/mascot-laptop.png'));
+  assert.deepEqual(Object.values(MASCOT_APPROVED_ASSETS.sheets), ['/mascot-actions/mascot-idle-fuke-rich.png']);
 });
 
 test('uses the stabilized Fu Xiaoke slow idle sheet as the default real frame loop', () => {
@@ -129,14 +123,11 @@ test('maps product actions to explicit frame animation specs', () => {
     const animation = MASCOT_ANIMATIONS[action];
     assert.ok(animation, `${action} should have an animation spec`);
     assert.ok(Array.isArray(animation.frames), `${action} should declare frames`);
-    if (action === MASCOT_ACTIONS.idle) {
-      assert.equal(animation.fps, 6, `${action} should be a calm slow idle loop`);
-    } else {
-      assert.ok(animation.fps >= 12, `${action} should be at least 12fps`);
-    }
+    assert.equal(animation.fps, 6, `${action} should use the calm stable Fu Xiaoke loop`);
     assert.equal(animation.playback, 'frames', `${action} should play actual authored frames`);
     assert.ok(animation.frames.length >= 8, `${action} should have enough frames for smooth motion`);
-    assert.ok(MASCOT_ACTION_SHEETS[animation.sheetKey], `${action} should reference a generated sheet`);
+    assert.equal(animation.sheetKey, 'idleFukeRich', `${action} should use the same complete stable sheet`);
+    assert.ok(MASCOT_ACTION_SHEETS[animation.sheetKey], `${action} should reference the approved stable sheet`);
     assert.ok(animation.frames.every((frame) => frame >= 0 && frame < MASCOT_ACTION_SHEETS[animation.sheetKey].frameCount));
   }
   assert.equal(MASCOT_ANIMATIONS.guide.durationMs, 1000);
@@ -144,9 +135,9 @@ test('maps product actions to explicit frame animation specs', () => {
   assert.equal(MASCOT_ANIMATIONS.wave.loop, false);
   assert.equal(MASCOT_ANIMATIONS.click.loop, false);
   assert.equal(MASCOT_ANIMATIONS.talk.loop, true);
-  assert.equal(MASCOT_ANIMATIONS.maintenance.sheetKey, 'idleBreathe');
-  assert.equal(MASCOT_ANIMATIONS.maintenanceSave.sheetKey, 'celebrate');
-  assert.equal(MASCOT_ANIMATIONS.maintenanceReview.sheetKey, 'think');
+  assert.equal(MASCOT_ANIMATIONS.maintenance.sheetKey, 'idleFukeRich');
+  assert.equal(MASCOT_ANIMATIONS.maintenanceSave.sheetKey, 'idleFukeRich');
+  assert.equal(MASCOT_ANIMATIONS.maintenanceReview.sheetKey, 'idleFukeRich');
   assert.ok(
     Object.values(MASCOT_ANIMATIONS).every((animation) => animation.sheetKey !== 'laptop'),
     'runtime mascot animations should not display the laptop sheet in the sidebar launcher',
@@ -180,6 +171,6 @@ test('resolves idle variants and unknown actions deterministically', () => {
   );
   assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).playback, 'frames');
   assert.equal(getMascotAnimation(MASCOT_ACTIONS.idle, { idleVariant: 'look' }).sheetKey, 'idleFukeRich');
-  assert.equal(getMascotAnimation('maintenanceSave').sheetKey, 'celebrate');
+  assert.equal(getMascotAnimation('maintenanceSave').sheetKey, 'idleFukeRich');
   assert.notEqual(getMascotAnimation('maintenanceSave').sheetKey, 'laptop');
 });
