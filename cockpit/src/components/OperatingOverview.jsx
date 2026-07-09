@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 15:24:22 CST  更新内容: 配合经营总览分界线左移，半环中心点小幅右移并约束外部标签边距，避免年度结构左侧标签被裁切。 */
 /* 更新时间: 2026-07-09 15:24:00 CST  更新内容: 回款半环按当前 258px 图区换算为与版本情况约 248px 外径一致，radius 调整为 57%/96%，避免机械照抄百分比导致视觉过小。 */
 /* 更新时间: 2026-07-09 15:18:00 CST  更新内容: 回款半环饼图尺寸重新对齐版本情况半环，radius/center 恢复为 45%/76% 与 49.5%/68%，只保留标签防省略。 */
 /* 更新时间: 2026-07-09 15:04:00 CST  更新内容: 去除半环外部标签深色底和边框，恢复纯文字标签并禁止省略，解决窄列下出现黑框与"..."的问题。 */
@@ -279,7 +280,7 @@ function channelStructureOption(structure, periodMeta, tokens) {
         type: 'pie',
         name: periodMeta.chartName,
         radius: ['57%', '96%'],
-        center: ['49.5%', '68%'],
+        center: ['53%', '68%'],
         startAngle: 180,
         endAngle: 360,
         padAngle: 3,
@@ -295,6 +296,8 @@ function channelStructureOption(structure, periodMeta, tokens) {
         label: {
           show: false,
           position: 'outside',
+          alignTo: 'edge',
+          edgeDistance: 8,
           formatter: (params) => `{name|${params.name}}\n{percent|${params.percent}%}`,
           bleedMargin: 0,
           distanceToLabelLine: 0,
@@ -331,6 +334,13 @@ function channelStructureOption(structure, periodMeta, tokens) {
           smooth: 0.18,
           length: 10,
           length2: 16,
+        },
+        labelLayout: (params) => {
+          if (params.labelRect?.x < 8) {
+            return { x: 8 };
+          }
+
+          return {};
         },
         data: structure.pieData.map((item, index) => {
           const isMajorLabel = index < 2 && !item.isEmpty && Number(item.value) > 0;
