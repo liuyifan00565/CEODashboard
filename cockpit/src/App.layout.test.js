@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 18:07:32 CST
+ 更新内容: 经营总览回归测试按截图红线同步月度与年度主卡继续上收后的 190px 回款结构图区高度。
+*/
+/*
  更新时间: 2026-07-09 17:59:03 CST
  更新内容: 经营总览回归测试同步月度与年度主卡继续收窄后的图区高度、经营行高和年度目标进度胶囊高度。
 */
@@ -1412,8 +1416,8 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   assert.match(monthGridBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.035\);/);
   assert.match(operatingOverviewCss, /\.op-month-primary-value-row\s*\{[\s\S]*?align-items:\s*flex-end;/);
   assert.match(operatingOverviewCss, /\.op-month-refund-note\s*\{[\s\S]*?margin-bottom:\s*clamp\(5px, \.55vw, 8px\);/);
-  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 208px;[\s\S]*?align-content:\s*start;/);
-  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?height:\s*208px;[\s\S]*?min-height:\s*0;/);
+  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 190px;[\s\S]*?align-content:\s*start;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?height:\s*190px;[\s\S]*?min-height:\s*0;/);
   assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*0;/);
   assert.match(operatingOverviewCss, /\.op-channel-item\s*\{[\s\S]*?min-height:\s*34px;/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-structure-progress/);

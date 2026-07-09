@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 18:07:32 CST  更新内容: 按截图红线继续上收月度与年度经营主卡底部，将回款结构图区高度压到 190px，减少右侧经营列表下方留白。 */
 /* 更新时间: 2026-07-09 17:59:03 CST  更新内容: 月度与年度经营主卡继续收缩上下高度，降低外层竖向内边距、回款结构图区和经营情况行高。 */
 /* 更新时间: 2026-07-09 17:57:41 CST  更新内容: 年度目标进度条右端收回到中间结构区分界线内侧，避免越界压到右侧经营情况。 */
 /* 更新时间: 2026-07-09 17:49:45 CST  更新内容: 年度目标进度条桌面端继续向右延长，贴近右侧经营情况列左侧留白。 */
@@ -298,7 +299,7 @@
 .op-recovery-structure {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto 208px;
+  grid-template-rows: auto 190px;
   align-content: start;
   gap: 0;
   margin-left: -6px;
@@ -324,7 +325,7 @@
 .op-channel-chart-wrap {
   position: relative;
   min-width: 0;
-  height: 208px;
+  height: 190px;
   min-height: 0;
   display: grid;
   place-items: center;
@@ -452,11 +453,11 @@
 }
 
 .op-annual-grid .op-recovery-structure {
-  grid-template-rows: auto 208px;
+  grid-template-rows: auto 190px;
 }
 
 .op-annual-grid .op-channel-chart-wrap {
-  height: 208px;
+  height: 190px;
 }
 
 .op-annual-grid .op-operating-side {
@@ -666,7 +667,7 @@
   }
 
   .op-channel-chart-wrap {
-    height: 208px;
+    height: 190px;
   }
 
   .op-channel-chart {
