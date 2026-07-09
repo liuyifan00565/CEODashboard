@@ -15,6 +15,10 @@
  更新内容: 经营总览回归测试锁定年度目标进度条下方三项辅助数据已移除。
 */
 /*
+ Update time: 2026-07-09 17:43:00 CST
+ Update content: Regression test locks cost maintenance fixed first columns to opaque backgrounds during horizontal scrolling.
+*/
+/*
  Update time: 2026-07-09 17:18:00 CST
  Update content: Regression test now requires the Excel import dialog to omit template download controls and leave downloads to the toolbar.
 */
@@ -912,6 +916,15 @@ test('uses silver-purple maintenance table row hover overlays and persistent cli
   assert.match(maintenancePageSource, /getSelectableRowProps\(`labor:\$\{row\.id\}`, selectedCostRow, setSelectedCostRow/);
   assert.match(maintenancePageSource, /getSelectableRowProps\(`org:\$\{user\.id\}`, selectedOrgRow, setSelectedOrgRow/);
   assert.match(maintenancePageSource, /getSelectableRowProps\(`source:\$\{source\.code\}`, selectedSourceRow, setSelectedSourceRow/);
+});
+
+test('keeps cost maintenance sticky first columns opaque while horizontally scrolling', () => {
+  const matrixWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap');
+
+  assert.match(matrixWrapBlock, /--mnt-cost-sticky-bg:\s*#[0-9a-fA-F]{6};/);
+  assert.match(maintenancePageCss, /\.mnt-matrix--cost th:first-child,\s*[\s\S]*?\.mnt-matrix--labor td:first-child \{[\s\S]*?background:\s*var\(--mnt-cost-sticky-bg\);[\s\S]*?backdrop-filter:\s*none;/);
+  assert.match(maintenancePageCss, /\.mnt-matrix--cost tbody tr:hover td:first-child,\s*[\s\S]*?\.mnt-matrix--labor tbody tr:hover td:first-child \{[\s\S]*?background:\s*var\(--mnt-cost-sticky-hover-bg\);/);
+  assert.match(maintenancePageCss, /\.mnt-matrix--cost tbody tr\.mnt-row--selected td:first-child,\s*[\s\S]*?\.mnt-matrix--labor tbody tr\.mnt-row--selected td:first-child \{[\s\S]*?background:\s*var\(--mnt-cost-sticky-selected-bg\);/);
 });
 
 test('keeps the maintenance year dropdown compact in the toolbar', () => {
