@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 17:59:03 CST  更新内容: 月度与年度经营主卡继续收缩上下高度，降低外层竖向内边距、回款结构图区和经营情况行高。 */
 /* 更新时间: 2026-07-09 17:57:41 CST  更新内容: 年度目标进度条右端收回到中间结构区分界线内侧，避免越界压到右侧经营情况。 */
 /* 更新时间: 2026-07-09 17:49:45 CST  更新内容: 年度目标进度条桌面端继续向右延长，贴近右侧经营情况列左侧留白。 */
 /* 更新时间: 2026-07-09 17:39:04 CST  更新内容: 年度目标进度条改为左侧事实区内联延展布局，取消 grid 位移以避免被卡片裁切。 */
@@ -59,7 +60,7 @@
   -webkit-backdrop-filter: var(--dashboard-card-blur);
   backdrop-filter: var(--dashboard-card-blur);
   box-shadow: var(--dashboard-card-shadow);
-  padding: clamp(10px, 1.05vw, 16px) clamp(18px, 1.8vw, 24px);
+  padding: clamp(8px, .85vw, 13px) clamp(18px, 1.8vw, 24px);
   transition: border-color .22s ease, box-shadow .22s ease;
 }
 
@@ -73,15 +74,15 @@
   grid-area: progress;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .op-panel--annual {
   grid-area: annual;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-block: clamp(10px, 1vw, 15px);
+  gap: 5px;
+  padding-block: clamp(8px, .85vw, 13px);
 }
 
 .op-search-result {
@@ -188,10 +189,10 @@
   grid-template-columns: minmax(330px, 1.02fr) minmax(260px, .78fr) minmax(330px, 1.08fr);
   align-items: stretch;
   column-gap: var(--op-grid-column-gap);
-  row-gap: clamp(3px, .45vw, 5px);
+  row-gap: clamp(2px, .35vw, 4px);
   border-top: 1px solid rgba(255,255,255,.035);
   border-bottom: 1px solid rgba(255,255,255,.035);
-  padding: clamp(2px, .35vw, 4px) 0;
+  padding: clamp(1px, .25vw, 3px) 0;
 }
 
 .op-annual-grid {
@@ -200,11 +201,11 @@
   grid-template-columns: minmax(330px, 1.02fr) minmax(260px, .78fr) minmax(330px, 1.08fr);
   align-items: stretch;
   column-gap: var(--op-grid-column-gap);
-  row-gap: clamp(3px, .45vw, 5px);
+  row-gap: clamp(2px, .35vw, 4px);
   border-top: 1px solid rgba(255,255,255,.035);
   border-bottom: 1px solid rgba(255,255,255,.035);
-  padding: clamp(2px, .35vw, 4px) 0;
-  padding-bottom: clamp(3px, .45vw, 5px);
+  padding: clamp(1px, .25vw, 3px) 0;
+  padding-bottom: clamp(2px, .35vw, 4px);
 }
 
 .op-month-primary,
@@ -212,7 +213,7 @@
   min-width: 0;
   display: grid;
   align-content: center;
-  gap: 8px;
+  gap: 7px;
 }
 
 .op-month-primary-value-row {
@@ -297,7 +298,7 @@
 .op-recovery-structure {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto 224px;
+  grid-template-rows: auto 208px;
   align-content: start;
   gap: 0;
   margin-left: -6px;
@@ -323,7 +324,7 @@
 .op-channel-chart-wrap {
   position: relative;
   min-width: 0;
-  height: 224px;
+  height: 208px;
   min-height: 0;
   display: grid;
   place-items: center;
@@ -345,13 +346,13 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
 }
 
 .op-channel-list {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
 }
 
 .op-channel-item {
@@ -361,8 +362,8 @@
   grid-template-columns: 10px minmax(0, 1fr) minmax(74px, auto) auto;
   align-items: center;
   gap: 10px;
-  min-height: 36px;
-  padding: 4px 8px;
+  min-height: 34px;
+  padding: 3px 8px;
   border: 1px solid transparent;
   border-radius: 12px;
   background: transparent;
@@ -451,11 +452,11 @@
 }
 
 .op-annual-grid .op-recovery-structure {
-  grid-template-rows: auto 224px;
+  grid-template-rows: auto 208px;
 }
 
 .op-annual-grid .op-channel-chart-wrap {
-  height: 224px;
+  height: 208px;
 }
 
 .op-annual-grid .op-operating-side {
@@ -464,28 +465,28 @@
 }
 
 .op-annual-grid .op-channel-item {
-  min-height: 39px;
-  padding-block: 5px;
+  min-height: 37px;
+  padding-block: 4px;
 }
 
 .op-annual-progress-footer {
   width: min(calc(100% + clamp(288px, calc(27.5vw - 105px), 424px)), calc(100vw - 96px));
   display: grid;
-  gap: 6px;
+  gap: 5px;
   align-self: start;
-  margin-top: clamp(3px, .45vw, 6px);
+  margin-top: clamp(2px, .35vw, 4px);
   transform: none;
   z-index: 2;
 }
 
 .op-annual-progress-main {
   min-width: 0;
-  min-height: 32px;
+  min-height: 30px;
   display: grid;
   grid-template-columns: auto minmax(140px, 1fr) auto;
   align-items: center;
   gap: clamp(6px, .7vw, 9px);
-  padding: 5px 10px;
+  padding: 4px 10px;
   border: 1px solid rgba(255,255,255,.07);
   border-radius: 14px;
   background: rgba(255,255,255,.026);
@@ -657,7 +658,7 @@
     border-right: 0;
     border-top: 1px solid rgba(255,255,255,.035);
     border-bottom: 1px solid rgba(255,255,255,.035);
-    padding-block: 14px;
+    padding-block: 12px;
   }
 
   .op-channel-list {
@@ -665,7 +666,7 @@
   }
 
   .op-channel-chart-wrap {
-    height: 224px;
+    height: 208px;
   }
 
   .op-channel-chart {
@@ -676,7 +677,7 @@
 
 @media (max-width: 560px) {
   .op-panel {
-    padding: 16px;
+    padding: 14px;
   }
 
   .op-progress-head,
