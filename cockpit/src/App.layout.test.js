@@ -1,4 +1,16 @@
 /*
+ 更新时间: 2026-07-09 12:02:57 CST
+ 更新内容: 经营总览回归测试同步超额/缺口并入主数字事实行，并删除独立风险渠道提醒卡。
+*/
+/*
+ 更新时间: 2026-07-09 11:58:00 CST
+ 更新内容: 经营总览回归测试同步收窄后的月度回款主卡，移除时间进度和月目标进度条断言。
+*/
+/*
+ 更新时间: 2026-07-09 11:43:19 CST
+ 更新内容: 经营总览回归测试同步月度回款主卡三栏布局，锁定本月回款结构与实际/目标经营列表。
+*/
+/*
  更新时间: 2026-07-09 11:15:17 CST
  更新内容: 经营总览回归测试锁定渠道目标完成结构饼图与版本情况半环同款的色板、环形参数和低光晕样式。
 */
@@ -446,10 +458,11 @@ test('keeps overview card placement stable when search result wrappers appear', 
   assert.match(searchResultBorderSource, /export default function SearchResultBorder\(\{ active, children, className = '' \}\)/);
   assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(progressKeywords, searchTerm\)\} className="op-search-result op-search-result--progress">/);
   assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(ANNUAL_KEYWORDS, searchTerm\)\} className="op-search-result op-search-result--annual">/);
-  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(CHANNEL_KEYWORDS, searchTerm\)\} className="op-search-result op-search-result--channel">/);
+  assert.doesNotMatch(operatingOverviewSource, /CHANNEL_KEYWORDS/);
+  assert.doesNotMatch(operatingOverviewSource, /op-search-result--channel/);
   assert.match(cssRuleBody(operatingOverviewCss, '.op-search-result--progress'), /grid-area:\s*progress;/);
   assert.match(cssRuleBody(operatingOverviewCss, '.op-search-result--annual'), /grid-area:\s*annual;/);
-  assert.match(cssRuleBody(operatingOverviewCss, '.op-search-result--channel'), /grid-area:\s*channel;/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-search-result--channel/);
 });
 
 test('morphs the FuKe brand capsule into compact and minimal sticky identities on scroll', () => {
@@ -1132,15 +1145,27 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">经营进度总览<\/span>/);
   assert.match(operatingOverviewSource, /本月回款/);
   assert.match(operatingOverviewSource, /月度完成率/);
-  assert.match(operatingOverviewSource, /时间进度/);
-  assert.match(operatingOverviewSource, /formatPaceLead/);
-  assert.match(operatingOverviewSource, /领先/);
+  assert.doesNotMatch(operatingOverviewSource, /formatPaceLead/);
+  assert.doesNotMatch(operatingOverviewSource, /'时间进度'/);
+  assert.doesNotMatch(operatingOverviewSource, /<span>时间进度<\/span>/);
+  assert.doesNotMatch(operatingOverviewSource, /时间进度 \{formatPct/);
+  assert.doesNotMatch(operatingOverviewSource, /领先 7\.1%/);
   assert.doesNotMatch(operatingOverviewSource, /预计影响缺口 \{overviewMetrics\.riskImpactGap\}万/);
   assert.match(operatingOverviewSource, /目标缺口/);
-  assert.match(operatingOverviewSource, /风险渠道/);
+  assert.match(operatingOverviewSource, /超额完成/);
+  assert.match(operatingOverviewSource, /op-month-primary-fact--over/);
+  assert.match(operatingOverviewSource, /\{targetStatusLabel\} \{formatWan\(targetStatusValue\)\}万/);
+  assert.doesNotMatch(operatingOverviewSource, /<span>风险渠道<\/span>/);
   assert.match(operatingOverviewSource, /getChannelCompletionRows\('month'\)/);
-  assert.match(operatingOverviewSource, /riskChannel\?\.name/);
-  assert.match(operatingOverviewSource, /完成率 \{formatPct\(riskChannel\?\.completion \?\? 0\)\}/);
+  assert.match(operatingOverviewSource, /function MonthlyRecoveryStructure/);
+  assert.match(operatingOverviewSource, /function OperatingSituation/);
+  assert.match(operatingOverviewSource, /<h2>本月回款结构<\/h2>/);
+  assert.match(operatingOverviewSource, /<h2>经营情况<\/h2>/);
+  assert.match(operatingOverviewSource, /实际回款 \/ 目标回款/);
+  assert.match(operatingOverviewSource, /实际 \{formatWan\(row\.recovered\)\}万 \/ 目标 \{formatWan\(row\.target\)\}万/);
+  assert.match(operatingOverviewSource, /row\.gap > 0 && <span>缺口 \{formatWan\(row\.gap\)\}万<\/span>/);
+  assert.doesNotMatch(operatingOverviewSource, /riskChannel\?\.name/);
+  assert.doesNotMatch(operatingOverviewSource, /const riskChannel/);
   assert.doesNotMatch(operatingOverviewSource, /overviewMetrics\.monthJudgement/);
   assert.match(operatingOverviewSource, /查看近期明细/);
   assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
@@ -1150,9 +1175,8 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /年度累计回款/);
   assert.match(operatingOverviewSource, /年度目标/);
   assert.match(operatingOverviewSource, /年度完成率/);
-  assert.match(operatingOverviewSource, /时间进度/);
   assert.doesNotMatch(operatingOverviewSource, /年度缺口/);
-  assert.match(operatingOverviewSource, /className="op-annual-grid"[\s\S]*?年度累计回款[\s\S]*?年度目标[\s\S]*?年度完成率[\s\S]*?时间进度[\s\S]*?<\/div>\s*<div className="op-annual-capsule"/);
+  assert.match(operatingOverviewSource, /className="op-annual-grid"[\s\S]*?年度累计回款[\s\S]*?年度目标[\s\S]*?年度完成率[\s\S]*?<\/div>\s*<div className="op-annual-capsule"/);
   assert.match(operatingOverviewSource, /<span>已完成 \{formatPct\(KPI_DERIVED\.yearCompletion\)\}<\/span>/);
   assert.match(operatingOverviewSource, /<span>剩余 \{formatPct\(overviewMetrics\.annualRemainingRate\)\}<\/span>/);
   assert.doesNotMatch(operatingOverviewSource, /overviewMetrics\.annualJudgement/);
@@ -1168,13 +1192,14 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.doesNotMatch(operatingOverviewSource, /明细 &gt;/);
   assert.match(operatingOverviewSource, /onOpenKpi\(yearKpiCard\)/);
   assert.match(operatingOverviewSource, /getOperatingOverviewMetrics/);
-  assert.match(operatingOverviewSource, /function ChannelStructurePanel\(\)/);
-  assert.match(operatingOverviewSource, /<h2>渠道目标完成结构<\/h2>/);
-  assert.match(operatingOverviewSource, /<Segmented options=\{CHANNEL_PERIOD_OPTIONS\} value=\{period\} onChange=\{setPeriod\} \/>/);
+  assert.doesNotMatch(operatingOverviewSource, /function ChannelStructurePanel\(\)/);
+  assert.doesNotMatch(operatingOverviewSource, /<h2>渠道目标完成结构<\/h2>/);
+  assert.doesNotMatch(operatingOverviewSource, /CHANNEL_PERIOD_OPTIONS/);
+  assert.doesNotMatch(operatingOverviewSource, /<Segmented/);
   assert.match(operatingOverviewSource, /<EChart className="op-channel-chart" option=\{option\} style=\{\{ height: '100%' \}\} \/>/);
-  assert.match(operatingOverviewSource, /buildChannelStructure\(rows\)/);
-  assert.match(operatingOverviewSource, /name: '未完成'/);
-  assert.match(operatingOverviewSource, /超额完成/);
+  assert.match(operatingOverviewSource, /buildChannelStructure\(monthChannelRows\)/);
+  assert.doesNotMatch(operatingOverviewSource, /name: '未完成'/);
+  assert.match(operatingOverviewSource, /回款占比 <strong>\$\{share\}%<\/strong> · 目标 \$\{formatWan\(target\)\} 万 · 完成率 \$\{formatPct\(completion\)\}/);
   assert.match(operatingOverviewSource, /const riskBaseline = Math\.min\(100, completion\);/);
   assert.match(operatingOverviewSource, /risk: row\.warn \|\| rowCompletion < riskBaseline,/);
   assert.match(operatingOverviewSource, /\{row\.risk && <span className="op-channel-risk">风险<\/span>\}/);
@@ -1188,7 +1213,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /borderRadius:\s*8,/);
   assert.match(operatingOverviewSource, /borderColor:\s*'rgba\(255, 255, 255, \.11\)'/);
   assert.match(operatingOverviewSource, /shadowColor:\s*'rgba\(184, 156, 255, \.08\)'/);
-  assert.match(operatingOverviewSource, /const isMajorLabel = index < 2 && !item\.isIncomplete;/);
+  assert.match(operatingOverviewSource, /const isMajorLabel = index < 2 && !item\.isEmpty;/);
   assert.match(operatingOverviewCss, /\.op-channel-chart-wrap::before\s*\{[\s\S]*?content:\s*none;/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?filter:\s*drop-shadow/);
   assert.match(operatingOverviewCss, /\.op-overview/);
@@ -1196,29 +1221,38 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewCss, /border:\s*1px solid var\(--dashboard-card-border\);/);
   assert.match(operatingOverviewCss, /backdrop-filter:\s*var\(--dashboard-card-blur\);/);
   assert.match(operatingOverviewCss, /box-shadow:\s*var\(--dashboard-card-shadow\);/);
-  assert.match(operatingOverviewCss, /\.op-annual-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/);
   assert.match(operatingOverviewCss, /\.op-annual-capsule\s*\{/);
   assert.match(operatingOverviewCss, /\.op-annual-fill\s*\{/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-annual-chart\s*\{/);
-  assert.match(operatingOverviewCss, /\.op-summary-cell:nth-child\(2\),\s*\.op-summary-cell:nth-child\(3\)/);
-  assert.doesNotMatch(operatingOverviewCss, /\.op-summary-cell\s*\{[\s\S]*?border-left:\s*1px solid var\(--line-2\);/);
+  assert.match(operatingOverviewCss, /\.op-month-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(220px, \.9fr\) minmax\(230px, \.82fr\) minmax\(330px, 1\.16fr\);/);
+  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?border-left:\s*1px solid rgba\(255,255,255,\.035\);[\s\S]*?border-right:\s*1px solid rgba\(255,255,255,\.035\);/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-panel--channel/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-search-result--channel/);
   assert.doesNotMatch(appSource, /recoveryKpiCards/);
   assert.doesNotMatch(appSource, /sidePanel=\{<ChannelPanel/);
   assert.doesNotMatch(dashboardCss, /\.dash-kpis/);
 });
 
 test('polishes the operating progress hierarchy with whitespace-first grouping', () => {
-  const summaryGridBlock = cssRuleBody(operatingOverviewCss, '.op-summary-grid');
+  const monthGridBlock = cssRuleBody(operatingOverviewCss, '.op-month-grid');
   const progressTitleBlock = cssRuleBody(operatingOverviewCss, '.op-progress-head h1');
+  const primaryValueBlock = cssRuleBody(operatingOverviewCss, '.op-month-primary b');
 
   assert.match(progressTitleBlock, /font-size:\s*clamp\(21px, 2vw, 28px\);/);
   assert.match(progressTitleBlock, /font-weight:\s*700;/);
-  assert.match(summaryGridBlock, /border-top:\s*1px solid rgba\(255,255,255,\.035\);/);
-  assert.match(summaryGridBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.035\);/);
-  assert.match(operatingOverviewCss, /\.op-summary-cell:nth-child\(2\),\s*\.op-summary-cell:nth-child\(3\)\s*\{[\s\S]*?border-left:\s*1px solid rgba\(255,255,255,\.028\);/);
-  assert.match(operatingOverviewCss, /\.op-summary-cell:nth-child\(n \+ 3\)\s*\{[\s\S]*?border-top:\s*1px solid rgba\(255,255,255,\.035\);/);
+  assert.match(primaryValueBlock, /font-size:\s*clamp\(54px, 6\.2vw, 86px\);/);
+  assert.match(primaryValueBlock, /font-weight:\s*840;/);
+  assert.match(monthGridBlock, /border-top:\s*1px solid rgba\(255,255,255,\.035\);/);
+  assert.match(monthGridBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.035\);/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-structure-progress/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-progress-track/);
+  assert.match(operatingOverviewCss, /\.op-month-primary-facts \.op-month-primary-fact--over\s*\{/);
+  assert.match(operatingOverviewCss, /\.op-month-primary-facts \.op-month-primary-fact--risk\s*\{/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-operating-alerts/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-operating-alert/);
   assert.doesNotMatch(progressTitleBlock, /font-size:\s*clamp\(24px, 2\.4vw, 34px\);/);
-  assert.doesNotMatch(summaryGridBlock, /rgba\(255,255,255,\.075\)/);
+  assert.doesNotMatch(monthGridBlock, /rgba\(255,255,255,\.075\)/);
 });
 
 test('replaces the annual rhythm chart with a glass progress capsule', () => {
@@ -1226,8 +1260,8 @@ test('replaces the annual rhythm chart with a glass progress capsule', () => {
   assert.match(operatingOverviewSource, /className="op-annual-capsule"/);
   assert.match(operatingOverviewSource, /className="op-annual-fill" style=\{\{ width: annualCapsuleWidth \}\}/);
   assert.match(operatingOverviewSource, /aria-label=\{`年度完成率 \$\{formatPct\(KPI_DERIVED\.yearCompletion\)\}，剩余 \$\{formatPct\(overviewMetrics\.annualRemainingRate\)\}`\}/);
-  assert.match(operatingOverviewCss, /\.op-annual-capsule\s*\{[\s\S]*?height:\s*42px;[\s\S]*?border-radius:\s*999px;[\s\S]*?background:\s*var\(--bar-track\);/);
-  assert.match(operatingOverviewCss, /\.op-annual-fill\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(142,134,255,\.86\), rgba\(228,184,215,\.72\)\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-capsule\s*\{[\s\S]*?height:\s*36px;[\s\S]*?border-radius:\s*999px;[\s\S]*?background:\s*var\(--bar-track\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-fill\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(142,134,255,\.78\), rgba\(228,184,215,\.62\)\);/);
   assert.match(operatingOverviewCss, /\.op-annual-capsule-labels\s*\{[\s\S]*?justify-content:\s*space-between;/);
   assert.doesNotMatch(operatingOverviewSource, /<EChart option=\{annualOption\}/);
 });
@@ -1279,7 +1313,8 @@ test('keeps search result boxes highlighted with persistent edge borders', () =>
   assert.doesNotMatch(appSource, /<HighlightBeam/);
   assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(progressKeywords,\s*searchTerm\)\} className="op-search-result op-search-result--progress">/);
   assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(ANNUAL_KEYWORDS,\s*searchTerm\)\} className="op-search-result op-search-result--annual">/);
-  assert.match(operatingOverviewSource, /<SearchResultBorder active=\{matchesSearchTerm\(CHANNEL_KEYWORDS,\s*searchTerm\)\} className="op-search-result op-search-result--channel">/);
+  assert.doesNotMatch(operatingOverviewSource, /CHANNEL_KEYWORDS/);
+  assert.doesNotMatch(operatingOverviewSource, /op-search-result--channel/);
   assert.match(searchResultBorderSource, /data-search-match=\{active \? 'true' : undefined\}/);
   assert.match(searchResultBorderSource, /aria-label=\{active \? '搜索命中结果' : undefined\}/);
   assert.match(searchResultBorderSource, /className="search-result-border__content"/);
@@ -1412,7 +1447,10 @@ test('uses one channel completion panel with month and year switching', () => {
   assert.match(channelPanelCss, /\.ch-progress-cell\s*\{/);
   assert.match(channelPanelCss, /\.ch-progress-fill\s*\{/);
   assert.doesNotMatch(channelPanelCss, /\.ch-status/);
-  assert.match(operatingOverviewSource, /<ChannelStructurePanel \/>/);
+  assert.doesNotMatch(operatingOverviewSource, /<ChannelStructurePanel \/>/);
+  assert.match(operatingOverviewSource, /<MonthlyRecoveryStructure[\s\S]*?structure=\{monthlyStructure\}[\s\S]*?option=\{monthlyStructureOption\}/);
+  assert.doesNotMatch(operatingOverviewSource, /progressWidth=\{progressWidth\}/);
+  assert.match(operatingOverviewSource, /<OperatingSituation[\s\S]*?structure=\{monthlyStructure\}/);
   assert.doesNotMatch(operatingOverviewSource, /<ChannelPanel title="渠道完成情况" showPeriodSwitch \/>/);
   assert.doesNotMatch(appSource, /sidePanel=\{<ChannelPanel/);
 });
