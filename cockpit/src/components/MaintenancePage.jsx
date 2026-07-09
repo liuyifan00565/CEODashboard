@@ -298,7 +298,7 @@ function SaveBadge({ status }) {
   return <span className={`mnt-save-badge${dirty ? ' mnt-save-badge--dirty' : ''}`}>{status}</span>;
 }
 
-function MaintenanceToolbar({ activePage, status, year, saving, canSave, onYearChange, onSave, onImport, onDownloadTemplate, onPageAction }) {
+function MaintenanceToolbar({ activePage, status, year, saving, canSave, onYearChange, onSave, onImport, onDownloadTemplate, onPageAction, onOpenTemplateDialog }) {
   const meta = getMaintenancePageMeta(activePage);
   const title = MAINTENANCE_TITLE_TEXT[activePage] ?? meta.title;
 
@@ -310,7 +310,7 @@ function MaintenanceToolbar({ activePage, status, year, saving, canSave, onYearC
     'target-maintenance': (
       <>
         <GlassSelect className="mnt-control mnt-year-control" value={year} onChange={handleYearChange} aria-label="目标年份" disabled={saving} options={YEAR_OPTIONS} />
-        <button className="mnt-btn" type="button" onClick={onDownloadTemplate} disabled={saving}>下载模板</button>
+        <button className="mnt-btn" type="button" onClick={onOpenTemplateDialog} disabled={saving}>下载模板</button>
         <button className="mnt-btn" type="button" onClick={onImport} disabled={saving}>Excel导入</button>
         <button className="mnt-btn mnt-btn--primary" type="button" onClick={onSave} disabled={saving || !canSave}>{saving ? '保存中…' : '保存目标'}</button>
       </>
@@ -358,6 +358,43 @@ function MaintenanceToolbar({ activePage, status, year, saving, canSave, onYearC
         </div>
       </section>
     </MaintenanceToolbarSurface>
+  );
+}
+
+function TemplateDownloadDialog({ configs, onClose, onDownloadTemplate }) {
+  return (
+    <div className="mnt-template-dialog" role="dialog" aria-label="选择下载模板">
+      <button className="mnt-template-dialog__mask" type="button" aria-label="关闭模板选择" onClick={onClose} />
+      <div className="mnt-template-dialog__card">
+        <header>
+          <h3>选择下载模板</h3>
+          <div className="mnt-template-dialog__head-actions">
+            <button className="mnt-btn" type="button" onClick={onClose}>关闭</button>
+          </div>
+        </header>
+        <div className="mnt-template-dialog__options">
+          {configs.map((config) => (
+            <section className="mnt-template-option-card" key={config.pageKey}>
+              <div className="mnt-template-option-card__head">
+                <div>
+                  <strong>{config.pageKey === 'target-maintenance' ? '目标模板' : '实际完成模板'}</strong>
+                  <span>{config.label}</span>
+                </div>
+                <button className="mnt-btn mnt-btn--primary" type="button" onClick={() => onDownloadTemplate(config.pageKey)}>下载此模板</button>
+              </div>
+              <table className="mnt-template-preview">
+                <thead>
+                  <tr>{config.columns.map((column) => <th key={column.field}>{column.header}</th>)}</tr>
+                </thead>
+                <tbody>
+                  <tr>{config.columns.map((column) => <td key={column.field}>{column.required ? '必填' : '可选'}</td>)}</tr>
+                </tbody>
+              </table>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -543,7 +580,7 @@ const TargetMaintenancePage = forwardRef(function TargetMaintenancePage({ markDi
   const [selectedTargetRow, setSelectedTargetRow] = useState(null);
   const targetScrollPaneRef = useTargetCurrentMonthAlignment();
   const draftRef = useRef({});
-  const rowList = rows ?? [];
+  const rowList = useMemo(() => rows ?? EMPTY_ARRAY, [rows]);
   const selectedOrgIds = useMemo(
     () => getNestedDescendantIds(orgTree, selectedOrg),
     [orgTree, selectedOrg]
@@ -1170,6 +1207,7 @@ const PAGE_RENDERERS = {
 export default function MaintenancePage({ activePage = 'target-maintenance' }) {
   const [statusByPage, setStatusByPage] = useState({});
   const [importOpen, setImportOpen] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [year, setYear] = useState('2026');
   const [data, setData] = useState(null);
   const [dataVersion, setDataVersion] = useState(0);
@@ -1182,6 +1220,15 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
   const status = statusByPage[activePage] ?? '未修改';
   const dirty = status === '有未保存修改';
   const importConfig = getImportConfig(activePage);
+  const importConfigs = useMemo(() => {
+    if (activePage === 'target-maintenance') {
+      return [
+        getImportConfig('target-maintenance'),
+        getImportConfig('target-actual-import'),
+      ].filter(Boolean);
+    }
+    return importConfig ? [importConfig] : [];
+  }, [activePage, importConfig]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1212,8 +1259,10 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
     setStatusByPage((current) => ({ ...current, [activePage]: `已保存 ${nowLabel()}` }));
   }
 
-  function handleDownloadTemplate() {
-    if (importConfig) downloadTemplate(importConfig);
+  function handleDownloadTemplate(pageKey = activePage) {
+    const config = getImportConfig(pageKey);
+    if (config) downloadTemplate(config);
+    setTemplateDialogOpen(false);
   }
 
   function handleImported() {
@@ -1298,7 +1347,15 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
         onImport={() => setImportOpen(true)}
         onDownloadTemplate={handleDownloadTemplate}
         onPageAction={handlePageAction}
+        onOpenTemplateDialog={() => setTemplateDialogOpen(true)}
       />
+      {templateDialogOpen && activePage === 'target-maintenance' && (
+        <TemplateDownloadDialog
+          configs={importConfigs}
+          onClose={() => setTemplateDialogOpen(false)}
+          onDownloadTemplate={handleDownloadTemplate}
+        />
+      )}
       {loading && <div className="mnt-state-line">正在加载真实数据库…</div>}
       {error && <div className="mnt-state-line mnt-state-line--error">加载失败：{error}</div>}
       {saveError && <div className="mnt-state-line mnt-state-line--error">{saveError}</div>}
@@ -1315,9 +1372,10 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
           {saving && <div className="mnt-saving-overlay" aria-live="polite">正在写入数据库…</div>}
         </>
       )}
-      {importOpen && importConfig && (
+      {importOpen && importConfigs.length > 0 && (
         <MaintenanceImportDialog
-          config={importConfig}
+          config={importConfigs[0]}
+          configs={importConfigs}
           onClose={() => setImportOpen(false)}
           onImported={handleImported}
         />

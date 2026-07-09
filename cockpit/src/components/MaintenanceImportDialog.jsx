@@ -17,6 +17,7 @@ import {
   getSheetNames,
   extractRows,
   mapAndValidate,
+  matchColumns,
   downloadTemplate,
 } from '../lib/excelImport.js';
 import './MaintenanceImportDialog.css';
@@ -28,9 +29,34 @@ function statusBadge(ok, text) {
   return <span className={`mnt-import-badge${ok ? ' mnt-import-badge--ok' : ' mnt-import-badge--err'}`}>{text}</span>;
 }
 
-export default function MaintenanceImportDialog({ config, onClose, onImported }) {
+function detectImportConfig(rawHeaders, candidates, fallback) {
+  if (!candidates?.length) return fallback;
+  let best = fallback ?? candidates[0];
+  let bestScore = Number.NEGATIVE_INFINITY;
+  for (const candidate of candidates) {
+    const { matched, missing } = matchColumns(rawHeaders, candidate);
+    const requiredMissing = missing.filter((col) => col.required).length;
+    const requiredMatched = candidate.columns.filter((col) => col.required && matched[col.field]).length;
+    const optionalMatched = candidate.columns.filter((col) => !col.required && matched[col.field]).length;
+    const score = requiredMatched * 20 + optionalMatched * 3 - requiredMissing * 30;
+    if (score > bestScore) {
+      best = candidate;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
+function hasRequiredMatch(rawHeaders, config) {
+  const { matched } = matchColumns(rawHeaders, config);
+  return config.columns.some((col) => col.required && matched[col.field]);
+}
+
+export default function MaintenanceImportDialog({ config, configs, onClose, onImported }) {
+  const importConfigs = useMemo(() => (configs?.length ? configs : [config].filter(Boolean)), [config, configs]);
   const fileInputRef = useRef(null);
   const [phase, setPhase] = useState('idle'); // idle | parsed | submitting | done
+  const [activeConfigKey, setActiveConfigKey] = useState(config?.pageKey ?? importConfigs[0]?.pageKey ?? '');
   const [fileName, setFileName] = useState('');
   const [workbook, setWorkbook] = useState(null);
   const [sheetNames, setSheetNames] = useState([]);
@@ -40,10 +66,14 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
   const [parseError, setParseError] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [result, setResult] = useState(null);
+  const activeConfig = useMemo(
+    () => importConfigs.find((item) => item?.pageKey === activeConfigKey) ?? importConfigs[0] ?? config,
+    [activeConfigKey, config, importConfigs],
+  );
 
   const mapResult = useMemo(
-    () => (rawHeaders.length && config ? mapAndValidate(rawHeaders, rawRows, config) : null),
-    [rawHeaders, rawRows, config],
+    () => (rawHeaders.length && activeConfig ? mapAndValidate(rawHeaders, rawRows, activeConfig) : null),
+    [rawHeaders, rawRows, activeConfig],
   );
 
   const hasErrors = mapResult?.errors?.length > 0;
@@ -52,6 +82,10 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
   const sheetOptions = useMemo(
     () => sheetNames.map((name) => ({ value: name, label: name })),
     [sheetNames],
+  );
+  const configOptions = useMemo(
+    () => importConfigs.map((item) => ({ value: item.pageKey, label: item.label })),
+    [importConfigs],
   );
 
   async function handleFile(file) {
@@ -67,7 +101,7 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
       }
       setWorkbook(wb);
       setSheetNames(names);
-      const initial = (config?.sheetName && names.includes(config.sheetName)) ? config.sheetName : names[0];
+      const initial = (activeConfig?.sheetName && names.includes(activeConfig.sheetName)) ? activeConfig.sheetName : names[0];
       setSheetName(initial);
       loadSheet(wb, initial);
       setPhase('parsed');
@@ -82,6 +116,8 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
     const { headers, rawRows: rows } = extractRows(wb, name);
     setRawHeaders(headers);
     setRawRows(rows);
+    const detected = detectImportConfig(headers, importConfigs, activeConfig);
+    if (detected?.pageKey) setActiveConfigKey(detected.pageKey);
   }
 
   function handleSheetChange(name) {
@@ -90,16 +126,33 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
   }
 
   async function handleConfirm(options = {}) {
-    if (!config || hasErrors) return;
+    if (!activeConfig || hasErrors) return;
     const createMissingStaff = options?.createMissingStaff === true;
     setPhase('submitting');
     setSubmitError('');
     try {
+      const imports = [];
+      if (workbook && importConfigs.length > 1) {
+        for (const name of sheetNames) {
+          const { headers, rawRows: rows } = extractRows(workbook, name);
+          const detected = detectImportConfig(headers, importConfigs, null);
+          if (!detected || !hasRequiredMatch(headers, detected)) continue;
+          imports.push({ pageKey: detected.pageKey, meta: { sheetName: name }, rawHeaders: headers, rawRows: rows });
+        }
+      }
+      if (importConfigs.length > 1 && imports.length === 0) {
+        setSubmitError('未在 Excel 中识别到“组织目标”或“组织实际完成”工作表，请重新下载模板后填写。');
+        setPhase('parsed');
+        return;
+      }
       const resp = await fetch('/api/maintenance/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pageKey: config.pageKey,
+        body: JSON.stringify(imports.length ? {
+          imports,
+          options: { createMissingTargetStaff: createMissingStaff },
+        } : {
+          pageKey: activeConfig.pageKey,
           meta: { sheetName },
           rawHeaders,
           rawRows,
@@ -133,13 +186,13 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
   }
 
   return (
-    <div className="mnt-import-overlay" role="dialog" aria-label={config?.label || 'Excel 导入'}>
+    <div className="mnt-import-overlay" role="dialog" aria-label={activeConfig?.label || 'Excel 导入'}>
       <div className="mnt-import-mask" onClick={onClose} />
       <div className="mnt-import-card">
         <header className="mnt-import-head">
           <div>
-            <h3>{config?.label || 'Excel 导入'}</h3>
-            {config?.notes && <p className="mnt-import-notes">{config.notes}</p>}
+            <h3>{activeConfig?.label || 'Excel 导入'}</h3>
+            {activeConfig?.notes && <p className="mnt-import-notes">{activeConfig.notes}</p>}
           </div>
           <button className="mnt-btn" type="button" onClick={onClose}>关闭</button>
         </header>
@@ -157,7 +210,7 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
               <button
                 className="mnt-btn"
                 type="button"
-                onClick={(e) => { e.stopPropagation(); if (config) downloadTemplate(config); }}
+                onClick={(e) => { e.stopPropagation(); if (activeConfig) downloadTemplate(activeConfig); }}
               >
                 下载模板
               </button>
@@ -182,6 +235,12 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
                     <GlassSelect className="mnt-control" value={sheetName} onChange={handleSheetChange} aria-label="选择工作表" options={sheetOptions} />
                   </label>
                 )}
+                {configOptions.length > 1 && (
+                  <label className="mnt-import-sheet">
+                    模板类型：
+                    <GlassSelect className="mnt-control" value={activeConfig?.pageKey} onChange={setActiveConfigKey} aria-label="选择模板类型" options={configOptions} />
+                  </label>
+                )}
                 <button
                   className="mnt-btn"
                   type="button"
@@ -202,7 +261,7 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
                     <tr><th>字段</th><th>Excel 表头</th><th>必填</th><th>类型</th><th>状态</th></tr>
                   </thead>
                   <tbody>
-                    {config.columns.map((col) => {
+                    {activeConfig.columns.map((col) => {
                       const matched = mapResult.matchedColumns[col.field];
                       return (
                         <tr key={col.field}>
@@ -236,12 +295,12 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
                   <div className="mnt-import-preview-wrap">
                     <table className="mnt-import-preview">
                       <thead>
-                        <tr>{config.columns.map((c) => <th key={c.field}>{c.header}</th>)}</tr>
+                        <tr>{activeConfig.columns.map((c) => <th key={c.field}>{c.header}</th>)}</tr>
                       </thead>
                       <tbody>
                         {previewRows.map((row, i) => (
                           <tr key={i}>
-                            {config.columns.map((c) => <td key={c.field}>{row[c.field] ?? '—'}</td>)}
+                            {activeConfig.columns.map((c) => <td key={c.field}>{row[c.field] ?? '—'}</td>)}
                           </tr>
                         ))}
                       </tbody>
@@ -306,7 +365,7 @@ export default function MaintenanceImportDialog({ config, onClose, onImported })
           <button
             className="mnt-btn"
             type="button"
-            onClick={() => config && downloadTemplate(config)}
+            onClick={() => activeConfig && downloadTemplate(activeConfig)}
           >
             下载模板
           </button>

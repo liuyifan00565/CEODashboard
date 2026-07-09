@@ -1,33 +1,12 @@
-/*
- 更新时间: 2026-07-08 17:49:56 CST
- 更新内容: 目标维护真实数据状态改为 120% 及以上才标记 good，100%-119.9% 继续显示普通完成色。
-*/
-/*
- 更新时间: 2026-07-08 11:45:00 CST
- 更新内容: 维护快照补齐联动口径：目标人员只取启用销售且有部门；成本页空年份默认生成 sales/marketing 人力成本行；
-          渠道/成本导航保留 dim_channel.parent_id，新增渠道大类后可形成树。
-*/
-/*
- 更新时间: 2026-07-08
- 更新内容: buildTargetSnapshot 的 sales 过滤补 department_id 非空判断，与读取口径一致：
-          目标维护只认「销售 + 有部门」的人员，防御性兜底，避免无部门人员混入目标行/组织树人数。
-*/
-/*
- 更新时间: 2026-07-07 11:00:00 CST
- 更新内容: 新增数据维护 DB→页面形状的纯函数映射器（target/cost/org/channel 四个 build*Snapshot），
-          无需 DB 即可单测；输出形状刻意与 mock.js 导出一致，前端子页可直接换 props。
-*/
-
 const QUARTER_MONTHS = { q1: ['m01', 'm02', 'm03'], q2: ['m04', 'm05', 'm06'], q3: ['m07', 'm08', 'm09'], q4: ['m10', 'm11', 'm12'] };
 const ALL_MONTH_KEYS = ['m01', 'm02', 'm03', 'm04', 'm05', 'm06', 'm07', 'm08', 'm09', 'm10', 'm11', 'm12'];
 
 function monthKeyFromYM(ym) {
-  const m = String(ym).slice(5, 7); // "2026-03" -> "03"
+  const m = String(ym).slice(5, 7);
   return `m${m}`;
 }
 
 function roundWan(yuan) {
-  // DB 存元，页面用万；保留 2 位小数
   return Math.round((Number(yuan || 0) / 10000) * 100) / 100;
 }
 
@@ -57,7 +36,6 @@ function laborPeriod(cost) {
   return { cost: Math.round(Number(cost || 0) * 100) / 100 };
 }
 
-/** 由 12 个月的 {target,actual} 拼装含季度/全年的 periods。 */
 function buildTargetPeriods(monthTarget, monthActual) {
   const periods = {};
   ALL_MONTH_KEYS.forEach((k, i) => {
@@ -130,7 +108,6 @@ function buildDeptTree(departments, userCountFn) {
   return { id: 'all', name: '全部组织', userCount: roots.reduce((s, r) => s + r.userCount, 0), children: roots };
 }
 
-/** 收集某部门及其所有后代部门 id（含自身）。 */
 function descendantDeptIds(departments, deptId) {
   const ids = new Set([deptId]);
   let changed = true;
@@ -146,13 +123,6 @@ function descendantDeptIds(departments, deptId) {
   return ids;
 }
 
-/**
- * 目标维护快照。
- * @param {object} p {departments, staff, targets, revenue}
- *   targets: [{year_month, staff_id, target_amount_yuan, ...}]
- *   revenue: [{ym, staff_id, amt, deals}]  amt=recovered_amount_yuan
- * @returns {{orgTree, rows}}
- */
 export function buildTargetSnapshot({ departments = [], staff = [], targets = [], revenue = [] } = {}) {
   const sales = staff.filter((s) => (
     (s.is_sales === 1 || s.is_sales === true || Number(s.is_sales) === 1)
@@ -160,60 +130,106 @@ export function buildTargetSnapshot({ departments = [], staff = [], targets = []
     && Number(s.is_enabled) === 1
   ));
 
-  // 按人按月索引
-  const targetByStaff = new Map(); // staff_id -> {m01..target_wan}
+  const departmentsById = new Map(departments.map((d) => [d.department_id, d]));
+  const childDeptIds = new Map();
+  departments.forEach((d) => {
+    if (d.parent_id != null && departmentsById.has(d.parent_id)) {
+      if (!childDeptIds.has(d.parent_id)) childDeptIds.set(d.parent_id, []);
+      childDeptIds.get(d.parent_id).push(d.department_id);
+    }
+  });
+
+  const targetByStaff = new Map();
+  const targetByDept = new Map();
   targets.forEach((t) => {
     const mk = monthKeyFromYM(t.year_month);
     if (!ALL_MONTH_KEYS.includes(mk)) return;
-    if (!targetByStaff.has(t.staff_id)) targetByStaff.set(t.staff_id, {});
-    targetByStaff.get(t.staff_id)[mk] = roundWan(t.target_amount_yuan);
+    if (t.department_id != null && t.staff_id == null) {
+      if (!targetByDept.has(t.department_id)) targetByDept.set(t.department_id, {});
+      targetByDept.get(t.department_id)[mk] = roundWan(t.target_amount_yuan);
+      return;
+    }
+    if (t.staff_id != null) {
+      if (!targetByStaff.has(t.staff_id)) targetByStaff.set(t.staff_id, {});
+      targetByStaff.get(t.staff_id)[mk] = roundWan(t.target_amount_yuan);
+    }
   });
+
   const actualByStaff = new Map();
+  const actualByDept = new Map();
   revenue.forEach((r) => {
     const mk = monthKeyFromYM(r.ym);
     if (!ALL_MONTH_KEYS.includes(mk)) return;
-    if (!actualByStaff.has(r.staff_id)) actualByStaff.set(r.staff_id, {});
-    const bucket = actualByStaff.get(r.staff_id);
-    bucket[mk] = (bucket[mk] || 0) + roundWan(r.amt);
+    if (r.department_id != null && r.staff_id == null) {
+      if (!actualByDept.has(r.department_id)) actualByDept.set(r.department_id, {});
+      const bucket = actualByDept.get(r.department_id);
+      bucket[mk] = (bucket[mk] || 0) + roundWan(r.amt);
+      return;
+    }
+    if (r.staff_id != null) {
+      if (!actualByStaff.has(r.staff_id)) actualByStaff.set(r.staff_id, {});
+      const bucket = actualByStaff.get(r.staff_id);
+      bucket[mk] = (bucket[mk] || 0) + roundWan(r.amt);
+    }
   });
 
-  // 部门 -> 直接下属销售
   const salesByDept = new Map();
   sales.forEach((s) => {
     if (!salesByDept.has(s.department_id)) salesByDept.set(s.department_id, []);
     salesByDept.get(s.department_id).push(s);
   });
 
+  const deptRollupCache = new Map();
+  function departmentRollup(deptId) {
+    if (deptRollupCache.has(deptId)) return deptRollupCache.get(deptId);
+    const directTarget = targetByDept.get(deptId) || {};
+    const directActual = actualByDept.get(deptId) || {};
+    const members = salesByDept.get(deptId) || [];
+    const childRollups = (childDeptIds.get(deptId) || []).map((id) => departmentRollup(id));
+
+    const target = ALL_MONTH_KEYS.map((mk, idx) => {
+      if (directTarget[mk] != null) return directTarget[mk];
+      const staffSum = members.reduce((sum, st) => sum + (targetByStaff.get(st.staff_id)?.[mk] || 0), 0);
+      const childSum = childRollups.reduce((sum, child) => sum + child.target[idx], 0);
+      return staffSum + childSum;
+    });
+    const actual = ALL_MONTH_KEYS.map((mk, idx) => {
+      if (directActual[mk] != null) return directActual[mk];
+      const staffSum = members.reduce((sum, st) => sum + (actualByStaff.get(st.staff_id)?.[mk] || 0), 0);
+      const childSum = childRollups.reduce((sum, child) => sum + child.actual[idx], 0);
+      return staffSum + childSum;
+    });
+    const value = { target, actual };
+    deptRollupCache.set(deptId, value);
+    return value;
+  }
+
   const rows = [];
+  const rootDepartments = departments.filter((d) => d.parent_id == null || !departmentsById.has(d.parent_id));
+  const allTarget = ALL_MONTH_KEYS.map((_, idx) => rootDepartments.reduce((sum, d) => sum + departmentRollup(d.department_id).target[idx], 0));
+  const allActual = ALL_MONTH_KEYS.map((_, idx) => rootDepartments.reduce((sum, d) => sum + departmentRollup(d.department_id).actual[idx], 0));
+  rows.push({ id: 'summary-all', type: 'department', name: '所有组织', role: '组织合计', periods: buildTargetPeriods(allTarget, allActual) });
 
-  // 全部汇总行
-  const allTarget = ALL_MONTH_KEYS.map((mk) => sales.reduce((s, st) => s + (targetByStaff.get(st.staff_id)?.[mk] || 0), 0));
-  const allActual = ALL_MONTH_KEYS.map((mk) => sales.reduce((s, st) => s + (actualByStaff.get(st.staff_id)?.[mk] || 0), 0));
-  rows.push({ id: 'summary-all', type: 'department', name: '所有部门', role: '组织合计', periods: buildTargetPeriods(allTarget, allActual) });
-
-  // 各部门汇总行（仅含有销售人员的部门）
   departments.forEach((d) => {
-    const ids = descendantDeptIds(departments, d.department_id);
-    const members = sales.filter((s) => ids.has(s.department_id));
-    if (!members.length) return;
-    const t = ALL_MONTH_KEYS.map((mk) => members.reduce((s, st) => s + (targetByStaff.get(st.staff_id)?.[mk] || 0), 0));
-    const a = ALL_MONTH_KEYS.map((mk) => members.reduce((s, st) => s + (actualByStaff.get(st.staff_id)?.[mk] || 0), 0));
-    rows.push({ id: `summary-${d.department_id}`, type: 'department', name: d.department_name, role: '组织合计', periods: buildTargetPeriods(t, a) });
+    const rollup = departmentRollup(d.department_id);
+    const hasData = rollup.target.some((v) => v) || rollup.actual.some((v) => v) || (salesByDept.get(d.department_id)?.length || 0) > 0 || (childDeptIds.get(d.department_id)?.length || 0) > 0;
+    if (!hasData) return;
+    rows.push({ id: `summary-${d.department_id}`, type: 'department', name: d.department_name, role: '组织合计', periods: buildTargetPeriods(rollup.target, rollup.actual) });
   });
 
-  // 人员明细行
   sales.forEach((s) => {
     const tb = targetByStaff.get(s.staff_id) || {};
     const ab = actualByStaff.get(s.staff_id) || {};
-    const t = ALL_MONTH_KEYS.map((mk) => tb[mk] || 0);
-    const a = ALL_MONTH_KEYS.map((mk) => ab[mk] || 0);
     rows.push({
       id: `user-${s.staff_id}`,
       type: 'user',
       name: s.staff_name,
       role: '人员',
       deptId: s.department_id != null ? String(s.department_id) : undefined,
-      periods: buildTargetPeriods(t, a),
+      periods: buildTargetPeriods(
+        ALL_MONTH_KEYS.map((mk) => tb[mk] || 0),
+        ALL_MONTH_KEYS.map((mk) => ab[mk] || 0),
+      ),
     });
   });
 
@@ -225,14 +241,6 @@ export function buildTargetSnapshot({ departments = [], staff = [], targets = []
   return { orgTree, rows };
 }
 
-/**
- * 成本维护快照。
- * @param {object} p {channels, costs, revenue, labor}
- *   costs: [{year_month, channel_id, investment_amount_yuan}]
- *   revenue: [{ym, channel_id, amt, deals}]
- *   labor: [{year_month, cost_type, amount_yuan}]
- * @returns {{channels, rows, laborRows}}
- */
 const LABOR_NAME = { sales: '销售部人力成本', marketing: '市场部人力成本', delivery: '实施部人力成本' };
 const DEFAULT_LABOR_TYPES = ['sales', 'marketing'];
 
@@ -256,7 +264,6 @@ export function buildCostSnapshot({ channels = [], costs = [], revenue = [], lab
   });
 
   const rows = [];
-  // 全部汇总
   const allCost = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (costByChannel.get(c.channel_id)?.[mk] || 0), 0));
   const allActual = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (actualByChannel.get(c.channel_id)?.[mk] || 0), 0));
   const allDeals = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (dealsByChannel.get(c.channel_id)?.[mk] || 0), 0));
@@ -290,7 +297,6 @@ export function buildCostSnapshot({ channels = [], costs = [], revenue = [], lab
     })),
   ];
 
-  // 人力成本按 cost_type 聚合
   const laborByType = new Map();
   labor.forEach((l) => {
     const mk = monthKeyFromYM(l.year_month);
@@ -302,9 +308,9 @@ export function buildCostSnapshot({ channels = [], costs = [], revenue = [], lab
   const laborRows = laborTypes.map((costType) => {
     const bucket = laborByType.get(costType) || {};
     return {
-    id: `labor-${costType}`,
-    name: LABOR_NAME[costType] || `${costType} 人力成本`,
-    periods: buildLaborPeriods(ALL_MONTH_KEYS.map((mk) => bucket[mk] || 0)),
+      id: `labor-${costType}`,
+      name: LABOR_NAME[costType] || `${costType} 人力成本`,
+      periods: buildLaborPeriods(ALL_MONTH_KEYS.map((mk) => bucket[mk] || 0)),
     };
   });
 
@@ -319,7 +325,6 @@ function deriveSourceName(s) {
   return '人员';
 }
 
-/** 组织维护快照。 */
 export function buildOrgSnapshot({ departments = [], staff = [] } = {}) {
   const departs = departments.map((d) => ({
     id: String(d.department_id),
@@ -339,7 +344,6 @@ export function buildOrgSnapshot({ departments = [], staff = [] } = {}) {
   return { departments: departs, users };
 }
 
-/** 渠道维护快照。 */
 export function buildChannelSnapshot({ channels = [], sources = [] } = {}) {
   const groups = channels.map((c) => ({
     id: String(c.channel_id),

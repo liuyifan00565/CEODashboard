@@ -59,26 +59,41 @@
  * @property {ImportColumn[]} columns 列定义
  * @property {string[]} uniqueKey  去重字段组合
  * @property {string} [notes]      备注（待业务确认事项）
+ * @property {string} [fileName]   下载模板文件名（不含 .xlsx）
  */
 
 /** @type {Record<string, ImportConfig>} */
 export const MAINTENANCE_IMPORT_CONFIG = {
   'target-maintenance': {
     pageKey: 'target-maintenance',
-    label: '目标维护导入',
-    sheetName: null,
+    label: '组织目标导入',
+    fileName: '目标维护-组织目标模板',
+    sheetName: '组织目标',
     columns: [
-      { field: 'staff_name', header: '人员名称', aliases: ['销售', '人员', '销售人员'], required: true, type: 'string', description: '对应 dim_staff.staff_name' },
-      // 更新时间: 2026-07-08 — 新增「所属组织」必填列：目标维护要求人员必须在销售组织里，
-      // 导入时后端校验该人确实属于此部门（直系部门名一致），无部门/非销售/部门不符一律拒绝。
-      { field: 'department_name', header: '所属组织', aliases: ['组织', '部门', 'BI组织'], required: true, type: 'string', description: '对应 dim_department.department_name；必须与该人员实际所属部门一致，否则拒绝。人员不存在时会先询问是否新增为该组织的启用销售员工。' },
+      { field: 'department_name', header: '组织名称', aliases: ['所属组织', '组织', '部门', 'BI组织'], required: true, type: 'string', description: '对应 dim_department.department_name' },
       { field: 'target_month', header: '目标月份', aliases: ['月份'], required: true, type: 'month', description: 'YYYY-MM，对应 biz_target_monthly.target_month' },
       { field: 'target_amount_yuan', header: '回款目标(万)', aliases: ['回款目标', '目标金额', '回款目标万', '回款目标(元)'], required: true, type: 'number', min: 0, description: '维护页以万为单位录入，写库时×10000转元，对应 biz_target_monthly.target_amount_yuan' },
       { field: 'target_opening_count', header: '开户目标(个)', aliases: ['开户目标', '开户目标个'], required: false, type: 'number', min: 0, description: '对应 biz_target_monthly.target_opening_count' },
       { field: 'target_order_count', header: '订单目标(单)', aliases: ['订单目标', '订单目标单'], required: false, type: 'number', min: 0, description: '对应 biz_target_monthly.target_order_count' },
     ],
-    uniqueKey: ['staff_name', 'target_month'],
-    notes: '口径：目标维护只认 is_sales=1、is_enabled=1 且有部门的人员。导入时「所属组织」必须与人员实际部门一致；人员不存在时会先询问是否新增员工，确认后新增为该组织启用销售并继续写目标。旧模板（无「所属组织」列）会被拒，需重新下载模板。',
+    uniqueKey: ['department_name', 'target_month'],
+    notes: '口径：这是目标维护页面的组织目标模板。导入写入 biz_target_monthly 的 department_id 口径；金额按“万”填写，写库时自动转元。',
+  },
+
+  'target-actual-import': {
+    pageKey: 'target-actual-import',
+    label: '组织实际完成导入',
+    fileName: '目标维护-组织实际完成模板',
+    sheetName: '组织实际完成',
+    columns: [
+      { field: 'department_name', header: '组织名称', aliases: ['所属组织', '组织', '部门', 'BI组织'], required: true, type: 'string', description: '对应 dim_department.department_name' },
+      { field: 'actual_month', header: '完成月份', aliases: ['月份', '实际月份', '统计月份'], required: true, type: 'month', description: 'YYYY-MM，对应 fact_revenue_daily.stat_date 所在月份' },
+      { field: 'recovered_amount_yuan', header: '实际回款(万)', aliases: ['实际回款', '完成金额', '完成总量', '实际完成', '实际回款万'], required: true, type: 'number', min: 0, description: '维护页以万为单位录入，写库时×10000转元，对应 fact_revenue_daily.recovered_amount_yuan' },
+      { field: 'actual_opening_count', header: '实际开户数', aliases: ['实际开户', '开户数', '开户完成数'], required: false, type: 'number', min: 0, description: '对应 fact_revenue_daily.actual_opening_count' },
+      { field: 'order_count', header: '实际订单数', aliases: ['订单数', '成交单数', '成交数', '实际订单'], required: false, type: 'number', min: 0, description: '对应 fact_revenue_daily.order_count' },
+    ],
+    uniqueKey: ['department_name', 'actual_month'],
+    notes: '口径：这是目标维护页面的组织实际完成模板。导入写入 fact_revenue_daily 的 department_id 口径；金额按“万”填写，写库时自动转元。',
   },
 
   'cost-maintenance': {

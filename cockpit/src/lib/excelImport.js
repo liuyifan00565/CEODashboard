@@ -300,6 +300,31 @@ export function buildTemplateWorkbook(config) {
   return XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
 }
 
+function appendTemplateSheets(wb, config) {
+  const headerRow = config.columns.map((c) => c.header);
+  const sampleRow = config.columns.map((c) => sampleValue(c));
+  const mainSheet = XLSX.utils.aoa_to_sheet([headerRow, sampleRow]);
+  mainSheet['!cols'] = config.columns.map((c) => ({ wch: Math.max(12, c.header.length * 2 + 4) }));
+  XLSX.utils.book_append_sheet(wb, mainSheet, config.sheetName || config.label || config.pageKey);
+}
+
+export function buildTemplateBundleWorkbook(configs) {
+  const wb = XLSX.utils.book_new();
+  configs.forEach((config) => appendTemplateSheets(wb, config));
+
+  const descRows = [['模板', '列名(字段)', '表头文案', '类型', '必填', '说明']];
+  configs.forEach((config) => {
+    config.columns.forEach((c) => {
+      descRows.push([config.label, c.field, c.header, c.type || 'string', c.required ? '是' : '否', c.description || '']);
+    });
+    if (config.notes) descRows.push([config.label, '备注', config.notes, '', '', '']);
+  });
+  const descSheet = XLSX.utils.aoa_to_sheet(descRows);
+  descSheet['!cols'] = [{ wch: 18 }, { wch: 22 }, { wch: 16 }, { wch: 10 }, { wch: 8 }, { wch: 52 }];
+  XLSX.utils.book_append_sheet(wb, descSheet, '说明');
+  return XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+}
+
 /** 触发浏览器下载模板 .xlsx。仅在浏览器环境调用。 */
 export function downloadTemplate(config) {
   const bytes = buildTemplateWorkbook(config);
@@ -307,7 +332,20 @@ export function downloadTemplate(config) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${config.pageKey}-模板.xlsx`;
+  a.download = `${config.fileName || `${config.pageKey}-模板`}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export function downloadTemplateBundle(configs, fileName = '目标维护-组织目标和实际完成模板') {
+  const bytes = buildTemplateBundleWorkbook(configs);
+  const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${fileName}.xlsx`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

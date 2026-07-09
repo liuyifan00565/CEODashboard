@@ -247,6 +247,129 @@
   transition: transform .22s ease, border-color .22s ease, background .22s ease;
 }
 
+.mnt-template-dialog {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.mnt-template-dialog__mask {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(0,0,0,.34);
+  cursor: pointer;
+}
+
+.mnt-template-dialog__card {
+  position: relative;
+  z-index: 1;
+  width: min(860px, 100%);
+  max-height: min(82vh, 720px);
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel-2);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  overflow: auto;
+}
+
+.mnt-template-dialog__card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mnt-template-dialog__head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mnt-template-dialog__card h3 {
+  margin: 0;
+  color: var(--txt);
+  font-size: 16px;
+}
+
+.mnt-template-dialog__options {
+  display: grid;
+  gap: 12px;
+}
+
+.mnt-template-option-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--glass-cell);
+  color: var(--txt);
+}
+
+.mnt-template-option-card:hover {
+  border-color: var(--line-2);
+  background: var(--glass-cell-hover);
+}
+
+.mnt-template-option-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mnt-template-option-card__head > div {
+  display: grid;
+  gap: 4px;
+}
+
+.mnt-template-option-card strong {
+  font-size: 14px;
+}
+
+.mnt-template-option-card span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.mnt-template-preview {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.mnt-template-preview th,
+.mnt-template-preview td {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  color: var(--txt);
+  font-size: 12px;
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.mnt-template-preview th {
+  background: rgba(255,255,255,.08);
+  font-weight: 760;
+}
+
+.mnt-template-preview td {
+  color: var(--muted);
+  background: rgba(255,255,255,.035);
+}
+
 .mnt-btn:hover {
   transform: translateY(-1px);
   border-color: var(--line-2);
