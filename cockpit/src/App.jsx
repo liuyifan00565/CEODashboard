@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 18:26:40 CST
+ 更新内容: 将福客品牌 logo 移入左侧导航上方，主内容顶部只保留搜索，并把版本情况提升到年度总览下方以压缩首屏信息距离。
+*/
+/*
  更新时间: 2026-07-09 13:13:45 CST
  更新内容: 为经营总览与数据维护之间的侧边导航切换传递模式标识，配合侧栏平滑换组动效。
 */
@@ -158,11 +162,9 @@ import { useMemo, useState, useRef, useLayoutEffect, useEffect } from 'react';
 import gsap from 'gsap';
 
 import AIAnalysisWidget from './components/AIAnalysisWidget';
-import GlassSurface from './components/GlassSurface/GlassSurface';
 import Sidebar from './components/Sidebar';
 import ExpandableSearch from './components/ExpandableSearch';
 import SearchResultBorder from './components/SearchResultBorder';
-import MetallicPaint from './components/MetallicPaint/MetallicPaint';
 import KpiCard from './components/KpiCard';
 import KpiModal from './components/KpiModal';
 import MonthlyTrend from './components/MonthlyTrend';
@@ -181,8 +183,6 @@ import { matchesSearchTerm } from './lib/searchMatch';
 import './dashboard.css';
 
 const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance';
-const BRAND_FULL_ENTER_SCROLL = 56;
-const BRAND_FULL_EXIT_SCROLL = 104;
 
 const DASHBOARD_SIDEBAR_ITEMS = [
   ...MENU.map((item) => ({ ...item, section: '导航', icon: item.icon ?? item.key })),
@@ -201,11 +201,6 @@ const PANEL_KEYWORDS = {
   delivery: ['交付', '实施', '配置', '知识库', '人效'],
 };
 
-function formatCompactMonthLabel(label) {
-  const match = String(label).match(/(\d{4})\s*年\s*(\d{1,2})\s*月/);
-  return match ? `${match[1]}.${match[2].padStart(2, '0')}` : label;
-}
-
 function makeCompanionCueId(card) {
   return `${card?.key ?? 'card'}-${Date.now()}`;
 }
@@ -221,12 +216,10 @@ export default function App() {
   const [activeSearchIndex, setActiveSearchIndex] = useState(0);
   const [openCard, setOpenCard] = useState(null);
   const [companionCue, setCompanionCue] = useState(null);
-  const [brandMode, setBrandMode] = useState('full');
   const [dashboardDataState, setDashboardDataState] = useState({ status: 'loading', error: '' });
   const [dashboardDataVersion, setDashboardDataVersion] = useState(0);
 
   const gridRef = useRef(null);
-  const secondaryGridRef = useRef(null);
   const pendingMenuScrollRef = useRef(false);
   const pendingSearchScrollRef = useRef(false);
   const isMaintenancePage = maintenanceMode;
@@ -236,11 +229,7 @@ export default function App() {
   const activeContextLabel = maintenanceMode
     ? '数据维护'
     : activeMenu === 'overview' ? 'CEO视角' : activeMenuLabel;
-  const compactMonthLabel = formatCompactMonthLabel(META.monthLabel);
-  const compactContextLabel = activeContextLabel === 'CEO视角' ? 'CEO' : activeContextLabel;
-  const brandIdentityText = brandMode === 'minimal'
-    ? '经营驾驶舱'
-    : `福客经营驾驶舱 · ${compactMonthLabel} · ${compactContextLabel}`;
+  const sidebarBrandMeta = `${META.monthLabel} · ${activeContextLabel}`;
   const sidebarItems = maintenanceMode ? MAINTENANCE_SIDEBAR_ITEMS : DASHBOARD_SIDEBAR_ITEMS;
   const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const sidebarTransitionKey = maintenanceMode ? 'maintenance' : 'dashboard';
@@ -274,48 +263,6 @@ export default function App() {
       cancelled = true;
     };
   }, []);
-
-  useLayoutEffect(() => {
-    if (typeof window === 'undefined') return undefined;
-
-    let animationFrame = 0;
-
-    function resolveBrandMode(currentMode) {
-      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
-      const fullThreshold = currentMode === 'full' ? BRAND_FULL_EXIT_SCROLL : BRAND_FULL_ENTER_SCROLL;
-      if (scrollTop <= fullThreshold) {
-        return 'full';
-      }
-
-      const secondaryTop = secondaryGridRef.current?.getBoundingClientRect().top;
-      const deepScroll = Number.isFinite(secondaryTop) ? secondaryTop <= 112 : scrollTop > 520;
-      return deepScroll ? 'minimal' : 'compact';
-    }
-
-    function updateBrandMode() {
-      setBrandMode((currentMode) => {
-        const nextMode = resolveBrandMode(currentMode);
-        return currentMode === nextMode ? currentMode : nextMode;
-      });
-    }
-
-    function requestBrandMode() {
-      if (animationFrame) return;
-      animationFrame = window.requestAnimationFrame(() => {
-        animationFrame = 0;
-        updateBrandMode();
-      });
-    }
-
-    updateBrandMode();
-    window.addEventListener('scroll', requestBrandMode, { passive: true });
-    window.addEventListener('resize', requestBrandMode);
-    return () => {
-      if (animationFrame) window.cancelAnimationFrame(animationFrame);
-      window.removeEventListener('scroll', requestBrandMode);
-      window.removeEventListener('resize', requestBrandMode);
-    };
-  }, [contentKey, dashboardDataVersion]);
 
   function scrollDashboardIntoView() {
     pendingMenuScrollRef.current = false;
@@ -458,7 +405,14 @@ export default function App() {
 
       <div className="dash-shell">
         <aside className="dash-aside">
-          <Sidebar items={sidebarItems} active={sidebarActive} onChange={handleSidebarChange} transitionKey={sidebarTransitionKey} />
+          <Sidebar
+            items={sidebarItems}
+            active={sidebarActive}
+            onChange={handleSidebarChange}
+            transitionKey={sidebarTransitionKey}
+            brandTitle="福客经营驾驶舱"
+            brandMeta={sidebarBrandMeta}
+          />
           <AIAnalysisWidget
             activeMenu={activeMenu}
             dim={dim}
@@ -470,46 +424,6 @@ export default function App() {
 
         <div className="dash-main">
           <header className="dash-topbar">
-            <GlassSurface
-              width={brandMode === 'full' ? 320 : brandMode === 'compact' ? 248 : 180}
-              height={brandMode === 'full' ? 62 : brandMode === 'compact' ? 40 : 38}
-              borderRadius={brandMode === 'full' ? 22 : 16}
-              brightness={brandMode === 'full' ? 46 : 38}
-              blur={7}
-              displace={brandMode === 'full' ? 0.32 : 0.2}
-              backgroundOpacity={brandMode === 'full' ? 0.045 : brandMode === 'compact' ? 0.03 : 0.018}
-              distortionScale={brandMode === 'full' ? -54 : -42}
-              className={`brand-glass brand-glass--${brandMode}`}
-            >
-              <div className="brand">
-                <span className="brand-logo-paint" aria-hidden="true">
-                  <MetallicPaint
-                    imageSrc="/logo-black.png"
-                    seed={64}
-                    scale={3.6}
-                    refraction={0.018}
-                    blur={0.014}
-                    liquid={0.68}
-                    speed={0.28}
-                    brightness={1.75}
-                    contrast={0.8}
-                    lightColor="#ffffff"
-                    darkColor="#050505"
-                    tintColor="#f0d99a"
-                    chromaticSpread={1.8}
-                    distortion={0.75}
-                    contour={0.28}
-                  />
-                </span>
-                <div className="brand-copy">
-                  <span className="brand-copy-full">
-                    <b>福客经营驾驶舱</b>
-                    <small>{META.monthLabel} / {activeContextLabel}</small>
-                  </span>
-                  <span className="brand-copy-inline">{brandIdentityText}</span>
-                </div>
-              </div>
-            </GlassSurface>
             <div className="dash-tools">
               <ExpandableSearch
                 onChange={setSearchTerm}
@@ -534,7 +448,13 @@ export default function App() {
                   onOpenKpi={handleOpenCard}
                 />
 
-                <div className="dash-secondary-grid" ref={secondaryGridRef}>
+                <div className="dash-version-row" data-anim>
+                  <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.version, searchTerm)}>
+                    <VersionFinancePanel channelKey={activeChannelKey} />
+                  </SearchResultBorder>
+                </div>
+
+                <div className="dash-secondary-grid">
                   <div className="dash-secondary-cell dash-secondary-cell--trend" data-anim>
                     <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.trend, searchTerm)}>
                       <MonthlyTrend channelKey={activeChannelKey} />
@@ -554,12 +474,6 @@ export default function App() {
                         </div>
                       ))}
                     </div>
-                  </div>
-
-                  <div className="dash-secondary-cell dash-secondary-cell--version" data-anim>
-                    <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.version, searchTerm)}>
-                      <VersionFinancePanel channelKey={activeChannelKey} />
-                    </SearchResultBorder>
                   </div>
                 </div>
 
