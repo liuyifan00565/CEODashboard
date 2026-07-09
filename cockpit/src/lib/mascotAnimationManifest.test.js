@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 11:29:54 CST
+ 更新内容: 验收默认待机为 16 帧慢呼吸、短弧线慢眨眼和干净闭眼补色，避免 idle 本体退回静态站姿、横杠眼或眼区杂色。
+*/
+/*
  更新时间: 2026-07-08 18:16:34 CST
  更新内容: 增加非待机动作与待机关键帧的可见差异验收，避免动作图退化成同一站姿。
 */
@@ -104,7 +108,7 @@ const expectedSheetByAction = {
 };
 
 const expectedSourceBySheet = {
-  idleFukeRich: 'stabilized-from-official-fuke-ai-reference',
+  idleFukeRich: 'official-fuke-idle-with-slow-breath-and-blink',
   wave: 'official-fuke-target-achieved-pose-with-symbols-removed',
   guide: 'official-fuke-kpi-guide-pose',
   talk: 'official-fuke-report-presenter-pose',
@@ -146,6 +150,85 @@ function getVisibleDifferenceRatio(baseSheet, actionSheet, frameIndex = 6) {
   return changedPixels / visiblePixels;
 }
 
+function getSameSheetFrameDifferenceRatio(sheet, baseFrameIndex, actionFrameIndex) {
+  const frameWidth = 224;
+  const frameHeight = 300;
+  let changedPixels = 0;
+  let visiblePixels = 0;
+  for (let y = 0; y < frameHeight; y += 1) {
+    for (let x = 0; x < frameWidth; x += 1) {
+      const baseIndex = (sheet.width * y + baseFrameIndex * frameWidth + x) * 4;
+      const actionIndex = (sheet.width * y + actionFrameIndex * frameWidth + x) * 4;
+      const baseAlpha = sheet.data[baseIndex + 3];
+      const actionAlpha = sheet.data[actionIndex + 3];
+      if (baseAlpha > 0 || actionAlpha > 0) visiblePixels += 1;
+      const alphaDelta = Math.abs(baseAlpha - actionAlpha);
+      const rgbDelta = Math.abs(sheet.data[baseIndex] - sheet.data[actionIndex])
+        + Math.abs(sheet.data[baseIndex + 1] - sheet.data[actionIndex + 1])
+        + Math.abs(sheet.data[baseIndex + 2] - sheet.data[actionIndex + 2]);
+      if (alphaDelta > 20 || rgbDelta > 48) changedPixels += 1;
+    }
+  }
+  return changedPixels / visiblePixels;
+}
+
+function getBlinkLineWidths(sheet, frameIndex) {
+  const frameWidth = 224;
+  const clusters = {
+    left: { minX: Infinity, maxX: -Infinity },
+    right: { minX: Infinity, maxX: -Infinity },
+  };
+  for (let y = 112; y <= 132; y += 1) {
+    for (let x = 100; x <= 174; x += 1) {
+      const index = (sheet.width * y + frameIndex * frameWidth + x) * 4;
+      const r = sheet.data[index];
+      const g = sheet.data[index + 1];
+      const b = sheet.data[index + 2];
+      const a = sheet.data[index + 3];
+      const isEyelidPixel = a > 170 && r < 80 && g < 95 && b < 130;
+      if (isEyelidPixel) {
+        const key = x < 138 ? 'left' : 'right';
+        clusters[key].minX = Math.min(clusters[key].minX, x);
+        clusters[key].maxX = Math.max(clusters[key].maxX, x);
+      }
+    }
+  }
+  return Object.fromEntries(
+    Object.entries(clusters).map(([key, cluster]) => [
+      key,
+      cluster.maxX >= cluster.minX ? cluster.maxX - cluster.minX + 1 : 0,
+    ]),
+  );
+}
+
+function countBlinkEyeNoisePixels(sheet, frameIndex) {
+  const frameWidth = 224;
+  const eyes = [
+    { cx: 116, cy: 127, rx: 13.5, ry: 15.5 },
+    { cx: 158, cy: 127, rx: 13.5, ry: 15.5 },
+  ];
+  let noisePixels = 0;
+  for (const eye of eyes) {
+    for (let y = Math.floor(eye.cy - eye.ry - 2); y <= Math.ceil(eye.cy + eye.ry + 2); y += 1) {
+      for (let x = Math.floor(eye.cx - eye.rx - 2); x <= Math.ceil(eye.cx + eye.rx + 2); x += 1) {
+        const nx = (x - eye.cx) / eye.rx;
+        const ny = (y - eye.cy) / eye.ry;
+        if (nx * nx + ny * ny > 1.15) continue;
+        const index = (sheet.width * y + frameIndex * frameWidth + x) * 4;
+        const r = sheet.data[index];
+        const g = sheet.data[index + 1];
+        const b = sheet.data[index + 2];
+        const a = sheet.data[index + 3];
+        const darkPixel = a > 170 && r < 100 && g < 110 && b < 150;
+        const lineCurveY = eye.cy - 4 + 2 * ((x - eye.cx) / (eye.rx * 0.65)) ** 2;
+        const expectedEyelid = Math.abs(y - lineCurveY) <= 4 && Math.abs(x - eye.cx) <= 12;
+        if (darkPixel && !expectedEyelid) noisePixels += 1;
+      }
+    }
+  }
+  return noisePixels;
+}
+
 test('declares generated per-action mascot sprite sheets', () => {
   assert.deepEqual(Object.keys(MASCOT_ACTION_SHEETS).sort(), requiredSheetKeys.sort());
   assert.ok(!Object.hasOwn(MASCOT_ACTION_SHEETS, 'laptop'), 'runtime sheets should not preload the laptop mascot asset');
@@ -183,9 +266,39 @@ test('uses the stabilized Fu Xiaoke slow idle sheet as the default real frame lo
   for (const variant of MASCOT_IDLE_VARIANTS) {
     assert.ok(Array.isArray(variant.frames), `${variant.key} should declare frame indexes`);
     assert.equal(variant.playback, 'frames', `${variant.key} should be a real idle frame sequence`);
-    assert.ok(variant.frames.length >= 8, `${variant.key} should have enough frames to loop smoothly`);
+    assert.equal(variant.frames.length, 16, `${variant.key} should use a longer idle loop for slow blink timing`);
     assert.equal(variant.fps, 6, `${variant.key} should idle slowly enough to avoid frantic blinking`);
     assert.equal(variant.sheetKey, 'idleFukeRich', `${variant.key} should point to the rich Fu Xiaoke idle sheet`);
+  }
+});
+
+test('keeps the default idle loop visibly alive without relying on static standing frames', () => {
+  const idleSheet = readMascotSheet('idleFukeRich');
+  assert.equal(MASCOT_ACTION_SHEETS.idleFukeRich.columns, 16);
+  assert.equal(MASCOT_ACTION_AUDIT.idleFukeRich.frameCount, 16);
+  const blinkDifference = getSameSheetFrameDifferenceRatio(idleSheet, 0, 5);
+  const breathingDifference = getSameSheetFrameDifferenceRatio(idleSheet, 0, 10);
+  assert.ok(blinkDifference >= 0.04, `idle blink should be visible; got ${blinkDifference.toFixed(3)}`);
+  assert.ok(breathingDifference >= 0.08, `idle breathing should be visible; got ${breathingDifference.toFixed(3)}`);
+});
+
+test('keeps the blink-return eyelids as short arcs instead of stretched bars', () => {
+  const idleSheet = readMascotSheet('idleFukeRich');
+  const closedWidths = getBlinkLineWidths(idleSheet, 5);
+  const returnWidths = getBlinkLineWidths(idleSheet, 6);
+  for (const [eye, width] of Object.entries(closedWidths)) {
+    assert.ok(width > 0 && width <= 18, `${eye} closed eyelid arc should stay compact; got ${width}px`);
+  }
+  for (const [eye, width] of Object.entries(returnWidths)) {
+    assert.ok(width > 0 && width <= 15, `${eye} blink-return eyelid arc should not become a long bar; got ${width}px`);
+  }
+});
+
+test('keeps closed-eye recoloring clean around the goggles', () => {
+  const idleSheet = readMascotSheet('idleFukeRich');
+  for (const frameIndex of [4, 5, 6]) {
+    const noisePixels = countBlinkEyeNoisePixels(idleSheet, frameIndex);
+    assert.ok(noisePixels <= 4, `blink frame ${frameIndex} should not leave dark speckles around the eye fill; got ${noisePixels}`);
   }
 });
 

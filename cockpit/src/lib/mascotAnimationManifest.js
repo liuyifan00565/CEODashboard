@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 11:29:54 CST
+ 更新内容: 将默认待机扩展为 16 帧慢呼吸、短弧线慢眨眼和胸口轻脉冲循环，并修正闭眼眼区补色，让 idle 本体更有生命感且保持尺寸稳定。
+*/
+/*
  更新时间: 2026-07-08 18:16:34 CST
  更新内容: 将非待机动作切换为可明显区分的正式福客姿态图，并同步新的稳定性审计数值。
 */
@@ -54,10 +58,11 @@ import { MASCOT_ACTIONS } from './mascotCompanion.js';
 
 const FRAME_WIDTH = 224;
 const FRAME_HEIGHT = 300;
+const IDLE_FRAMES = Object.freeze(Array.from({ length: 16 }, (_, index) => index));
 const TWELVE_FRAMES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 
 export const MASCOT_ACTION_SHEETS = Object.freeze({
-  idleFukeRich: sheetSpec('/mascot-actions/mascot-idle-fuke-rich.png'),
+  idleFukeRich: sheetSpec('/mascot-actions/mascot-idle-fuke-rich.png', 16),
   wave: sheetSpec('/mascot-actions/mascot-wave.png'),
   guide: sheetSpec('/mascot-actions/mascot-guide.png'),
   talk: sheetSpec('/mascot-actions/mascot-talk.png'),
@@ -78,7 +83,7 @@ export const MASCOT_APPROVED_ASSETS = Object.freeze({
 });
 
 export const MASCOT_ACTION_AUDIT = Object.freeze({
-  idleFukeRich: auditSpec(12, 2, 2, 19),
+  idleFukeRich: auditSpec(16, 1, 1, 19),
   wave: auditSpec(12, 3.16, 3, 29),
   guide: auditSpec(12, 2.24, 1, 27),
   talk: auditSpec(12, 1, 1, 32),
@@ -89,7 +94,7 @@ export const MASCOT_ACTION_AUDIT = Object.freeze({
 });
 
 export const MASCOT_IDLE_VARIANTS = Object.freeze([
-  idleVariant('fukeRich', 'idleFukeRich', 6),
+  idleVariant('fukeRich', 'idleFukeRich', 6, IDLE_FRAMES),
 ]);
 
 const idleByKey = new Map(MASCOT_IDLE_VARIANTS.map((variant) => [variant.key, variant]));
@@ -117,11 +122,11 @@ function auditSpec(frameCount, maxCenterJitterPx, maxFootJitterPx, minTransparen
   });
 }
 
-function idleVariant(key, sheetKey, fps) {
+function idleVariant(key, sheetKey, fps, frames = TWELVE_FRAMES) {
   return Object.freeze({
     key,
     sheetKey,
-    frames: TWELVE_FRAMES,
+    frames,
     fps,
     playback: 'frames',
     loop: true,

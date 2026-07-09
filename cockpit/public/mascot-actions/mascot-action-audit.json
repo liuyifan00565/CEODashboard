@@ -1,16 +1,19 @@
 {
-  "updatedAt": "2026-07-08 18:16:34 CST",
+  "updatedAt": "2026-07-09 11:29:54 CST",
   "criteria": {
     "source": "Runtime actions now use visible official Fu Xiaoke pose art instead of near-identical standing frames.",
     "frameSize": [
       224,
       300
     ],
-    "frameCount": 12,
+    "frameCount": "idle uses 16 frames; non-idle actions use 12 frames",
     "maxCenterJitterPx": 4,
     "maxFootJitterPx": 3,
     "minTransparentMarginPx": 18,
     "visibleActionDeltaFromIdle": "Non-idle actions must be visually distinct from the idle standing pose at sidebar size.",
+    "idleLife": "Default idle must include visible slow breathing and a slow blink, while keeping subject size and foot position stable.",
+    "blinkArc": "Half-blink return eyelids must stay short enough to read as natural arcs instead of stretched horizontal bars.",
+    "blinkColor": "Closed-eye frames must recolor the original eye area cleanly without dark speckles or mismatched patches around the goggles.",
     "forbidden": [
       "white draft model assets",
       "gray model assets",
@@ -19,7 +22,7 @@
   },
   "actions": {
     "idleFukeRich": {
-      "frameCount": 12,
+      "frameCount": 16,
       "bodyWidthRange": [
         151,
         151
@@ -28,12 +31,12 @@
         234,
         234
       ],
-      "maxCenterJitterPx": 2,
-      "maxFootJitterPx": 2,
+      "maxCenterJitterPx": 1,
+      "maxFootJitterPx": 1,
       "minTransparentMarginPx": 19,
       "smooth": true,
       "reasonable": true,
-      "source": "stabilized-from-official-fuke-ai-reference"
+      "source": "official-fuke-idle-with-slow-breath-and-blink"
     },
     "wave": {
       "frameCount": 12,
