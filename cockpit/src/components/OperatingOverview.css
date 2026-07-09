@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 14:05:00 CST  更新内容: 年度/月度回款结构半环饼图继续放大——月度图区高度 232→300px、年度 248→308px、窄屏 240→296px，并加宽图表列最小宽度至 320/330px，整体接近但仍略小于版本情况饼图(min-height 326px)。 */
 /* 更新时间: 2026-07-09 13:55:00 CST  更新内容: 年度/月度回款结构半环饼图放大——月度图区高度 186→232px、年度 202→248px，并加宽图表列占比与最小宽度，使饼图横向纵向同步变大。 */
 /* 更新时间: 2026-07-09 13:14:23 CST  更新内容: 月度/年度半环放大并恢复未完成扇区，年度进度条改为只跨左两列，明细入口改为文字箭头链接。 */
 /* 更新时间: 2026-07-09 12:19:47 CST  更新内容: 年度回款卡改为三栏总览布局，并新增不挤占经营列表的薄年度进度 footer。 */
@@ -165,7 +166,7 @@
 
 .op-month-grid {
   display: grid;
-  grid-template-columns: minmax(200px, .7fr) minmax(280px, 1.06fr) minmax(320px, 1.14fr);
+  grid-template-columns: minmax(200px, .66fr) minmax(320px, 1.12fr) minmax(310px, 1.12fr);
   align-items: stretch;
   gap: clamp(10px, 1.35vw, 18px);
   border-top: 1px solid rgba(255,255,255,.035);
@@ -175,7 +176,7 @@
 
 .op-annual-grid {
   display: grid;
-  grid-template-columns: minmax(200px, .68fr) minmax(290px, 1.08fr) minmax(330px, 1.16fr);
+  grid-template-columns: minmax(200px, .64fr) minmax(330px, 1.14fr) minmax(320px, 1.14fr);
   align-items: stretch;
   gap: clamp(10px, 1.35vw, 18px);
   border-top: 1px solid rgba(255,255,255,.035);
@@ -258,7 +259,7 @@
 .op-recovery-structure {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto 232px;
+  grid-template-rows: auto 300px;
   align-content: center;
   gap: 2px;
   padding-inline: clamp(4px, .65vw, 10px);
@@ -283,7 +284,7 @@
 .op-channel-chart-wrap {
   position: relative;
   min-width: 0;
-  height: 232px;
+  height: 300px;
   min-height: 0;
   display: grid;
   place-items: center;
@@ -411,11 +412,11 @@
 }
 
 .op-annual-grid .op-recovery-structure {
-  grid-template-rows: auto 248px;
+  grid-template-rows: auto 308px;
 }
 
 .op-annual-grid .op-channel-chart-wrap {
-  height: 248px;
+  height: 308px;
 }
 
 .op-annual-grid .op-operating-side {
@@ -641,7 +642,7 @@
   }
 
   .op-channel-chart-wrap {
-    height: 240px;
+    height: 296px;
   }
 
   .op-channel-chart {
