@@ -1,0 +1,87 @@
+/*
+ 更新时间: 2026-07-09 15:10:00 CST
+ 更新内容: 移除本月/年度完成率两项后，速览条从六格改为四格。
+*/
+/*
+ 更新时间: 2026-07-09 14:20:00 CST
+ 更新内容: 新增顶部薄 KPI 速览条样式，六格轻量玻璃卡片，弱化装饰突出数字。
+*/
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+.kpi-strip-item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--dashboard-card-bg);
+  border: 1px solid var(--dashboard-card-border);
+  -webkit-backdrop-filter: var(--dashboard-card-blur);
+  backdrop-filter: var(--dashboard-card-blur);
+  box-shadow: var(--dashboard-card-shadow);
+  transition: border-color .22s ease, box-shadow .22s ease;
+}
+
+.kpi-strip-item:hover {
+  border-color: rgba(255,255,255,.28);
+}
+
+.kpi-strip-item--risk {
+  border-color: rgba(var(--warn-rgb), .22);
+  background: rgba(var(--warn-rgb), .05);
+}
+
+.kpi-strip-label {
+  min-width: 0;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi-strip-value {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-width: 0;
+}
+
+.kpi-strip-value b {
+  color: var(--txt);
+  font-size: clamp(19px, 1.7vw, 23px);
+  font-weight: 820;
+  line-height: 1.05;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.kpi-strip-delta {
+  font-size: 11px;
+  font-weight: 720;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1240px) {
+  .kpi-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .kpi-strip {
+    grid-template-columns: 1fr;
+  }
+}

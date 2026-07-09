@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 14:45:00 CST
+ 更新内容: sparkline 改为拉伸铺满卡片剩余空间（preserveAspectRatio="none" + non-scaling-stroke），不再是右下角小图标。
+*/
+/*
  更新时间: 2026-07-03 23:48:36 CST
  更新内容: 本月开户数与今日开户数卡片增加复用现有日维度数据的近 7 日 sparkline。
 */
@@ -52,12 +56,13 @@ function Sparkline({ metric }) {
     <svg
       className="opening-metric-card__sparkline"
       viewBox="0 0 96 32"
+      preserveAspectRatio="none"
       role="img"
       aria-label={`${metric.title}近 7 日开户趋势`}
       focusable="false"
     >
-      <path className="opening-metric-card__sparkline-base" d={path} />
-      <path className="opening-metric-card__sparkline-path" d={path} />
+      <path className="opening-metric-card__sparkline-base" d={path} vectorEffect="non-scaling-stroke" />
+      <path className="opening-metric-card__sparkline-path" d={path} vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }

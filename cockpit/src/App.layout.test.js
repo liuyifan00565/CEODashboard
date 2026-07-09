@@ -1,4 +1,13 @@
 /*
+ 更新时间: 2026-07-09 22:30:00 CST
+ 更新内容: 搜索命中扫描回归依赖数组同步为 dashboardDataState.status + computeDataState.status（不再用
+          dashboardDataVersion），覆盖经营总览/算力数据就绪后搜索高亮仍会刷新。
+*/
+/*
+ 更新时间: 2026-07-09 22:05:00 CST
+ 更新内容: 搜索命中扫描回归同步依赖数组新增 computeDataState.status，覆盖算力数据就绪后搜索高亮仍会刷新。
+*/
+/*
  更新时间: 2026-07-09 13:14:23 CST
  更新内容: 经营总览回归测试同步未完成半环占位、放大图表、年度进度条左两列布局和文字箭头入口。
 */
@@ -363,8 +372,8 @@ test('renders compute usage analysis as an independent dashboard page', () => {
   assert.match(appSource, /import ComputeUsagePage from '\.\/components\/ComputeUsagePage';/);
   assert.match(appSource, /const isComputePage = activeMenu === 'compute';/);
   assert.match(appSource, /isComputePage \? \(/);
-  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim=\{dim\} dateRange=\{dateRange\} \/>/);
-  assert.match(appSource, /: \(\s*<>\s*<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
+  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim="day" dateRange=\{\[\]\} computeDataState=\{computeDataState\} \/>/);
+  assert.match(appSource, /: \(\s*<>[\s\S]*?<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
 });
 
 test('uses neutral dark glass backgrounds without BorderGlow sweep for top compute KPI cards', () => {
@@ -452,8 +461,8 @@ test('keeps the right toolbar focused on search while data keeps default monthly
   assert.doesNotMatch(appSource, /<DateRangePicker/);
   assert.doesNotMatch(appSource, /<Segmented options=\{DIM_OPTS\}/);
   assert.doesNotMatch(appSource, /<ThemeToggle/);
-  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim=\{dim\} dateRange=\{dateRange\} \/>/);
-  assert.match(computePageSource, /export default function ComputeUsagePage\(\{ searchTerm = '', dim = 'month', dateRange = \[\] \}\)/);
+  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim="day" dateRange=\{\[\]\} computeDataState=\{computeDataState\} \/>/);
+  assert.match(computePageSource, /export default function ComputeUsagePage\(\{ searchTerm = '', dim = 'month', dateRange = \[\], computeDataState = \{ status: 'ready', error: '' \} \}\)/);
   assert.match(computePageSource, /const periodLabel = DIM_TREND_LABELS\[dim\] \?\? DIM_TREND_LABELS\.month;/);
   assert.match(computePageSource, /const trend = getComputeUsageTrend\(\{ dim, dateRange \}\);/);
 });
@@ -466,7 +475,7 @@ test('counts searchable matches and cycles the current result from the top searc
   assert.match(appSource, /querySelectorAll\('\[data-search-match="true"\]'\)/);
   assert.match(appSource, /node\.dataset\.searchCurrent = index === currentIndex \? 'true' : 'false';/);
   assert.match(appSource, /scrollIntoView\(\{ behavior: 'smooth', block: 'center', inline: 'nearest' \}\)/);
-  assert.match(appSource, /\}, \[searchTerm, activeSearchIndex, contentKey, isComputePage, dashboardDataVersion\]\);/);
+  assert.match(appSource, /\}, \[searchTerm, activeSearchIndex, contentKey, isComputePage, dashboardDataState\.status, computeDataState\.status\]\);/);
   assert.doesNotMatch(appSource, /\}, \[searchTerm, activeSearchIndex, contentKey, isComputePage, filteredKpiCards, dashboardDataVersion\]\);/);
 });
 
@@ -1146,15 +1155,16 @@ test('moves the whole compute customer ranking table upward', () => {
   assert.match(customerTableWrapBlock, /margin-top:\s*-12px;/);
 });
 
-test('removes compute resource utilization from the compute analysis page', () => {
-  assert.doesNotMatch(computePageSource, /getComputeResourceHealth/);
-  assert.doesNotMatch(computePageSource, /resourceHealth/);
-  assert.doesNotMatch(computePageSource, /SEARCH_KEYWORDS[\s\S]*?health:/);
-  assert.doesNotMatch(computePageSource, /资源利用率/);
-  assert.doesNotMatch(computePageSource, /cpu-panel--health/);
-  assert.doesNotMatch(computePageCss, /cpu-panel--health/);
-  assert.doesNotMatch(computePageCss, /cpu-health/);
-  assert.doesNotMatch(computePageCss, /grid-area:\s*health/);
+test('shows compute component token breakdown from external api fields', () => {
+  assert.match(computePageSource, /getComputeResourceHealth/);
+  assert.match(computePageSource, /resourceHealth/);
+  assert.match(computePageSource, /SEARCH_KEYWORDS[\s\S]*?health:/);
+  assert.match(computePageSource, /算力消耗构成/);
+  assert.match(computePageSource, /cpu-panel--health/);
+  assert.match(computePageCss, /cpu-panel--health/);
+  assert.match(computePageCss, /cpu-health/);
+  assert.match(computePageSource, /computeDataState\.status === 'loading'/);
+  assert.doesNotMatch(computePageSource, /token 用量数据同步失败/);
 });
 
 test('keeps the operating story overview while restoring secondary KPI companion openings', () => {
@@ -1437,7 +1447,7 @@ test('routes overview through the fused operating layout while compute keeps sco
   assert.doesNotMatch(appSource, /activeMenu === 'finance'/);
   assert.match(appSource, /const activeChannelKey = getDashboardChannelKey\(activeMenu\);/);
   assert.match(appSource, /<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
-  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim=\{dim\} dateRange=\{dateRange\} \/>/);
+  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim="day" dateRange=\{\[\]\} computeDataState=\{computeDataState\} \/>/);
   assert.match(appSource, /getFilteredKpiCards\(\{ dim, dateRange, channel: activeChannelKey \}\)/);
   assert.match(appSource, /<MonthlyTrend channelKey=\{activeChannelKey\} \/>/);
   assert.match(appSource, /<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);

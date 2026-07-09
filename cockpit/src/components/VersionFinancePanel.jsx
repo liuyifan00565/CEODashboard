@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 16:45:00 CST  更新内容: 版本情况半环图标签从只显示前两名改为全部版本都显示名称和占比，同经营总览渠道半环处理一致。 */
 /* 更新时间: 2026-07-08 18:22:00 CST  更新内容: 版本二级明细补齐当前筛选与主结论，底部改为纯文字对比摘要，避免重要口径脚注化。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: 版本情况色板改为银紫玫瑰与香槟/柔和辅助色，移除青蓝主视觉。 */
 /* 更新时间: 2026-07-06 10:00:00 CST  更新内容: 版本二级明细弹窗继承高级果味玻璃明细页母版。 */
@@ -315,17 +316,16 @@ function versionHalfRingOption(versions, mode, tokens) {
         },
         data: versions.map((version, index) => {
           const value = Math.max(Number(version[modeMeta.field]) || 0, 0.01);
-          const isMajorLabel = index < 2;
           return {
             value,
             rawValue: Number(version[modeMeta.field]) || 0,
             name: version.name,
             itemStyle: { color: VERSION_RING_COLORS[index] },
             label: {
-              show: isMajorLabel,
+              show: true,
             },
             labelLine: {
-              show: isMajorLabel,
+              show: true,
             },
           };
         }),

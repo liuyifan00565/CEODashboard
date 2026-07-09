@@ -1,4 +1,29 @@
 /*
+ 更新时间: 2026-07-09 21:15:00 CST
+ 更新内容: 新增 /api/compute-customers 分页接口（loadExternalComputeCustomerPage / handleComputeCustomersRequest），
+          支持前端后台分页拉取全量客户列表，不再受首屏 20 条采样限制；提取 mapCustomerRow 供两处复用。
+*/
+/*
+ 更新时间: 2026-07-09 19:52:00 CST
+ 更新内容: 外部客户明细实时读取条数从 50 降到 20，实时看板只保留轻量排行样本。
+*/
+/*
+ 更新时间: 2026-07-09 19:32:00 CST
+ 更新内容: 外部客户明细首屏页缩小到 50 条，后续全量客户同步交给数据库增量任务处理，避免实时看板加载等待。
+*/
+/*
+ 更新时间: 2026-07-09 19:05:00 CST
+ 更新内容: 外部客户列表恢复为首屏页数据，避免为表格一次拉取全部客户导致看板打开过慢；总客户数仍使用接口 total。
+*/
+/*
+ 更新时间: 2026-07-09 18:35:00 CST
+ 更新内容: 外部算力接口请求增加 8 秒超时（AbortController），避免外部服务偶发卡顿时整个看板首屏无限期停在加载中。
+*/
+/*
+ 更新时间: 2026-07-09 18:18:00 CST
+ 更新内容: 外部算力接口补齐全量客户分页、回复率百分比归一和组件级消耗字段映射。
+*/
+/*
  更新时间: 2026-07-09 17:55:00 CST
  更新内容: 外部算力接口改为 GET query 请求，并避免 base/path 同时包含 /csrc 时拼出重复路径。
 */
@@ -46,6 +71,11 @@ function round1(value) {
   return Math.round(num(value) * 10) / 10;
 }
 
+function percentValue(value) {
+  const numericValue = num(value);
+  return round1(numericValue > 0 && numericValue <= 1 ? numericValue * 100 : numericValue);
+}
+
 function dayStartUnix(date) {
   const shifted = new Date(date.getTime() + BEIJING_OFFSET_MS);
   const utcStart = Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate());
@@ -85,6 +115,45 @@ function accountLevelName(level) {
   return ACCOUNT_LEVEL_NAMES[Number(level)] ?? String(level || '');
 }
 
+function usageShare(value, total) {
+  const numericValue = num(value);
+  if (!total || numericValue <= 0) return 0;
+  return Math.max(0.1, round1((numericValue / total) * 100));
+}
+
+function formatPointState(value) {
+  return `${round0(value).toLocaleString('zh-CN')} 点`;
+}
+
+function buildResourceHealth(platformBoard, customerBoard) {
+  const total = Math.max(num(platformBoard.deduct), num(customerBoard.deduct), 1);
+  const rows = [
+    { key: 'ocr', name: 'OCR识别', value: sumByField(platformBoard.last_30_day_details, 'ocr_deduct'), color: '#8E86FF' },
+    { key: 'voc', name: 'VOC分析', value: num(customerBoard.voc_deduct) || sumByField(platformBoard.last_30_day_details, 'voc_deduct'), color: '#B89CFF' },
+    { key: 'video', name: '视频识别', value: num(customerBoard.video_deduct) || sumByField(platformBoard.last_30_day_details, 'video_deduct'), color: '#D9D1FF' },
+    { key: 'reply-intercept', name: '回复拦截', value: num(platformBoard.reply_intercept_deduct) || sumByField(platformBoard.last_30_day_details, 'reply_intercept_deduct'), color: '#F06A8B' },
+    { key: 'dialogue-test', name: '对话测试', value: num(platformBoard.dialogue_test_deduct) || sumByField(platformBoard.last_30_day_details, 'dialogue_test_deduct'), color: '#C9A96B' },
+  ];
+
+  return rows.map((row) => {
+    const usage = usageShare(row.value, total);
+    return {
+      key: row.key,
+      name: row.name,
+      usage,
+      value: round0(row.value),
+      trend: formatPointState(row.value),
+      state: usage >= 10 ? '高频消耗' : usage > 0 ? '低频消耗' : '暂无消耗',
+      tone: usage >= 10 ? 'warn' : 'neutral',
+      color: row.color,
+    };
+  });
+}
+
+function sumByField(rows = [], field) {
+  return rows.reduce((total, row) => total + num(row[field]), 0);
+}
+
 function normalizeApiPayload(payload, label) {
   if (payload?.status_code && Number(payload.status_code) !== 200) {
     throw new Error(`${label} 返回异常：${payload.message || payload.status_code}`);
@@ -95,19 +164,35 @@ function normalizeApiPayload(payload, label) {
   return payload?.data ?? payload;
 }
 
-async function getJson({ baseUrl, token, path, params, fetchImpl }) {
+const EXTERNAL_API_TIMEOUT_MS = 8000;
+
+async function getJson({ baseUrl, token, path, params, fetchImpl, timeoutMs = EXTERNAL_API_TIMEOUT_MS }) {
   const url = new URL(endpointUrl(baseUrl, path));
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, value);
   }
 
-  const response = await fetchImpl(url.toString(), {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      'x-token': token,
-    },
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  let response;
+  try {
+    response = await fetchImpl(url.toString(), {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'x-token': token,
+      },
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error(`外部算力接口请求超时（${timeoutMs}ms）：${path}`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 
   let payload = null;
   try {
@@ -171,7 +256,7 @@ export function mapExternalComputeBoards({ platformBoard = {}, customerBoard = {
       customerBalance: round0(customerBoard.pool),
       newCustomers: round0(customerBoard.new_customer_num),
       newStores: round0(customerBoard.new_shop_num),
-      averageReplyRate: round1(customerBoard.avg_ai_reply_rate ?? customerBoard.average_ai_reply_rate),
+      averageReplyRate: percentValue(customerBoard.avg_ai_reply_rate ?? customerBoard.average_ai_reply_rate),
       totalCustomers: round0(customerTotal),
     },
     computeUsageTrend: trend,
@@ -185,16 +270,23 @@ export function mapExternalComputeBoards({ platformBoard = {}, customerBoard = {
       name: row.range,
       value: round0(row.num),
     })),
-    computeCustomerRows: customerList.map((row) => ({
-      phone: row.phone,
-      owner: row.nick_name ?? row.owner ?? row.customer_name,
-      accountType: accountLevelName(row.level),
-      salesOwner: row.sales_manager ?? '',
-      successOwner: row.customer_manager ?? '',
-      usage: round0(row.deduct),
-      balance: round0(row.pool),
-      averageReplyRate: round1(row.avg_ai_reply_rate ?? row.average_ai_reply_rate ?? row.averageResponseRate),
-    })),
+    computeCustomerRows: customerList.map(mapCustomerRow),
+    computeResourceHealth: buildResourceHealth(platformBoard, customerBoard),
+  };
+}
+
+function mapCustomerRow(row) {
+  return {
+    phone: row.phone,
+    owner: row.nick_name ?? row.owner ?? row.customer_name,
+    accountType: accountLevelName(row.level),
+    salesOwner: row.sales_manager ?? '',
+    successOwner: row.customer_manager ?? '',
+    usage: round0(row.deduct),
+    balance: round0(row.pool),
+    averageReplyRate: percentValue(row.avg_ai_reply_rate ?? row.average_ai_reply_rate ?? row.averageResponseRate),
+    videoUsage: round0(row.video_deduct),
+    vocUsage: round0(row.voc_deduct),
   };
 }
 
@@ -203,6 +295,7 @@ export async function loadExternalComputeSnapshot({
   token,
   platformBoardPath = PLATFORM_BOARD_PATH,
   customerBoardPath = CUSTOMER_BOARD_PATH,
+  customerPageSize = 20,
   now = new Date(),
   fetchImpl = globalThis.fetch,
 } = {}) {
@@ -220,7 +313,7 @@ export async function loadExternalComputeSnapshot({
     level: 0,
     limit_type: 1,
     page: 1,
-    page_size: 200,
+    page_size: customerPageSize,
     sort_type: 1,
   };
 
@@ -235,6 +328,46 @@ export async function loadExternalComputeSnapshot({
   });
 }
 
+export async function loadExternalComputeCustomerPage({
+  baseUrl,
+  token,
+  customerBoardPath = CUSTOMER_BOARD_PATH,
+  page = 1,
+  pageSize = 200,
+  now = new Date(),
+  fetchImpl = globalThis.fetch,
+} = {}) {
+  if (!baseUrl || !token) return null;
+  if (typeof fetchImpl !== 'function') {
+    throw new Error('当前 Node 环境不支持 fetch，无法读取外部算力接口。');
+  }
+
+  const window = buildExternalComputeRequestWindow(now);
+  const customerBody = {
+    customer_manager: '',
+    sales_manager: '',
+    start_time: window.start_time,
+    end_time: window.end_time,
+    level: 0,
+    limit_type: 1,
+    page,
+    page_size: pageSize,
+    sort_type: 1,
+  };
+
+  const customerPayload = await getJson({ baseUrl, token, path: customerBoardPath, params: customerBody, fetchImpl });
+  const customerBoard = normalizeApiPayload(customerPayload, '客户算力列表');
+  const customerList = customerBoard.customer_list?.list ?? customerBoard.customer_list ?? [];
+  const total = customerBoard.customer_list?.total ?? customerList.length;
+
+  return {
+    rows: customerList.map(mapCustomerRow),
+    total: round0(total),
+    page,
+    pageSize,
+  };
+}
+
 export function hasExternalComputeConfig(env = process.env) {
   return Boolean(env.COMPUTE_API_BASE_URL && env.COMPUTE_API_TOKEN);
 }
@@ -245,6 +378,53 @@ export async function loadConfiguredExternalComputeSnapshot({ env = process.env,
     ...computeApiConfigFromEnv(env),
     fetchImpl,
   });
+}
+
+export async function loadConfiguredExternalComputeCustomerPage({ page, pageSize, env = process.env, fetchImpl = globalThis.fetch } = {}) {
+  if (!hasExternalComputeConfig(env)) return null;
+  return loadExternalComputeCustomerPage({
+    ...computeApiConfigFromEnv(env),
+    page,
+    pageSize,
+    fetchImpl,
+  });
+}
+
+function parsePositiveInt(value, fallback) {
+  if (value === null || value === undefined || value === '') return fallback;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+export async function handleComputeCustomersRequest(req, res) {
+  try {
+    const requestUrl = new URL(req.url, 'http://internal');
+    const page = parsePositiveInt(requestUrl.searchParams.get('page'), 1);
+    const pageSize = Math.min(500, parsePositiveInt(requestUrl.searchParams.get('pageSize'), 200));
+
+    const result = await loadConfiguredExternalComputeCustomerPage({ page, pageSize });
+    if (!result) {
+      res.writeHead(503, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store',
+      });
+      res.end(JSON.stringify({ error: '外部算力接口未配置。' }));
+      return;
+    }
+
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+    });
+    res.end(JSON.stringify({ source: 'mysql', ...result }));
+  } catch (err) {
+    if (!res.headersSent) {
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+    }
+    res.end(JSON.stringify({
+      error: `外部算力客户分页接口异常：${err.message}`,
+    }));
+  }
 }
 
 export async function handleComputeDataRequest(_req, res) {

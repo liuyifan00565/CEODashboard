@@ -1,10 +1,52 @@
 /*
+ 更新时间: 2026-07-09 22:30:00 CST
+ 更新内容: 经营总览页在 dashboard-data 未就绪前改为渲染骨架屏，不再显示 mock.js 本地示例经营数据；彻底移除
+          dashboardDataVersion（两个用途都已不需要强制重挂载），contentRenderKey 直接等于 contentKey。
+*/
+/*
+ 更新时间: 2026-07-09 22:05:00 CST
+ 更新内容: 算力数据就绪后不再触发 dashboardDataVersion 自增，避免算力页同步条消失时整块内容区被 key 变化强制
+          重挂载（表现为"刷新了一下"）；搜索命中扫描改为直接监听 computeDataState.status，保持算力页数据
+          就绪后搜索高亮仍会刷新。
+*/
+/*
+ 更新时间: 2026-07-09 21:15:00 CST
+ 更新内容: 移除数据库加载全屏阻塞占位，改为顶栏轻量同步提示条，所有页面用本地快照立即渲染；
+          修复算力后台同步状态因 effect 依赖自身状态被提前取消、"正在同步 token 用量数据"永不消失的问题；
+          算力客户列表改为分页后台全量同步，客户表随分页到达增量刷新。
+*/
+/*
+ 更新时间: 2026-07-09 19:52:00 CST
+ 更新内容: 首页数据就绪后后台同步 token 数据；算力页仅在后台同步未完成或失败时显示状态条。
+*/
+/*
+ 更新时间: 2026-07-09 19:32:00 CST
+ 更新内容: 算力页改为进入页面后按需加载外部 token 数据，并使用日维度默认趋势，避免首页等待和月维度单点趋势。
+*/
+/*
+ 更新时间: 2026-07-09 16:15:00 CST
+ 更新内容: 移除经营判断轴（预览后决定不保留）；渠道 ROI 分析从二级网格移到月度经营进度卡下方，
+          让 KPI 速览条+年度进度条+月度主卡+渠道 ROI 尽量落在一屏内。
+*/
+/*
+ 更新时间: 2026-07-09 16:05:00 CST
+ 更新内容: KPI 速览条下方新增经营判断轴（探索性预览，用户要求先看效果再决定是否保留）。
+*/
+/*
+ 更新时间: 2026-07-09 15:50:00 CST
+ 更新内容: 经营总览下方新增"渠道 ROI 分析"面板（月度经营趋势下方、版本情况上方），落地需求文档里此前未实现的模块。
+*/
+/*
  更新时间: 2026-07-09 13:13:45 CST
  更新内容: 为经营总览与数据维护之间的侧边导航切换传递模式标识，配合侧栏平滑换组动效。
 */
 /*
+ 更新时间: 2026-07-09 14:20:00 CST
+ 更新内容: 经营总览页顶部新增薄 KPI 速览条，汇总月度/年度完成率、续费率、广告 ROI、费比和本月开户数。
+*/
+/*
  更新时间: 2026-07-08 16:57:24 CST
- 更新内容: 移除顶部右侧“更新数据”按钮，维护入口仅保留左侧导航的数据维护菜单。
+ 更新内容: 移除顶部右侧”更新数据”按钮，维护入口仅保留左侧导航的数据维护菜单。
 */
 /*
  更新时间: 2026-07-08 14:46:29 CST
@@ -166,15 +208,17 @@ import MetallicPaint from './components/MetallicPaint/MetallicPaint';
 import KpiCard from './components/KpiCard';
 import KpiModal from './components/KpiModal';
 import MonthlyTrend from './components/MonthlyTrend';
+import ChannelRoiPanel from './components/ChannelRoiPanel';
 import VersionFinancePanel from './components/VersionFinancePanel';
 import DeliveryPanel from './components/DeliveryPanel';
 import ComputeUsagePage from './components/ComputeUsagePage';
 import OpeningMetricCards from './components/OpeningMetricCards';
 import MaintenancePage from './components/MaintenancePage';
 import OperatingOverview from './components/OperatingOverview';
+import TopKpiStrip from './components/TopKpiStrip';
 
 import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
-import { loadDashboardData } from './data/liveData';
+import { loadComputeData, loadDashboardData } from './data/liveData';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
 import { matchesSearchTerm } from './lib/searchMatch';
@@ -183,6 +227,7 @@ import './dashboard.css';
 const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance';
 const BRAND_FULL_ENTER_SCROLL = 56;
 const BRAND_FULL_EXIT_SCROLL = 104;
+const DASHBOARD_LOADING_DELAY_MS = 450;
 
 const DASHBOARD_SIDEBAR_ITEMS = [
   ...MENU.map((item) => ({ ...item, section: '导航', icon: item.icon ?? item.key })),
@@ -197,6 +242,7 @@ const MAINTENANCE_SIDEBAR_ITEMS = [
 
 const PANEL_KEYWORDS = {
   trend: ['趋势', '月度', '回款', '目标', '完成率'],
+  roi: ['渠道 ROI', '渠道ROI', 'ROI', '投入产出', '费比', '线上', '线下华南', '线下华东', '代理'],
   version: ['版本', '启航', '卓越', '至尊', '财务', '健康', '应收', '广告', '缺口', '续费'],
   delivery: ['交付', '实施', '配置', '知识库', '人效'],
 };
@@ -223,7 +269,8 @@ export default function App() {
   const [companionCue, setCompanionCue] = useState(null);
   const [brandMode, setBrandMode] = useState('full');
   const [dashboardDataState, setDashboardDataState] = useState({ status: 'loading', error: '' });
-  const [dashboardDataVersion, setDashboardDataVersion] = useState(0);
+  const [showDashboardLoading, setShowDashboardLoading] = useState(false);
+  const [computeDataState, setComputeDataState] = useState({ status: 'idle', error: '' });
 
   const gridRef = useRef(null);
   const secondaryGridRef = useRef(null);
@@ -245,8 +292,7 @@ export default function App() {
   const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const sidebarTransitionKey = maintenanceMode ? 'maintenance' : 'dashboard';
   const contentKey = maintenanceMode ? activeMaintenanceMenu : activeMenu;
-  const contentRenderKey = `${contentKey}-${dashboardDataVersion}`;
-  const isDashboardDataReady = dashboardDataState.status === 'ready';
+  const isDashboardDataLoading = dashboardDataState.status === 'loading';
   const filteredKpiCards = getFilteredKpiCards({ dim, dateRange, channel: activeChannelKey });
   const monthKpiCard = filteredKpiCards.find((card) => card.key === 'month');
   const yearKpiCard = filteredKpiCards.find((card) => card.key === 'year');
@@ -262,7 +308,6 @@ export default function App() {
     loadDashboardData()
       .then(() => {
         if (cancelled) return;
-        setDashboardDataVersion((version) => version + 1);
         setDashboardDataState({ status: 'ready', error: '' });
       })
       .catch((err) => {
@@ -274,6 +319,45 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (dashboardDataState.status !== 'loading') {
+      setShowDashboardLoading(false);
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setShowDashboardLoading(true);
+    }, DASHBOARD_LOADING_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [dashboardDataState.status]);
+
+  useEffect(() => {
+    if (dashboardDataState.status !== 'ready' || computeDataState.status !== 'idle') return undefined;
+    let cancelled = false;
+
+    setComputeDataState({ status: 'loading', error: '' });
+    loadComputeData()
+      .then(() => {
+        if (cancelled) return;
+        setComputeDataState({ status: 'ready', error: '' });
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setComputeDataState({ status: 'error', error: err.message || '算力数据加载失败' });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // computeDataState.status is intentionally omitted: this effect sets that
+    // status itself, and including it retriggers/cancels this same effect
+    // before loadComputeData() resolves, leaving status stuck at 'loading'.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dashboardDataState.status]);
 
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -315,7 +399,7 @@ export default function App() {
       window.removeEventListener('scroll', requestBrandMode);
       window.removeEventListener('resize', requestBrandMode);
     };
-  }, [contentKey, dashboardDataVersion]);
+  }, [contentKey]);
 
   function scrollDashboardIntoView() {
     pendingMenuScrollRef.current = false;
@@ -407,7 +491,7 @@ export default function App() {
       matches[currentIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     }
     pendingSearchScrollRef.current = false;
-  }, [searchTerm, activeSearchIndex, contentKey, isComputePage, dashboardDataVersion]);
+  }, [searchTerm, activeSearchIndex, contentKey, isComputePage, dashboardDataState.status, computeDataState.status]);
 
   // GSAP 入场：KPI 卡 + 面板 stagger fade-up（菜单切换时重放）
   useLayoutEffect(() => {
@@ -434,23 +518,7 @@ export default function App() {
       if (scrollFrame) cancelAnimationFrame(scrollFrame);
       ctx.revert();
     };
-  }, [contentKey, dashboardDataVersion]);
-
-  if (!isDashboardDataReady) {
-    return (
-      <div className="app">
-        <div className="bg" aria-hidden="true" />
-        <main className="dash-data-state" role={dashboardDataState.status === 'error' ? 'alert' : 'status'}>
-          <b>{dashboardDataState.status === 'loading' ? '正在加载数据库数据' : '真实数据库数据加载失败'}</b>
-          <span>
-            {dashboardDataState.status === 'loading'
-              ? '正在从 ceo_dashboard 读取经营、渠道、算力和交付数据。'
-              : dashboardDataState.error}
-          </span>
-        </main>
-      </div>
-    );
-  }
+  }, [contentKey]);
 
   return (
     <div className="app">
@@ -510,6 +578,17 @@ export default function App() {
                 </div>
               </div>
             </GlassSurface>
+            {dashboardDataState.status === 'error' ? (
+              <div className="dash-sync-pill dash-sync-pill--error" role="alert">
+                <span className="dash-sync-pill-dot" aria-hidden="true" />
+                <span>真实数据同步失败，当前显示本地快照</span>
+              </div>
+            ) : showDashboardLoading ? (
+              <div className="dash-sync-pill dash-sync-pill--loading" role="status">
+                <span className="dash-sync-pill-dot" aria-hidden="true" />
+                <span>正在同步真实数据…</span>
+              </div>
+            ) : null}
             <div className="dash-tools">
               <ExpandableSearch
                 onChange={setSearchTerm}
@@ -520,19 +599,49 @@ export default function App() {
             </div>
           </header>
 
-          <div className="dash-content" ref={gridRef} key={contentRenderKey}>
+          <div className="dash-content" ref={gridRef} key={contentKey}>
             {isMaintenancePage ? (
               <MaintenancePage activePage={activeMaintenanceMenu} onBack={handleMaintenanceBack} />
             ) : isComputePage ? (
-              <ComputeUsagePage searchTerm={searchTerm} dim={dim} dateRange={dateRange} />
+              <ComputeUsagePage searchTerm={searchTerm} dim="day" dateRange={[]} computeDataState={computeDataState} />
+            ) : isDashboardDataLoading ? (
+              <>
+                <div className="dash-skeleton-strip" data-anim />
+                <div className="dash-skeleton-block dash-skeleton-block--overview" data-anim />
+                <div className="dash-secondary-roi" data-anim>
+                  <div className="dash-skeleton-block" />
+                </div>
+                <div className="dash-secondary-grid">
+                  <div className="dash-secondary-cell dash-secondary-cell--trend" data-anim>
+                    <div className="dash-skeleton-block" />
+                  </div>
+                  <div className="dash-secondary-cell dash-secondary-cell--finance" data-anim>
+                    <div className="dash-skeleton-block" />
+                  </div>
+                  <div className="dash-secondary-cell dash-secondary-cell--version" data-anim>
+                    <div className="dash-skeleton-block" />
+                  </div>
+                </div>
+                <div className="dash-secondary-delivery" data-anim>
+                  <div className="dash-skeleton-block" />
+                </div>
+              </>
             ) : (
               <>
+                <TopKpiStrip />
+
                 <OperatingOverview
                   searchTerm={searchTerm}
                   monthKpiCard={monthKpiCard}
                   yearKpiCard={yearKpiCard}
                   onOpenKpi={handleOpenCard}
                 />
+
+                <div className="dash-secondary-roi" data-anim>
+                  <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.roi, searchTerm)}>
+                    <ChannelRoiPanel />
+                  </SearchResultBorder>
+                </div>
 
                 <div className="dash-secondary-grid" ref={secondaryGridRef}>
                   <div className="dash-secondary-cell dash-secondary-cell--trend" data-anim>

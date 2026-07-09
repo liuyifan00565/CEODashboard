@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 21:15:00 CST
+ 更新内容: Vite 开发服务新增 /api/compute-customers 分页接口，与生产一致支持算力页后台全量客户同步。
+*/
+/*
  更新时间: 2026-07-09 17:05:00 CST
  更新内容: Vite 开发服务新增 /api/compute-data，与生产一致支持算力数据独立回退加载。
 */
@@ -29,7 +33,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { handleAiAnalyzeRequest } from './server/dashscope.js'
 import { handleAiHoverCueRequest } from './server/hoverCue.js'
-import { handleComputeDataRequest } from './server/computeApi.js'
+import { handleComputeDataRequest, handleComputeCustomersRequest } from './server/computeApi.js'
 import { handleDashboardDataRequest } from './server/dashboardData.js'
 import { handleMaintenanceImportRequest } from './server/maintenanceImport.js'
 import { handleMaintenanceDataRequest } from './server/maintenanceData.js'
@@ -67,6 +71,9 @@ export default defineConfig({
         })
         server.middlewares.use('/api/compute-data', (req, res) => {
           handleComputeDataRequest(req, res)
+        })
+        server.middlewares.use('/api/compute-customers', (req, res) => {
+          handleComputeCustomersRequest(req, res)
         })
         server.middlewares.use('/api/maintenance/data', (req, res) => {
           handleMaintenanceDataRequest(req, res)

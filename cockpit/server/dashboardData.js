@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 19:32:00 CST
+ 更新内容: /api/dashboard-data 不再实时调用外部算力接口，token 外部数据改由 /api/compute-data 在算力页按需加载。
+*/
+/*
  更新时间: 2026-07-09 17:28:00 CST
  更新内容: 外部算力覆盖失败时保留本地 MySQL dashboard 快照，避免 token 接口 404 阻塞其它看板数据。
 */
@@ -982,7 +986,7 @@ export async function buildDashboardSnapshot(connection) {
     computeResourceHealth,
     deliveryRows,
   });
-  return applyExternalComputeSnapshot(snapshot);
+  return snapshot;
 }
 
 export async function handleDashboardDataRequest(_req, res) {

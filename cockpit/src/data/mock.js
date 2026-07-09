@@ -1,4 +1,16 @@
 /*
+ 更新时间: 2026-07-09 21:15:00 CST
+ 更新内容: 新增 appendComputeCustomerRows，供算力页后台分页同步时按手机号增量合并客户行，不整体替换数组。
+*/
+/*
+ 更新时间: 2026-07-09 19:32:00 CST
+ 更新内容: 算力趋势默认日期范围跟随已加载算力数据，避免外部最新 30 天数据被全局 6 月范围过滤。
+*/
+/*
+ 更新时间: 2026-07-09 19:05:00 CST
+ 更新内容: 外部算力日数据只覆盖接口实际返回日期，缺失日期继续使用本地历史占位，避免月/年趋势因接口短窗口变成不完整序列。
+*/
+/*
  更新时间: 2026-07-09 10:59:10 CST
  更新内容: 暂时隐藏数据维护侧边栏的组织维护入口，保留组织维护页面元数据和数据结构以便后续恢复。
 */
@@ -461,6 +473,8 @@ const COMPUTE_YEAR = '2026';
 const COMPUTE_YEAR_NUMBER = Number(COMPUTE_YEAR);
 const COMPUTE_LOOKBACK_YEARS = 5;
 const COMPUTE_LOOKBACK_MONTHS = 36;
+let COMPUTE_USAGE_TREND_IS_EXTERNAL = false;
+let COMPUTE_ACTIVE_DEFAULT_RANGE = [...COMPUTE_DEFAULT_RANGE];
 
 export const COMPUTE_USAGE_TREND = COMPUTE_DAYS.map((day, index) => ({
   day,
@@ -587,7 +601,7 @@ function normalizeComputeDateRange(dateRange) {
     .filter(Boolean)
     .sort();
 
-  if (!keys.length) return [...COMPUTE_DEFAULT_RANGE];
+  if (!keys.length) return [...COMPUTE_ACTIVE_DEFAULT_RANGE];
   if (keys.length === 1) return [keys[0], keys[0]];
   return [keys[0], keys.at(-1)];
 }
@@ -652,6 +666,8 @@ function makeComputeYearPoint(year) {
 }
 
 function getComputeDayRows(dateRange) {
+  if (COMPUTE_USAGE_TREND_IS_EXTERNAL) return getExternalComputeDayRows(dateRange);
+
   const [start, end] = normalizeComputeDateRange(dateRange);
   const rows = [];
   for (let current = parseDateKey(end); formatDateKey(current) >= start; current = addDays(current, -1)) {
@@ -662,6 +678,8 @@ function getComputeDayRows(dateRange) {
 }
 
 function getComputeMonthRows(dateRange) {
+  if (COMPUTE_USAGE_TREND_IS_EXTERNAL) return getExternalComputePeriodRows(dateRange, 'month');
+
   const [start, end] = normalizeComputeDateRange(dateRange);
   const startIndex = computeMonthIndex(start);
   const endIndex = computeMonthIndex(end);
@@ -676,6 +694,8 @@ function getComputeMonthRows(dateRange) {
 }
 
 function getComputeYearRows(dateRange) {
+  if (COMPUTE_USAGE_TREND_IS_EXTERNAL) return getExternalComputePeriodRows(dateRange, 'year');
+
   const [start, end] = normalizeComputeDateRange(dateRange);
   const startYear = Number(start.slice(0, 4));
   const endYear = Number(end.slice(0, 4));
@@ -687,6 +707,39 @@ function getComputeYearRows(dateRange) {
   }
 
   return rows;
+}
+
+function getExternalComputeDayRows(dateRange) {
+  const [start, end] = normalizeComputeDateRange(dateRange);
+  const rows = [];
+  for (let current = parseDateKey(end); formatDateKey(current) >= start; current = addDays(current, -1)) {
+    const dateKey = formatDateKey(current);
+    rows.push(COMPUTE_USAGE_TREND_BY_DATE.get(dateKey) ?? makeComputeDayPoint(dateKey));
+  }
+
+  return rows.length ? rows : COMPUTE_USAGE_TREND;
+}
+
+function getExternalComputePeriodRows(dateRange, period) {
+  const rows = getExternalComputeDayRows(dateRange);
+  const grouped = new Map();
+
+  rows.forEach((row) => {
+    const range = period === 'year' ? String(row.range).slice(0, 4) : String(row.range).slice(0, 7);
+    const current = grouped.get(range) ?? {
+      day: period === 'year' ? `${range}年` : range.replace('-', '.'),
+      range,
+      usage: 0,
+      addOn: 0,
+      capacity: 0,
+    };
+    current.usage += Number(row.usage) || 0;
+    current.addOn += Number(row.addOn) || 0;
+    if (!current.capacity) current.capacity = Number(row.capacity) || 0;
+    grouped.set(range, current);
+  });
+
+  return [...grouped.values()];
 }
 
 export function getComputeUsageTrend(request = '30d') {
@@ -1369,10 +1422,18 @@ export function applyDashboardDataSnapshot(snapshot) {
 
   if (Array.isArray(snapshot.computeUsageTrend)) {
     replaceArray(COMPUTE_USAGE_TREND, snapshot.computeUsageTrend);
+    COMPUTE_USAGE_TREND_IS_EXTERNAL = true;
     COMPUTE_USAGE_TREND_BY_DATE.clear();
     snapshot.computeUsageTrend.forEach((row) => {
       if (row.range) COMPUTE_USAGE_TREND_BY_DATE.set(row.range, row);
     });
+    const loadedRanges = snapshot.computeUsageTrend
+      .map((row) => normalizeComputeDateKey(row.range))
+      .filter(Boolean)
+      .sort();
+    if (loadedRanges.length) {
+      COMPUTE_ACTIVE_DEFAULT_RANGE = [loadedRanges[0], loadedRanges.at(-1)];
+    }
   }
 
   if (Array.isArray(snapshot.computeVersionConsumption)) {
@@ -1396,4 +1457,19 @@ export function applyDashboardDataSnapshot(snapshot) {
   }
 
   updateKpiCardsFromRuntimeData();
+}
+
+export function appendComputeCustomerRows(rows = []) {
+  if (!Array.isArray(rows) || !rows.length) return;
+
+  const indexByPhone = new Map(COMPUTE_CUSTOMER_ROWS.map((row, index) => [row.phone, index]));
+  rows.forEach((row) => {
+    const existingIndex = indexByPhone.get(row.phone);
+    if (existingIndex !== undefined) {
+      COMPUTE_CUSTOMER_ROWS[existingIndex] = row;
+    } else {
+      COMPUTE_CUSTOMER_ROWS.push(row);
+      indexByPhone.set(row.phone, COMPUTE_CUSTOMER_ROWS.length - 1);
+    }
+  });
 }

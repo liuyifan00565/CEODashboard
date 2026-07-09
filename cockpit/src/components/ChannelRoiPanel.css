@@ -1,0 +1,157 @@
+/*
+ 更新时间: 2026-07-09 16:30:00 CST
+ 更新内容: 标签移到标题旁并缩短文案，腾出的高度回填给卡片内边距、间距和数字字号，让卡片不再显得局促。
+*/
+/*
+ 更新时间: 2026-07-09 16:15:00 CST
+ 更新内容: 面板移出二级网格改为独立整行区块后，补充原先由 dash-secondary-cell 提供的 hover 高光反馈。
+*/
+/*
+ 更新时间: 2026-07-09 15:50:00 CST
+ 更新内容: 新增渠道 ROI 分析面板样式，四渠道横排卡片，弱化装饰突出 ROI 倍数和费比。
+*/
+.roi-panel.mt-panel {
+  padding: 13px 16px;
+}
+
+.roi-panel .mt-head {
+  margin-bottom: 8px;
+}
+
+.roi-panel {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: border-color .22s ease, box-shadow .22s ease;
+}
+
+.roi-panel:hover,
+.roi-panel:focus-within {
+  border-color: rgba(255,255,255,.34);
+  box-shadow: var(--glass-shadow);
+}
+
+.roi-list {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.roi-row {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 18px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 14px;
+  background: rgba(255,255,255,.026);
+  transition: border-color .22s ease, background .22s ease;
+}
+
+.roi-row--warn {
+  border-color: rgba(var(--warn-rgb), .22);
+  background: rgba(var(--warn-rgb), .05);
+}
+
+.roi-row--strong {
+  border-color: rgba(228,184,215,.24);
+  background: rgba(228,184,215,.05);
+}
+
+.roi-row-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.roi-row-name {
+  color: var(--txt);
+  font-size: 14px;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.roi-row-value {
+  display: block;
+  color: var(--txt);
+  font-size: 24px;
+  font-weight: 850;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.roi-row-track {
+  position: relative;
+  min-width: 0;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--bar-track);
+  border: 1px solid rgba(255,255,255,.075);
+  overflow: hidden;
+}
+
+.roi-row-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  min-width: 6px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(142,134,255,.78), rgba(228,184,215,.62));
+  box-shadow: 0 0 12px rgba(184,156,255,.14);
+}
+
+.roi-row--warn .roi-row-fill {
+  background: linear-gradient(90deg, #B84E68, #F06A8B);
+  box-shadow: 0 0 12px rgba(240,106,139,.16);
+}
+
+.roi-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: rgba(247,248,252,.56);
+  font-size: 12px;
+  font-weight: 640;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+.roi-row-tag {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 760;
+  line-height: 1.4;
+}
+
+.roi-row-tag--warn {
+  border: 1px solid rgba(var(--warn-rgb), .28);
+  background: rgba(var(--warn-rgb), .09);
+  color: var(--warn);
+}
+
+.roi-row-tag--strong {
+  border: 1px solid rgba(228,184,215,.3);
+  background: rgba(228,184,215,.1);
+  color: rgba(228,184,215,.94);
+}
+
+@media (max-width: 860px) {
+  .roi-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .roi-list {
+    grid-template-columns: 1fr;
+  }
+}
