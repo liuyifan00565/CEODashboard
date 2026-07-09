@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 15:10:00 CST  更新内容: 年度回款总览与月度经营进度的目标状态文案统一为"超额完成/剩余目标"，超额用约定金色 var(--accent-gold)、剩余用约定红色 var(--warn)；年度新增超额/剩余条件判断(原为写死"剩余目标"无色)，月度"目标缺口"改为"剩余目标"保持一致。 */
 /* 更新时间: 2026-07-09 15:00:00 CST  更新内容: 回款半环直接对齐版本情况饼图参数——radius 62/88%→45/76%、center 50/56%→49.5/68%(与 VersionFinancePanel 完全一致)；图区高度月度/年度/窄屏统一→326px；图表列最小宽度→420/430 接近版本饼图容器宽 clamp(430,34vw,560)。 */
 /* 更新时间: 2026-07-09 14:55:00 CST  更新内容: 回款半环继续缩小并瘦身(上一版仍偏大且有"下巴")——radius 58/92%→62/88%(环厚34%→26%变薄)、center 54%→56%(=1-0.88/2 去下方空荡)；图区高度月度370→280、年度378→288、窄屏362→272；图表列最小宽度350→300/360→310，饼图直径≈0.88×280≈246px。 */
 /* 更新时间: 2026-07-09 14:50:00 CST  更新内容: 回款半环回调到合理尺寸(上一版430px太大)——radius 60/96%→58/92%、center 52%→54%(=1-0.92/2)；图区高度月度430→370、年度438→378、窄屏420→362；图表列最小宽度400→350/410→360，饼图直径≈0.92×350≈322px。 */
@@ -447,12 +448,16 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
   const annualStructureOption = useMemo(() => channelStructureOption(annualStructure, ANNUAL_STRUCTURE_META, tokens), [annualStructure, tokens]);
   const annualCapsuleWidth = `${Math.min(KPI_DERIVED.yearCompletion, 100)}%`;
   const annualRemainingTarget = Math.max(0, KPI.yearTarget - KPI.yearRecovered);
+  const annualTargetOver = Math.max(0, KPI.yearRecovered - KPI.yearTarget);
+  const annualTargetStatusRisk = annualRemainingTarget > 0;
+  const annualTargetStatusLabel = annualTargetStatusRisk ? '剩余目标' : '超额完成';
+  const annualTargetStatusValue = annualTargetStatusRisk ? annualRemainingTarget : annualTargetOver;
   const annualPaceDelta = +(KPI_DERIVED.yearCompletion - overviewMetrics.annualTimeProgress).toFixed(1);
   const annualPaceLabel = `${annualPaceDelta < 0 ? '低于' : '高于'}线性进度 ${formatPp(annualPaceDelta)}`;
   const monthTargetGap = Math.max(0, KPI.monthTarget - KPI.monthRecovered);
   const monthTargetOver = Math.max(0, KPI.monthRecovered - KPI.monthTarget);
   const targetStatusRisk = monthTargetGap > 0;
-  const targetStatusLabel = targetStatusRisk ? '目标缺口' : '超额完成';
+  const targetStatusLabel = targetStatusRisk ? '剩余目标' : '超额完成';
   const targetStatusValue = targetStatusRisk ? monthTargetGap : monthTargetOver;
 
   return (
@@ -517,7 +522,9 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
               <span className="op-summary-sub">年度目标 {formatWan(KPI.yearTarget)}万</span>
               <div className="op-month-primary-facts op-annual-primary-facts">
                 <span>年目标完成率 {formatPct(KPI_DERIVED.yearCompletion)}</span>
-                <span>剩余目标 {formatWan(annualRemainingTarget)}万</span>
+                <span className={annualTargetStatusRisk ? 'op-month-primary-fact--risk' : 'op-month-primary-fact--over'}>
+                  {annualTargetStatusLabel} {formatWan(annualTargetStatusValue)}万
+                </span>
               </div>
             </div>
 

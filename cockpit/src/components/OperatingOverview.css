@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 15:10:00 CST  更新内容: 目标状态胶囊配色对齐约定——op-month-primary-fact--over 由粉色改为金色 var(--accent-gold)(rgba 201,169,107)；年度 op-annual-primary-facts span:last-child 加 :not(.--over):not(.--risk) 排除，使金色/红色不被中性规则覆盖。 */
 /* 更新时间: 2026-07-09 15:00:00 CST  更新内容: 回款半环对齐版本情况饼图——图区高度月度/年度/窄屏统一 326px；图表列最小宽度月度→420/年度→430 接近版本饼图容器宽，配合 radius 45/76% center 49.5/68% 使两者一致。 */
 /* 更新时间: 2026-07-09 14:55:00 CST  更新内容: 回款半环继续缩小并瘦身——图区高度月度370→280、年度378→288、窄屏362→272；图表列最小宽度月度350→300/年度360→310，配合 radius 62/88%(环变薄) 使饼图直径≈246px 且去下方空荡。 */
 /* 更新时间: 2026-07-09 14:50:00 CST  更新内容: 回款半环回调合理尺寸(上一版430px太大)——图区高度月度430→370、年度438→378、窄屏420→362；图表列最小宽度月度400→350/年度410→360，配合 radius 58/92% 使饼图直径≈322px。 */
@@ -244,9 +245,9 @@
 }
 
 .op-month-primary-facts .op-month-primary-fact--over {
-  border-color: rgba(228,184,215,.14);
-  background: rgba(228,184,215,.052);
-  color: rgba(247,248,252,.78);
+  border-color: rgba(201,169,107,.26);
+  background: rgba(201,169,107,.08);
+  color: var(--accent-gold);
 }
 
 .op-month-primary-facts .op-month-primary-fact--risk {
@@ -255,7 +256,7 @@
   color: var(--warn);
 }
 
-.op-annual-primary-facts span:last-child {
+.op-annual-primary-facts span:last-child:not(.op-month-primary-fact--over):not(.op-month-primary-fact--risk) {
   border-color: rgba(255,255,255,.065);
   background: rgba(255,255,255,.026);
   color: rgba(247,248,252,.62);
