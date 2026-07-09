@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 11:43:55 CST
+ 更新内容: 验收 sprite 小人动作切换具备旧帧淡出过渡，避免非 Live2D 动作之间直接硬切。
+*/
+/*
  更新时间: 2026-07-09 10:52:44 CST
  更新内容: 验收福客帧图具备 translate-only 内层生命感动效，同时继续禁止缩放、旋转和外层尺寸动画。
 */
@@ -126,6 +130,19 @@ test('plays authored frames with requestAnimationFrame and elapsed fps timing', 
   assert.doesNotMatch(componentCode, /replacementSrc|mascot-sprite-stage__replacement/);
 });
 
+test('crossfades sprite action changes instead of hard-cutting sheets', () => {
+  assert.match(componentCode, /const MASCOT_ACTION_BLEND_MS = 260;/);
+  assert.match(componentCode, /const \[transitionGhost,\s*setTransitionGhost\] = useState\(null\);/);
+  assert.match(componentCode, /const transitionTimeoutRef = useRef\(0\);/);
+  assert.match(componentCode, /const lastActionSignatureRef = useRef\(''\);/);
+  assert.match(componentCode, /const latestPresentationRef = useRef\(null\);/);
+  assert.match(componentCode, /previousSignature !== actionSignature/);
+  assert.match(componentCode, /setTransitionGhost\(\{/);
+  assert.match(componentCode, /window\.setTimeout\(\(\) => \{\s*setTransitionGhost\(null\);/);
+  assert.match(componentCode, /mascot-sprite-stage__blend-layer/);
+  assert.match(componentCode, /mascot-sprite-stage__sheet--ghost/);
+});
+
 test('keeps idle playback on a real rich Fu Xiaoke frame loop', () => {
   assert.match(componentCode, /const \[idleVariantIndex,\s*setIdleVariantIndex\] = useState\(0\);/);
   assert.match(componentCode, /const IDLE_LOOPS_BEFORE_VARIANT = 1;/);
@@ -179,8 +196,16 @@ test('adds translate-only inner life motion to keep the mascot from feeling stat
   assert.doesNotMatch(cssCode, /transform:\s*[^;]*(?:scale|rotate)/);
 });
 
+test('uses a no-scale no-rotate crossfade to soften action changes', () => {
+  assert.match(cssCode, /\.mascot-sprite-stage__blend-layer\s*\{[\s\S]*position:\s*absolute;[\s\S]*inset:\s*0;[\s\S]*pointer-events:\s*none;/);
+  assert.match(cssCode, /\.mascot-sprite-stage__sheet--ghost\s*\{[\s\S]*animation:\s*mascot-action-crossfade-out \.26s cubic-bezier\(\.2, \.82, \.2, 1\) both !important;/);
+  assert.match(cssCode, /@keyframes mascot-action-crossfade-out\s*\{[\s\S]*opacity:\s*\.96;[\s\S]*transform:\s*translate3d\(0, 0, 0\);[\s\S]*opacity:\s*0;[\s\S]*transform:\s*translate3d\(0, -1px, 0\);/);
+  assert.doesNotMatch(cssCode, /mascot-action-crossfade-out[\s\S]*?(?:scale|rotate)/);
+});
+
 test('includes a reduced-motion static-frame fallback', () => {
   assert.match(cssCode, /@media \(prefers-reduced-motion:\s*reduce\)/);
   assert.match(cssCode, /\.mascot-sprite-stage,\s*[\s\S]*?\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*none;/);
   assert.match(cssCode, /transition:\s*none;/);
+  assert.match(cssCode, /\.mascot-sprite-stage__blend-layer\s*\{[\s\S]*display:\s*none;/);
 });

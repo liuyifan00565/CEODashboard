@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 11:43:55 CST
+ 更新内容: 为 sprite 小人动作切换增加旧帧淡出过渡，缓解非 Live2D 骨骼动作之间的硬切问题。
+*/
+/*
  Update time: 2026-07-08 15:24:00 CST
  Update content: Mount an optional Live2D renderer above the Fu Xiaoke sprite sheets while keeping sprite fallback active.
 */
@@ -44,6 +48,7 @@ import './MascotSpriteStage.css';
 
 const DEFAULT_LABEL = '福小客 AI 经营助手';
 const IDLE_LOOPS_BEFORE_VARIANT = 1;
+const MASCOT_ACTION_BLEND_MS = 260;
 const preloadedMascotSheets = new Set();
 
 function preloadMascotActionSheets() {
@@ -71,26 +76,8 @@ function getBackgroundPercent(index, total) {
   return `${(index / (total - 1)) * 100}%`;
 }
 
-export default function MascotSpriteStage({
-  action = MASCOT_ACTIONS.idle,
-  analysisActive = false,
-  label = DEFAULT_LABEL,
-}) {
-  const [frameCursor, setFrameCursor] = useState(0);
-  const [idleVariantIndex, setIdleVariantIndex] = useState(0);
-  const [live2dStatus, setLive2dStatus] = useState('idle');
-  const animationFrameRef = useRef(0);
-  const idleLoopCountRef = useRef(0);
-  const lastLoopRef = useRef(0);
-  const idleVariant = getMascotIdleVariant(idleVariantIndex);
-  const animation = useMemo(
-    () => getMascotAnimation(action, { idleVariant: idleVariant.key }),
-    [action, idleVariant.key],
-  );
-  const sheet = getMascotSheet(animation.sheetKey);
-  const currentFrame = animation.frames[frameCursor] ?? animation.frames[0] ?? 0;
-  const framePosition = getFramePosition(currentFrame, sheet);
-  const stageStyle = {
+function getSheetStyle(sheet, framePosition) {
+  return {
     '--mascot-sheet-url': `url("${sheet.src}")`,
     '--mascot-sheet-columns': sheet.columns,
     '--mascot-sheet-width': `${sheet.columns * 100}%`,
@@ -99,10 +86,70 @@ export default function MascotSpriteStage({
     '--mascot-frame-width': `${sheet.frameWidth}px`,
     '--mascot-frame-height': `${sheet.frameHeight}px`,
   };
+}
+
+export default function MascotSpriteStage({
+  action = MASCOT_ACTIONS.idle,
+  analysisActive = false,
+  label = DEFAULT_LABEL,
+}) {
+  const [frameCursor, setFrameCursor] = useState(0);
+  const [idleVariantIndex, setIdleVariantIndex] = useState(0);
+  const [live2dStatus, setLive2dStatus] = useState('idle');
+  const [transitionGhost, setTransitionGhost] = useState(null);
+  const animationFrameRef = useRef(0);
+  const transitionTimeoutRef = useRef(0);
+  const idleLoopCountRef = useRef(0);
+  const lastLoopRef = useRef(0);
+  const lastActionSignatureRef = useRef('');
+  const latestPresentationRef = useRef(null);
+  const idleVariant = getMascotIdleVariant(idleVariantIndex);
+  const animation = useMemo(
+    () => getMascotAnimation(action, { idleVariant: idleVariant.key }),
+    [action, idleVariant.key],
+  );
+  const sheet = getMascotSheet(animation.sheetKey);
+  const currentFrame = animation.frames[frameCursor] ?? animation.frames[0] ?? 0;
+  const framePosition = getFramePosition(currentFrame, sheet);
+  const stageStyle = getSheetStyle(sheet, framePosition);
+  const actionSignature = `${animation.key}:${animation.sheetKey}:${animation.idleVariant ?? ''}`;
+  const currentPresentation = {
+    actionSignature,
+    style: stageStyle,
+  };
 
   useEffect(() => {
     preloadMascotActionSheets();
   }, []);
+
+  useEffect(() => () => {
+    if (typeof window !== 'undefined') {
+      window.clearTimeout(transitionTimeoutRef.current);
+    }
+  }, []);
+
+  useEffect(() => {
+    const previousSignature = lastActionSignatureRef.current;
+    const previousPresentation = latestPresentationRef.current;
+    const actionChanged = previousSignature && previousSignature !== actionSignature;
+    if (actionChanged && previousPresentation) {
+      setTransitionGhost({
+        ...previousPresentation,
+        transitionKey: `${previousSignature}->${actionSignature}`,
+      });
+      if (typeof window !== 'undefined') {
+        window.clearTimeout(transitionTimeoutRef.current);
+        transitionTimeoutRef.current = window.setTimeout(() => {
+          setTransitionGhost(null);
+        }, MASCOT_ACTION_BLEND_MS);
+      }
+    }
+    lastActionSignatureRef.current = actionSignature;
+  }, [actionSignature]);
+
+  useEffect(() => {
+    latestPresentationRef.current = currentPresentation;
+  });
 
   useEffect(() => {
     setFrameCursor(0);
@@ -168,6 +215,15 @@ export default function MascotSpriteStage({
       style={stageStyle}
     >
       <span className="mascot-sprite-stage__sheet" aria-hidden="true" />
+      {transitionGhost ? (
+        <span className="mascot-sprite-stage__blend-layer" aria-hidden="true">
+          <span
+            key={transitionGhost.transitionKey}
+            className="mascot-sprite-stage__sheet mascot-sprite-stage__sheet--ghost"
+            style={transitionGhost.style}
+          />
+        </span>
+      ) : null}
       <Live2DMascotStage
         action={animation.key}
         label={label}

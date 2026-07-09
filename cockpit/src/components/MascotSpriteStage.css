@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 11:43:55 CST
+ 更新内容: 增加 sprite 动作切换 crossfade 过渡，用旧帧淡出衔接新动作，避免状态硬切且不引入缩放旋转。
+*/
+/*
  更新时间: 2026-07-09 10:52:44 CST
  更新内容: 为福客帧图增加内层 translate-only 生命感动效，让待机、说话、指引和庆祝不再像静态贴图，同时保持外层尺寸稳定。
 */
@@ -78,6 +82,18 @@
   backface-visibility: hidden;
 }
 
+.mascot-sprite-stage__blend-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.mascot-sprite-stage__sheet--ghost {
+  z-index: 5;
+  animation: mascot-action-crossfade-out .26s cubic-bezier(.2, .82, .2, 1) both !important;
+}
+
 .mascot-sprite-stage--idle .mascot-sprite-stage__sheet,
 .mascot-sprite-stage--maintenance .mascot-sprite-stage__sheet {
   animation: mascot-sheet-idle-life 5.8s cubic-bezier(.45, 0, .2, 1) infinite;
@@ -123,6 +139,18 @@
 
 .mascot-sprite-stage--celebrate {
   filter: drop-shadow(0 22px 34px rgba(0, 0, 0, .42)) drop-shadow(0 0 34px rgba(215, 181, 109, .3));
+}
+
+@keyframes mascot-action-crossfade-out {
+  0% {
+    opacity: .96;
+    transform: translate3d(0, 0, 0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -1px, 0);
+  }
 }
 
 @keyframes mascot-sheet-idle-life {
@@ -232,5 +260,9 @@
   .mascot-sprite-stage__sheet {
     animation: none;
     transition: none;
+  }
+
+  .mascot-sprite-stage__blend-layer {
+    display: none;
   }
 }
