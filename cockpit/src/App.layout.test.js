@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-09 15:24:00 CST
+ 更新内容: 经营总览回款半环回归测试改为锁定当前图区下与版本情况视觉外径一致的 57%/96% 半径。
+*/
+/*
+ 更新时间: 2026-07-09 15:18:00 CST
+ 更新内容: 经营总览回款半环尺寸回归锁定为版本情况同款 radius/center，同时保留标签防省略。
+*/
+/*
  更新时间: 2026-07-09 14:58:00 CST
  更新内容: 经营总览回归测试同步经营进度卡上下收窄、左宽中窄三栏、半环饼图上移和年度目标动态状态文案。
 */
@@ -1267,8 +1275,9 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /colorStops: \[\{ offset: 0, color: '#9B6FAD' \}, \{ offset: 1, color: '#E4B8D7' \}\]/);
   assert.match(operatingOverviewSource, /colorStops: \[\{ offset: 0, color: '#C9A96B' \}, \{ offset: 1, color: '#E3D2A4' \}\]/);
   assert.match(operatingOverviewSource, /animationDuration:\s*900/);
-  assert.match(operatingOverviewSource, /radius:\s*\['48%', '82%'\]/);
-  assert.match(operatingOverviewSource, /center:\s*\['49\.5%', '62%'\]/);
+  assert.match(operatingOverviewSource, /radius:\s*\['57%', '96%'\]/);
+  assert.match(operatingOverviewSource, /center:\s*\['49\.5%', '68%'\]/);
+  assert.match(operatingOverviewSource, /overflow:\s*'none'/);
   assert.match(operatingOverviewSource, /borderRadius:\s*8,/);
   assert.match(operatingOverviewSource, /borderColor:\s*'rgba\(255, 255, 255, \.11\)'/);
   assert.match(operatingOverviewSource, /shadowColor:\s*'rgba\(184, 156, 255, \.08\)'/);
