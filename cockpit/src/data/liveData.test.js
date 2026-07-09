@@ -20,6 +20,7 @@ import assert from 'node:assert/strict';
 import {
   CHANNELS,
   COST_TREND,
+  COMPUTE_OVERVIEW,
   KPI,
   KPI_CARDS,
   KPI_DERIVED,
@@ -30,6 +31,7 @@ import {
   getKpiSeries,
   getSalesMemberRows,
 } from './mock.js';
+import { loadDashboardData } from './liveData.js';
 
 test('applies mysql dashboard snapshot to mutable dashboard data exports', () => {
   applyDashboardDataSnapshot({
@@ -106,4 +108,35 @@ test('applies mysql dashboard snapshot to mutable dashboard data exports', () =>
   assert.equal(getSalesMemberRows('east', 'month')[0].target, 120);
   assert.equal(getSalesMemberRows('east', 'year')[0].target, 720);
   assert.equal(getSalesMemberRows('east', 'year')[0].recovered, 430);
+});
+
+test('falls back to compute-only api when full dashboard data is unavailable', async () => {
+  const calls = [];
+  const payload = await loadDashboardData({
+    fetchImpl: async (url) => {
+      calls.push(url);
+      if (url === '/api/dashboard-data') {
+        return {
+          ok: false,
+          status: 500,
+          json: async () => ({ error: 'MySQL unavailable' }),
+        };
+      }
+
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          source: 'mysql',
+          computeOverview: {
+            totalCapacity: 123456,
+          },
+        }),
+      };
+    },
+  });
+
+  assert.deepEqual(calls, ['/api/dashboard-data', '/api/compute-data']);
+  assert.equal(payload.computeOverview.totalCapacity, 123456);
+  assert.equal(COMPUTE_OVERVIEW.totalCapacity, 123456);
 });

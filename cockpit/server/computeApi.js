@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 17:05:00 CST
+ 更新内容: 新增 /api/compute-data 响应处理器，支持前端在 MySQL 全量快照失败时单独读取外部算力数据。
+*/
+/*
  更新时间: 2026-07-09 16:18:00 CST
  更新内容: 新增外部算力看板接口读取与字段映射，用 COMPUTE_API_BASE_URL / COMPUTE_API_TOKEN 覆盖本地算力快照。
 */
@@ -213,4 +217,31 @@ export async function loadConfiguredExternalComputeSnapshot({ env = process.env,
     token: env.COMPUTE_API_TOKEN,
     fetchImpl,
   });
+}
+
+export async function handleComputeDataRequest(_req, res) {
+  try {
+    const snapshot = await loadConfiguredExternalComputeSnapshot();
+    if (!snapshot) {
+      res.writeHead(503, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store',
+      });
+      res.end(JSON.stringify({ error: '外部算力接口未配置。' }));
+      return;
+    }
+
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+    });
+    res.end(JSON.stringify({ source: 'mysql', ...snapshot }));
+  } catch (err) {
+    if (!res.headersSent) {
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+    }
+    res.end(JSON.stringify({
+      error: `外部算力数据接口异常：${err.message}`,
+    }));
+  }
 }

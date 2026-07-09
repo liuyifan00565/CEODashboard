@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 17:05:00 CST
+ 更新内容: 生产服务新增 /api/compute-data 外部算力独立接口，供全量数据库接口失败时单独加载 token 用量。
+*/
+/*
  更新时间: 2026-07-07 14:30:00 CST
  更新内容: 生产服务新增 POST /api/maintenance/save 数据维护页内编辑保存接口，按页执行部分列 upsert 写库。
 */
@@ -25,6 +29,7 @@ import { fileURLToPath } from 'node:url';
 
 import { handleAiAnalyzeRequest } from './server/dashscope.js';
 import { handleAiHoverCueRequest } from './server/hoverCue.js';
+import { handleComputeDataRequest } from './server/computeApi.js';
 import { handleDashboardDataRequest } from './server/dashboardData.js';
 import { handleMaintenanceImportRequest } from './server/maintenanceImport.js';
 import { handleMaintenanceDataRequest } from './server/maintenanceData.js';
@@ -100,6 +105,11 @@ const server = http.createServer((req, res) => {
 
   if (url.pathname === '/api/dashboard-data') {
     handleDashboardDataRequest(req, res);
+    return;
+  }
+
+  if (url.pathname === '/api/compute-data') {
+    handleComputeDataRequest(req, res);
     return;
   }
 

@@ -1,5 +1,8 @@
 # Dashboard Data Aggregation
 
+更新时间: 2026-07-09 17:05:00 CST
+更新内容: 新增 `/api/compute-data` 独立算力快照接口；前端在 `/api/dashboard-data` 失败时只回退加载 token/算力数据，其它看板数据保持原有展示。
+
 更新时间: 2026-07-09 16:18:00 CST
 更新内容: 算力数据支持通过 COMPUTE_API_BASE_URL / COMPUTE_API_TOKEN 调用外部算力看板接口，并覆盖 `/api/dashboard-data` 返回快照中的算力模块。
 
@@ -25,7 +28,7 @@
 
 `/api/dashboard-data` 读取本地 MySQL 兼容库 `ceo_dashboard`，返回前端运行时快照。前端通过 `src/data/liveData.js` 拉取接口，再由 `src/data/mock.js` 的 `applyDashboardDataSnapshot` 覆盖页面数据。
 
-当 `COMPUTE_API_BASE_URL` 和 `COMPUTE_API_TOKEN` 同时存在时，服务端会在本地 MySQL 快照生成后额外调用外部算力看板接口，把返回结果映射为 `computeOverview`、`computeUsageTrend`、`computeVersionConsumption`、`computeUsageDistribution` 和 `computeCustomerRows`，并覆盖本地算力事实表聚合结果。外部接口只在服务端调用，前端不直接接触 `x-token`。
+当 `COMPUTE_API_BASE_URL` 和 `COMPUTE_API_TOKEN` 同时存在时，服务端会在本地 MySQL 快照生成后额外调用外部算力看板接口，把返回结果映射为 `computeOverview`、`computeUsageTrend`、`computeVersionConsumption`、`computeUsageDistribution` 和 `computeCustomerRows`，并覆盖本地算力事实表聚合结果。外部接口只在服务端调用，前端不直接接触 `x-token`。若 `/api/dashboard-data` 因本地 MySQL 不可用而失败，前端会改读 `/api/compute-data`，只覆盖这些算力字段，不改动其它运行时看板数据。
 
 业务月份 `latestMonth` 当前通过 `TEMP_DASHBOARD_MONTH_OVERRIDE = '2026-06'` 临时锁定为 2026 年 6 月；其它数据原因处理完后，移除该覆盖即可恢复自动月份。自动月份回退路径会优先取 `fact_revenue_daily.stat_date` 最新年月，再与 `fact_sales_member_monthly.year_month` 比较兜底。
 
@@ -53,7 +56,7 @@
 - 总投入费比二级下钻：全渠道视角展示 `totalCost`；选择单个或多个渠道时，主指标只展示所选渠道投放成本合计，底部同时标明全渠道总投入和广告/人力构成。人力成本不强行分摊到单渠道。
 - 开户数：`fact_opening_account_daily.opening_count`。本月开户环比 `previous` 取上一月同表汇总，今日开户 `previous` 取上一个有数据日期的汇总；当无历史日期时回退 0。
 - 算力趋势、客户排行、资源健康：分别来自 `fact_compute_usage_daily`、`fact_compute_customer_daily`、`fact_compute_resource_health_daily` 等算力事实表。
-- 外部算力接口覆盖：配置 `COMPUTE_API_BASE_URL`（例如以 `/csrc` 结尾的接口 base）和 `COMPUTE_API_TOKEN` 后，`server/computeApi.js` 会调用 `POST /api/v1/customer-management/getPlatformBoard` 和 `POST /api/v1/customer-management/getCustomerBoardList`。请求头使用 `x-token`，请求时间窗默认为北京时间昨天结束往前 30 天。`getPlatformBoard` 提供总容量、新增算力、消耗算力、近 30 日用量和容量趋势；`getCustomerBoardList` 提供客户数、客户算力用量/余额、新开客户/店铺、平均回复率、版本消耗、用量区间分布和客户明细排行。
+- 外部算力接口覆盖：配置 `COMPUTE_API_BASE_URL`（例如以 `/csrc` 结尾的接口 base）和 `COMPUTE_API_TOKEN` 后，`server/computeApi.js` 会调用 `POST /api/v1/customer-management/getPlatformBoard` 和 `POST /api/v1/customer-management/getCustomerBoardList`。请求头使用 `x-token`，请求时间窗默认为北京时间昨天结束往前 30 天。`getPlatformBoard` 提供总容量、新增算力、消耗算力、近 30 日用量和容量趋势；`getCustomerBoardList` 提供客户数、客户算力用量/余额、新开客户/店铺、平均回复率、版本消耗、用量区间分布和客户明细排行。`/api/compute-data` 使用同一套映射单独返回算力快照，供前端在全量 MySQL 快照失败时回退。
 - 算力 overview：总容量/新增/已耗来自 `fact_compute_usage_daily`；客户数、客户用量、客户余额、平均回复率、新开客户数、店铺数来自 `fact_compute_customer_daily` 最新快照——新开客户按手机号在更早日期不存在的记录计数，店铺数按 `customer_name` 同理计数；平均回复率取 `AVG(average_reply_rate)`。
 - 算力页前端派生指标：算力利用率 = `consumedCapacity / totalCapacity`；供需关系图把趋势中的用量、按当前总容量缩放后的容量和二者利用率同屏展示；风险客户按客户明细中的低余额（余额不高于 100 万点或余额/用量不高于 3）、高消耗（用量不低于 40 万点）、低回复（平均回复率低于 60%）和零用量标签派生；建议动作由风险标签映射为销售提醒充值、客成激活、客成排查配置、余额预警或高价值场景复盘；版本效率洞察按版本消耗占比计算头部版本和前两版本集中度。
 - 续费：`fact_renewal_daily` 按渠道×版本先聚合当月到期/已续/续费金额，再 LEFT JOIN 上一月同口径聚合得到 `prev_due_count`/`prev_renewed_count`；当上一月无数据时回退 0。

@@ -1,11 +1,14 @@
 # Compute API Integration
 
+更新时间: 2026-07-09 17:05:00 CST
+更新内容: 增加 `/api/compute-data` 独立算力接口说明，支持全量 MySQL 快照失败时只回退加载 token/算力数据。
+
 更新时间: 2026-07-09 16:18:00 CST
 更新内容: 新增外部算力看板 API 接入说明，记录服务端环境变量、接口路径和字段映射方式。
 
 ## 接入方式
 
-算力页默认仍可使用本地 MySQL 的算力事实表聚合结果。若服务端环境同时提供以下变量，则 `/api/dashboard-data` 会在生成本地快照后调用外部算力看板接口，并用外部返回覆盖快照中的算力模块：
+算力页默认仍可使用本地 MySQL 的算力事实表聚合结果。若服务端环境同时提供以下变量，则服务端会调用外部算力看板接口，并用外部返回覆盖快照中的算力模块：
 
 ```text
 COMPUTE_API_BASE_URL
@@ -13,6 +16,11 @@ COMPUTE_API_TOKEN
 ```
 
 `COMPUTE_API_BASE_URL` 应指向外部服务的 API base，例如带 `/csrc` 的地址。`COMPUTE_API_TOKEN` 只在 Node 服务端读取，并作为 `x-token` 请求头发送；前端不会直接读取或传递该 token。
+
+外部算力数据有两条读取路径：
+
+- `/api/dashboard-data`：本地 MySQL 快照生成成功后，额外覆盖其中的算力模块。
+- `/api/compute-data`：只读取外部算力数据并返回 `computeOverview`、`computeUsageTrend`、`computeVersionConsumption`、`computeUsageDistribution`、`computeCustomerRows`。前端在 `/api/dashboard-data` 失败时会自动尝试该接口，因此其它看板数据保持原有展示，token/算力模块可单独接真实数据。
 
 ## 外部接口
 
@@ -40,3 +48,4 @@ computeCustomerRows
 ```
 
 因此前端 `ComputeUsagePage` 不需要直接知道外部接口；它仍只读取 `/api/dashboard-data` 生成的运行时快照。
+当本地 MySQL 不可用时，前端会改读 `/api/compute-data`，但字段结构仍保持一致。

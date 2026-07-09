@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 17:05:00 CST
+ 更新内容: Vite 开发服务新增 /api/compute-data，与生产一致支持算力数据独立回退加载。
+*/
+/*
  更新时间: 2026-07-07 14:30:00 CST
  更新内容: Vite 开发服务新增 POST /api/maintenance/save 数据维护页内编辑保存接口，与生产一致。
 */
@@ -25,6 +29,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { handleAiAnalyzeRequest } from './server/dashscope.js'
 import { handleAiHoverCueRequest } from './server/hoverCue.js'
+import { handleComputeDataRequest } from './server/computeApi.js'
 import { handleDashboardDataRequest } from './server/dashboardData.js'
 import { handleMaintenanceImportRequest } from './server/maintenanceImport.js'
 import { handleMaintenanceDataRequest } from './server/maintenanceData.js'
@@ -59,6 +64,9 @@ export default defineConfig({
         })
         server.middlewares.use('/api/dashboard-data', (req, res) => {
           handleDashboardDataRequest(req, res)
+        })
+        server.middlewares.use('/api/compute-data', (req, res) => {
+          handleComputeDataRequest(req, res)
         })
         server.middlewares.use('/api/maintenance/data', (req, res) => {
           handleMaintenanceDataRequest(req, res)
