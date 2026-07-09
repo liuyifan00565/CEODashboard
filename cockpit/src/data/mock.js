@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 10:59:10 CST
+ 更新内容: 暂时隐藏数据维护侧边栏的组织维护入口，保留组织维护页面元数据和数据结构以便后续恢复。
+*/
+/*
  更新时间: 2026-07-08 18:22:00 CST
  更新内容: 新增成本月趋势口径，KPI 成本二级下钻改用渠道投放成本和全渠道广告/人力构成，不再按回款趋势推算投入。
 */
@@ -1020,10 +1024,12 @@ export const MENU = [
   { key: 'compute', name: '算力用量分析', channelKey: 'all' },
 ];
 
+const ORG_MAINTENANCE_VISIBLE = false;
+
 export const MAINTENANCE_MENU = [
   { key: 'target-maintenance', name: '目标维护', icon: 'target' },
   { key: 'cost-maintenance', name: '成本维护', icon: 'cost' },
-  { key: 'org-maintenance', name: '组织维护', icon: 'organization' },
+  ...(ORG_MAINTENANCE_VISIBLE ? [{ key: 'org-maintenance', name: '组织维护', icon: 'organization' }] : []),
   { key: 'channel-maintenance', name: '渠道维护', icon: 'channel' },
 ];
 
