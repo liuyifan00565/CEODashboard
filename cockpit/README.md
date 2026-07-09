@@ -1,5 +1,8 @@
 # CEO 经营驾驶舱 React Demo
 
+更新时间: 2026-07-09 16:28:48 CST
+更新内容: 首页“回款”文案保持不变，实际值改为回款扣减渠道月度退款后的净额；本月和年度主卡在回款大数字右侧用目标同款小字显示退款金额。
+
 更新时间: 2026-07-09 14:51:22 CST
 更新内容: 目标维护与首页目标口径改为部门级:biz_target_monthly 取 staff_id IS NULL 的部门级目标,目标维护页只显示部门行(可编辑),渠道二级明细由按销售人员改为按部门。
 
@@ -127,7 +130,7 @@ DB_PASSWORD=your-mysql-password
 DB_NAME=ceo_dashboard
 ```
 
-当前首页回款实际值优先来自 `fact_revenue_daily.recovered_amount_yuan`，按月份和渠道聚合；当日级回款表没有数据时，才回退到 `fact_sales_member_monthly.recovered_amount_yuan`。月目标、年度目标和渠道目标统一来自 `biz_target_monthly.target_amount_yuan`，且只统计关联到 `dim_staff` 后满足 `is_sales=1`、`is_enabled=1`、`department_id IS NOT NULL` 的人员目标；渠道目标优先按 `dim_staff.channel_key` 汇总，若为空则按 `dim_department.department_code` 兜底映射到 `online/south/east/agent`。渠道二级销售人员明细按本月/年度分别使用目标维护与日级回款聚合，新增销售只要有维护目标，即使销售月表尚未生成也会出现在对应渠道下钻中。导入完整数据库后，年度累计实际会按当年 1 月到当前月的日级回款累计，不再只等于单月销售人员月表回款，也不会显示旧 mock。
+当前首页回款文案保持“回款”，实际值优先来自 `fact_revenue_daily.recovered_amount_yuan`，按月份和渠道扣减 `biz_channel_cost_monthly.refund_amount_yuan` 后聚合；当日级回款表没有数据时，才回退到 `fact_sales_member_monthly.recovered_amount_yuan`。`/api/dashboard-data` 会返回 `kpi.monthRefund` 和 `kpi.yearRefund`，用于展示本月和年度累计退款额。月目标、年度目标和渠道目标统一来自 `biz_target_monthly.target_amount_yuan`，且只统计 `staff_id IS NULL` 的部门级目标；渠道目标直接按 `biz_target_monthly.channel_id` 关联 `dim_channel` 汇总。渠道二级部门明细按本月/年度分别使用目标维护与日级回款聚合，新增部门只要有维护目标，即使销售月表尚未生成也会出现在对应渠道下钻中。导入完整数据库后，年度累计实际会按当年 1 月到当前月的日级净回款累计，不再只等于单月销售人员月表回款，也不会显示旧 mock。
 
 渠道完成的实际回款优先来自 `dim_channel` + `fact_revenue_daily`，渠道投入来自 `biz_channel_cost_monthly`，人力成本来自 `biz_labor_cost_monthly`。`/api/dashboard-data` 同时返回 `costTrend`，按月输出 `{ yearMonth, label, adCost, laborCost, totalCost, channels }`；总投入费比二级下钻中，全渠道视角展示 `totalCost`，单渠道视角只展示该渠道投放成本，并在底部补充全渠道总投入与广告/人力构成，人力成本不分摊到单渠道。版本销售先按 `fact_version_sales_daily` 聚合版本套数和回款，续费数据先按 `fact_renewal_daily.version_id` 聚合后再关联版本销售，避免一对多 JOIN 放大销售金额。开户、算力和交付模块分别读取 `fact_opening_account_daily`、算力事实表和 `fact_delivery_order`/`biz_delivery_target_monthly`。
 
@@ -135,7 +138,7 @@ DB_NAME=ceo_dashboard
 
 ## 经营总览口径
 
-经营总览首页顶部为两张回款总览卡：`本月经营进度` 和 `年度回款总览`。本月作为一号主视角展示 `/api/dashboard-data` 返回的本月回款、月度目标完成率、目标缺口/超额完成，并在同一卡内用放大的半环图解释本月回款结构、用右侧经营情况列展示各渠道实际/目标/完成率和风险缺口。
+经营总览首页顶部为两张回款总览卡：`本月经营进度` 和 `年度回款总览`。本月作为一号主视角展示 `/api/dashboard-data` 返回的本月回款、回款右侧本月退款提示、月度目标完成率、目标缺口/超额完成，并在同一卡内用放大的半环图解释本月回款结构、用右侧经营情况列展示各渠道实际/目标/完成率和风险缺口；年度主卡同样在年度累计回款右侧展示年度累计退款提示。
 
 年度回款总览以 `/api/dashboard-data` 返回的 `kpi.yearRecovered` 和 `kpi.yearTarget` 为权威值；卡片参考月度主卡展示年度累计回款大数字、年度回款结构半环和年度经营情况列表，并在底部用薄年度目标进度 footer 只跨左侧大数字和半环结构区，表达 `年度累计回款 / 年度目标`、完成率、时间进度、线性进度差和后续月均需完成金额，避免挤占右侧经营情况。
 

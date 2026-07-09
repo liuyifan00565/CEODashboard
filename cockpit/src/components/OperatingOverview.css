@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 16:28:48 CST  更新内容: 月度与年度经营主卡右侧下角新增目标同款小字退款金额，回款大数字文案保持不变。 */
 /* 更新时间: 2026-07-09 15:24:22 CST  更新内容: 经营总览卡片高度再收窄一档，年度目标进度继续上拉，同时保持进度条右边沿与经营情况列左边沿对齐。 */
 /* 更新时间: 2026-07-09 15:17:21 CST  更新内容: 经营总览左右分界线左移，月度/年度卡片上下收窄，经营情况渠道行距放开，并上移年度目标进度使右边沿对齐经营情况列。 */
 /* 更新时间: 2026-07-09 14:58:00 CST  更新内容: 经营进度/年度总览卡片按反馈上下收窄，三栏改为左宽中窄，并压紧回款结构图高度与经营情况列表间距。 */
@@ -176,7 +177,7 @@
 .op-month-grid {
   --op-grid-column-gap: clamp(8px, 1vw, 14px);
   display: grid;
-  grid-template-columns: minmax(278px, .92fr) minmax(300px, .84fr) minmax(360px, 1.18fr);
+  grid-template-columns: minmax(330px, 1.02fr) minmax(260px, .78fr) minmax(330px, 1.08fr);
   align-items: stretch;
   column-gap: var(--op-grid-column-gap);
   row-gap: clamp(3px, .45vw, 5px);
@@ -188,7 +189,7 @@
 .op-annual-grid {
   --op-grid-column-gap: clamp(8px, 1vw, 14px);
   display: grid;
-  grid-template-columns: minmax(278px, .9fr) minmax(310px, .86fr) minmax(360px, 1.18fr);
+  grid-template-columns: minmax(330px, 1.02fr) minmax(260px, .78fr) minmax(330px, 1.08fr);
   align-items: stretch;
   column-gap: var(--op-grid-column-gap);
   row-gap: clamp(3px, .45vw, 5px);
@@ -204,6 +205,15 @@
   display: grid;
   align-content: center;
   gap: 8px;
+}
+
+.op-month-primary-value-row {
+  min-width: 0;
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  column-gap: clamp(6px, .8vw, 10px);
+  row-gap: 2px;
 }
 
 .op-month-primary b {
@@ -227,6 +237,13 @@
 .op-summary-sub {
   display: block;
   color: rgba(247,248,252,.54);
+}
+
+.op-month-refund-note {
+  flex: 0 0 auto;
+  margin-bottom: clamp(5px, .55vw, 8px);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .op-month-primary-facts {

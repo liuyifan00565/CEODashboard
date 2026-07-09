@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-09 16:05:00 CST
+ 更新内容: 回款全局计算逻辑改为赢单金额扣退款金额，从 biz_channel_cost_monthly.refund_amount_yuan
+   按月份+渠道扣减日级或销售月表回款，并在 dashboard 快照返回月度/年度退款额。
+*/
+/*
  更新时间: 2026-07-09 14:51:22 CST
  更新内容: 目标口径改为部门级:monthlyTargets/channelTargets/yearChannelTargets/memberTargets 查询
    去掉 JOIN dim_staff,改 WHERE staff_id IS NULL 取部门级目标,渠道目标直接用 t.channel_id;
@@ -158,6 +163,46 @@ function groupSum(rows, keyField, valueField) {
     result.set(key, num(result.get(key)) + num(row[valueField]));
   }
   return result;
+}
+
+function groupSumBy(rows, keyFn, valueField) {
+  const result = new Map();
+  for (const row of rows) {
+    const key = keyFn(row);
+    if (!key) continue;
+    result.set(key, num(result.get(key)) + num(row[valueField]));
+  }
+  return result;
+}
+
+function monthChannelKey(row) {
+  const yearMonth = row?.year_month;
+  const channelKey = row?.channel_key;
+  return yearMonth && channelKey ? `${yearMonth}|${channelKey}` : '';
+}
+
+function applyRefundsToRecoveredRows(recoveredRows = [], refundRows = []) {
+  if (!recoveredRows.length || !refundRows.length) return recoveredRows;
+
+  const grossByMonthChannel = groupSumBy(recoveredRows, monthChannelKey, 'recovered_wan');
+  const refundByMonthChannel = groupSumBy(refundRows, monthChannelKey, 'refund_wan');
+
+  return recoveredRows.map((row) => {
+    const key = monthChannelKey(row);
+    const refundTotal = num(refundByMonthChannel.get(key));
+    if (!key || !refundTotal) return row;
+
+    const grossTotal = num(grossByMonthChannel.get(key));
+    const gross = num(row.recovered_wan);
+    const allocatedRefund = grossTotal ? refundTotal * (gross / grossTotal) : 0;
+    const refundWan = round2(num(row.refund_wan) + allocatedRefund);
+    return {
+      ...row,
+      gross_recovered_wan: row.gross_recovered_wan ?? row.recovered_wan,
+      refund_wan: refundWan,
+      recovered_wan: Math.max(0, round2(gross - allocatedRefund)),
+    };
+  });
 }
 
 function completionRow(row) {
@@ -513,15 +558,21 @@ export function mapDashboardRowsToSnapshot(rows) {
   const latestMonth = rows.latestMonth || rows.salesMemberMonthly?.[0]?.year_month || '2026-06';
   const latestYear = String(latestMonth).slice(0, 4);
   const previousMonth = rows.previousMonth || previousYearMonthValue(latestMonth);
-  const currentSalesRows = (rows.salesMemberMonthly ?? []).filter((row) => row.year_month === latestMonth);
-  const yearSalesRows = (rows.salesMemberMonthly ?? []).filter((row) => String(row.year_month).startsWith(latestYear));
-  const revenueRows = rows.revenueDaily ?? [];
+  const refundRows = rows.refundRows ?? [];
+  const salesRows = applyRefundsToRecoveredRows(rows.salesMemberMonthly ?? [], refundRows);
+  const previousSalesRows = applyRefundsToRecoveredRows(rows.previousMonthSales ?? [], refundRows);
+  const lastYearSalesRows = applyRefundsToRecoveredRows(rows.lastYearSales ?? [], refundRows);
+  const currentSalesRows = salesRows.filter((row) => row.year_month === latestMonth);
+  const yearSalesRows = salesRows.filter((row) => String(row.year_month).startsWith(latestYear));
+  const revenueRows = applyRefundsToRecoveredRows(rows.revenueDaily ?? [], refundRows);
   const useRevenueDaily = revenueRows.length > 0;
   const currentRevenueRows = revenueRows.filter((row) => row.year_month === latestMonth);
   const previousRevenueRows = revenueRows.filter((row) => row.year_month === previousMonth);
   const yearRevenueRows = revenueRows.filter((row) => String(row.year_month).startsWith(latestYear) && monthNumber(row.year_month) <= monthNumber(latestMonth));
   const recoveredRows = useRevenueDaily ? revenueRows : yearSalesRows;
   const currentRecoveredRows = useRevenueDaily ? currentRevenueRows : currentSalesRows;
+  const monthRefund = round0(sum(refundRows.filter((row) => row.year_month === latestMonth), 'refund_wan'));
+  const yearRefund = round0(sum(refundRows.filter((row) => String(row.year_month).startsWith(latestYear) && monthNumber(row.year_month) <= monthNumber(latestMonth)), 'refund_wan'));
   const currentMonthRecovered = round0(sum(currentRecoveredRows, 'recovered_wan'));
   const currentMonthlyTarget = (rows.monthlyTargets ?? []).find((row) => row.year_month === latestMonth);
   const currentMonthTarget = round0(currentMonthlyTarget?.target_wan ?? sum(currentSalesRows, 'target_wan'));
@@ -533,10 +584,12 @@ export function mapDashboardRowsToSnapshot(rows) {
   const kpi = {
     monthRecovered: currentMonthRecovered,
     monthTarget: currentMonthTarget,
-    lastMonthRecovered: useRevenueDaily ? round0(sum(previousRevenueRows, 'recovered_wan')) : round0(sum((rows.previousMonthSales ?? []), 'recovered_wan')),
+    lastMonthRecovered: useRevenueDaily ? round0(sum(previousRevenueRows, 'recovered_wan')) : round0(sum(previousSalesRows, 'recovered_wan')),
     yearRecovered,
     yearTarget: annualTarget,
-    lastYearSameRecovered: round0(sum((rows.lastYearSales ?? []), 'recovered_wan')),
+    lastYearSameRecovered: round0(sum(lastYearSalesRows, 'recovered_wan')),
+    monthRefund,
+    yearRefund,
     totalCost: adCost + laborCost,
     adCost,
     laborCost,
@@ -553,7 +606,7 @@ export function mapDashboardRowsToSnapshot(rows) {
     annualTarget,
     monthRecoveredTotal: currentMonthRecovered,
     monthTargetTotal: currentMonthTarget,
-    yearRecoveredRows: useRevenueDaily ? yearRevenueRows : [],
+    yearRecoveredRows: useRevenueDaily ? yearRevenueRows : yearSalesRows,
     yearTargetRows: rows.yearChannelTargets ?? [],
   });
   const operatingOverviewMetrics = makeOperatingMetrics({ kpiDerived, latestMonth, channelRows: channels });
@@ -581,7 +634,7 @@ export function mapDashboardRowsToSnapshot(rows) {
     salesMemberRows: makeSalesMemberRows({
       salesRows: yearSalesRows,
       targetRows: rows.memberTargets ?? [],
-      recoveredRows: rows.memberRecovered ?? [],
+      recoveredRows: applyRefundsToRecoveredRows(rows.memberRecovered ?? [], refundRows),
       latestMonth,
       latestYear,
       useRevenueDaily,
@@ -634,8 +687,19 @@ async function selectDashboardBusinessMonth(connection) {
   return process.env.DASHBOARD_MONTH_OVERRIDE || TEMP_DASHBOARD_MONTH_OVERRIDE || await loadLatestActualMonth(connection);
 }
 
+async function ensureDashboardRefundColumn(connection) {
+  const rows = await queryRows(
+    connection,
+    "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'biz_channel_cost_monthly' AND COLUMN_NAME = 'refund_amount_yuan'",
+  );
+  if (!rows.length) {
+    await connection.execute('ALTER TABLE biz_channel_cost_monthly ADD COLUMN refund_amount_yuan DECIMAL(14,2) NOT NULL DEFAULT 0 COMMENT \'refund amount for dashboard net recovery\' AFTER investment_amount_yuan');
+  }
+}
+
 export async function buildDashboardSnapshot(connection) {
   const latestMonth = await selectDashboardBusinessMonth(connection);
+  await ensureDashboardRefundColumn(connection);
   const prevMonthRows = await queryRows(connection, "SELECT DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(?, '-01'), '%Y-%m-%d'), INTERVAL 1 MONTH), '%Y-%m') AS previousMonth", [latestMonth]);
   const previousMonth = prevMonthRows[0]?.previousMonth;
   const latestYear = String(latestMonth).slice(0, 4);
@@ -657,6 +721,7 @@ export async function buildDashboardSnapshot(connection) {
     laborCosts,
     channelCostTrend,
     laborCostTrend,
+    refundRows,
     versionSales,
     renewalRows,
     openingRows,
@@ -696,14 +761,26 @@ export async function buildDashboardSnapshot(connection) {
       ORDER BY \`year_month\`, c.channel_key
     `, [`${latestYear}-01-01`, `${nextYear}-01-01`]),
     queryRows(connection, `
-      SELECT ROUND(recovered_amount_yuan / 10000, 2) AS recovered_wan
-      FROM fact_sales_member_monthly
-      WHERE \`year_month\` = ?
+      SELECT f.\`year_month\`, ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
+             ROUND(SUM(f.recovered_amount_yuan) / 10000, 2) AS recovered_wan
+      FROM fact_sales_member_monthly f
+      JOIN dim_staff s ON s.staff_id = f.staff_id
+      LEFT JOIN dim_department d ON d.department_id = s.department_id
+      LEFT JOIN dim_channel c ON c.channel_id = f.channel_id
+      WHERE f.\`year_month\` = ?
+      GROUP BY f.\`year_month\`, channel_key
+      HAVING channel_key IS NOT NULL
     `, [previousMonth]),
     queryRows(connection, `
-      SELECT ROUND(recovered_amount_yuan / 10000, 2) AS recovered_wan
-      FROM fact_sales_member_monthly
-      WHERE \`year_month\` <= ? AND \`year_month\` LIKE CONCAT(?, '%')
+      SELECT f.\`year_month\`, ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
+             ROUND(SUM(f.recovered_amount_yuan) / 10000, 2) AS recovered_wan
+      FROM fact_sales_member_monthly f
+      JOIN dim_staff s ON s.staff_id = f.staff_id
+      LEFT JOIN dim_department d ON d.department_id = s.department_id
+      LEFT JOIN dim_channel c ON c.channel_id = f.channel_id
+      WHERE f.\`year_month\` <= ? AND f.\`year_month\` LIKE CONCAT(?, '%')
+      GROUP BY f.\`year_month\`, channel_key
+      HAVING channel_key IS NOT NULL
     `, [lastYearMonth, Number(latestYear) - 1]),
     queryRows(connection, `
       SELECT t.\`year_month\`,
@@ -787,6 +864,15 @@ export async function buildDashboardSnapshot(connection) {
         AND \`year_month\` <= ?
       GROUP BY \`year_month\`, cost_type
       ORDER BY \`year_month\`, cost_type
+    `, [latestYear, latestMonth]),
+    queryRows(connection, `
+      SELECT cost.\`year_month\`, c.channel_key, ROUND(SUM(cost.refund_amount_yuan) / 10000, 2) AS refund_wan
+      FROM biz_channel_cost_monthly cost
+      JOIN dim_channel c ON c.channel_id = cost.channel_id
+      WHERE cost.\`year_month\` LIKE CONCAT(?, '%')
+        AND cost.\`year_month\` <= ?
+      GROUP BY cost.\`year_month\`, c.channel_key
+      ORDER BY cost.\`year_month\`, c.channel_key
     `, [latestYear, latestMonth]),
     queryRows(connection, `
       SELECT v.version_key, v.version_name, v.standard_price_yuan, c.channel_key,
@@ -947,6 +1033,7 @@ export async function buildDashboardSnapshot(connection) {
     laborCosts,
     channelCostTrend,
     laborCostTrend,
+    refundRows,
     versionSales,
     renewalRows,
     openingRows,

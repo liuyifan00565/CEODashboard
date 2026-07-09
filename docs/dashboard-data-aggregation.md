@@ -1,5 +1,8 @@
 # Dashboard Data Aggregation
 
+Update time: 2026-07-09 16:28:48 CST
+Update content: Dashboard display text remains "回款"; all dashboard recovered values now subtract per-channel monthly refunds from `biz_channel_cost_monthly.refund_amount_yuan`, and the API returns `kpi.monthRefund` / `kpi.yearRefund` for monthly and annual refund notes.
+
 Update time: 2026-07-09 14:51:22 CST
 Update content: 目标口径改为部门级。biz_target_monthly 只取 staff_id IS NULL 的部门级目标(历史人员级目标保留在库但忽略);渠道目标直接用 t.channel_id 关联 dim_channel;渠道二级明细由"按销售人员"改为"按部门"。回款口径不变(仍 fact_revenue_daily 优先)。
 
@@ -34,7 +37,8 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 
 ## 经营目标与回款
 
-- 本月回款、年度累计回款、月趋势实际值：优先使用 `fact_revenue_daily.recovered_amount_yuan`，按 `stat_date` 的年月聚合。
+- 本月回款、年度累计回款、月趋势实际值：前端文案仍显示“回款”；数值优先使用 `fact_revenue_daily.recovered_amount_yuan`，再按年月+渠道扣减 `biz_channel_cost_monthly.refund_amount_yuan` 后聚合。
+- `/api/dashboard-data` 同时返回 `kpi.monthRefund` 和 `kpi.yearRefund`，月度和年度主卡在回款大数字右侧分别显示本月退款金额、年度累计退款金额。
 - 当 `fact_revenue_daily` 没有数据时，回退使用 `fact_sales_member_monthly.recovered_amount_yuan`。
 - 本月目标、年度目标、月趋势目标：使用 `biz_target_monthly.target_amount_yuan`，仅取 `staff_id IS NULL` 的部门级目标（目标维护改为按部门录入，历史人员级目标保留在库但不再进入统计）。
 - 渠道目标：`biz_target_monthly.channel_id` 直接关联 `dim_channel` 按渠道汇总，仅取 `staff_id IS NULL` 的部门级目标。
@@ -65,3 +69,4 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 - `biz_channel_cost_monthly.refund_amount_yuan` stores the monthly refund amount for each channel.
 - Cost maintenance displays and saves this field in wan, then converts it to yuan before writing to MySQL.
 - Dashboard channel investment and ROI aggregation continue to use `investment_amount_yuan` unless a later metric requirement explicitly changes the formula.
+- Dashboard recovered metrics subtract monthly refunds from the matching month+channel recovered amount; visible labels remain "回款".

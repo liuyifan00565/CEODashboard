@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 16:05:00 CST
+ 更新内容: dashboard 运行时 KPI 增加月度/年度退款额；回款文案保持不变，数值由服务端按扣退款后净额覆盖。
+*/
+/*
  Update time: 2026-07-09 16:20:00 CST
  Update content: Cost maintenance mock periods include refund amount for channel refund maintenance.
 */
@@ -115,6 +119,8 @@ export const KPI = {
   yearRecovered: 3120,     // 年度累计回款
   yearTarget: 5800,        // 年度目标
   lastYearSameRecovered: 2760, // 去年同期（年度环比用）
+  monthRefund: 0,          // 本月退款
+  yearRefund: 0,           // 年度累计退款
   totalCost: 156,          // 总投入费用（广告+人力）
   adCost: 96,              // 渠道广告/投放成本
   laborCost: 60,           // 人力成本
@@ -964,8 +970,8 @@ export function getKpiSeries(metric, channelOrOptions = 'all', dim = 'month') {
 
 // KPI 卡片元信息（用于二级卡片标题/单位）
 export const KPI_CARDS = [
-  { key: 'month',  title: '本月回款', metric: 'recovered', unit: '万', value: KPI.monthRecovered, sub: `本月目标 ${KPI.monthTarget} 万`, progress: KPI_DERIVED.monthCompletion, progressLabel: '本月目标完成率', gap: KPI_DERIVED.monthGap, delta: KPI_DERIVED.monthMoM, keywords: ['本月回款', '回款', '目标', '完成率', '缺口'] },
-  { key: 'year',   title: '年度累计回款', metric: 'recovered', unit: '万', value: KPI.yearRecovered, sub: `年度目标 ${KPI.yearTarget} 万`, progress: KPI_DERIVED.yearCompletion, progressLabel: '年度目标完成率', gap: KPI_DERIVED.yearGap, delta: KPI_DERIVED.yearYoY, keywords: ['年度累计', '年度', '年目标', '缺口'] },
+  { key: 'month',  title: '本月回款', metric: 'recovered', unit: '万', value: KPI.monthRecovered, sub: `本月目标 ${KPI.monthTarget} 万`, progress: KPI_DERIVED.monthCompletion, progressLabel: '本月目标完成率', gap: KPI_DERIVED.monthGap, delta: KPI_DERIVED.monthMoM, keywords: ['本月回款', '回款', '退款', '目标', '完成率', '缺口'] },
+  { key: 'year',   title: '年度累计回款', metric: 'recovered', unit: '万', value: KPI.yearRecovered, sub: `年度目标 ${KPI.yearTarget} 万`, progress: KPI_DERIVED.yearCompletion, progressLabel: '年度目标完成率', gap: KPI_DERIVED.yearGap, delta: KPI_DERIVED.yearYoY, keywords: ['年度累计', '年度回款', '回款', '退款', '年度', '年目标', '缺口'] },
   { key: 'cost',   title: '总投入 · 费比', metric: 'cost', unit: '万', value: KPI.totalCost, sub: `广告 ${KPI.adCost} 万 + 人力 ${KPI.laborCost} 万 · 费比 ${KPI_DERIVED.costRatio}%`, gap: null, delta: null, keywords: ['投入', '成本', '费比', '广告', '人力'] },
   { key: 'renewal', title: '续费率', metric: 'renewalRate', unit: '%', decimals: 1, value: RENEWAL_OVERVIEW.rate, sub: `到期 ${RENEWAL_OVERVIEW.due} 单 · 已续 ${RENEWAL_OVERVIEW.renewed} 单 · 续费 ${RENEWAL_OVERVIEW.revenue} 万`, progress: RENEWAL_OVERVIEW.rate, progressLabel: '当期续费率', gap: null, delta: RENEWAL_OVERVIEW.delta, keywords: ['续费率', '续费', '复购', '版本', '销售'] },
 ];

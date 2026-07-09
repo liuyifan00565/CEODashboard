@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 16:28:48 CST  更新内容: 经营总览回款数字按扣退款后净额展示，文案保留“回款”，月度和年度主卡右侧下角均显示退款金额。 */
 /* 更新时间: 2026-07-09 15:24:22 CST  更新内容: 配合经营总览分界线左移，半环中心点小幅右移并约束外部标签边距，避免年度结构左侧标签被裁切。 */
 /* 更新时间: 2026-07-09 15:24:00 CST  更新内容: 回款半环按当前 258px 图区换算为与版本情况约 248px 外径一致，radius 调整为 57%/96%，避免机械照抄百分比导致视觉过小。 */
 /* 更新时间: 2026-07-09 15:18:00 CST  更新内容: 回款半环饼图尺寸重新对齐版本情况半环，radius/center 恢复为 45%/76% 与 49.5%/68%，只保留标签防省略。 */
@@ -51,6 +52,7 @@ import './OperatingOverview.css';
 const PROGRESS_KEYWORDS_BASE = [
   '本月回款',
   '本月回款结构',
+  '退款',
   '月度完成率',
   '目标缺口',
   '超额完成',
@@ -64,6 +66,7 @@ const ANNUAL_KEYWORDS = [
   '年度回款总览',
   '年度回款结构',
   '年度累计',
+  '退款',
   '年度目标',
   '年度完成率',
   '年度目标进度',
@@ -494,7 +497,10 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
           <div className="op-month-grid">
             <div className="op-month-primary">
               <span className="op-summary-label">本月回款</span>
-              <b>{formatWan(KPI.monthRecovered)}万</b>
+              <div className="op-month-primary-value-row">
+                <b>{formatWan(KPI.monthRecovered)}万</b>
+                <span className="op-summary-sub op-month-refund-note">退款{formatWan(KPI.monthRefund ?? 0)}万</span>
+              </div>
               <span className="op-summary-sub">月度目标 {formatWan(KPI.monthTarget)}万</span>
               <div className="op-month-primary-facts">
                 <span>月目标完成率 {formatPct(KPI_DERIVED.monthCompletion)}</span>
@@ -533,7 +539,10 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
           <div className="op-annual-grid">
             <div className="op-annual-primary">
               <span className="op-summary-label">年度累计回款</span>
-              <b>{formatWan(KPI.yearRecovered)}万</b>
+              <div className="op-month-primary-value-row op-annual-primary-value-row">
+                <b>{formatWan(KPI.yearRecovered)}万</b>
+                <span className="op-summary-sub op-month-refund-note">退款{formatWan(KPI.yearRefund ?? 0)}万</span>
+              </div>
               <span className="op-summary-sub">年度目标 {formatWan(KPI.yearTarget)}万</span>
               <div className="op-month-primary-facts op-annual-primary-facts">
                 <span>年目标完成率 {formatPct(KPI_DERIVED.yearCompletion)}</span>
