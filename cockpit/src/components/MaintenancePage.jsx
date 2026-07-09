@@ -1,4 +1,11 @@
 /*
+ Update time: 2026-07-09 14:29:12 CST
+ Update content: 修复成本/组织/渠道维护页"下载模板"按钮点击无响应。工具栏按钮以 onDownloadTemplate
+   直接作 onClick 时,React 会把事件对象当第一个参数传入,覆盖了 handleDownloadTemplate 的默认参数
+   pageKey=activePage,导致 getImportConfig 拿事件对象当 key 查不到配置、静默跳过不下载。
+   handler 改为显式判断:仅当传入字符串 pageKey 时才采用,否则回退 activePage,三个维护页一并修复。
+*/
+/*
  Update time: 2026-07-09 16:20:00 CST
  Update content: Cost maintenance table adds editable refund amount for each channel and month.
 */
@@ -1277,8 +1284,11 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
     setStatusByPage((current) => ({ ...current, [activePage]: `已保存 ${nowLabel()}` }));
   }
 
-  function handleDownloadTemplate(pageKey = activePage) {
-    const config = getImportConfig(pageKey);
+  function handleDownloadTemplate(pageKey) {
+    // 工具栏按钮把 onDownloadTemplate 直接当 onClick 用时,React 会把事件对象作为第一个参数传入,
+    // 不能再依赖默认参数回退 activePage;此处显式判断,只有字符串 pageKey 才采用,否则用当前页。
+    const key = typeof pageKey === 'string' && pageKey ? pageKey : activePage;
+    const config = getImportConfig(key);
     if (config) downloadTemplate(config);
     setTemplateDialogOpen(false);
   }
