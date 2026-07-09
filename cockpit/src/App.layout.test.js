@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-09 18:03:00 CST
+ Update content: Regression test requires cost sticky first-column opacity rules to come after the shared translucent first-column rule.
+*/
+/*
  更新时间: 2026-07-09 17:29:39 CST
  更新内容: 经营总览回归测试锁定年度目标进度 footer 位于年度卡主内容行并用 transform 上提。
 */
@@ -920,8 +924,11 @@ test('uses silver-purple maintenance table row hover overlays and persistent cli
 
 test('keeps cost maintenance sticky first columns opaque while horizontally scrolling', () => {
   const matrixWrapBlock = cssRuleBody(maintenancePageCss, '.mnt-matrix-wrap');
+  const sharedFirstColumnIndex = maintenancePageCss.indexOf('.mnt-matrix th:first-child,');
+  const costFirstColumnIndex = maintenancePageCss.indexOf('.mnt-matrix--cost th:first-child,');
 
   assert.match(matrixWrapBlock, /--mnt-cost-sticky-bg:\s*#[0-9a-fA-F]{6};/);
+  assert.ok(costFirstColumnIndex > sharedFirstColumnIndex);
   assert.match(maintenancePageCss, /\.mnt-matrix--cost th:first-child,\s*[\s\S]*?\.mnt-matrix--labor td:first-child \{[\s\S]*?background:\s*var\(--mnt-cost-sticky-bg\);[\s\S]*?backdrop-filter:\s*none;/);
   assert.match(maintenancePageCss, /\.mnt-matrix--cost tbody tr:hover td:first-child,\s*[\s\S]*?\.mnt-matrix--labor tbody tr:hover td:first-child \{[\s\S]*?background:\s*var\(--mnt-cost-sticky-hover-bg\);/);
   assert.match(maintenancePageCss, /\.mnt-matrix--cost tbody tr\.mnt-row--selected td:first-child,\s*[\s\S]*?\.mnt-matrix--labor tbody tr\.mnt-row--selected td:first-child \{[\s\S]*?background:\s*var\(--mnt-cost-sticky-selected-bg\);/);
