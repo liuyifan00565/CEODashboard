@@ -1,4 +1,16 @@
 /*
+ 更新时间: 2026-07-09 11:08:00 CST
+ 更新内容: 经营总览回归测试同步风险判断下沉到半环结构数据生成阶段，锁定 row.risk 渲染风险标签。
+*/
+/*
+ 更新时间: 2026-07-09 11:02:18 CST
+ 更新内容: 经营总览回归测试补充渠道半环风险基准断言，要求低于整体完成基准的渠道显示风险标签。
+*/
+/*
+ 更新时间: 2026-07-09 10:52:02 CST
+ 更新内容: 经营总览回归测试同步渠道目标完成结构半环模块，锁定本月/本年切换、ECharts 半环和轻量摘要。
+*/
+/*
  更新时间: 2026-07-08 18:51:50 CST
  更新内容: 算力页回归测试同步经营健康驾驶舱改版，覆盖利用率、风险客户、供需关系和客户建议动作。
 */
@@ -1152,7 +1164,16 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.doesNotMatch(operatingOverviewSource, /明细 &gt;/);
   assert.match(operatingOverviewSource, /onOpenKpi\(yearKpiCard\)/);
   assert.match(operatingOverviewSource, /getOperatingOverviewMetrics/);
-  assert.match(operatingOverviewSource, /<ChannelPanel title="渠道完成情况" showPeriodSwitch \/>/);
+  assert.match(operatingOverviewSource, /function ChannelStructurePanel\(\)/);
+  assert.match(operatingOverviewSource, /<h2>渠道目标完成结构<\/h2>/);
+  assert.match(operatingOverviewSource, /<Segmented options=\{CHANNEL_PERIOD_OPTIONS\} value=\{period\} onChange=\{setPeriod\} \/>/);
+  assert.match(operatingOverviewSource, /<EChart className="op-channel-chart" option=\{option\} style=\{\{ height: '100%' \}\} \/>/);
+  assert.match(operatingOverviewSource, /buildChannelStructure\(rows\)/);
+  assert.match(operatingOverviewSource, /name: '未完成'/);
+  assert.match(operatingOverviewSource, /超额完成/);
+  assert.match(operatingOverviewSource, /const riskBaseline = Math\.min\(100, completion\);/);
+  assert.match(operatingOverviewSource, /risk: row\.warn \|\| rowCompletion < riskBaseline,/);
+  assert.match(operatingOverviewSource, /\{row\.risk && <span className="op-channel-risk">风险<\/span>\}/);
   assert.match(operatingOverviewCss, /\.op-overview/);
   assert.match(operatingOverviewCss, /background:\s*var\(--dashboard-card-bg\);/);
   assert.match(operatingOverviewCss, /border:\s*1px solid var\(--dashboard-card-border\);/);
@@ -1191,7 +1212,7 @@ test('replaces the annual rhythm chart with a glass progress capsule', () => {
   assert.match(operatingOverviewCss, /\.op-annual-capsule\s*\{[\s\S]*?height:\s*42px;[\s\S]*?border-radius:\s*999px;[\s\S]*?background:\s*var\(--bar-track\);/);
   assert.match(operatingOverviewCss, /\.op-annual-fill\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(142,134,255,\.86\), rgba\(228,184,215,\.72\)\);/);
   assert.match(operatingOverviewCss, /\.op-annual-capsule-labels\s*\{[\s\S]*?justify-content:\s*space-between;/);
-  assert.doesNotMatch(operatingOverviewSource, /import EChart from '\.\/EChart';/);
+  assert.doesNotMatch(operatingOverviewSource, /<EChart option=\{annualOption\}/);
 });
 
 test('uses low-saturation dashboard controls in focused secondary interfaces', () => {
@@ -1224,8 +1245,8 @@ test('gives the version panel the same hover halo as the monthly trend panel', (
 });
 
 test('gives every dashboard card the shared hover halo', () => {
-  assert.match(operatingOverviewCss, /\.op-panel,\s*[\s\S]*?\.op-channel-wrap \.ch-panel\s*\{[\s\S]*?transition:\s*border-color \.22s ease, box-shadow \.22s ease;/);
-  assert.match(operatingOverviewCss, /\.op-panel:hover,\s*[\s\S]*?\.op-panel:focus-within,\s*[\s\S]*?\.op-channel-wrap \.ch-panel:hover,\s*[\s\S]*?\.op-channel-wrap \.ch-panel:focus-within\s*\{[\s\S]*?border-color:\s*rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
+  assert.match(operatingOverviewCss, /\.op-panel\s*\{[\s\S]*?transition:\s*border-color \.22s ease, box-shadow \.22s ease;/);
+  assert.match(operatingOverviewCss, /\.op-panel:hover,\s*[\s\S]*?\.op-panel:focus-within\s*\{[\s\S]*?border-color:\s*rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
   assert.match(kpiCardCss, /\.kpi-card:hover,\s*[\s\S]*?\.kpi-card:focus-visible\s*\{[\s\S]*?border-color:\s*rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
   assert.match(openingMetricCardsCss, /\.opening-metric-card:hover,\s*[\s\S]*?\.opening-metric-card:focus-visible\s*\{[\s\S]*?border-color:\s*rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
   assert.match(computePageCss, /\.cpu-kpi:hover,\s*[\s\S]*?\.cpu-kpi:focus-within\s*\{[\s\S]*?border-color:\s*rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
@@ -1374,7 +1395,8 @@ test('uses one channel completion panel with month and year switching', () => {
   assert.match(channelPanelCss, /\.ch-progress-cell\s*\{/);
   assert.match(channelPanelCss, /\.ch-progress-fill\s*\{/);
   assert.doesNotMatch(channelPanelCss, /\.ch-status/);
-  assert.match(operatingOverviewSource, /<ChannelPanel title="渠道完成情况" showPeriodSwitch \/>/);
+  assert.match(operatingOverviewSource, /<ChannelStructurePanel \/>/);
+  assert.doesNotMatch(operatingOverviewSource, /<ChannelPanel title="渠道完成情况" showPeriodSwitch \/>/);
   assert.doesNotMatch(appSource, /sidePanel=\{<ChannelPanel/);
 });
 

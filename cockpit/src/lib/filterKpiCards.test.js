@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 10:52:02 CST
+ 更新内容: 搜索关键词回归同步渠道目标完成结构新标题，避免继续命中旧渠道表格名称。
+*/
+/*
  更新时间: 2026-07-08 18:22:00 CST
  更新内容: 总投入费比搜索与卡片文案回归同步当前渠道投入、全渠道总投入和广告/人力构成口径。
 */
@@ -146,7 +150,9 @@ test('adds fused operating overview section text to KPI search keywords', () => 
   assert.ok(annual.keywords.includes('下半年月均需完成 447 万'));
   assert.ok(!annual.keywords.includes('节奏偏差 +3.8%'));
   assert.ok(!annual.keywords.includes('月均仍需完成'));
-  assert.ok(annual.keywords.includes('渠道完成情况'));
+  assert.ok(month.keywords.includes('渠道目标完成结构'));
+  assert.ok(annual.keywords.includes('渠道目标完成结构'));
+  assert.ok(!annual.keywords.includes('渠道完成情况'));
   assert.ok(!annual.keywords.includes('年度贡献'));
   assert.ok(!annual.keywords.includes('本年目标完成情况'));
   assert.ok(!annual.keywords.includes('年度风险预测'));
