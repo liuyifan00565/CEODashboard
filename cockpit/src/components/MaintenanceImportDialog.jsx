@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-09 14:42:00 CST
+ Update content: Make target maintenance import dialog download the two-sheet target template bundle instead of the default single template.
+*/
+/*
  更新时间: 2026-07-08 13:05:31 CST
  更新内容: 目标导入遇到未找到员工时展示新增员工确认项，确认后携带新增员工选项再次提交并刷新维护数据。
 */
@@ -19,6 +23,7 @@ import {
   mapAndValidate,
   matchColumns,
   downloadTemplate,
+  downloadTemplateBundle,
 } from '../lib/excelImport.js';
 import './MaintenanceImportDialog.css';
 import GlassSelect from './GlassSelect.jsx';
@@ -87,6 +92,14 @@ export default function MaintenanceImportDialog({ config, configs, onClose, onIm
     () => importConfigs.map((item) => ({ value: item.pageKey, label: item.label })),
     [importConfigs],
   );
+
+  function handleDownloadTemplate() {
+    if (importConfigs.length > 1) {
+      downloadTemplateBundle(importConfigs);
+      return;
+    }
+    if (activeConfig) downloadTemplate(activeConfig);
+  }
 
   async function handleFile(file) {
     if (!file) return;
@@ -210,7 +223,7 @@ export default function MaintenanceImportDialog({ config, configs, onClose, onIm
               <button
                 className="mnt-btn"
                 type="button"
-                onClick={(e) => { e.stopPropagation(); if (activeConfig) downloadTemplate(activeConfig); }}
+                onClick={(e) => { e.stopPropagation(); handleDownloadTemplate(); }}
               >
                 下载模板
               </button>
@@ -365,7 +378,7 @@ export default function MaintenanceImportDialog({ config, configs, onClose, onIm
           <button
             className="mnt-btn"
             type="button"
-            onClick={() => activeConfig && downloadTemplate(activeConfig)}
+            onClick={handleDownloadTemplate}
           >
             下载模板
           </button>

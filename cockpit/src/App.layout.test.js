@@ -322,6 +322,10 @@
  Update time: 2026-07-02 18:16:13 CST
  Update content: Expect search highlight green to use the restored fluorescent lime RGB.
 */
+/*
+ Update time: 2026-07-09 14:42:00 CST
+ Update content: Cover target maintenance import dialog downloading the bundled two-sheet template.
+*/
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -672,6 +676,13 @@ test('builds the target and cost maintenance pages from reference matrix content
   assert.match(maintenancePageSource, /渠道成本维护/);
   assert.match(maintenancePageSource, /人力成本维护/);
   assert.match(maintenancePageSource, /保存成本/);
+});
+
+test('downloads bundled target maintenance templates from the import dialog', () => {
+  assert.match(maintenanceImportDialogSource, /downloadTemplateBundle/);
+  assert.match(maintenanceImportDialogSource, /if \(importConfigs\.length > 1\) \{[\s\S]*?downloadTemplateBundle\(importConfigs\);/);
+  assert.match(maintenanceImportDialogSource, /onClick=\{\(e\) => \{ e\.stopPropagation\(\); handleDownloadTemplate\(\); \}\}/);
+  assert.match(maintenanceImportDialogSource, /onClick=\{handleDownloadTemplate\}/);
 });
 
 test('keeps target maintenance completed amount and percent on one line', () => {
