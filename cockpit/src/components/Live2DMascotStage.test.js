@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-09 12:09:25 CST
- 更新内容: 验收本地福小客 rig ready 后不再叠加 CSS 主动动效和淡入层，避免加载期出现多套动画。
+ 更新时间: 2026-07-09 13:18:11 CST
+ 更新内容: 验收本地福小客 rig 使用离散帧 motion bridge 衔接动作，并禁止旧 ghost crossfade 层回归。
 */
 /*
  Update time: 2026-07-08 20:29:00 CST
@@ -44,6 +44,7 @@ const componentCode = stripSourceComments(componentSource);
 const cssCode = stripSourceComments(cssSource);
 const live2dModelUrl = new URL('../../public/live2d/fuxiaoke/fuxiaoke.model3.json', import.meta.url);
 const live2dMocUrl = new URL('../../public/live2d/fuxiaoke/fuxiaoke.moc3', import.meta.url);
+const live2dIdleMotionUrl = new URL('../../public/live2d/fuxiaoke/motions/idle.motion3.json', import.meta.url);
 
 function stripSourceComments(source) {
   return source
@@ -103,6 +104,14 @@ test('ships a complete local Fu Xiaoke rig resource pack', () => {
       `${motionFile} should exist`,
     );
   }
+});
+
+test('keeps local motion fade metadata short enough for crisp action changes', () => {
+  const idleMotion = JSON.parse(readFileSync(live2dIdleMotionUrl, 'utf8'));
+  assert.ok(idleMotion.Meta.FadeInTime <= 0.18);
+  assert.ok(idleMotion.Meta.FadeOutTime <= 0.18);
+  const eyeOpenCurve = idleMotion.Curves.find((curve) => curve.Id === 'ParamEyeLOpen');
+  assert.deepEqual(eyeOpenCurve.Segments.slice(2, 8), [0.62, 1, 0.68, 0, 0.76, 1]);
 });
 
 test('prefers the local Fu Xiaoke rig before falling back to Cubism runtime loading', () => {
@@ -181,12 +190,20 @@ test('keeps Live2D canvas transparent and unable to steal launcher clicks', () =
 });
 
 test('renders the local Fu Xiaoke rig as a click-through ready layer', () => {
-  assert.match(cssCode, /\.mascot-local-live2d-rig,\s*[\s\S]*?\.mascot-local-live2d-rig__sheet,\s*[\s\S]*?\.mascot-local-live2d-rig__blend-layer\s*\{[\s\S]*pointer-events:\s*none;/);
+  assert.match(cssCode, /\.mascot-local-live2d-rig,\s*[\s\S]*?\.mascot-local-live2d-rig__sheet\s*\{[\s\S]*pointer-events:\s*none;/);
   assert.match(cssCode, /\.mascot-local-live2d-rig__sheet\s*\{[\s\S]*background-image:\s*var\(--fuxiaoke-rig-sheet-url\);/);
   assert.match(cssCode, /\.mascot-local-live2d-rig__sheet\s*\{[\s\S]*background-size:\s*var\(--fuxiaoke-rig-sheet-width\) 100%;/);
   assert.match(cssCode, /\.mascot-local-live2d-rig__sheet\s*\{[\s\S]*animation:\s*none;/);
   assert.doesNotMatch(cssCode, /fuxiaoke-local-rig-idle/);
-  assert.match(cssCode, /\.mascot-local-live2d-rig__sheet--ghost\s*\{[\s\S]*animation:\s*fuxiaoke-local-rig-crossfade-out \.26s/);
-  assert.match(cssCode, /@keyframes fuxiaoke-local-rig-crossfade-out/);
-  assert.doesNotMatch(cssCode, /fuxiaoke-local-rig-crossfade-out[\s\S]*?(?:scale|rotate)/);
+  assert.doesNotMatch(cssCode, /fuxiaoke-local-rig-crossfade-out|mascot-local-live2d-rig__sheet--ghost|mascot-local-live2d-rig__blend-layer/);
+});
+
+test('uses frame-level motion bridges instead of ghost overlays for local rig action changes', () => {
+  assert.match(componentCode, /LOCAL_RIG_MOTION_BRIDGE_FPS = 14;/);
+  assert.match(componentCode, /function buildLocalRigMotionBridge\(fromAnimation,\s*fromCursor,\s*toAnimation\)/);
+  assert.match(componentCode, /getOutgoingSettleFrames\(fromAnimation,\s*fromCursor\)/);
+  assert.match(componentCode, /toAnimation\.frames\s*\.\s*slice\(0,\s*LOCAL_RIG_LEAD_IN_FRAME_COUNT\)/);
+  assert.match(componentCode, /const \[motionBridge,\s*setMotionBridge\] = useState\(null\);/);
+  assert.match(componentCode, /motionBridge\?\.frames\[bridgeCursor\]/);
+  assert.doesNotMatch(componentCode, /transitionGhost|transitionTimeoutRef|mascot-local-live2d-rig__sheet--ghost|mascot-local-live2d-rig__blend-layer/);
 });

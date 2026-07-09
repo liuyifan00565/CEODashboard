@@ -1,3 +1,6 @@
+更新时间: 2026-07-09 13:18:11 CST
+更新内容: 本地 rig motion3 缩短眨眼和 fade 参数，前端使用离散帧 motion bridge 替代旧帧透明淡出。
+
 更新时间: 2026-07-09 12:09:25 CST
 更新内容: 说明当前 model3/moc3 是项目本地 rig 资源，不等同于 Cubism Editor 导出的真实二进制骨骼模型。
 
@@ -20,7 +23,7 @@ fuxiaoke.moc3
 motions/*.motion3.json
 ```
 
-前端会优先识别 `fuxiaoke.model3.json` 中的 `Meta.LocalRenderer: "fuxiaoke-local-rig-v1"`，并使用项目内福小客动作帧渲染完整动作层。这个 `model3.json` 是本地 rig 的入口清单，当前 `fuxiaoke.moc3` 是本地 renderer 用来识别和校验资源包的 payload，不是 Cubism Editor 导出的二进制骨骼文件。
+前端会优先识别 `fuxiaoke.model3.json` 中的 `Meta.LocalRenderer: "fuxiaoke-local-rig-v1"`，并使用项目内福小客动作帧渲染完整动作层。本地 renderer 会用离散帧 motion bridge 衔接动作，`motions/*.motion3.json` 中的 blink/fade 时间保持短促，避免闭眼过久和旧帧透明糊过去。这个 `model3.json` 是本地 rig 的入口清单，当前 `fuxiaoke.moc3` 是本地 renderer 用来识别和校验资源包的 payload，不是 Cubism Editor 导出的二进制骨骼文件。
 
 后续如果要替换为 Cubism Editor 正式导出的福小客 Live2D 模型文件，也请放在本目录，并确保入口文件命名为:
 

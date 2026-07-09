@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 13:18:11 CST
+ 更新内容: 验收 AI 小人临时动作时长与福客帧级 motion bridge 对齐，避免 guide/click 未播完就切回 resting。
+*/
+/*
  Update time: 2026-07-07 18:12:09 CST
  Update content: Require the sidebar AI launcher to reserve enough guarded stage space so mascot images never appear clipped.
 */
@@ -122,7 +126,7 @@ test('keeps the mascot anchored instead of tracking cursor movement', () => {
 
 test('plays a visible greeting wave shortly after the launcher first mounts', () => {
   assert.match(componentSource, /const GREETING_WAVE_DELAY = 240;/);
-  assert.match(componentSource, /const GREETING_WAVE_DURATION = 920;/);
+  assert.match(componentSource, /const GREETING_WAVE_DURATION = 1200;/);
   assert.match(componentSource, /const greetingWaveTimerRef = useRef\(null\);/);
   assert.match(componentSource, /clearTimeout\(greetingWaveTimerRef\.current\);/);
   assert.match(componentSource, /greetingWaveTimerRef\.current = window\.setTimeout\(\(\) => \{/);
@@ -165,9 +169,11 @@ test('responds to KPI card context with matching speech and motion', () => {
   assert.match(componentSource, /showCompanionCue\(companionCue, \{ openDialog: false \}\);/);
 });
 
-test('plays a one-second guide motion only when opening the AI dialog from the mascot', () => {
-  assert.match(componentSource, /if \(nextOpen\) \{\s*playMascotAction\(MASCOT_ACTIONS\.guide,\s*1000,\s*true\);[\s\S]*?openAiDialog\(\);[\s\S]*?return;\s*\}/);
-  assert.match(componentSource, /playMascotAction\(MASCOT_ACTIONS\.click,\s*860,\s*false\);/);
+test('plays the full guide motion only when opening the AI dialog from the mascot', () => {
+  assert.match(componentSource, /const GUIDE_MOTION_DURATION = 1200;/);
+  assert.match(componentSource, /const CLICK_MOTION_DURATION = 900;/);
+  assert.match(componentSource, /if \(nextOpen\) \{\s*playMascotAction\(MASCOT_ACTIONS\.guide,\s*GUIDE_MOTION_DURATION,\s*true\);[\s\S]*?openAiDialog\(\);[\s\S]*?return;\s*\}/);
+  assert.match(componentSource, /playMascotAction\(MASCOT_ACTIONS\.click,\s*CLICK_MOTION_DURATION,\s*false\);/);
   assert.doesNotMatch(componentSource, /playMascotAction\(MASCOT_ACTIONS\.guide,\s*1000,\s*false\)/);
 });
 

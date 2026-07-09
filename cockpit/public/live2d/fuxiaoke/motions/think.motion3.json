@@ -4,6 +4,8 @@
     "Duration": 2,
     "Fps": 30,
     "Loop": true,
+    "FadeInTime": 0.16,
+    "FadeOutTime": 0.18,
     "CurveCount": 2,
     "TotalSegmentCount": 8,
     "TotalPointCount": 12

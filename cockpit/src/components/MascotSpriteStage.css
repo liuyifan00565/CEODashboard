@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-09 12:09:25 CST
- 更新内容: 模型检测和加载期暂停 sprite CSS 动效并在 ready 后隐藏旧过渡层，配合组件冻结帧播放避免多套动画叠加。
+ 更新时间: 2026-07-09 13:18:11 CST
+ 更新内容: 移除 sprite 旧帧 ghost crossfade，fallback 也只播放 manifest 离散动作帧，避免平移模糊式衔接。
 */
 /*
  更新时间: 2026-07-09 11:43:55 CST
@@ -86,25 +86,9 @@
   backface-visibility: hidden;
 }
 
-.mascot-sprite-stage__blend-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  pointer-events: none;
-}
-
-.mascot-sprite-stage__sheet--ghost {
-  z-index: 5;
-  animation: mascot-action-crossfade-out .26s cubic-bezier(.2, .82, .2, 1) both !important;
-}
-
 .mascot-sprite-stage--model-pending .mascot-sprite-stage__sheet {
   animation: none !important;
   transform: translate3d(0, 0, 0);
-}
-
-.mascot-sprite-stage--live2d-ready .mascot-sprite-stage__blend-layer {
-  display: none;
 }
 
 .mascot-sprite-stage--idle .mascot-sprite-stage__sheet,
@@ -152,18 +136,6 @@
 
 .mascot-sprite-stage--celebrate {
   filter: drop-shadow(0 22px 34px rgba(0, 0, 0, .42)) drop-shadow(0 0 34px rgba(215, 181, 109, .3));
-}
-
-@keyframes mascot-action-crossfade-out {
-  0% {
-    opacity: .96;
-    transform: translate3d(0, 0, 0);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translate3d(0, -1px, 0);
-  }
 }
 
 @keyframes mascot-sheet-idle-life {
@@ -275,7 +247,4 @@
     transition: none;
   }
 
-  .mascot-sprite-stage__blend-layer {
-    display: none;
-  }
 }

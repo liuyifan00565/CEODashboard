@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-09 11:29:54 CST
- 更新内容: 验收默认待机为 16 帧慢呼吸、短弧线慢眨眼和干净闭眼补色，避免 idle 本体退回静态站姿、横杠眼或眼区杂色。
+ 更新时间: 2026-07-09 13:18:11 CST
+ 更新内容: 验收默认待机只播放一格闭眼，并要求循环动作使用 ping-pong 帧序列减少呆滞和循环硬切。
 */
 /*
  更新时间: 2026-07-08 18:16:34 CST
@@ -266,10 +266,18 @@ test('uses the stabilized Fu Xiaoke slow idle sheet as the default real frame lo
   for (const variant of MASCOT_IDLE_VARIANTS) {
     assert.ok(Array.isArray(variant.frames), `${variant.key} should declare frame indexes`);
     assert.equal(variant.playback, 'frames', `${variant.key} should be a real idle frame sequence`);
-    assert.equal(variant.frames.length, 16, `${variant.key} should use a longer idle loop for slow blink timing`);
-    assert.equal(variant.fps, 6, `${variant.key} should idle slowly enough to avoid frantic blinking`);
+    assert.equal(variant.frames.length, 16, `${variant.key} should keep a long idle loop for slow breathing`);
+    assert.equal(variant.fps, 7, `${variant.key} should keep idle calm while shortening the blink hold`);
     assert.equal(variant.sheetKey, 'idleFukeRich', `${variant.key} should point to the rich Fu Xiaoke idle sheet`);
   }
+});
+
+test('shortens the visible closed-eye hold in the idle playback sequence', () => {
+  const variant = MASCOT_IDLE_VARIANTS.find((item) => item.key === 'fukeRich');
+  const closedEyeFramesInPlayback = variant.frames.filter((frame) => frame >= 4 && frame <= 6);
+  assert.deepEqual(closedEyeFramesInPlayback, [4]);
+  assert.ok(!variant.frames.includes(5), 'idle playback should skip the long fully closed hold frame');
+  assert.ok(!variant.frames.includes(6), 'idle playback should skip the slow blink-return hold frame');
 });
 
 test('keeps the default idle loop visibly alive without relying on static standing frames', () => {
@@ -307,7 +315,7 @@ test('maps product actions to explicit frame animation specs', () => {
     const animation = MASCOT_ANIMATIONS[action];
     assert.ok(animation, `${action} should have an animation spec`);
     assert.ok(Array.isArray(animation.frames), `${action} should declare frames`);
-    assert.ok(animation.fps >= 6 && animation.fps <= 8, `${action} should use a calm stable frame rate`);
+    assert.ok(animation.fps >= 7 && animation.fps <= 10, `${action} should use a lively but stable frame rate`);
     assert.equal(animation.playback, 'frames', `${action} should play actual authored frames`);
     assert.ok(animation.frames.length >= 8, `${action} should have enough frames for smooth motion`);
     assert.equal(animation.sheetKey, expectedSheetByAction[action], `${action} should use its stabilized Fu Xiaoke sheet`);
@@ -326,6 +334,16 @@ test('maps product actions to explicit frame animation specs', () => {
     Object.values(MASCOT_ANIMATIONS).every((animation) => animation.sheetKey !== 'laptop'),
     'runtime mascot animations should not display the laptop sheet in the sidebar launcher',
   );
+});
+
+test('uses ping-pong frame loops for continuous speaking and thinking actions', () => {
+  for (const action of [MASCOT_ACTIONS.talk, MASCOT_ACTIONS.think, MASCOT_ACTIONS.alert, 'maintenanceReview']) {
+    const animation = MASCOT_ANIMATIONS[action];
+    assert.equal(animation.loop, true, `${action} should stay loopable`);
+    assert.ok(animation.frames.length > MASCOT_ACTION_SHEETS[animation.sheetKey].frameCount);
+    assert.deepEqual(animation.frames.slice(0, 12), Array.from({ length: 12 }, (_, index) => index));
+    assert.deepEqual(animation.frames.slice(12), [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+  }
 });
 
 test('records self-audit results for smoothness and reasonableness', () => {

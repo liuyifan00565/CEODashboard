@@ -3,8 +3,8 @@
   "Meta": {
     "Name": "Fu Xiaoke Local Rig",
     "LocalRenderer": "fuxiaoke-local-rig-v1",
-    "UpdatedAt": "2026-07-09 11:53:13 CST",
-    "Description": "Project-local Fu Xiaoke motion rig that drives the authorized in-repo mascot action sheets when no Cubism Editor exported binary is available."
+    "UpdatedAt": "2026-07-09 13:18:11 CST",
+    "Description": "Project-local Fu Xiaoke motion rig that drives authorized in-repo mascot action sheets with shorter blink timing and frame-level motion bridges when no Cubism Editor exported binary is available."
   },
   "FileReferences": {
     "Moc": "fuxiaoke.moc3",

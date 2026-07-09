@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-09 12:09:25 CST
- 更新内容: 关闭本地福小客 rig 的额外 CSS 主动动效和 ready 淡入，只保留动作帧与切换淡出，避免多层动画叠加。
+ 更新时间: 2026-07-09 13:18:11 CST
+ 更新内容: 移除本地福小客 rig 的 ghost crossfade 样式，动作衔接交给组件内离散帧 motion bridge。
 */
 /*
  更新时间: 2026-07-09 11:53:13 CST
@@ -31,8 +31,7 @@
 }
 
 .mascot-local-live2d-rig,
-.mascot-local-live2d-rig__sheet,
-.mascot-local-live2d-rig__blend-layer {
+.mascot-local-live2d-rig__sheet {
   position: absolute;
   inset: 0;
   display: block;
@@ -63,15 +62,6 @@
   animation: none;
 }
 
-.mascot-local-live2d-rig__blend-layer {
-  z-index: 5;
-}
-
-.mascot-local-live2d-rig__sheet--ghost {
-  z-index: 5;
-  animation: fuxiaoke-local-rig-crossfade-out .26s cubic-bezier(.2, .82, .2, 1) both !important;
-}
-
 .mascot-sprite-stage--live2d-ready .mascot-live2d-stage {
   opacity: 1;
 }
@@ -80,29 +70,12 @@
   opacity: 0;
 }
 
-@keyframes fuxiaoke-local-rig-crossfade-out {
-  0% {
-    opacity: .96;
-    transform: translate3d(0, 0, 0);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translate3d(0, -1px, 0);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .mascot-live2d-stage {
     transition: none;
   }
 
-  .mascot-local-live2d-rig__sheet,
-  .mascot-local-live2d-rig__sheet--ghost {
+  .mascot-local-live2d-rig__sheet {
     animation: none;
-  }
-
-  .mascot-local-live2d-rig__blend-layer {
-    display: none;
   }
 }

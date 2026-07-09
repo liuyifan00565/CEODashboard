@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-09 11:29:54 CST
- 更新内容: 将默认待机扩展为 16 帧慢呼吸、短弧线慢眨眼和胸口轻脉冲循环，并修正闭眼眼区补色，让 idle 本体更有生命感且保持尺寸稳定。
+ 更新时间: 2026-07-09 13:18:11 CST
+ 更新内容: 缩短福客待机闭眼播放占比，并为动作帧增加 ping-pong/settle 序列，让 motion 衔接更多依赖帧表而非视觉淡出。
 */
 /*
  更新时间: 2026-07-08 18:16:34 CST
@@ -58,8 +58,10 @@ import { MASCOT_ACTIONS } from './mascotCompanion.js';
 
 const FRAME_WIDTH = 224;
 const FRAME_HEIGHT = 300;
-const IDLE_FRAMES = Object.freeze(Array.from({ length: 16 }, (_, index) => index));
+const IDLE_FRAMES = Object.freeze([0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 14, 13]);
 const TWELVE_FRAMES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
+const ACTION_PING_PONG_FRAMES = Object.freeze([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+const ACTION_SETTLE_FRAMES = Object.freeze([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
 
 export const MASCOT_ACTION_SHEETS = Object.freeze({
   idleFukeRich: sheetSpec('/mascot-actions/mascot-idle-fuke-rich.png', 16),
@@ -94,7 +96,7 @@ export const MASCOT_ACTION_AUDIT = Object.freeze({
 });
 
 export const MASCOT_IDLE_VARIANTS = Object.freeze([
-  idleVariant('fukeRich', 'idleFukeRich', 6, IDLE_FRAMES),
+  idleVariant('fukeRich', 'idleFukeRich', 7, IDLE_FRAMES),
 ]);
 
 const idleByKey = new Map(MASCOT_IDLE_VARIANTS.map((variant) => [variant.key, variant]));
@@ -150,31 +152,38 @@ export const MASCOT_ANIMATIONS = Object.freeze({
   [MASCOT_ACTIONS.idle]: actionSpec(MASCOT_ACTIONS.idle, defaultIdle.sheetKey, defaultIdle.fps, {
     intensity: 'idle',
   }),
-  [MASCOT_ACTIONS.wave]: actionSpec(MASCOT_ACTIONS.wave, 'wave', 8, {
+  [MASCOT_ACTIONS.wave]: actionSpec(MASCOT_ACTIONS.wave, 'wave', 10, {
+    frames: ACTION_SETTLE_FRAMES,
     durationMs: 1200,
     loop: false,
     intensity: 'greeting',
   }),
-  [MASCOT_ACTIONS.guide]: actionSpec(MASCOT_ACTIONS.guide, 'guide', 8, {
+  [MASCOT_ACTIONS.guide]: actionSpec(MASCOT_ACTIONS.guide, 'guide', 10, {
+    frames: ACTION_SETTLE_FRAMES,
     durationMs: 1200,
     loop: false,
     intensity: 'guide',
   }),
-  [MASCOT_ACTIONS.talk]: actionSpec(MASCOT_ACTIONS.talk, 'talk', 6, {
+  [MASCOT_ACTIONS.talk]: actionSpec(MASCOT_ACTIONS.talk, 'talk', 8, {
+    frames: ACTION_PING_PONG_FRAMES,
     intensity: 'speech',
   }),
-  [MASCOT_ACTIONS.think]: actionSpec(MASCOT_ACTIONS.think, 'think', 6, {
+  [MASCOT_ACTIONS.think]: actionSpec(MASCOT_ACTIONS.think, 'think', 8, {
+    frames: ACTION_PING_PONG_FRAMES,
     intensity: 'focus',
   }),
-  [MASCOT_ACTIONS.alert]: actionSpec(MASCOT_ACTIONS.alert, 'alert', 8, {
+  [MASCOT_ACTIONS.alert]: actionSpec(MASCOT_ACTIONS.alert, 'alert', 9, {
+    frames: ACTION_PING_PONG_FRAMES,
     intensity: 'alert',
   }),
-  [MASCOT_ACTIONS.celebrate]: actionSpec(MASCOT_ACTIONS.celebrate, 'celebrate', 8, {
+  [MASCOT_ACTIONS.celebrate]: actionSpec(MASCOT_ACTIONS.celebrate, 'celebrate', 10, {
+    frames: ACTION_SETTLE_FRAMES,
     durationMs: 1200,
     loop: false,
     intensity: 'celebrate',
   }),
-  [MASCOT_ACTIONS.click]: actionSpec(MASCOT_ACTIONS.click, 'click', 8, {
+  [MASCOT_ACTIONS.click]: actionSpec(MASCOT_ACTIONS.click, 'click', 10, {
+    frames: ACTION_SETTLE_FRAMES,
     durationMs: 900,
     loop: false,
     intensity: 'click',
@@ -182,12 +191,14 @@ export const MASCOT_ANIMATIONS = Object.freeze({
   maintenance: actionSpec('maintenance', defaultIdle.sheetKey, defaultIdle.fps, {
     intensity: 'maintenance',
   }),
-  maintenanceSave: actionSpec('maintenanceSave', 'celebrate', 8, {
+  maintenanceSave: actionSpec('maintenanceSave', 'celebrate', 10, {
+    frames: ACTION_SETTLE_FRAMES,
     durationMs: 1200,
     loop: false,
     intensity: 'maintenance-save',
   }),
-  maintenanceReview: actionSpec('maintenanceReview', 'think', 6, {
+  maintenanceReview: actionSpec('maintenanceReview', 'think', 8, {
+    frames: ACTION_PING_PONG_FRAMES,
     intensity: 'maintenance-review',
   }),
 });

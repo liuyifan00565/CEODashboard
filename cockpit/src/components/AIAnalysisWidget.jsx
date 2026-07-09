@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-07 17:45:31 CST
- 更新内容: 首次挂载 AI 小人后自动播放约 1 秒挥手动作，并避免覆盖用户点击后的 guide 指引。
+ 更新时间: 2026-07-09 13:18:11 CST
+ 更新内容: 对齐福客帧级 motion bridge 后的 wave/guide/click 时长，避免动作未播完就被切回 resting 状态。
 */
 /*
  更新时间: 2026-07-07 15:09:26 CST
@@ -93,7 +93,9 @@ const HOVER_BUBBLE_COOLDOWN = 6000;
 const DEFAULT_BUBBLE_INTERVAL = 10000;
 const DEFAULT_BUBBLE_DURATION = 4000;
 const GREETING_WAVE_DELAY = 240;
-const GREETING_WAVE_DURATION = 920;
+const GREETING_WAVE_DURATION = 1200;
+const GUIDE_MOTION_DURATION = 1200;
+const CLICK_MOTION_DURATION = 900;
 const BUBBLE_EXIT_DURATION = 360;
 const fallbackCue = '这处信息建议结合目标完成率、ROI 和续费一起看。';
 
@@ -501,12 +503,12 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
     }, { openDialog: false, duration: 3800 });
 
     if (nextOpen) {
-      playMascotAction(MASCOT_ACTIONS.guide, 1000, true);
+      playMascotAction(MASCOT_ACTIONS.guide, GUIDE_MOTION_DURATION, true);
       openAiDialog();
       return;
     }
 
-    playMascotAction(MASCOT_ACTIONS.click, 860, false);
+    playMascotAction(MASCOT_ACTIONS.click, CLICK_MOTION_DURATION, false);
     closeAiDialog();
   }
 

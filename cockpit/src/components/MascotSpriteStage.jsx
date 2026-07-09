@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-09 12:09:25 CST
- 更新内容: 模型检测、加载和 ready 期间冻结 sprite 帧播放，只在确认 fallback 后启用 sprite 动画与过渡层。
+ 更新时间: 2026-07-09 13:18:11 CST
+ 更新内容: 移除 sprite fallback 的旧帧透明淡出层，动作衔接改为依赖 manifest 帧序列和本地 rig motion bridge。
 */
 /*
  更新时间: 2026-07-09 11:43:55 CST
@@ -52,7 +52,6 @@ import './MascotSpriteStage.css';
 
 const DEFAULT_LABEL = '福小客 AI 经营助手';
 const IDLE_LOOPS_BEFORE_VARIANT = 1;
-const MASCOT_ACTION_BLEND_MS = 260;
 const preloadedMascotSheets = new Set();
 
 function preloadMascotActionSheets() {
@@ -100,13 +99,9 @@ export default function MascotSpriteStage({
   const [frameCursor, setFrameCursor] = useState(0);
   const [idleVariantIndex, setIdleVariantIndex] = useState(0);
   const [live2dStatus, setLive2dStatus] = useState('checking');
-  const [transitionGhost, setTransitionGhost] = useState(null);
   const animationFrameRef = useRef(0);
-  const transitionTimeoutRef = useRef(0);
   const idleLoopCountRef = useRef(0);
   const lastLoopRef = useRef(0);
-  const lastActionSignatureRef = useRef('');
-  const latestPresentationRef = useRef(null);
   const idleVariant = getMascotIdleVariant(idleVariantIndex);
   const animation = useMemo(
     () => getMascotAnimation(action, { idleVariant: idleVariant.key }),
@@ -116,45 +111,11 @@ export default function MascotSpriteStage({
   const currentFrame = animation.frames[frameCursor] ?? animation.frames[0] ?? 0;
   const framePosition = getFramePosition(currentFrame, sheet);
   const stageStyle = getSheetStyle(sheet, framePosition);
-  const actionSignature = `${animation.key}:${animation.sheetKey}:${animation.idleVariant ?? ''}`;
-  const currentPresentation = {
-    actionSignature,
-    style: stageStyle,
-  };
   const spriteFallbackActive = live2dStatus === 'fallback';
 
   useEffect(() => {
     preloadMascotActionSheets();
   }, []);
-
-  useEffect(() => () => {
-    if (typeof window !== 'undefined') {
-      window.clearTimeout(transitionTimeoutRef.current);
-    }
-  }, []);
-
-  useEffect(() => {
-    const previousSignature = lastActionSignatureRef.current;
-    const previousPresentation = latestPresentationRef.current;
-    const actionChanged = previousSignature && previousSignature !== actionSignature;
-    if (spriteFallbackActive && actionChanged && previousPresentation) {
-      setTransitionGhost({
-        ...previousPresentation,
-        transitionKey: `${previousSignature}->${actionSignature}`,
-      });
-      if (typeof window !== 'undefined') {
-        window.clearTimeout(transitionTimeoutRef.current);
-        transitionTimeoutRef.current = window.setTimeout(() => {
-          setTransitionGhost(null);
-        }, MASCOT_ACTION_BLEND_MS);
-      }
-    }
-    lastActionSignatureRef.current = actionSignature;
-  }, [actionSignature, spriteFallbackActive]);
-
-  useEffect(() => {
-    latestPresentationRef.current = currentPresentation;
-  });
 
   useEffect(() => {
     setFrameCursor(0);
@@ -225,15 +186,6 @@ export default function MascotSpriteStage({
       style={stageStyle}
     >
       <span className="mascot-sprite-stage__sheet" aria-hidden="true" />
-      {spriteFallbackActive && transitionGhost ? (
-        <span className="mascot-sprite-stage__blend-layer" aria-hidden="true">
-          <span
-            key={transitionGhost.transitionKey}
-            className="mascot-sprite-stage__sheet mascot-sprite-stage__sheet--ghost"
-            style={transitionGhost.style}
-          />
-        </span>
-      ) : null}
       <Live2DMascotStage
         action={animation.key}
         label={label}

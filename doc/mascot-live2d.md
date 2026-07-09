@@ -1,3 +1,6 @@
+更新时间: 2026-07-09 13:18:11 CST
+更新内容: 补充参考 Live2D motion fade 后的本地实现：使用离散帧 motion bridge 和短 blink/fade 参数，禁止旧帧透明 ghost crossfade。
+
 更新时间: 2026-07-09 12:09:25 CST
 更新内容: 补充本地 rig 与真实 Cubism 模型的边界，并记录加载检测期冻结 sprite、fallback 后才播放 sprite 动画的规则。
 
@@ -26,7 +29,7 @@
 
 ## 加载与降级
 
-前端会先检查同源本地 rig、Live2D Core 与模型入口文件是否存在，并拒绝把 HTML fallback 当成模型资源。检测和加载期间，外层 sprite 保持静态首帧；只有确认本地 rig 与真实 Cubism 模型都不可用并进入 fallback 后，sprite 自身的帧动画和动作过渡才会启动，避免启动时出现 sprite、rig 与过渡层多套动画短暂叠加。
+前端会先检查同源本地 rig、Live2D Core 与模型入口文件是否存在，并拒绝把 HTML fallback 当成模型资源。检测和加载期间，外层 sprite 保持静态首帧；只有确认本地 rig 与真实 Cubism 模型都不可用并进入 fallback 后，sprite 自身的帧动画才会启动，避免启动时出现 sprite、rig 与过渡层多套动画短暂叠加。本地 rig 的动作切换不再使用透明 ghost crossfade，而是用当前动作的 settle 帧和下一动作的 lead-in 帧组成 motion bridge。
 
 任一文件缺失、内容类型异常、Cubism Core 初始化失败或模型加载失败时，组件会保持 sprite 小人可见并把状态切到 fallback。此过程不影响左下角入口点击，也不会隐藏原有小人。
 

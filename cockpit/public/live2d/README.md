@@ -1,3 +1,6 @@
+更新时间: 2026-07-09 13:18:11 CST
+更新内容: 记录本地 rig 采用离散帧 motion bridge 衔接动作，并缩短 idle motion 眨眼曲线与 fade 时间。
+
 更新时间: 2026-07-09 12:09:25 CST
 更新内容: 明确当前本地 rig 的 model3 是项目入口清单，启动检测期会冻结 sprite，真实 Cubism 效果需要替换为 Editor 导出的二进制 moc3 资源。
 
@@ -21,7 +24,7 @@
 - `public/live2d/fuxiaoke/fuxiaoke.moc3`
 - `public/live2d/fuxiaoke/motions/*.motion3.json`
 
-该本地 rig 包引用项目内已有福小客动作帧，作为可直接运行的完整动作层。加载检测期内 sprite 会保持静态首帧，只有确认本地 rig 和 Cubism 模型都不可用时才启用 sprite 自身动画，避免启动时多套动画短暂叠加。
+该本地 rig 包引用项目内已有福小客动作帧，作为可直接运行的完整动作层。加载检测期内 sprite 会保持静态首帧，只有确认本地 rig 和 Cubism 模型都不可用时才启用 sprite 自身动画，避免启动时多套动画短暂叠加。本地 rig 运行时使用离散帧 motion bridge 连接动作，并读取更短的 blink/fade motion 设计，不使用透明 ghost crossfade。
 
 这里的 `fuxiaoke.model3.json` 是入口清单；当前 `fuxiaoke.moc3` 是项目本地 rig payload，不是 Cubism Editor 导出的二进制骨骼模型。若后续替换为 Cubism Editor 正式导出的二进制模型，则仍沿用以下入口:
 
