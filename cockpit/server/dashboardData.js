@@ -41,6 +41,7 @@
  更新内容: 新增真实 MySQL dashboard 数据聚合接口，将 ceo_dashboard 表汇总为前端可覆盖的经营快照。
 */
 import mysql from 'mysql2/promise';
+import { loadConfiguredExternalComputeSnapshot } from './computeApi.js';
 
 const DB_DEFAULTS = {
   host: '127.0.0.1',
@@ -937,7 +938,7 @@ export async function buildDashboardSnapshot(connection) {
     `, [latestMonth]),
   ]);
 
-  return mapDashboardRowsToSnapshot({
+  const snapshot = mapDashboardRowsToSnapshot({
     latestMonth,
     previousMonth,
     channels,
@@ -965,6 +966,8 @@ export async function buildDashboardSnapshot(connection) {
     computeResourceHealth,
     deliveryRows,
   });
+  const externalComputeSnapshot = await loadConfiguredExternalComputeSnapshot();
+  return externalComputeSnapshot ? { ...snapshot, ...externalComputeSnapshot } : snapshot;
 }
 
 export async function handleDashboardDataRequest(_req, res) {
