@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 17:45:00 CST
+ 更新内容: dashboard 快照成功后继续尝试 /api/compute-data 覆盖算力模块，确保 token 用量优先读取外部真实数据。
+*/
+/*
  更新时间: 2026-07-09 17:05:00 CST
  更新内容: 全量真实数据库加载失败时回退读取 /api/compute-data，只覆盖算力模块，避免其它看板内容被阻塞。
 */
@@ -36,7 +40,13 @@ export async function loadDashboardData({ fetchImpl = globalThis.fetch } = {}) {
   try {
     const payload = await fetchJson(fetchImpl, '/api/dashboard-data');
     applyDashboardDataSnapshot(payload);
-    return payload;
+    try {
+      const computePayload = await fetchJson(fetchImpl, '/api/compute-data');
+      applyDashboardDataSnapshot(computePayload);
+      return { ...payload, ...computePayload };
+    } catch {
+      return payload;
+    }
   } catch (dashboardError) {
     try {
       const computePayload = await fetchJson(fetchImpl, '/api/compute-data');

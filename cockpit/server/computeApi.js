@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 17:45:00 CST
+ 更新内容: 支持通过 COMPUTE_PLATFORM_BOARD_PATH / COMPUTE_CUSTOMER_BOARD_PATH 配置外部算力接口路径，便于对齐真实页面 endpoint。
+*/
+/*
  更新时间: 2026-07-09 17:05:00 CST
  更新内容: 新增 /api/compute-data 响应处理器，支持前端在 MySQL 全量快照失败时单独读取外部算力数据。
 */
@@ -99,10 +103,19 @@ async function postJson({ baseUrl, token, path, body, fetchImpl }) {
   }
 
   if (!response.ok) {
-    throw new Error(`外部算力接口请求失败：HTTP ${response.status}`);
+    throw new Error(`外部算力接口请求失败：HTTP ${response.status} (${path})`);
   }
 
   return payload;
+}
+
+export function computeApiConfigFromEnv(env = process.env) {
+  return {
+    baseUrl: env.COMPUTE_API_BASE_URL,
+    token: env.COMPUTE_API_TOKEN,
+    platformBoardPath: env.COMPUTE_PLATFORM_BOARD_PATH || PLATFORM_BOARD_PATH,
+    customerBoardPath: env.COMPUTE_CUSTOMER_BOARD_PATH || CUSTOMER_BOARD_PATH,
+  };
 }
 
 export function buildExternalComputeRequestWindow(now = new Date()) {
@@ -174,6 +187,8 @@ export function mapExternalComputeBoards({ platformBoard = {}, customerBoard = {
 export async function loadExternalComputeSnapshot({
   baseUrl,
   token,
+  platformBoardPath = PLATFORM_BOARD_PATH,
+  customerBoardPath = CUSTOMER_BOARD_PATH,
   now = new Date(),
   fetchImpl = globalThis.fetch,
 } = {}) {
@@ -196,8 +211,8 @@ export async function loadExternalComputeSnapshot({
   };
 
   const [platformPayload, customerPayload] = await Promise.all([
-    postJson({ baseUrl, token, path: PLATFORM_BOARD_PATH, body: window, fetchImpl }),
-    postJson({ baseUrl, token, path: CUSTOMER_BOARD_PATH, body: customerBody, fetchImpl }),
+    postJson({ baseUrl, token, path: platformBoardPath, body: window, fetchImpl }),
+    postJson({ baseUrl, token, path: customerBoardPath, body: customerBody, fetchImpl }),
   ]);
 
   return mapExternalComputeBoards({
@@ -213,8 +228,7 @@ export function hasExternalComputeConfig(env = process.env) {
 export async function loadConfiguredExternalComputeSnapshot({ env = process.env, fetchImpl = globalThis.fetch } = {}) {
   if (!hasExternalComputeConfig(env)) return null;
   return loadExternalComputeSnapshot({
-    baseUrl: env.COMPUTE_API_BASE_URL,
-    token: env.COMPUTE_API_TOKEN,
+    ...computeApiConfigFromEnv(env),
     fetchImpl,
   });
 }

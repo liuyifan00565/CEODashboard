@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 17:45:00 CST
+ 更新内容: 增加全量 dashboard 成功后继续读取 compute-only 接口的回归，确保 token 数据优先用外部真实快照。
+*/
+/*
  更新时间: 2026-07-08 18:22:00 CST
  更新内容: 增加真实快照 costTrend 覆盖回归，确保前端成本二级下钻使用 MySQL 成本趋势。
 */
@@ -139,4 +143,40 @@ test('falls back to compute-only api when full dashboard data is unavailable', a
   assert.deepEqual(calls, ['/api/dashboard-data', '/api/compute-data']);
   assert.equal(payload.computeOverview.totalCapacity, 123456);
   assert.equal(COMPUTE_OVERVIEW.totalCapacity, 123456);
+});
+
+test('overlays compute-only api after full dashboard data loads', async () => {
+  const calls = [];
+  const payload = await loadDashboardData({
+    fetchImpl: async (url) => {
+      calls.push(url);
+      if (url === '/api/dashboard-data') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            source: 'mysql',
+            computeOverview: {
+              totalCapacity: 111,
+            },
+          }),
+        };
+      }
+
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          source: 'mysql',
+          computeOverview: {
+            totalCapacity: 999999,
+          },
+        }),
+      };
+    },
+  });
+
+  assert.deepEqual(calls, ['/api/dashboard-data', '/api/compute-data']);
+  assert.equal(payload.computeOverview.totalCapacity, 999999);
+  assert.equal(COMPUTE_OVERVIEW.totalCapacity, 999999);
 });

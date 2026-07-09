@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 17:45:00 CST
+ 更新内容: 增加外部算力接口 path 环境变量回归，支持按真实页面接口调整 endpoint。
+*/
+/*
  更新时间: 2026-07-09 16:18:00 CST
  更新内容: 新增外部算力看板接口映射测试，覆盖 /csrc 接口请求参数、x-token 鉴权头和快照字段转换。
 */
@@ -7,6 +11,7 @@ import assert from 'node:assert/strict';
 
 import {
   buildExternalComputeRequestWindow,
+  computeApiConfigFromEnv,
   loadExternalComputeSnapshot,
   mapExternalComputeBoards,
 } from './computeApi.js';
@@ -147,4 +152,20 @@ test('loads external compute boards with the configured api base and x-token hea
   assert.equal(calls[0].options.headers['x-token'], 'secret-token');
   assert.equal(calls[1].options.headers['x-token'], 'secret-token');
   assert.equal(snapshot.computeOverview.totalCapacity, 1);
+});
+
+test('reads external compute endpoint paths from env config', () => {
+  const config = computeApiConfigFromEnv({
+    COMPUTE_API_BASE_URL: 'https://pre.zhihuige.cc/lmr',
+    COMPUTE_API_TOKEN: 'secret-token',
+    COMPUTE_PLATFORM_BOARD_PATH: '/api/custom/platform',
+    COMPUTE_CUSTOMER_BOARD_PATH: '/api/custom/customer',
+  });
+
+  assert.deepEqual(config, {
+    baseUrl: 'https://pre.zhihuige.cc/lmr',
+    token: 'secret-token',
+    platformBoardPath: '/api/custom/platform',
+    customerBoardPath: '/api/custom/customer',
+  });
 });
