@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-09 17:39:04 CST  更新内容: 年度目标进度条改为内嵌在年度左侧事实区两个胶囊下方，避免 grid 位移导致被卡片裁切消失。 */
+/* 更新时间: 2026-07-09 17:28:41 CST  更新内容: 回款半环 tooltip 加入扇区色标识并传入当前扇区色，避免悬浮信息像临时调试弹窗。 */
 /* 更新时间: 2026-07-09 17:16:09 CST  更新内容: 年度目标进度 footer 删除可见标题文字，并让进度条向左贴近累计/目标数字。 */
 /* 更新时间: 2026-07-09 17:12:32 CST  更新内容: 年度目标进度条下方移除时间进度、线性进度差和后续月均需完成三项辅助数据。 */
 /* 更新时间: 2026-07-09 16:28:48 CST  更新内容: 经营总览回款数字按扣退款后净额展示，文案保留“回款”，月度和年度主卡右侧下角均显示退款金额。 */
@@ -162,6 +164,7 @@ function buildChannelStructure(rows) {
       share: safeRatioPercent(incompleteGap, Math.max(structureTotal, 1)),
       name: '未完成',
       isIncomplete: true,
+      swatch: INCOMPLETE_STRUCTURE_STYLE.swatch,
       itemStyle: {
         color: INCOMPLETE_STRUCTURE_STYLE.color,
         opacity: .34,
@@ -180,6 +183,7 @@ function buildChannelStructure(rows) {
         completion: row.completion,
         share: row.share,
         name: row.name,
+        swatch: row.swatch,
         itemStyle: row.itemStyle,
       })),
       ...(incompleteSlice ? [incompleteSlice] : []),
@@ -192,6 +196,7 @@ function buildChannelStructure(rows) {
       share: 0,
       name: '暂无回款',
       isEmpty: true,
+      swatch: INCOMPLETE_STRUCTURE_STYLE.swatch,
       itemStyle: {
         color: INCOMPLETE_STRUCTURE_STYLE.color,
         opacity: .42,
@@ -259,10 +264,14 @@ function channelStructureOption(structure, periodMeta, tokens) {
         const completion = Number(params.data?.completion ?? 0) || 0;
         const isIncomplete = Boolean(params.data?.isIncomplete);
         const valueLabel = isIncomplete ? '目标缺口' : periodMeta.recoveredLabel;
+        const swatch = params.data?.swatch ?? INCOMPLETE_STRUCTURE_STYLE.swatch;
 
         return `
-          <div class="op-channel-tooltip" aria-label="${params.name}${periodMeta.recoveredLabel}${value}万">
-            <div class="op-channel-tooltip__name">${periodMeta.chartName} · ${params.name}</div>
+          <div class="op-channel-tooltip" style="--op-channel-tooltip-accent: ${swatch};" aria-label="${params.name}${periodMeta.recoveredLabel}${value}万">
+            <div class="op-channel-tooltip__head">
+              <span class="op-channel-tooltip__marker"></span>
+              <div class="op-channel-tooltip__name">${periodMeta.chartName} · ${params.name}</div>
+            </div>
             <div class="op-channel-tooltip__value">${valueLabel} <strong>${formatWan(value)}</strong> 万</div>
             <div class="op-channel-tooltip__meta">图上占比 <strong>${share}%</strong> · 目标 ${formatWan(target)} 万 · 完成率 ${formatPct(completion)}</div>
           </div>
@@ -541,6 +550,18 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
                   {annualTargetStatusLabel} {formatWan(annualTargetStatusValue)}万
                 </span>
               </div>
+              <div
+                className="op-annual-progress-footer"
+                aria-label={`年度目标进度 ${formatWan(KPI.yearRecovered)} 万 / ${formatWan(KPI.yearTarget)} 万，完成率 ${formatPct(KPI_DERIVED.yearCompletion)}`}
+              >
+                <div className="op-annual-progress-main">
+                  <b>{formatWan(KPI.yearRecovered)}万 / {formatWan(KPI.yearTarget)}万</b>
+                  <div className="op-annual-progress-track">
+                    <span className="op-annual-fill" style={{ width: annualCapsuleWidth }} />
+                  </div>
+                  <strong>{formatPct(KPI_DERIVED.yearCompletion)}</strong>
+                </div>
+              </div>
             </div>
 
             <AnnualRecoveryStructure
@@ -553,18 +574,6 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
               subLabel="年度回款 / 年度目标"
             />
 
-            <div
-              className="op-annual-progress-footer"
-              aria-label={`年度目标进度 ${formatWan(KPI.yearRecovered)} 万 / ${formatWan(KPI.yearTarget)} 万，完成率 ${formatPct(KPI_DERIVED.yearCompletion)}`}
-            >
-              <div className="op-annual-progress-main">
-                <b>{formatWan(KPI.yearRecovered)}万 / {formatWan(KPI.yearTarget)}万</b>
-                <div className="op-annual-progress-track">
-                  <span className="op-annual-fill" style={{ width: annualCapsuleWidth }} />
-                </div>
-                <strong>{formatPct(KPI_DERIVED.yearCompletion)}</strong>
-              </div>
-            </div>
           </div>
         </section>
       </SearchResultBorder>

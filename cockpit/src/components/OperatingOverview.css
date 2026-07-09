@@ -1,4 +1,6 @@
+/* 更新时间: 2026-07-09 17:39:04 CST  更新内容: 年度目标进度条改为左侧事实区内联延展布局，取消 grid 位移以避免被卡片裁切。 */
 /* 更新时间: 2026-07-09 17:29:39 CST  更新内容: 年度目标进度 footer 移入年度卡主内容行并用位移真实上提，避免继续贴在卡片底部。 */
+/* 更新时间: 2026-07-09 17:28:41 CST  更新内容: 回款半环 tooltip 改为轻量深色玻璃卡，收薄黑底和阴影，并用左侧色带/色点关联当前扇区。 */
 /* 更新时间: 2026-07-09 17:19:28 CST  更新内容: 年度目标进度 footer 加大上移幅度，并收窄累计/目标数字与进度条之间的间距。 */
 /* 更新时间: 2026-07-09 17:16:09 CST  更新内容: 年度目标进度 footer 删除可见标题后改为三列布局，进度条左移并整体上移。 */
 /* 更新时间: 2026-07-09 17:12:32 CST  更新内容: 年度目标进度 footer 移除进度条下方三项辅助数据样式。 */
@@ -465,14 +467,12 @@
 }
 
 .op-annual-progress-footer {
-  grid-column: 1 / 3;
-  grid-row: 1;
+  width: min(calc(100% + clamp(248px, 26vw, 300px)), calc(100vw - 96px));
   display: grid;
   gap: 6px;
-  align-self: end;
-  margin-top: 0;
-  margin-right: calc(var(--op-grid-column-gap) * -1);
-  transform: translateY(clamp(-78px, -4.7vw, -52px));
+  align-self: start;
+  margin-top: clamp(3px, .45vw, 6px);
+  transform: none;
   z-index: 2;
 }
 
@@ -529,38 +529,55 @@
 }
 
 .op-channel-tooltip {
+  --op-channel-tooltip-accent: rgba(184, 156, 255, .72);
   position: relative;
   display: grid;
-  gap: 5px;
-  min-width: 184px;
-  padding: 12px 14px 11px;
+  gap: 6px;
+  min-width: 178px;
+  padding: 10px 12px 10px 14px;
   overflow: hidden;
   border: 1px solid var(--line-2);
-  border-radius: 8px;
-  background: rgba(5, 6, 9, .76);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(28, 29, 40, .72), rgba(13, 14, 21, .64)),
+    rgba(18, 19, 28, .62);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
-  box-shadow: 0 22px 70px rgba(0, 0, 0, .56), inset 0 1px 0 rgba(255, 255, 255, .16);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .14);
   text-align: left;
 }
 
-.op-channel-tooltip::after {
+.op-channel-tooltip::before {
   content: "";
   position: absolute;
-  top: -42%;
-  bottom: -42%;
-  left: -46%;
-  width: 42%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .12), transparent);
-  opacity: .34;
-  transform: translateX(-150%) rotate(18deg);
-  animation: opChannelTooltipSweep 2.8s linear infinite;
+  inset: 10px auto 10px 0;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--op-channel-tooltip-accent);
+  box-shadow: 0 0 12px var(--op-channel-tooltip-accent);
+  opacity: .9;
   pointer-events: none;
 }
 
 .op-channel-tooltip > * {
   position: relative;
   z-index: 1;
+}
+
+.op-channel-tooltip__head {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.op-channel-tooltip__marker {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--op-channel-tooltip-accent);
+  box-shadow: 0 0 11px var(--op-channel-tooltip-accent);
 }
 
 .op-channel-tooltip__name {
@@ -598,16 +615,6 @@
   font-weight: 900;
 }
 
-@keyframes opChannelTooltipSweep {
-  from {
-    transform: translateX(-150%) rotate(18deg);
-  }
-
-  to {
-    transform: translateX(260%) rotate(18deg);
-  }
-}
-
 @media (max-width: 1240px) {
   .op-month-grid,
   .op-annual-grid {
@@ -625,7 +632,7 @@
   }
 
   .op-annual-progress-footer {
-    margin-right: 0;
+    width: 100%;
   }
 
   .op-channel-list {
