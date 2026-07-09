@@ -1,5 +1,14 @@
 # 经营总览月度/年度回款主卡与回款结构
 
+更新时间: 2026-07-09 17:19:28 CST
+更新内容: 年度目标进度 footer 加大上移幅度，进度条更贴近左侧累计/目标数字。
+
+更新时间: 2026-07-09 17:16:09 CST
+更新内容: 年度目标进度 footer 删除可见的“年度目标进度”标题，进度条左移并整体上移。
+
+更新时间: 2026-07-09 17:12:32 CST
+更新内容: 年度目标进度条下方移除时间进度、线性进度差和后续月均需完成三项辅助数据，footer 只保留目标进度、累计/目标和完成率。
+
 更新时间: 2026-07-09 15:24:22 CST
 更新内容: 按反馈继续收窄月度与年度总览卡片高度，并进一步上拉年度目标进度条，保持其右边沿对齐年度经营情况列左边沿。
 
@@ -48,7 +57,7 @@
 - 左侧：年度累计回款大数字、年度目标、年目标完成率、剩余目标。
 - 中间：年度回款结构半环图，按年度实际回款拆分渠道占比。
 - 右侧：年度经营情况，展示各渠道年度回款、年度目标、完成率、缺口与风险标签。
-- 底部：年度目标进度 footer 只跨左侧大数字区和中间半环结构区，显示 `年度累计回款 / 年度目标`、进度条、完成率、时间进度、线性进度差和后续月均需完成金额。
+- 底部：年度目标进度 footer 只跨左侧大数字区和中间半环结构区，显示 `年度累计回款 / 年度目标`、进度条和完成率。
 
 年度右侧经营情况列独占第三列并跨越主内容与底部进度两行，年度进度 footer 不进入经营情况列，避免压缩或覆盖经营列表。
 
@@ -58,9 +67,9 @@
 
 ## 数据来源
 
-- 月度主卡继续读取 `KPI.monthRecovered`、`KPI.monthTarget`、`KPI_DERIVED.monthCompletion` 和 `getOperatingOverviewMetrics()`。
+- 月度主卡继续读取 `KPI.monthRecovered`、`KPI.monthTarget` 和 `KPI_DERIVED.monthCompletion`。
 - 渠道行数据继续使用前端统一方法 `getChannelCompletionRows('month')`。
-- 年度总览读取 `KPI.yearRecovered`、`KPI.yearTarget`、`KPI_DERIVED.yearCompletion`、`getOperatingOverviewMetrics()` 和 `getChannelCompletionRows('year')`。
+- 年度总览读取 `KPI.yearRecovered`、`KPI.yearTarget`、`KPI_DERIVED.yearCompletion` 和 `getChannelCompletionRows('year')`。
 - 渠道实际回款读取行内 `recovered`，目标回款读取行内 `target`，完成率读取行内 `completion`。
 - 渠道缺口 = `max(0, target - recovered)`。
 - 风险标签优先沿用渠道行 `warn` / `status` 结果；若渠道完成率低于当前整体完成基准，也标记为风险渠道。
@@ -103,8 +112,8 @@
 年度卡底部进度 footer 表达全年节奏：
 
 - 主进度 = `KPI.yearRecovered / KPI.yearTarget`，宽度上限为 100%。
-- 左侧文字展示 `年度目标进度` 和 `年度累计回款 / 年度目标`。
+- 左侧文字只展示 `年度累计回款 / 年度目标`，不再显示可见的 `年度目标进度` 标题。
 - 右侧展示年目标完成率。
-- 辅助行展示时间进度、相对线性进度的高于/低于 pp 值，以及 `remainingMonthlyRequired` 计算出的后续月均需完成金额。
+- 进度条下方不再展示时间进度、线性进度差或后续月均需完成金额，避免年度卡底部信息过密。
 
 该 footer 只跨年度卡前两列，不改变年度经营情况列的可用宽度。

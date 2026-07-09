@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-09 17:16:09 CST  更新内容: 年度目标进度 footer 删除可见标题文字，并让进度条向左贴近累计/目标数字。 */
+/* 更新时间: 2026-07-09 17:12:32 CST  更新内容: 年度目标进度条下方移除时间进度、线性进度差和后续月均需完成三项辅助数据。 */
 /* 更新时间: 2026-07-09 16:28:48 CST  更新内容: 经营总览回款数字按扣退款后净额展示，文案保留“回款”，月度和年度主卡右侧下角均显示退款金额。 */
 /* 更新时间: 2026-07-09 15:24:22 CST  更新内容: 配合经营总览分界线左移，半环中心点小幅右移并约束外部标签边距，避免年度结构左侧标签被裁切。 */
 /* 更新时间: 2026-07-09 15:24:00 CST  更新内容: 回款半环按当前 258px 图区换算为与版本情况约 248px 外径一致，radius 调整为 57%/96%，避免机械照抄百分比导致视觉过小。 */
@@ -43,7 +45,6 @@ import {
   KPI,
   KPI_DERIVED,
   getChannelCompletionRows,
-  getOperatingOverviewMetrics,
 } from '../data/mock';
 import { matchesSearchTerm } from '../lib/searchMatch';
 import { useThemeTokens } from '../lib/theme';
@@ -71,9 +72,6 @@ const ANNUAL_KEYWORDS = [
   '年度完成率',
   '年度目标进度',
   '剩余目标',
-  '时间进度',
-  '线性进度',
-  '后续月均需完成',
   '经营情况',
   '未完成',
   '风险',
@@ -120,10 +118,6 @@ function formatWan(value) {
 
 function formatPct(value) {
   return `${Number(value).toFixed(1)}%`;
-}
-
-function formatPp(value) {
-  return `${Math.abs(Number(value)).toFixed(1)}pp`;
 }
 
 function safeRatioPercent(value, total) {
@@ -457,7 +451,6 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
   const tokens = useThemeTokens();
   const progressTitle = `${META.monthLabel}经营进度`;
   const progressKeywords = [progressTitle, ...PROGRESS_KEYWORDS_BASE];
-  const overviewMetrics = getOperatingOverviewMetrics();
   const monthChannelRows = getChannelCompletionRows('month');
   const annualChannelRows = getChannelCompletionRows('year');
   const monthlyStructure = useMemo(() => buildChannelStructure(monthChannelRows), [monthChannelRows]);
@@ -470,8 +463,6 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
   const annualTargetStatusRisk = annualRemainingTarget > 0;
   const annualTargetStatusLabel = annualTargetStatusRisk ? '剩余目标' : '超额完成';
   const annualTargetStatusValue = annualTargetStatusRisk ? annualRemainingTarget : annualTargetOver;
-  const annualPaceDelta = +(KPI_DERIVED.yearCompletion - overviewMetrics.annualTimeProgress).toFixed(1);
-  const annualPaceLabel = `${annualPaceDelta < 0 ? '低于' : '高于'}线性进度 ${formatPp(annualPaceDelta)}`;
   const monthTargetGap = Math.max(0, KPI.monthTarget - KPI.monthRecovered);
   const monthTargetOver = Math.max(0, KPI.monthRecovered - KPI.monthTarget);
   const targetStatusRisk = monthTargetGap > 0;
@@ -564,22 +555,14 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
 
             <div
               className="op-annual-progress-footer"
-              aria-label={`年度目标进度 ${formatWan(KPI.yearRecovered)} 万 / ${formatWan(KPI.yearTarget)} 万，完成率 ${formatPct(KPI_DERIVED.yearCompletion)}，时间进度 ${formatPct(overviewMetrics.annualTimeProgress)}，${annualPaceLabel}`}
+              aria-label={`年度目标进度 ${formatWan(KPI.yearRecovered)} 万 / ${formatWan(KPI.yearTarget)} 万，完成率 ${formatPct(KPI_DERIVED.yearCompletion)}`}
             >
               <div className="op-annual-progress-main">
-                <span>年度目标进度</span>
                 <b>{formatWan(KPI.yearRecovered)}万 / {formatWan(KPI.yearTarget)}万</b>
                 <div className="op-annual-progress-track">
                   <span className="op-annual-fill" style={{ width: annualCapsuleWidth }} />
                 </div>
                 <strong>{formatPct(KPI_DERIVED.yearCompletion)}</strong>
-              </div>
-              <div className="op-annual-progress-meta">
-                <span>时间进度 {formatPct(overviewMetrics.annualTimeProgress)}</span>
-                <span className={annualPaceDelta < 0 ? 'op-annual-progress-meta--risk' : 'op-annual-progress-meta--ahead'}>
-                  {annualPaceLabel}
-                </span>
-                <span>后续月均需完成 {formatWan(overviewMetrics.remainingMonthlyRequired)}万</span>
               </div>
             </div>
           </div>
