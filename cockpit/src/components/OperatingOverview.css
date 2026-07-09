@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 14:55:00 CST  更新内容: 回款半环继续缩小并瘦身——图区高度月度370→280、年度378→288、窄屏362→272；图表列最小宽度月度350→300/年度360→310，配合 radius 62/88%(环变薄) 使饼图直径≈246px 且去下方空荡。 */
 /* 更新时间: 2026-07-09 14:50:00 CST  更新内容: 回款半环回调合理尺寸(上一版430px太大)——图区高度月度430→370、年度438→378、窄屏420→362；图表列最小宽度月度400→350/年度410→360，配合 radius 58/92% 使饼图直径≈322px。 */
 /* 更新时间: 2026-07-09 14:35:00 CST  更新内容: 按截图红框目标放大回款半环——图区高度月度320→430、年度328→438、窄屏316→420；图表列最小宽度月度→400/年度→410 并提升 fr 占比，配合 radius 60/96% 使半环接近红框尺寸且保持正圆。 */
 /* 更新时间: 2026-07-09 14:20:00 CST  更新内容: 配合半环几何修复(radius/center)，图区高度月度 300→320px、年度 308→328px、窄屏 296→316px。 */
@@ -169,7 +170,7 @@
 
 .op-month-grid {
   display: grid;
-  grid-template-columns: minmax(200px, .64fr) minmax(350px, 1.12fr) minmax(310px, 1.08fr);
+  grid-template-columns: minmax(200px, .68fr) minmax(300px, 1.06fr) minmax(310px, 1.1fr);
   align-items: stretch;
   gap: clamp(10px, 1.35vw, 18px);
   border-top: 1px solid rgba(255,255,255,.035);
@@ -179,7 +180,7 @@
 
 .op-annual-grid {
   display: grid;
-  grid-template-columns: minmax(200px, .62fr) minmax(360px, 1.14fr) minmax(320px, 1.08fr);
+  grid-template-columns: minmax(200px, .66fr) minmax(310px, 1.08fr) minmax(320px, 1.1fr);
   align-items: stretch;
   gap: clamp(10px, 1.35vw, 18px);
   border-top: 1px solid rgba(255,255,255,.035);
@@ -262,7 +263,7 @@
 .op-recovery-structure {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto 370px;
+  grid-template-rows: auto 280px;
   align-content: center;
   gap: 2px;
   padding-inline: clamp(4px, .65vw, 10px);
@@ -287,7 +288,7 @@
 .op-channel-chart-wrap {
   position: relative;
   min-width: 0;
-  height: 370px;
+  height: 280px;
   min-height: 0;
   display: grid;
   place-items: center;
@@ -415,11 +416,11 @@
 }
 
 .op-annual-grid .op-recovery-structure {
-  grid-template-rows: auto 378px;
+  grid-template-rows: auto 288px;
 }
 
 .op-annual-grid .op-channel-chart-wrap {
-  height: 378px;
+  height: 288px;
 }
 
 .op-annual-grid .op-operating-side {
@@ -645,7 +646,7 @@
   }
 
   .op-channel-chart-wrap {
-    height: 362px;
+    height: 272px;
   }
 
   .op-channel-chart {
