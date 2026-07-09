@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 13:14:23 CST
+ 更新内容: 搜索关键词回归同步点击查看入口和半环未完成占位。
+*/
+/*
  更新时间: 2026-07-09 12:19:47 CST
  更新内容: 搜索关键词回归同步年度回款总览卡和底部年度目标进度 footer 文案。
 */
@@ -151,8 +155,10 @@ test('adds fused operating overview section text to KPI search keywords', () => 
   const annual = byKey(cards, 'year');
 
   assert.ok(month.keywords.includes('2026年6月经营进度'));
-  assert.ok(month.keywords.includes('查看近期明细'));
+  assert.ok(month.keywords.includes('点击查看近期明细'));
   assert.ok(month.keywords.includes('风险'));
+  assert.ok(month.keywords.includes('未完成'));
+  assert.ok(!month.keywords.includes('查看近期明细'));
   assert.ok(!month.keywords.includes('风险渠道'));
   assert.ok(month.keywords.includes('完成率 70%'));
   assert.ok(month.keywords.includes('本月回款结构'));
@@ -170,8 +176,10 @@ test('adds fused operating overview section text to KPI search keywords', () => 
   assert.ok(annual.keywords.includes('年度完成率'));
   assert.ok(annual.keywords.includes('年目标完成率'));
   assert.ok(annual.keywords.includes('剩余目标'));
-  assert.ok(annual.keywords.includes('查看年度拆解'));
+  assert.ok(annual.keywords.includes('点击查看年度拆解'));
   assert.ok(annual.keywords.includes('年度目标进度'));
+  assert.ok(annual.keywords.includes('未完成'));
+  assert.ok(!annual.keywords.includes('查看年度拆解'));
   assert.ok(annual.keywords.includes('时间进度 50.0%'));
   assert.ok(annual.keywords.includes('高于线性进度 3.8pp'));
   assert.ok(annual.keywords.includes('后续月均需完成 447万'));

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 13:14:23 CST  更新内容: 月度/年度半环放大并恢复未完成扇区，年度进度条改为只跨左两列，明细入口改为文字箭头链接。 */
 /* 更新时间: 2026-07-09 12:19:47 CST  更新内容: 年度回款卡改为三栏总览布局，并新增不挤占经营列表的薄年度进度 footer。 */
 /* 更新时间: 2026-07-09 12:12:08 CST  更新内容: 半环去掉中心数字后继续收窄图表列，并固定图表高度避免撑高主卡。 */
 /* 更新时间: 2026-07-09 12:02:57 CST  更新内容: 超额/缺口状态移入本月回款事实胶囊，删除右侧独立提醒卡样式。 */
@@ -122,41 +123,50 @@
   line-height: 1.18;
 }
 
-.op-detail-button {
+.op-detail-link {
   flex: none;
-  min-width: 104px;
-  padding: 9px 13px;
-  border-radius: 999px;
-  border: 1px solid var(--line-2);
-  background: var(--ai-chip-bg);
-  color: rgba(247,248,252,.82);
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: -8px -10px 0 0;
+  padding: 10px;
+  border: 0;
+  background: transparent;
+  color: rgba(247,248,252,.72);
   font: inherit;
   font-size: 13px;
-  font-weight: 720;
+  font-weight: 760;
   line-height: 1;
   cursor: pointer;
-  transition: border-color .2s ease, background .2s ease, color .2s ease, transform .2s ease;
+  transition: color .2s ease, transform .2s ease;
 }
 
-.op-detail-button:hover:not(:disabled),
-.op-detail-button:focus-visible:not(:disabled) {
-  border-color: rgba(255,255,255,.28);
-  background: var(--ai-chip-hover);
+.op-detail-link:hover:not(:disabled),
+.op-detail-link:focus-visible:not(:disabled) {
   color: var(--txt);
   outline: none;
   transform: translateY(-1px);
 }
 
-.op-detail-button:disabled {
+.op-detail-link:disabled {
   opacity: .42;
   cursor: not-allowed;
 }
 
+.op-detail-link-arrow {
+  color: rgba(228,184,215,.82);
+  font-size: 17px;
+  font-weight: 780;
+  line-height: .8;
+  transform: translateY(-.5px);
+}
+
 .op-month-grid {
   display: grid;
-  grid-template-columns: minmax(220px, .92fr) minmax(190px, .64fr) minmax(330px, 1.22fr);
+  grid-template-columns: minmax(200px, .78fr) minmax(250px, .92fr) minmax(330px, 1.22fr);
   align-items: stretch;
-  gap: clamp(12px, 1.55vw, 22px);
+  gap: clamp(10px, 1.35vw, 18px);
   border-top: 1px solid rgba(255,255,255,.035);
   border-bottom: 1px solid rgba(255,255,255,.035);
   padding: clamp(10px, 1.25vw, 15px) 0;
@@ -164,9 +174,9 @@
 
 .op-annual-grid {
   display: grid;
-  grid-template-columns: minmax(220px, .9fr) minmax(200px, .68fr) minmax(330px, 1.24fr);
+  grid-template-columns: minmax(200px, .76fr) minmax(260px, .94fr) minmax(340px, 1.22fr);
   align-items: stretch;
-  gap: clamp(12px, 1.55vw, 22px);
+  gap: clamp(10px, 1.35vw, 18px);
   border-top: 1px solid rgba(255,255,255,.035);
   border-bottom: 1px solid rgba(255,255,255,.035);
   padding: clamp(10px, 1.25vw, 15px) 0;
@@ -247,10 +257,10 @@
 .op-recovery-structure {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto 154px;
+  grid-template-rows: auto 186px;
   align-content: center;
   gap: 2px;
-  padding-inline: clamp(6px, .8vw, 14px);
+  padding-inline: clamp(4px, .65vw, 10px);
   border-left: 1px solid rgba(255,255,255,.035);
   border-right: 1px solid rgba(255,255,255,.035);
 }
@@ -272,7 +282,7 @@
 .op-channel-chart-wrap {
   position: relative;
   min-width: 0;
-  height: 154px;
+  height: 186px;
   min-height: 0;
   display: grid;
   place-items: center;
@@ -400,11 +410,16 @@
 }
 
 .op-annual-grid .op-recovery-structure {
-  grid-template-rows: auto 170px;
+  grid-template-rows: auto 202px;
 }
 
 .op-annual-grid .op-channel-chart-wrap {
-  height: 170px;
+  height: 202px;
+}
+
+.op-annual-grid .op-operating-side {
+  grid-column: 3;
+  grid-row: 1 / span 2;
 }
 
 .op-annual-grid .op-channel-item {
@@ -413,16 +428,19 @@
 }
 
 .op-annual-progress-footer {
+  grid-column: 1 / 3;
+  grid-row: 2;
   display: grid;
   gap: 6px;
-  margin-top: -2px;
+  align-self: end;
+  margin-top: -4px;
 }
 
 .op-annual-progress-main {
   min-width: 0;
   min-height: 38px;
   display: grid;
-  grid-template-columns: auto auto minmax(160px, 1fr) auto;
+  grid-template-columns: auto auto minmax(120px, 1fr) auto;
   align-items: center;
   gap: 10px;
   padding: 7px 10px;
@@ -582,11 +600,17 @@
 @media (max-width: 1240px) {
   .op-month-grid,
   .op-annual-grid {
-    grid-template-columns: minmax(220px, .9fr) minmax(210px, .72fr);
+    grid-template-columns: minmax(200px, .82fr) minmax(240px, .9fr);
   }
 
   .op-operating-side {
     grid-column: 1 / -1;
+  }
+
+  .op-annual-grid .op-operating-side,
+  .op-annual-progress-footer {
+    grid-column: 1 / -1;
+    grid-row: auto;
   }
 
   .op-channel-list {
@@ -616,7 +640,7 @@
   }
 
   .op-channel-chart-wrap {
-    height: 182px;
+    height: 198px;
   }
 
   .op-channel-chart {
