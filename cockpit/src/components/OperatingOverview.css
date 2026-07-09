@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 14:20:00 CST  更新内容: 配合半环几何修复(radius/center)，图区高度月度 300→320px、年度 308→328px、窄屏 296→316px。 */
 /* 更新时间: 2026-07-09 14:05:00 CST  更新内容: 年度/月度回款结构半环饼图继续放大——月度图区高度 232→300px、年度 248→308px、窄屏 240→296px，并加宽图表列最小宽度至 320/330px，整体接近但仍略小于版本情况饼图(min-height 326px)。 */
 /* 更新时间: 2026-07-09 13:55:00 CST  更新内容: 年度/月度回款结构半环饼图放大——月度图区高度 186→232px、年度 202→248px，并加宽图表列占比与最小宽度，使饼图横向纵向同步变大。 */
 /* 更新时间: 2026-07-09 13:14:23 CST  更新内容: 月度/年度半环放大并恢复未完成扇区，年度进度条改为只跨左两列，明细入口改为文字箭头链接。 */
@@ -259,7 +260,7 @@
 .op-recovery-structure {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto 300px;
+  grid-template-rows: auto 320px;
   align-content: center;
   gap: 2px;
   padding-inline: clamp(4px, .65vw, 10px);
@@ -284,7 +285,7 @@
 .op-channel-chart-wrap {
   position: relative;
   min-width: 0;
-  height: 300px;
+  height: 320px;
   min-height: 0;
   display: grid;
   place-items: center;
@@ -412,11 +413,11 @@
 }
 
 .op-annual-grid .op-recovery-structure {
-  grid-template-rows: auto 308px;
+  grid-template-rows: auto 328px;
 }
 
 .op-annual-grid .op-channel-chart-wrap {
-  height: 308px;
+  height: 328px;
 }
 
 .op-annual-grid .op-operating-side {
@@ -642,7 +643,7 @@
   }
 
   .op-channel-chart-wrap {
-    height: 296px;
+    height: 316px;
   }
 
   .op-channel-chart {
