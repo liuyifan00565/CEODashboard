@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-09 16:20:00 CST
+ Update content: Cover cost maintenance saving refund_amount_yuan.
+*/
+/*
  更新时间: 2026-07-08 19:12:00 CST
  更新内容: 单测覆盖渠道维护删除渠道大类时停用 dim_channel 并排除解绑来源。
 */
@@ -113,8 +117,9 @@ test('saveCost: 按 (year_month, channel_id) upsert investment_amount_yuan', asy
   const r = await saveCost(conn, [{ channel_id: 3001, year_month: '2026-03', investment_amount_wan: 50 }]);
   assert.equal(r.written, 1);
   const update = execs.find((e) => e.sql.startsWith('UPDATE'));
-  assert.match(update.sql, /SET investment_amount_yuan = /);
+  assert.match(update.sql, /SET investment_amount_yuan = \?, refund_amount_yuan = \?/);
   assert.equal(update.params[0], 500000);
+  assert.equal(update.params[1], 0);
 });
 
 test('saveCost: 新增渠道后映射临时 channel_id 再写成本', async () => {
@@ -126,7 +131,7 @@ test('saveCost: 新增渠道后映射临时 channel_id 再写成本', async () =
   });
   const r = await saveCost(
     conn,
-    [{ channel_id: 'new-channel-5', year_month: '2026-03', investment_amount_wan: 12 }],
+    [{ channel_id: 'new-channel-5', year_month: '2026-03', investment_amount_wan: 12, refund_amount_wan: 2 }],
     [{ channel_id: 'new-channel-5', channel_name: '新增渠道 5', parent_id: '', is_enabled: 1 }],
   );
   assert.equal(r.written, 2);
@@ -135,7 +140,7 @@ test('saveCost: 新增渠道后映射临时 channel_id 再写成本', async () =
   assert.equal(channelInsert.params[0], 3100);
   const costInsert = execs.find((e) => e.sql.startsWith('INSERT INTO biz_channel_cost_monthly'));
   assert.ok(costInsert);
-  assert.deepEqual(costInsert.params, [5100, '2026-03', 3100, 120000]);
+  assert.deepEqual(costInsert.params, [5100, '2026-03', 3100, 120000, 20000]);
 });
 
 test('saveCost: 删除渠道会停用渠道并清理当前年份成本', async () => {

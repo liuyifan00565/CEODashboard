@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-09 16:20:00 CST
+ Update content: Cost maintenance reads refund_amount_yuan from biz_channel_cost_monthly and auto-adds the column when old databases lack it.
+*/
+/*
  更新时间: 2026-07-08 19:12:00 CST
  更新内容: 渠道维护读取只展示启用渠道大类，配合渠道大类删除后的回拉隐藏。
 */
@@ -56,13 +60,24 @@ async function readTarget(connection, year) {
 }
 
 async function readCost(connection, year) {
+  await ensureChannelCostRefundColumn(connection);
   const [channels, costs, revenue, labor] = await Promise.all([
     queryRows(connection, 'SELECT channel_id, channel_name, parent_id, is_enabled FROM dim_channel WHERE is_enabled = 1'),
-    queryRows(connection, 'SELECT `year_month`, channel_id, investment_amount_yuan FROM biz_channel_cost_monthly WHERE `year_month` LIKE ?', [`${year}-%`]),
+    queryRows(connection, 'SELECT `year_month`, channel_id, investment_amount_yuan, refund_amount_yuan FROM biz_channel_cost_monthly WHERE `year_month` LIKE ?', [`${year}-%`]),
     queryRows(connection, "SELECT DATE_FORMAT(stat_date, '%Y-%m') AS ym, channel_id, SUM(recovered_amount_yuan) AS amt, SUM(order_count) AS deals FROM fact_revenue_daily WHERE stat_date BETWEEN ? AND ? GROUP BY channel_id, ym", [`${year}-01-01`, `${year}-12-31`]),
     queryRows(connection, 'SELECT `year_month`, cost_type, amount_yuan FROM biz_labor_cost_monthly WHERE `year_month` LIKE ?', [`${year}-%`]),
   ]);
   return buildCostSnapshot({ channels, costs, revenue, labor });
+}
+
+async function ensureChannelCostRefundColumn(connection) {
+  const rows = await queryRows(
+    connection,
+    "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'biz_channel_cost_monthly' AND COLUMN_NAME = 'refund_amount_yuan'",
+  );
+  if (!rows.length) {
+    await connection.execute('ALTER TABLE biz_channel_cost_monthly ADD COLUMN refund_amount_yuan DECIMAL(14,2) NOT NULL DEFAULT 0 COMMENT \'refund amount for cost maintenance\' AFTER investment_amount_yuan');
+  }
 }
 
 async function readOrg(connection) {

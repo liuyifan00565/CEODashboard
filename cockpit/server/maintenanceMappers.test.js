@@ -1,3 +1,7 @@
+/*
+ Update time: 2026-07-09 16:20:00 CST
+ Update content: Cover cost maintenance refund amount mapping and rollup.
+*/
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
@@ -97,7 +101,7 @@ test('buildCostSnapshot builds channel rows, summary, roi, and labor rows', () =
     { channel_id: 3001, channel_name: '线上', parent_id: null, is_enabled: 1 },
     { channel_id: 3002, channel_name: '华南线下', parent_id: null, is_enabled: 1 },
   ];
-  const costs = [{ year_month: '2026-01', channel_id: 3001, investment_amount_yuan: 500000 }];
+  const costs = [{ year_month: '2026-01', channel_id: 3001, investment_amount_yuan: 500000, refund_amount_yuan: 120000 }];
   const revenue = [{ ym: '2026-01', channel_id: 3001, amt: 750000, deals: 5 }];
   const labor = [
     { year_month: '2026-01', cost_type: 'sales', amount_yuan: 530000 },
@@ -114,11 +118,13 @@ test('buildCostSnapshot builds channel rows, summary, roi, and labor rows', () =
   assert.equal(ch.periods.m01.cost, 50);
   assert.equal(ch.periods.m01.actual, 75);
   assert.equal(ch.periods.m01.deals, 5);
+  assert.equal(ch.periods.m01.refund, 12);
   assert.equal(ch.periods.m01.roi, 0.5);
 
   const all = rows.find((r) => r.id === 'summary-all');
   assert.equal(all.type, 'group');
   assert.equal(all.periods.m01.cost, 50);
+  assert.equal(all.periods.m01.refund, 12);
 
   assert.equal(laborRows.length, 2);
   assert.equal(laborRows.find((l) => l.id === 'labor-sales').name, '销售部人力成本');

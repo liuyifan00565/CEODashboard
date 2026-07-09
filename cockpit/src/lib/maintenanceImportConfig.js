@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-09 16:20:00 CST
+ Update content: Cost maintenance import template adds refund_amount_yuan for channel refund amount in wan.
+*/
+/*
  更新时间: 2026-07-08 13:05:31 CST
  更新内容: 目标维护导入备注补充陌生员工确认新增规则：人员不存在时先询问，确认后新增为所属组织的启用销售员工。
 */
@@ -104,6 +108,7 @@ export const MAINTENANCE_IMPORT_CONFIG = {
       { field: 'channel_name', header: '渠道名称', aliases: ['渠道'], required: true, type: 'string', description: '对应 dim_channel.channel_name' },
       { field: 'cost_month', header: '成本月份', aliases: ['月份'], required: true, type: 'month', description: 'YYYY-MM，对应 biz_channel_cost_monthly.cost_month' },
       { field: 'investment_amount_yuan', header: '投入成本(万)', aliases: ['投入成本', '成本', '投放成本', '投入成本(元)'], required: true, type: 'number', min: 0, description: '维护页以万为单位录入，写库时×10000转元，对应 biz_channel_cost_monthly.investment_amount_yuan' },
+      { field: 'refund_amount_yuan', header: '退款金额(万)', aliases: ['退款金额', '退款', '退款金额(元)'], required: false, type: 'number', min: 0, description: '维护页以万为单位录入，写库时×10000转元，对应 biz_channel_cost_monthly.refund_amount_yuan' },
     ],
     uniqueKey: ['channel_name', 'cost_month'],
     notes: '待业务确认：人力成本 biz_labor_cost_monthly 需单独导入时，在此新增一条 pageKey（如 labor-cost-maintenance）并挂独立按钮。',

@@ -1,3 +1,7 @@
+/*
+ Update time: 2026-07-09 16:20:00 CST
+ Update content: Add channel refund amount to cost maintenance periods so four channels can maintain monthly refunds alongside investment.
+*/
 const QUARTER_MONTHS = { q1: ['m01', 'm02', 'm03'], q2: ['m04', 'm05', 'm06'], q3: ['m07', 'm08', 'm09'], q4: ['m10', 'm11', 'm12'] };
 const ALL_MONTH_KEYS = ['m01', 'm02', 'm03', 'm04', 'm05', 'm06', 'm07', 'm08', 'm09', 'm10', 'm11', 'm12'];
 
@@ -24,12 +28,13 @@ function targetPeriod(target, actual) {
   return { target: t, actual: a, pct, status: maintenanceStatus(pct, t) };
 }
 
-function costPeriod(cost, actual, deals) {
+function costPeriod(cost, actual, deals, refund) {
   const c = Math.round(Number(cost || 0) * 100) / 100;
   const a = Math.round(Number(actual || 0) * 100) / 100;
   const d = Math.round(Number(deals || 0));
+  const r = Math.round(Number(refund || 0) * 100) / 100;
   const roi = c ? Math.round(((a - c) / c) * 100) / 100 : 0;
-  return { cost: c, actual: a, deals: d, roi };
+  return { cost: c, actual: a, deals: d, refund: r, roi };
 }
 
 function laborPeriod(cost) {
@@ -52,21 +57,23 @@ function buildTargetPeriods(monthTarget, monthActual) {
   return periods;
 }
 
-function buildCostPeriods(monthCost, monthActual, monthDeals) {
+function buildCostPeriods(monthCost, monthActual, monthDeals, monthRefund = []) {
   const periods = {};
   ALL_MONTH_KEYS.forEach((k, i) => {
-    periods[k] = costPeriod(monthCost[i], monthActual[i], monthDeals[i]);
+    periods[k] = costPeriod(monthCost[i], monthActual[i], monthDeals[i], monthRefund[i]);
   });
   Object.entries(QUARTER_MONTHS).forEach(([q, keys]) => {
     const c = keys.reduce((s, k) => s + (periods[k].cost || 0), 0);
     const a = keys.reduce((s, k) => s + (periods[k].actual || 0), 0);
     const d = keys.reduce((s, k) => s + (periods[k].deals || 0), 0);
-    periods[q] = costPeriod(c, a, d);
+    const r = keys.reduce((s, k) => s + (periods[k].refund || 0), 0);
+    periods[q] = costPeriod(c, a, d, r);
   });
   const cYear = ALL_MONTH_KEYS.reduce((s, k) => s + (periods[k].cost || 0), 0);
   const aYear = ALL_MONTH_KEYS.reduce((s, k) => s + (periods[k].actual || 0), 0);
   const dYear = ALL_MONTH_KEYS.reduce((s, k) => s + (periods[k].deals || 0), 0);
-  periods.year = costPeriod(cYear, aYear, dYear);
+  const rYear = ALL_MONTH_KEYS.reduce((s, k) => s + (periods[k].refund || 0), 0);
+  periods.year = costPeriod(cYear, aYear, dYear, rYear);
   return periods;
 }
 
@@ -246,11 +253,14 @@ const DEFAULT_LABOR_TYPES = ['sales', 'marketing'];
 
 export function buildCostSnapshot({ channels = [], costs = [], revenue = [], labor = [] } = {}) {
   const costByChannel = new Map();
+  const refundByChannel = new Map();
   costs.forEach((c) => {
     const mk = monthKeyFromYM(c.year_month);
     if (!ALL_MONTH_KEYS.includes(mk)) return;
     if (!costByChannel.has(c.channel_id)) costByChannel.set(c.channel_id, {});
+    if (!refundByChannel.has(c.channel_id)) refundByChannel.set(c.channel_id, {});
     costByChannel.get(c.channel_id)[mk] = roundWan(c.investment_amount_yuan);
+    refundByChannel.get(c.channel_id)[mk] = roundWan(c.refund_amount_yuan);
   });
   const actualByChannel = new Map();
   const dealsByChannel = new Map();
@@ -265,12 +275,14 @@ export function buildCostSnapshot({ channels = [], costs = [], revenue = [], lab
 
   const rows = [];
   const allCost = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (costByChannel.get(c.channel_id)?.[mk] || 0), 0));
+  const allRefund = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (refundByChannel.get(c.channel_id)?.[mk] || 0), 0));
   const allActual = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (actualByChannel.get(c.channel_id)?.[mk] || 0), 0));
   const allDeals = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (dealsByChannel.get(c.channel_id)?.[mk] || 0), 0));
-  rows.push({ id: 'summary-all', type: 'group', name: '全部渠道', periods: buildCostPeriods(allCost, allActual, allDeals) });
+  rows.push({ id: 'summary-all', type: 'group', name: '全部渠道', periods: buildCostPeriods(allCost, allActual, allDeals, allRefund) });
 
   channels.forEach((c) => {
     const cb = costByChannel.get(c.channel_id) || {};
+    const rb = refundByChannel.get(c.channel_id) || {};
     const ab = actualByChannel.get(c.channel_id) || {};
     const db = dealsByChannel.get(c.channel_id) || {};
     rows.push({
@@ -282,6 +294,7 @@ export function buildCostSnapshot({ channels = [], costs = [], revenue = [], lab
         ALL_MONTH_KEYS.map((mk) => cb[mk] || 0),
         ALL_MONTH_KEYS.map((mk) => ab[mk] || 0),
         ALL_MONTH_KEYS.map((mk) => db[mk] || 0),
+        ALL_MONTH_KEYS.map((mk) => rb[mk] || 0),
       ),
     });
   });

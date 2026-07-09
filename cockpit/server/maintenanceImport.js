@@ -1,3 +1,7 @@
+/*
+ Update time: 2026-07-09 16:20:00 CST
+ Update content: Cost maintenance Excel import supports refund_amount_yuan and ensures the channel cost refund column exists.
+*/
 import { getImportConfig } from '../src/lib/maintenanceImportConfig.js';
 import { mapAndValidate } from '../src/lib/excelImport.js';
 import { createDbConnection, queryRows, nextId } from './db.js';
@@ -172,7 +176,18 @@ export async function persistActual(connection, rows) {
   return { written, skipped, errors };
 }
 
+async function ensureChannelCostRefundColumn(connection) {
+  const rows = await queryRows(
+    connection,
+    "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'biz_channel_cost_monthly' AND COLUMN_NAME = 'refund_amount_yuan'",
+  );
+  if (!rows.length) {
+    await connection.execute('ALTER TABLE biz_channel_cost_monthly ADD COLUMN refund_amount_yuan DECIMAL(14,2) NOT NULL DEFAULT 0 COMMENT \'refund amount for cost maintenance\' AFTER investment_amount_yuan');
+  }
+}
+
 async function persistCost(connection, rows) {
+  await ensureChannelCostRefundColumn(connection);
   let written = 0;
   let skipped = 0;
   const errors = [];
@@ -184,12 +199,13 @@ async function persistCost(connection, rows) {
       continue;
     }
     const amountYuan = WAN_TO_YUAN(row.investment_amount_yuan);
+    const refundYuan = WAN_TO_YUAN(row.refund_amount_yuan);
     const existing = await queryRows(connection, 'SELECT cost_id FROM biz_channel_cost_monthly WHERE `year_month` = ? AND channel_id = ?', [row.cost_month, channelId]);
     if (existing[0]?.cost_id) {
-      await connection.execute('UPDATE biz_channel_cost_monthly SET investment_amount_yuan = ? WHERE cost_id = ?', [amountYuan, existing[0].cost_id]);
+      await connection.execute('UPDATE biz_channel_cost_monthly SET investment_amount_yuan = ?, refund_amount_yuan = ? WHERE cost_id = ?', [amountYuan, refundYuan, existing[0].cost_id]);
     } else {
       const id = await nextId(connection, 'biz_channel_cost_monthly', 'cost_id');
-      await connection.execute('INSERT INTO biz_channel_cost_monthly (cost_id, `year_month`, channel_id, investment_amount_yuan) VALUES (?, ?, ?, ?)', [id, row.cost_month, channelId, amountYuan]);
+      await connection.execute('INSERT INTO biz_channel_cost_monthly (cost_id, `year_month`, channel_id, investment_amount_yuan, refund_amount_yuan) VALUES (?, ?, ?, ?, ?)', [id, row.cost_month, channelId, amountYuan, refundYuan]);
     }
     written += 1;
   }

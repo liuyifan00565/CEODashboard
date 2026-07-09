@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-09 16:20:00 CST
+ Update content: Cost maintenance save now persists refund_amount_yuan with channel investment and ensures the refund column exists.
+*/
+/*
  更新时间: 2026-07-08 19:12:00 CST
  更新内容: 渠道维护保存支持渠道大类删除列表，软删除 dim_channel 并兜底排除其来源。
 */
@@ -160,8 +164,19 @@ async function deleteCostChannels(connection, deletions = [], year) {
 }
 
 /** 成本维护：可先新增 dim_channel，再按 (year_month, channel_id) upsert biz_channel_cost_monthly，最后处理渠道删除。 */
+async function ensureChannelCostRefundColumn(connection) {
+  const rows = await queryRows(
+    connection,
+    "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'biz_channel_cost_monthly' AND COLUMN_NAME = 'refund_amount_yuan'",
+  );
+  if (!rows.length) {
+    await connection.execute('ALTER TABLE biz_channel_cost_monthly ADD COLUMN refund_amount_yuan DECIMAL(14,2) NOT NULL DEFAULT 0 COMMENT \'refund amount for cost maintenance\' AFTER investment_amount_yuan');
+  }
+}
+
 export async function saveCost(connection, rows, groups = [], deletions = [], year) {
   const errors = [];
+  await ensureChannelCostRefundColumn(connection);
   const channelRes = await saveNewChannelGroups(connection, groups, errors);
   let written = channelRes.written;
   let skipped = channelRes.skipped;
@@ -178,12 +193,13 @@ export async function saveCost(connection, rows, groups = [], deletions = [], ye
       continue;
     }
     const amountYuan = WAN_TO_YUAN(row.investment_amount_wan);
+    const refundYuan = WAN_TO_YUAN(row.refund_amount_wan);
     const existing = await queryRows(connection, 'SELECT cost_id FROM biz_channel_cost_monthly WHERE `year_month` = ? AND channel_id = ?', [yearMonth, channelId]);
     if (existing[0]?.cost_id) {
-      await connection.execute('UPDATE biz_channel_cost_monthly SET investment_amount_yuan = ? WHERE cost_id = ?', [amountYuan, existing[0].cost_id]);
+      await connection.execute('UPDATE biz_channel_cost_monthly SET investment_amount_yuan = ?, refund_amount_yuan = ? WHERE cost_id = ?', [amountYuan, refundYuan, existing[0].cost_id]);
     } else {
       const id = await nextId(connection, 'biz_channel_cost_monthly', 'cost_id');
-      await connection.execute('INSERT INTO biz_channel_cost_monthly (cost_id, `year_month`, channel_id, investment_amount_yuan) VALUES (?, ?, ?, ?)', [id, yearMonth, channelId, amountYuan]);
+      await connection.execute('INSERT INTO biz_channel_cost_monthly (cost_id, `year_month`, channel_id, investment_amount_yuan, refund_amount_yuan) VALUES (?, ?, ?, ?, ?)', [id, yearMonth, channelId, amountYuan, refundYuan]);
     }
     written += 1;
   }

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-09 16:20:00 CST
+ Update content: Cost maintenance save builder supports separate channel investment and refund amount draft fields.
+*/
+/*
  更新时间: 2026-07-08 18:45:00 CST
  更新内容: 成本维护新增渠道时保留 new-channel 临时 ID 成本行，供后端落库后映射真实 channel_id。
 */
@@ -28,6 +32,15 @@ function splitDraftKey(key) {
   const sep = String(key || '').indexOf('|');
   if (sep < 0) return { rowId: '', field: '' };
   return { rowId: String(key).slice(0, sep), field: String(key).slice(sep + 1) };
+}
+
+function splitCostDraftKey(key) {
+  const parts = String(key || '').split('|');
+  return {
+    rowId: parts[0] || '',
+    monthKey: parts[1] || '',
+    valueField: parts[2] || 'cost',
+  };
 }
 
 /**
@@ -73,10 +86,10 @@ export function buildCostSaveRows(snapshot, draft, year) {
   );
   const laborMap = new Map(laborRows.filter((r) => r && r.id).map((r) => [r.id, r]));
 
-  const costRows = [];
+  const costRowsByKey = new Map();
   const laborOut = [];
   for (const [key, value] of Object.entries(draft || {})) {
-    const { rowId, field: monthKey } = splitDraftKey(key);
+    const { rowId, monthKey, valueField } = splitCostDraftKey(key);
     const mm = monthKeyToMM(monthKey);
     if (!mm) continue;
     const yearMonth = `${year}-${mm}`;
@@ -91,15 +104,23 @@ export function buildCostSaveRows(snapshot, draft, year) {
     } else {
       const chRow = channelRows.get(rowId);
       if (!chRow) continue;
-      costRows.push({
+      const mapKey = `${rowId}|${yearMonth}`;
+      const existing = costRowsByKey.get(mapKey) || {
         channel_id: rowId,
         channel_name: chRow.name,
         year_month: yearMonth,
-        investment_amount_wan: Number(value) || 0,
-      });
+        investment_amount_wan: Number(chRow.periods?.[monthKey]?.cost) || 0,
+        refund_amount_wan: Number(chRow.periods?.[monthKey]?.refund) || 0,
+      };
+      if (valueField === 'refund') {
+        existing.refund_amount_wan = Number(value) || 0;
+      } else {
+        existing.investment_amount_wan = Number(value) || 0;
+      }
+      costRowsByKey.set(mapKey, existing);
     }
   }
-  return { rows: costRows, laborRows: laborOut };
+  return { rows: Array.from(costRowsByKey.values()), laborRows: laborOut };
 }
 
 /**

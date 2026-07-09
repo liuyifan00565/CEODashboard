@@ -1,5 +1,8 @@
 # Dashboard Data Aggregation
 
+Update time: 2026-07-09 16:20:00 CST
+Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yuan` as the per-channel monthly refund amount; dashboard investment aggregation is unchanged.
+
 更新时间: 2026-07-08 18:51:50 CST
 更新内容: 补充算力页前端派生指标口径，包括算力利用率、供需关系、风险客户、版本效率洞察和客户建议动作。
 
@@ -53,3 +56,9 @@
 - 续费：`fact_renewal_daily` 按渠道×版本先聚合当月到期/已续/续费金额，再 LEFT JOIN 上一月同口径聚合得到 `prev_due_count`/`prev_renewed_count`；当上一月无数据时回退 0。
 - 经营节奏：月时间进度按真实日历推导（已过完整月=100%、未到月=0%、当月=已过天数/30），不再使用固定 30 的占位分支；年度时间进度仍按 `latestMonth` 月序 / 12。
 - 交付看板：`fact_delivery_order` 聚合交付单数和金额，`biz_delivery_target_monthly` 提供实施工程师月目标。
+
+## Cost Maintenance Refund Amount
+
+- `biz_channel_cost_monthly.refund_amount_yuan` stores the monthly refund amount for each channel.
+- Cost maintenance displays and saves this field in wan, then converts it to yuan before writing to MySQL.
+- Dashboard channel investment and ROI aggregation continue to use `investment_amount_yuan` unless a later metric requirement explicitly changes the formula.

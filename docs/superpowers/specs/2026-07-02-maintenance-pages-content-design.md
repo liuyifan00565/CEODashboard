@@ -1,4 +1,8 @@
 <!--
+Update time: 2026-07-09 16:20:00 CST
+Update content: Cost maintenance adds channel monthly refund amount, stored as `biz_channel_cost_monthly.refund_amount_yuan`.
+-->
+<!--
 更新时间: 2026-07-08 13:05:31 CST
 更新内容: 目标维护导入口径补充陌生员工确认新增流程：先返回“是否新增员工”确认项，确认后新增启用销售员工并继续写入目标。
 -->
@@ -238,3 +242,10 @@
 - `POST /api/maintenance/org`
 - `GET /api/maintenance/channels`
 - `POST /api/maintenance/channels`
+
+## Cost Maintenance Refund Amount Addendum
+
+- Channel cost maintenance now includes editable monthly refund amount for each channel.
+- The field maps to `biz_channel_cost_monthly.refund_amount_yuan`.
+- UI and Excel import use wan as the input unit; API persistence converts to yuan.
+- The existing ROI formula remains based on win amount and investment amount unless a later requirement changes the metric definition.

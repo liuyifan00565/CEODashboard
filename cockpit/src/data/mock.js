@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-09 16:20:00 CST
+ Update content: Cost maintenance mock periods include refund amount for channel refund maintenance.
+*/
+/*
  更新时间: 2026-07-09 10:59:10 CST
  更新内容: 暂时隐藏数据维护侧边栏的组织维护入口，保留组织维护页面元数据和数据结构以便后续恢复。
 */
@@ -1074,12 +1078,13 @@ function targetPeriod(target, actual) {
   return { target: safeTarget, actual: safeActual, pct, status: safeTarget ? maintenanceStatus(pct) : 'unset' };
 }
 
-function costPeriod(cost, actual, deals = 0) {
+function costPeriod(cost, actual, deals = 0, refund = 0) {
   const safeCost = Math.max(0, Math.round(Number(cost || 0)));
   const safeActual = Math.max(0, Math.round(Number(actual || 0)));
   const safeDeals = Math.max(0, Math.round(Number(deals || 0)));
+  const safeRefund = Math.max(0, Math.round(Number(refund || 0)));
   const roi = safeCost ? +((safeActual - safeCost) / safeCost).toFixed(2) : 0;
-  return { cost: safeCost, actual: safeActual, deals: safeDeals, roi };
+  return { cost: safeCost, actual: safeActual, deals: safeDeals, refund: safeRefund, roi };
 }
 
 function laborPeriod(cost) {
@@ -1104,22 +1109,24 @@ function createTargetPeriods(monthTargets, monthActuals) {
   return periods;
 }
 
-function createCostPeriods(monthCosts, monthActuals, monthDeals) {
+function createCostPeriods(monthCosts, monthActuals, monthDeals, monthRefunds = []) {
   const periods = {};
   MAINTENANCE_MONTH_KEYS.forEach((key, index) => {
-    periods[key] = costPeriod(monthCosts[index] ?? 0, monthActuals[index] ?? 0, monthDeals[index] ?? 0);
+    periods[key] = costPeriod(monthCosts[index] ?? 0, monthActuals[index] ?? 0, monthDeals[index] ?? 0, monthRefunds[index] ?? 0);
   });
   Object.entries(MAINTENANCE_QUARTERS).forEach(([key, months]) => {
     periods[key] = costPeriod(
       sumValues(months, periods, 'cost'),
       sumValues(months, periods, 'actual'),
-      sumValues(months, periods, 'deals')
+      sumValues(months, periods, 'deals'),
+      sumValues(months, periods, 'refund')
     );
   });
   periods.year = costPeriod(
     sumValues(MAINTENANCE_MONTH_KEYS, periods, 'cost'),
     sumValues(MAINTENANCE_MONTH_KEYS, periods, 'actual'),
-    sumValues(MAINTENANCE_MONTH_KEYS, periods, 'deals')
+    sumValues(MAINTENANCE_MONTH_KEYS, periods, 'deals'),
+    sumValues(MAINTENANCE_MONTH_KEYS, periods, 'refund')
   );
   return periods;
 }

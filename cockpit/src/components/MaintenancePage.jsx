@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-09 16:20:00 CST
+ Update content: Cost maintenance table adds editable refund amount for each channel and month.
+*/
+/*
  更新时间: 2026-07-08 19:12:00 CST
  更新内容: 成本维护与渠道维护删除按钮统一改为二级确认；渠道维护渠道大类支持删除并提交软删除。
 */
@@ -708,10 +712,16 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
     markDirty();
   }
 
+  function handleCostFieldEdit(rowId, monthKey, field, value) {
+    const key = field === 'refund' ? `${rowId}|${monthKey}|refund` : `${rowId}|${monthKey}`;
+    draftRef.current[key] = Number(value) || 0;
+    markDirty();
+  }
+
   function buildEmptyCostPeriods() {
     return MAINTENANCE_PERIOD_COLUMNS.reduce((periods, column) => ({
       ...periods,
-      [column.key]: { cost: 0, actual: 0, deals: 0, roi: 0 },
+      [column.key]: { cost: 0, actual: 0, deals: 0, refund: 0, roi: 0 },
     }), {});
   }
 
@@ -819,13 +829,21 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
                           {editable ? (
                             <label className="mnt-inline-field">
                               <span>成本</span>
-                              <input className="mnt-control mnt-number-input" type="number" min="0" defaultValue={period.cost} onChange={(e) => handleEdit(row.id, column.key, e.target.value)} />
+                              <input className="mnt-control mnt-number-input" type="number" min="0" defaultValue={period.cost} onChange={(e) => handleCostFieldEdit(row.id, column.key, 'cost', e.target.value)} />
                             </label>
                           ) : (
                             <div className="mnt-mini-line">成本 {formatWan(period.cost)}</div>
                           )}
                           <div className="mnt-mini-line">赢单 {formatWan(period.actual)}</div>
                           <div className="mnt-mini-line">成交 {period.deals} 单</div>
+                          {editable ? (
+                            <label className="mnt-inline-field">
+                              <span>退款</span>
+                              <input className="mnt-control mnt-number-input" type="number" min="0" defaultValue={period.refund || 0} onChange={(e) => handleCostFieldEdit(row.id, column.key, 'refund', e.target.value)} />
+                            </label>
+                          ) : (
+                            <div className="mnt-mini-line">退款 {formatWan(period.refund)}</div>
+                          )}
                           <div className="mnt-mini-line mnt-mini-line--strong">ROI {formatRoi(period.roi)}</div>
                         </td>
                       );
