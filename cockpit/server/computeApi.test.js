@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 17:55:00 CST
+ 更新内容: 外部算力接口改为 GET query，并覆盖 base/path 同时带 /csrc 时不重复拼接。
+*/
+/*
  更新时间: 2026-07-09 17:45:00 CST
  更新内容: 增加外部算力接口 path 环境变量回归，支持按真实页面接口调整 endpoint。
 */
@@ -108,12 +112,14 @@ test('maps external compute board payloads into dashboard compute snapshot field
   ]);
 });
 
-test('loads external compute boards with the configured api base and x-token header', async () => {
+test('loads external compute boards with get query and x-token header', async () => {
   const calls = [];
   const now = new Date('2026-07-09T10:00:00+08:00');
   const window = buildExternalComputeRequestWindow(now);
   const snapshot = await loadExternalComputeSnapshot({
     baseUrl: 'https://pre.zhihuige.cc/csrc/',
+    platformBoardPath: '/csrc/api/v1/customer-management/getPlatformBoard',
+    customerBoardPath: '/csrc/api/v1/customer-management/getCustomerBoardList',
     token: 'secret-token',
     now,
     fetchImpl: async (url, options) => {
@@ -123,7 +129,7 @@ test('loads external compute boards with the configured api base and x-token hea
         status: 200,
         json: async () => ({
           status_code: 200,
-          data: url.endsWith('/getPlatformBoard')
+          data: new URL(url).pathname.endsWith('/getPlatformBoard')
             ? { total: 1, incr: 2, deduct: 3, last_30_day_details: [], last_30_day_pool: [] }
             : { customer_list: { list: [], total: 0 }, level_deduct_details: { details: [], total: 0 }, range_customer_details: { details: [], total: 0 } },
         }),
@@ -133,21 +139,29 @@ test('loads external compute boards with the configured api base and x-token hea
 
   assert.deepEqual(window, { start_time: 1780934400, end_time: 1783526399 });
   assert.equal(calls.length, 2);
-  assert.deepEqual(calls.map((call) => call.url), [
+  assert.deepEqual(calls.map((call) => {
+    const url = new URL(call.url);
+    return `${url.origin}${url.pathname}`;
+  }), [
     'https://pre.zhihuige.cc/csrc/api/v1/customer-management/getPlatformBoard',
     'https://pre.zhihuige.cc/csrc/api/v1/customer-management/getCustomerBoardList',
   ]);
-  assert.deepEqual(JSON.parse(calls[0].options.body), window);
-  assert.deepEqual(JSON.parse(calls[1].options.body), {
+  assert.equal(calls[0].options.method, 'GET');
+  assert.equal(calls[1].options.method, 'GET');
+  assert.equal(calls[0].options.body, undefined);
+  assert.equal(calls[1].options.body, undefined);
+  assert.equal(new URL(calls[0].url).searchParams.get('start_time'), String(window.start_time));
+  assert.equal(new URL(calls[0].url).searchParams.get('end_time'), String(window.end_time));
+  assert.deepEqual(Object.fromEntries(new URL(calls[1].url).searchParams), {
     customer_manager: '',
     sales_manager: '',
-    start_time: window.start_time,
-    end_time: window.end_time,
-    level: 0,
-    limit_type: 1,
-    page: 1,
-    page_size: 200,
-    sort_type: 1,
+    start_time: String(window.start_time),
+    end_time: String(window.end_time),
+    level: '0',
+    limit_type: '1',
+    page: '1',
+    page_size: '200',
+    sort_type: '1',
   });
   assert.equal(calls[0].options.headers['x-token'], 'secret-token');
   assert.equal(calls[1].options.headers['x-token'], 'secret-token');

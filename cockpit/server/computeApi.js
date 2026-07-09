@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 17:55:00 CST
+ 更新内容: 外部算力接口改为 GET query 请求，并避免 base/path 同时包含 /csrc 时拼出重复路径。
+*/
+/*
  更新时间: 2026-07-09 17:45:00 CST
  更新内容: 支持通过 COMPUTE_PLATFORM_BOARD_PATH / COMPUTE_CUSTOMER_BOARD_PATH 配置外部算力接口路径，便于对齐真实页面 endpoint。
 */
@@ -67,7 +71,14 @@ function normalizeBaseUrl(baseUrl) {
 }
 
 function endpointUrl(baseUrl, path) {
-  return `${normalizeBaseUrl(baseUrl)}${path}`;
+  const normalizedBase = normalizeBaseUrl(baseUrl);
+  const normalizedPath = String(path || '').startsWith('/') ? String(path || '') : `/${path || ''}`;
+  const basePath = new URL(normalizedBase).pathname.replace(/\/+$/, '');
+  const firstPathSegment = normalizedPath.split('/').filter(Boolean)[0];
+  if (firstPathSegment && basePath.endsWith(`/${firstPathSegment}`)) {
+    return `${normalizedBase}${normalizedPath.slice(firstPathSegment.length + 1)}`;
+  }
+  return `${normalizedBase}${normalizedPath}`;
 }
 
 function accountLevelName(level) {
@@ -84,15 +95,18 @@ function normalizeApiPayload(payload, label) {
   return payload?.data ?? payload;
 }
 
-async function postJson({ baseUrl, token, path, body, fetchImpl }) {
-  const response = await fetchImpl(endpointUrl(baseUrl, path), {
-    method: 'POST',
+async function getJson({ baseUrl, token, path, params, fetchImpl }) {
+  const url = new URL(endpointUrl(baseUrl, path));
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+
+  const response = await fetchImpl(url.toString(), {
+    method: 'GET',
     headers: {
-      'Content-Type': 'application/json',
       Accept: 'application/json',
       'x-token': token,
     },
-    body: JSON.stringify(body),
   });
 
   let payload = null;
@@ -211,8 +225,8 @@ export async function loadExternalComputeSnapshot({
   };
 
   const [platformPayload, customerPayload] = await Promise.all([
-    postJson({ baseUrl, token, path: platformBoardPath, body: window, fetchImpl }),
-    postJson({ baseUrl, token, path: customerBoardPath, body: customerBody, fetchImpl }),
+    getJson({ baseUrl, token, path: platformBoardPath, params: window, fetchImpl }),
+    getJson({ baseUrl, token, path: customerBoardPath, params: customerBody, fetchImpl }),
   ]);
 
   return mapExternalComputeBoards({

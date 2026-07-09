@@ -1,5 +1,8 @@
 # Compute API Integration
 
+更新时间: 2026-07-09 17:55:00 CST
+更新内容: 外部算力接口按真实 Network 行为改为 GET query 请求；base/path 同时带 `/csrc` 时服务端会去重。
+
 更新时间: 2026-07-09 17:45:00 CST
 更新内容: 前端在全量 dashboard 成功后仍会读取 `/api/compute-data` 覆盖 token/算力模块；外部接口 path 支持环境变量配置。
 
@@ -35,14 +38,14 @@ COMPUTE_CUSTOMER_BOARD_PATH
 
 ## 外部接口
 
-服务端调用两个接口：
+服务端用 GET query 调用两个接口，请求头携带 `x-token`：
 
 ```text
-POST /api/v1/customer-management/getPlatformBoard
-POST /api/v1/customer-management/getCustomerBoardList
+GET /api/v1/customer-management/getPlatformBoard
+GET /api/v1/customer-management/getCustomerBoardList
 ```
 
-这两个路径是默认值。若当前真实页面使用其它 path，在 `.env.local` 中设置 `COMPUTE_PLATFORM_BOARD_PATH` / `COMPUTE_CUSTOMER_BOARD_PATH` 即可替换，不需要改代码。
+这两个路径是默认值。若当前真实页面使用其它 path，在 `.env.local` 中设置 `COMPUTE_PLATFORM_BOARD_PATH` / `COMPUTE_CUSTOMER_BOARD_PATH` 即可替换，不需要改代码。`COMPUTE_API_BASE_URL` 和 path 如果同时包含 `/csrc`，服务端会按单个 `/csrc` 拼接，避免出现 `/csrc/csrc/...`。
 
 `getPlatformBoard` 使用 `{ start_time, end_time }`，提供算力总容量、新增算力、消耗算力、近 30 日用量趋势和容量趋势。
 
