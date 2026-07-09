@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-09 16:47:39 CST
+ Update content: 成本维护的成本与退款输入框增加“万”单位提示，保持页面录入单位清晰。
+*/
+/*
  Update time: 2026-07-09 14:51:22 CST
  Update content: 目标维护改为部门级:右侧表格只显示部门行(隐藏人员明细行),部门行(除"所有组织"合计行外)
    变为可编辑目标,draft 键改用 summary-<deptId>;左侧组织架构人数改为部门计数。配合后端 saveTarget/
@@ -844,7 +848,17 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
                           {editable ? (
                             <label className="mnt-inline-field">
                               <span>成本</span>
-                              <input className="mnt-control mnt-number-input" type="number" min="0" defaultValue={period.cost} onChange={(e) => handleCostFieldEdit(row.id, column.key, 'cost', e.target.value)} />
+                              <div className="mnt-cost-unit-input-wrap">
+                                <input
+                                  className="mnt-number-input mnt-cost-unit-input"
+                                  type="number"
+                                  min="0"
+                                  defaultValue={period.cost}
+                                  onChange={(e) => handleCostFieldEdit(row.id, column.key, 'cost', e.target.value)}
+                                  aria-label={`${row.name}${column.label}成本`}
+                                />
+                                <span className="mnt-cost-unit-input-unit">万</span>
+                              </div>
                             </label>
                           ) : (
                             <div className="mnt-mini-line">成本 {formatWan(period.cost)}</div>
@@ -854,7 +868,17 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
                           {editable ? (
                             <label className="mnt-inline-field">
                               <span>退款</span>
-                              <input className="mnt-control mnt-number-input" type="number" min="0" defaultValue={period.refund || 0} onChange={(e) => handleCostFieldEdit(row.id, column.key, 'refund', e.target.value)} />
+                              <div className="mnt-cost-unit-input-wrap">
+                                <input
+                                  className="mnt-number-input mnt-cost-unit-input"
+                                  type="number"
+                                  min="0"
+                                  defaultValue={period.refund || 0}
+                                  onChange={(e) => handleCostFieldEdit(row.id, column.key, 'refund', e.target.value)}
+                                  aria-label={`${row.name}${column.label}退款`}
+                                />
+                                <span className="mnt-cost-unit-input-unit">万</span>
+                              </div>
                             </label>
                           ) : (
                             <div className="mnt-mini-line">退款 {formatWan(period.refund)}</div>

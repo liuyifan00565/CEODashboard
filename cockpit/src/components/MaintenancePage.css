@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 16:47:39 CST
+ 更新内容: 成本维护的成本与退款输入框复用目标维护单位输入样式，并显示“万”单位。
+*/
+/*
  更新时间: 2026-07-08 19:12:00 CST
  更新内容: 新增删除二级确认按钮组样式，供成本维护与渠道维护共用。
 */
@@ -1170,7 +1174,8 @@
   vertical-align: top;
 }
 
-.mnt-target-input-wrap {
+.mnt-target-input-wrap,
+.mnt-cost-unit-input-wrap {
   position: relative;
   isolation: isolate;
   display: grid;
@@ -1193,7 +1198,8 @@
   transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
 
-.mnt-target-input-wrap::before {
+.mnt-target-input-wrap::before,
+.mnt-cost-unit-input-wrap::before {
   content: "";
   position: absolute;
   left: 0;
@@ -1206,7 +1212,8 @@
   pointer-events: none;
 }
 
-.mnt-target-input-wrap:hover {
+.mnt-target-input-wrap:hover,
+.mnt-cost-unit-input-wrap:hover {
   border-color: color-mix(in srgb, var(--txt) 54%, var(--line-2));
   background: color-mix(in srgb, var(--glass-cell-hover) 78%, transparent);
   box-shadow:
@@ -1216,7 +1223,8 @@
     0 10px 22px rgba(0, 0, 0, .18);
 }
 
-.mnt-target-input-wrap:focus-within {
+.mnt-target-input-wrap:focus-within,
+.mnt-cost-unit-input-wrap:focus-within {
   border-color: color-mix(in srgb, var(--txt) 58%, var(--line-2));
   background: color-mix(in srgb, var(--glass-cell-hover) 78%, transparent);
   box-shadow:
@@ -1225,7 +1233,8 @@
     0 0 0 3px var(--focus-outline);
 }
 
-.mnt-target-input {
+.mnt-target-input,
+.mnt-cost-unit-input {
   width: 100%;
   min-width: 0;
   border: 0;
@@ -1240,7 +1249,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-.mnt-target-input-unit {
+.mnt-target-input-unit,
+.mnt-cost-unit-input-unit {
   color: var(--muted);
   font-size: 12px;
   font-weight: 760;
