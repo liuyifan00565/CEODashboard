@@ -11,6 +11,10 @@
  更新内容: 经营总览回归测试锁定年度目标进度条下方三项辅助数据已移除。
 */
 /*
+ Update time: 2026-07-09 17:18:00 CST
+ Update content: Regression test now requires the Excel import dialog to omit template download controls and leave downloads to the toolbar.
+*/
+/*
  更新时间: 2026-07-09 16:28:48 CST
  更新内容: 经营总览回归测试同步本月和年度回款右侧下角退款小字，并对齐当前半环与年度进度 footer 尺寸断言。
 */
@@ -690,11 +694,11 @@ test('builds the target and cost maintenance pages from reference matrix content
   assert.match(maintenancePageSource, /保存成本/);
 });
 
-test('downloads bundled target maintenance templates from the import dialog', () => {
-  assert.match(maintenanceImportDialogSource, /downloadTemplateBundle/);
-  assert.match(maintenanceImportDialogSource, /if \(importConfigs\.length > 1\) \{[\s\S]*?downloadTemplateBundle\(importConfigs\);/);
-  assert.match(maintenanceImportDialogSource, /onClick=\{\(e\) => \{ e\.stopPropagation\(\); handleDownloadTemplate\(\); \}\}/);
-  assert.match(maintenanceImportDialogSource, /onClick=\{handleDownloadTemplate\}/);
+test('omits template download controls from the import dialog', () => {
+  assert.doesNotMatch(maintenanceImportDialogSource, /downloadTemplateBundle/);
+  assert.doesNotMatch(maintenanceImportDialogSource, /handleDownloadTemplate/);
+  assert.doesNotMatch(maintenanceImportDialogSource, /onClick=\{\(e\) => \{ e\.stopPropagation\(\); handleDownloadTemplate\(\); \}\}/);
+  assert.doesNotMatch(maintenanceImportDialogSource, /onClick=\{handleDownloadTemplate\}/);
 });
 
 test('keeps target maintenance completed amount and percent on one line', () => {

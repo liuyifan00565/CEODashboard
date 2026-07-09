@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-09 17:18:00 CST
+ Update content: Remove template download buttons from the Excel import dialog; templates are downloaded from the maintenance toolbar only.
+*/
+/*
  Update time: 2026-07-09 14:42:00 CST
  Update content: Make target maintenance import dialog download the two-sheet target template bundle instead of the default single template.
 */
@@ -22,8 +26,6 @@ import {
   extractRows,
   mapAndValidate,
   matchColumns,
-  downloadTemplate,
-  downloadTemplateBundle,
 } from '../lib/excelImport.js';
 import './MaintenanceImportDialog.css';
 import GlassSelect from './GlassSelect.jsx';
@@ -92,14 +94,6 @@ export default function MaintenanceImportDialog({ config, configs, onClose, onIm
     () => importConfigs.map((item) => ({ value: item.pageKey, label: item.label })),
     [importConfigs],
   );
-
-  function handleDownloadTemplate() {
-    if (importConfigs.length > 1) {
-      downloadTemplateBundle(importConfigs);
-      return;
-    }
-    if (activeConfig) downloadTemplate(activeConfig);
-  }
 
   async function handleFile(file) {
     if (!file) return;
@@ -219,14 +213,7 @@ export default function MaintenanceImportDialog({ config, configs, onClose, onIm
               onDragOver={handleDropOver}
             >
               <p>点击或拖拽 .xlsx / .xls 文件到这里</p>
-              <span className="mnt-import-hint">未选好文件？可先</span>
-              <button
-                className="mnt-btn"
-                type="button"
-                onClick={(e) => { e.stopPropagation(); handleDownloadTemplate(); }}
-              >
-                下载模板
-              </button>
+              <span className="mnt-import-hint">未选好文件</span>
               {parseError && <p className="mnt-import-error">{parseError}</p>}
               <input
                 ref={fileInputRef}
@@ -375,13 +362,6 @@ export default function MaintenanceImportDialog({ config, configs, onClose, onIm
 
         <footer className="mnt-import-foot">
           <button className="mnt-btn" type="button" onClick={onClose}>{phase === 'done' ? '完成' : '取消'}</button>
-          <button
-            className="mnt-btn"
-            type="button"
-            onClick={handleDownloadTemplate}
-          >
-            下载模板
-          </button>
           <button
             className="mnt-btn mnt-btn--primary"
             type="button"
