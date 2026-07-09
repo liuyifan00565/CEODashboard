@@ -4,10 +4,16 @@
 # 用法：
 #   1. 启动 Docker Desktop
 #   2. docker compose up -d --build
-#   3. 浏览器打开 http://127.0.0.1:5173 ，curl http://127.0.0.1:5173/api/dashboard-data 验证真实数据
+#   3. 浏览器打开 http://127.0.0.1:5174 ，curl http://127.0.0.1:5174/api/dashboard-data 验证真实数据
 #   4. docker compose down 停服务（db_data 卷保留，下次 up 数据仍在）
 #
 # 面向本地开发联调；生产交付仍走 scripts/package_aliyun_amd64.sh。
+
+# 更新时间: 2026-07-08 13:58:51 CST
+# 更新内容: 将 cockpit 服务端口调整为 5174，避免与旧项目 5173 冲突。
+
+# 更新时间: 2026-07-09 18:10:00 CST
+# 更新内容: 同步本地 Docker 用法中的访问端口为 5174，并将 cockpit/.env.local 设置为可选，避免新环境缺少本地密钥文件时阻断容器启动。
 
 services:
   db:
@@ -36,16 +42,17 @@ services:
     restart: unless-stopped
     # 复用已有 .env.local（含 DASHSCOPE_* 通义密钥）；下面的 environment 会覆盖其中的 DB_* 指向容器内 db
     env_file:
-      - ./cockpit/.env.local
+      - path: ./cockpit/.env.local
+        required: false
     environment:
       DB_HOST: db
       DB_PORT: 3306
       DB_USERNAME: root
       DB_PASSWORD: ceodashboard
       DB_NAME: ceo_dashboard
-      PORT: 5173
+      PORT: 5174
     ports:
-      - "5173:5173"
+      - "5174:5174"
     volumes:
       # 整个 cockpit 目录挂入，支持前端/后端源码热更新
       - ./cockpit:/app
