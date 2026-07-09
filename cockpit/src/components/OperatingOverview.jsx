@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-09 15:04:00 CST  更新内容: 去除半环外部标签深色底和边框，恢复纯文字标签并禁止省略，解决窄列下出现黑框与"..."的问题。 */
+/* 更新时间: 2026-07-09 14:58:00 CST  更新内容: 经营进度主卡按反馈收紧结构，半环饼图中心上移至 62% 并略放大环形，配合左宽中窄的卡片布局。 */
 /* 更新时间: 2026-07-09 15:10:00 CST  更新内容: 年度回款总览与月度经营进度的目标状态文案统一为"超额完成/剩余目标"，超额用约定金色 var(--accent-gold)、剩余用约定红色 var(--warn)；年度新增超额/剩余条件判断(原为写死"剩余目标"无色)，月度"目标缺口"改为"剩余目标"保持一致。 */
 /* 更新时间: 2026-07-09 15:00:00 CST  更新内容: 回款半环直接对齐版本情况饼图参数——radius 62/88%→45/76%、center 50/56%→49.5/68%(与 VersionFinancePanel 完全一致)；图区高度月度/年度/窄屏统一→326px；图表列最小宽度→420/430 接近版本饼图容器宽 clamp(430,34vw,560)。 */
 /* 更新时间: 2026-07-09 14:55:00 CST  更新内容: 回款半环继续缩小并瘦身(上一版仍偏大且有"下巴")——radius 58/92%→62/88%(环厚34%→26%变薄)、center 54%→56%(=1-0.88/2 去下方空荡)；图区高度月度370→280、年度378→288、窄屏362→272；图表列最小宽度350→300/360→310，饼图直径≈0.88×280≈246px。 */
@@ -274,8 +276,8 @@ function channelStructureOption(structure, periodMeta, tokens) {
       {
         type: 'pie',
         name: periodMeta.chartName,
-        radius: ['45%', '76%'],
-        center: ['49.5%', '68%'],
+        radius: ['48%', '82%'],
+        center: ['49.5%', '62%'],
         startAngle: 180,
         endAngle: 360,
         padAngle: 3,
@@ -294,6 +296,7 @@ function channelStructureOption(structure, periodMeta, tokens) {
           formatter: (params) => `{name|${params.name}}\n{percent|${params.percent}%}`,
           bleedMargin: 0,
           distanceToLabelLine: 0,
+          overflow: 'none',
           color: tokens.chartText,
           rich: {
             name: {

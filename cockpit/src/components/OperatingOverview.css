@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 14:58:00 CST  更新内容: 经营进度/年度总览卡片按反馈上下收窄，三栏改为左宽中窄，并压紧回款结构图高度与经营情况列表间距。 */
 /* 更新时间: 2026-07-09 15:10:00 CST  更新内容: 目标状态胶囊配色对齐约定——op-month-primary-fact--over 由粉色改为金色 var(--accent-gold)(rgba 201,169,107)；年度 op-annual-primary-facts span:last-child 加 :not(.--over):not(.--risk) 排除，使金色/红色不被中性规则覆盖。 */
 /* 更新时间: 2026-07-09 15:00:00 CST  更新内容: 回款半环对齐版本情况饼图——图区高度月度/年度/窄屏统一 326px；图表列最小宽度月度→420/年度→430 接近版本饼图容器宽，配合 radius 45/76% center 49.5/68% 使两者一致。 */
 /* 更新时间: 2026-07-09 14:55:00 CST  更新内容: 回款半环继续缩小并瘦身——图区高度月度370→280、年度378→288、窄屏362→272；图表列最小宽度月度350→300/年度360→310，配合 radius 62/88%(环变薄) 使饼图直径≈246px 且去下方空荡。 */
@@ -47,7 +48,7 @@
   -webkit-backdrop-filter: var(--dashboard-card-blur);
   backdrop-filter: var(--dashboard-card-blur);
   box-shadow: var(--dashboard-card-shadow);
-  padding: clamp(18px, 2vw, 26px);
+  padding: clamp(15px, 1.55vw, 22px) clamp(18px, 1.8vw, 24px);
   transition: border-color .22s ease, box-shadow .22s ease;
 }
 
@@ -61,15 +62,15 @@
   grid-area: progress;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .op-panel--annual {
   grid-area: annual;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-block: clamp(17px, 1.85vw, 23px);
+  gap: 10px;
+  padding-block: clamp(14px, 1.45vw, 20px);
 }
 
 .op-search-result {
@@ -172,23 +173,23 @@
 
 .op-month-grid {
   display: grid;
-  grid-template-columns: minmax(200px, .6fr) minmax(420px, 1.2fr) minmax(310px, 1fr);
+  grid-template-columns: minmax(300px, 1.04fr) minmax(300px, .76fr) minmax(330px, 1.06fr);
   align-items: stretch;
-  gap: clamp(10px, 1.35vw, 18px);
+  gap: clamp(8px, 1vw, 14px);
   border-top: 1px solid rgba(255,255,255,.035);
   border-bottom: 1px solid rgba(255,255,255,.035);
-  padding: clamp(10px, 1.25vw, 15px) 0;
+  padding: clamp(5px, .7vw, 9px) 0;
 }
 
 .op-annual-grid {
   display: grid;
-  grid-template-columns: minmax(200px, .58fr) minmax(430px, 1.22fr) minmax(320px, 1fr);
+  grid-template-columns: minmax(300px, 1.02fr) minmax(310px, .78fr) minmax(340px, 1.08fr);
   align-items: stretch;
-  gap: clamp(10px, 1.35vw, 18px);
+  gap: clamp(8px, 1vw, 14px);
   border-top: 1px solid rgba(255,255,255,.035);
   border-bottom: 1px solid rgba(255,255,255,.035);
-  padding: clamp(10px, 1.25vw, 15px) 0;
-  padding-bottom: clamp(9px, 1vw, 12px);
+  padding: clamp(5px, .7vw, 9px) 0;
+  padding-bottom: clamp(7px, .8vw, 10px);
 }
 
 .op-month-primary,
@@ -196,7 +197,7 @@
   min-width: 0;
   display: grid;
   align-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .op-month-primary b {
@@ -226,7 +227,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 6px;
+  margin-top: 3px;
 }
 
 .op-month-primary-facts span {
@@ -265,10 +266,10 @@
 .op-recovery-structure {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto 326px;
-  align-content: center;
-  gap: 2px;
-  padding-inline: clamp(4px, .65vw, 10px);
+  grid-template-rows: auto 258px;
+  align-content: start;
+  gap: 0;
+  padding-inline: clamp(0px, .45vw, 6px);
   border-left: 1px solid rgba(255,255,255,.035);
   border-right: 1px solid rgba(255,255,255,.035);
 }
@@ -290,7 +291,7 @@
 .op-channel-chart-wrap {
   position: relative;
   min-width: 0;
-  height: 326px;
+  height: 258px;
   min-height: 0;
   display: grid;
   place-items: center;
@@ -312,13 +313,13 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .op-channel-list {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
 }
 
 .op-channel-item {
@@ -327,9 +328,9 @@
   display: grid;
   grid-template-columns: 10px minmax(0, 1fr) minmax(74px, auto) auto;
   align-items: center;
-  gap: 9px;
-  min-height: 41px;
-  padding: 6px 8px;
+  gap: 8px;
+  min-height: 38px;
+  padding: 5px 8px;
   border: 1px solid transparent;
   border-radius: 12px;
   background: transparent;
@@ -418,11 +419,11 @@
 }
 
 .op-annual-grid .op-recovery-structure {
-  grid-template-rows: auto 326px;
+  grid-template-rows: auto 258px;
 }
 
 .op-annual-grid .op-channel-chart-wrap {
-  height: 326px;
+  height: 258px;
 }
 
 .op-annual-grid .op-operating-side {
@@ -431,8 +432,8 @@
 }
 
 .op-annual-grid .op-channel-item {
-  min-height: 48px;
-  padding-block: 7px;
+  min-height: 42px;
+  padding-block: 6px;
 }
 
 .op-annual-progress-footer {
@@ -608,7 +609,7 @@
 @media (max-width: 1240px) {
   .op-month-grid,
   .op-annual-grid {
-    grid-template-columns: minmax(200px, .82fr) minmax(240px, .9fr);
+    grid-template-columns: minmax(260px, 1.04fr) minmax(260px, .86fr);
   }
 
   .op-operating-side {
@@ -648,7 +649,7 @@
   }
 
   .op-channel-chart-wrap {
-    height: 326px;
+    height: 258px;
   }
 
   .op-channel-chart {
