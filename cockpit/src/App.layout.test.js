@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 11:15:17 CST
+ 更新内容: 经营总览回归测试锁定渠道目标完成结构饼图与版本情况半环同款的色板、环形参数和低光晕样式。
+*/
+/*
  更新时间: 2026-07-09 11:08:00 CST
  更新内容: 经营总览回归测试同步风险判断下沉到半环结构数据生成阶段，锁定 row.risk 渲染风险标签。
 */
@@ -1174,6 +1178,19 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /const riskBaseline = Math\.min\(100, completion\);/);
   assert.match(operatingOverviewSource, /risk: row\.warn \|\| rowCompletion < riskBaseline,/);
   assert.match(operatingOverviewSource, /\{row\.risk && <span className="op-channel-risk">风险<\/span>\}/);
+  assert.match(operatingOverviewSource, /colorStops: \[\{ offset: 0, color: '#8E86FF' \}, \{ offset: 1, color: '#E4B8D7' \}\]/);
+  assert.match(operatingOverviewSource, /colorStops: \[\{ offset: 0, color: '#B89CFF' \}, \{ offset: 1, color: '#D9D1FF' \}\]/);
+  assert.match(operatingOverviewSource, /colorStops: \[\{ offset: 0, color: '#9B6FAD' \}, \{ offset: 1, color: '#E4B8D7' \}\]/);
+  assert.match(operatingOverviewSource, /colorStops: \[\{ offset: 0, color: '#C9A96B' \}, \{ offset: 1, color: '#E3D2A4' \}\]/);
+  assert.match(operatingOverviewSource, /animationDuration:\s*900/);
+  assert.match(operatingOverviewSource, /radius:\s*\['45%', '76%'\]/);
+  assert.match(operatingOverviewSource, /center:\s*\['49\.5%', '68%'\]/);
+  assert.match(operatingOverviewSource, /borderRadius:\s*8,/);
+  assert.match(operatingOverviewSource, /borderColor:\s*'rgba\(255, 255, 255, \.11\)'/);
+  assert.match(operatingOverviewSource, /shadowColor:\s*'rgba\(184, 156, 255, \.08\)'/);
+  assert.match(operatingOverviewSource, /const isMajorLabel = index < 2 && !item\.isIncomplete;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap::before\s*\{[\s\S]*?content:\s*none;/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?filter:\s*drop-shadow/);
   assert.match(operatingOverviewCss, /\.op-overview/);
   assert.match(operatingOverviewCss, /background:\s*var\(--dashboard-card-bg\);/);
   assert.match(operatingOverviewCss, /border:\s*1px solid var\(--dashboard-card-border\);/);

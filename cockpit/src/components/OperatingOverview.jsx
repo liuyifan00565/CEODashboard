@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 11:15:17 CST  更新内容: 渠道目标完成结构半环同步版本情况饼图的银紫玫瑰色板、环形参数和悬浮样式。 */
 /* 更新时间: 2026-07-09 11:08:00 CST  更新内容: 将渠道风险判断下沉到半环结构数据生成阶段，确保低于整体基准的渠道稳定显示风险标签。 */
 /* 更新时间: 2026-07-09 11:02:18 CST  更新内容: 经营总览渠道半环模块补充低于整体完成基准的风险标签，便于快速识别拖累渠道。 */
 /* 更新时间: 2026-07-09 10:52:02 CST  更新内容: 经营总览右上渠道表单升级为本月/本年可切换的半环饼图与轻量渠道摘要模块。 */
@@ -74,20 +75,20 @@ const CHANNEL_PERIOD_META = {
 };
 const CHANNEL_STRUCTURE_STYLES = {
   online: {
-    color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#F4F0FF' }, { offset: 0.52, color: '#D9D1FF' }, { offset: 1, color: '#B89CFF' }] },
-    swatch: '#D9D1FF',
+    color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8E86FF' }, { offset: 1, color: '#E4B8D7' }] },
+    swatch: '#8E86FF',
   },
   south: {
-    color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8E86FF' }, { offset: 0.58, color: '#B89CFF' }, { offset: 1, color: '#E4B8D7' }] },
+    color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#B89CFF' }, { offset: 1, color: '#D9D1FF' }] },
     swatch: '#B89CFF',
   },
   east: {
-    color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#7EA7FF' }, { offset: 0.58, color: '#AFA4F4' }, { offset: 1, color: '#D9D1FF' }] },
-    swatch: '#AFA4F4',
+    color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#9B6FAD' }, { offset: 1, color: '#E4B8D7' }] },
+    swatch: '#E4B8D7',
   },
   agent: {
-    color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#89B7A4' }, { offset: 0.58, color: '#A6C878' }, { offset: 1, color: '#D8E5C3' }] },
-    swatch: '#A6C878',
+    color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#C9A96B' }, { offset: 1, color: '#E3D2A4' }] },
+    swatch: '#C9A96B',
   },
 };
 const INCOMPLETE_STRUCTURE_STYLE = {
@@ -212,6 +213,7 @@ function channelStructureTooltipPosition(point, params, dom, rect, size) {
 
 function channelStructureOption(structure, periodMeta, tokens) {
   return {
+    color: Object.values(CHANNEL_STRUCTURE_STYLES).map((style) => style.color),
     tooltip: {
       trigger: 'item',
       confine: true,
@@ -241,37 +243,77 @@ function channelStructureOption(structure, periodMeta, tokens) {
       },
       extraCssText: 'padding:0;border:0;background:transparent;box-shadow:none;pointer-events:none;',
     },
-    animationDuration: 720,
+    animationDuration: 900,
     animationEasing: 'cubicOut',
     series: [
       {
         type: 'pie',
         name: periodMeta.chartName,
-        radius: ['50%', '72%'],
-        center: ['50%', '74%'],
+        radius: ['45%', '76%'],
+        center: ['49.5%', '68%'],
         startAngle: 180,
         endAngle: 360,
         padAngle: 3,
         minShowLabelAngle: 1,
         avoidLabelOverlap: true,
-        label: { show: false },
-        labelLine: { show: false },
         itemStyle: {
-          borderRadius: 7,
-          borderColor: 'rgba(255,255,255,.085)',
+          borderRadius: 8,
+          borderColor: 'rgba(255, 255, 255, .11)',
           borderWidth: 1,
           shadowBlur: 5,
-          shadowColor: 'rgba(184,156,255,.10)',
+          shadowColor: 'rgba(184, 156, 255, .08)',
         },
-        emphasis: {
-          scale: false,
-          itemStyle: {
-            shadowBlur: 10,
-            shadowColor: 'rgba(228,184,215,.18)',
-            borderColor: 'rgba(255,255,255,.16)',
+        label: {
+          show: false,
+          position: 'outside',
+          formatter: (params) => `{name|${params.name}}\n{percent|${params.percent}%}`,
+          bleedMargin: 0,
+          distanceToLabelLine: 0,
+          color: tokens.chartText,
+          rich: {
+            name: {
+              color: tokens.chartText,
+              fontSize: 13,
+              fontWeight: 850,
+              lineHeight: 17,
+              align: 'center',
+              textShadowColor: 'rgba(0,0,0,.36)',
+              textShadowBlur: 7,
+            },
+            percent: {
+              color: tokens.chartText,
+              fontSize: 12,
+              fontWeight: 850,
+              lineHeight: 15,
+              align: 'center',
+              textShadowColor: 'rgba(0,0,0,.38)',
+              textShadowBlur: 7,
+            },
           },
         },
-        data: structure.pieData,
+        labelLine: {
+          show: false,
+          lineStyle: {
+            color: tokens.chartText,
+            opacity: 0.58,
+            width: 1.5,
+          },
+          smooth: 0.18,
+          length: 10,
+          length2: 16,
+        },
+        data: structure.pieData.map((item, index) => {
+          const isMajorLabel = index < 2 && !item.isIncomplete;
+          return {
+            ...item,
+            label: {
+              show: isMajorLabel,
+            },
+            labelLine: {
+              show: isMajorLabel,
+            },
+          };
+        }),
       },
     ],
   };

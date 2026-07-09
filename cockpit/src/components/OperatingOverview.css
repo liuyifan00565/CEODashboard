@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 11:15:17 CST  更新内容: 渠道目标完成结构饼图撤掉独立光晕并同步版本情况半环的视觉位置。 */
 /* 更新时间: 2026-07-09 11:02:18 CST  更新内容: 经营总览渠道半环中心数字略微上移并收敛字号，风险渠道标签配合整体完成基准显示。 */
 /* 更新时间: 2026-07-09 10:52:02 CST  更新内容: 经营总览渠道区替换为半环饼图、中心完成率和右侧轻量渠道摘要的玻璃模块样式。 */
 /* 更新时间: 2026-07-06 17:02:49 CST  更新内容: 年度节奏移除折线图样式，新增玻璃年度进度胶囊条。 */
@@ -360,32 +361,20 @@
 }
 
 .op-channel-chart-wrap::before {
-  content: "";
-  position: absolute;
-  left: 11%;
-  right: 11%;
-  top: 18%;
-  bottom: 18%;
-  z-index: 0;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at 50% 56%, rgba(184,156,255,.075) 0%, rgba(228,184,215,.04) 38%, transparent 74%);
-  filter: blur(16px) saturate(.86);
-  opacity: .54;
-  pointer-events: none;
+  content: none;
 }
 
 .op-channel-chart {
   position: relative;
   z-index: 1;
   width: 100%;
-  min-height: 240px;
-  filter: drop-shadow(0 0 4px rgba(184,156,255,.08));
+  min-height: 260px;
 }
 
 .op-channel-center {
   position: absolute;
   left: 50%;
-  top: 54%;
+  top: 51%;
   z-index: 2;
   width: min(152px, 58%);
   display: grid;
