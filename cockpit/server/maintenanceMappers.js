@@ -1,4 +1,10 @@
 /*
+ Update time: 2026-07-09 14:51:22 CST
+ Update content: buildTargetSnapshot 改为部门级:不再生成人员明细行(user 行),部门目标 rollup 不再回退
+   人员目标(只用部门级 directTarget + 子部门累加);回款 actual 仍按人员汇总到部门;左侧树改显示子部门数。
+   配合 readTarget 只取 staff_id IS NULL 的部门级目标。
+*/
+/*
  Update time: 2026-07-09 16:20:00 CST
  Update content: Add channel refund amount to cost maintenance periods so four channels can maintain monthly refunds alongside investment.
 */
@@ -196,9 +202,9 @@ export function buildTargetSnapshot({ departments = [], staff = [], targets = []
 
     const target = ALL_MONTH_KEYS.map((mk, idx) => {
       if (directTarget[mk] != null) return directTarget[mk];
-      const staffSum = members.reduce((sum, st) => sum + (targetByStaff.get(st.staff_id)?.[mk] || 0), 0);
+      // 部门级目标：不再汇总人员目标，只累加子部门目标
       const childSum = childRollups.reduce((sum, child) => sum + child.target[idx], 0);
-      return staffSum + childSum;
+      return childSum;
     });
     const actual = ALL_MONTH_KEYS.map((mk, idx) => {
       if (directActual[mk] != null) return directActual[mk];
@@ -224,25 +230,11 @@ export function buildTargetSnapshot({ departments = [], staff = [], targets = []
     rows.push({ id: `summary-${d.department_id}`, type: 'department', name: d.department_name, role: '组织合计', periods: buildTargetPeriods(rollup.target, rollup.actual) });
   });
 
-  sales.forEach((s) => {
-    const tb = targetByStaff.get(s.staff_id) || {};
-    const ab = actualByStaff.get(s.staff_id) || {};
-    rows.push({
-      id: `user-${s.staff_id}`,
-      type: 'user',
-      name: s.staff_name,
-      role: '人员',
-      deptId: s.department_id != null ? String(s.department_id) : undefined,
-      periods: buildTargetPeriods(
-        ALL_MONTH_KEYS.map((mk) => tb[mk] || 0),
-        ALL_MONTH_KEYS.map((mk) => ab[mk] || 0),
-      ),
-    });
-  });
+  // 部门级目标维护：不再生成人员明细行（回款仍按人员汇总进部门 actual）
 
   const orgTree = buildDeptTree(departments, (deptId) => {
-    const ids = descendantDeptIds(departments, deptId);
-    return sales.filter((s) => ids.has(s.department_id) && (s.is_enabled === 1 || Number(s.is_enabled) === 1)).length;
+    // 左侧树显示子部门数（不再显示人员数）
+    return (childDeptIds.get(deptId) || []).length;
   });
 
   return { orgTree, rows };

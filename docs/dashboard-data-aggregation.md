@@ -1,5 +1,8 @@
 # Dashboard Data Aggregation
 
+Update time: 2026-07-09 14:51:22 CST
+Update content: 目标口径改为部门级。biz_target_monthly 只取 staff_id IS NULL 的部门级目标(历史人员级目标保留在库但忽略);渠道目标直接用 t.channel_id 关联 dim_channel;渠道二级明细由"按销售人员"改为"按部门"。回款口径不变(仍 fact_revenue_daily 优先)。
+
 Update time: 2026-07-09 16:20:00 CST
 Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yuan` as the per-channel monthly refund amount; dashboard investment aggregation is unchanged.
 
@@ -33,9 +36,9 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 
 - 本月回款、年度累计回款、月趋势实际值：优先使用 `fact_revenue_daily.recovered_amount_yuan`，按 `stat_date` 的年月聚合。
 - 当 `fact_revenue_daily` 没有数据时，回退使用 `fact_sales_member_monthly.recovered_amount_yuan`。
-- 本月目标、年度目标、月趋势目标：使用 `biz_target_monthly.target_amount_yuan`，仅统计关联到 `dim_staff` 且满足 `is_sales=1`、`is_enabled=1`、`department_id IS NOT NULL` 的人员目标。
-- 渠道目标：`biz_target_monthly.staff_id` 关联销售人员渠道后按渠道汇总，同样只统计启用销售且有部门的人员；当 `dim_staff.channel_key` 为空时，按 `dim_department.department_code` 兜底映射：`online-sales -> online`、`south-sales -> south`、`east-sales -> east`、`agent-sales -> agent`。
-- 渠道二级销售人员明细：本月/年度目标来自 `biz_target_monthly`，实际回款优先来自 `fact_revenue_daily.staff_id` 聚合；没有日级回款时才回退 `fact_sales_member_monthly`。因此新销售只要已在目标维护中有目标，即使销售月表尚未生成，也会出现在对应渠道的二级明细中。
+- 本月目标、年度目标、月趋势目标：使用 `biz_target_monthly.target_amount_yuan`，仅取 `staff_id IS NULL` 的部门级目标（目标维护改为按部门录入，历史人员级目标保留在库但不再进入统计）。
+- 渠道目标：`biz_target_monthly.channel_id` 直接关联 `dim_channel` 按渠道汇总，仅取 `staff_id IS NULL` 的部门级目标。
+- 渠道二级明细：本月/年度目标来自 `biz_target_monthly`（按部门），实际回款来自 `fact_revenue_daily.department_id` 聚合；明细粒度由原来的“销售人员”改为“部门”，按部门目标完成率降序排列。
 
 ## 版本与续费
 

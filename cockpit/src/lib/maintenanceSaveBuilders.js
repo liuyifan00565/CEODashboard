@@ -1,4 +1,9 @@
 /*
+ Update time: 2026-07-09 14:51:22 CST
+ Update content: buildTargetSaveRows 改为部门级:处理 summary-<deptId> 行,输出 {department_id, department_name,
+   year_month, target_amount_wan},不再输出 staff_id(由后端 saveTarget 置 NULL),与目标维护页部门级录入对齐。
+*/
+/*
  Update time: 2026-07-09 16:20:00 CST
  Update content: Cost maintenance save builder supports separate channel investment and refund amount draft fields.
 */
@@ -44,28 +49,28 @@ function splitCostDraftKey(key) {
 }
 
 /**
- * 目标维护：把 draft（"user-<staff_id>|mXX" -> 万）转成保存行。
- * 只产出 draft 命中且对应 user 行的格；summary/department 行天然被排除。
+ * 目标维护：把 draft（"summary-<deptId>|mXX" -> 万）转成部门级保存行。
+ * 只产出 draft 命中且对应部门行(排除 summary-all 合计行)的格；staff_id 由后端置 NULL。
  * @param {Array} rows 快照 rows
  * @param {Record<string, number>} draft
  * @param {string|number} year
- * @returns {Array<{staff_id, staff_name, year_month, target_amount_wan}>}
+ * @returns {Array<{department_id, department_name, year_month, target_amount_wan}>}
  */
 export function buildTargetSaveRows(rows, draft, year) {
-  const userRows = new Map(
+  const deptRows = new Map(
     (Array.isArray(rows) ? rows : [])
-      .filter((r) => r && r.type === 'user' && typeof r.id === 'string' && r.id.startsWith('user-'))
+      .filter((r) => r && r.type === 'department' && typeof r.id === 'string' && r.id.startsWith('summary-') && r.id !== 'summary-all')
       .map((r) => [r.id, r]),
   );
   const out = [];
   for (const [key, value] of Object.entries(draft || {})) {
     const { rowId, field: monthKey } = splitDraftKey(key);
     const mm = monthKeyToMM(monthKey);
-    const row = userRows.get(rowId);
+    const row = deptRows.get(rowId);
     if (!mm || !row) continue;
     out.push({
-      staff_id: rowId.slice('user-'.length),
-      staff_name: row.name,
+      department_id: rowId.slice('summary-'.length),
+      department_name: row.name,
       year_month: `${year}-${mm}`,
       target_amount_wan: Number(value) || 0,
     });

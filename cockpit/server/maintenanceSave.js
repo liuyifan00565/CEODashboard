@@ -1,4 +1,10 @@
 /*
+ Update time: 2026-07-09 14:51:22 CST
+ Update content: saveTarget 改为部门级:按 (year_month, department_id, staff_id IS NULL) upsert,
+   staff_id 置 NULL,channel_id 由 resolveDepartmentChannelId 解析(从 maintenanceImport 复用并 export),
+   校验部门存在且启用。与目标维护页部门级录入、首页部门级口径对齐。
+*/
+/*
  Update time: 2026-07-09 16:20:00 CST
  Update content: Cost maintenance save now persists refund_amount_yuan with channel investment and ensures the refund column exists.
 */
@@ -36,7 +42,7 @@
           复用 maintenanceImport.js 的 WAN_TO_YUAN / readJsonBody / sendJson，避免口径漂移。
 */
 import { createDbConnection, queryRows, nextId } from './db.js';
-import { WAN_TO_YUAN, readJsonBody, sendJson } from './maintenanceImport.js';
+import { WAN_TO_YUAN, readJsonBody, sendJson, resolveDepartmentChannelId } from './maintenanceImport.js';
 import { buildDepartmentChannelKeyMap } from './departmentChannel.js';
 
 function isTempId(value, prefix) {
@@ -85,54 +91,46 @@ async function saveNewChannelGroups(connection, groups = [], errors = []) {
   return { written, skipped, validChannelIds, tempChannelIdMap };
 }
 
-/** 目标维护：按 (year_month, staff_id) 部分列 upsert，仅写 target_amount_yuan。人员须 is_sales=1 且有部门。 */
+/** 目标维护：按 (year_month, department_id, staff_id IS NULL) 部分列 upsert，仅写 target_amount_yuan。
+ *  部门级目标：staff_id 置 NULL，channel_id 由部门解析。部门须存在于 dim_department 且启用。 */
 export async function saveTarget(connection, rows) {
   let written = 0;
   let skipped = 0;
   const errors = [];
   for (const row of rows) {
-    const staffId = Number(row.staff_id);
+    const departmentId = Number(row.department_id);
     const yearMonth = String(row.year_month || '');
-    if (!Number.isInteger(staffId) || !/^\d{4}-\d{2}$/.test(yearMonth)) {
+    if (!Number.isInteger(departmentId) || !/^\d{4}-\d{2}$/.test(yearMonth)) {
       skipped += 1;
-      errors.push({ field: 'staff_id|year_month', message: `目标行键非法，跳过：staff_id=${row.staff_id} year_month=${yearMonth}` });
+      errors.push({ field: 'department_id|year_month', message: `目标行键非法，跳过：department_id=${row.department_id} year_month=${yearMonth}` });
       continue;
     }
-    // 口径与导入一致：只允许销售且有部门的人员保存目标
-    const staffRows = await queryRows(connection, 'SELECT is_sales, is_enabled, department_id FROM dim_staff WHERE staff_id = ? LIMIT 1', [staffId]);
-    const st = staffRows[0];
-    if (!st) {
+    // 部门级目标：部门须存在且启用，staff_id 置 NULL，channel_id 由部门解析（与导入口径一致）
+    const deptRows = await queryRows(connection, 'SELECT department_id, is_enabled FROM dim_department WHERE department_id = ? LIMIT 1', [departmentId]);
+    const dept = deptRows[0];
+    if (!dept) {
       skipped += 1;
-      errors.push({ field: 'staff_id', message: `人员不存在，跳过：staff_id=${staffId}` });
+      errors.push({ field: 'department_id', message: `组织不存在，跳过：department_id=${departmentId}` });
       continue;
     }
-    if (Number(st.is_sales) !== 1) {
+    if (Number(dept.is_enabled) !== 1) {
       skipped += 1;
-      errors.push({ field: 'staff_id', message: `staff_id=${staffId} 不是销售，无法保存目标` });
+      errors.push({ field: 'department_id', message: `department_id=${departmentId} 已停用，无法保存目标` });
       continue;
     }
-    if (st.department_id == null) {
-      skipped += 1;
-      errors.push({ field: 'staff_id', message: `staff_id=${staffId} 无所属组织，无法保存目标` });
-      continue;
-    }
-    if (Number(st.is_enabled) !== 1) {
-      skipped += 1;
-      errors.push({ field: 'staff_id', message: `staff_id=${staffId} 已停用，无法保存目标` });
-      continue;
-    }
+    const channelId = await resolveDepartmentChannelId(connection, departmentId);
     const amountYuan = WAN_TO_YUAN(row.target_amount_wan);
-    const existing = await queryRows(connection, 'SELECT target_id FROM biz_target_monthly WHERE `year_month` = ? AND staff_id = ?', [yearMonth, staffId]);
+    const existing = await queryRows(connection, 'SELECT target_id FROM biz_target_monthly WHERE `year_month` = ? AND department_id = ? AND staff_id IS NULL LIMIT 1', [yearMonth, departmentId]);
     if (existing[0]?.target_id) {
       await connection.execute(
-        'UPDATE biz_target_monthly SET target_amount_yuan = ? WHERE target_id = ?',
-        [amountYuan, existing[0].target_id],
+        'UPDATE biz_target_monthly SET channel_id = ?, target_amount_yuan = ? WHERE target_id = ?',
+        [channelId, amountYuan, existing[0].target_id],
       );
     } else {
       const id = await nextId(connection, 'biz_target_monthly', 'target_id');
       await connection.execute(
-        'INSERT INTO biz_target_monthly (target_id, `year_month`, staff_id, target_amount_yuan, target_opening_count, target_order_count) VALUES (?, ?, ?, ?, 0, 0)',
-        [id, yearMonth, staffId, amountYuan],
+        'INSERT INTO biz_target_monthly (target_id, `year_month`, department_id, staff_id, channel_id, target_amount_yuan, target_opening_count, target_order_count) VALUES (?, ?, ?, NULL, ?, ?, 0, 0)',
+        [id, yearMonth, departmentId, channelId, amountYuan],
       );
     }
     written += 1;

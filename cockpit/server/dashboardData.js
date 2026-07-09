@@ -1,4 +1,11 @@
 /*
+ 更新时间: 2026-07-09 14:51:22 CST
+ 更新内容: 目标口径改为部门级:monthlyTargets/channelTargets/yearChannelTargets/memberTargets 查询
+   去掉 JOIN dim_staff,改 WHERE staff_id IS NULL 取部门级目标,渠道目标直接用 t.channel_id;
+   memberTargets/memberRecovered 改按 department 聚合;addMemberMetric 改用 department_id/department_name,
+   首页"目标完成明细"由按人改为按部门。回款总数仍走 revenueDaily(查询3),不受影响。
+*/
+/*
  更新时间: 2026-07-08 18:22:00 CST
  更新内容: dashboard 快照新增成本月趋势 costTrend，按渠道投放成本与人力成本聚合，供总投入费比二级下钻使用。
 */
@@ -326,14 +333,14 @@ function makeCostTrend({ channelCosts = [], laborCosts = [], latestMonth }) {
 }
 
 function addMemberMetric(map, row, field) {
-  const staffId = row.staff_id;
+  const deptId = row.department_id;
   const channelKey = row.channel_key;
-  if (staffId == null || !channelKey) return;
-  const key = `${channelKey}:${staffId}`;
+  if (deptId == null || !channelKey) return;
+  const key = `${channelKey}:${deptId}`;
   const current = map.get(key) ?? {
-    key: `staff-${staffId}`,
+    key: `dept-${deptId}`,
     group: channelKey,
-    name: row.staff_name,
+    name: row.department_name,
     monthTarget: 0,
     monthRecovered: 0,
     yearTarget: 0,
@@ -704,68 +711,54 @@ export async function buildDashboardSnapshot(connection) {
              SUM(t.target_opening_count) AS opening_target,
              SUM(t.target_order_count) AS order_target
       FROM biz_target_monthly t
-      JOIN dim_staff s ON s.staff_id = t.staff_id
       WHERE t.\`year_month\` LIKE CONCAT(?, '%')
-        AND s.is_sales = 1
-        AND s.department_id IS NOT NULL
-        AND s.is_enabled = 1
+        AND t.staff_id IS NULL
       GROUP BY t.\`year_month\`
       ORDER BY t.\`year_month\`
     `, [latestYear]),
     queryRows(connection, `
-      SELECT ${STAFF_CHANNEL_KEY_SQL} AS channel_key, ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
+      SELECT c.channel_key, ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
       FROM biz_target_monthly t
-      JOIN dim_staff s ON s.staff_id = t.staff_id
-      LEFT JOIN dim_department d ON d.department_id = s.department_id
+      LEFT JOIN dim_channel c ON c.channel_id = t.channel_id
       WHERE t.\`year_month\` = ?
-        AND s.is_sales = 1
-        AND s.department_id IS NOT NULL
-        AND s.is_enabled = 1
-      GROUP BY ${STAFF_CHANNEL_KEY_SQL}
+        AND t.staff_id IS NULL
+      GROUP BY c.channel_key
       HAVING channel_key IS NOT NULL
     `, [latestMonth]),
     queryRows(connection, `
-      SELECT ${STAFF_CHANNEL_KEY_SQL} AS channel_key, ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
+      SELECT c.channel_key, ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
       FROM biz_target_monthly t
-      JOIN dim_staff s ON s.staff_id = t.staff_id
-      LEFT JOIN dim_department d ON d.department_id = s.department_id
+      LEFT JOIN dim_channel c ON c.channel_id = t.channel_id
       WHERE t.\`year_month\` LIKE CONCAT(?, '%')
-        AND s.is_sales = 1
-        AND s.department_id IS NOT NULL
-        AND s.is_enabled = 1
-      GROUP BY ${STAFF_CHANNEL_KEY_SQL}
+        AND t.staff_id IS NULL
+      GROUP BY c.channel_key
       HAVING channel_key IS NOT NULL
     `, [latestYear]),
     queryRows(connection, `
-      SELECT t.\`year_month\`, s.staff_id, s.staff_name,
-             ${STAFF_CHANNEL_KEY_SQL} AS channel_key,
+      SELECT t.\`year_month\`, d.department_id, d.department_name,
+             c.channel_key,
              ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
       FROM biz_target_monthly t
-      JOIN dim_staff s ON s.staff_id = t.staff_id
-      LEFT JOIN dim_department d ON d.department_id = s.department_id
+      JOIN dim_department d ON d.department_id = t.department_id
+      LEFT JOIN dim_channel c ON c.channel_id = t.channel_id
       WHERE t.\`year_month\` LIKE CONCAT(?, '%')
-        AND s.is_sales = 1
-        AND s.department_id IS NOT NULL
-        AND s.is_enabled = 1
-      GROUP BY t.\`year_month\`, s.staff_id, s.staff_name, ${STAFF_CHANNEL_KEY_SQL}
+        AND t.staff_id IS NULL
+      GROUP BY t.\`year_month\`, d.department_id, d.department_name, c.channel_key
       HAVING channel_key IS NOT NULL
-      ORDER BY t.\`year_month\`, channel_key, s.staff_id
+      ORDER BY t.\`year_month\`, channel_key, d.department_id
     `, [latestYear]),
     queryRows(connection, `
-      SELECT DATE_FORMAT(r.stat_date, '%Y-%m') AS \`year_month\`, s.staff_id, s.staff_name,
-             ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
+      SELECT DATE_FORMAT(r.stat_date, '%Y-%m') AS \`year_month\`, d.department_id, d.department_name,
+             c.channel_key,
              ROUND(SUM(r.recovered_amount_yuan) / 10000, 2) AS recovered_wan
       FROM fact_revenue_daily r
-      JOIN dim_staff s ON s.staff_id = r.staff_id
-      LEFT JOIN dim_department d ON d.department_id = s.department_id
+      JOIN dim_department d ON d.department_id = r.department_id
       LEFT JOIN dim_channel c ON c.channel_id = r.channel_id
       WHERE r.stat_date >= ? AND r.stat_date < ?
-        AND s.is_sales = 1
-        AND s.department_id IS NOT NULL
-        AND s.is_enabled = 1
-      GROUP BY DATE_FORMAT(r.stat_date, '%Y-%m'), s.staff_id, s.staff_name, ${STAFF_OR_FACT_CHANNEL_KEY_SQL}
+        AND d.is_enabled = 1
+      GROUP BY DATE_FORMAT(r.stat_date, '%Y-%m'), d.department_id, d.department_name, c.channel_key
       HAVING channel_key IS NOT NULL
-      ORDER BY \`year_month\`, channel_key, s.staff_id
+      ORDER BY \`year_month\`, channel_key, d.department_id
     `, [`${latestYear}-01-01`, `${nextYear}-01-01`]),
     queryRows(connection, `
       SELECT c.channel_key, ROUND(cost.investment_amount_yuan / 10000, 2) AS investment_wan

@@ -1,4 +1,10 @@
 /*
+ Update time: 2026-07-09 14:51:22 CST
+ Update content: 目标维护改为部门级:右侧表格只显示部门行(隐藏人员明细行),部门行(除"所有组织"合计行外)
+   变为可编辑目标,draft 键改用 summary-<deptId>;左侧组织架构人数改为部门计数。配合后端 saveTarget/
+   readTarget 与首页口径一并改为部门级(staff_id IS NULL)。
+*/
+/*
  Update time: 2026-07-09 14:29:12 CST
  Update content: 修复成本/组织/渠道维护页"下载模板"按钮点击无响应。工具栏按钮以 onDownloadTemplate
    直接作 onClick 时,React 会把事件对象当第一个参数传入,覆盖了 handleDownloadTemplate 的默认参数
@@ -556,7 +562,7 @@ function TargetPeriodHeader({ column }) {
 
 function TargetPeriodCell({ row, column, onEdit }) {
   const period = row.periods[column.key];
-  const editable = row.type === 'user' && column.month;
+  const editable = row.type === 'department' && column.month && row.id !== 'summary-all';
 
   return (
     <td
@@ -597,10 +603,12 @@ const TargetMaintenancePage = forwardRef(function TargetMaintenancePage({ markDi
     [orgTree, selectedOrg]
   );
   const visibleTargetRows = useMemo(() => {
-    if (!orgTree || selectedOrg === orgTree.id || selectedOrgIds.size === 0) return rowList;
-    return rowList.filter((row) => targetRowBelongsToOrg(row, selectedOrgIds));
+    // 目标维护改为部门级：只保留部门行，不再显示人员明细行
+    const deptRows = rowList.filter((row) => row.type === 'department');
+    if (!orgTree || selectedOrg === orgTree.id || selectedOrgIds.size === 0) return deptRows;
+    return deptRows.filter((row) => targetRowBelongsToOrg(row, selectedOrgIds));
   }, [orgTree, rowList, selectedOrg, selectedOrgIds]);
-  const visibleTargetUserCount = visibleTargetRows.filter((row) => row.type === 'user').length;
+  const visibleDeptCount = visibleTargetRows.filter((row) => row.type === 'department' && row.id !== 'summary-all').length;
   const selectedTargetRowIndex = visibleTargetRows.findIndex((row) => `target:${row.id}` === selectedTargetRow);
 
   useImperativeHandle(ref, () => ({
@@ -614,7 +622,7 @@ const TargetMaintenancePage = forwardRef(function TargetMaintenancePage({ markDi
 
   return (
     <section className="mnt-layout mnt-layout--target">
-      <Panel title="组织架构" meta={`${visibleTargetUserCount} 人`} className="mnt-side-panel">
+      <Panel title="组织架构" meta={`${visibleDeptCount} 个部门`} className="mnt-side-panel">
         <MaintenanceSideNav nodes={orgTree ? [orgTree] : []} activeId={selectedOrg} onSelect={setSelectedOrg} />
       </Panel>
       <Panel title="年度目标" meta={<SaveBadge status={status} />} className="mnt-main-panel">
@@ -624,7 +632,7 @@ const TargetMaintenancePage = forwardRef(function TargetMaintenancePage({ markDi
               <table className="mnt-matrix mnt-matrix--target-name">
                 <thead>
                   <tr>
-                    <th>部门/人员</th>
+                    <th>部门</th>
                   </tr>
                 </thead>
                 <tbody>

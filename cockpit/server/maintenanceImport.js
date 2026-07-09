@@ -1,4 +1,9 @@
 /*
+ Update time: 2026-07-09 14:51:22 CST
+ Update content: export resolveDepartmentChannelId 供 maintenanceSave.saveTarget 复用:目标维护页内编辑改为
+   部门级保存时,需由 department_id 解析 channel_id 写入 biz_target_monthly(staff_id IS NULL)。
+*/
+/*
  Update time: 2026-07-09 16:20:00 CST
  Update content: Cost maintenance Excel import supports refund_amount_yuan and ensures the channel cost refund column exists.
 */
@@ -64,7 +69,7 @@ async function resolveDepartmentChannelKeyFromDb(connection, departmentId) {
   return resolveDepartmentChannelKey(departments, departmentId);
 }
 
-async function resolveDepartmentChannelId(connection, departmentId) {
+export async function resolveDepartmentChannelId(connection, departmentId) {
   const channelKey = await resolveDepartmentChannelKeyFromDb(connection, departmentId);
   if (!channelKey) return null;
   const rows = await queryRows(connection, 'SELECT channel_id AS id FROM dim_channel WHERE channel_key = ? AND is_enabled = 1 LIMIT 1', [channelKey]);
