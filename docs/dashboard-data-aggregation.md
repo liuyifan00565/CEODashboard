@@ -1,5 +1,8 @@
 # Dashboard Data Aggregation
 
+Update time: 2026-07-09 18:26:37 CST
+Update content: Added the compute token usage schema script reference. External token/compute API fields now have local MySQL tables in `scripts/create_compute_token_usage_tables.sql`; `fact_compute_usage_daily` keeps existing display columns while adding raw API fields.
+
 Update time: 2026-07-09 16:28:48 CST
 Update content: Dashboard display text remains "回款"; all dashboard recovered values now subtract per-channel monthly refunds from `biz_channel_cost_monthly.refund_amount_yuan`, and the API returns `kpi.monthRefund` / `kpi.yearRefund` for monthly and annual refund notes.
 
@@ -57,7 +60,7 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 - 成本趋势：`costTrend` 按当前业务年份从 `biz_channel_cost_monthly` 聚合各渠道投放成本，并从 `biz_labor_cost_monthly` 聚合人力成本，返回 `{ yearMonth, label, adCost, laborCost, totalCost, channels }`；其中 `channels` 是渠道投放成本拆分，`totalCost = adCost + laborCost`。
 - 总投入费比二级下钻：全渠道视角展示 `totalCost`；选择单个或多个渠道时，主指标只展示所选渠道投放成本合计，底部同时标明全渠道总投入和广告/人力构成。人力成本不强行分摊到单渠道。
 - 开户数：`fact_opening_account_daily.opening_count`。本月开户环比 `previous` 取上一月同表汇总，今日开户 `previous` 取上一个有数据日期的汇总；当无历史日期时回退 0。
-- 算力趋势、客户排行、资源健康：分别来自 `fact_compute_usage_daily`、`fact_compute_customer_daily`、`fact_compute_resource_health_daily` 等算力事实表。
+- 算力趋势、客户排行、资源健康：分别来自 `fact_compute_usage_daily`、`fact_compute_customer_daily`、`fact_compute_resource_health_daily` 等算力事实表；外部 token/算力接口对应的建表脚本为 `scripts/create_compute_token_usage_tables.sql`。
 - 算力 overview：总容量/新增/已耗来自 `fact_compute_usage_daily`；客户数、客户用量、客户余额、平均回复率、新开客户数、店铺数来自 `fact_compute_customer_daily` 最新快照——新开客户按手机号在更早日期不存在的记录计数，店铺数按 `customer_name` 同理计数；平均回复率取 `AVG(average_reply_rate)`。
 - 算力页前端派生指标：算力利用率 = `consumedCapacity / totalCapacity`；供需关系图把趋势中的用量、按当前总容量缩放后的容量和二者利用率同屏展示；风险客户按客户明细中的低余额（余额不高于 100 万点或余额/用量不高于 3）、高消耗（用量不低于 40 万点）、低回复（平均回复率低于 60%）和零用量标签派生；建议动作由风险标签映射为销售提醒充值、客成激活、客成排查配置、余额预警或高价值场景复盘；版本效率洞察按版本消耗占比计算头部版本和前两版本集中度。
 - 续费：`fact_renewal_daily` 按渠道×版本先聚合当月到期/已续/续费金额，再 LEFT JOIN 上一月同口径聚合得到 `prev_due_count`/`prev_renewed_count`；当上一月无数据时回退 0。
