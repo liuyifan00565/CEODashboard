@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 17:57:41 CST
+ 更新内容: 经营总览回归测试锁定年度目标进度条右端收回到结构区分界线内侧，避免越界。
+*/
+/*
  更新时间: 2026-07-09 17:49:45 CST
  更新内容: 经营总览回归测试锁定年度目标进度条桌面端加长到更接近右侧经营情况列。
 */
@@ -1426,7 +1430,7 @@ test('replaces the annual rhythm chart with a yearly recovery overview footer', 
   assert.match(operatingOverviewSource, /className="op-annual-progress-track"/);
   assert.match(operatingOverviewSource, /className="op-annual-fill" style=\{\{ width: annualCapsuleWidth \}\}/);
   assert.match(operatingOverviewSource, /aria-label=\{`年度目标进度 \$\{formatWan\(KPI\.yearRecovered\)\} 万 \/ \$\{formatWan\(KPI\.yearTarget\)\} 万，完成率 \$\{formatPct\(KPI_DERIVED\.yearCompletion\)\}`\}/);
-  assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{[\s\S]*?width:\s*min\(calc\(100% \+ clamp\(304px, calc\(27\.5vw - 89px\), 440px\)\), calc\(100vw - 96px\)\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{[\s\S]*?width:\s*min\(calc\(100% \+ clamp\(288px, calc\(27\.5vw - 105px\), 424px\)\), calc\(100vw - 96px\)\);/);
   assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{[\s\S]*?margin-top:\s*clamp\(3px, \.45vw, 6px\);/);
   assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{[\s\S]*?transform:\s*none;/);
   assert.match(operatingOverviewCss, /\.op-annual-progress-main\s*\{[\s\S]*?min-height:\s*32px;[\s\S]*?grid-template-columns:\s*auto minmax\(140px, 1fr\) auto;/);
