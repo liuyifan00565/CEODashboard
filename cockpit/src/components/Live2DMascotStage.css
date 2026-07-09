@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 12:09:25 CST
+ 更新内容: 关闭本地福小客 rig 的额外 CSS 主动动效和 ready 淡入，只保留动作帧与切换淡出，避免多层动画叠加。
+*/
+/*
  更新时间: 2026-07-09 11:53:13 CST
  更新内容: 增加本地福小客 rig 渲染层样式，让完整动作资源包可在缺少 Cubism 二进制导出时直接显示。
 */
@@ -14,7 +18,7 @@
   pointer-events: none;
   opacity: 0;
   transform: translateZ(0);
-  transition: opacity .24s ease;
+  transition: none;
 }
 
 .mascot-live2d-stage__canvas {
@@ -47,7 +51,7 @@
   background-position: var(--fuxiaoke-rig-bg-x) var(--fuxiaoke-rig-bg-y);
   image-rendering: auto;
   transform-origin: center bottom;
-  animation: fuxiaoke-local-rig-idle 5.8s cubic-bezier(.45, 0, .2, 1) infinite;
+  animation: none;
   backface-visibility: hidden;
 }
 
@@ -56,7 +60,7 @@
 .mascot-local-live2d-rig--click .mascot-local-live2d-rig__sheet,
 .mascot-local-live2d-rig--celebrate .mascot-local-live2d-rig__sheet,
 .mascot-local-live2d-rig--maintenance-save .mascot-local-live2d-rig__sheet {
-  animation: fuxiaoke-local-rig-active 1.25s cubic-bezier(.2, .82, .2, 1) both;
+  animation: none;
 }
 
 .mascot-local-live2d-rig__blend-layer {
@@ -74,36 +78,6 @@
 
 .mascot-sprite-stage--live2d-ready .mascot-sprite-stage__sheet {
   opacity: 0;
-}
-
-@keyframes fuxiaoke-local-rig-idle {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-
-  46% {
-    transform: translate3d(0, -1px, 0);
-  }
-
-  72% {
-    transform: translate3d(.6px, -.3px, 0);
-  }
-}
-
-@keyframes fuxiaoke-local-rig-active {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-
-  34% {
-    transform: translate3d(.9px, -1.4px, 0);
-  }
-
-  68% {
-    transform: translate3d(-.6px, -.5px, 0);
-  }
 }
 
 @keyframes fuxiaoke-local-rig-crossfade-out {

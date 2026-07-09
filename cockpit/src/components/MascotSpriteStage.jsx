@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 12:09:25 CST
+ 更新内容: 模型检测、加载和 ready 期间冻结 sprite 帧播放，只在确认 fallback 后启用 sprite 动画与过渡层。
+*/
+/*
  更新时间: 2026-07-09 11:43:55 CST
  更新内容: 为 sprite 小人动作切换增加旧帧淡出过渡，缓解非 Live2D 骨骼动作之间的硬切问题。
 */
@@ -95,7 +99,7 @@ export default function MascotSpriteStage({
 }) {
   const [frameCursor, setFrameCursor] = useState(0);
   const [idleVariantIndex, setIdleVariantIndex] = useState(0);
-  const [live2dStatus, setLive2dStatus] = useState('idle');
+  const [live2dStatus, setLive2dStatus] = useState('checking');
   const [transitionGhost, setTransitionGhost] = useState(null);
   const animationFrameRef = useRef(0);
   const transitionTimeoutRef = useRef(0);
@@ -117,6 +121,7 @@ export default function MascotSpriteStage({
     actionSignature,
     style: stageStyle,
   };
+  const spriteFallbackActive = live2dStatus === 'fallback';
 
   useEffect(() => {
     preloadMascotActionSheets();
@@ -132,7 +137,7 @@ export default function MascotSpriteStage({
     const previousSignature = lastActionSignatureRef.current;
     const previousPresentation = latestPresentationRef.current;
     const actionChanged = previousSignature && previousSignature !== actionSignature;
-    if (actionChanged && previousPresentation) {
+    if (spriteFallbackActive && actionChanged && previousPresentation) {
       setTransitionGhost({
         ...previousPresentation,
         transitionKey: `${previousSignature}->${actionSignature}`,
@@ -145,7 +150,7 @@ export default function MascotSpriteStage({
       }
     }
     lastActionSignatureRef.current = actionSignature;
-  }, [actionSignature]);
+  }, [actionSignature, spriteFallbackActive]);
 
   useEffect(() => {
     latestPresentationRef.current = currentPresentation;
@@ -161,6 +166,10 @@ export default function MascotSpriteStage({
 
   useEffect(() => {
     if (typeof window === 'undefined' || animation.frames.length <= 1) return undefined;
+    if (!spriteFallbackActive) {
+      setFrameCursor(0);
+      return undefined;
+    }
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (reduceMotion) return undefined;
 
@@ -197,13 +206,14 @@ export default function MascotSpriteStage({
     return () => {
       cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [animation]);
+  }, [animation, spriteFallbackActive]);
 
   return (
     <span
       className={[
         'mascot-sprite-stage',
         `mascot-sprite-stage--${animation.intensity}`,
+        live2dStatus === 'checking' || live2dStatus === 'loading' ? 'mascot-sprite-stage--model-pending' : '',
         live2dStatus === 'ready' ? 'mascot-sprite-stage--live2d-ready' : '',
         analysisActive ? 'mascot-sprite-stage--active' : '',
       ].filter(Boolean).join(' ')}
@@ -215,7 +225,7 @@ export default function MascotSpriteStage({
       style={stageStyle}
     >
       <span className="mascot-sprite-stage__sheet" aria-hidden="true" />
-      {transitionGhost ? (
+      {spriteFallbackActive && transitionGhost ? (
         <span className="mascot-sprite-stage__blend-layer" aria-hidden="true">
           <span
             key={transitionGhost.transitionKey}

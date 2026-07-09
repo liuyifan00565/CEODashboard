@@ -1,3 +1,6 @@
+更新时间: 2026-07-09 12:09:25 CST
+更新内容: 明确当前本地 rig 的 model3 是项目入口清单，启动检测期会冻结 sprite，真实 Cubism 效果需要替换为 Editor 导出的二进制 moc3 资源。
+
 更新时间: 2026-07-09 11:53:13 CST
 更新内容: 补齐项目内福小客本地 rig 资源包说明，前端会优先加载该资源包显示完整动作层，再回退到 Cubism 真模型或 sprite。
 
@@ -18,7 +21,9 @@
 - `public/live2d/fuxiaoke/fuxiaoke.moc3`
 - `public/live2d/fuxiaoke/motions/*.motion3.json`
 
-该本地 rig 包引用项目内已有福小客动作帧，作为可直接运行的完整动作层。若后续替换为 Cubism Editor 正式导出的二进制模型，则仍沿用以下入口:
+该本地 rig 包引用项目内已有福小客动作帧，作为可直接运行的完整动作层。加载检测期内 sprite 会保持静态首帧，只有确认本地 rig 和 Cubism 模型都不可用时才启用 sprite 自身动画，避免启动时多套动画短暂叠加。
+
+这里的 `fuxiaoke.model3.json` 是入口清单；当前 `fuxiaoke.moc3` 是项目本地 rig payload，不是 Cubism Editor 导出的二进制骨骼模型。若后续替换为 Cubism Editor 正式导出的二进制模型，则仍沿用以下入口:
 
 - `public/live2d/live2dcubismcore.min.js`
 - `public/live2d/fuxiaoke/fuxiaoke.model3.json`

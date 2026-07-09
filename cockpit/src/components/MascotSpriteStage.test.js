@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-09 11:43:55 CST
- 更新内容: 验收 sprite 小人动作切换具备旧帧淡出过渡，避免非 Live2D 动作之间直接硬切。
+ 更新时间: 2026-07-09 12:09:25 CST
+ 更新内容: 验收模型检测和 ready 期间冻结 sprite 帧播放，只有 fallback 兜底时才启用 sprite 动画与过渡层。
 */
 /*
  更新时间: 2026-07-09 10:52:44 CST
@@ -101,10 +101,18 @@ test('renders a manifest-driven generated mascot sprite stage', () => {
 });
 
 test('keeps the generated Fu Xiaoke sprite visible until the Live2D model is ready', () => {
-  assert.match(componentCode, /const \[live2dStatus,\s*setLive2dStatus\] = useState\('idle'\);/);
+  assert.match(componentCode, /const \[live2dStatus,\s*setLive2dStatus\] = useState\('checking'\);/);
   assert.match(componentCode, /live2dStatus === 'ready' \? 'mascot-sprite-stage--live2d-ready' : ''/);
   assert.match(componentCode, /<span className="mascot-sprite-stage__sheet" aria-hidden="true" \/>/);
   assert.match(componentCode, /<Live2DMascotStage[\s\S]*?action=\{animation\.key\}[\s\S]*?label=\{label\}[\s\S]*?onLoadStateChange=\{setLive2dStatus\}/);
+});
+
+test('freezes the sprite layer while the local rig is checking or ready', () => {
+  assert.match(componentCode, /const spriteFallbackActive = live2dStatus === 'fallback';/);
+  assert.match(componentCode, /if \(!spriteFallbackActive\) \{\s*setFrameCursor\(0\);\s*return undefined;\s*\}/);
+  assert.match(componentCode, /live2dStatus === 'checking' \|\| live2dStatus === 'loading' \? 'mascot-sprite-stage--model-pending' : ''/);
+  assert.match(cssCode, /\.mascot-sprite-stage--model-pending \.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*none !important;[\s\S]*transform:\s*translate3d\(0, 0, 0\);/);
+  assert.match(cssCode, /\.mascot-sprite-stage--live2d-ready \.mascot-sprite-stage__blend-layer\s*\{[\s\S]*display:\s*none;/);
 });
 
 test('preloads all generated action sheets before action switches need them', () => {
@@ -137,8 +145,10 @@ test('crossfades sprite action changes instead of hard-cutting sheets', () => {
   assert.match(componentCode, /const lastActionSignatureRef = useRef\(''\);/);
   assert.match(componentCode, /const latestPresentationRef = useRef\(null\);/);
   assert.match(componentCode, /previousSignature !== actionSignature/);
+  assert.match(componentCode, /spriteFallbackActive && actionChanged && previousPresentation/);
   assert.match(componentCode, /setTransitionGhost\(\{/);
   assert.match(componentCode, /window\.setTimeout\(\(\) => \{\s*setTransitionGhost\(null\);/);
+  assert.match(componentCode, /\{spriteFallbackActive && transitionGhost \? \(/);
   assert.match(componentCode, /mascot-sprite-stage__blend-layer/);
   assert.match(componentCode, /mascot-sprite-stage__sheet--ghost/);
 });

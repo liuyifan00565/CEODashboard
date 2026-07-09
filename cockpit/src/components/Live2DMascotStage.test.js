@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-09 11:53:13 CST
- 更新内容: 验收本地福小客 rig 资源包和优先渲染路径，确保不再只停留在缺模型 fallback。
+ 更新时间: 2026-07-09 12:09:25 CST
+ 更新内容: 验收本地福小客 rig ready 后不再叠加 CSS 主动动效和淡入层，避免加载期出现多套动画。
 */
 /*
  Update time: 2026-07-08 20:29:00 CST
@@ -174,6 +174,7 @@ test('maps existing mascot actions to optional Live2D motion groups', () => {
 test('keeps Live2D canvas transparent and unable to steal launcher clicks', () => {
   assert.match(cssCode, /\.mascot-live2d-stage\s*\{/);
   assert.match(cssCode, /\.mascot-live2d-stage\s*\{[\s\S]*pointer-events:\s*none;/);
+  assert.match(cssCode, /\.mascot-live2d-stage\s*\{[\s\S]*transition:\s*none;/);
   assert.match(cssCode, /\.mascot-live2d-stage__canvas\s*\{[\s\S]*pointer-events:\s*none;/);
   assert.match(cssCode, /\.mascot-sprite-stage--live2d-ready\s+\.mascot-live2d-stage\s*\{[\s\S]*opacity:\s*1;/);
   assert.match(cssCode, /\.mascot-sprite-stage--live2d-ready\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*opacity:\s*0;/);
@@ -183,6 +184,8 @@ test('renders the local Fu Xiaoke rig as a click-through ready layer', () => {
   assert.match(cssCode, /\.mascot-local-live2d-rig,\s*[\s\S]*?\.mascot-local-live2d-rig__sheet,\s*[\s\S]*?\.mascot-local-live2d-rig__blend-layer\s*\{[\s\S]*pointer-events:\s*none;/);
   assert.match(cssCode, /\.mascot-local-live2d-rig__sheet\s*\{[\s\S]*background-image:\s*var\(--fuxiaoke-rig-sheet-url\);/);
   assert.match(cssCode, /\.mascot-local-live2d-rig__sheet\s*\{[\s\S]*background-size:\s*var\(--fuxiaoke-rig-sheet-width\) 100%;/);
+  assert.match(cssCode, /\.mascot-local-live2d-rig__sheet\s*\{[\s\S]*animation:\s*none;/);
+  assert.doesNotMatch(cssCode, /fuxiaoke-local-rig-idle/);
   assert.match(cssCode, /\.mascot-local-live2d-rig__sheet--ghost\s*\{[\s\S]*animation:\s*fuxiaoke-local-rig-crossfade-out \.26s/);
   assert.match(cssCode, /@keyframes fuxiaoke-local-rig-crossfade-out/);
   assert.doesNotMatch(cssCode, /fuxiaoke-local-rig-crossfade-out[\s\S]*?(?:scale|rotate)/);

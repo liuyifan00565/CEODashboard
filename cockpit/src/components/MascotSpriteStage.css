@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 12:09:25 CST
+ 更新内容: 模型检测和加载期暂停 sprite CSS 动效并在 ready 后隐藏旧过渡层，配合组件冻结帧播放避免多套动画叠加。
+*/
+/*
  更新时间: 2026-07-09 11:43:55 CST
  更新内容: 增加 sprite 动作切换 crossfade 过渡，用旧帧淡出衔接新动作，避免状态硬切且不引入缩放旋转。
 */
@@ -92,6 +96,15 @@
 .mascot-sprite-stage__sheet--ghost {
   z-index: 5;
   animation: mascot-action-crossfade-out .26s cubic-bezier(.2, .82, .2, 1) both !important;
+}
+
+.mascot-sprite-stage--model-pending .mascot-sprite-stage__sheet {
+  animation: none !important;
+  transform: translate3d(0, 0, 0);
+}
+
+.mascot-sprite-stage--live2d-ready .mascot-sprite-stage__blend-layer {
+  display: none;
 }
 
 .mascot-sprite-stage--idle .mascot-sprite-stage__sheet,
