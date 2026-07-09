@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 12:12:08 CST
+ 更新内容: 经营总览回归测试同步半环中心数字移除，并锁定进一步收窄后的图表列尺寸。
+*/
+/*
  更新时间: 2026-07-09 12:02:57 CST
  更新内容: 经营总览回归测试同步超额/缺口并入主数字事实行，并删除独立风险渠道提醒卡。
 */
@@ -1164,6 +1168,8 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /实际回款 \/ 目标回款/);
   assert.match(operatingOverviewSource, /实际 \{formatWan\(row\.recovered\)\}万 \/ 目标 \{formatWan\(row\.target\)\}万/);
   assert.match(operatingOverviewSource, /row\.gap > 0 && <span>缺口 \{formatWan\(row\.gap\)\}万<\/span>/);
+  assert.doesNotMatch(operatingOverviewSource, /className="op-channel-center"/);
+  assert.doesNotMatch(operatingOverviewSource, /<b>\{formatPct\(structure\.completion\)\}<\/b>/);
   assert.doesNotMatch(operatingOverviewSource, /riskChannel\?\.name/);
   assert.doesNotMatch(operatingOverviewSource, /const riskChannel/);
   assert.doesNotMatch(operatingOverviewSource, /overviewMetrics\.monthJudgement/);
@@ -1225,8 +1231,9 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewCss, /\.op-annual-capsule\s*\{/);
   assert.match(operatingOverviewCss, /\.op-annual-fill\s*\{/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-annual-chart\s*\{/);
-  assert.match(operatingOverviewCss, /\.op-month-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(220px, \.9fr\) minmax\(230px, \.82fr\) minmax\(330px, 1\.16fr\);/);
+  assert.match(operatingOverviewCss, /\.op-month-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(220px, \.92fr\) minmax\(190px, \.64fr\) minmax\(330px, 1\.22fr\);/);
   assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?border-left:\s*1px solid rgba\(255,255,255,\.035\);[\s\S]*?border-right:\s*1px solid rgba\(255,255,255,\.035\);/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-channel-center/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-panel--channel/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-search-result--channel/);
   assert.doesNotMatch(appSource, /recoveryKpiCards/);
@@ -1245,6 +1252,10 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   assert.match(primaryValueBlock, /font-weight:\s*840;/);
   assert.match(monthGridBlock, /border-top:\s*1px solid rgba\(255,255,255,\.035\);/);
   assert.match(monthGridBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.035\);/);
+  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 154px;[\s\S]*?align-content:\s*center;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?height:\s*154px;[\s\S]*?min-height:\s*0;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*0;/);
+  assert.match(operatingOverviewCss, /\.op-channel-item\s*\{[\s\S]*?min-height:\s*41px;/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-structure-progress/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-progress-track/);
   assert.match(operatingOverviewCss, /\.op-month-primary-facts \.op-month-primary-fact--over\s*\{/);

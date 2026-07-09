@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 12:12:08 CST  更新内容: 移除半环图中心完成率数字，并收窄月度主卡中间图表列。 */
 /* 更新时间: 2026-07-09 12:02:57 CST  更新内容: 将超额/缺口并入本月回款主事实行，并删除右侧独立风险渠道提醒卡。 */
 /* 更新时间: 2026-07-09 11:58:00 CST  更新内容: 月度回款主卡移除时间进度和月目标进度条，并压紧主卡高度。 */
 /* 更新时间: 2026-07-09 11:43:19 CST  更新内容: 将渠道半环降级并入月度回款主卡，右侧经营情况改为各渠道实际/目标/完成率。 */
@@ -308,10 +309,6 @@ function MonthlyRecoveryStructure({ structure, option }) {
         aria-label={`${MONTH_STRUCTURE_META.centerLabel} ${formatPct(structure.completion)}，本月回款 ${formatWan(structure.totalRecovered)} 万`}
       >
         <EChart className="op-channel-chart" option={option} style={{ height: '100%' }} />
-        <div className="op-channel-center" aria-hidden="true">
-          <b>{formatPct(structure.completion)}</b>
-          <span>{MONTH_STRUCTURE_META.centerLabel}</span>
-        </div>
       </div>
     </div>
   );

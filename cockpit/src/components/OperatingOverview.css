@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 12:12:08 CST  更新内容: 半环去掉中心数字后继续收窄图表列，并固定图表高度避免撑高主卡。 */
 /* 更新时间: 2026-07-09 12:02:57 CST  更新内容: 超额/缺口状态移入本月回款事实胶囊，删除右侧独立提醒卡样式。 */
 /* 更新时间: 2026-07-09 11:58:00 CST  更新内容: 月度回款主卡移除时间进度和月目标进度条，收紧主卡间距与半环图区高度。 */
 /* 更新时间: 2026-07-09 11:43:19 CST  更新内容: 将经营总览重排为月度回款主卡三栏布局，半环图并入主卡且右侧展示实际/目标/完成率。 */
@@ -152,9 +153,9 @@
 
 .op-month-grid {
   display: grid;
-  grid-template-columns: minmax(220px, .9fr) minmax(230px, .82fr) minmax(330px, 1.16fr);
+  grid-template-columns: minmax(220px, .92fr) minmax(190px, .64fr) minmax(330px, 1.22fr);
   align-items: stretch;
-  gap: clamp(14px, 1.8vw, 26px);
+  gap: clamp(12px, 1.55vw, 22px);
   border-top: 1px solid rgba(255,255,255,.035);
   border-bottom: 1px solid rgba(255,255,255,.035);
   padding: clamp(10px, 1.25vw, 15px) 0;
@@ -218,9 +219,10 @@
 .op-recovery-structure {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto minmax(158px, 1fr);
-  gap: 4px;
-  padding-inline: clamp(8px, 1.1vw, 18px);
+  grid-template-rows: auto 154px;
+  align-content: center;
+  gap: 2px;
+  padding-inline: clamp(6px, .8vw, 14px);
   border-left: 1px solid rgba(255,255,255,.035);
   border-right: 1px solid rgba(255,255,255,.035);
 }
@@ -242,8 +244,8 @@
 .op-channel-chart-wrap {
   position: relative;
   min-width: 0;
-  min-height: 164px;
-  height: 100%;
+  height: 154px;
+  min-height: 0;
   display: grid;
   place-items: center;
   isolation: isolate;
@@ -257,51 +259,20 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  min-height: 186px;
-}
-
-.op-channel-center {
-  position: absolute;
-  left: 50%;
-  top: 51%;
-  z-index: 2;
-  width: min(150px, 58%);
-  display: grid;
-  justify-items: center;
-  gap: 5px;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  pointer-events: none;
-}
-
-.op-channel-center b {
-  color: var(--txt);
-  font-size: clamp(28px, 2.55vw, 38px);
-  font-weight: 830;
-  line-height: .96;
-  letter-spacing: 0;
-  font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 18px rgba(228,184,215,.16);
-}
-
-.op-channel-center span {
-  color: rgba(247,248,252,.62);
-  font-size: 12px;
-  font-weight: 720;
-  line-height: 1.25;
+  min-height: 0;
 }
 
 .op-operating-side {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .op-channel-list {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 5px;
 }
 
 .op-channel-item {
@@ -310,9 +281,9 @@
   display: grid;
   grid-template-columns: 10px minmax(0, 1fr) minmax(74px, auto) auto;
   align-items: center;
-  gap: 10px;
-  min-height: 45px;
-  padding: 7px 9px;
+  gap: 9px;
+  min-height: 41px;
+  padding: 6px 8px;
   border: 1px solid transparent;
   border-radius: 12px;
   background: transparent;
@@ -550,7 +521,7 @@
 
 @media (max-width: 1240px) {
   .op-month-grid {
-    grid-template-columns: minmax(230px, .86fr) minmax(250px, .9fr);
+    grid-template-columns: minmax(220px, .9fr) minmax(210px, .72fr);
   }
 
   .op-operating-side {
@@ -584,11 +555,11 @@
   }
 
   .op-channel-chart-wrap {
-    min-height: 196px;
+    height: 182px;
   }
 
   .op-channel-chart {
-    min-height: 210px;
+    min-height: 0;
   }
 }
 
