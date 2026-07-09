@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 13:13:45 CST
+ 更新内容: 为经营总览与数据维护之间的侧边导航切换传递模式标识，配合侧栏平滑换组动效。
+*/
+/*
  更新时间: 2026-07-08 16:57:24 CST
  更新内容: 移除顶部右侧“更新数据”按钮，维护入口仅保留左侧导航的数据维护菜单。
 */
@@ -239,6 +243,7 @@ export default function App() {
     : `福客经营驾驶舱 · ${compactMonthLabel} · ${compactContextLabel}`;
   const sidebarItems = maintenanceMode ? MAINTENANCE_SIDEBAR_ITEMS : DASHBOARD_SIDEBAR_ITEMS;
   const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
+  const sidebarTransitionKey = maintenanceMode ? 'maintenance' : 'dashboard';
   const contentKey = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const contentRenderKey = `${contentKey}-${dashboardDataVersion}`;
   const isDashboardDataReady = dashboardDataState.status === 'ready';
@@ -453,7 +458,7 @@ export default function App() {
 
       <div className="dash-shell">
         <aside className="dash-aside">
-          <Sidebar items={sidebarItems} active={sidebarActive} onChange={handleSidebarChange} />
+          <Sidebar items={sidebarItems} active={sidebarActive} onChange={handleSidebarChange} transitionKey={sidebarTransitionKey} />
           <AIAnalysisWidget
             activeMenu={activeMenu}
             dim={dim}

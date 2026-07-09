@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 13:13:45 CST
+ 更新内容: 回归测试锁定经营总览与数据维护侧边导航换组的淡出淡入动效和稳定高度。
+*/
+/*
  更新时间: 2026-07-09 12:19:47 CST
  更新内容: 经营总览回归测试同步年度回款总览三栏卡和底部年度目标进度 footer。
 */
@@ -533,11 +537,12 @@ test('adds a dashboard maintenance entry and a compact sidebar return item that 
   assert.match(appSource, /const \[activeMaintenanceMenu,\s*setActiveMaintenanceMenu\] = useState\(DEFAULT_MAINTENANCE_MENU\);/);
   assert.match(appSource, /const sidebarItems = maintenanceMode \? MAINTENANCE_SIDEBAR_ITEMS : DASHBOARD_SIDEBAR_ITEMS;/);
   assert.match(appSource, /const sidebarActive = maintenanceMode \? activeMaintenanceMenu : activeMenu;/);
+  assert.match(appSource, /const sidebarTransitionKey = maintenanceMode \? 'maintenance' : 'dashboard';/);
   assert.match(appSource, /const activeContextLabel = maintenanceMode\s*\?\s*'数据维护'\s*:/);
   assert.doesNotMatch(appSource, /`数据维护 · \$\{activeMaintenanceLabel\}`/);
   assert.match(appSource, /function handleSidebarChange\(nextMenu\) \{[\s\S]*?if \(nextMenu === 'data-maintenance'\) \{[\s\S]*?setMaintenanceMode\(true\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?if \(nextMenu === 'dashboard-home'\) \{[\s\S]*?handleMaintenanceBack\(\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setActiveMaintenanceMenu\(nextMenu\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?handleMenuChange\(nextMenu\);[\s\S]*?\}/);
   assert.doesNotMatch(appSource, /function handleMaintenanceModeToggle\(\)/);
-  assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} \/>/);
+  assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} transitionKey=\{sidebarTransitionKey\} \/>/);
   assert.doesNotMatch(appSource, /className="maintenance-back-glass"/);
   assert.doesNotMatch(appSource, /dash-maintenance-switch--sidebar/);
   assert.doesNotMatch(appSource, /aria-label="返回主界面"/);
@@ -580,8 +585,8 @@ test('uses a 220px icon and text management sidebar with restrained hierarchy', 
   assert.doesNotMatch(appSource, /name: '客户转化'/);
   assert.match(appSource, /const MAINTENANCE_SIDEBAR_ITEMS = \[\s*MAINTENANCE_HOME_ITEM,\s*\.\.\.MAINTENANCE_MENU\.map\(\(item\) => \(\{ \.\.\.item, section: '数据维护' \}\)\),\s*\];/);
   assert.match(dashboardCss, /\.dash-aside\{[\s\S]*?width:220px;[\s\S]*?padding:18px 12px;/);
-  assert.match(sidebarSource, /<nav className="sb-root" aria-label="主导航">/);
-  assert.match(sidebarSource, /<button[\s\S]*?type="button"[\s\S]*?className=\{`sb-item\$\{item\.key === active \? ' sb-item--active' : ''\}`\}[\s\S]*?aria-label=\{item\.name\}[\s\S]*?title=\{item\.name\}/);
+  assert.match(sidebarSource, /<nav className=\{`sb-root sb-root--\$\{visiblePhase\}`\} aria-label="主导航" data-transition-key=\{transitionKey\}>/);
+  assert.match(sidebarSource, /<button[\s\S]*?type="button"[\s\S]*?className=\{`sb-item\$\{item\.key === visibleActive \? ' sb-item--active' : ''\}`\}[\s\S]*?aria-label=\{item\.name\}[\s\S]*?title=\{item\.name\}/);
   assert.match(sidebarSource, /<span className="sb-section-title">\{section\.title\}<\/span>/);
   assert.match(sidebarSource, /disabled=\{Boolean\(item\.disabled\)\}/);
   assert.match(sidebarCss, /\.sb-root\s*\{[\s\S]*?width:\s*100%;[\s\S]*?padding:\s*12px;/);
@@ -601,6 +606,24 @@ test('uses a 220px icon and text management sidebar with restrained hierarchy', 
   assert.doesNotMatch(sidebarNameBlock, /position:\s*absolute/);
   assert.doesNotMatch(sidebarNameBlock, /opacity:\s*0/);
   assert.doesNotMatch(sidebarSource, /<div className="sb-title">导航<\/div>/);
+});
+
+test('smooths the sidebar swap between dashboard and data maintenance modes', () => {
+  assert.match(appSource, /const sidebarTransitionKey = maintenanceMode \? 'maintenance' : 'dashboard';/);
+  assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} transitionKey=\{sidebarTransitionKey\} \/>/);
+  assert.match(sidebarSource, /const SIDEBAR_LEAVE_MS = 110;/);
+  assert.match(sidebarSource, /const SIDEBAR_ENTER_MS = 220;/);
+  assert.match(sidebarSource, /export default function Sidebar\(\{ items = \[\], active, onChange, transitionKey = 'default' \}\)/);
+  assert.match(sidebarSource, /phase: 'leaving'/);
+  assert.match(sidebarSource, /phase: 'entering'/);
+  assert.match(sidebarSource, /const visiblePhase = transitionState\.transitionKey === transitionKey \? transitionState\.phase : 'leaving';/);
+  assert.match(sidebarSource, /className=\{`sb-root sb-root--\$\{visiblePhase\}`\}/);
+  assert.match(sidebarCss, /\.sb-root\s*\{[\s\S]*?min-height:\s*274px;[\s\S]*?transition:\s*min-height \.28s cubic-bezier\(\.22,1,\.36,1\);/);
+  assert.match(sidebarCss, /\.sb-root--leaving \.sb-list-item,\s*[\s\S]*?\.sb-root--leaving \.sb-section-title\s*\{[\s\S]*?opacity:\s*0;[\s\S]*?filter:\s*blur\(2px\);[\s\S]*?transform:\s*translateY\(7px\) scale\(\.992\);/);
+  assert.match(sidebarCss, /\.sb-root--entering \.sb-list-item\s*\{[\s\S]*?animation:\s*sbNavItemIn \.3s cubic-bezier\(\.22,1,\.36,1\) both;/);
+  assert.match(sidebarCss, /\.sb-item::before\s*\{[\s\S]*?transition:\s*opacity \.26s cubic-bezier\(\.22,1,\.36,1\), transform \.26s cubic-bezier\(\.22,1,\.36,1\);/);
+  assert.match(sidebarCss, /@keyframes sbNavItemIn/);
+  assert.match(sidebarCss, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
 test('renders data maintenance as four independent pages instead of the dashboard grid', () => {
@@ -1414,7 +1437,7 @@ test('scrolls the dashboard content into view when a sidebar menu item is select
   assert.match(appSource, /const pendingMenuScrollRef = useRef\(false\);/);
   assert.match(appSource, /function handleMenuChange\(nextMenu\)/);
   assert.match(appSource, /pendingMenuScrollRef\.current = true;/);
-  assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} \/>/);
+  assert.match(appSource, /<Sidebar items=\{sidebarItems\} active=\{sidebarActive\} onChange=\{handleSidebarChange\} transitionKey=\{sidebarTransitionKey\} \/>/);
   assert.match(appSource, /gridRef\.current\?\.scrollIntoView\(\{\s*behavior:\s*'smooth',\s*block:\s*'start'\s*\}\);/);
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:92px;/);
 });

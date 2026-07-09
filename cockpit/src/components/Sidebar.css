@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 13:13:45 CST  更新内容: 侧边导航增加经营总览/数据维护换组淡入淡出与稳定高度，减少切换生硬跳变。 */
 /* 更新时间: 2026-07-05 16:12:00 CST  更新内容: 侧边栏恢复图标加文字的 220px 管理导航，并使用轻薄选中态与分组层级。 */
 /* 更新时间: 2026-07-02 16:28:00 CST  更新内容: 侧边导航图标样式适配统一 AppIcon 线性 SVG。 */
 .sb-glass {
@@ -14,11 +15,13 @@
 
 .sb-root {
   width: 100%;
+  min-height: 274px;
   box-sizing: border-box;
   background: transparent;
   border: none;
   border-radius: 24px;
   padding: 12px;
+  transition: min-height .28s cubic-bezier(.22,1,.36,1);
 }
 
 .sb-section + .sb-section {
@@ -33,6 +36,8 @@
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: .08em;
+  transform-origin: left center;
+  transition: opacity .22s cubic-bezier(.22,1,.36,1), transform .22s cubic-bezier(.22,1,.36,1), filter .22s cubic-bezier(.22,1,.36,1);
 }
 
 .sb-list {
@@ -48,6 +53,8 @@
   position: relative;
   margin: 0;
   padding: 0;
+  transform-origin: left center;
+  transition: opacity .22s cubic-bezier(.22,1,.36,1), transform .22s cubic-bezier(.22,1,.36,1), filter .22s cubic-bezier(.22,1,.36,1);
 }
 
 .sb-item {
@@ -69,6 +76,21 @@
   transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease;
 }
 
+.sb-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scaleY(.68);
+  width: 3px;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg,#A994FF,#7F6BFF);
+  box-shadow: 0 0 12px rgba(127,107,255,.28);
+  opacity: 0;
+  transition: opacity .26s cubic-bezier(.22,1,.36,1), transform .26s cubic-bezier(.22,1,.36,1);
+}
+
 .sb-item:hover {
   background: rgba(255,255,255,.05);
   border-color: rgba(255,255,255,.075);
@@ -88,12 +110,13 @@
   position: absolute;
   left: 0;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) scaleY(1);
   width: 3px;
   height: 18px;
   border-radius: 999px;
   background: linear-gradient(180deg,#A994FF,#7F6BFF);
   box-shadow: 0 0 12px rgba(127,107,255,.28);
+  opacity: 1;
 }
 
 .sb-icon {
@@ -146,9 +169,91 @@
   outline-offset: 3px;
 }
 
+.sb-root--leaving .sb-list-item,
+.sb-root--leaving .sb-section-title {
+  opacity: 0;
+  filter: blur(2px);
+  transform: translateY(7px) scale(.992);
+  pointer-events: none;
+}
+
+.sb-root--entering .sb-section-title {
+  animation: sbSectionTitleIn .24s cubic-bezier(.22,1,.36,1) both;
+}
+
+.sb-root--entering .sb-list-item {
+  animation: sbNavItemIn .3s cubic-bezier(.22,1,.36,1) both;
+}
+
+.sb-root--entering .sb-list-item:nth-child(2) {
+  animation-delay: 24ms;
+}
+
+.sb-root--entering .sb-list-item:nth-child(3) {
+  animation-delay: 48ms;
+}
+
+.sb-root--entering .sb-list-item:nth-child(4) {
+  animation-delay: 72ms;
+}
+
+.sb-root--entering .sb-section + .sb-section .sb-section-title,
+.sb-root--entering .sb-section + .sb-section .sb-list-item {
+  animation-delay: 64ms;
+}
+
+@keyframes sbNavItemIn {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translateY(8px) scale(.992);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sbSectionTitleIn {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sb-root,
+  .sb-list-item,
+  .sb-name,
+  .sb-item,
+  .sb-item::before {
+    transition: none;
+  }
+
+  .sb-root--entering .sb-section-title,
+  .sb-root--entering .sb-list-item {
+    animation: none;
+  }
+
+  .sb-root--leaving .sb-list-item,
+  .sb-root--leaving .sb-section-title {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+
 @media (max-width:760px) {
   .sb-root {
     width: 100%;
+    min-height: 0;
     padding: 8px;
   }
 
