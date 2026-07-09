@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 17:29:39 CST  更新内容: 年度目标进度 footer 移入年度卡主内容行并用位移真实上提，避免继续贴在卡片底部。 */
 /* 更新时间: 2026-07-09 17:19:28 CST  更新内容: 年度目标进度 footer 加大上移幅度，并收窄累计/目标数字与进度条之间的间距。 */
 /* 更新时间: 2026-07-09 17:16:09 CST  更新内容: 年度目标进度 footer 删除可见标题后改为三列布局，进度条左移并整体上移。 */
 /* 更新时间: 2026-07-09 17:12:32 CST  更新内容: 年度目标进度 footer 移除进度条下方三项辅助数据样式。 */
@@ -465,12 +466,14 @@
 
 .op-annual-progress-footer {
   grid-column: 1 / 3;
-  grid-row: 2;
+  grid-row: 1;
   display: grid;
   gap: 6px;
   align-self: end;
-  margin-top: clamp(-92px, -5.4vw, -64px);
+  margin-top: 0;
   margin-right: calc(var(--op-grid-column-gap) * -1);
+  transform: translateY(clamp(-78px, -4.7vw, -52px));
+  z-index: 2;
 }
 
 .op-annual-progress-main {
