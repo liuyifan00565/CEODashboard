@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 14:45:00 CST
+ 更新内容: Vite 开发服务新增 server.watch.usePolling=true(interval 500ms)，解决 Windows + Docker Desktop bind mount 下 inotify 事件不传播导致 HMR 不触发、改了代码页面不更新的问题。
+*/
+/*
  更新时间: 2026-07-07 14:30:00 CST
  更新内容: Vite 开发服务新增 POST /api/maintenance/save 数据维护页内编辑保存接口，与生产一致。
 */
@@ -85,6 +89,13 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+  server: {
+    watch: {
+      // Windows + Docker Desktop bind mount 下 inotify 不传播，改用轮询保证 HMR 触发
+      usePolling: true,
+      interval: 500,
     },
   },
 })
