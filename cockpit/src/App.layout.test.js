@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 12:19:47 CST
+ 更新内容: 经营总览回归测试同步年度回款总览三栏卡和底部年度目标进度 footer。
+*/
+/*
  更新时间: 2026-07-09 12:12:08 CST
  更新内容: 经营总览回归测试同步半环中心数字移除，并锁定进一步收窄后的图表列尺寸。
 */
@@ -1150,9 +1154,6 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /本月回款/);
   assert.match(operatingOverviewSource, /月度完成率/);
   assert.doesNotMatch(operatingOverviewSource, /formatPaceLead/);
-  assert.doesNotMatch(operatingOverviewSource, /'时间进度'/);
-  assert.doesNotMatch(operatingOverviewSource, /<span>时间进度<\/span>/);
-  assert.doesNotMatch(operatingOverviewSource, /时间进度 \{formatPct/);
   assert.doesNotMatch(operatingOverviewSource, /领先 7\.1%/);
   assert.doesNotMatch(operatingOverviewSource, /预计影响缺口 \{overviewMetrics\.riskImpactGap\}万/);
   assert.match(operatingOverviewSource, /目标缺口/);
@@ -1163,7 +1164,8 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /getChannelCompletionRows\('month'\)/);
   assert.match(operatingOverviewSource, /function MonthlyRecoveryStructure/);
   assert.match(operatingOverviewSource, /function OperatingSituation/);
-  assert.match(operatingOverviewSource, /<h2>本月回款结构<\/h2>/);
+  assert.match(operatingOverviewSource, /chartName: '本月回款结构'/);
+  assert.match(operatingOverviewSource, /<h2>\{periodMeta\.chartName\}<\/h2>/);
   assert.match(operatingOverviewSource, /<h2>经营情况<\/h2>/);
   assert.match(operatingOverviewSource, /实际回款 \/ 目标回款/);
   assert.match(operatingOverviewSource, /实际 \{formatWan\(row\.recovered\)\}万 \/ 目标 \{formatWan\(row\.target\)\}万/);
@@ -1175,19 +1177,26 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.doesNotMatch(operatingOverviewSource, /overviewMetrics\.monthJudgement/);
   assert.match(operatingOverviewSource, /查看近期明细/);
   assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
-  assert.match(operatingOverviewSource, /年度节奏/);
+  assert.match(operatingOverviewSource, /<h2>年度回款总览<\/h2>/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">年度经营进度<\/span>/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">年度节奏<\/span>/);
+  assert.match(operatingOverviewSource, /const annualChannelRows = getChannelCompletionRows\('year'\);/);
+  assert.match(operatingOverviewSource, /const annualStructure = useMemo\(\(\) => buildChannelStructure\(annualChannelRows\), \[annualChannelRows\]\);/);
+  assert.match(operatingOverviewSource, /chartName: '年度回款结构'/);
   assert.match(operatingOverviewSource, /年度累计回款/);
   assert.match(operatingOverviewSource, /年度目标/);
   assert.match(operatingOverviewSource, /年度完成率/);
   assert.doesNotMatch(operatingOverviewSource, /年度缺口/);
-  assert.match(operatingOverviewSource, /className="op-annual-grid"[\s\S]*?年度累计回款[\s\S]*?年度目标[\s\S]*?年度完成率[\s\S]*?<\/div>\s*<div className="op-annual-capsule"/);
-  assert.match(operatingOverviewSource, /<span>已完成 \{formatPct\(KPI_DERIVED\.yearCompletion\)\}<\/span>/);
-  assert.match(operatingOverviewSource, /<span>剩余 \{formatPct\(overviewMetrics\.annualRemainingRate\)\}<\/span>/);
+  assert.match(operatingOverviewSource, /className="op-annual-grid"[\s\S]*?op-annual-primary[\s\S]*?<AnnualRecoveryStructure[\s\S]*?<OperatingSituation/);
+  assert.match(operatingOverviewSource, /<span>年目标完成率 \{formatPct\(KPI_DERIVED\.yearCompletion\)\}<\/span>/);
+  assert.match(operatingOverviewSource, /<span>剩余目标 \{formatWan\(annualRemainingTarget\)\}万<\/span>/);
+  assert.match(operatingOverviewSource, /className="op-annual-progress-footer"/);
+  assert.match(operatingOverviewSource, /<span>年度目标进度<\/span>/);
+  assert.match(operatingOverviewSource, /<b>\{formatWan\(KPI\.yearRecovered\)\}万 \/ \{formatWan\(KPI\.yearTarget\)\}万<\/b>/);
+  assert.match(operatingOverviewSource, /<span>时间进度 \{formatPct\(overviewMetrics\.annualTimeProgress\)\}<\/span>/);
+  assert.match(operatingOverviewSource, /后续月均需完成 \{formatWan\(overviewMetrics\.remainingMonthlyRequired\)\}万/);
   assert.doesNotMatch(operatingOverviewSource, /overviewMetrics\.annualJudgement/);
   assert.doesNotMatch(operatingOverviewSource, /op-judgement/);
-  assert.match(operatingOverviewSource, /下半年月均需完成 \{formatWan\(overviewMetrics\.remainingMonthlyRequired\)\} 万。/);
   assert.doesNotMatch(operatingOverviewSource, /<span>节奏偏差<\/span>/);
   assert.doesNotMatch(operatingOverviewSource, /function shouldShowActualAnnualLabel/);
   assert.doesNotMatch(operatingOverviewSource, /annualRhythmOption/);
@@ -1227,9 +1236,12 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewCss, /border:\s*1px solid var\(--dashboard-card-border\);/);
   assert.match(operatingOverviewCss, /backdrop-filter:\s*var\(--dashboard-card-blur\);/);
   assert.match(operatingOverviewCss, /box-shadow:\s*var\(--dashboard-card-shadow\);/);
-  assert.match(operatingOverviewCss, /\.op-annual-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/);
-  assert.match(operatingOverviewCss, /\.op-annual-capsule\s*\{/);
+  assert.match(operatingOverviewCss, /\.op-annual-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(220px, \.9fr\) minmax\(200px, \.68fr\) minmax\(330px, 1\.24fr\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-primary b\s*\{[\s\S]*?font-size:\s*clamp\(46px, 5\.1vw, 74px\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{/);
+  assert.match(operatingOverviewCss, /\.op-annual-progress-track\s*\{/);
   assert.match(operatingOverviewCss, /\.op-annual-fill\s*\{/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-annual-capsule\s*\{/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-annual-chart\s*\{/);
   assert.match(operatingOverviewCss, /\.op-month-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(220px, \.92fr\) minmax\(190px, \.64fr\) minmax\(330px, 1\.22fr\);/);
   assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?border-left:\s*1px solid rgba\(255,255,255,\.035\);[\s\S]*?border-right:\s*1px solid rgba\(255,255,255,\.035\);/);
@@ -1266,14 +1278,19 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   assert.doesNotMatch(monthGridBlock, /rgba\(255,255,255,\.075\)/);
 });
 
-test('replaces the annual rhythm chart with a glass progress capsule', () => {
+test('replaces the annual rhythm chart with a yearly recovery overview footer', () => {
   assert.match(operatingOverviewSource, /const annualCapsuleWidth = `\$\{Math\.min\(KPI_DERIVED\.yearCompletion, 100\)\}%`;/);
-  assert.match(operatingOverviewSource, /className="op-annual-capsule"/);
+  assert.match(operatingOverviewSource, /const annualPaceDelta = \+\(KPI_DERIVED\.yearCompletion - overviewMetrics\.annualTimeProgress\)\.toFixed\(1\);/);
+  assert.match(operatingOverviewSource, /const annualPaceLabel = `\$\{annualPaceDelta < 0 \? '低于' : '高于'\}线性进度 \$\{formatPp\(annualPaceDelta\)\}`;/);
+  assert.match(operatingOverviewSource, /className="op-annual-progress-footer"/);
+  assert.match(operatingOverviewSource, /className="op-annual-progress-track"/);
   assert.match(operatingOverviewSource, /className="op-annual-fill" style=\{\{ width: annualCapsuleWidth \}\}/);
-  assert.match(operatingOverviewSource, /aria-label=\{`年度完成率 \$\{formatPct\(KPI_DERIVED\.yearCompletion\)\}，剩余 \$\{formatPct\(overviewMetrics\.annualRemainingRate\)\}`\}/);
-  assert.match(operatingOverviewCss, /\.op-annual-capsule\s*\{[\s\S]*?height:\s*36px;[\s\S]*?border-radius:\s*999px;[\s\S]*?background:\s*var\(--bar-track\);/);
+  assert.match(operatingOverviewSource, /aria-label=\{`年度目标进度 \$\{formatWan\(KPI\.yearRecovered\)\} 万 \/ \$\{formatWan\(KPI\.yearTarget\)\} 万，完成率 \$\{formatPct\(KPI_DERIVED\.yearCompletion\)\}，时间进度 \$\{formatPct\(overviewMetrics\.annualTimeProgress\)\}，\$\{annualPaceLabel\}`\}/);
+  assert.match(operatingOverviewCss, /\.op-annual-progress-main\s*\{[\s\S]*?min-height:\s*38px;[\s\S]*?grid-template-columns:\s*auto auto minmax\(160px, 1fr\) auto;/);
+  assert.match(operatingOverviewCss, /\.op-annual-progress-track\s*\{[\s\S]*?height:\s*12px;[\s\S]*?border-radius:\s*999px;[\s\S]*?background:\s*var\(--bar-track\);/);
   assert.match(operatingOverviewCss, /\.op-annual-fill\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(142,134,255,\.78\), rgba\(228,184,215,\.62\)\);/);
-  assert.match(operatingOverviewCss, /\.op-annual-capsule-labels\s*\{[\s\S]*?justify-content:\s*space-between;/);
+  assert.match(operatingOverviewCss, /\.op-annual-progress-meta\s*\{[\s\S]*?flex-wrap:\s*wrap;/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-annual-capsule-labels/);
   assert.doesNotMatch(operatingOverviewSource, /<EChart option=\{annualOption\}/);
 });
 

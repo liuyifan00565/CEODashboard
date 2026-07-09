@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 12:19:47 CST  更新内容: 年度节奏升级为年度回款总览三栏卡，并新增横跨全卡的年度目标进度 footer。 */
 /* 更新时间: 2026-07-09 12:12:08 CST  更新内容: 移除半环图中心完成率数字，并收窄月度主卡中间图表列。 */
 /* 更新时间: 2026-07-09 12:02:57 CST  更新内容: 将超额/缺口并入本月回款主事实行，并删除右侧独立风险渠道提醒卡。 */
 /* 更新时间: 2026-07-09 11:58:00 CST  更新内容: 月度回款主卡移除时间进度和月目标进度条，并压紧主卡高度。 */
@@ -47,20 +48,30 @@ const PROGRESS_KEYWORDS_BASE = [
   '线下华东',
 ];
 const ANNUAL_KEYWORDS = [
-  '年度节奏',
+  '年度回款总览',
+  '年度回款结构',
   '年度累计',
   '年度目标',
   '年度完成率',
-  '已完成',
-  '剩余',
-  '明细 >',
-  '下半年月均需完成',
+  '年度目标进度',
+  '剩余目标',
+  '时间进度',
+  '线性进度',
+  '后续月均需完成',
+  '经营情况',
+  '风险',
 ];
 const MONTH_STRUCTURE_META = {
   recoveredLabel: '实际回款',
   targetLabel: '目标回款',
   centerLabel: '月目标完成率',
   chartName: '本月回款结构',
+};
+const ANNUAL_STRUCTURE_META = {
+  recoveredLabel: '年度回款',
+  targetLabel: '年度目标',
+  centerLabel: '年目标完成率',
+  chartName: '年度回款结构',
 };
 const CHANNEL_STRUCTURE_STYLES = {
   online: {
@@ -91,6 +102,10 @@ function formatWan(value) {
 
 function formatPct(value) {
   return `${Number(value).toFixed(1)}%`;
+}
+
+function formatPp(value) {
+  return `${Math.abs(Number(value)).toFixed(1)}pp`;
 }
 
 function safeRatioPercent(value, total) {
@@ -294,19 +309,19 @@ function channelStructureOption(structure, periodMeta, tokens) {
   };
 }
 
-function MonthlyRecoveryStructure({ structure, option }) {
+function RecoveryStructure({ structure, option, periodMeta }) {
   return (
     <div className="op-recovery-structure">
       <div className="op-structure-head">
         <div>
-          <h2>本月回款结构</h2>
+          <h2>{periodMeta.chartName}</h2>
           <span>单位：万元</span>
         </div>
       </div>
 
       <div
         className="op-channel-chart-wrap"
-        aria-label={`${MONTH_STRUCTURE_META.centerLabel} ${formatPct(structure.completion)}，本月回款 ${formatWan(structure.totalRecovered)} 万`}
+        aria-label={`${periodMeta.centerLabel} ${formatPct(structure.completion)}，${periodMeta.recoveredLabel} ${formatWan(structure.totalRecovered)} 万`}
       >
         <EChart className="op-channel-chart" option={option} style={{ height: '100%' }} />
       </div>
@@ -314,13 +329,33 @@ function MonthlyRecoveryStructure({ structure, option }) {
   );
 }
 
-function OperatingSituation({ structure }) {
+function MonthlyRecoveryStructure({ structure, option }) {
+  return (
+    <RecoveryStructure
+      structure={structure}
+      option={option}
+      periodMeta={MONTH_STRUCTURE_META}
+    />
+  );
+}
+
+function AnnualRecoveryStructure({ structure, option }) {
+  return (
+    <RecoveryStructure
+      structure={structure}
+      option={option}
+      periodMeta={ANNUAL_STRUCTURE_META}
+    />
+  );
+}
+
+function OperatingSituation({ structure, subLabel = '实际回款 / 目标回款' }) {
   return (
     <aside className="op-operating-side">
       <div className="op-operating-head">
         <div>
           <h2>经营情况</h2>
-          <span>实际回款 / 目标回款</span>
+          <span>{subLabel}</span>
         </div>
       </div>
 
@@ -356,9 +391,15 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
   const progressKeywords = [progressTitle, ...PROGRESS_KEYWORDS_BASE];
   const overviewMetrics = getOperatingOverviewMetrics();
   const monthChannelRows = getChannelCompletionRows('month');
+  const annualChannelRows = getChannelCompletionRows('year');
   const monthlyStructure = useMemo(() => buildChannelStructure(monthChannelRows), [monthChannelRows]);
+  const annualStructure = useMemo(() => buildChannelStructure(annualChannelRows), [annualChannelRows]);
   const monthlyStructureOption = useMemo(() => channelStructureOption(monthlyStructure, MONTH_STRUCTURE_META, tokens), [monthlyStructure, tokens]);
+  const annualStructureOption = useMemo(() => channelStructureOption(annualStructure, ANNUAL_STRUCTURE_META, tokens), [annualStructure, tokens]);
   const annualCapsuleWidth = `${Math.min(KPI_DERIVED.yearCompletion, 100)}%`;
+  const annualRemainingTarget = Math.max(0, KPI.yearTarget - KPI.yearRecovered);
+  const annualPaceDelta = +(KPI_DERIVED.yearCompletion - overviewMetrics.annualTimeProgress).toFixed(1);
+  const annualPaceLabel = `${annualPaceDelta < 0 ? '低于' : '高于'}线性进度 ${formatPp(annualPaceDelta)}`;
   const monthTargetGap = Math.max(0, KPI.monthTarget - KPI.monthRecovered);
   const monthTargetOver = Math.max(0, KPI.monthRecovered - KPI.monthTarget);
   const targetStatusRisk = monthTargetGap > 0;
@@ -412,7 +453,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
         <section className="op-panel op-panel--annual" data-anim>
           <header className="op-section-head">
             <div>
-              <h2>年度节奏</h2>
+              <h2>年度回款总览</h2>
             </div>
             <button
               type="button"
@@ -425,31 +466,47 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
           </header>
 
           <div className="op-annual-grid">
-            <div className="op-metric">
-              <span>年度累计回款</span>
+            <div className="op-annual-primary">
+              <span className="op-summary-label">年度累计回款</span>
               <b>{formatWan(KPI.yearRecovered)}万</b>
+              <span className="op-summary-sub">年度目标 {formatWan(KPI.yearTarget)}万</span>
+              <div className="op-month-primary-facts op-annual-primary-facts">
+                <span>年目标完成率 {formatPct(KPI_DERIVED.yearCompletion)}</span>
+                <span>剩余目标 {formatWan(annualRemainingTarget)}万</span>
+              </div>
             </div>
-            <div className="op-metric">
-              <span>年度目标</span>
-              <b>{formatWan(KPI.yearTarget)}万</b>
-            </div>
-            <div className="op-metric">
-              <span>年度完成率</span>
-              <b>{formatPct(KPI_DERIVED.yearCompletion)}</b>
-            </div>
+
+            <AnnualRecoveryStructure
+              structure={annualStructure}
+              option={annualStructureOption}
+            />
+
+            <OperatingSituation
+              structure={annualStructure}
+              subLabel="年度回款 / 年度目标"
+            />
           </div>
 
-          <div className="op-annual-capsule" aria-label={`年度完成率 ${formatPct(KPI_DERIVED.yearCompletion)}，剩余 ${formatPct(overviewMetrics.annualRemainingRate)}`}>
-            <span className="op-annual-fill" style={{ width: annualCapsuleWidth }} />
-            <div className="op-annual-capsule-labels">
-              <span>已完成 {formatPct(KPI_DERIVED.yearCompletion)}</span>
-              <span>剩余 {formatPct(overviewMetrics.annualRemainingRate)}</span>
+          <div
+            className="op-annual-progress-footer"
+            aria-label={`年度目标进度 ${formatWan(KPI.yearRecovered)} 万 / ${formatWan(KPI.yearTarget)} 万，完成率 ${formatPct(KPI_DERIVED.yearCompletion)}，时间进度 ${formatPct(overviewMetrics.annualTimeProgress)}，${annualPaceLabel}`}
+          >
+            <div className="op-annual-progress-main">
+              <span>年度目标进度</span>
+              <b>{formatWan(KPI.yearRecovered)}万 / {formatWan(KPI.yearTarget)}万</b>
+              <div className="op-annual-progress-track">
+                <span className="op-annual-fill" style={{ width: annualCapsuleWidth }} />
+              </div>
+              <strong>{formatPct(KPI_DERIVED.yearCompletion)}</strong>
+            </div>
+            <div className="op-annual-progress-meta">
+              <span>时间进度 {formatPct(overviewMetrics.annualTimeProgress)}</span>
+              <span className={annualPaceDelta < 0 ? 'op-annual-progress-meta--risk' : 'op-annual-progress-meta--ahead'}>
+                {annualPaceLabel}
+              </span>
+              <span>后续月均需完成 {formatWan(overviewMetrics.remainingMonthlyRequired)}万</span>
             </div>
           </div>
-
-          <p className="op-annual-note">
-            下半年月均需完成 {formatWan(overviewMetrics.remainingMonthlyRequired)} 万。
-          </p>
         </section>
       </SearchResultBorder>
     </div>

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 12:19:47 CST
+ 更新内容: 搜索关键词回归同步年度回款总览卡和底部年度目标进度 footer 文案。
+*/
+/*
  更新时间: 2026-07-09 12:02:57 CST
  更新内容: 搜索关键词回归同步删除独立风险渠道卡片词，保留行内风险标签命中。
 */
@@ -160,14 +164,24 @@ test('adds fused operating overview section text to KPI search keywords', () => 
   assert.ok(!month.keywords.includes('月目标进度'));
   assert.ok(!month.keywords.includes('领先 7.1%'));
   assert.ok(!month.keywords.includes('本月目标完成情况'));
-  assert.ok(annual.keywords.includes('年度节奏'));
+  assert.ok(annual.keywords.includes('年度回款总览'));
   assert.ok(annual.keywords.includes('年度累计回款'));
+  assert.ok(annual.keywords.includes('年度回款结构'));
   assert.ok(annual.keywords.includes('年度完成率'));
+  assert.ok(annual.keywords.includes('年目标完成率'));
+  assert.ok(annual.keywords.includes('剩余目标'));
   assert.ok(annual.keywords.includes('查看年度拆解'));
-  assert.ok(annual.keywords.includes('已完成 53.8%'));
-  assert.ok(annual.keywords.includes('剩余 46.2%'));
-  assert.ok(annual.keywords.includes('下半年月均需完成 447 万'));
-  assert.ok(!annual.keywords.includes('时间进度'));
+  assert.ok(annual.keywords.includes('年度目标进度'));
+  assert.ok(annual.keywords.includes('时间进度 50.0%'));
+  assert.ok(annual.keywords.includes('高于线性进度 3.8pp'));
+  assert.ok(annual.keywords.includes('后续月均需完成 447万'));
+  assert.ok(annual.keywords.includes('经营情况'));
+  assert.ok(annual.keywords.includes('年度回款'));
+  assert.ok(annual.keywords.includes('风险'));
+  assert.ok(!annual.keywords.includes('年度节奏'));
+  assert.ok(!annual.keywords.includes('已完成 53.8%'));
+  assert.ok(!annual.keywords.includes('剩余 46.2%'));
+  assert.ok(!annual.keywords.includes('下半年月均需完成 447 万'));
   assert.ok(!annual.keywords.includes('节奏偏差 +3.8%'));
   assert.ok(!annual.keywords.includes('月均仍需完成'));
   assert.ok(!month.keywords.includes('渠道目标完成结构'));
