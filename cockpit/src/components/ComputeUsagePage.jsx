@@ -439,21 +439,29 @@ function buildTrendPoints(trend) {
   }));
 }
 
+function buildChronologicalTrendPoints(trend) {
+  return buildTrendPoints(trend).reverse();
+}
+
 function getTrendZoomRange(pointCount) {
-  const sliderEndValue = Math.min(MAX_VISIBLE_TREND_BARS - 1, pointCount - 1);
+  const lastIndex = Math.max(0, pointCount - 1);
+  const maxValueSpan = Math.min(MAX_VISIBLE_TREND_BARS - 1, lastIndex);
+  const sliderStartValue = Math.max(0, lastIndex - maxValueSpan);
+  const sliderEndValue = lastIndex;
   return {
+    sliderStartValue,
     sliderEndValue,
-    minValueSpan: Math.min(MIN_VISIBLE_TREND_BARS - 1, sliderEndValue),
-    maxValueSpan: sliderEndValue,
+    minValueSpan: Math.min(MIN_VISIBLE_TREND_BARS - 1, maxValueSpan),
+    maxValueSpan,
   };
 }
 
 function buildTrendOption({ trend, tokens }) {
-  const buckets = buildTrendPoints(trend);
+  const buckets = buildChronologicalTrendPoints(trend);
   const days = buckets.map((point) => point.label);
   const usage = buckets.map((point) => point.usage);
   const showSlider = days.length > MAX_VISIBLE_TREND_BARS;
-  const { sliderEndValue, minValueSpan, maxValueSpan } = getTrendZoomRange(days.length);
+  const { sliderStartValue, sliderEndValue, minValueSpan, maxValueSpan } = getTrendZoomRange(days.length);
   const txt = tokens.chartText;
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
@@ -513,7 +521,7 @@ function buildTrendOption({ trend, tokens }) {
       {
         type: 'inside',
         xAxisIndex: 0,
-        startValue: 0,
+        startValue: sliderStartValue,
         endValue: sliderEndValue,
         minValueSpan,
         maxValueSpan,
@@ -525,7 +533,7 @@ function buildTrendOption({ trend, tokens }) {
         xAxisIndex: 0,
         height: 18,
         bottom: 8,
-        startValue: 0,
+        startValue: sliderStartValue,
         endValue: sliderEndValue,
         minValueSpan,
         maxValueSpan,
@@ -639,15 +647,16 @@ function buildTrendOption({ trend, tokens }) {
 }
 
 function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
-  const buckets = buildTrendPoints(trend);
+  const buckets = buildChronologicalTrendPoints(trend);
   const days = buckets.map((point) => point.label);
-  const latestCapacityBase = buckets[0]?.capacity || 1;
+  const latestTrendPoint = buildTrendPoints(trend)[0];
+  const latestCapacityBase = latestTrendPoint?.capacity || 1;
   const capacityScale = totalCapacity / latestCapacityBase;
   const capacity = buckets.map((point) => Math.round(point.capacity * capacityScale / 10000));
   const usage = buckets.map((point) => Number(point.usage) || 0);
   const utilization = buckets.map((point, index) => percentOf(usage[index], capacity[index]));
   const showSlider = days.length > MAX_VISIBLE_TREND_BARS;
-  const { sliderEndValue, minValueSpan, maxValueSpan } = getTrendZoomRange(days.length);
+  const { sliderStartValue, sliderEndValue, minValueSpan, maxValueSpan } = getTrendZoomRange(days.length);
   const txt = tokens.chartText;
   const faint = tokens.chartMuted;
   const line = tokens.chartGrid;
@@ -690,7 +699,7 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
       {
         type: 'inside',
         xAxisIndex: 0,
-        startValue: 0,
+        startValue: sliderStartValue,
         endValue: sliderEndValue,
         minValueSpan,
         maxValueSpan,
@@ -702,7 +711,7 @@ function buildCapacityTrendOption({ trend, tokens, totalCapacity }) {
         xAxisIndex: 0,
         height: 18,
         bottom: 8,
-        startValue: 0,
+        startValue: sliderStartValue,
         endValue: sliderEndValue,
         minValueSpan,
         maxValueSpan,
