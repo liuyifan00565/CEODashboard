@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 11:53:13 CST
+ 更新内容: 验收本地福小客 rig 资源包和优先渲染路径，确保不再只停留在缺模型 fallback。
+*/
+/*
  Update time: 2026-07-08 20:29:00 CST
  Update content: Forbid external sample-character fallback so the visible sidebar mascot remains Fu Xiaoke.
 */
@@ -30,7 +34,7 @@
  Update time: 2026-07-08 15:24:00 CST
  Update content: Add regression coverage for the optional Pixi Live2D Fu Xiaoke mascot renderer and fallback boundary.
 */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -38,6 +42,8 @@ const componentSource = readFileSync(new URL('./Live2DMascotStage.jsx', import.m
 const cssSource = readFileSync(new URL('./Live2DMascotStage.css', import.meta.url), 'utf8');
 const componentCode = stripSourceComments(componentSource);
 const cssCode = stripSourceComments(cssSource);
+const live2dModelUrl = new URL('../../public/live2d/fuxiaoke/fuxiaoke.model3.json', import.meta.url);
+const live2dMocUrl = new URL('../../public/live2d/fuxiaoke/fuxiaoke.moc3', import.meta.url);
 
 function stripSourceComments(source) {
   return source
@@ -79,6 +85,36 @@ test('uses local Fu Xiaoke Live2D paths and falls back when assets are absent', 
   assert.match(componentCode, /onLoadStateChange\?\.\('loading'\);/);
   assert.match(componentCode, /onLoadStateChange\?\.\('ready'\);/);
   assert.match(componentCode, /onLoadStateChange\?\.\('fallback'\);/);
+});
+
+test('ships a complete local Fu Xiaoke rig resource pack', () => {
+  assert.ok(existsSync(live2dModelUrl), 'Fu Xiaoke model3 entry should exist');
+  assert.ok(existsSync(live2dMocUrl), 'Fu Xiaoke local rig moc payload should exist');
+  const model = JSON.parse(readFileSync(live2dModelUrl, 'utf8'));
+  const mocPayload = readFileSync(live2dMocUrl, 'utf8');
+  assert.equal(model.Meta.LocalRenderer, 'fuxiaoke-local-rig-v1');
+  assert.equal(model.FileReferences.Moc, 'fuxiaoke.moc3');
+  assert.match(mocPayload, /fuxiaoke-local-rig-v1/);
+  for (const group of ['Idle', 'Wave', 'Guide', 'Talk', 'Think', 'Alert', 'Celebrate', 'Tap', 'tap_body']) {
+    const motionFile = model.FileReferences.Motions[group]?.[0]?.File;
+    assert.ok(motionFile, `${group} should declare a motion3 file`);
+    assert.ok(
+      existsSync(new URL(`../../public/live2d/fuxiaoke/${motionFile}`, import.meta.url)),
+      `${motionFile} should exist`,
+    );
+  }
+});
+
+test('prefers the local Fu Xiaoke rig before falling back to Cubism runtime loading', () => {
+  assert.match(componentCode, /LOCAL_FU_XIAOKE_RIG_FORMAT = 'fuxiaoke-local-rig-v1';/);
+  assert.match(componentCode, /function resolveLive2DAssetPath\(modelSource,\s*assetPath\)/);
+  assert.match(componentCode, /function loadLocalFuXiaokeRigAssets\(modelSource\)/);
+  assert.match(componentCode, /model\?\.Meta\?\.LocalRenderer !== LOCAL_FU_XIAOKE_RIG_FORMAT/);
+  assert.match(componentCode, /mocPayload\.includes\(LOCAL_FU_XIAOKE_RIG_FORMAT\)/);
+  assert.match(componentCode, /const localRigModel = await loadLocalFuXiaokeRigAssets\(modelSource\);/);
+  assert.match(componentCode, /setLocalRigReady\(true\);/);
+  assert.match(componentCode, /onLoadStateChange\?\.\('ready'\);/);
+  assert.match(componentCode, /<FuxiaokeLocalRigStage action=\{action\} \/>/);
 });
 
 test('does not show an external sample character when Fu Xiaoke Live2D assets are missing', () => {
@@ -141,4 +177,13 @@ test('keeps Live2D canvas transparent and unable to steal launcher clicks', () =
   assert.match(cssCode, /\.mascot-live2d-stage__canvas\s*\{[\s\S]*pointer-events:\s*none;/);
   assert.match(cssCode, /\.mascot-sprite-stage--live2d-ready\s+\.mascot-live2d-stage\s*\{[\s\S]*opacity:\s*1;/);
   assert.match(cssCode, /\.mascot-sprite-stage--live2d-ready\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*opacity:\s*0;/);
+});
+
+test('renders the local Fu Xiaoke rig as a click-through ready layer', () => {
+  assert.match(cssCode, /\.mascot-local-live2d-rig,\s*[\s\S]*?\.mascot-local-live2d-rig__sheet,\s*[\s\S]*?\.mascot-local-live2d-rig__blend-layer\s*\{[\s\S]*pointer-events:\s*none;/);
+  assert.match(cssCode, /\.mascot-local-live2d-rig__sheet\s*\{[\s\S]*background-image:\s*var\(--fuxiaoke-rig-sheet-url\);/);
+  assert.match(cssCode, /\.mascot-local-live2d-rig__sheet\s*\{[\s\S]*background-size:\s*var\(--fuxiaoke-rig-sheet-width\) 100%;/);
+  assert.match(cssCode, /\.mascot-local-live2d-rig__sheet--ghost\s*\{[\s\S]*animation:\s*fuxiaoke-local-rig-crossfade-out \.26s/);
+  assert.match(cssCode, /@keyframes fuxiaoke-local-rig-crossfade-out/);
+  assert.doesNotMatch(cssCode, /fuxiaoke-local-rig-crossfade-out[\s\S]*?(?:scale|rotate)/);
 });

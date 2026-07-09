@@ -1,3 +1,6 @@
+更新时间: 2026-07-09 11:53:13 CST
+更新内容: 补齐项目内福小客本地 rig 资源包说明，前端会优先加载该资源包显示完整动作层，再回退到 Cubism 真模型或 sprite。
+
 更新时间: 2026-07-08 20:29:00 CST
 更新内容: 移除外部样例人物回退说明，明确正式模型缺失时继续显示项目内福客 AI sprite。
 
@@ -9,12 +12,18 @@
 
 # Live2D 模型目录
 
-左下角福小客 AI 小人会优先尝试加载:
+左下角福小客 AI 小人会优先尝试加载项目内本地 rig 资源包:
+
+- `public/live2d/fuxiaoke/fuxiaoke.model3.json`
+- `public/live2d/fuxiaoke/fuxiaoke.moc3`
+- `public/live2d/fuxiaoke/motions/*.motion3.json`
+
+该本地 rig 包引用项目内已有福小客动作帧，作为可直接运行的完整动作层。若后续替换为 Cubism Editor 正式导出的二进制模型，则仍沿用以下入口:
 
 - `public/live2d/live2dcubismcore.min.js`
 - `public/live2d/fuxiaoke/fuxiaoke.model3.json`
 
-如果上述文件不存在或加载失败，页面会自动继续显示现有的福小客 sprite 帧动画，不影响点击小人打开 AI 经营分析对话框。
+如果本地 rig 包、Cubism Core 或正式模型加载失败，页面会自动继续显示现有的福小客 sprite 帧动画，不影响点击小人打开 AI 经营分析对话框。
 
 渲染层会先检查上述同源文件是否存在且不是 HTML fallback，确认可用后才加载 Pixi 与 Live2D Cubism 运行时。这样模型未准备好时不会抢点击、不会隐藏现有小人，也不会影响看板首屏交互。
 

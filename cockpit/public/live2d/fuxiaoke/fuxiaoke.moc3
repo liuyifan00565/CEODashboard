@@ -1,0 +1,19 @@
+{
+  "format": "fuxiaoke-local-rig-v1",
+  "updatedAt": "2026-07-09 11:53:13 CST",
+  "note": "Project-local Fu Xiaoke rig payload for CEODashboard. This file is intentionally used by the local renderer path and references the in-repo Fu Xiaoke sprite action sheets.",
+  "frameSize": [
+    224,
+    300
+  ],
+  "actions": {
+    "idle": "/mascot-actions/mascot-idle-fuke-rich.png",
+    "wave": "/mascot-actions/mascot-wave.png",
+    "guide": "/mascot-actions/mascot-guide.png",
+    "talk": "/mascot-actions/mascot-talk.png",
+    "think": "/mascot-actions/mascot-think.png",
+    "alert": "/mascot-actions/mascot-alert.png",
+    "celebrate": "/mascot-actions/mascot-celebrate.png",
+    "click": "/mascot-actions/mascot-click.png"
+  }
+}

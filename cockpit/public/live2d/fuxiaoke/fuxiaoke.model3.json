@@ -1,0 +1,94 @@
+{
+  "Version": 3,
+  "Meta": {
+    "Name": "Fu Xiaoke Local Rig",
+    "LocalRenderer": "fuxiaoke-local-rig-v1",
+    "UpdatedAt": "2026-07-09 11:53:13 CST",
+    "Description": "Project-local Fu Xiaoke motion rig that drives the authorized in-repo mascot action sheets when no Cubism Editor exported binary is available."
+  },
+  "FileReferences": {
+    "Moc": "fuxiaoke.moc3",
+    "Motions": {
+      "Idle": [
+        {
+          "File": "motions/idle.motion3.json",
+          "FadeInTime": 0.26,
+          "FadeOutTime": 0.26
+        }
+      ],
+      "Wave": [
+        {
+          "File": "motions/wave.motion3.json",
+          "FadeInTime": 0.2,
+          "FadeOutTime": 0.26
+        }
+      ],
+      "Guide": [
+        {
+          "File": "motions/guide.motion3.json",
+          "FadeInTime": 0.18,
+          "FadeOutTime": 0.26
+        }
+      ],
+      "Talk": [
+        {
+          "File": "motions/talk.motion3.json",
+          "FadeInTime": 0.18,
+          "FadeOutTime": 0.26
+        }
+      ],
+      "Think": [
+        {
+          "File": "motions/think.motion3.json",
+          "FadeInTime": 0.22,
+          "FadeOutTime": 0.26
+        }
+      ],
+      "Alert": [
+        {
+          "File": "motions/alert.motion3.json",
+          "FadeInTime": 0.16,
+          "FadeOutTime": 0.28
+        }
+      ],
+      "Celebrate": [
+        {
+          "File": "motions/celebrate.motion3.json",
+          "FadeInTime": 0.18,
+          "FadeOutTime": 0.28
+        }
+      ],
+      "Tap": [
+        {
+          "File": "motions/tap_body.motion3.json",
+          "FadeInTime": 0.16,
+          "FadeOutTime": 0.24
+        }
+      ],
+      "tap_body": [
+        {
+          "File": "motions/tap_body.motion3.json",
+          "FadeInTime": 0.16,
+          "FadeOutTime": 0.24
+        }
+      ]
+    }
+  },
+  "Groups": [
+    {
+      "Target": "Parameter",
+      "Name": "EyeBlink",
+      "Ids": [
+        "ParamEyeLOpen",
+        "ParamEyeROpen"
+      ]
+    },
+    {
+      "Target": "Parameter",
+      "Name": "LipSync",
+      "Ids": [
+        "ParamMouthOpenY"
+      ]
+    }
+  ]
+}

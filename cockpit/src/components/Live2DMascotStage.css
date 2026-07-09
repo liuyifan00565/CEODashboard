@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 11:53:13 CST
+ 更新内容: 增加本地福小客 rig 渲染层样式，让完整动作资源包可在缺少 Cubism 二进制导出时直接显示。
+*/
+/*
  Update time: 2026-07-08 15:24:00 CST
  Update content: Add transparent, click-through Live2D canvas styling for the sidebar Fu Xiaoke mascot renderer.
 */
@@ -22,6 +26,48 @@
   pointer-events: none;
 }
 
+.mascot-local-live2d-rig,
+.mascot-local-live2d-rig__sheet,
+.mascot-local-live2d-rig__blend-layer {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.mascot-local-live2d-rig {
+  transform: translateZ(0);
+}
+
+.mascot-local-live2d-rig__sheet {
+  z-index: 2;
+  background-image: var(--fuxiaoke-rig-sheet-url);
+  background-repeat: no-repeat;
+  background-size: var(--fuxiaoke-rig-sheet-width) 100%;
+  background-position: var(--fuxiaoke-rig-bg-x) var(--fuxiaoke-rig-bg-y);
+  image-rendering: auto;
+  transform-origin: center bottom;
+  animation: fuxiaoke-local-rig-idle 5.8s cubic-bezier(.45, 0, .2, 1) infinite;
+  backface-visibility: hidden;
+}
+
+.mascot-local-live2d-rig--greeting .mascot-local-live2d-rig__sheet,
+.mascot-local-live2d-rig--guide .mascot-local-live2d-rig__sheet,
+.mascot-local-live2d-rig--click .mascot-local-live2d-rig__sheet,
+.mascot-local-live2d-rig--celebrate .mascot-local-live2d-rig__sheet,
+.mascot-local-live2d-rig--maintenance-save .mascot-local-live2d-rig__sheet {
+  animation: fuxiaoke-local-rig-active 1.25s cubic-bezier(.2, .82, .2, 1) both;
+}
+
+.mascot-local-live2d-rig__blend-layer {
+  z-index: 5;
+}
+
+.mascot-local-live2d-rig__sheet--ghost {
+  z-index: 5;
+  animation: fuxiaoke-local-rig-crossfade-out .26s cubic-bezier(.2, .82, .2, 1) both !important;
+}
+
 .mascot-sprite-stage--live2d-ready .mascot-live2d-stage {
   opacity: 1;
 }
@@ -30,8 +76,59 @@
   opacity: 0;
 }
 
+@keyframes fuxiaoke-local-rig-idle {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  46% {
+    transform: translate3d(0, -1px, 0);
+  }
+
+  72% {
+    transform: translate3d(.6px, -.3px, 0);
+  }
+}
+
+@keyframes fuxiaoke-local-rig-active {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  34% {
+    transform: translate3d(.9px, -1.4px, 0);
+  }
+
+  68% {
+    transform: translate3d(-.6px, -.5px, 0);
+  }
+}
+
+@keyframes fuxiaoke-local-rig-crossfade-out {
+  0% {
+    opacity: .96;
+    transform: translate3d(0, 0, 0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -1px, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mascot-live2d-stage {
     transition: none;
+  }
+
+  .mascot-local-live2d-rig__sheet,
+  .mascot-local-live2d-rig__sheet--ghost {
+    animation: none;
+  }
+
+  .mascot-local-live2d-rig__blend-layer {
+    display: none;
   }
 }
