@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 17:28:00 CST
+ 更新内容: 外部算力覆盖失败时保留本地 MySQL dashboard 快照，避免 token 接口 404 阻塞其它看板数据。
+*/
+/*
  更新时间: 2026-07-08 18:22:00 CST
  更新内容: dashboard 快照新增成本月趋势 costTrend，按渠道投放成本与人力成本聚合，供总投入费比二级下钻使用。
 */
@@ -628,6 +632,18 @@ async function selectDashboardBusinessMonth(connection) {
   return process.env.DASHBOARD_MONTH_OVERRIDE || TEMP_DASHBOARD_MONTH_OVERRIDE || await loadLatestActualMonth(connection);
 }
 
+export async function applyExternalComputeSnapshot(
+  snapshot,
+  { loader = loadConfiguredExternalComputeSnapshot } = {}
+) {
+  try {
+    const externalComputeSnapshot = await loader();
+    return externalComputeSnapshot ? { ...snapshot, ...externalComputeSnapshot } : snapshot;
+  } catch {
+    return snapshot;
+  }
+}
+
 export async function buildDashboardSnapshot(connection) {
   const latestMonth = await selectDashboardBusinessMonth(connection);
   const prevMonthRows = await queryRows(connection, "SELECT DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(?, '-01'), '%Y-%m-%d'), INTERVAL 1 MONTH), '%Y-%m') AS previousMonth", [latestMonth]);
@@ -966,8 +982,7 @@ export async function buildDashboardSnapshot(connection) {
     computeResourceHealth,
     deliveryRows,
   });
-  const externalComputeSnapshot = await loadConfiguredExternalComputeSnapshot();
-  return externalComputeSnapshot ? { ...snapshot, ...externalComputeSnapshot } : snapshot;
+  return applyExternalComputeSnapshot(snapshot);
 }
 
 export async function handleDashboardDataRequest(_req, res) {

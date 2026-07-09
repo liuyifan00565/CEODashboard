@@ -1,5 +1,8 @@
 # Dashboard Data Aggregation
 
+更新时间: 2026-07-09 17:28:00 CST
+更新内容: 外部算力接口 404 或异常时不再阻塞 `/api/dashboard-data`，全量 MySQL 快照会继续返回，仅跳过 token/算力外部覆盖。
+
 更新时间: 2026-07-09 17:05:00 CST
 更新内容: 新增 `/api/compute-data` 独立算力快照接口；前端在 `/api/dashboard-data` 失败时只回退加载 token/算力数据，其它看板数据保持原有展示。
 
@@ -28,7 +31,7 @@
 
 `/api/dashboard-data` 读取本地 MySQL 兼容库 `ceo_dashboard`，返回前端运行时快照。前端通过 `src/data/liveData.js` 拉取接口，再由 `src/data/mock.js` 的 `applyDashboardDataSnapshot` 覆盖页面数据。
 
-当 `COMPUTE_API_BASE_URL` 和 `COMPUTE_API_TOKEN` 同时存在时，服务端会在本地 MySQL 快照生成后额外调用外部算力看板接口，把返回结果映射为 `computeOverview`、`computeUsageTrend`、`computeVersionConsumption`、`computeUsageDistribution` 和 `computeCustomerRows`，并覆盖本地算力事实表聚合结果。外部接口只在服务端调用，前端不直接接触 `x-token`。若 `/api/dashboard-data` 因本地 MySQL 不可用而失败，前端会改读 `/api/compute-data`，只覆盖这些算力字段，不改动其它运行时看板数据。
+当 `COMPUTE_API_BASE_URL` 和 `COMPUTE_API_TOKEN` 同时存在时，服务端会在本地 MySQL 快照生成后额外调用外部算力看板接口，把返回结果映射为 `computeOverview`、`computeUsageTrend`、`computeVersionConsumption`、`computeUsageDistribution` 和 `computeCustomerRows`，并覆盖本地算力事实表聚合结果。外部接口只在服务端调用，前端不直接接触 `x-token`。若外部算力接口失败，`/api/dashboard-data` 会保留本地 MySQL 快照继续返回，仅跳过外部算力覆盖。若 `/api/dashboard-data` 因本地 MySQL 不可用而失败，前端会改读 `/api/compute-data`，只覆盖这些算力字段，不改动其它运行时看板数据。
 
 业务月份 `latestMonth` 当前通过 `TEMP_DASHBOARD_MONTH_OVERRIDE = '2026-06'` 临时锁定为 2026 年 6 月；其它数据原因处理完后，移除该覆盖即可恢复自动月份。自动月份回退路径会优先取 `fact_revenue_daily.stat_date` 最新年月，再与 `fact_sales_member_monthly.year_month` 比较兜底。
 

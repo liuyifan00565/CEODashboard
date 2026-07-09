@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-09 17:28:00 CST
+ 更新内容: 增加外部算力覆盖失败不阻塞 MySQL dashboard 快照的回归测试。
+*/
+/*
  更新时间: 2026-07-08 18:22:00 CST
  更新内容: 增加 dashboard costTrend 快照映射回归，覆盖渠道投放成本、人力成本和全渠道总投入构成。
 */
@@ -26,7 +30,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { mapDashboardRowsToSnapshot, chinaTodayYMD } from './dashboardData.js';
+import { applyExternalComputeSnapshot, mapDashboardRowsToSnapshot, chinaTodayYMD } from './dashboardData.js';
 
 test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
   const snapshot = mapDashboardRowsToSnapshot({
@@ -134,6 +138,18 @@ test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
   ]);
   assert.deepEqual(snapshot.costTrend.at(-1).channels, { online: 31, south: 19, east: 18, agent: 9 });
   assert.equal(snapshot.salesMemberRows.find((row) => row.key === 'staff-2004').group, 'east');
+});
+
+test('keeps mysql dashboard snapshot when external compute overlay fails', async () => {
+  const snapshot = { source: 'mysql', kpi: { monthRecovered: 520 } };
+  const result = await applyExternalComputeSnapshot(snapshot, {
+    loader: async () => {
+      throw new Error('外部算力接口请求失败：HTTP 404');
+    },
+  });
+
+  assert.equal(result, snapshot);
+  assert.deepEqual(result, { source: 'mysql', kpi: { monthRecovered: 520 } });
 });
 
 test('chinaTodayYMD 在任意进程时区下都返回北京时间当地的今天', () => {

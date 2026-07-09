@@ -1,5 +1,8 @@
 # Compute API Integration
 
+更新时间: 2026-07-09 17:28:00 CST
+更新内容: 明确外部算力接口失败不会阻塞 `/api/dashboard-data`，本地 MySQL 快照会继续返回。
+
 更新时间: 2026-07-09 17:05:00 CST
 更新内容: 增加 `/api/compute-data` 独立算力接口说明，支持全量 MySQL 快照失败时只回退加载 token/算力数据。
 
@@ -21,6 +24,8 @@ COMPUTE_API_TOKEN
 
 - `/api/dashboard-data`：本地 MySQL 快照生成成功后，额外覆盖其中的算力模块。
 - `/api/compute-data`：只读取外部算力数据并返回 `computeOverview`、`computeUsageTrend`、`computeVersionConsumption`、`computeUsageDistribution`、`computeCustomerRows`。前端在 `/api/dashboard-data` 失败时会自动尝试该接口，因此其它看板数据保持原有展示，token/算力模块可单独接真实数据。
+
+如果外部算力接口返回 404、鉴权失败或其它异常，`/api/dashboard-data` 会保留本地 MySQL 生成的快照继续返回，不让 token/算力覆盖失败影响其它模块。此时 `/api/compute-data` 仍会返回对应错误，用于排查外部接口 base/path/token 配置。
 
 ## 外部接口
 
