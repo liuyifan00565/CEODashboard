@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 10:32:45 CST
+ 更新内容: 回归测试增加低有效高度桌面档，锁定主卡空白收敛、趋势高度与开户投入不等高分配。
+*/
+/*
  更新时间: 2026-07-10 10:26:00 CST
  更新内容: 回归测试锁定 1K 默认紧凑档与 2K 舒展档，防止任一分辨率重新出现首屏裁切或信息拥挤。
 */
@@ -1771,6 +1775,8 @@ test('keeps month year trend and finance metrics balanced across 1K and 2K scree
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?gap:10px;/);
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:58px;/);
   assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?flex:none;[\s\S]*?grid-template-rows:clamp\(350px,36vh,386px\);/);
+  assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?grid-template-rows:clamp\(320px,34vh,350px\);[\s\S]*?grid-template-rows:minmax\(136px,\.82fr\) minmax\(176px,1\.08fr\);/);
+  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-overview \{[\s\S]*?gap: 10px;[\s\S]*?grid-template-rows: auto 148px;[\s\S]*?height: 148px;/);
   assert.match(dashboardCss, /@media \(min-width:2200px\) and \(min-height:1300px\)\{[\s\S]*?\.dash-secondary-grid\{[\s\S]*?grid-template-rows:410px;/);
   assert.match(dashboardCss, /\.dash-version-row \.vf-panel\{[\s\S]*?min-height:280px;/);
   assert.match(dashboardCss, /\.dash-version-row \.vf-ring-chart\{[\s\S]*?height:250px!important;/);

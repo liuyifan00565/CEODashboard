@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-10 10:32:45 CST  更新内容: 低有效高度桌面档回收月度/年度卡片内部空白，保持主数字字号并确保趋势财务区完整进入首屏。 */
 /* 更新时间: 2026-07-09 18:37:27 CST  更新内容: 为首屏同时露出月度、年度和版本情况继续压缩经营主卡高度，收小图表区、主数字和渠道行高。 */
 /* 更新时间: 2026-07-09 18:07:32 CST  更新内容: 按截图红线继续上收月度与年度经营主卡底部，将回款结构图区高度压到 190px，减少右侧经营列表下方留白。 */
 /* 更新时间: 2026-07-09 17:59:03 CST  更新内容: 月度与年度经营主卡继续收缩上下高度，降低外层竖向内边距、回款结构图区和经营情况行高。 */
@@ -618,6 +619,45 @@
 .op-channel-tooltip__meta strong {
   color: rgba(255,255,255,.98);
   font-weight: 900;
+}
+
+@media (min-width: 1181px) and (max-height: 1071px) {
+  .op-overview {
+    gap: 10px;
+  }
+
+  .op-panel,
+  .op-panel--annual {
+    padding-block: 5px;
+  }
+
+  .op-recovery-structure,
+  .op-annual-grid .op-recovery-structure {
+    grid-template-rows: auto 148px;
+  }
+
+  .op-channel-chart-wrap,
+  .op-annual-grid .op-channel-chart-wrap {
+    height: 148px;
+  }
+
+  .op-channel-list {
+    gap: 4px;
+  }
+
+  .op-channel-item {
+    min-height: 28px;
+    padding-block: 1px;
+  }
+
+  .op-annual-grid .op-channel-item {
+    min-height: 29px;
+    padding-block: 2px;
+  }
+
+  .op-annual-progress-main {
+    min-height: 26px;
+  }
 }
 
 @media (max-width: 1240px) {
