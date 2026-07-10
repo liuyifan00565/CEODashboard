@@ -1,3 +1,6 @@
+# 更新时间: 2026-07-10 17:20:00 CST
+# 更新内容: 生产镜像构建忽略 .env 和交付包产物，避免运行时密钥进入镜像层。
+#
 # 更新时间: 2026-07-07 14:35:00 CST
 # 更新内容: 新增 .dockerignore，缩小构建上下文，避免宿主 node_modules/dist 进入镜像层。
 
@@ -10,9 +13,14 @@ coverage
 .git
 .gitignore
 *.log
+*.tar
+*.tar.gz
 logs
 .DS_Store
 Thumbs.db
+.env
 .env.local
+.env.*
+!.env.example
 .env.*.local
 tmp_schema_check.mjs

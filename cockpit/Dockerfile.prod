@@ -1,0 +1,32 @@
+# 更新时间: 2026-07-10 17:20:00 CST
+# 更新内容: 新增阿里云 AMD64 生产镜像 Dockerfile，多阶段构建 React dist，并以 node server.js 同时提供静态页面和后端 API。
+
+FROM --platform=$BUILDPLATFORM node:20-bookworm-slim AS deps
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+FROM deps AS build
+
+COPY . .
+RUN npm run build
+
+FROM node:20-bookworm-slim AS runtime
+
+ENV NODE_ENV=production
+ENV PORT=5174
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+COPY server.js ./server.js
+COPY server ./server
+COPY --from=build /app/dist ./dist
+
+EXPOSE 5174
+
+CMD ["node", "server.js"]

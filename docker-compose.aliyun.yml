@@ -1,0 +1,48 @@
+# 更新时间: 2026-07-10 17:20:00 CST
+# 更新内容: 新增阿里云 AMD64 生产 Compose 示例，使用已加载的 ceodashboard-cockpit:amd64 镜像和 Compose MySQL。
+#
+# 运维反向代理 bi.freecallai.cn 到 cockpit 的 5174 端口；HTTPS、DNS、Nginx/SLB 由运维侧处理。
+
+services:
+  db:
+    image: mysql:8.4
+    container_name: ceodashboard-db
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      MYSQL_DATABASE: ${DB_NAME:-ceo_dashboard}
+    volumes:
+      - ceodashboard_db_data:/var/lib/mysql
+      - ./docker/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  cockpit:
+    image: ceodashboard-cockpit:amd64
+    container_name: ceodashboard-cockpit
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      DB_NAME: ${DB_NAME:-ceo_dashboard}
+      PORT: ${PORT:-5174}
+    ports:
+      - "${COCKPIT_PORT:-5174}:5174"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  ceodashboard_db_data:

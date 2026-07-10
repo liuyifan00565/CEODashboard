@@ -173,6 +173,8 @@ npm run build
 npm run serve
 ```
 
+阿里云交付不要直接使用开发态 Vite Docker 镜像；生产镜像和运维交付包由仓库根目录执行 `bash scripts/package_aliyun_amd64.sh` 生成，详见 [`../DEPLOY_ALIYUN_AMD64.md`](../DEPLOY_ALIYUN_AMD64.md)。真实 `DASHSCOPE_API_KEY`、`COMPUTE_API_TOKEN` 和数据库密码只放服务器 `.env`，不写入前端源码或 Git。
+
 代码检查：
 
 ```bash
