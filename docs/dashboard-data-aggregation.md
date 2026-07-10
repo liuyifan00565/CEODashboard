@@ -1,5 +1,10 @@
 # Dashboard Data Aggregation
 
+更新时间: 2026-07-10 15:58:00 CST
+更新内容: 算力客户分页同步从 `ComputeUsagePage` 组件提升到 `App` 后台流程：`/api/compute-data` 成功覆盖 token
+          总览后，应用立即按 `/api/compute-customers` 分页拉取客户明细并合并到运行时数据；用户尚未进入算力页时
+          客户数据也会在后台同步，算力页只负责展示同步进度与已合并结果。
+
 更新时间: 2026-07-09 22:30:00 CST
 更新内容: 经营总览页在 `dashboard-data` 未就绪前改为渲染骨架屏（不再用 mock.js 本地示例经营数据顶替）；彻底移除
           `dashboardDataVersion` 状态——它此前用于在数据到达时把内容区 key 变化强制重挂载，表现为"页面刷新了一下"，
@@ -63,7 +68,7 @@
 
 `/api/dashboard-data` 读取本地 MySQL 兼容库 `ceo_dashboard`，返回前端运行时快照。前端通过 `src/data/liveData.js` 拉取接口，再由 `src/data/mock.js` 的 `applyDashboardDataSnapshot` 覆盖页面数据。
 
-`/api/dashboard-data` 只读取本地 MySQL 快照，不再实时调用外部算力接口，避免首页等待 token 数据服务。当前端首页数据就绪后，会在后台调用 `/api/compute-data` 读取外部算力看板接口，把返回结果映射为 `computeOverview`、`computeUsageTrend`、`computeVersionConsumption`、`computeUsageDistribution`、`computeCustomerRows` 和 `computeResourceHealth`，并覆盖运行时算力模块。外部接口只在服务端调用，前端不直接接触 `x-token`。如果用户进入算力页时后台同步还没完成，算力页先展示本地快照并显示同步状态。
+`/api/dashboard-data` 只读取本地 MySQL 快照，不再实时调用外部算力接口，避免首页等待 token 数据服务。当前端首页数据就绪后，会在后台调用 `/api/compute-data` 读取外部算力看板接口，把返回结果映射为 `computeOverview`、`computeUsageTrend`、`computeVersionConsumption`、`computeUsageDistribution`、`computeCustomerRows` 和 `computeResourceHealth`，并覆盖运行时算力模块。`/api/compute-data` 成功后，`App` 会继续在后台按 `/api/compute-customers?page=&pageSize=200` 分页拉取客户明细并增量合并，即使用户还停留在经营总览也会启动；算力页只展示同步进度和已合并客户列表。外部接口只在服务端调用，前端不直接接触 `x-token`。如果用户进入算力页时后台同步还没完成，算力页先展示本地快照并显示同步状态。
 
 业务月份 `latestMonth` 当前通过 `TEMP_DASHBOARD_MONTH_OVERRIDE = '2026-06'` 临时锁定为 2026 年 6 月；其它数据原因处理完后，移除该覆盖即可恢复自动月份。自动月份回退路径会优先取 `fact_revenue_daily.stat_date` 最新年月，再与 `fact_sales_member_monthly.year_month` 比较兜底。
 

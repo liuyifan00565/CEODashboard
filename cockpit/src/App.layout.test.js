@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:58:00 CST
+ 更新内容: 算力页渲染断言同步客户分页后台状态入参，匹配 App 负责后台加载客户、页面只显示进度的新结构。
+*/
+/*
  更新时间: 2026-07-09 22:30:00 CST
  更新内容: 搜索命中扫描回归依赖数组同步为 dashboardDataState.status + computeDataState.status（不再用
           dashboardDataVersion），覆盖经营总览/算力数据就绪后搜索高亮仍会刷新。
@@ -372,7 +376,7 @@ test('renders compute usage analysis as an independent dashboard page', () => {
   assert.match(appSource, /import ComputeUsagePage from '\.\/components\/ComputeUsagePage';/);
   assert.match(appSource, /const isComputePage = activeMenu === 'compute';/);
   assert.match(appSource, /isComputePage \? \(/);
-  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim="day" dateRange=\{\[\]\} computeDataState=\{computeDataState\} \/>/);
+  assert.match(appSource, /<ComputeUsagePage[\s\S]*?searchTerm=\{searchTerm\}[\s\S]*?dim="day"[\s\S]*?dateRange=\{\[\]\}[\s\S]*?computeDataState=\{computeDataState\}[\s\S]*?customerSyncState=\{computeCustomerSyncState\}[\s\S]*?\/>/);
   assert.match(appSource, /: \(\s*<>[\s\S]*?<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
 });
 
@@ -461,8 +465,8 @@ test('keeps the right toolbar focused on search while data keeps default monthly
   assert.doesNotMatch(appSource, /<DateRangePicker/);
   assert.doesNotMatch(appSource, /<Segmented options=\{DIM_OPTS\}/);
   assert.doesNotMatch(appSource, /<ThemeToggle/);
-  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim="day" dateRange=\{\[\]\} computeDataState=\{computeDataState\} \/>/);
-  assert.match(computePageSource, /export default function ComputeUsagePage\(\{ searchTerm = '', dim = 'month', dateRange = \[\], computeDataState = \{ status: 'ready', error: '' \} \}\)/);
+  assert.match(appSource, /<ComputeUsagePage[\s\S]*?searchTerm=\{searchTerm\}[\s\S]*?dim="day"[\s\S]*?dateRange=\{\[\]\}[\s\S]*?computeDataState=\{computeDataState\}[\s\S]*?customerSyncState=\{computeCustomerSyncState\}[\s\S]*?\/>/);
+  assert.match(computePageSource, /export default function ComputeUsagePage\(\{[\s\S]*?computeDataState = \{ status: 'ready', error: '' \},[\s\S]*?customerSyncState = \{ status: 'idle', total: 0 \},[\s\S]*?\}\)/);
   assert.match(computePageSource, /const periodLabel = DIM_TREND_LABELS\[dim\] \?\? DIM_TREND_LABELS\.month;/);
   assert.match(computePageSource, /const trend = getComputeUsageTrend\(\{ dim, dateRange \}\);/);
 });
@@ -542,7 +546,7 @@ test('morphs the FuKe brand capsule into compact and minimal sticky identities o
 });
 
 test('adds a dashboard maintenance entry and a compact sidebar return item that swaps the navigation', () => {
-  assert.match(appSource, /import \{ META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel \} from '\.\/data\/mock';/);
+  assert.match(appSource, /import \{[\s\S]*?META,[\s\S]*?MENU,[\s\S]*?MAINTENANCE_MENU,[\s\S]*?getDashboardChannelKey,[\s\S]*?getDashboardMenuLabel,[\s\S]*?\} from '\.\/data\/mock';/);
   assert.match(appSource, /const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU\[0\]\?\.key \?\? 'target-maintenance';/);
   assert.match(appSource, /const MAINTENANCE_HOME_ITEM = \{ key: 'dashboard-home', name: '经营总览', icon: 'return', section: '导航' \};/);
   assert.match(appSource, /const MAINTENANCE_SIDEBAR_ITEMS = \[\s*MAINTENANCE_HOME_ITEM,\s*\.\.\.MAINTENANCE_MENU\.map\(\(item\) => \(\{ \.\.\.item, section: '数据维护' \}\)\),\s*\];/);
@@ -1447,7 +1451,7 @@ test('routes overview through the fused operating layout while compute keeps sco
   assert.doesNotMatch(appSource, /activeMenu === 'finance'/);
   assert.match(appSource, /const activeChannelKey = getDashboardChannelKey\(activeMenu\);/);
   assert.match(appSource, /<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
-  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim="day" dateRange=\{\[\]\} computeDataState=\{computeDataState\} \/>/);
+  assert.match(appSource, /<ComputeUsagePage[\s\S]*?searchTerm=\{searchTerm\}[\s\S]*?dim="day"[\s\S]*?dateRange=\{\[\]\}[\s\S]*?computeDataState=\{computeDataState\}[\s\S]*?customerSyncState=\{computeCustomerSyncState\}[\s\S]*?\/>/);
   assert.match(appSource, /getFilteredKpiCards\(\{ dim, dateRange, channel: activeChannelKey \}\)/);
   assert.match(appSource, /<MonthlyTrend channelKey=\{activeChannelKey\} \/>/);
   assert.match(appSource, /<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);

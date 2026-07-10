@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-10 15:58:00 CST
+ 更新内容: 移除页面挂载后才启动的客户分页同步，改为接收 App 后台同步状态；
+          算力页只展示客户列表和同步进度，避免未进入页面时客户不加载。
+*/
+/*
  更新时间: 2026-07-09 23:10:00 CST
  更新内容: 清理：客户后台分页同步不再调用 getComputeCustomerRows()（拷贝+排序整个数组）只为读取行数，
           改用 appendComputeCustomerRows 的返回值；customerSyncState 去掉冗余的 loaded 字段，同步进度
@@ -54,12 +59,11 @@
  更新时间: 2026-07-02 16:52:00 CST
  更新内容: 算力用量表格筛选、排序、分页和下拉控制改用统一 AppIcon 线性图标。
 */
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import AppIcon from './AppIcon';
 import EChart from './EChart';
 import {
-  appendComputeCustomerRows,
   getComputeCustomerRows,
   getComputeResourceHealth,
   getComputeOverview,
@@ -67,11 +71,8 @@ import {
   getComputeUsageTrend,
   getComputeVersionConsumption,
 } from '../data/mock';
-import { loadComputeCustomerPage } from '../data/liveData';
 import { useThemeTokens } from '../lib/theme';
 import './ComputeUsagePage.css';
-
-const CUSTOMER_SYNC_PAGE_SIZE = 200;
 
 const SEARCH_KEYWORDS = {
   overview: ['算力', '总容量', '新增', '消耗', '客户', '回复率', '余额', '利用率', '风险客户', '经营判断'],
@@ -1096,7 +1097,13 @@ function CustomerSortableHeader({
   );
 }
 
-export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateRange = [], computeDataState = { status: 'ready', error: '' } }) {
+export default function ComputeUsagePage({
+  searchTerm = '',
+  dim = 'month',
+  dateRange = [],
+  computeDataState = { status: 'ready', error: '' },
+  customerSyncState = { status: 'idle', total: 0 },
+}) {
   const tokens = useThemeTokens();
   const [customerSort, setCustomerSort] = useState('usage-desc');
   const [customerColumnFilters, setCustomerColumnFilters] = useState(() => buildInitialCustomerColumnFilters());
@@ -1105,7 +1112,6 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
   const [customerPageSize, setCustomerPageSize] = useState(DEFAULT_CUSTOMER_PAGE_SIZE);
   const [customerPageSizeMenuOpen, setCustomerPageSizeMenuOpen] = useState(false);
   const [customerJumpPage, setCustomerJumpPage] = useState('');
-  const [customerSyncState, setCustomerSyncState] = useState({ status: 'idle', total: 0 });
   const periodLabel = DIM_TREND_LABELS[dim] ?? DIM_TREND_LABELS.month;
   const overview = getComputeOverview();
   const trend = getComputeUsageTrend({ dim, dateRange });
@@ -1113,46 +1119,6 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
   const distribution = getComputeUsageDistribution();
   const resourceHealth = getComputeResourceHealth();
   const customers = getComputeCustomerRows();
-
-  useEffect(() => {
-    if (computeDataState.status !== 'ready') return undefined;
-    let cancelled = false;
-
-    async function syncAllCustomers() {
-      setCustomerSyncState({ status: 'loading', total: overview.totalCustomers || 0 });
-
-      let page = 1;
-      for (;;) {
-        if (cancelled) return;
-        let payload;
-        try {
-          payload = await loadComputeCustomerPage({ page, pageSize: CUSTOMER_SYNC_PAGE_SIZE });
-        } catch {
-          if (!cancelled) setCustomerSyncState((state) => ({ ...state, status: 'error' }));
-          return;
-        }
-        if (cancelled) return;
-
-        const loaded = appendComputeCustomerRows(payload.rows);
-        setCustomerSyncState({ status: 'loading', total: payload.total });
-
-        if (!payload.rows.length || payload.rows.length < CUSTOMER_SYNC_PAGE_SIZE || loaded >= payload.total) break;
-        page += 1;
-      }
-
-      if (!cancelled) setCustomerSyncState((state) => ({ ...state, status: 'done' }));
-    }
-
-    syncAllCustomers();
-
-    return () => {
-      cancelled = true;
-    };
-    // overview.totalCustomers is only read once as this effect starts; it is
-    // intentionally not a dependency so appendComputeCustomerRows/state
-    // updates during the loop don't retrigger or cancel this same sync.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [computeDataState.status]);
   const customerRows = useMemo(
     () => buildCustomerTableRows(customers),
     [customers]

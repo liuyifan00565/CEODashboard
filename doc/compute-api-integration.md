@@ -1,5 +1,10 @@
 # Compute API Integration
 
+更新时间: 2026-07-10 15:58:00 CST
+更新内容: 客户分页同步从算力页组件挂载流程提升到 App 后台流程：`/api/compute-data` 成功后立即按
+          `/api/compute-customers?page=&pageSize=200` 循环同步客户明细，用户未进入算力页时也会后台加载；
+          算力页只接收并展示客户同步状态，避免进入页面才开始拉客户。
+
 更新时间: 2026-07-09 21:15:00 CST
 更新内容: 新增 `/api/compute-customers` 分页接口，算力页进入后在后台按 200/页循环拉取全量客户列表并增量合并到表格，
           不再受首屏 20 条采样限制；客户表按手机号去重合并，实测发现 `getCustomerBoardList` 按 `sort_type: 1`
@@ -58,7 +63,7 @@ COMPUTE_CUSTOMER_BOARD_PATH
 
 - `/api/dashboard-data`：只生成本地 MySQL 经营快照，不再实时调用外部算力接口；这是前端首屏的优先读取入口。
 - `/api/compute-data`：只读取外部算力数据并返回 `computeOverview`、`computeUsageTrend`、`computeVersionConsumption`、`computeUsageDistribution`、`computeCustomerRows`（首屏 20 条采样）、`computeResourceHealth`。前端在 `/api/dashboard-data` 成功后后台调用该接口；如果用户进入算力页时同步还没完成，算力页才显示状态条。
-- `/api/compute-customers?page=&pageSize=`：只读取 `getCustomerBoardList` 的某一页客户明细，返回 `{ rows, total, page, pageSize }`。算力页在 `/api/compute-data` 就绪后，于后台按 `pageSize=200` 从 `page=1` 开始循环调用该接口，每页到达后立即按手机号合并进客户表（不整体替换、不阻塞其它区块渲染），直到某页返回的行数少于 `pageSize` 或已合并数量达到 `total` 为止。
+- `/api/compute-customers?page=&pageSize=`：只读取 `getCustomerBoardList` 的某一页客户明细，返回 `{ rows, total, page, pageSize }`。`App` 在 `/api/compute-data` 就绪后，于后台按 `pageSize=200` 从 `page=1` 开始循环调用该接口，每页到达后立即按手机号合并进客户表（不整体替换、不阻塞其它区块渲染），直到某页返回的行数少于 `pageSize` 或已合并数量达到 `total` 为止。该流程不依赖算力页是否已经打开；算力页只展示同步状态和已合并结果。
 
 如果外部算力接口返回 404、鉴权失败或其它异常，`/api/dashboard-data` 会保留本地 MySQL 生成的快照继续返回，不让 token/算力覆盖失败影响其它模块。此时 `/api/compute-data` 仍会返回对应错误，用于排查外部接口 base/path/token 配置。
 

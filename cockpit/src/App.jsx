@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-10 15:58:00 CST
+ 更新内容: 将算力客户分页同步从算力页组件提升到 App 后台流程，token 总览同步完成后即开始拉取客户明细；
+          算力页仅负责展示客户同步进度，避免必须进入算力页才开始加载客户。
+*/
+/*
  更新时间: 2026-07-09 22:30:00 CST
  更新内容: 经营总览页在 dashboard-data 未就绪前改为渲染骨架屏，不再显示 mock.js 本地示例经营数据；彻底移除
           dashboardDataVersion（两个用途都已不需要强制重挂载），contentRenderKey 直接等于 contentKey。
@@ -217,8 +222,16 @@ import MaintenancePage from './components/MaintenancePage';
 import OperatingOverview from './components/OperatingOverview';
 import TopKpiStrip from './components/TopKpiStrip';
 
-import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
-import { loadComputeData, loadDashboardData } from './data/liveData';
+import {
+  appendComputeCustomerRows,
+  META,
+  MENU,
+  MAINTENANCE_MENU,
+  getComputeOverview,
+  getDashboardChannelKey,
+  getDashboardMenuLabel,
+} from './data/mock';
+import { loadComputeCustomerPage, loadComputeData, loadDashboardData } from './data/liveData';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
 import { matchesSearchTerm } from './lib/searchMatch';
@@ -228,6 +241,7 @@ const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance
 const BRAND_FULL_ENTER_SCROLL = 56;
 const BRAND_FULL_EXIT_SCROLL = 104;
 const DASHBOARD_LOADING_DELAY_MS = 450;
+const CUSTOMER_SYNC_PAGE_SIZE = 200;
 
 const DASHBOARD_SIDEBAR_ITEMS = [
   ...MENU.map((item) => ({ ...item, section: '导航', icon: item.icon ?? item.key })),
@@ -271,6 +285,7 @@ export default function App() {
   const [dashboardDataState, setDashboardDataState] = useState({ status: 'loading', error: '' });
   const [showDashboardLoading, setShowDashboardLoading] = useState(false);
   const [computeDataState, setComputeDataState] = useState({ status: 'idle', error: '' });
+  const [computeCustomerSyncState, setComputeCustomerSyncState] = useState({ status: 'idle', total: 0 });
 
   const gridRef = useRef(null);
   const secondaryGridRef = useRef(null);
@@ -358,6 +373,46 @@ export default function App() {
     // before loadComputeData() resolves, leaving status stuck at 'loading'.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dashboardDataState.status]);
+
+  useEffect(() => {
+    if (computeDataState.status !== 'ready' || computeCustomerSyncState.status !== 'idle') return undefined;
+    let cancelled = false;
+
+    async function syncAllComputeCustomers() {
+      const overview = getComputeOverview();
+      setComputeCustomerSyncState({ status: 'loading', total: overview.totalCustomers || 0 });
+
+      let page = 1;
+      for (;;) {
+        if (cancelled) return;
+        let payload;
+        try {
+          payload = await loadComputeCustomerPage({ page, pageSize: CUSTOMER_SYNC_PAGE_SIZE });
+        } catch {
+          if (!cancelled) setComputeCustomerSyncState((state) => ({ ...state, status: 'error' }));
+          return;
+        }
+        if (cancelled) return;
+
+        const loaded = appendComputeCustomerRows(payload.rows);
+        setComputeCustomerSyncState({ status: 'loading', total: payload.total });
+
+        if (!payload.rows.length || payload.rows.length < CUSTOMER_SYNC_PAGE_SIZE || loaded >= payload.total) break;
+        page += 1;
+      }
+
+      if (!cancelled) setComputeCustomerSyncState((state) => ({ ...state, status: 'done' }));
+    }
+
+    syncAllComputeCustomers();
+
+    return () => {
+      cancelled = true;
+    };
+    // computeCustomerSyncState.status is intentionally omitted: this effect
+    // owns the status transitions and should not cancel itself while paging.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [computeDataState.status]);
 
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -603,7 +658,13 @@ export default function App() {
             {isMaintenancePage ? (
               <MaintenancePage activePage={activeMaintenanceMenu} onBack={handleMaintenanceBack} />
             ) : isComputePage ? (
-              <ComputeUsagePage searchTerm={searchTerm} dim="day" dateRange={[]} computeDataState={computeDataState} />
+              <ComputeUsagePage
+                searchTerm={searchTerm}
+                dim="day"
+                dateRange={[]}
+                computeDataState={computeDataState}
+                customerSyncState={computeCustomerSyncState}
+              />
             ) : isDashboardDataLoading ? (
               <>
                 <div className="dash-skeleton-strip" data-anim />

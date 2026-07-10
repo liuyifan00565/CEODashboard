@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:58:00 CST
+ 更新内容: 算力客户分页同步断言改为检查 App 后台流程，确认客户加载不再依赖 ComputeUsagePage 挂载。
+*/
+/*
  更新时间: 2026-07-09 22:30:00 CST
  更新内容: dashboardDataVersion 状态被彻底移除，相关断言改为验证经营总览页在 dashboard-data 未就绪时渲染
           骨架屏、不使用本地示例数据，以及 dashboard-data/算力数据就绪都不再触发内容区重挂载。
@@ -43,7 +47,7 @@ const viteConfigSource = readFileSync(new URL('../vite.config.js', import.meta.u
 const computePageSource = readFileSync(new URL('./components/ComputeUsagePage.jsx', import.meta.url), 'utf8');
 
 test('loads mysql dashboard data in the background without blocking the dashboard shell', () => {
-  assert.match(appSource, /import \{ loadComputeData, loadDashboardData \} from '\.\/data\/liveData';/);
+  assert.match(appSource, /import \{ loadComputeCustomerPage, loadComputeData, loadDashboardData \} from '\.\/data\/liveData';/);
   assert.match(appSource, /useEffect\(\(\) => \{[\s\S]*?loadDashboardData\(\)[\s\S]*?setDashboardDataState\(\{ status: 'ready', error: '' \}\)/);
   assert.doesNotMatch(appSource, /if \(!isDashboardDataReady\)/);
   assert.doesNotMatch(appSource, /className="dash-data-state"/);
@@ -59,7 +63,7 @@ test('loads external compute data in the background after dashboard data is read
   assert.match(appSource, /const \[computeDataState, setComputeDataState\] = useState\(\{ status: 'idle', error: '' \}\);/);
   assert.match(appSource, /if \(dashboardDataState\.status !== 'ready' \|\| computeDataState\.status !== 'idle'\) return undefined;/);
   assert.match(appSource, /loadComputeData\(\)[\s\S]*?setComputeDataState\(\{ status: 'ready', error: '' \}\)/);
-  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim="day" dateRange=\{\[\]\} computeDataState=\{computeDataState\} \/>/);
+  assert.match(appSource, /<ComputeUsagePage[\s\S]*?computeDataState=\{computeDataState\}[\s\S]*?customerSyncState=\{computeCustomerSyncState\}[\s\S]*?\/>/);
 });
 
 test('removed dashboardDataVersion entirely so neither dashboard nor compute data readiness remounts the content area', () => {
@@ -117,10 +121,13 @@ test('registers paginated compute customers api in production and vite dev serve
 });
 
 test('syncs all compute customers in the background via pagination instead of a single capped request', () => {
-  assert.match(computePageSource, /import \{ loadComputeCustomerPage \} from '\.\.\/data\/liveData';/);
-  assert.match(computePageSource, /appendComputeCustomerRows,/);
-  assert.match(computePageSource, /const CUSTOMER_SYNC_PAGE_SIZE = 200;/);
-  assert.match(computePageSource, /if \(computeDataState\.status !== 'ready'\) return undefined;/);
-  assert.match(computePageSource, /loadComputeCustomerPage\(\{ page, pageSize: CUSTOMER_SYNC_PAGE_SIZE \}\)/);
+  assert.match(appSource, /const CUSTOMER_SYNC_PAGE_SIZE = 200;/);
+  assert.match(appSource, /const \[computeCustomerSyncState, setComputeCustomerSyncState\] = useState\(\{ status: 'idle', total: 0 \}\);/);
+  assert.match(appSource, /import \{ loadComputeCustomerPage, loadComputeData, loadDashboardData \} from '\.\/data\/liveData';/);
+  assert.match(appSource, /appendComputeCustomerRows,/);
+  assert.match(appSource, /if \(computeDataState\.status !== 'ready' \|\| computeCustomerSyncState\.status !== 'idle'\) return undefined;/);
+  assert.match(appSource, /loadComputeCustomerPage\(\{ page, pageSize: CUSTOMER_SYNC_PAGE_SIZE \}\)/);
+  assert.match(appSource, /customerSyncState=\{computeCustomerSyncState\}/);
+  assert.doesNotMatch(computePageSource, /loadComputeCustomerPage\(/);
   assert.match(computePageSource, /className="cpu-customer-sync"/);
 });
