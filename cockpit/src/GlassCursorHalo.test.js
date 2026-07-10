@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 10:59:53 CST
+ 更新内容: 光标柔光回归测试改为要求彻底停用全局覆盖层，只保留系统原生光标，避免 Canvas 合成闪烁。
+*/
+/*
  更新时间: 2026-07-06 11:23:48 CST
  更新内容: 光标效果回归测试改为要求低存在感银紫玫瑰柔光，并限制为透明环境光层。
 */
@@ -39,39 +43,26 @@ const mainSource = readFileSync(new URL('./main.jsx', import.meta.url), 'utf8');
 const cursorSource = readFileSync(new URL('./components/GlassCursor.jsx', import.meta.url), 'utf8');
 const cursorCss = readFileSync(new URL('./components/GlassCursor.css', import.meta.url), 'utf8');
 
-test('mounts one global cursor ambient light outside the dashboard shell', () => {
+test('does not mount a cursor ambient layer outside the dashboard shell', () => {
   assert.doesNotMatch(appSource, /GlassCursor/);
-  assert.match(mainSource, /import GlassCursor from '\.\/components\/GlassCursor';?/);
-  assert.match(mainSource, /<GlassCursor\s*\/>/);
+  assert.doesNotMatch(mainSource, /import GlassCursor from '\.\/components\/GlassCursor';?/);
+  assert.doesNotMatch(mainSource, /<GlassCursor\s*\/>/);
 });
 
-test('tracks the native pointer with a passive non-interactive halo', () => {
-  assert.match(cursorSource, /import \{ useEffect, useRef \} from 'react';/);
-  assert.match(cursorSource, /import '\.\/GlassCursor\.css';/);
-  assert.match(cursorSource, /const haloRef = useRef\(null\);/);
-  assert.match(cursorSource, /window\.addEventListener\('pointermove', handlePointerMove, \{ passive: true \}\);/);
-  assert.match(cursorSource, /style\.setProperty\('--glass-cursor-x', `\$\{event\.clientX\}px`\);/);
-  assert.match(cursorSource, /style\.setProperty\('--glass-cursor-y', `\$\{event\.clientY\}px`\);/);
-  assert.match(cursorSource, /classList\.add\('is-active'\);/);
-  assert.match(cursorSource, /window\.removeEventListener\('pointermove', handlePointerMove\);/);
-  assert.match(cursorSource, /<div ref=\{haloRef\} className="glass-cursor-halo" aria-hidden="true" \/>/);
+test('keeps the cursor helper inert so the native cursor has no surrounding layer', () => {
+  assert.match(cursorSource, /export default function GlassCursor\(\) \{\s*return null;\s*\}/);
+  assert.doesNotMatch(cursorSource, /useState|useRef|useEffect/);
+  assert.doesNotMatch(cursorSource, /GlassCursor\.css/);
+  assert.doesNotMatch(cursorSource, /addEventListener\('pointermove'|addEventListener\('mousemove'/);
+  assert.doesNotMatch(cursorSource, /glass-cursor-halo|glass-cursor-fixed|is-active/);
   assert.doesNotMatch(cursorSource, /<Canvas/);
   assert.doesNotMatch(cursorSource, /cursor:\s*'none'|cursor\s*=\s*['"]none/);
 });
 
-test('uses only the restrained silver violet rose radial light', () => {
-  assert.match(cursorCss, /\.glass-cursor-halo\s*\{/);
-  assert.match(cursorCss, /position:\s*fixed;/);
-  assert.match(cursorCss, /inset:\s*0;/);
-  assert.match(cursorCss, /pointer-events:\s*none;/);
-  assert.match(cursorCss, /z-index:\s*30;/);
-  assert.match(cursorCss, /radial-gradient\(\s*420px circle at var\(--glass-cursor-x\) var\(--glass-cursor-y\),\s*rgba\(184,\s*156,\s*255,\s*0\.10\),\s*rgba\(228,\s*184,\s*215,\s*0\.045\) 32%,\s*transparent 68%\s*\)/);
-  assert.match(cursorCss, /\.glass-cursor-halo\.is-active\s*\{[\s\S]*?opacity:\s*1;/);
-  assert.match(cursorCss, /@media \(pointer:\s*coarse\), \(prefers-reduced-motion:\s*reduce\)/);
-  assert.match(cursorCss, /display:\s*none;/);
-
-  assert.doesNotMatch(cursorCss, /glass-cursor-fixed/);
-  assert.doesNotMatch(cursorCss, /box-shadow|filter:\s*blur|saturate\(/);
-  assert.doesNotMatch(cursorCss, /z-index:\s*2147483647/);
+test('ships no cursor glow CSS that can create a composited overlay', () => {
+  assert.doesNotMatch(cursorCss, /\.glass-cursor-halo|\.glass-cursor-fixed/);
+  assert.doesNotMatch(cursorCss, /radial-gradient|box-shadow|filter:\s*blur|saturate\(/);
+  assert.doesNotMatch(cursorCss, /position:\s*fixed|inset:\s*0|will-change:/);
+  assert.doesNotMatch(cursorCss, /z-index:/);
   assert.doesNotMatch(cursorCss, /cursor:\s*none/);
 });

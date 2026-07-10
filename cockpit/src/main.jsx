@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 10:59:53 CST
+ 更新内容: 停用全局 GlassCursor 覆盖层，只保留系统原生光标，消除鼠标静止时的页面合成闪烁。
+*/
+/*
  更新时间: 2026-07-06 11:23:48 CST
  更新内容: 恢复全局 GlassCursor 环境柔光挂载，用低透明银紫玫瑰光补充暗色玻璃层次。
 */
@@ -18,13 +22,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
-import GlassCursor from './components/GlassCursor'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <>
-      <App />
-      <GlassCursor />
-    </>
+    <App />
   </StrictMode>,
 )
