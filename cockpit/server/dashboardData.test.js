@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 14:50:00 CST
+ 更新内容: 业务月份回归改为默认跟随北京时间当前自然月，不再要求临时 2026-06 覆盖。
+*/
+/*
  更新时间: 2026-07-09 16:05:00 CST
  更新内容: 增加 dashboard 净回款回归，验证日级和销售月表回款都会扣减渠道月度退款并返回退款额。
 */
@@ -319,12 +323,12 @@ test('filters maintained targets to department-level dashboard rows', () => {
   assert.ok(source.includes('GROUP BY t.\\`year_month\\`, d.department_id, d.department_name, c.channel_key'));
 });
 
-test('selects dashboard business month from the temporary June override before automatic fallback', () => {
+test('selects dashboard business month from explicit override or the current Beijing month', () => {
   const source = readFileSync(new URL('./dashboardData.js', import.meta.url), 'utf8');
 
-  assert.match(source, /const TEMP_DASHBOARD_MONTH_OVERRIDE = '2026-06';/);
+  assert.match(source, /const TEMP_DASHBOARD_MONTH_OVERRIDE = '';/);
   assert.match(source, /async function selectDashboardBusinessMonth/);
-  assert.match(source, /process\.env\.DASHBOARD_MONTH_OVERRIDE \|\| TEMP_DASHBOARD_MONTH_OVERRIDE \|\| await loadLatestActualMonth\(connection\)/);
+  assert.match(source, /process\.env\.DASHBOARD_MONTH_OVERRIDE \|\| TEMP_DASHBOARD_MONTH_OVERRIDE \|\| chinaTodayYMD\(\)\.yearMonth \|\| await loadLatestActualMonth\(connection\)/);
   assert.match(source, /async function loadLatestActualMonth/);
   assert.match(source, /DATE_FORMAT\(MAX\(stat_date\), '%Y-%m'\) AS actual_month[\s\S]*FROM fact_revenue_daily/);
   assert.match(source, /SELECT MAX\(\\`year_month\\`\) AS actual_month[\s\S]*FROM fact_sales_member_monthly/);

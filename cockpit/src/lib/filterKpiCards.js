@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 14:50:00 CST
+ 更新内容: 默认 KPI 日期范围改为运行时当前自然月，不再固定 2026-06。
+*/
+/*
  更新时间: 2026-07-09 16:05:00 CST
  更新内容: 搜索关键词继续保留“回款”文案，并补充“退款”用于定位月度/年度退款提示。
 */
@@ -99,7 +103,15 @@ import { CHANNEL_ROI, CHANNELS, COST_TREND, KPI, KPI_CARDS, KPI_DERIVED, META, g
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DIM_KEYS = new Set(['year', 'month', 'day']);
 
-export const DEFAULT_FILTER_RANGE = ['2026-06-01', '2026-06-30'];
+function currentMonthRange(date = new Date()) {
+  const year = date.getFullYear();
+  const monthIndex = date.getMonth();
+  const month = String(monthIndex + 1).padStart(2, '0');
+  const lastDay = String(new Date(year, monthIndex + 1, 0).getDate()).padStart(2, '0');
+  return [`${year}-${month}-01`, `${year}-${month}-${lastDay}`];
+}
+
+export const DEFAULT_FILTER_RANGE = currentMonthRange();
 
 function getDimConfig() {
   const yearCostScale = KPI.monthRecovered ? KPI.yearRecovered / KPI.monthRecovered : 0;

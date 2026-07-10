@@ -1,5 +1,8 @@
 # Dashboard Data Aggregation
 
+Update time: 2026-07-10 14:50:00 CST
+Update content: Dashboard business month now defaults to the current Beijing calendar month and the frontend default KPI date range follows the current calendar month. `DASHBOARD_MONTH_OVERRIDE` remains available for explicit month overrides.
+
 Update time: 2026-07-10 16:45:00 CST
 Update content: Merged Jichuan compute usage API split. `/api/dashboard-data` remains the local MySQL snapshot entry; after it is ready, `App` calls `/api/compute-data` in the background and then paginates `/api/compute-customers` to merge customer rows into the runtime compute table.
 
@@ -39,9 +42,9 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 
 `/api/dashboard-data` 不实时调用外部算力接口，避免首页等待 token 服务。dashboard 快照就绪后，`App` 会在后台调用 `/api/compute-data` 覆盖 `computeOverview`、`computeUsageTrend`、`computeVersionConsumption`、`computeUsageDistribution`、`computeCustomerRows` 和 `computeResourceHealth`；随后按 `/api/compute-customers?page=&pageSize=200` 分页拉取客户明细并按手机号增量合并。算力页只接收 token 同步状态和客户同步状态，用骨架屏/进度文案展示后台加载进度。
 
-业务月份 `latestMonth` 当前通过 `TEMP_DASHBOARD_MONTH_OVERRIDE = '2026-06'` 临时锁定为 2026 年 6 月；其它数据原因处理完后，移除该覆盖即可恢复自动月份。自动月份回退路径会优先取 `fact_revenue_daily.stat_date` 最新年月，再与 `fact_sales_member_monthly.year_month` 比较兜底。
+业务月份 `latestMonth` 默认跟随北京时间当前自然月；如需排查历史月份，可通过 `DASHBOARD_MONTH_OVERRIDE=YYYY-MM` 显式覆盖。当前自然月无法解析时，自动月份回退路径会优先取 `fact_revenue_daily.stat_date` 最新年月，再与 `fact_sales_member_monthly.year_month` 比较兜底。
 
-前端 KPI 默认日期范围当前固定为 `2026-06-01` 至 `2026-06-30`；完整自然月范围按 100% 口径计算，手动查看历史完整月份时不会因月份天数差异缩放 KPI。
+前端 KPI 默认日期范围跟随浏览器运行时当前自然月的第一天到最后一天；完整自然月范围按 100% 口径计算，手动查看历史完整月份时不会因月份天数差异缩放 KPI。
 
 ## 经营目标与回款
 

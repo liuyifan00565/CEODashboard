@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 14:50:00 CST
+ 更新内容: 默认日期范围回归改为运行时当前自然月，不再要求 2026 年 6 月整月。
+*/
+/*
  更新时间: 2026-07-09 13:14:23 CST
  更新内容: 搜索关键词回归同步点击查看入口和半环未完成占位。
 */
@@ -94,7 +98,15 @@ function expectNoMainCardDateRange(cards) {
   }
 }
 
-test('keeps the default June monthly filter aligned with the existing mock KPI values', () => {
+function currentMonthRange(date = new Date()) {
+  const year = date.getFullYear();
+  const monthIndex = date.getMonth();
+  const month = String(monthIndex + 1).padStart(2, '0');
+  const lastDay = String(new Date(year, monthIndex + 1, 0).getDate()).padStart(2, '0');
+  return [`${year}-${month}-01`, `${year}-${month}-${lastDay}`];
+}
+
+test('keeps full-month filters aligned with the existing mock KPI values', () => {
   const cards = getFilteredKpiCards({ dim: 'month', dateRange: ['2026-06-01', '2026-06-30'] });
   const recovered = byKey(cards, 'month');
   const renewal = byKey(cards, 'renewal');
@@ -154,7 +166,7 @@ test('adds fused operating overview section text to KPI search keywords', () => 
   const month = byKey(cards, 'month');
   const annual = byKey(cards, 'year');
 
-  assert.ok(month.keywords.includes('2026年6月经营进度'));
+  assert.ok(month.keywords.includes(`${META.monthLabel}经营进度`));
   assert.ok(month.keywords.includes('点击查看近期明细'));
   assert.ok(month.keywords.includes('风险'));
   assert.ok(month.keywords.includes('未完成'));
@@ -215,8 +227,8 @@ test('uses runtime month label in operating overview search keywords', () => {
   }
 });
 
-test('keeps the temporary default filter range on June while reviewing June facts', () => {
-  assert.deepEqual(DEFAULT_FILTER_RANGE, ['2026-06-01', '2026-06-30']);
+test('uses the current calendar month as the default filter range', () => {
+  assert.deepEqual(DEFAULT_FILTER_RANGE, currentMonthRange());
 });
 
 test('changes KPI card values when the calendar range changes', () => {

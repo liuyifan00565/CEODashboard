@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 14:50:00 CST
+ 更新内容: 前端兜底月份、默认算力范围和年份派生改为运行时当前自然月，不再固定 2026-06。
+*/
+/*
  更新时间: 2026-07-10 16:38:00 CST
  更新内容: 合并 Jichuan 算力外部数据覆盖与客户分页增量合并逻辑，同时保留退款和成本维护运行时字段。
 */
@@ -108,10 +112,29 @@
 */
 import { calculateRenewalOverview, getRenewalChannelBreakdown } from '../lib/renewal.js';
 
+function currentMonthParts(date = new Date()) {
+  const year = date.getFullYear();
+  const monthIndex = date.getMonth();
+  const month = monthIndex + 1;
+  const monthKey = String(month).padStart(2, '0');
+  const lastDay = String(new Date(year, monthIndex + 1, 0).getDate()).padStart(2, '0');
+  return { year, month, monthKey, lastDay };
+}
+
+function currentMonthLabel() {
+  const { year, month } = currentMonthParts();
+  return `${year}年${month}月`;
+}
+
+function currentMonthDateRange() {
+  const { year, monthKey, lastDay } = currentMonthParts();
+  return [`${year}-${monthKey}-01`, `${year}-${monthKey}-${lastDay}`];
+}
+
 export const META = {
   title: 'AI 客服销售经营驾驶舱',
   company: '成都福客人工智能',
-  monthLabel: '2026年6月',
+  monthLabel: currentMonthLabel(),
   annualTarget: 5800, // 万元
 };
 
@@ -470,8 +493,8 @@ const COMPUTE_DAYS = Array.from({ length: 29 }, (_, index) => `06-${String(index
 const COMPUTE_USAGE = [468, 462, 459, 442, 435, 444, 452, 438, 458, 453, 429, 423, 456, 486, 492, 487, 504, 423, 441, 468, 482, 477, 471, 455, 466, 486, 496, 512, 536];
 const COMPUTE_ADD_ON = [16, 14, 13, 11, 10, 12, 11, 9, 14, 12, 10, 8, 12, 18, 16, 15, 17, 8, 10, 13, 14, 13, 12, 10, 12, 14, 15, 16, 18];
 const COMPUTE_CAPACITY = [2360, 2380, 2376, 2382, 2392, 2388, 2394, 2401, 2410, 2408, 2417, 2440, 2438, 2434, 2441, 2480, 2501, 2512, 2510, 2515, 2512, 2522, 2534, 2540, 2552, 2570, 2582, 2578, 2600];
-const COMPUTE_DEFAULT_RANGE = ['2026-06-01', '2026-06-30'];
-const COMPUTE_YEAR = '2026';
+const COMPUTE_DEFAULT_RANGE = currentMonthDateRange();
+const COMPUTE_YEAR = String(currentMonthParts().year);
 const COMPUTE_YEAR_NUMBER = Number(COMPUTE_YEAR);
 const COMPUTE_LOOKBACK_YEARS = 5;
 const COMPUTE_LOOKBACK_MONTHS = 36;
@@ -971,7 +994,7 @@ export function getAnnualRhythmPoints() {
 
   return [
     { label: firstMonth?.month ?? '1月', value: Math.round((firstMonth?.recovered ?? 0) * scale), tone: 'actual' },
-    { label: META.monthLabel.replace(/^2026年/, ''), value: KPI.yearRecovered, tone: 'current' },
+    { label: META.monthLabel.replace(/^\d{4}年/, ''), value: KPI.yearRecovered, tone: 'current' },
     { label: '12月目标', value: KPI.yearTarget, tone: 'target' },
   ];
 }

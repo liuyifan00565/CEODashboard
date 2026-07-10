@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 14:50:00 CST
+ 更新内容: 侧边栏月份回归同步动态当前月兜底，不再断言 mock 写死 2026年6月。
+*/
+/*
  更新时间: 2026-07-10 11:55:10 CST
  更新内容: 回归测试锁定回款半环未完成标签向内收缩，避免文字远离半环。
 */
@@ -643,8 +647,8 @@ test('places the FuKe brand logo above the sidebar navigation instead of the mai
   const sidebarTitleBlock = cssRuleBody(sidebarCss, '.sb-brand-copy b');
   const mainBlock = cssRuleBody(dashboardCss, '.dash-main');
 
-  assert.match(mockSource, /monthLabel: '2026年6月'/);
-  assert.doesNotMatch(mockSource, /monthLabel: '2026 年 6 月'/);
+  assert.match(mockSource, /monthLabel: currentMonthLabel\(\)/);
+  assert.doesNotMatch(mockSource, /monthLabel: '2026年6月'/);
   assert.match(appSource, /const sidebarBrandMeta = `\$\{META\.monthLabel\} · \$\{activeContextLabel\}`;/);
   assert.match(appSource, /brandTitle="福客经营驾驶舱"/);
   assert.match(appSource, /brandMeta=\{sidebarBrandMeta\}/);

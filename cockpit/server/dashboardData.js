@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 14:50:00 CST
+ 更新内容: 首页业务月份默认跟随北京时间当前自然月，不再临时锁定 2026-06；仍支持 DASHBOARD_MONTH_OVERRIDE 显式覆盖。
+*/
+/*
  更新时间: 2026-07-09 16:05:00 CST
  更新内容: 回款全局计算逻辑改为赢单金额扣退款金额，从 biz_channel_cost_monthly.refund_amount_yuan
    按月份+渠道扣减日级或销售月表回款，并在 dashboard 快照返回月度/年度退款额。
@@ -60,8 +64,8 @@ const DB_DEFAULTS = {
   database: 'ceo_dashboard',
 };
 
-// 临时锁定 2026-06：其它数据原因处理完后，把这里改为空字符串即可恢复自动月份。
-const TEMP_DASHBOARD_MONTH_OVERRIDE = '2026-06';
+// 本地排查时可临时填入 YYYY-MM；默认走北京时间当前自然月。
+const TEMP_DASHBOARD_MONTH_OVERRIDE = '';
 
 const STAFF_CHANNEL_KEY_SQL = `COALESCE(NULLIF(s.channel_key, ''), CASE
   WHEN d.department_code = 'online-sales' THEN 'online'
@@ -113,7 +117,7 @@ function monthNumber(yearMonth) {
 }
 
 function monthLabel(yearMonth) {
-  const [year, month] = String(yearMonth || '2026-06').split('-');
+  const [year, month] = String(yearMonth || chinaTodayYMD().yearMonth).split('-');
   return `${year}年${Number(month)}月`;
 }
 
@@ -140,7 +144,7 @@ export function chinaTodayYMD() {
 }
 
 function previousYearMonthValue(yearMonth) {
-  const [year, month] = String(yearMonth || '2026-06').split('-').map(Number);
+  const [year, month] = String(yearMonth || chinaTodayYMD().yearMonth).split('-').map(Number);
   if (month > 1) return `${year}-${String(month - 1).padStart(2, '0')}`;
   return `${year - 1}-12`;
 }
@@ -555,7 +559,7 @@ function makeDeliveryRows(rows) {
 }
 
 export function mapDashboardRowsToSnapshot(rows) {
-  const latestMonth = rows.latestMonth || rows.salesMemberMonthly?.[0]?.year_month || '2026-06';
+  const latestMonth = rows.latestMonth || rows.salesMemberMonthly?.[0]?.year_month || chinaTodayYMD().yearMonth;
   const latestYear = String(latestMonth).slice(0, 4);
   const previousMonth = rows.previousMonth || previousYearMonthValue(latestMonth);
   const refundRows = rows.refundRows ?? [];
@@ -684,7 +688,7 @@ async function loadLatestActualMonth(connection) {
 }
 
 async function selectDashboardBusinessMonth(connection) {
-  return process.env.DASHBOARD_MONTH_OVERRIDE || TEMP_DASHBOARD_MONTH_OVERRIDE || await loadLatestActualMonth(connection);
+  return process.env.DASHBOARD_MONTH_OVERRIDE || TEMP_DASHBOARD_MONTH_OVERRIDE || chinaTodayYMD().yearMonth || await loadLatestActualMonth(connection);
 }
 
 async function ensureDashboardRefundColumn(connection) {
