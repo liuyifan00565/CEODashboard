@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-10 13:12:05 CST  更新内容: 临时预览回款半环左侧主标签向内收缩，缩短标签到半环的引导距离。 */
 /* 更新时间: 2026-07-10 11:55:10 CST  更新内容: 回款半环未完成外部标签向内收缩，让文字更靠近半环。 */
 /* 更新时间: 2026-07-10 11:10:16 CST  更新内容: 回款半环保留版本情况同款 radius/center，最终显示尺寸由 CSS 对齐首页版本情况实际图高。 */
 /* 更新时间: 2026-07-10 11:03:44 CST  更新内容: 删除年度累计回款大数字上方的小标签，并将年度拆解入口移到年度回款结构标题右上方。 */
@@ -118,6 +119,7 @@ const INCOMPLETE_STRUCTURE_STYLE = {
   color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: 'rgba(255,255,255,.075)' }, { offset: 1, color: 'rgba(255,255,255,.035)' }] },
   swatch: 'rgba(255,255,255,.28)',
 };
+const MAJOR_LABEL_EDGE_DISTANCE = '16%';
 const INCOMPLETE_LABEL_EDGE_DISTANCE = '22%';
 const DETAIL_ARROW = '›';
 
@@ -362,6 +364,7 @@ function channelStructureOption(structure, periodMeta, tokens) {
             ...item,
             label: {
               show: isMajorLabel || isIncompleteLabel,
+              ...(isMajorLabel ? { edgeDistance: MAJOR_LABEL_EDGE_DISTANCE } : {}),
               ...(isIncompleteLabel ? { edgeDistance: INCOMPLETE_LABEL_EDGE_DISTANCE } : {}),
             },
             labelLine: {

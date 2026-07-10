@@ -1,3 +1,20 @@
+/* 更新时间: 2026-07-10 13:39:13 CST  更新内容: 临时预览月度半环保持左移和放大但下放到标题下方，避免压住本月回款结构标题，待确认后再提交。 */
+/* 更新时间: 2026-07-10 13:36:03 CST  更新内容: 临时预览本月回款结构分界线左移，并让月度半环本体按年度同档左移、下移和放大，待确认后再提交。 */
+/* 更新时间: 2026-07-10 13:31:35 CST  更新内容: 临时预览仅将年度半环本体左移、下移并继续放大，保持其它布局不变，待确认后再提交。 */
+/* 更新时间: 2026-07-10 13:23:16 CST  更新内容: 临时预览仅放大年度回款结构半环本体，保持卡片高度与其它布局不变，待确认后再提交。 */
+/* 更新时间: 2026-07-10 13:21:01 CST  更新内容: 临时预览年度半环从过高位置下移，靠近年度卡片视觉高度中央，待确认后再提交。 */
+/* 更新时间: 2026-07-10 13:15:50 CST  更新内容: 临时预览年度半环本体横向居中到年度回款结构列中央，待确认后再提交。 */
+/* 更新时间: 2026-07-10 13:08:20 CST  更新内容: 临时预览年度拆解入口上提，避免与上移后的未完成标签重叠，待确认后再提交。 */
+/* 更新时间: 2026-07-10 13:03:30 CST  更新内容: 临时预览月度与年度总览卡继续收窄，释放月度经营趋势完整露出空间，待确认后再提交。 */
+/* 更新时间: 2026-07-10 12:57:27 CST  更新内容: 临时预览年度回款总览卡上下收缩，年度半环保持放大并继续上提，待确认后再提交。 */
+/* 更新时间: 2026-07-10 12:18:00 CST  更新内容: 临时预览年度回款结构半环大幅上提到标题下方空区，待确认后再提交。 */
+/* 更新时间: 2026-07-10 12:14:54 CST  更新内容: 临时预览年度回款结构左边界再左移，并将年度半环整体上提，待确认后再提交。 */
+/* 更新时间: 2026-07-10 12:12:14 CST  更新内容: 临时预览年度回款结构半环图区再放大一档，待确认后再提交。 */
+/* 更新时间: 2026-07-10 12:09:16 CST  更新内容: 临时预览年度回款结构左边界继续左移，并放大年度半环图区，待确认后再提交。 */
+/* 更新时间: 2026-07-10 11:57:22 CST  更新内容: 临时预览年度目标进度条轨道再次加粗到 16px，位置保持不变待确认。 */
+/* 更新时间: 2026-07-10 11:56:12 CST  更新内容: 临时预览年度目标进度条略向上回调并加粗轨道，待确认后再提交。 */
+/* 更新时间: 2026-07-10 11:54:58 CST  更新内容: 临时预览年度目标进度条中心线对齐右侧代理黄色条中心，仍不提交待确认。 */
+/* 更新时间: 2026-07-10 11:53:44 CST  更新内容: 临时预览年度目标进度条改用视觉位移下移，避免年度回款数字和目标胶囊被布局重新居中带着上移。 */
 /* 更新时间: 2026-07-10 11:44:01 CST  更新内容: 年度目标进度条继续下移，加大与年度目标胶囊之间的垂直距离。 */
 /* 更新时间: 2026-07-10 11:33:58 CST  更新内容: 月度/年度回款结构区整体轻微左移，结构标题入口向左下移动，年度目标进度条下移。 */
 /* 更新时间: 2026-07-10 11:33:41 CST  更新内容: 经营情况渠道行距继续加大到 16px，低高度桌面档为 13px，进一步拉开四个条目的扫描距离。 */
@@ -59,7 +76,7 @@
   grid-template-areas:
     "progress"
     "annual";
-  gap: 12px;
+  gap: 10px;
 }
 
 .op-panel {
@@ -87,6 +104,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding-block: clamp(3px, .35vw, 6px);
 }
 
 .op-panel--annual {
@@ -94,7 +112,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-block: clamp(5px, .55vw, 8px);
+  padding-block: clamp(3px, .35vw, 6px);
 }
 
 .op-search-result {
@@ -310,7 +328,7 @@
 .op-recovery-structure {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto 220px;
+  grid-template-rows: auto 210px;
   align-content: start;
   gap: 0;
   margin-left: -16px;
@@ -345,8 +363,8 @@
   min-width: 0;
   width: clamp(320px, 25vw, 420px);
   max-width: 100%;
-  height: 220px;
-  min-height: 220px;
+  height: 210px;
+  min-height: 210px;
   justify-self: center;
   display: grid;
   place-items: center;
@@ -361,7 +379,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  min-height: 220px;
+  min-height: 210px;
 }
 
 .op-operating-side {
@@ -473,13 +491,35 @@
   line-height: 1;
 }
 
+.op-month-grid .op-recovery-structure {
+  margin-left: clamp(-66px, -4.3vw, -42px);
+  margin-right: clamp(16px, 1.3vw, 22px);
+}
+
+.op-month-grid .op-channel-chart {
+  transform: translate(clamp(-16px, -1vw, -10px), clamp(8px, .75vw, 14px)) scale(1.24);
+  transform-origin: 50% 42%;
+}
+
 .op-annual-grid .op-recovery-structure {
-  grid-template-rows: auto 220px;
+  grid-template-rows: auto 218px;
+  margin-left: clamp(-66px, -4.3vw, -42px);
+  margin-right: clamp(16px, 1.3vw, 22px);
 }
 
 .op-annual-grid .op-channel-chart-wrap {
-  height: 220px;
-  min-height: 220px;
+  width: clamp(380px, 29vw, 480px);
+  height: 218px;
+  min-height: 218px;
+}
+
+.op-annual-grid .op-channel-chart {
+  transform: translate(clamp(-16px, -1vw, -10px), clamp(-34px, -2.4vw, -24px)) scale(1.3);
+  transform-origin: 50% 42%;
+}
+
+.op-annual-grid .op-structure-head .op-detail-link {
+  margin-top: -10px;
 }
 
 .op-annual-grid .op-operating-side {
@@ -497,7 +537,7 @@
   display: grid;
   align-self: start;
   margin-top: clamp(18px, 1.35vw, 24px);
-  transform: none;
+  transform: translateY(clamp(34px, 2.6vw, 42px));
   z-index: 2;
 }
 
@@ -522,7 +562,7 @@
 .op-annual-progress-track {
   position: relative;
   min-width: 0;
-  height: 8px;
+  height: 16px;
   border-radius: 999px;
   background: var(--bar-track);
   border: 1px solid rgba(255,255,255,.075);
@@ -628,7 +668,7 @@
 
 @media (min-width: 1181px) and (max-height: 1071px) {
   .op-overview {
-    gap: 8px;
+    gap: 6px;
   }
 
   .op-panel,
@@ -636,20 +676,30 @@
     padding-block: 4px;
   }
 
-  .op-recovery-structure,
-  .op-annual-grid .op-recovery-structure {
-    grid-template-rows: auto 204px;
+  .op-recovery-structure {
+    grid-template-rows: auto 194px;
   }
 
-  .op-channel-chart-wrap,
-  .op-annual-grid .op-channel-chart-wrap {
+  .op-annual-grid .op-recovery-structure {
+    grid-template-rows: auto 208px;
+    margin-left: clamp(-62px, -4vw, -40px);
+    margin-right: clamp(16px, 1.2vw, 22px);
+  }
+
+  .op-channel-chart-wrap {
     width: clamp(300px, 23vw, 392px);
-    height: 204px;
-    min-height: 204px;
+    height: 194px;
+    min-height: 194px;
+  }
+
+  .op-annual-grid .op-channel-chart-wrap {
+    width: clamp(360px, 27.5vw, 440px);
+    height: 208px;
+    min-height: 208px;
   }
 
   .op-channel-chart {
-    min-height: 204px;
+    min-height: 194px;
   }
 
   .op-channel-list {
