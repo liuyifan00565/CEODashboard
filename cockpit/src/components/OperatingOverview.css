@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-10 15:57:27 CST  更新内容: 年度下钻入口移到年度进度条上方的半环右下区域，避免落到进度条下边。 */
+/* 更新时间: 2026-07-10 15:55:14 CST  更新内容: 月度与年度下钻入口共用更扁的右下热区，避免年度入口矩形与进度条相交。 */
 /* 更新时间: 2026-07-10 15:49:48 CST  更新内容: 年度下钻入口改回与月度一致的半环右下位置，不再额外上移。 */
 /* 更新时间: 2026-07-10 15:42:33 CST  更新内容: 年度下钻入口上收并让年度进度条保持更高层级，避免透明热区挡住进度条。 */
 /* 更新时间: 2026-07-10 15:36:50 CST  更新内容: 月度与年度下钻入口固定到半环图右下方，并用透明大热区支持点击周边跳转。 */
@@ -219,13 +221,13 @@
 .op-channel-chart-wrap .op-detail-link {
   position: absolute;
   right: clamp(0px, .65vw, 10px);
-  bottom: clamp(2px, .55vw, 10px);
+  bottom: -8px;
   z-index: 3;
   min-width: 156px;
-  min-height: 56px;
+  min-height: 28px;
   justify-content: flex-end;
   align-items: flex-end;
-  padding: 24px 6px 8px 28px;
+  padding: 8px 6px 6px 28px;
   font-size: 12px;
   text-align: right;
 }
@@ -233,6 +235,10 @@
 .op-channel-chart-wrap .op-detail-link:focus-visible:not(:disabled) {
   border-radius: 12px;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+}
+
+.op-annual-grid .op-channel-chart-wrap .op-detail-link {
+  bottom: 44px;
 }
 
 .op-month-grid {

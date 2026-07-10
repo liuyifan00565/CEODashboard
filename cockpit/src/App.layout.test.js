@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-10 15:57:27 CST
+ 更新内容: 回归测试锁定年度下钻入口位于年度进度条上方，不落到进度条下边。
+*/
+/*
+ 更新时间: 2026-07-10 15:55:14 CST
+ 更新内容: 回归测试锁定月度与年度共用更扁的右下热区，避免入口矩形与年度进度条相交。
+*/
+/*
  更新时间: 2026-07-10 15:49:48 CST
  更新内容: 回归测试锁定年度下钻入口与月度共用同一半环右下定位，不再额外上移。
 */
@@ -1432,9 +1440,9 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /function RecoveryStructure\(\{ structure, option, periodMeta, action = null \}\)[\s\S]*?className="op-structure-head"[\s\S]*?className=\{action \? 'op-channel-chart-wrap op-channel-chart-wrap--with-detail' : 'op-channel-chart-wrap'\}[\s\S]*?<EChart className="op-channel-chart" option=\{option\} style=\{\{ height: '100%' \}\} \/>[\s\S]*?\{action\}/);
   assert.match(operatingOverviewSource, /function MonthlyRecoveryStructure\(\{ structure, option, detailDisabled, onDetailClick \}\)[\s\S]*?action=\{\([\s\S]*?<DetailLink disabled=\{detailDisabled\} onClick=\{onDetailClick\}>[\s\S]*?点击查看近期明细/);
   assert.match(operatingOverviewSource, /<MonthlyRecoveryStructure[\s\S]*?detailDisabled=\{!monthKpiCard \|\| !onOpenKpi\}[\s\S]*?onDetailClick=\{\(\) => onOpenKpi\(monthKpiCard\)\}/);
-  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?right:\s*clamp\(0px, \.65vw, 10px\);[\s\S]*?bottom:\s*clamp\(2px, \.55vw, 10px\);[\s\S]*?min-width:\s*156px;[\s\S]*?min-height:\s*56px;[\s\S]*?padding:\s*24px 6px 8px 28px;[\s\S]*?font-size:\s*12px;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?right:\s*clamp\(0px, \.65vw, 10px\);[\s\S]*?bottom:\s*-8px;[\s\S]*?min-width:\s*156px;[\s\S]*?min-height:\s*28px;[\s\S]*?padding:\s*8px 6px 6px 28px;[\s\S]*?font-size:\s*12px;/);
   assert.match(operatingOverviewCss, /\.op-channel-chart-wrap \.op-detail-link:focus-visible:not\(:disabled\)\s*\{[\s\S]*?box-shadow:\s*inset 0 0 0 1px rgba\(255,255,255,\.14\);/);
-  assert.doesNotMatch(operatingOverviewCss, /\.op-annual-grid \.op-channel-chart-wrap \.op-detail-link\s*\{/);
+  assert.match(operatingOverviewCss, /\.op-annual-grid \.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?bottom:\s*44px;/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-structure-head \.op-detail-link/);
   assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
   assert.match(operatingOverviewSource, /<h2>年度回款总览<\/h2>/);
