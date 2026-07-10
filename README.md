@@ -1,7 +1,7 @@
 # CEO Dashboard
 
-更新时间: 2026-07-10 17:20:00 CST
-更新内容: 新增阿里云 AMD64 Docker 镜像交付入口说明。
+更新时间: 2026-07-10 16:46:49 CST
+更新内容: 补充生产镜像包含服务端共享 `src/lib` 模块，避免运维部署旧包时报模块缺失启动失败。
 
 CEO Dashboard 是经营驾驶舱项目。前端位于 `cockpit/`，生产运行时由 Node 服务同时提供 React 静态页面、真实 MySQL 数据接口、外部算力接口代理和 AI 小人分析接口。
 
@@ -28,6 +28,8 @@ http://127.0.0.1:5174
 ```bash
 bash scripts/package_aliyun_amd64.sh
 ```
+
+生产镜像会同时携带 `server/`、React `dist/` 和服务端运行所需的共享 `src/lib/` 模块。
 
 如需带运行时配置一起交付：
 

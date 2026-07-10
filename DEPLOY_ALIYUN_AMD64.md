@@ -1,7 +1,7 @@
 # 阿里云 AMD64 Docker 镜像交付说明
 
-更新时间: 2026-07-10 17:20:00 CST
-更新内容: 新增 CEO Dashboard 生产镜像交付流程；支持 Compose MySQL、运行时密钥校验、`bi.freecallai.cn` 运维反向代理说明。
+更新时间: 2026-07-10 16:46:49 CST
+更新内容: 补充生产镜像会携带服务端共享 `src/lib` 模块，修复 `/app/src/lib/...` 模块缺失导致容器启动失败的排障说明。
 
 ## 交付范围
 
@@ -28,6 +28,8 @@ bash scripts/package_aliyun_amd64.sh
 ```text
 ceodashboard-cockpit:amd64
 ```
+
+应用镜像 runtime 阶段会包含 `server/`、React `dist/` 和服务端共享的 `src/lib/` 模块。若旧包启动时报 `Cannot find module '/app/src/lib/...'`，需要重新使用本脚本生成并部署新包。
 
 输出目录：
 

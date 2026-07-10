@@ -1,3 +1,5 @@
+# 更新时间: 2026-07-10 16:46:49 CST
+# 更新内容: 修复生产镜像 runtime 阶段遗漏 src/lib 共享模块，避免服务端导入 hoverCue 和维护导入工具时报 ERR_MODULE_NOT_FOUND。
 # 更新时间: 2026-07-10 17:20:00 CST
 # 更新内容: 新增阿里云 AMD64 生产镜像 Dockerfile，多阶段构建 React dist，并以 node server.js 同时提供静态页面和后端 API。
 
@@ -25,6 +27,7 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 COPY server.js ./server.js
 COPY server ./server
+COPY src/lib ./src/lib
 COPY --from=build /app/dist ./dist
 
 EXPOSE 5174
