@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:25:00 CST
+ 更新内容: 开户二级趋势测试改为数据库明细快照前为空，避免继续要求前端静态开户趋势。
+*/
+/*
  更新时间: 2026-07-05 23:42:14 CST
  更新内容: 开户数首页位置测试同步到经营总览下方二级财务 KPI stack，不再依赖旧 showOpeningMetrics 变量。
 */
@@ -51,14 +55,14 @@ test('exports month and today opening-account metrics with trend deltas', () => 
   assert.deepEqual(todayMetric?.keywords, ['开户', '今日开户数']);
 });
 
-test('provides matching secondary series for each opening-account metric', () => {
+test('keeps opening-account secondary series empty before live detail rows load', () => {
   const monthMetric = OPENING_ACCOUNT_METRICS.find((metric) => metric.key === 'month-openings');
   const todayMetric = OPENING_ACCOUNT_METRICS.find((metric) => metric.key === 'today-openings');
 
   assert.equal(monthMetric?.metric, 'monthOpenings');
   assert.equal(todayMetric?.metric, 'todayOpenings');
-  assert.equal(getKpiSeries(monthMetric.metric, { dim: 'month' }).at(-1).value, monthMetric.value);
-  assert.equal(getKpiSeries(todayMetric.metric, { dim: 'day' }).at(-1).value, todayMetric.value);
+  assert.deepEqual(getKpiSeries(monthMetric.metric, { dim: 'month' }), []);
+  assert.deepEqual(getKpiSeries(todayMetric.metric, { dim: 'day' }), []);
 });
 
 test('renders opening-account cards in the homepage finance KPI stack only', () => {

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-10 15:25:00 CST  更新内容: 版本二级趋势改为读取数据库版本明细聚合结果，不再按月度趋势或固定日权重推算。 */
 /* 更新时间: 2026-07-08 18:22:00 CST  更新内容: 版本二级明细补齐当前筛选与主结论，底部改为纯文字对比摘要，避免重要口径脚注化。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: 版本情况色板改为银紫玫瑰与香槟/柔和辅助色，移除青蓝主视觉。 */
 /* 更新时间: 2026-07-06 10:00:00 CST  更新内容: 版本二级明细弹窗继承高级果味玻璃明细页母版。 */
@@ -19,7 +20,7 @@ import AppIcon from './AppIcon';
 import EChart from './EChart';
 import MultiSegmented from './MultiSegmented';
 import Segmented from './Segmented';
-import { getChannelRows, getVersionRows, META, MONTHLY_TREND } from '../data/mock';
+import { getChannelRows, getVersionDetailSeries, getVersionRows, META } from '../data/mock';
 import { fmtDelta, deltaColor, fmtMoney } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './KpiModal.css';
@@ -54,7 +55,6 @@ const DIM_OPTS = [
 ];
 const DIM_TITLE = { year: '年度', month: '本月', day: '本日' };
 const DIM_SCOPE = { year: '年度', month: '月度', day: '日度' };
-const DAY_WEIGHTS = [62, 70, 55, 81, 74, 90, 68, 77, 84, 96];
 
 function getModeMeta(mode) {
   return VERSION_MODES.find((item) => item.value === mode) ?? VERSION_MODES[0];
@@ -65,68 +65,16 @@ function getDisplayVersions(versions) {
   return VERSION_DISPLAY_KEYS.map((key) => byKey.get(key)).filter(Boolean);
 }
 
-function normalizeSalesKeys(salesKeys) {
-  const validKeys = new Set(SALES_FILTER_OPTS.map((item) => item.value));
-  const selected = Array.isArray(salesKeys) ? salesKeys.filter((key) => validKeys.has(key)) : [];
-  return selected.length ? selected : SALES_FILTER_OPTS.map((item) => item.value);
-}
-
 function initialSalesKeys(channelKey) {
   return channelKey === 'all' ? SALES_FILTER_OPTS.map((item) => item.value) : [channelKey];
-}
-
-function aggregateVersionTotals(salesKeys, versionKey) {
-  const safeKeys = normalizeSalesKeys(salesKeys);
-  const rows = safeKeys.length === SALES_FILTER_OPTS.length
-    ? getDisplayVersions(getVersionRows('all'))
-    : safeKeys.flatMap((key) => getDisplayVersions(getVersionRows(key)));
-  const scopedRows = versionKey ? rows.filter((version) => version.key === versionKey) : rows;
-
-  return scopedRows.reduce(
-    (acc, version) => ({
-      units: acc.units + (Number(version.units) || 0),
-      recovered: acc.recovered + (Number(version.recovered) || 0),
-    }),
-    { units: 0, recovered: 0 }
-  );
 }
 
 function versionDetailModeMeta(mode) {
   return VERSION_DETAIL_MODES.find((item) => item.value === mode) ?? VERSION_DETAIL_MODES[0];
 }
 
-function withPreviousValues(points) {
-  return points.map((point, index, list) => ({
-    ...point,
-    prev: index === 0 ? Math.max(1, Math.round(point.value * 0.9)) : list[index - 1].value,
-  }));
-}
-
 function buildVersionDetailSeries({ salesKeys, mode, dim, versionKey }) {
-  const modeMeta = versionDetailModeMeta(mode);
-  const totals = aggregateVersionTotals(salesKeys, versionKey);
-  const currentTotal = Number(totals[modeMeta.field]) || 0;
-
-  if (dim === 'year') {
-    return withPreviousValues(['2023', '2024', '2025', '2026'].map((label, index) => ({
-      label,
-      value: Math.max(1, Math.round(currentTotal * [3.6, 4.5, 5.35, 6.4][index])),
-    })));
-  }
-
-  if (dim === 'day') {
-    const weightTotal = DAY_WEIGHTS.reduce((sum, weight) => sum + weight, 0);
-    return withPreviousValues(DAY_WEIGHTS.map((weight, index) => ({
-      label: `06-${String(index * 3 + 1).padStart(2, '0')}`,
-      value: Math.max(1, Math.round(currentTotal * (weight / weightTotal))),
-    })));
-  }
-
-  const latestRecovered = MONTHLY_TREND.at(-1)?.recovered || 1;
-  return withPreviousValues(MONTHLY_TREND.map((month) => ({
-    label: month.month,
-    value: Math.max(1, Math.round(currentTotal * (month.recovered / latestRecovered))),
-  })));
+  return getVersionDetailSeries({ salesKeys, mode, dim, versionKey });
 }
 
 function formatModeValue(value, modeMeta) {
@@ -162,9 +110,12 @@ function modalDeltaColor(value) {
 }
 
 function selectedPeriodLabel(label, dim) {
-  if (dim === 'year') return label;
-  if (dim === 'day') return /^\d{2}-\d{2}$/.test(label) ? `2026-${label}` : label;
   const year = String(META.monthLabel || '2026年').match(/^\d{4}/)?.[0] ?? '2026';
+  if (dim === 'year') return label;
+  if (dim === 'day') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(label)) return label;
+    return /^\d{2}-\d{2}$/.test(label) ? `${year}-${label}` : label;
+  }
   const month = String(label || '').match(/^(\d+)月$/)?.[1];
   return month ? `${year}年${Number(month)}月` : label;
 }

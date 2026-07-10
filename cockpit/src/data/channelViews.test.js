@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:25:00 CST
+ 更新内容: 二级页和算力趋势测试同步真实明细口径：无运行时快照明细时返回空，不再断言前端临时趋势。
+*/
+/*
  更新时间: 2026-07-09 10:59:10 CST
  更新内容: 回归测试同步临时隐藏组织维护侧边栏入口，并确认组织维护元数据仍保留。
 */
@@ -69,13 +73,14 @@ import {
   LABOR_COST_MAINTENANCE_ROWS,
   MAINTENANCE_MENU,
   MAINTENANCE_PERIOD_COLUMNS,
+  META,
   MENU,
   ORG_MAINTENANCE_DEPARTMENTS,
   ORG_MAINTENANCE_USERS,
+  KPI,
   SALES_GROUPS,
   TARGET_MAINTENANCE_ORG_TREE,
   TARGET_MAINTENANCE_ROWS,
-  VERSIONS,
   getComputeCustomerRows,
   getComputeOverview,
   getComputeResourceHealth,
@@ -270,8 +275,7 @@ test('returns compute usage trend by 7-day, 30-day, and half-year periods', () =
   assert.equal(thirtyDays.length, 29);
   assert.equal(thirtyDays[0].day, '06-02');
   assert.equal(thirtyDays.at(-1).day, '06-30');
-  assert.deepEqual(halfYear.map((point) => point.day), ['1月', '2月', '3月', '4月', '5月', '6月']);
-  assert.ok(halfYear.every((point) => point.target > point.usage));
+  assert.deepEqual(halfYear, []);
 });
 
 test('links compute usage trend to year month day filters and selected date range', () => {
@@ -280,14 +284,13 @@ test('links compute usage trend to year month day filters and selected date rang
   const yearRows = getComputeUsageTrend({ dim: 'year', dateRange: ['2026-06-01', '2026-06-30'] });
   const crossYearDayRows = getComputeUsageTrend({ dim: 'day', dateRange: ['2025-12-29', '2026-01-03'] });
 
-  assert.equal(dayRows.length, 30);
+  assert.equal(dayRows.length, 29);
   assert.equal(dayRows[0].day, '06-30');
-  assert.equal(dayRows.at(-1).day, '06-01');
+  assert.equal(dayRows.at(-1).day, '06-02');
   assert.equal(dayRows[0].range, '2026-06-30');
-  assert.ok(monthRows.length > 30);
-  assert.deepEqual(monthRows.slice(0, 4).map((point) => point.day), ['2026.06', '2026.05', '2026.04', '2026.03']);
-  assert.deepEqual(yearRows.map((point) => point.day), ['2026年', '2025年', '2024年', '2023年', '2022年']);
-  assert.deepEqual(crossYearDayRows.map((point) => point.day), ['01-03', '01-02', '01-01', '2025-12-31', '2025-12-30', '2025-12-29']);
+  assert.deepEqual(monthRows.map((point) => point.range), ['2026-06']);
+  assert.deepEqual(yearRows.map((point) => point.range), ['2026']);
+  assert.deepEqual(crossYearDayRows, []);
 });
 
 test('filters KPI cards to the selected channel while overview keeps all-channel totals', () => {
@@ -325,10 +328,8 @@ test('returns channel-scoped trend, channel completion, and version rows', () =>
 
   assert.equal(allChannelRows.length, 4);
   assert.deepEqual(eastChannelRows.map((row) => row.key), ['east']);
-  assert.equal(eastTrend.at(-1).recovered, byKey(CHANNELS, 'east').recovered);
-  assert.equal(eastTrend.at(-1).target, byKey(CHANNELS, 'east').target);
-  assert.equal(eastVersions.length, VERSIONS.length);
-  assert.ok(eastVersions.every((version) => version.recovered <= byKey(VERSIONS, version.key).recovered));
+  assert.deepEqual(eastTrend, []);
+  assert.deepEqual(eastVersions, []);
 });
 
 test('returns sales completion rows grouped as online south offline east offline and agent', () => {
@@ -389,10 +390,11 @@ test('returns operating overview pace metrics for dense executive judgement', ()
 test('returns annual rhythm points anchored to annual KPI values', () => {
   const points = getAnnualRhythmPoints();
 
-  assert.deepEqual(points.map((point) => point.label), ['1月', '6月', '12月目标']);
-  assert.equal(points.find((point) => point.label === '6月').value, 3120);
+  const currentMonthLabel = META.monthLabel.replace(/^\d{4}年/, '');
+  assert.deepEqual(points.map((point) => point.label), ['1月', currentMonthLabel, '12月目标']);
+  assert.equal(points.find((point) => point.label === currentMonthLabel).value, KPI.yearRecovered);
   assert.equal(points.find((point) => point.label === '12月目标').value, 5800);
-  assert.equal(points.find((point) => point.label === '6月').tone, 'current');
+  assert.equal(points.find((point) => point.label === currentMonthLabel).tone, 'current');
   assert.equal(points.find((point) => point.label === '12月目标').tone, 'target');
 });
 
@@ -413,10 +415,9 @@ test('combines selected sales keys and order type in KPI series', () => {
   const withoutEast = getKpiSeries('recovered', { dim: 'month', salesKeys: ['online', 'south', 'agent'], orderType: 'new' });
   const allRenewal = getKpiSeries('recovered', { dim: 'month', salesKeys: ['online', 'south', 'east', 'agent'], orderType: 'renewal' });
 
-  assert.equal(allNew.length, 6);
-  assert.ok(allNew.at(-1).value > withoutEast.at(-1).value);
-  assert.notEqual(allNew.at(-1).value, allRenewal.at(-1).value);
-  assert.ok(allNew.every((point) => typeof point.prev === 'number'));
+  assert.deepEqual(allNew, []);
+  assert.deepEqual(withoutEast, []);
+  assert.deepEqual(allRenewal, []);
 });
 
 test('returns delivery rows and summary against the 15 order monthly target', () => {

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:25:00 CST
+ 更新内容: dashboard 快照补充回款、开户、版本的真实日级明细行，并按真实续费事实表返回月/年/日粒度，供前端二级页停用临时趋势。
+*/
+/*
  更新时间: 2026-07-10 14:50:00 CST
  更新内容: 首页业务月份默认跟随北京时间当前自然月，不再临时锁定 2026-06；仍支持 DASHBOARD_MONTH_OVERRIDE 显式覆盖。
 */
@@ -458,6 +462,7 @@ function makeVersionRows(rows) {
   return rows.map((row) => ({
     key: row.version_key || row.version_name,
     name: row.version_name,
+    channelKey: row.channel_key || 'all',
     price: round0(row.standard_price_yuan),
     units: round0(row.units),
     recovered: round0(row.recovered_wan),
@@ -469,20 +474,29 @@ function makeVersionRows(rows) {
 }
 
 function makeRenewalRows(rows) {
-  return rows.map((row) => ({
-    channel: row.channel_key,
-    channelName: row.channel_name,
-    version: row.version_key || 'all',
-    periods: {
-      month: {
-        due: round0(row.due_count),
-        renewed: round0(row.renewed_count),
-        revenue: round0(row.renewal_wan),
-        prevDue: round0(row.prev_due_count),
-        prevRenewed: round0(row.prev_renewed_count),
-      },
-    },
-  }));
+  const grouped = new Map();
+
+  rows.forEach((row) => {
+    const channel = row.channel_key;
+    const version = row.version_key || 'all';
+    const key = `${channel}::${version}`;
+    const current = grouped.get(key) ?? {
+      channel,
+      channelName: row.channel_name,
+      version,
+      periods: {},
+    };
+    current.periods[row.period_kind || 'month'] = {
+      due: round0(row.due_count),
+      renewed: round0(row.renewed_count),
+      revenue: round0(row.renewal_wan),
+      prevDue: round0(row.prev_due_count),
+      prevRenewed: round0(row.prev_renewed_count),
+    };
+    grouped.set(key, current);
+  });
+
+  return [...grouped.values()];
 }
 
 function makeOpeningMetrics(rows) {
@@ -653,6 +667,11 @@ export function mapDashboardRowsToSnapshot(rows) {
     computeCustomerRows: rows.computeCustomerRows ?? [],
     computeResourceHealth: rows.computeResourceHealth ?? [],
     deliveryRows,
+    detailRows: {
+      revenue: rows.revenueDetailRows ?? [],
+      openings: rows.openingDetailRows ?? [],
+      versions: rows.versionDetailRows ?? [],
+    },
   };
 }
 
@@ -736,6 +755,9 @@ export async function buildDashboardSnapshot(connection) {
     computeCustomerRows,
     computeResourceHealth,
     deliveryRows,
+    revenueDetailRows,
+    openingDetailRows,
+    versionDetailRows,
   ] = await Promise.all([
     queryRows(connection, 'SELECT channel_id, channel_key, channel_name, zone_name FROM dim_channel WHERE is_enabled = 1 ORDER BY channel_id'),
     queryRows(connection, `
@@ -897,41 +919,119 @@ export async function buildDashboardSnapshot(connection) {
       JOIN dim_product_version v ON v.version_id = f.version_id
       LEFT JOIN dim_channel c ON c.channel_id = f.channel_id
       LEFT JOIN (
-        SELECT version_id,
+        SELECT version_id, channel_id,
                SUM(due_count) AS current_renewal_due,
                SUM(renewed_count) AS current_renewal_paid
         FROM fact_renewal_daily
         WHERE DATE_FORMAT(stat_date, '%Y-%m') = ?
-        GROUP BY version_id
-      ) r ON r.version_id = f.version_id
+        GROUP BY version_id, channel_id
+      ) r ON r.version_id = f.version_id AND r.channel_id = f.channel_id
       ORDER BY f.recovered_wan DESC
     `, [latestMonth, latestMonth]),
     queryRows(connection, `
-      SELECT c.channel_key, c.channel_name, v.version_key,
-             cur.due_count, cur.renewed_count, cur.renewal_wan,
-             COALESCE(p.prev_due_count, 0) AS prev_due_count,
-             COALESCE(p.prev_renewed_count, 0) AS prev_renewed_count
+      SELECT *
       FROM (
-        SELECT channel_id, version_id,
-               SUM(due_count) AS due_count,
-               SUM(renewed_count) AS renewed_count,
-               ROUND(SUM(renewal_amount_yuan) / 10000, 2) AS renewal_wan
-        FROM fact_renewal_daily
-        WHERE DATE_FORMAT(stat_date, '%Y-%m') = ?
-        GROUP BY channel_id, version_id
-      ) cur
-      LEFT JOIN dim_channel c ON c.channel_id = cur.channel_id
-      LEFT JOIN dim_product_version v ON v.version_id = cur.version_id
-      LEFT JOIN (
-        SELECT channel_id, version_id,
-               SUM(due_count) AS prev_due_count,
-               SUM(renewed_count) AS prev_renewed_count
-        FROM fact_renewal_daily
-        WHERE DATE_FORMAT(stat_date, '%Y-%m') = ?
-        GROUP BY channel_id, version_id
-      ) p ON p.channel_id = cur.channel_id AND p.version_id = cur.version_id
-      ORDER BY cur.renewal_wan DESC
-    `, [latestMonth, previousMonth]),
+        SELECT 'month' AS period_kind, c.channel_key, c.channel_name, v.version_key,
+               cur.due_count, cur.renewed_count, cur.renewal_wan,
+               COALESCE(p.prev_due_count, 0) AS prev_due_count,
+               COALESCE(p.prev_renewed_count, 0) AS prev_renewed_count
+        FROM (
+          SELECT channel_id, version_id,
+                 SUM(due_count) AS due_count,
+                 SUM(renewed_count) AS renewed_count,
+                 ROUND(SUM(renewal_amount_yuan) / 10000, 2) AS renewal_wan
+          FROM fact_renewal_daily
+          WHERE DATE_FORMAT(stat_date, '%Y-%m') = ?
+          GROUP BY channel_id, version_id
+        ) cur
+        LEFT JOIN dim_channel c ON c.channel_id = cur.channel_id
+        LEFT JOIN dim_product_version v ON v.version_id = cur.version_id
+        LEFT JOIN (
+          SELECT channel_id, version_id,
+                 SUM(due_count) AS prev_due_count,
+                 SUM(renewed_count) AS prev_renewed_count
+          FROM fact_renewal_daily
+          WHERE DATE_FORMAT(stat_date, '%Y-%m') = ?
+          GROUP BY channel_id, version_id
+        ) p ON p.channel_id = cur.channel_id AND p.version_id = cur.version_id
+
+        UNION ALL
+
+        SELECT 'year' AS period_kind, c.channel_key, c.channel_name, v.version_key,
+               cur.due_count, cur.renewed_count, cur.renewal_wan,
+               COALESCE(p.prev_due_count, 0) AS prev_due_count,
+               COALESCE(p.prev_renewed_count, 0) AS prev_renewed_count
+        FROM (
+          SELECT channel_id, version_id,
+                 SUM(due_count) AS due_count,
+                 SUM(renewed_count) AS renewed_count,
+                 ROUND(SUM(renewal_amount_yuan) / 10000, 2) AS renewal_wan
+          FROM fact_renewal_daily
+          WHERE stat_date >= ? AND stat_date < ?
+          GROUP BY channel_id, version_id
+        ) cur
+        LEFT JOIN dim_channel c ON c.channel_id = cur.channel_id
+        LEFT JOIN dim_product_version v ON v.version_id = cur.version_id
+        LEFT JOIN (
+          SELECT channel_id, version_id,
+                 SUM(due_count) AS prev_due_count,
+                 SUM(renewed_count) AS prev_renewed_count
+          FROM fact_renewal_daily
+          WHERE stat_date >= ? AND stat_date < ?
+          GROUP BY channel_id, version_id
+        ) p ON p.channel_id = cur.channel_id AND p.version_id = cur.version_id
+
+        UNION ALL
+
+        SELECT 'day' AS period_kind, c.channel_key, c.channel_name, v.version_key,
+               cur.due_count, cur.renewed_count, cur.renewal_wan,
+               COALESCE(p.prev_due_count, 0) AS prev_due_count,
+               COALESCE(p.prev_renewed_count, 0) AS prev_renewed_count
+        FROM (
+          SELECT channel_id, version_id,
+                 SUM(due_count) AS due_count,
+                 SUM(renewed_count) AS renewed_count,
+                 ROUND(SUM(renewal_amount_yuan) / 10000, 2) AS renewal_wan
+          FROM fact_renewal_daily
+          WHERE stat_date = (
+            SELECT MAX(stat_date)
+            FROM fact_renewal_daily
+            WHERE stat_date >= ? AND stat_date < ?
+          )
+          GROUP BY channel_id, version_id
+        ) cur
+        LEFT JOIN dim_channel c ON c.channel_id = cur.channel_id
+        LEFT JOIN dim_product_version v ON v.version_id = cur.version_id
+        LEFT JOIN (
+          SELECT channel_id, version_id,
+                 SUM(due_count) AS prev_due_count,
+                 SUM(renewed_count) AS prev_renewed_count
+          FROM fact_renewal_daily
+          WHERE stat_date = (
+            SELECT MAX(prev_stat.stat_date)
+            FROM fact_renewal_daily prev_stat
+            WHERE prev_stat.stat_date < (
+              SELECT MAX(cur_stat.stat_date)
+              FROM fact_renewal_daily cur_stat
+              WHERE cur_stat.stat_date >= ? AND cur_stat.stat_date < ?
+            )
+          )
+          GROUP BY channel_id, version_id
+        ) p ON p.channel_id = cur.channel_id AND p.version_id = cur.version_id
+      ) renewal_periods
+      ORDER BY period_kind, renewal_wan DESC
+    `, [
+      latestMonth,
+      previousMonth,
+      `${latestYear}-01-01`,
+      `${nextYear}-01-01`,
+      `${Number(latestYear) - 1}-01-01`,
+      `${latestYear}-01-01`,
+      `${latestYear}-01-01`,
+      `${nextYear}-01-01`,
+      `${latestYear}-01-01`,
+      `${nextYear}-01-01`,
+    ]),
     queryRows(connection, `
       SELECT 'monthOpenings' AS metric, SUM(opening_count) AS value,
              (SELECT COALESCE(SUM(opening_count), 0) FROM fact_opening_account_daily WHERE DATE_FORMAT(stat_date, '%Y-%m') = ?) AS previous
@@ -1018,6 +1118,51 @@ export async function buildDashboardSnapshot(connection) {
       WHERE DATE_FORMAT(d.delivery_date, '%Y-%m') = ?
       GROUP BY d.engineer_id, s.staff_name
     `, [latestMonth]),
+    queryRows(connection, `
+      SELECT
+        DATE_FORMAT(r.stat_date, '%Y-%m-%d') AS \`date\`,
+        DATE_FORMAT(r.stat_date, '%Y-%m') AS yearMonth,
+        CAST(YEAR(r.stat_date) AS CHAR) AS \`year\`,
+        COALESCE(c.channel_key, '') AS channelKey,
+        r.order_type AS orderType,
+        ROUND(SUM(r.recovered_amount_yuan) / 10000, 2) AS \`value\`
+      FROM fact_revenue_daily r
+      LEFT JOIN dim_channel c ON c.channel_id = r.channel_id
+      WHERE r.stat_date >= ? AND r.stat_date < ?
+      GROUP BY r.stat_date, c.channel_key, r.order_type
+      ORDER BY r.stat_date, c.channel_key, r.order_type
+    `, [`${latestYear}-01-01`, `${nextYear}-01-01`]),
+    queryRows(connection, `
+      SELECT
+        DATE_FORMAT(o.stat_date, '%Y-%m-%d') AS \`date\`,
+        DATE_FORMAT(o.stat_date, '%Y-%m') AS yearMonth,
+        CAST(YEAR(o.stat_date) AS CHAR) AS \`year\`,
+        COALESCE(c.channel_key, '') AS channelKey,
+        SUM(o.opening_count) AS \`value\`
+      FROM fact_opening_account_daily o
+      LEFT JOIN dim_channel c ON c.channel_id = o.channel_id
+      WHERE o.stat_date >= ? AND o.stat_date < ?
+      GROUP BY o.stat_date, c.channel_key
+      ORDER BY o.stat_date, c.channel_key
+    `, [`${latestYear}-01-01`, `${nextYear}-01-01`]),
+    queryRows(connection, `
+      SELECT
+        DATE_FORMAT(f.stat_date, '%Y-%m-%d') AS \`date\`,
+        DATE_FORMAT(f.stat_date, '%Y-%m') AS yearMonth,
+        CAST(YEAR(f.stat_date) AS CHAR) AS \`year\`,
+        COALESCE(c.channel_key, '') AS channelKey,
+        v.version_key AS versionKey,
+        v.version_name AS versionName,
+        v.standard_price_yuan AS price,
+        SUM(f.units) AS units,
+        ROUND(SUM(f.recovered_amount_yuan) / 10000, 2) AS recovered
+      FROM fact_version_sales_daily f
+      JOIN dim_product_version v ON v.version_id = f.version_id
+      LEFT JOIN dim_channel c ON c.channel_id = f.channel_id
+      WHERE f.stat_date >= ? AND f.stat_date < ?
+      GROUP BY f.stat_date, c.channel_key, v.version_key, v.version_name, v.standard_price_yuan
+      ORDER BY f.stat_date, c.channel_key, v.version_key
+    `, [`${latestYear}-01-01`, `${nextYear}-01-01`]),
   ]);
 
   return mapDashboardRowsToSnapshot({
@@ -1048,6 +1193,9 @@ export async function buildDashboardSnapshot(connection) {
     computeCustomerRows,
     computeResourceHealth,
     deliveryRows,
+    revenueDetailRows,
+    openingDetailRows,
+    versionDetailRows,
   });
 }
 

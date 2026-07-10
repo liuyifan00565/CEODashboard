@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:25:00 CST
+ 更新内容: 续费聚合停用 period 缺失时回退月度数据，缺少数据库粒度时返回空口径汇总。
+*/
+/*
  更新时间: 2026-06-29 10:45:53
  更新内容: 续费率聚合工具支持多选销售维度筛选，兼容原单维度筛选调用。
 */
@@ -22,7 +26,7 @@ function emptySummary() {
 
 function summarize(rows, period) {
   const total = rows.reduce((acc, row) => {
-    const data = row.periods?.[period] ?? row.periods?.month;
+    const data = row.periods?.[period];
     if (!data) return acc;
     acc.due += data.due ?? 0;
     acc.renewed += data.renewed ?? 0;

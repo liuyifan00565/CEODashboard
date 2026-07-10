@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:25:00 CST
+ 更新内容: 增加真实 detailRows 聚合回归，并把算力缺失日期回归改为不再前端补点。
+*/
+/*
  更新时间: 2026-07-09 21:15:00 CST
  更新内容: 增加 loadComputeCustomerPage 分页请求回归测试。
 */
@@ -58,6 +62,7 @@ import {
   getComputeUsageTrend,
   getKpiSeries,
   getSalesMemberRows,
+  getVersionDetailSeries,
 } from './mock.js';
 import { loadComputeCustomerPage, loadComputeData, loadDashboardData } from './liveData.js';
 
@@ -119,6 +124,19 @@ test('applies mysql dashboard snapshot to mutable dashboard data exports', () =>
     salesMemberRows: [
       { key: 'staff-2004', group: 'east', name: '马骏', target: 120, recovered: 86, monthTarget: 120, monthRecovered: 86, yearTarget: 720, yearRecovered: 430 },
     ],
+    detailRows: {
+      revenue: [
+        { date: '2026-06-10', yearMonth: '2026-06', year: '2026', channelKey: 'online', orderType: 'new', value: 244 },
+        { date: '2026-06-11', yearMonth: '2026-06', year: '2026', channelKey: 'east', orderType: 'renewal', value: 86 },
+      ],
+      openings: [
+        { date: '2026-06-10', yearMonth: '2026-06', year: '2026', channelKey: 'online', value: 11 },
+        { date: '2026-06-11', yearMonth: '2026-06', year: '2026', channelKey: 'east', value: 9 },
+      ],
+      versions: [
+        { date: '2026-06-10', yearMonth: '2026-06', year: '2026', channelKey: 'online', versionKey: 'qihang', units: 2, recovered: 34 },
+      ],
+    },
   });
 
   assert.equal(KPI.monthRecovered, 520);
@@ -130,6 +148,9 @@ test('applies mysql dashboard snapshot to mutable dashboard data exports', () =>
   assert.equal(COST_TREND.at(-1).channels.online, 31);
   assert.equal(getKpiSeries('cost', { salesKeys: ['online', 'east'] }).at(-1).value, 159);
   assert.equal(getKpiSeries('cost', { salesKeys: ['online'] }).at(-1).value, 31);
+  assert.equal(getKpiSeries('recovered', { salesKeys: ['online'], orderType: 'new', dim: 'month' }).at(-1).value, 244);
+  assert.equal(getKpiSeries('monthOpenings', { salesKeys: ['online', 'east'], dim: 'day' }).at(-1).value, 9);
+  assert.equal(getVersionDetailSeries({ salesKeys: ['online'], mode: 'amount', dim: 'month', versionKey: 'qihang' }).at(-1).value, 34);
   assert.equal(KPI_CARDS.find((card) => card.key === 'month').value, 520);
   assert.equal(KPI_CARDS.find((card) => card.key === 'year').sub, '年度目标 4874 万');
   assert.equal(getChannelCompletionRows('month').find((row) => row.key === 'east').monthGap, 34);
@@ -229,8 +250,9 @@ test('uses only real external compute rows for customers and trend ranges', () =
   });
 
   assert.deepEqual(getComputeCustomerRows().map((row) => row.phone), ['1', '2']);
-  assert.deepEqual(getComputeUsageTrend({ dim: 'day', dateRange: ['2026-07-06', '2026-07-08'] }).map((row) => row.range), ['2026-07-08', '2026-07-07', '2026-07-06']);
-  assert.equal(getComputeUsageTrend({ dim: 'day', dateRange: ['2026-07-06', '2026-07-08'] })[2].usage > 0, true);
+  const dayRows = getComputeUsageTrend({ dim: 'day', dateRange: ['2026-07-06', '2026-07-08'] });
+  assert.deepEqual(dayRows.map((row) => row.range), ['2026-07-08', '2026-07-07']);
+  assert.equal(dayRows.some((row) => row.range === '2026-07-06'), false);
   assert.deepEqual(getComputeUsageTrend({ dim: 'month', dateRange: ['2026-06-01', '2026-07-31'] }).map((row) => row.range), ['2026-07', '2026-06']);
   assert.deepEqual(getComputeUsageTrend({ dim: 'year', dateRange: ['2026-01-01', '2026-12-31'] }).map((row) => row.range), ['2026']);
   assert.equal(getComputeResourceHealth()[0].name, 'VOC分析');

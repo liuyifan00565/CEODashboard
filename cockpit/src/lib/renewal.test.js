@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:25:00 CST
+ 更新内容: 增加缺失 period 不回退月度数据的真实粒度回归。
+*/
+/*
  更新时间: 2026-06-24 15:40:01
  更新内容: 新增续费率聚合测试，覆盖按版本筛选后的整体续费率和渠道拆分口径。
 */
@@ -78,4 +82,17 @@ test('returns channel renewal rates with selected version filter applied', () =>
       delta: -10,
     },
   ]);
+});
+
+test('returns empty renewal summary when the requested period is absent', () => {
+  assert.deepEqual(calculateRenewalOverview(rows, { version: 'qihang', period: 'year' }), {
+    due: 0,
+    renewed: 0,
+    revenue: 0,
+    prevDue: 0,
+    prevRenewed: 0,
+    rate: 0,
+    prevRate: 0,
+    delta: 0,
+  });
 });

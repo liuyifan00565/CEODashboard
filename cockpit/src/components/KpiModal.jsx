@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-10 15:25:00 CST  更新内容: 续费版本筛选和开户摘要停用模块加载时临时值，改为运行时真实数据生成。 */
 /* 更新时间: 2026-07-08 18:22:00 CST  更新内容: 总投入费比二级弹窗改为投入趋势与环比，补齐当前筛选、主结论和全渠道广告/人力构成口径。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: KPI 二级弹窗柱形高亮改为银紫玫瑰，未选中柱回退为低透明银紫。 */
 /* 更新时间: 2026-07-06 10:00:00 CST  更新内容: KPI 二级弹窗升级为高级果味玻璃明细页母版，补充副标题、主指标、图表 tooltip 和摘要条。 */
@@ -28,16 +29,15 @@ const DIM_OPTS = [
 const COST_DIM_OPTS = [
   { value: 'month', label: '月' },
 ];
-const VERSION_OPTS = [
-  { value: 'all', label: '全部版本' },
-  ...VERSIONS.map((version) => ({ value: version.key, label: version.name })),
-];
 const MOM_LABEL = { year: '年度环比', month: '月度环比', day: '日度环比' };
 const DIM_COPY = { year: '年度', month: '月度', day: '日度' };
-const OPENING_GOALS = {
-  todayOpenings: { target: 80, completed: 56, rate: 70, gap: 24 },
-  monthOpenings: { target: 180, completed: 126, rate: 70, gap: 54 },
-};
+
+function versionOptions() {
+  return [
+    { value: 'all', label: '全部版本' },
+    ...VERSIONS.map((version) => ({ value: version.key, label: version.name })),
+  ];
+}
 
 function metricNoun(card, isRenewal = false) {
   if (isRenewal) return '续费率';
@@ -80,9 +80,12 @@ function salesSelectionLabel(salesKeys) {
 }
 
 function selectedPeriodLabel(label, dim) {
-  if (dim === 'year') return label;
-  if (dim === 'day') return /^\d{2}-\d{2}$/.test(label) ? `2026-${label}` : label;
   const year = String(META.monthLabel || '2026年').match(/^\d{4}/)?.[0] ?? '2026';
+  if (dim === 'year') return label;
+  if (dim === 'day') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(label)) return label;
+    return /^\d{2}-\d{2}$/.test(label) ? `${year}-${label}` : label;
+  }
   const month = String(label || '').match(/^(\d+)月$/)?.[1];
   return month ? `${year}年${Number(month)}月` : label;
 }
@@ -140,22 +143,6 @@ function targetLabelForCard(card) {
 }
 
 function buildGoalSummary(card, sel, cardUnit) {
-  const openingGoal = OPENING_GOALS[card.metric];
-  if (openingGoal) {
-    return {
-      targetLabel: '月度目标',
-      targetValue: formatMetricWithUnit(openingGoal.target, cardUnit),
-      completedLabel: '已完成',
-      completedValue: formatMetricWithUnit(openingGoal.completed, cardUnit),
-      rateLabel: '完成率',
-      rate: openingGoal.rate,
-      rateValue: `${openingGoal.rate.toFixed(1)}%`,
-      gapLabel: '目标差距',
-      gapValue: formatMetricWithUnit(openingGoal.gap, cardUnit),
-      gapTone: 'risk',
-    };
-  }
-
   if (card.progress != null && card.gap != null) {
     const completed = Number(card.value ?? sel.value ?? 0) || 0;
     const gap = Math.max(Number(card.gap) || 0, 0);
@@ -238,6 +225,7 @@ export default function KpiModal({ card, onClose }) {
     () => (isRenewal ? getRenewalModalData(version, dimForSeries, salesKeys) : null),
     [isRenewal, version, dimForSeries, salesKeys]
   );
+  const currentVersionOptions = versionOptions();
   const series = useMemo(() => {
     if (isRenewal) {
       return (renewalData?.breakdown ?? []).map((item) => ({
@@ -386,7 +374,7 @@ export default function KpiModal({ card, onClose }) {
     dim: dimForSeries,
     selectedLabel: sel.label,
     extra: isRenewal && version !== 'all'
-      ? [VERSION_OPTS.find((option) => option.value === version)?.label]
+      ? [currentVersionOptions.find((option) => option.value === version)?.label]
       : [],
   });
   const insight = trendInsight(trendText, mom, isRenewal);
@@ -409,7 +397,7 @@ export default function KpiModal({ card, onClose }) {
           {isRenewal ? (
             <div className="km-filter-group">
               <span className="km-filter-label">版本</span>
-              <Segmented options={VERSION_OPTS} value={version} onChange={setVersion} />
+              <Segmented options={currentVersionOptions} value={version} onChange={setVersion} />
             </div>
           ) : null}
           <div className="km-filter-group">
