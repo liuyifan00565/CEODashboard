@@ -1,6 +1,23 @@
 /*
- 更新时间: 2026-07-10 14:55:00 CST
- 更新内容: 接入福小客经营洞察定位，并让长算力页按顶部而非页面中段对齐。
+ 更新时间: 2026-07-10 15:16:00 CST
+ 更新内容: 合并远端算力后台同步与最新首页布局，保留福小客经营洞察定位和算力顶部对齐。
+*/
+/*
+ 更新时间: 2026-07-10 16:35:00 CST
+ 更新内容: 合并 Jichuan 算力用量分析后台同步逻辑：dashboard 数据就绪后加载 token 总览，再分页同步客户明细；
+          移除数据版本号强制重挂载，算力页接收同步状态展示进度。
+*/
+/*
+ 更新时间: 2026-07-10 10:51:28 CST
+ 更新内容: 将搜索入口移到左侧导航下方，并移除主内容独占的搜索顶栏，让经营总览整体上移释放首屏空间。
+*/
+/*
+ 更新时间: 2026-07-10 10:26:00 CST
+ 更新内容: 将月度经营趋势、开户数和总投入费比提升到年度总览下方，版本情况下移，优先保证首屏经营决策信息完整可见。
+*/
+/*
+ 更新时间: 2026-07-09 18:26:40 CST
+ 更新内容: 将福客品牌 logo 移入左侧导航上方，主内容顶部只保留搜索，并把版本情况提升到年度总览下方以压缩首屏信息距离。
 */
 /*
  更新时间: 2026-07-09 13:13:45 CST
@@ -162,11 +179,9 @@ import { useMemo, useState, useRef, useLayoutEffect, useEffect } from 'react';
 import gsap from 'gsap';
 
 import AIAnalysisWidget from './components/AIAnalysisWidget';
-import GlassSurface from './components/GlassSurface/GlassSurface';
 import Sidebar from './components/Sidebar';
 import ExpandableSearch from './components/ExpandableSearch';
 import SearchResultBorder from './components/SearchResultBorder';
-import MetallicPaint from './components/MetallicPaint/MetallicPaint';
 import KpiCard from './components/KpiCard';
 import KpiModal from './components/KpiModal';
 import MonthlyTrend from './components/MonthlyTrend';
@@ -177,16 +192,23 @@ import OpeningMetricCards from './components/OpeningMetricCards';
 import MaintenancePage from './components/MaintenancePage';
 import OperatingOverview from './components/OperatingOverview';
 
-import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
-import { loadDashboardData } from './data/liveData';
+import {
+  appendComputeCustomerRows,
+  META,
+  MENU,
+  MAINTENANCE_MENU,
+  getComputeOverview,
+  getDashboardChannelKey,
+  getDashboardMenuLabel,
+} from './data/mock';
+import { loadComputeCustomerPage, loadComputeData, loadDashboardData } from './data/liveData';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
 import { matchesSearchTerm } from './lib/searchMatch';
 import './dashboard.css';
 
 const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance';
-const BRAND_FULL_ENTER_SCROLL = 56;
-const BRAND_FULL_EXIT_SCROLL = 104;
+const CUSTOMER_SYNC_PAGE_SIZE = 200;
 
 const DASHBOARD_SIDEBAR_ITEMS = [
   ...MENU.map((item) => ({ ...item, section: '导航', icon: item.icon ?? item.key })),
@@ -205,11 +227,6 @@ const PANEL_KEYWORDS = {
   delivery: ['交付', '实施', '配置', '知识库', '人效'],
 };
 
-function formatCompactMonthLabel(label) {
-  const match = String(label).match(/(\d{4})\s*年\s*(\d{1,2})\s*月/);
-  return match ? `${match[1]}.${match[2].padStart(2, '0')}` : label;
-}
-
 function makeCompanionCueId(card) {
   return `${card?.key ?? 'card'}-${Date.now()}`;
 }
@@ -225,12 +242,11 @@ export default function App() {
   const [activeSearchIndex, setActiveSearchIndex] = useState(0);
   const [openCard, setOpenCard] = useState(null);
   const [companionCue, setCompanionCue] = useState(null);
-  const [brandMode, setBrandMode] = useState('full');
   const [dashboardDataState, setDashboardDataState] = useState({ status: 'loading', error: '' });
-  const [dashboardDataVersion, setDashboardDataVersion] = useState(0);
+  const [computeDataState, setComputeDataState] = useState({ status: 'idle', error: '' });
+  const [computeCustomerSyncState, setComputeCustomerSyncState] = useState({ status: 'idle', total: 0 });
 
   const gridRef = useRef(null);
-  const secondaryGridRef = useRef(null);
   const pendingMenuScrollRef = useRef(false);
   const pendingSearchScrollRef = useRef(false);
   const pendingAiInsightRef = useRef(null);
@@ -242,16 +258,11 @@ export default function App() {
   const activeContextLabel = maintenanceMode
     ? '数据维护'
     : activeMenu === 'overview' ? 'CEO视角' : activeMenuLabel;
-  const compactMonthLabel = formatCompactMonthLabel(META.monthLabel);
-  const compactContextLabel = activeContextLabel === 'CEO视角' ? 'CEO' : activeContextLabel;
-  const brandIdentityText = brandMode === 'minimal'
-    ? '经营驾驶舱'
-    : `福客经营驾驶舱 · ${compactMonthLabel} · ${compactContextLabel}`;
+  const sidebarBrandMeta = `${META.monthLabel} · ${activeContextLabel}`;
   const sidebarItems = maintenanceMode ? MAINTENANCE_SIDEBAR_ITEMS : DASHBOARD_SIDEBAR_ITEMS;
   const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const sidebarTransitionKey = maintenanceMode ? 'maintenance' : 'dashboard';
   const contentKey = maintenanceMode ? activeMaintenanceMenu : activeMenu;
-  const contentRenderKey = `${contentKey}-${dashboardDataVersion}`;
   const isDashboardDataReady = dashboardDataState.status === 'ready';
   const filteredKpiCards = getFilteredKpiCards({ dim, dateRange, channel: activeChannelKey });
   const monthKpiCard = filteredKpiCards.find((card) => card.key === 'month');
@@ -268,7 +279,6 @@ export default function App() {
     loadDashboardData()
       .then(() => {
         if (cancelled) return;
-        setDashboardDataVersion((version) => version + 1);
         setDashboardDataState({ status: 'ready', error: '' });
       })
       .catch((err) => {
@@ -281,47 +291,67 @@ export default function App() {
     };
   }, []);
 
-  useLayoutEffect(() => {
-    if (typeof window === 'undefined') return undefined;
+  useEffect(() => {
+    if (dashboardDataState.status !== 'ready' || computeDataState.status !== 'idle') return undefined;
+    let cancelled = false;
 
-    let animationFrame = 0;
+    setComputeDataState({ status: 'loading', error: '' });
+    loadComputeData()
+      .then(() => {
+        if (cancelled) return;
+        setComputeDataState({ status: 'ready', error: '' });
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setComputeDataState({ status: 'error', error: err.message || '算力数据加载失败' });
+      });
 
-    function resolveBrandMode(currentMode) {
-      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
-      const fullThreshold = currentMode === 'full' ? BRAND_FULL_EXIT_SCROLL : BRAND_FULL_ENTER_SCROLL;
-      if (scrollTop <= fullThreshold) {
-        return 'full';
+    return () => {
+      cancelled = true;
+    };
+    // This effect owns computeDataState.status transitions; including it would
+    // cancel the same request when the status changes to "loading".
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dashboardDataState.status]);
+
+  useEffect(() => {
+    if (computeDataState.status !== 'ready' || computeCustomerSyncState.status !== 'idle') return undefined;
+    let cancelled = false;
+
+    async function syncAllComputeCustomers() {
+      const overview = getComputeOverview();
+      setComputeCustomerSyncState({ status: 'loading', total: overview.totalCustomers || 0 });
+
+      let page = 1;
+      for (;;) {
+        if (cancelled) return;
+        let payload;
+        try {
+          payload = await loadComputeCustomerPage({ page, pageSize: CUSTOMER_SYNC_PAGE_SIZE });
+        } catch {
+          if (!cancelled) setComputeCustomerSyncState((state) => ({ ...state, status: 'error' }));
+          return;
+        }
+        if (cancelled) return;
+
+        const loaded = appendComputeCustomerRows(payload.rows);
+        setComputeCustomerSyncState({ status: 'loading', total: payload.total });
+
+        if (!payload.rows.length || payload.rows.length < CUSTOMER_SYNC_PAGE_SIZE || loaded >= payload.total) break;
+        page += 1;
       }
 
-      const secondaryTop = secondaryGridRef.current?.getBoundingClientRect().top;
-      const deepScroll = Number.isFinite(secondaryTop) ? secondaryTop <= 112 : scrollTop > 520;
-      return deepScroll ? 'minimal' : 'compact';
+      if (!cancelled) setComputeCustomerSyncState((state) => ({ ...state, status: 'done' }));
     }
 
-    function updateBrandMode() {
-      setBrandMode((currentMode) => {
-        const nextMode = resolveBrandMode(currentMode);
-        return currentMode === nextMode ? currentMode : nextMode;
-      });
-    }
+    syncAllComputeCustomers();
 
-    function requestBrandMode() {
-      if (animationFrame) return;
-      animationFrame = window.requestAnimationFrame(() => {
-        animationFrame = 0;
-        updateBrandMode();
-      });
-    }
-
-    updateBrandMode();
-    window.addEventListener('scroll', requestBrandMode, { passive: true });
-    window.addEventListener('resize', requestBrandMode);
     return () => {
-      if (animationFrame) window.cancelAnimationFrame(animationFrame);
-      window.removeEventListener('scroll', requestBrandMode);
-      window.removeEventListener('resize', requestBrandMode);
+      cancelled = true;
     };
-  }, [contentKey, dashboardDataVersion]);
+    // This effect owns computeCustomerSyncState.status transitions while paging.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [computeDataState.status]);
 
   function scrollDashboardIntoView() {
     pendingMenuScrollRef.current = false;
@@ -459,7 +489,7 @@ export default function App() {
       matches[currentIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     }
     pendingSearchScrollRef.current = false;
-  }, [searchTerm, activeSearchIndex, contentKey, isComputePage, dashboardDataVersion]);
+  }, [searchTerm, activeSearchIndex, contentKey, isComputePage, dashboardDataState.status, computeDataState.status]);
 
   // GSAP 入场：KPI 卡 + 面板 stagger fade-up（菜单切换时重放）
   useLayoutEffect(() => {
@@ -486,7 +516,7 @@ export default function App() {
       if (scrollFrame) cancelAnimationFrame(scrollFrame);
       ctx.revert();
     };
-  }, [contentKey, dashboardDataVersion]);
+  }, [contentKey]);
 
   useLayoutEffect(() => {
     const target = pendingAiInsightRef.current;
@@ -497,7 +527,7 @@ export default function App() {
       pendingAiInsightRef.current = null;
     });
     return () => cancelAnimationFrame(focusFrame);
-  }, [contentKey, dashboardDataVersion]);
+  }, [contentKey, computeDataState.status]);
 
   useEffect(() => () => {
     clearTimeout(aiInsightFocusTimerRef.current);
@@ -525,7 +555,23 @@ export default function App() {
 
       <div className="dash-shell">
         <aside className="dash-aside">
-          <Sidebar items={sidebarItems} active={sidebarActive} onChange={handleSidebarChange} transitionKey={sidebarTransitionKey} />
+          <Sidebar
+            items={sidebarItems}
+            active={sidebarActive}
+            onChange={handleSidebarChange}
+            transitionKey={sidebarTransitionKey}
+            brandTitle="福客经营驾驶舱"
+            brandMeta={sidebarBrandMeta}
+          />
+          <div className="dash-sidebar-search">
+            <ExpandableSearch
+              placement="sidebar"
+              onChange={setSearchTerm}
+              currentIndex={searchStats.current}
+              totalResults={searchStats.total}
+              onNext={jumpToNextSearchResult}
+            />
+          </div>
           <AIAnalysisWidget
             activeMenu={activeMenu}
             dim={dim}
@@ -537,62 +583,17 @@ export default function App() {
         </aside>
 
         <div className="dash-main">
-          <header className="dash-topbar">
-            <GlassSurface
-              width={brandMode === 'full' ? 320 : brandMode === 'compact' ? 248 : 180}
-              height={brandMode === 'full' ? 62 : brandMode === 'compact' ? 40 : 38}
-              borderRadius={brandMode === 'full' ? 22 : 16}
-              brightness={brandMode === 'full' ? 46 : 38}
-              blur={7}
-              displace={brandMode === 'full' ? 0.32 : 0.2}
-              backgroundOpacity={brandMode === 'full' ? 0.045 : brandMode === 'compact' ? 0.03 : 0.018}
-              distortionScale={brandMode === 'full' ? -54 : -42}
-              className={`brand-glass brand-glass--${brandMode}`}
-            >
-              <div className="brand">
-                <span className="brand-logo-paint" aria-hidden="true">
-                  <MetallicPaint
-                    imageSrc="/logo-black.png"
-                    seed={64}
-                    scale={3.6}
-                    refraction={0.018}
-                    blur={0.014}
-                    liquid={0.68}
-                    speed={0.28}
-                    brightness={1.75}
-                    contrast={0.8}
-                    lightColor="#ffffff"
-                    darkColor="#050505"
-                    tintColor="#f0d99a"
-                    chromaticSpread={1.8}
-                    distortion={0.75}
-                    contour={0.28}
-                  />
-                </span>
-                <div className="brand-copy">
-                  <span className="brand-copy-full">
-                    <b>福客经营驾驶舱</b>
-                    <small>{META.monthLabel} / {activeContextLabel}</small>
-                  </span>
-                  <span className="brand-copy-inline">{brandIdentityText}</span>
-                </div>
-              </div>
-            </GlassSurface>
-            <div className="dash-tools">
-              <ExpandableSearch
-                onChange={setSearchTerm}
-                currentIndex={searchStats.current}
-                totalResults={searchStats.total}
-                onNext={jumpToNextSearchResult}
-              />
-            </div>
-          </header>
-
-          <div className="dash-content" ref={gridRef} key={contentRenderKey}>
+          <div className="dash-content" ref={gridRef} key={contentKey}>
             {isMaintenancePage ? (
               <MaintenancePage activePage={activeMaintenanceMenu} onBack={handleMaintenanceBack} />
             ) : isComputePage ? (
-              <ComputeUsagePage searchTerm={searchTerm} dim={dim} dateRange={dateRange} />
+              <ComputeUsagePage
+                searchTerm={searchTerm}
+                dim="day"
+                dateRange={[]}
+                computeDataState={computeDataState}
+                customerSyncState={computeCustomerSyncState}
+              />
             ) : (
               <>
                 <OperatingOverview
@@ -602,7 +603,7 @@ export default function App() {
                   onOpenKpi={handleOpenCard}
                 />
 
-                <div className="dash-secondary-grid" ref={secondaryGridRef}>
+                <div className="dash-secondary-grid">
                   <div className="dash-secondary-cell dash-secondary-cell--trend" data-ai-insight-target="trend" data-anim>
                     <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.trend, searchTerm)}>
                       <MonthlyTrend channelKey={activeChannelKey} />
@@ -623,12 +624,12 @@ export default function App() {
                       ))}
                     </div>
                   </div>
+                </div>
 
-                  <div className="dash-secondary-cell dash-secondary-cell--version" data-ai-insight-target="versions" data-anim>
-                    <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.version, searchTerm)}>
-                      <VersionFinancePanel channelKey={activeChannelKey} />
-                    </SearchResultBorder>
-                  </div>
+                <div className="dash-version-row" data-ai-insight-target="versions" data-anim>
+                  <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.version, searchTerm)}>
+                    <VersionFinancePanel channelKey={activeChannelKey} />
+                  </SearchResultBorder>
                 </div>
 
                 <div className="dash-secondary-delivery" data-anim>

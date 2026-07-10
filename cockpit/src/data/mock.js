@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-10 14:50:00 CST
+ 更新内容: 前端兜底月份、默认算力范围和年份派生改为运行时当前自然月，不再固定 2026-06。
+*/
+/*
+ 更新时间: 2026-07-10 16:38:00 CST
+ 更新内容: 合并 Jichuan 算力外部数据覆盖与客户分页增量合并逻辑，同时保留退款和成本维护运行时字段。
+*/
+/*
  更新时间: 2026-07-09 16:05:00 CST
  更新内容: dashboard 运行时 KPI 增加月度/年度退款额；回款文案保持不变，数值由服务端按扣退款后净额覆盖。
 */
@@ -104,10 +112,29 @@
 */
 import { calculateRenewalOverview, getRenewalChannelBreakdown } from '../lib/renewal.js';
 
+function currentMonthParts(date = new Date()) {
+  const year = date.getFullYear();
+  const monthIndex = date.getMonth();
+  const month = monthIndex + 1;
+  const monthKey = String(month).padStart(2, '0');
+  const lastDay = String(new Date(year, monthIndex + 1, 0).getDate()).padStart(2, '0');
+  return { year, month, monthKey, lastDay };
+}
+
+function currentMonthLabel() {
+  const { year, month } = currentMonthParts();
+  return `${year}年${month}月`;
+}
+
+function currentMonthDateRange() {
+  const { year, monthKey, lastDay } = currentMonthParts();
+  return [`${year}-${monthKey}-01`, `${year}-${monthKey}-${lastDay}`];
+}
+
 export const META = {
   title: 'AI 客服销售经营驾驶舱',
   company: '成都福客人工智能',
-  monthLabel: '2026年6月',
+  monthLabel: currentMonthLabel(),
   annualTarget: 5800, // 万元
 };
 
@@ -466,11 +493,13 @@ const COMPUTE_DAYS = Array.from({ length: 29 }, (_, index) => `06-${String(index
 const COMPUTE_USAGE = [468, 462, 459, 442, 435, 444, 452, 438, 458, 453, 429, 423, 456, 486, 492, 487, 504, 423, 441, 468, 482, 477, 471, 455, 466, 486, 496, 512, 536];
 const COMPUTE_ADD_ON = [16, 14, 13, 11, 10, 12, 11, 9, 14, 12, 10, 8, 12, 18, 16, 15, 17, 8, 10, 13, 14, 13, 12, 10, 12, 14, 15, 16, 18];
 const COMPUTE_CAPACITY = [2360, 2380, 2376, 2382, 2392, 2388, 2394, 2401, 2410, 2408, 2417, 2440, 2438, 2434, 2441, 2480, 2501, 2512, 2510, 2515, 2512, 2522, 2534, 2540, 2552, 2570, 2582, 2578, 2600];
-const COMPUTE_DEFAULT_RANGE = ['2026-06-01', '2026-06-30'];
-const COMPUTE_YEAR = '2026';
+const COMPUTE_DEFAULT_RANGE = currentMonthDateRange();
+const COMPUTE_YEAR = String(currentMonthParts().year);
 const COMPUTE_YEAR_NUMBER = Number(COMPUTE_YEAR);
 const COMPUTE_LOOKBACK_YEARS = 5;
 const COMPUTE_LOOKBACK_MONTHS = 36;
+let COMPUTE_USAGE_TREND_IS_EXTERNAL = false;
+let COMPUTE_ACTIVE_DEFAULT_RANGE = [...COMPUTE_DEFAULT_RANGE];
 
 export const COMPUTE_USAGE_TREND = COMPUTE_DAYS.map((day, index) => ({
   day,
@@ -597,7 +626,7 @@ function normalizeComputeDateRange(dateRange) {
     .filter(Boolean)
     .sort();
 
-  if (!keys.length) return [...COMPUTE_DEFAULT_RANGE];
+  if (!keys.length) return [...COMPUTE_ACTIVE_DEFAULT_RANGE];
   if (keys.length === 1) return [keys[0], keys[0]];
   return [keys[0], keys.at(-1)];
 }
@@ -662,6 +691,8 @@ function makeComputeYearPoint(year) {
 }
 
 function getComputeDayRows(dateRange) {
+  if (COMPUTE_USAGE_TREND_IS_EXTERNAL) return getExternalComputeDayRows(dateRange);
+
   const [start, end] = normalizeComputeDateRange(dateRange);
   const rows = [];
   for (let current = parseDateKey(end); formatDateKey(current) >= start; current = addDays(current, -1)) {
@@ -672,6 +703,8 @@ function getComputeDayRows(dateRange) {
 }
 
 function getComputeMonthRows(dateRange) {
+  if (COMPUTE_USAGE_TREND_IS_EXTERNAL) return getExternalComputePeriodRows(dateRange, 'month');
+
   const [start, end] = normalizeComputeDateRange(dateRange);
   const startIndex = computeMonthIndex(start);
   const endIndex = computeMonthIndex(end);
@@ -686,6 +719,8 @@ function getComputeMonthRows(dateRange) {
 }
 
 function getComputeYearRows(dateRange) {
+  if (COMPUTE_USAGE_TREND_IS_EXTERNAL) return getExternalComputePeriodRows(dateRange, 'year');
+
   const [start, end] = normalizeComputeDateRange(dateRange);
   const startYear = Number(start.slice(0, 4));
   const endYear = Number(end.slice(0, 4));
@@ -697,6 +732,39 @@ function getComputeYearRows(dateRange) {
   }
 
   return rows;
+}
+
+function getExternalComputeDayRows(dateRange) {
+  const [start, end] = normalizeComputeDateRange(dateRange);
+  const rows = [];
+  for (let current = parseDateKey(end); formatDateKey(current) >= start; current = addDays(current, -1)) {
+    const dateKey = formatDateKey(current);
+    rows.push(COMPUTE_USAGE_TREND_BY_DATE.get(dateKey) ?? makeComputeDayPoint(dateKey));
+  }
+
+  return rows.length ? rows : COMPUTE_USAGE_TREND;
+}
+
+function getExternalComputePeriodRows(dateRange, period) {
+  const rows = getExternalComputeDayRows(dateRange);
+  const grouped = new Map();
+
+  rows.forEach((row) => {
+    const range = period === 'year' ? String(row.range).slice(0, 4) : String(row.range).slice(0, 7);
+    const current = grouped.get(range) ?? {
+      day: period === 'year' ? `${range}年` : range.replace('-', '.'),
+      range,
+      usage: 0,
+      addOn: 0,
+      capacity: 0,
+    };
+    current.usage += Number(row.usage) || 0;
+    current.addOn += Number(row.addOn) || 0;
+    if (!current.capacity) current.capacity = Number(row.capacity) || 0;
+    grouped.set(range, current);
+  });
+
+  return [...grouped.values()];
 }
 
 export function getComputeUsageTrend(request = '30d') {
@@ -721,6 +789,12 @@ export function getComputeUsageDistribution() {
 
 export function getComputeCustomerRows() {
   return [...COMPUTE_CUSTOMER_ROWS].sort((a, b) => b.usage - a.usage);
+}
+
+let COMPUTE_CUSTOMER_INDEX = new Map(COMPUTE_CUSTOMER_ROWS.map((row, index) => [row.phone, index]));
+
+function reindexComputeCustomerRows() {
+  COMPUTE_CUSTOMER_INDEX = new Map(COMPUTE_CUSTOMER_ROWS.map((row, index) => [row.phone, index]));
 }
 
 export function getComputeResourceHealth() {
@@ -920,7 +994,7 @@ export function getAnnualRhythmPoints() {
 
   return [
     { label: firstMonth?.month ?? '1月', value: Math.round((firstMonth?.recovered ?? 0) * scale), tone: 'actual' },
-    { label: META.monthLabel.replace(/^2026年/, ''), value: KPI.yearRecovered, tone: 'current' },
+    { label: META.monthLabel.replace(/^\d{4}年/, ''), value: KPI.yearRecovered, tone: 'current' },
     { label: '12月目标', value: KPI.yearTarget, tone: 'target' },
   ];
 }
@@ -1382,10 +1456,18 @@ export function applyDashboardDataSnapshot(snapshot) {
 
   if (Array.isArray(snapshot.computeUsageTrend)) {
     replaceArray(COMPUTE_USAGE_TREND, snapshot.computeUsageTrend);
+    COMPUTE_USAGE_TREND_IS_EXTERNAL = true;
     COMPUTE_USAGE_TREND_BY_DATE.clear();
     snapshot.computeUsageTrend.forEach((row) => {
       if (row.range) COMPUTE_USAGE_TREND_BY_DATE.set(row.range, row);
     });
+    const loadedRanges = snapshot.computeUsageTrend
+      .map((row) => normalizeComputeDateKey(row.range))
+      .filter(Boolean)
+      .sort();
+    if (loadedRanges.length) {
+      COMPUTE_ACTIVE_DEFAULT_RANGE = [loadedRanges[0], loadedRanges.at(-1)];
+    }
   }
 
   if (Array.isArray(snapshot.computeVersionConsumption)) {
@@ -1398,6 +1480,7 @@ export function applyDashboardDataSnapshot(snapshot) {
 
   if (Array.isArray(snapshot.computeCustomerRows)) {
     replaceArray(COMPUTE_CUSTOMER_ROWS, snapshot.computeCustomerRows);
+    reindexComputeCustomerRows();
   }
 
   if (Array.isArray(snapshot.computeResourceHealth)) {
@@ -1409,4 +1492,20 @@ export function applyDashboardDataSnapshot(snapshot) {
   }
 
   updateKpiCardsFromRuntimeData();
+}
+
+export function appendComputeCustomerRows(rows = []) {
+  if (!Array.isArray(rows) || !rows.length) return COMPUTE_CUSTOMER_ROWS.length;
+
+  rows.forEach((row) => {
+    const existingIndex = COMPUTE_CUSTOMER_INDEX.get(row.phone);
+    if (existingIndex !== undefined) {
+      COMPUTE_CUSTOMER_ROWS[existingIndex] = row;
+    } else {
+      COMPUTE_CUSTOMER_ROWS.push(row);
+      COMPUTE_CUSTOMER_INDEX.set(row.phone, COMPUTE_CUSTOMER_ROWS.length - 1);
+    }
+  });
+
+  return COMPUTE_CUSTOMER_ROWS.length;
 }

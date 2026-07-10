@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-09 18:26:40 CST  更新内容: 侧边导航顶部新增福客驾驶舱品牌 logo 区，承接主内容顶部移出的品牌识别信息。 */
 /* 更新时间: 2026-07-09 13:13:45 CST  更新内容: 侧边导航新增模式换组过渡，经营总览与数据维护切换时先柔和淡出再进入。 */
 /* 更新时间: 2026-07-05 16:12:00 CST  更新内容: 侧边导航恢复 220px 图标加文字分组结构，兼顾管理识别效率与轻玻璃质感。 */
 /* 更新时间: 2026-07-03 23:39:28 CST  更新内容: 降低左侧导航玻璃容器的高光、模糊和折射强度。 */
@@ -5,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import GlassSurface from './GlassSurface/GlassSurface'
 import AppIcon from './AppIcon';
+import MetallicPaint from './MetallicPaint/MetallicPaint';
 import './Sidebar.css'
 
 const SIDEBAR_LEAVE_MS = 110;
@@ -23,7 +25,14 @@ function groupItemsBySection(items) {
   }, []);
 }
 
-export default function Sidebar({ items = [], active, onChange, transitionKey = 'default' }) {
+export default function Sidebar({
+  items = [],
+  active,
+  onChange,
+  transitionKey = 'default',
+  brandTitle = '福客经营驾驶舱',
+  brandMeta = '',
+}) {
   const [transitionState, setTransitionState] = useState(() => ({
     items,
     active,
@@ -93,6 +102,31 @@ export default function Sidebar({ items = [], active, onChange, transitionKey = 
       className="sb-glass"
     >
       <nav className={`sb-root sb-root--${visiblePhase}`} aria-label="主导航" data-transition-key={transitionKey}>
+        <div className="sb-brand" aria-label={`${brandTitle}${brandMeta ? ` ${brandMeta}` : ''}`}>
+          <span className="sb-brand-logo" aria-hidden="true">
+            <MetallicPaint
+              imageSrc="/logo-black.png"
+              seed={64}
+              scale={3.4}
+              refraction={0.018}
+              blur={0.014}
+              liquid={0.68}
+              speed={0.28}
+              brightness={1.72}
+              contrast={0.82}
+              lightColor="#ffffff"
+              darkColor="#050505"
+              tintColor="#f0d99a"
+              chromaticSpread={1.8}
+              distortion={0.72}
+              contour={0.28}
+            />
+          </span>
+          <span className="sb-brand-copy">
+            <b>{brandTitle}</b>
+            {brandMeta && <small>{brandMeta}</small>}
+          </span>
+        </div>
         {sections.map((section) => (
           <section className="sb-section" key={section.title}>
             <span className="sb-section-title">{section.title}</span>

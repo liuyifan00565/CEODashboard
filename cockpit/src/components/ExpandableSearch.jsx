@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 10:51:28 CST
+ 更新内容: 增加侧栏紧凑搜索形态，折叠时显示图标与“搜索”文字，展开后保留原结果计数和回车跳转能力。
+*/
+/*
  Update time: 2026-07-03 23:39:28 CST
  Update content: Reduce expandable search GlassSurface brightness, blur, and distortion for a calmer B-side toolbar.
 */
@@ -14,10 +18,17 @@ import { useState, useRef } from 'react';
 import GlassSurface from './GlassSurface/GlassSurface';
 import AppIcon from './AppIcon';
 
-export default function ExpandableSearch({ onChange, currentIndex = 0, totalResults = 0, onNext }) {
+export default function ExpandableSearch({
+  onChange,
+  currentIndex = 0,
+  totalResults = 0,
+  onNext,
+  placement = 'toolbar',
+}) {
   const [expanded, setExpanded] = useState(false);
   const [val, setVal] = useState('');
   const inputRef = useRef(null);
+  const isSidebar = placement === 'sidebar';
   const hasQuery = val.trim().length > 0;
   const displayIndex = hasQuery ? currentIndex : 0;
 
@@ -42,11 +53,14 @@ export default function ExpandableSearch({ onChange, currentIndex = 0, totalResu
   }
 
   return (
-    <div className={`search-wrap${expanded ? ' search-wrap--expanded' : ''}`} onMouseEnter={open}>
+    <div
+      className={`search-wrap${isSidebar ? ' search-wrap--sidebar' : ''}${expanded ? ' search-wrap--expanded' : ''}`}
+      onMouseEnter={isSidebar ? undefined : open}
+    >
       <GlassSurface
-        width={expanded ? 318 : 54}
-        height={54}
-        borderRadius={27}
+        width={isSidebar ? '100%' : expanded ? 318 : 54}
+        height={isSidebar ? 44 : 54}
+        borderRadius={isSidebar ? 12 : 27}
         brightness={48}
         blur={7}
         displace={0.35}
@@ -56,6 +70,7 @@ export default function ExpandableSearch({ onChange, currentIndex = 0, totalResu
         <div className="search-inner">
           <button className="search-ico" onClick={open} aria-label="搜索" aria-expanded={expanded}>
             <AppIcon name="search" size={18} />
+            {isSidebar && !expanded && <span className="search-label">搜索</span>}
           </button>
           <input
             ref={inputRef}

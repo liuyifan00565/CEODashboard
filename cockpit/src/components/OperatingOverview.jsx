@@ -1,4 +1,11 @@
-/* 更新时间: 2026-07-10 12:28:00 CST  更新内容: 为月度业绩和渠道经营区增加福小客洞察定位标识。 */
+/* 更新时间: 2026-07-10 15:16:00 CST  更新内容: 合并远端经营布局，保留月度业绩和渠道经营区的福小客洞察定位标识。 */
+/* 更新时间: 2026-07-10 13:12:05 CST  更新内容: 临时预览回款半环左侧主标签向内收缩，缩短标签到半环的引导距离。 */
+/* 更新时间: 2026-07-10 11:55:10 CST  更新内容: 回款半环未完成外部标签向内收缩，让文字更靠近半环。 */
+/* 更新时间: 2026-07-10 11:10:16 CST  更新内容: 回款半环保留版本情况同款 radius/center，最终显示尺寸由 CSS 对齐首页版本情况实际图高。 */
+/* 更新时间: 2026-07-10 11:03:44 CST  更新内容: 删除年度累计回款大数字上方的小标签，并将年度拆解入口移到年度回款结构标题右上方。 */
+/* 更新时间: 2026-07-10 10:54:38 CST  更新内容: 将“点击查看近期明细”从月度卡总标题右侧移到本月回款结构半环图标题右上方。 */
+/* 更新时间: 2026-07-10 10:53:56 CST  更新内容: 删除月度回款大数字上方重复的“本月回款”小标签，进一步收敛数字区层级。 */
+/* 更新时间: 2026-07-10 10:51:28 CST  更新内容: 年度目标进度条移除累计/目标文字和外围胶囊，只保留进度条与完成率百分比。 */
 /* 更新时间: 2026-07-09 17:39:04 CST  更新内容: 年度目标进度条改为内嵌在年度左侧事实区两个胶囊下方，避免 grid 位移导致被卡片裁切消失。 */
 /* 更新时间: 2026-07-09 17:28:41 CST  更新内容: 回款半环 tooltip 加入扇区色标识并传入当前扇区色，避免悬浮信息像临时调试弹窗。 */
 /* 更新时间: 2026-07-09 17:16:09 CST  更新内容: 年度目标进度 footer 删除可见标题文字，并让进度条向左贴近累计/目标数字。 */
@@ -113,6 +120,8 @@ const INCOMPLETE_STRUCTURE_STYLE = {
   color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: 'rgba(255,255,255,.075)' }, { offset: 1, color: 'rgba(255,255,255,.035)' }] },
   swatch: 'rgba(255,255,255,.28)',
 };
+const MAJOR_LABEL_EDGE_DISTANCE = '16%';
+const INCOMPLETE_LABEL_EDGE_DISTANCE = '22%';
 const DETAIL_ARROW = '›';
 
 function formatWan(value) {
@@ -286,8 +295,8 @@ function channelStructureOption(structure, periodMeta, tokens) {
       {
         type: 'pie',
         name: periodMeta.chartName,
-        radius: ['57%', '96%'],
-        center: ['53%', '68%'],
+        radius: ['45%', '76%'],
+        center: ['49.5%', '68%'],
         startAngle: 180,
         endAngle: 360,
         padAngle: 3,
@@ -356,6 +365,8 @@ function channelStructureOption(structure, periodMeta, tokens) {
             ...item,
             label: {
               show: isMajorLabel || isIncompleteLabel,
+              ...(isMajorLabel ? { edgeDistance: MAJOR_LABEL_EDGE_DISTANCE } : {}),
+              ...(isIncompleteLabel ? { edgeDistance: INCOMPLETE_LABEL_EDGE_DISTANCE } : {}),
             },
             labelLine: {
               show: isMajorLabel || isIncompleteLabel,
@@ -367,7 +378,7 @@ function channelStructureOption(structure, periodMeta, tokens) {
   };
 }
 
-function RecoveryStructure({ structure, option, periodMeta }) {
+function RecoveryStructure({ structure, option, periodMeta, action = null }) {
   return (
     <div className="op-recovery-structure">
       <div className="op-structure-head">
@@ -375,6 +386,7 @@ function RecoveryStructure({ structure, option, periodMeta }) {
           <h2>{periodMeta.chartName}</h2>
           <span>单位：万元</span>
         </div>
+        {action}
       </div>
 
       <div
@@ -387,22 +399,32 @@ function RecoveryStructure({ structure, option, periodMeta }) {
   );
 }
 
-function MonthlyRecoveryStructure({ structure, option }) {
+function MonthlyRecoveryStructure({ structure, option, detailDisabled, onDetailClick }) {
   return (
     <RecoveryStructure
       structure={structure}
       option={option}
       periodMeta={MONTH_STRUCTURE_META}
+      action={(
+        <DetailLink disabled={detailDisabled} onClick={onDetailClick}>
+          点击查看近期明细
+        </DetailLink>
+      )}
     />
   );
 }
 
-function AnnualRecoveryStructure({ structure, option }) {
+function AnnualRecoveryStructure({ structure, option, detailDisabled, onDetailClick }) {
   return (
     <RecoveryStructure
       structure={structure}
       option={option}
       periodMeta={ANNUAL_STRUCTURE_META}
+      action={(
+        <DetailLink disabled={detailDisabled} onClick={onDetailClick}>
+          点击查看年度拆解
+        </DetailLink>
+      )}
     />
   );
 }
@@ -487,17 +509,10 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             <div>
               <h1>{progressTitle}</h1>
             </div>
-            <DetailLink
-              disabled={!monthKpiCard || !onOpenKpi}
-              onClick={() => onOpenKpi(monthKpiCard)}
-            >
-              点击查看近期明细
-            </DetailLink>
           </header>
 
           <div className="op-month-grid">
             <div className="op-month-primary">
-              <span className="op-summary-label">本月回款</span>
               <div className="op-month-primary-value-row">
                 <b>{formatWan(KPI.monthRecovered)}万</b>
                 <span className="op-summary-sub op-month-refund-note">退款{formatWan(KPI.monthRefund ?? 0)}万</span>
@@ -514,6 +529,8 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             <MonthlyRecoveryStructure
               structure={monthlyStructure}
               option={monthlyStructureOption}
+              detailDisabled={!monthKpiCard || !onOpenKpi}
+              onDetailClick={() => onOpenKpi(monthKpiCard)}
             />
 
             <OperatingSituation
@@ -530,17 +547,10 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             <div>
               <h2>年度回款总览</h2>
             </div>
-            <DetailLink
-              disabled={!yearKpiCard || !onOpenKpi}
-              onClick={() => onOpenKpi(yearKpiCard)}
-            >
-              点击查看年度拆解
-            </DetailLink>
           </header>
 
           <div className="op-annual-grid">
             <div className="op-annual-primary">
-              <span className="op-summary-label">年度累计回款</span>
               <div className="op-month-primary-value-row op-annual-primary-value-row">
                 <b>{formatWan(KPI.yearRecovered)}万</b>
                 <span className="op-summary-sub op-month-refund-note">退款{formatWan(KPI.yearRefund ?? 0)}万</span>
@@ -554,10 +564,9 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
               </div>
               <div
                 className="op-annual-progress-footer"
-                aria-label={`年度目标进度 ${formatWan(KPI.yearRecovered)} 万 / ${formatWan(KPI.yearTarget)} 万，完成率 ${formatPct(KPI_DERIVED.yearCompletion)}`}
+                aria-label={`年度目标完成率 ${formatPct(KPI_DERIVED.yearCompletion)}`}
               >
                 <div className="op-annual-progress-main">
-                  <b>{formatWan(KPI.yearRecovered)}万 / {formatWan(KPI.yearTarget)}万</b>
                   <div className="op-annual-progress-track">
                     <span className="op-annual-fill" style={{ width: annualCapsuleWidth }} />
                   </div>
@@ -569,6 +578,8 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             <AnnualRecoveryStructure
               structure={annualStructure}
               option={annualStructureOption}
+              detailDisabled={!yearKpiCard || !onOpenKpi}
+              onDetailClick={() => onOpenKpi(yearKpiCard)}
             />
 
             <OperatingSituation

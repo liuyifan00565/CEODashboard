@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 16:41:00 CST
+ 更新内容: 合并 Jichuan 算力开发路由，新增 /api/compute-data 与 /api/compute-customers，同时保留固定端口和轮询监听。
+*/
+/*
  更新时间: 2026-07-09 15:08:00 CST
  更新内容: 合并 Vite 重复 server 配置，保留 5174 固定端口和 Windows 轮询监听，避免开发服务被后一个 server 块覆盖回默认端口。
 */
@@ -33,6 +37,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { handleAiAnalyzeRequest } from './server/dashscope.js'
 import { handleAiHoverCueRequest } from './server/hoverCue.js'
+import { handleComputeDataRequest, handleComputeCustomersRequest } from './server/computeApi.js'
 import { handleDashboardDataRequest } from './server/dashboardData.js'
 import { handleMaintenanceImportRequest } from './server/maintenanceImport.js'
 import { handleMaintenanceDataRequest } from './server/maintenanceData.js'
@@ -77,6 +82,12 @@ export default defineConfig({
         })
         server.middlewares.use('/api/dashboard-data', (req, res) => {
           handleDashboardDataRequest(req, res)
+        })
+        server.middlewares.use('/api/compute-data', (req, res) => {
+          handleComputeDataRequest(req, res)
+        })
+        server.middlewares.use('/api/compute-customers', (req, res) => {
+          handleComputeCustomersRequest(req, res)
         })
         server.middlewares.use('/api/maintenance/data', (req, res) => {
           handleMaintenanceDataRequest(req, res)

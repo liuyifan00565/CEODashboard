@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-10 10:49:21 CST  更新内容: 固定月度趋势配置引用并关闭画布动画与折线模糊光晕，消除无交互时反复闪烁。 */
 /* 更新时间: 2026-07-07 16:50:00 CST  更新内容: 柱状图悬浮框对齐 GlassSelect 面板同体系——银紫描边 + 24px 毛玻璃 + 紫光投影 + 16px 圆角，杜绝与下拉框质感割裂。 */
 /* 更新时间: 2026-07-07 14:40:00 CST  更新内容: 月度经营趋势重构数据语义——目标改为背景宽柱(淡灰紫)、回款改为前景窄柱(银紫玫瑰渐变)，完成率细线+圆点且 y 轴超 100% 自动扩展并加 100% 基准线，图例颜色与序列对齐，移除 6 月高亮，未发生月份用虚线占位。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: 月度趋势按高级果味规则重排图表权重，回款用银紫渐变，目标后退，风险点保留玫瑰红。 */
@@ -6,6 +7,7 @@
 /* 更新时间: 2026-07-03 18:54:17 CST  更新内容: 月度趋势回款柱与完成率标签按 80 以下红色、80-99 紫色、100 及以上金色三档分色。 */
 /* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 月度经营趋势回款柱按完成率 80% 风险线分色，危险月份直接使用风险色。 */
 /* 更新时间: 2026-06-29 10:45:53  更新内容: 月度经营趋势图例改为静态说明，并将目标与回款柱重叠展示。 */
+import { useMemo } from 'react';
 import EChart from './EChart';
 import { getChannelTrend } from '../data/mock';
 import { isRiskCompletion } from '../lib/format';
@@ -41,8 +43,7 @@ function isPlaceholderMonth(item) {
   return item == null || item.recovered == null || Number.isNaN(Number(item.recovered));
 }
 
-export default function MonthlyTrend({ channelKey = 'all' }) {
-  const tokens = useThemeTokens();
+function buildMonthlyTrendOption(channelKey, tokens) {
   const trend = getChannelTrend(channelKey);
   const months = trend.map(m => m.month);
   const target = trend.map(m => m.target);
@@ -62,6 +63,7 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
   const targetOpacity = 0.22;
 
   const option = {
+    animation: false,
     backgroundColor: 'transparent',
     textStyle: { color: muted, fontFamily: 'inherit' },
     legend: {
@@ -181,7 +183,7 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         smooth: true,
         symbol: 'circle',
         symbolSize: ({ value }) => (isRiskCompletion(value) ? 8 : 5),
-        lineStyle: { color: tokens.chartRateLine, width: 1.5, opacity: 0.72, shadowBlur: 8, shadowColor: 'rgba(184,156,255,.24)' },
+        lineStyle: { color: tokens.chartRateLine, width: 1.5, opacity: 0.72 },
         itemStyle: { color: ({ value }) => completionPointColor(value, tokens), borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
         label: {
           show: true,
@@ -202,6 +204,13 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
       },
     ],
   };
+
+  return option;
+}
+
+export default function MonthlyTrend({ channelKey = 'all' }) {
+  const tokens = useThemeTokens();
+  const option = useMemo(() => buildMonthlyTrendOption(channelKey, tokens), [channelKey, tokens]);
 
   return (
     <section className="mt-panel">
