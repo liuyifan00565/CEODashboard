@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 17:20:59 CST
+ 更新内容: Vite 开发服务新增 /api/health，与生产 server.js 健康检查保持一致，便于 Docker 联调验证。
+*/
+/*
  更新时间: 2026-07-10 16:41:00 CST
  更新内容: 合并 Jichuan 算力开发路由，新增 /api/compute-data 与 /api/compute-customers，同时保留固定端口和轮询监听。
 */
@@ -47,6 +51,22 @@ import { loadLocalEnv } from './server/env.js'
 const projectRoot = fileURLToPath(new URL('.', import.meta.url))
 loadLocalEnv(projectRoot)
 
+function handleHealthRequest(_req, res) {
+  res.writeHead(200, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+  })
+  res.end(JSON.stringify({
+    status: 'ok',
+    service: 'ceodashboard-cockpit',
+    timestamp: new Date().toISOString(),
+    aiAvailable: Boolean(process.env.DASHSCOPE_API_KEY || process.env.ALIBABA_API_KEY),
+    computeConfigured: Boolean(process.env.COMPUTE_API_BASE_URL && process.env.COMPUTE_API_TOKEN),
+    dbConfigured: Boolean(process.env.DB_HOST && process.env.DB_PORT && process.env.DB_USERNAME && process.env.DB_PASSWORD && process.env.DB_NAME),
+    imageTag: process.env.APP_IMAGE_TAG || 'development',
+  }))
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   server: {
@@ -64,6 +84,9 @@ export default defineConfig({
     {
       name: 'ceo-ai-analysis-api',
       configureServer(server) {
+        server.middlewares.use('/api/health', (req, res) => {
+          handleHealthRequest(req, res)
+        })
         server.middlewares.use('/api/ai/analyze', (req, res) => {
           handleAiAnalyzeRequest(req, res).catch((err) => {
             if (!res.headersSent) {

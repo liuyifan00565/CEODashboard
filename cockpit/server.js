@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 17:20:59 CST
+ 更新内容: 新增 /api/health 轻量健康检查端点，供阿里云 Docker 部署脚本等待服务就绪并确认运行时密钥状态。
+*/
+/*
  更新时间: 2026-07-09 21:15:00 CST
  更新内容: 生产服务新增 /api/compute-customers 分页接口，供算力页后台全量同步客户列表。
 */
@@ -95,8 +99,33 @@ function serveStatic(req, res) {
   fs.createReadStream(filePath).pipe(res);
 }
 
+function writeJson(res, statusCode, body) {
+  res.writeHead(statusCode, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+  });
+  res.end(JSON.stringify(body));
+}
+
+function handleHealthRequest(_req, res) {
+  writeJson(res, 200, {
+    status: 'ok',
+    service: 'ceodashboard-cockpit',
+    timestamp: new Date().toISOString(),
+    aiAvailable: Boolean(process.env.DASHSCOPE_API_KEY || process.env.ALIBABA_API_KEY),
+    computeConfigured: Boolean(process.env.COMPUTE_API_BASE_URL && process.env.COMPUTE_API_TOKEN),
+    dbConfigured: Boolean(process.env.DB_HOST && process.env.DB_PORT && process.env.DB_USERNAME && process.env.DB_PASSWORD && process.env.DB_NAME),
+    imageTag: process.env.APP_IMAGE_TAG || 'unknown',
+  });
+}
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+  if (url.pathname === '/api/health') {
+    handleHealthRequest(req, res);
+    return;
+  }
+
   if (url.pathname === '/api/ai/analyze') {
     handleAiAnalyzeRequest(req, res).catch((err) => {
       if (!res.headersSent) {

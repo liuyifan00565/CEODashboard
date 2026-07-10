@@ -1,21 +1,9 @@
-# 阿里云 AMD64 Docker 镜像交付说明
+# 阿里云 AMD64 Docker 离线部署说明
 
-更新时间: 2026-07-10 16:46:49 CST
-更新内容: 补充生产镜像会携带服务端共享 `src/lib` 模块，修复 `/app/src/lib/...` 模块缺失导致容器启动失败的排障说明。
+更新时间: 2026-07-10 17:20:59 CST
+更新内容: 修复离线交付包规范，明确默认携带生产 `.env`、应用与 MySQL 镜像、版本追踪、密钥状态、迁移执行和健康检查等待。
 
-## 交付范围
-
-本项目交付给运维的是 `linux/amd64` Docker 镜像包和运行示例，不在项目内管理 DNS、HTTPS、Nginx、SLB 或 CDN。
-
-运维需要将 `bi.freecallai.cn` 反向代理到驾驶舱服务：
-
-```text
-http://服务器内网或本机:5174
-```
-
-生产服务必须运行 `node server.js`，由同一个 `cockpit` 容器提供 React `dist` 静态页面、`/api/dashboard-data`、`/api/compute-data`、`/api/compute-customers`、`/api/ai/analyze` 和 `/api/ai/hover-cue`。不能只用纯静态 Nginx 托管前端文件，否则数据库和 AI 接口不可用。
-
-## 生成交付包
+## 1) 打包
 
 在项目根目录执行：
 
@@ -23,63 +11,45 @@ http://服务器内网或本机:5174
 bash scripts/package_aliyun_amd64.sh
 ```
 
-脚本会构建并导出应用镜像：
-
-```text
-ceodashboard-cockpit:amd64
-```
-
-应用镜像 runtime 阶段会包含 `server/`、React `dist/` 和服务端共享的 `src/lib/` 模块。若旧包启动时报 `Cannot find module '/app/src/lib/...'`，需要重新使用本脚本生成并部署新包。
-
-输出目录：
-
-```text
-deploy_artifacts/ceodashboard-aliyun-amd64-YYYYMMDD-HHMMSS/
-deploy_artifacts/ceodashboard-aliyun-amd64-YYYYMMDD-HHMMSS.tar.gz
-```
-
-交付包包含：
-
-- `images/ceodashboard-cockpit-amd64.tar.gz`
-- `docker-compose.yml`，生产 Compose 示例
-- `docker/db-init/ceo_dashboard_full.sql`，MySQL 空卷首次启动初始化数据
-- `.env.example`
-- `install.sh`
-- `update.sh`
-
-默认不会把真实 `.env` 打进交付包。真实密钥应由运维写入服务器部署目录 `.env`。
-
-如果明确需要把本机运行时配置一起交给运维，可使用 `--include-env`：
+默认读取 `cockpit/.env.local`，校验并复制为交付包内 `.env`。如果要复用历史交付包里的生产配置，可显式指定：
 
 ```bash
-bash scripts/package_aliyun_amd64.sh --include-env --env-file /c/Users/22720/Desktop/.env.local
+bash scripts/package_aliyun_amd64.sh --env-file deploy_artifacts/ceodashboard-aliyun-amd64-20260710-162023/.env
 ```
 
-`--include-env` 会复制指定 env 文件到包内 `.env`，并自动把容器内数据库地址调整为：
+脚本会：
 
-```env
-DB_HOST=db
-DB_PORT=3306
-PORT=5174
-COCKPIT_PORT=5174
-```
+- 交叉构建 `linux/amd64` 应用镜像，镜像 tag 为本次包唯一值。
+- 拉取并导出 `mysql:8.4` 的 `linux/amd64` 镜像。
+- 校验 `.env` 必填项，不打印密钥明文。
+- 生成安装、升级、迁移、版本和密钥状态文件。
 
-脚本只输出 `SET/EMPTY` 校验结果，不打印密钥值。校验必填项：
+输出示例：
 
 ```text
-DB_HOST
-DB_PORT
-DB_USERNAME
-DB_PASSWORD
-DB_NAME
-DASHSCOPE_API_KEY
+deploy_artifacts/ceodashboard-aliyun-amd64-deploy-YYYYMMDD-HHMMSS/
+deploy_artifacts/ceodashboard-aliyun-amd64-deploy-YYYYMMDD-HHMMSS.tar.gz
 ```
 
-当前桌面新配置中的 `DASHSCOPE_API_KEY` 如果为空，不能直接带 `--include-env` 打包；需要先在源 env 文件或服务器 `.env` 中补齐真实 AI 小人 API Key。
+## 2) 交付包内容
 
-## 运行时环境变量
+必须包含：
 
-服务器部署目录 `.env` 至少包含：
+- `install.sh`：首次部署
+- `update.sh`：升级部署
+- `docker-compose.yml`：生产编排文件
+- `.env`：生产运行时配置，包含真实 `DASHSCOPE_API_KEY`、数据库密码和 `APP_IMAGE_TAG`
+- `.env.example`：占位示例，不用于直接上线
+- `ENV_KEY_STATUS.txt`：关键环境变量是否为 `SET`
+- `VERSION.txt`：包名、镜像、平台、Git 提交和打包时工作区状态
+- `images/ceodashboard-cockpit-*.tar.gz`：应用镜像，`linux/amd64`
+- `images/mysql-8.4-amd64.tar.gz`：MySQL 镜像，`linux/amd64`
+- `docker/db-init/ceo_dashboard_full.sql`：MySQL 空卷首次初始化数据
+- `docker/migrations/20260709_compute_token_usage_tables.sql`：升级时补齐算力表结构
+
+## 3) 必填环境变量
+
+`.env` 至少包含：
 
 ```env
 DB_HOST=db
@@ -89,6 +59,8 @@ DB_PASSWORD=your-production-mysql-password
 DB_NAME=ceo_dashboard
 PORT=5174
 COCKPIT_PORT=5174
+APP_IMAGE_REPO=ceodashboard-cockpit
+APP_IMAGE_TAG=aliyun-amd64-YYYYMMDD-HHMMSS
 
 DASHSCOPE_API_KEY=your-dashscope-api-key
 DASHSCOPE_MODEL=qwen3.7-max-2026-05-20
@@ -96,7 +68,7 @@ DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 DASHSCOPE_ENABLE_THINKING=false
 ```
 
-外部算力 API 是服务端运行时密钥，和 AI Key 一样不要写入前端源码或 Git：
+外部算力 API 可选，但必须成对配置：
 
 ```env
 COMPUTE_API_BASE_URL=https://pre.zhihuige.cc/csrc
@@ -105,65 +77,59 @@ COMPUTE_PLATFORM_BOARD_PATH=/api/v1/customer-management/getPlatformBoard
 COMPUTE_CUSTOMER_BOARD_PATH=/api/v1/customer-management/getCustomerBoardList
 ```
 
-如果 `COMPUTE_API_BASE_URL` 和 `COMPUTE_API_TOKEN` 都为空，只影响外部算力实时同步；`/api/dashboard-data` 仍会读取本地 MySQL 快照。
-
-## 运维部署
+## 4) 生产部署
 
 首次部署：
 
 ```bash
-tar -xzf ceodashboard-aliyun-amd64-YYYYMMDD-HHMMSS.tar.gz
-cd ceodashboard-aliyun-amd64-YYYYMMDD-HHMMSS
+tar -xzf ceodashboard-aliyun-amd64-deploy-YYYYMMDD-HHMMSS.tar.gz
+cd ceodashboard-aliyun-amd64-deploy-YYYYMMDD-HHMMSS
 bash install.sh /opt/ceodashboard
 ```
 
 后续升级：
 
 ```bash
-tar -xzf ceodashboard-aliyun-amd64-YYYYMMDD-HHMMSS.tar.gz
-cd ceodashboard-aliyun-amd64-YYYYMMDD-HHMMSS
+tar -xzf ceodashboard-aliyun-amd64-deploy-YYYYMMDD-HHMMSS.tar.gz
+cd ceodashboard-aliyun-amd64-deploy-YYYYMMDD-HHMMSS
 bash update.sh /opt/ceodashboard
 ```
 
 `install.sh` 和 `update.sh` 都会：
 
-- 加载包内应用镜像
-- 复制生产 `docker-compose.yml`
-- 复制 MySQL 初始化 SQL
-- 保留服务器已有 `.env`
-- 如果包内带 `.env`，会先备份服务器旧 `.env` 再覆盖
-- 执行 `docker compose -f docker-compose.yml up -d`
+- 导入包内离线镜像。
+- 复制 `docker-compose.yml`、`.env.example`、初始化 SQL 和迁移 SQL。
+- 如果包内带 `.env`，先备份服务器旧 `.env` 再覆盖。
+- 校验 `.env` 必填项，禁止示例密码上线。
+- 执行 `docker compose -f docker-compose.yml up -d`。
+- 执行 `docker/migrations/*.sql`，不删除 MySQL 数据卷。
+- 等待 `http://127.0.0.1:${COCKPIT_PORT}/api/health` 最多 120 秒。
 
-MySQL 数据使用 Docker named volume `ceodashboard_db_data` 持久化。`docker/db-init/ceo_dashboard_full.sql` 只会在 MySQL 空卷首次启动时自动导入，不会在升级时覆盖已有数据。
+MySQL 数据使用 Docker named volume `ceodashboard_db_data` 持久化；升级不会删除卷。
 
-## 验证
-
-服务器上验证容器：
+## 5) 运维验收
 
 ```bash
 cd /opt/ceodashboard
 docker compose -f docker-compose.yml ps
-docker image inspect ceodashboard-cockpit:amd64 mysql:8.4 --format '{{join .RepoTags ","}} {{.Os}}/{{.Architecture}}'
+docker image inspect ceodashboard-cockpit:$(grep '^APP_IMAGE_TAG=' .env | cut -d= -f2) mysql:8.4 --format '{{join .RepoTags ","}} {{.Os}}/{{.Architecture}}'
+curl -fsS http://127.0.0.1:5174/api/health
+curl -fsS http://127.0.0.1:5174/
+curl -fsS http://127.0.0.1:5174/api/dashboard-data
 ```
 
-验证接口：
+健康检查返回 `"aiAvailable":true` 代表 `DASHSCOPE_API_KEY` 已被服务端读取。
 
-```bash
-curl http://127.0.0.1:5174/
-curl http://127.0.0.1:5174/api/dashboard-data
-curl 'http://127.0.0.1:5174/api/compute-data'
+域名侧由运维反向代理 `bi.freecallai.cn` 到：
+
+```text
+http://服务器内网或本机:5174
 ```
 
-AI 分析接口需要 POST：
+## 6) 失败排查
 
-```bash
-curl -X POST http://127.0.0.1:5174/api/ai/analyze \
-  -H 'Content-Type: application/json' \
-  -d '{"question":"请概括当前经营风险","snapshot":{"kpi":{}}}'
-```
-
-域名侧由运维完成反向代理后验证：
-
-```bash
-curl https://bi.freecallai.cn/
-```
+- `mysql:8.4` 找不到：确认包内存在 `images/mysql-8.4-amd64.tar.gz`，并检查 `install.sh` 镜像导入日志。
+- `APP_IMAGE_TAG is required`：检查服务器 `/opt/ceodashboard/.env` 是否来自本次包。
+- `aiAvailable:false`：检查 `ENV_KEY_STATUS.txt` 和服务器 `.env` 的 `DASHSCOPE_API_KEY` 是否为 `SET`。
+- 健康检查超时：执行 `docker compose -f docker-compose.yml logs --tail 200 cockpit db`。
+- 业务数据为空：确认首次启动前 `docker/db-init/ceo_dashboard_full.sql` 已在包内，且 MySQL 卷首次初始化时不是旧空卷。
