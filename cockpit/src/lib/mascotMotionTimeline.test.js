@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-10 14:48:00 CST
+ Update content: Cover bridge retargets that return to the currently visible action without a frame-zero jump.
+*/
+/*
  更新时间: 2026-07-10 13:01:00 CST
  更新内容: 增加 bridge 墙钟计时与快速重定向测试，防止一次性动作被截断或跨动作直跳。
 */
@@ -127,4 +131,22 @@ test('retargets an active bridge from its current visible frame', () => {
   assert.deepEqual(retargeted.timeline[0], currentFrame);
   assert.equal(retargeted.targetAction, 'alert');
   assert.ok(retargeted.timeline.slice(1).every((entry) => entry.actionKey === 'alert'));
+});
+
+test('retargets back to the currently visible action without returning null', () => {
+  const thinkAnimation = {
+    ...loopAnimation,
+    key: 'think',
+    sheetKey: 'think',
+    intensity: 'focus',
+  };
+  const firstBridge = buildMascotMotionBridge(loopAnimation, 2, thinkAnimation);
+  const currentCursor = 0;
+  const currentFrame = firstBridge.timeline[currentCursor];
+  const retargeted = retargetMascotMotionBridge(firstBridge, currentCursor, loopAnimation);
+
+  assert.ok(retargeted);
+  assert.deepEqual(retargeted.timeline[0], currentFrame);
+  assert.equal(retargeted.targetAction, 'talk');
+  assert.ok(retargeted.timeline.slice(1).every((entry) => entry.actionKey === 'talk'));
 });

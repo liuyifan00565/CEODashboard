@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-10 15:01:00 CST
+ Update content: Require Cubism auto-updates to pause for reduced motion without duplicate ticker registration.
+*/
+/*
  更新时间: 2026-07-10 13:01:00 CST
  更新内容: 增加 bridge 墙钟追帧、快速重定向和真实 Cubism 减少动态停止动作的验收。
 */
@@ -228,9 +232,12 @@ test('keeps bridge targets on their action wall clock and retargets without dire
 test('stops real Cubism motions while reduced motion is active', () => {
   assert.match(componentCode, /function stopLive2DMotions\(model\)/);
   assert.match(componentCode, /model\?\.internalModel\?\.motionManager\?\.stopAllMotions\?\.\(\);/);
+  assert.match(componentCode, /function setLive2DMotionSuspended\(model,\s*suspended\)/);
+  assert.match(componentCode, /if \(model\.autoUpdate !== !suspended\) model\.autoUpdate = !suspended;/);
   assert.match(componentCode, /const reducedMotionRef = useRef\(false\);/);
   assert.match(componentCode, /reducedMotionQuery\.addEventListener\('change',\s*syncReducedMotion\)/);
-  assert.match(componentCode, /if \(reducedMotionRef\.current\) \{\s*stopLive2DMotions\(modelRef\.current\);/);
+  assert.match(componentCode, /setLive2DMotionSuspended\(modelRef\.current,\s*reducedMotionRef\.current\);/);
+  assert.match(componentCode, /setLive2DMotionSuspended\(model,\s*reducedMotionRef\.current\);/);
   assert.match(componentCode, /if \(!reducedMotionRef\.current\) \{\s*playFirstAvailableMotion\(model,\s*actionRef\.current\);/);
 });
 

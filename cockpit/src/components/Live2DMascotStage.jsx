@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-10 15:02:00 CST
+ Update content: Pause Cubism auto-updates for reduced motion without duplicate ticker registration on normal startup.
+*/
+/*
  更新时间: 2026-07-10 13:12:00 CST
  更新内容: bridge 改为墙钟追帧并支持当前帧快速重定向，真实 Cubism 路径同步遵守减少动态偏好。
 */
@@ -246,6 +250,12 @@ function stopLive2DMotions(model) {
   model?.internalModel?.motionManager?.stopAllMotions?.();
 }
 
+function setLive2DMotionSuspended(model, suspended) {
+  if (!model) return;
+  if (model.autoUpdate !== !suspended) model.autoUpdate = !suspended;
+  if (suspended) stopLive2DMotions(model);
+}
+
 function getFramePosition(currentFrame, sheet) {
   return {
     x: Math.floor(currentFrame % sheet.columns),
@@ -444,9 +454,8 @@ export default function Live2DMascotStage({
     const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     function syncReducedMotion(event = reducedMotionQuery) {
       reducedMotionRef.current = Boolean(event.matches);
-      if (reducedMotionRef.current) {
-        stopLive2DMotions(modelRef.current);
-      } else if (modelRef.current) {
+      setLive2DMotionSuspended(modelRef.current, reducedMotionRef.current);
+      if (!reducedMotionRef.current && modelRef.current) {
         playFirstAvailableMotion(modelRef.current, actionRef.current);
         lastActionRef.current = actionRef.current;
       }
@@ -527,6 +536,7 @@ export default function Live2DMascotStage({
         fitModel(model, app);
         modelRef.current = model;
         appRef.current = app;
+        setLive2DMotionSuspended(model, reducedMotionRef.current);
         if (!reducedMotionRef.current) {
           playFirstAvailableMotion(model, actionRef.current);
         }
@@ -564,7 +574,7 @@ export default function Live2DMascotStage({
   useEffect(() => {
     if (!modelRef.current || action === lastActionRef.current) return;
     if (reducedMotionRef.current) {
-      stopLive2DMotions(modelRef.current);
+      setLive2DMotionSuspended(modelRef.current, true);
       lastActionRef.current = action;
       return;
     }

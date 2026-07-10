@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-10 14:51:00 CST
+ Update content: Preserve the current bridge frame when rapid input retargets back to the same visible action.
+*/
+/*
  更新时间: 2026-07-10 13:06:00 CST
  更新内容: 增加基于动作起始墙钟的追帧解析与 bridge 中途重定向，避免一次性动作被截断或跨姿态直跳。
 */
@@ -112,16 +116,15 @@ export function retargetMascotMotionBridge(motionBridge, currentCursor, toAnimat
 
   const safeCursor = Math.max(0, Math.min(Number(currentCursor) || 0, timeline.length - 1));
   const currentEntry = timeline[safeCursor];
-  const sourceAnimation = Object.freeze({
-    key: currentEntry.actionKey,
-    intensity: currentEntry.intensity,
-    sheetKey: currentEntry.sheetKey,
-    timeline: Object.freeze([Object.freeze({
-      frame: currentEntry.frame,
-      durationMs: currentEntry.durationMs,
-    })]),
-    settleFrameCount: 1,
-  });
+  const leadInCount = Math.max(0, Number(toAnimation.leadInFrameCount) || 0);
+  const incoming = toAnimation.timeline
+    .slice(0, leadInCount)
+    .map((entry) => createBridgeEntry(toAnimation, entry));
+  const retargetedTimeline = Object.freeze([currentEntry, ...incoming]);
 
-  return buildMascotMotionBridge(sourceAnimation, 0, toAnimation);
+  return Object.freeze({
+    timeline: retargetedTimeline,
+    targetAction: toAnimation.key,
+    targetCursor: incoming.length,
+  });
 }
