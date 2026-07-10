@@ -1,4 +1,28 @@
 /*
+ 更新时间: 2026-07-10 15:57:27 CST
+ 更新内容: 回归测试锁定年度下钻入口位于年度进度条上方，不落到进度条下边。
+*/
+/*
+ 更新时间: 2026-07-10 15:55:14 CST
+ 更新内容: 回归测试锁定月度与年度共用更扁的右下热区，避免入口矩形与年度进度条相交。
+*/
+/*
+ 更新时间: 2026-07-10 15:49:48 CST
+ 更新内容: 回归测试锁定年度下钻入口与月度共用同一半环右下定位，不再额外上移。
+*/
+/*
+ 更新时间: 2026-07-10 15:42:33 CST
+ 更新内容: 回归测试锁定年度下钻入口不遮挡年度进度条，进度条层级高于入口透明热区。
+*/
+/*
+ 更新时间: 2026-07-10 15:36:50 CST
+ 更新内容: 回归测试锁定月度与年度下钻入口移到半环图右下方，并保留透明大点击热区。
+*/
+/*
+ 更新时间: 2026-07-10 15:16:00 CST
+ 更新内容: 合并远端布局回归，并覆盖福小客总览分区、算力切页顶部定位、平滑滚动与玻璃焦点反馈。
+*/
+/*
  更新时间: 2026-07-10 15:24:00 CST
  更新内容: 合并远端布局回归，覆盖福小客页面定位，并要求助手接收真实算力加载状态。
 */
@@ -1413,11 +1437,13 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /点击查看近期明细/);
   assert.match(operatingOverviewSource, /className="op-detail-link"/);
   assert.match(operatingOverviewSource, /className="op-detail-link-arrow"/);
-  assert.match(operatingOverviewSource, /function RecoveryStructure\(\{ structure, option, periodMeta, action = null \}\)[\s\S]*?className="op-structure-head"[\s\S]*?\{action\}/);
+  assert.match(operatingOverviewSource, /function RecoveryStructure\(\{ structure, option, periodMeta, action = null \}\)[\s\S]*?className="op-structure-head"[\s\S]*?className=\{action \? 'op-channel-chart-wrap op-channel-chart-wrap--with-detail' : 'op-channel-chart-wrap'\}[\s\S]*?<EChart className="op-channel-chart" option=\{option\} style=\{\{ height: '100%' \}\} \/>[\s\S]*?\{action\}/);
   assert.match(operatingOverviewSource, /function MonthlyRecoveryStructure\(\{ structure, option, detailDisabled, onDetailClick \}\)[\s\S]*?action=\{\([\s\S]*?<DetailLink disabled=\{detailDisabled\} onClick=\{onDetailClick\}>[\s\S]*?点击查看近期明细/);
   assert.match(operatingOverviewSource, /<MonthlyRecoveryStructure[\s\S]*?detailDisabled=\{!monthKpiCard \|\| !onOpenKpi\}[\s\S]*?onDetailClick=\{\(\) => onOpenKpi\(monthKpiCard\)\}/);
-  assert.match(operatingOverviewCss, /\.op-structure-head \.op-detail-link\s*\{[\s\S]*?font-size:\s*12px;/);
-  assert.match(operatingOverviewCss, /\.op-structure-head \.op-detail-link\s*\{[\s\S]*?margin:\s*2px 10px 0 0;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?right:\s*clamp\(0px, \.65vw, 10px\);[\s\S]*?bottom:\s*-8px;[\s\S]*?min-width:\s*156px;[\s\S]*?min-height:\s*28px;[\s\S]*?padding:\s*8px 6px 6px 28px;[\s\S]*?font-size:\s*12px;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap \.op-detail-link:focus-visible:not\(:disabled\)\s*\{[\s\S]*?box-shadow:\s*inset 0 0 0 1px rgba\(255,255,255,\.14\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-grid \.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?bottom:\s*44px;/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-structure-head \.op-detail-link/);
   assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
   assert.match(operatingOverviewSource, /<h2>年度回款总览<\/h2>/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">年度经营进度<\/span>/);
@@ -1505,6 +1531,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.doesNotMatch(cssRuleBody(operatingOverviewCss, '.op-annual-progress-footer'), /grid-row:/);
   assert.match(operatingOverviewCss, /\.op-annual-grid \.op-operating-side\s*\{[\s\S]*?grid-column:\s*3;[\s\S]*?grid-row:\s*1 \/ span 2;/);
   assert.match(operatingOverviewCss, /\.op-annual-progress-track\s*\{/);
+  assert.match(cssRuleBody(operatingOverviewCss, '.op-annual-progress-footer'), /z-index:\s*4;/);
   assert.match(operatingOverviewCss, /\.op-annual-fill\s*\{/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-annual-capsule\s*\{/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-annual-chart\s*\{/);
@@ -1531,10 +1558,10 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   assert.match(monthGridBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.035\);/);
   assert.match(operatingOverviewCss, /\.op-month-primary-value-row\s*\{[\s\S]*?align-items:\s*flex-end;/);
   assert.match(operatingOverviewCss, /\.op-month-refund-note\s*\{[\s\S]*?margin-bottom:\s*clamp\(3px, \.4vw, 6px\);/);
-  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 220px;[\s\S]*?align-content:\s*start;/);
+  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 210px;[\s\S]*?align-content:\s*start;/);
   assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?margin-left:\s*-16px;[\s\S]*?margin-right:\s*8px;/);
-  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?width:\s*clamp\(320px, 25vw, 420px\);[\s\S]*?height:\s*220px;[\s\S]*?min-height:\s*220px;/);
-  assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*220px;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?width:\s*clamp\(320px, 25vw, 420px\);[\s\S]*?height:\s*210px;[\s\S]*?min-height:\s*210px;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*210px;/);
   assert.match(operatingOverviewCss, /\.op-channel-list\s*\{[\s\S]*?gap:\s*16px;/);
   assert.match(operatingOverviewCss, /\.op-channel-item\s*\{[\s\S]*?min-height:\s*30px;/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-structure-progress/);

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:40:59 CST
+ 更新内容: 续费快照为每个渠道版本补齐 day/month/year 空粒度，避免二级页因部分粒度字段缺失而漏算。
+*/
+/*
  更新时间: 2026-07-10 17:20:00 CST
  更新内容: 交付看板目标未配置时返回 null 完成率和 targetConfigured=false，避免把缺失目标误显示为 0%。
 */
@@ -477,6 +481,24 @@ function makeVersionRows(rows) {
   }));
 }
 
+function emptyRenewalPeriod() {
+  return {
+    due: 0,
+    renewed: 0,
+    revenue: 0,
+    prevDue: 0,
+    prevRenewed: 0,
+  };
+}
+
+function emptyRenewalPeriods() {
+  return {
+    day: emptyRenewalPeriod(),
+    month: emptyRenewalPeriod(),
+    year: emptyRenewalPeriod(),
+  };
+}
+
 function makeRenewalRows(rows) {
   const grouped = new Map();
 
@@ -488,7 +510,7 @@ function makeRenewalRows(rows) {
       channel,
       channelName: row.channel_name,
       version,
-      periods: {},
+      periods: emptyRenewalPeriods(),
     };
     current.periods[row.period_kind || 'month'] = {
       due: round0(row.due_count),

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:40:59 CST
+ 更新内容: 增加续费快照补齐 day/month/year 空粒度回归，防止真实库部分粒度缺行导致二级页漏算。
+*/
+/*
  更新时间: 2026-07-10 14:50:00 CST
  更新内容: 业务月份回归改为默认跟随北京时间当前自然月，不再要求临时 2026-06 覆盖。
 */
@@ -143,6 +147,9 @@ test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
     ['2026-06', 77, 82, 159],
   ]);
   assert.deepEqual(snapshot.costTrend.at(-1).channels, { online: 31, south: 19, east: 18, agent: 9 });
+  assert.deepEqual(snapshot.renewalRows[0].periods.day, { due: 0, renewed: 0, revenue: 0, prevDue: 0, prevRenewed: 0 });
+  assert.deepEqual(snapshot.renewalRows[0].periods.month, { due: 20, renewed: 18, revenue: 88, prevDue: 18, prevRenewed: 15 });
+  assert.deepEqual(snapshot.renewalRows[0].periods.year, { due: 0, renewed: 0, revenue: 0, prevDue: 0, prevRenewed: 0 });
   assert.equal(snapshot.salesMemberRows.find((row) => row.key === 'staff-2004').group, 'east');
 });
 
