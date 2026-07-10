@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 11:44:01 CST
+ 更新内容: 回归测试锁定年度目标进度条继续下移后的更大上间距。
+*/
+/*
  更新时间: 2026-07-10 11:33:58 CST
  更新内容: 回归测试锁定月度/年度回款结构区左移、结构入口向左下移动，以及年度进度条下移。
 */
@@ -1515,7 +1519,7 @@ test('replaces the annual rhythm chart with a yearly recovery overview footer', 
   assert.match(operatingOverviewSource, /className="op-annual-fill" style=\{\{ width: annualCapsuleWidth \}\}/);
   assert.match(operatingOverviewSource, /aria-label=\{`年度目标完成率 \$\{formatPct\(KPI_DERIVED\.yearCompletion\)\}`\}/);
   assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{[\s\S]*?width:\s*min\(calc\(100% \+ clamp\(288px, calc\(27\.5vw - 105px\), 424px\)\), calc\(100vw - 96px\)\);/);
-  assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{[\s\S]*?margin-top:\s*clamp\(10px, \.85vw, 14px\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{[\s\S]*?margin-top:\s*clamp\(18px, 1\.35vw, 24px\);/);
   assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{[\s\S]*?transform:\s*none;/);
   const annualProgressMainBlock = cssRuleBody(operatingOverviewCss, '.op-annual-progress-main');
   assert.match(annualProgressMainBlock, /min-height:\s*18px;/);
