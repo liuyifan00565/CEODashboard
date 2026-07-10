@@ -517,7 +517,7 @@ test('renders compute usage analysis as an independent dashboard page', () => {
   assert.match(appSource, /import ComputeUsagePage from '\.\/components\/ComputeUsagePage';/);
   assert.match(appSource, /const isComputePage = activeMenu === 'compute';/);
   assert.match(appSource, /isComputePage \? \(/);
-  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim=\{dim\} dateRange=\{dateRange\} \/>/);
+  assert.match(appSource, /<ComputeUsagePage[\s\S]*?searchTerm=\{searchTerm\}[\s\S]*?dim="day"[\s\S]*?dateRange=\{\[\]\}[\s\S]*?computeDataState=\{computeDataState\}[\s\S]*?customerSyncState=\{computeCustomerSyncState\}[\s\S]*?\/>/);
   assert.match(appSource, /: \(\s*<>\s*<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
 });
 
@@ -608,8 +608,8 @@ test('keeps search in the compact sidebar while data keeps default monthly filte
   assert.doesNotMatch(appSource, /<DateRangePicker/);
   assert.doesNotMatch(appSource, /<Segmented options=\{DIM_OPTS\}/);
   assert.doesNotMatch(appSource, /<ThemeToggle/);
-  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim=\{dim\} dateRange=\{dateRange\} \/>/);
-  assert.match(computePageSource, /export default function ComputeUsagePage\(\{ searchTerm = '', dim = 'month', dateRange = \[\] \}\)/);
+  assert.match(appSource, /<ComputeUsagePage[\s\S]*?searchTerm=\{searchTerm\}[\s\S]*?dim="day"[\s\S]*?dateRange=\{\[\]\}[\s\S]*?computeDataState=\{computeDataState\}[\s\S]*?customerSyncState=\{computeCustomerSyncState\}[\s\S]*?\/>/);
+  assert.match(computePageSource, /export default function ComputeUsagePage\(\{[\s\S]*?searchTerm = '',[\s\S]*?dim = 'month',[\s\S]*?dateRange = \[\],[\s\S]*?computeDataState = \{ status: 'ready', error: '' \},[\s\S]*?customerSyncState = \{ status: 'idle', total: 0 \},[\s\S]*?\}\)/);
   assert.match(computePageSource, /const periodLabel = DIM_TREND_LABELS\[dim\] \?\? DIM_TREND_LABELS\.month;/);
   assert.match(computePageSource, /const trend = getComputeUsageTrend\(\{ dim, dateRange \}\);/);
 });
@@ -622,8 +622,8 @@ test('counts searchable matches and cycles the current result from the top searc
   assert.match(appSource, /querySelectorAll\('\[data-search-match="true"\]'\)/);
   assert.match(appSource, /node\.dataset\.searchCurrent = index === currentIndex \? 'true' : 'false';/);
   assert.match(appSource, /scrollIntoView\(\{ behavior: 'smooth', block: 'center', inline: 'nearest' \}\)/);
-  assert.match(appSource, /\}, \[searchTerm, activeSearchIndex, contentKey, isComputePage, dashboardDataVersion\]\);/);
-  assert.doesNotMatch(appSource, /\}, \[searchTerm, activeSearchIndex, contentKey, isComputePage, filteredKpiCards, dashboardDataVersion\]\);/);
+  assert.match(appSource, /\}, \[searchTerm, activeSearchIndex, contentKey, isComputePage, dashboardDataState\.status, computeDataState\.status\]\);/);
+  assert.doesNotMatch(appSource, /dashboardDataVersion/);
 });
 
 test('keeps overview card placement stable when search result wrappers appear', () => {
@@ -680,7 +680,7 @@ test('places the FuKe brand logo above the sidebar navigation instead of the mai
 });
 
 test('adds a dashboard maintenance entry and a compact sidebar return item that swaps the navigation', () => {
-  assert.match(appSource, /import \{ META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel \} from '\.\/data\/mock';/);
+  assert.match(appSource, /import \{[\s\S]*?META,[\s\S]*?MENU,[\s\S]*?MAINTENANCE_MENU,[\s\S]*?getDashboardChannelKey,[\s\S]*?getDashboardMenuLabel,[\s\S]*?\} from '\.\/data\/mock';/);
   assert.match(appSource, /const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU\[0\]\?\.key \?\? 'target-maintenance';/);
   assert.match(appSource, /const MAINTENANCE_HOME_ITEM = \{ key: 'dashboard-home', name: '经营总览', icon: 'return', section: '导航' \};/);
   assert.match(appSource, /const MAINTENANCE_SIDEBAR_ITEMS = \[\s*MAINTENANCE_HOME_ITEM,\s*\.\.\.MAINTENANCE_MENU\.map\(\(item\) => \(\{ \.\.\.item, section: '数据维护' \}\)\),\s*\];/);
@@ -1093,7 +1093,7 @@ test('uses full-width compute trend sliders that resize from 3 to 15 bars', () =
   assert.match(computePageSource, /type:\s*'slider'[\s\S]*?showDetail:\s*false[\s\S]*?brushSelect:\s*false/);
   assert.match(computePageSource, /grid:\s*\{ top: 42, left: 10, right: 12, bottom: showSlider \? 44 : 8, containLabel: true \}/);
   assert.match(computePageSource, /const trend = getComputeUsageTrend\(\{ dim, dateRange \}\);/);
-  assert.match(computePageCss, /grid-template-areas:\s*"trend trend"\s*"capacity capacity"\s*"version usage";/);
+  assert.match(computePageCss, /grid-template-areas:\s*"trend trend"\s*"capacity capacity"\s*"health health"\s*"version usage";/);
   assert.match(computePageCss, /\.cpu-panel--trend \{[\s\S]*?min-height:\s*560px;/);
   assert.match(computePageCss, /\.cpu-trend-chart \{[\s\S]*?min-height:\s*420px;/);
 });
@@ -1131,7 +1131,7 @@ test('adds a linked full-width compute supply-demand card below usage trend', ()
 });
 
 test('places compute pie cards side by side without bottom legend explanations', () => {
-  assert.match(computePageCss, /\.cpu-grid \{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);[\s\S]*?grid-template-areas:\s*"trend trend"\s*"capacity capacity"\s*"version usage";/);
+  assert.match(computePageCss, /\.cpu-grid \{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);[\s\S]*?grid-template-areas:\s*"trend trend"\s*"capacity capacity"\s*"health health"\s*"version usage";/);
   assert.match(computePageCss, /\.cpu-panel--pie \{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;/);
   assert.doesNotMatch(computePageCss, /\.cpu-panel--pie \{[^}]*grid-template-columns:/);
   assert.doesNotMatch(computePageSource, /sub="圆角环图 · 外拉标签"/);
@@ -1313,15 +1313,15 @@ test('moves the whole compute customer ranking table upward', () => {
   assert.match(customerTableWrapBlock, /margin-top:\s*-12px;/);
 });
 
-test('removes compute resource utilization from the compute analysis page', () => {
-  assert.doesNotMatch(computePageSource, /getComputeResourceHealth/);
-  assert.doesNotMatch(computePageSource, /resourceHealth/);
-  assert.doesNotMatch(computePageSource, /SEARCH_KEYWORDS[\s\S]*?health:/);
-  assert.doesNotMatch(computePageSource, /资源利用率/);
-  assert.doesNotMatch(computePageSource, /cpu-panel--health/);
-  assert.doesNotMatch(computePageCss, /cpu-panel--health/);
-  assert.doesNotMatch(computePageCss, /cpu-health/);
-  assert.doesNotMatch(computePageCss, /grid-area:\s*health/);
+test('shows compute component consumption as a health panel', () => {
+  assert.match(computePageSource, /getComputeResourceHealth/);
+  assert.match(computePageSource, /const resourceHealth = getComputeResourceHealth\(\);/);
+  assert.match(computePageSource, /SEARCH_KEYWORDS[\s\S]*?health:\s*\['构成', 'OCR', 'VOC', '视频', '拦截', '对话测试', '组件消耗'\]/);
+  assert.match(computePageSource, /title="算力消耗构成"/);
+  assert.match(computePageSource, /className="cpu-panel--health"/);
+  assert.match(computePageCss, /\.cpu-panel--health \{[\s\S]*?grid-area:\s*health;/);
+  assert.match(computePageCss, /\.cpu-health \{[\s\S]*?grid-template-columns:\s*repeat\(5,\s*minmax\(0,\s*1fr\)\);/);
+  assert.match(computePageCss, /\.cpu-health-row__bar i \{[\s\S]*?min-width:\s*2px;/);
 });
 
 test('keeps the operating story overview while restoring secondary KPI companion openings', () => {
@@ -1648,7 +1648,7 @@ test('routes overview through the fused operating layout while compute keeps sco
   assert.doesNotMatch(appSource, /activeMenu === 'finance'/);
   assert.match(appSource, /const activeChannelKey = getDashboardChannelKey\(activeMenu\);/);
   assert.match(appSource, /<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
-  assert.match(appSource, /<ComputeUsagePage searchTerm=\{searchTerm\} dim=\{dim\} dateRange=\{dateRange\} \/>/);
+  assert.match(appSource, /<ComputeUsagePage[\s\S]*?searchTerm=\{searchTerm\}[\s\S]*?dim="day"[\s\S]*?dateRange=\{\[\]\}[\s\S]*?computeDataState=\{computeDataState\}[\s\S]*?customerSyncState=\{computeCustomerSyncState\}[\s\S]*?\/>/);
   assert.match(appSource, /getFilteredKpiCards\(\{ dim, dateRange, channel: activeChannelKey \}\)/);
   assert.match(appSource, /<MonthlyTrend channelKey=\{activeChannelKey\} \/>/);
   assert.match(appSource, /<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);

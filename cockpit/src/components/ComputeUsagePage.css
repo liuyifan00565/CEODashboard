@@ -1,4 +1,30 @@
 /*
+ 更新时间: 2026-07-09 23:10:00 CST
+ 更新内容: .cpu-skeleton-card/.cpu-skeleton-panel 的渐变/动画改为复用 dashboard.css 里共享的 skeleton-shimmer
+          样式（原来这里和经营总览骨架屏各自定义了一份完全相同的 shimmer 动画），本文件只保留尺寸相关规则。
+*/
+/*
+ 更新时间: 2026-07-09 22:05:00 CST
+ 更新内容: 算力页外部数据未就绪前不再渲染本地示例 KPI/图表/客户数据，改为骨架屏占位，就绪后一次性显示真实内容，
+          同步条只在此期间出现，就绪后完全移除。
+*/
+/*
+ 更新时间: 2026-07-09 21:15:00 CST
+ 更新内容: 客户表工具栏新增 .cpu-customer-sync 后台全量同步进度提示（与 token 同步条一致，仅保留加载中提示）。
+*/
+/*
+ 更新时间: 2026-07-09 20:08:00 CST
+ 更新内容: token 同步状态条移除失败态样式，仅保留加载中提示。
+*/
+/*
+ 更新时间: 2026-07-09 19:32:00 CST
+ 更新内容: 新增算力页按需同步状态条样式，提示 token 数据后台加载或失败。
+*/
+/*
+ 更新时间: 2026-07-09 18:18:00 CST
+ 更新内容: 新增算力消耗构成面板样式，展示外部 API 组件级 token 消耗占比。
+*/
+/*
  更新时间: 2026-07-08 18:51:50 CST
  更新内容: 算力页新增经营判断带、供需关系洞察、版本/分布说明和客户风险动作标签样式。
 */
@@ -72,8 +98,61 @@
   gap: 14px;
 }
 
+.cpu-sync {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 12px;
+  background: rgba(12,14,20,.54);
+  color: rgba(255,255,255,.74);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.cpu-sync span {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,.9);
+}
+
+.cpu-sync b {
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: right;
+  color: rgba(255,255,255,.62);
+}
+
 .cpu-kpi-slot {
   min-width: 0;
+}
+
+.cpu-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* Shimmer gradient/animation for these two classes lives in dashboard.css,
+   shared with the overview page's .dash-skeleton-* skeleton. */
+.cpu-skeleton-card,
+.cpu-skeleton-panel {
+  border-radius: 16px;
+}
+
+.cpu-skeleton-card {
+  min-height: 142px;
+}
+
+.cpu-skeleton-panel {
+  min-height: 220px;
+}
+
+.cpu-skeleton-panel--tall {
+  min-height: 320px;
 }
 
 .cpu-kpi {
@@ -308,6 +387,7 @@
   grid-template-areas:
     "trend trend"
     "capacity capacity"
+    "health health"
     "version usage";
   gap: 16px;
   align-items: stretch;
@@ -332,6 +412,11 @@
 .cpu-panel--usage-pie {
   grid-area: usage;
   min-height: 320px;
+}
+
+.cpu-panel--health {
+  grid-area: health;
+  min-height: 0;
 }
 
 .cpu-trend-chart {
@@ -381,6 +466,69 @@
   overflow-wrap: anywhere;
 }
 
+.cpu-health {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.cpu-health-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: start;
+  gap: 8px 10px;
+  min-width: 0;
+  padding: 12px 13px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+}
+
+.cpu-health-row__name,
+.cpu-health-row__state {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cpu-health-row__name {
+  color: var(--txt);
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.cpu-health-row__value {
+  color: var(--txt);
+  font-size: 13px;
+  font-weight: 780;
+  font-variant-numeric: tabular-nums;
+}
+
+.cpu-health-row__bar {
+  grid-column: 1 / -1;
+  display: block;
+  width: 100%;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+}
+
+.cpu-health-row__bar i {
+  display: block;
+  min-width: 2px;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.cpu-health-row__state {
+  grid-column: 1 / -1;
+  color: var(--faint);
+  font-size: 12px;
+}
+
 .cpu-panel--customers {
   min-height: 0;
 }
@@ -398,6 +546,13 @@
 .cpu-pagination__total {
   color: var(--faint);
   font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.cpu-customer-sync {
+  color: rgba(255,255,255,.62);
+  font-size: 12px;
   font-weight: 650;
   white-space: nowrap;
 }
@@ -933,8 +1088,13 @@
     grid-template-areas:
       "trend"
       "capacity"
+      "health"
       "version"
       "usage";
+  }
+
+  .cpu-health {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .cpu-panel--version-pie,
@@ -982,6 +1142,10 @@
 
   .cpu-trend-chart {
     min-height: 320px;
+  }
+
+  .cpu-health {
+    grid-template-columns: 1fr;
   }
 
   .cpu-panel__head {

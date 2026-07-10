@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 16:40:00 CST
+ 更新内容: 合并算力页骨架屏共享 skeleton-shimmer 动画，供 .cpu-skeleton-card/.cpu-skeleton-panel 复用。
+*/
+/*
  更新时间: 2026-07-10 10:56:13 CST
  更新内容: 侧栏搜索折叠态改为水平弹性布局，确保搜索图标与“搜索”文字稳定保持单行。
 */
@@ -176,6 +180,25 @@
   color:var(--muted);
   font-size:14px;
   line-height:1.7;
+}
+
+/* Shared shimmer recipe for compute page loading skeletons. */
+.cpu-skeleton-card,
+.cpu-skeleton-panel{
+  border:1px solid var(--dashboard-card-border);
+  background:linear-gradient(
+    100deg,
+    rgba(255,255,255,.04) 40%,
+    rgba(255,255,255,.09) 50%,
+    rgba(255,255,255,.04) 60%
+  );
+  background-size:200% 100%;
+  animation:skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
 }
 
 .dash-aside{

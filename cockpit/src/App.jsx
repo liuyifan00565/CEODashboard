@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-10 16:35:00 CST
+ 更新内容: 合并 Jichuan 算力用量分析后台同步逻辑：dashboard 数据就绪后加载 token 总览，再分页同步客户明细；
+          移除数据版本号强制重挂载，算力页接收同步状态展示进度。
+*/
+/*
  更新时间: 2026-07-10 10:51:28 CST
  更新内容: 将搜索入口移到左侧导航下方，并移除主内容独占的搜索顶栏，让经营总览整体上移释放首屏空间。
 */
@@ -183,14 +188,23 @@ import OpeningMetricCards from './components/OpeningMetricCards';
 import MaintenancePage from './components/MaintenancePage';
 import OperatingOverview from './components/OperatingOverview';
 
-import { META, MENU, MAINTENANCE_MENU, getDashboardChannelKey, getDashboardMenuLabel } from './data/mock';
-import { loadDashboardData } from './data/liveData';
+import {
+  appendComputeCustomerRows,
+  META,
+  MENU,
+  MAINTENANCE_MENU,
+  getComputeOverview,
+  getDashboardChannelKey,
+  getDashboardMenuLabel,
+} from './data/mock';
+import { loadComputeCustomerPage, loadComputeData, loadDashboardData } from './data/liveData';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
 import { matchesSearchTerm } from './lib/searchMatch';
 import './dashboard.css';
 
 const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance';
+const CUSTOMER_SYNC_PAGE_SIZE = 200;
 
 const DASHBOARD_SIDEBAR_ITEMS = [
   ...MENU.map((item) => ({ ...item, section: '导航', icon: item.icon ?? item.key })),
@@ -225,7 +239,8 @@ export default function App() {
   const [openCard, setOpenCard] = useState(null);
   const [companionCue, setCompanionCue] = useState(null);
   const [dashboardDataState, setDashboardDataState] = useState({ status: 'loading', error: '' });
-  const [dashboardDataVersion, setDashboardDataVersion] = useState(0);
+  const [computeDataState, setComputeDataState] = useState({ status: 'idle', error: '' });
+  const [computeCustomerSyncState, setComputeCustomerSyncState] = useState({ status: 'idle', total: 0 });
 
   const gridRef = useRef(null);
   const pendingMenuScrollRef = useRef(false);
@@ -242,7 +257,6 @@ export default function App() {
   const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const sidebarTransitionKey = maintenanceMode ? 'maintenance' : 'dashboard';
   const contentKey = maintenanceMode ? activeMaintenanceMenu : activeMenu;
-  const contentRenderKey = `${contentKey}-${dashboardDataVersion}`;
   const isDashboardDataReady = dashboardDataState.status === 'ready';
   const filteredKpiCards = getFilteredKpiCards({ dim, dateRange, channel: activeChannelKey });
   const monthKpiCard = filteredKpiCards.find((card) => card.key === 'month');
@@ -259,7 +273,6 @@ export default function App() {
     loadDashboardData()
       .then(() => {
         if (cancelled) return;
-        setDashboardDataVersion((version) => version + 1);
         setDashboardDataState({ status: 'ready', error: '' });
       })
       .catch((err) => {
@@ -271,6 +284,68 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (dashboardDataState.status !== 'ready' || computeDataState.status !== 'idle') return undefined;
+    let cancelled = false;
+
+    setComputeDataState({ status: 'loading', error: '' });
+    loadComputeData()
+      .then(() => {
+        if (cancelled) return;
+        setComputeDataState({ status: 'ready', error: '' });
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setComputeDataState({ status: 'error', error: err.message || '算力数据加载失败' });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // This effect owns computeDataState.status transitions; including it would
+    // cancel the same request when the status changes to "loading".
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dashboardDataState.status]);
+
+  useEffect(() => {
+    if (computeDataState.status !== 'ready' || computeCustomerSyncState.status !== 'idle') return undefined;
+    let cancelled = false;
+
+    async function syncAllComputeCustomers() {
+      const overview = getComputeOverview();
+      setComputeCustomerSyncState({ status: 'loading', total: overview.totalCustomers || 0 });
+
+      let page = 1;
+      for (;;) {
+        if (cancelled) return;
+        let payload;
+        try {
+          payload = await loadComputeCustomerPage({ page, pageSize: CUSTOMER_SYNC_PAGE_SIZE });
+        } catch {
+          if (!cancelled) setComputeCustomerSyncState((state) => ({ ...state, status: 'error' }));
+          return;
+        }
+        if (cancelled) return;
+
+        const loaded = appendComputeCustomerRows(payload.rows);
+        setComputeCustomerSyncState({ status: 'loading', total: payload.total });
+
+        if (!payload.rows.length || payload.rows.length < CUSTOMER_SYNC_PAGE_SIZE || loaded >= payload.total) break;
+        page += 1;
+      }
+
+      if (!cancelled) setComputeCustomerSyncState((state) => ({ ...state, status: 'done' }));
+    }
+
+    syncAllComputeCustomers();
+
+    return () => {
+      cancelled = true;
+    };
+    // This effect owns computeCustomerSyncState.status transitions while paging.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [computeDataState.status]);
 
   function scrollDashboardIntoView() {
     pendingMenuScrollRef.current = false;
@@ -362,7 +437,7 @@ export default function App() {
       matches[currentIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     }
     pendingSearchScrollRef.current = false;
-  }, [searchTerm, activeSearchIndex, contentKey, isComputePage, dashboardDataVersion]);
+  }, [searchTerm, activeSearchIndex, contentKey, isComputePage, dashboardDataState.status, computeDataState.status]);
 
   // GSAP 入场：KPI 卡 + 面板 stagger fade-up（菜单切换时重放）
   useLayoutEffect(() => {
@@ -389,7 +464,7 @@ export default function App() {
       if (scrollFrame) cancelAnimationFrame(scrollFrame);
       ctx.revert();
     };
-  }, [contentKey, dashboardDataVersion]);
+  }, [contentKey]);
 
   if (!isDashboardDataReady) {
     return (
@@ -440,11 +515,17 @@ export default function App() {
         </aside>
 
         <div className="dash-main">
-          <div className="dash-content" ref={gridRef} key={contentRenderKey}>
+          <div className="dash-content" ref={gridRef} key={contentKey}>
             {isMaintenancePage ? (
               <MaintenancePage activePage={activeMaintenanceMenu} onBack={handleMaintenanceBack} />
             ) : isComputePage ? (
-              <ComputeUsagePage searchTerm={searchTerm} dim={dim} dateRange={dateRange} />
+              <ComputeUsagePage
+                searchTerm={searchTerm}
+                dim="day"
+                dateRange={[]}
+                computeDataState={computeDataState}
+                customerSyncState={computeCustomerSyncState}
+              />
             ) : (
               <>
                 <OperatingOverview

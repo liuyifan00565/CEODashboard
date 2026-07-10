@@ -1,4 +1,33 @@
 /*
+ 更新时间: 2026-07-10 15:58:00 CST
+ 更新内容: 移除页面挂载后才启动的客户分页同步，改为接收 App 后台同步状态；
+          算力页只展示客户列表和同步进度，避免未进入页面时客户不加载。
+*/
+/*
+ 更新时间: 2026-07-09 23:10:00 CST
+ 更新内容: 清理：客户后台分页同步不再调用 getComputeCustomerRows()（拷贝+排序整个数组）只为读取行数，
+          改用 appendComputeCustomerRows 的返回值；customerSyncState 去掉冗余的 loaded 字段，同步进度
+          展示直接读渲染期已算好的 customers.length；buildCustomerTableRows 去掉对已排序输入的重复排序；
+          骨架屏 shimmer 动画与 dashboard.css 的经营总览骨架屏合并为同一套 CSS，不再各自定义一份。
+*/
+/*
+ 更新时间: 2026-07-09 21:15:00 CST
+ 更新内容: 新增后台分页同步全量客户列表（loadComputeCustomerPage + appendComputeCustomerRows），
+          客户表工具栏显示同步进度，不再受首屏 20 条采样限制，也不阻塞页面其它区块渲染。
+*/
+/*
+ 更新时间: 2026-07-09 20:08:00 CST
+ 更新内容: token 同步状态条仅在同步进行中显示，完成或失败后不再占位。
+*/
+/*
+ 更新时间: 2026-07-09 19:32:00 CST
+ 更新内容: 算力页接收按需加载状态，进入页面时提示 token 数据正在同步或同步失败。
+*/
+/*
+ 更新时间: 2026-07-09 18:18:00 CST
+ 更新内容: 算力页新增组件级消耗构成面板，使用外部 API 的 OCR/VOC/视频/拦截/测试消耗字段。
+*/
+/*
  更新时间: 2026-07-08 18:51:50 CST
  更新内容: 算力页升级为经营健康驾驶舱，新增利用率、风险客户、供需关系、版本效率洞察与客户动作标签。
 */
@@ -36,6 +65,7 @@ import AppIcon from './AppIcon';
 import EChart from './EChart';
 import {
   getComputeCustomerRows,
+  getComputeResourceHealth,
   getComputeOverview,
   getComputeUsageDistribution,
   getComputeUsageTrend,
@@ -49,6 +79,7 @@ const SEARCH_KEYWORDS = {
   trend: ['趋势', '年', '月', '日', '日期', '自动回复', '商品同步', '容量', '供需', '利用率', '峰值'],
   version: ['版本', '试用版', '企业版', '旗舰版', '卓越版', '创世版', '启航版', '版本效率'],
   distribution: ['分布', '用量', '客户占比', '高消耗', '零用量', '激活'],
+  health: ['构成', 'OCR', 'VOC', '视频', '拦截', '对话测试', '组件消耗'],
   customer: ['客户', '排行', '手机号', '负责人', '平均回复率', '风险', '建议动作', '低余额', '高消耗'],
 };
 
@@ -207,31 +238,12 @@ function decorateCustomerRow(row, index) {
   };
 }
 
-function buildCustomerTableRows(rows, totalCount) {
-  const sortedRows = [...rows].sort((a, b) => b.usage - a.usage);
-  if (!sortedRows.length) return [];
+// rows must already be sorted by usage desc — its only caller passes
+// getComputeCustomerRows(), which sorts on the same key.
+function buildCustomerTableRows(rows) {
+  if (!rows.length) return [];
 
-  const totalRows = Math.max(sortedRows.length, Number(totalCount) || sortedRows.length);
-  const tailStartUsage = sortedRows[sortedRows.length - 1].usage;
-
-  return Array.from({ length: totalRows }, (_, index) => {
-    if (index < sortedRows.length) {
-      return decorateCustomerRow(sortedRows[index], index);
-    }
-
-    const source = sortedRows[index % sortedRows.length];
-    const tailIndex = index - sortedRows.length + 1;
-    const usage = Math.max(1200, tailStartUsage - tailIndex * 73);
-    const balance = Math.max(0, source.balance + ((index % 13) - 6) * 24860 - tailIndex * 19);
-    const averageReplyRate = Math.max(42, Math.min(96, source.averageReplyRate + ((index % 7) - 3)));
-
-    return decorateCustomerRow({
-      ...source,
-      usage,
-      balance,
-      averageReplyRate,
-    }, index);
-  });
+  return rows.map((row, index) => decorateCustomerRow(row, index));
 }
 
 function buildInitialCustomerColumnFilters() {
@@ -308,6 +320,15 @@ function buildDistributionInsight(distribution) {
   const highUsage = getDistributionValue(distribution, (name) => name.includes('>10000'));
 
   return `零用量 ${formatInt(zeroUsage)} 档、高用量 ${formatInt(highUsage)} 档；建议把沉默客户激活和超高消耗客户预警拆成两条运营清单。`;
+}
+
+function buildResourceHealthInsight(resourceHealth) {
+  if (!resourceHealth.length) return '暂无组件级消耗数据';
+
+  const sorted = [...resourceHealth].sort((a, b) => b.usage - a.usage);
+  const top = sorted[0];
+  const activeCount = sorted.filter((row) => Number(row.value || row.usage) > 0).length;
+  return `${top.name}占组件消耗最高，为 ${formatPct(top.usage)}；当前有 ${formatInt(activeCount)} 个组件产生 token 消耗。`;
 }
 
 function buildExecutiveSnapshot({ overview, trend, distribution, customerRows }) {
@@ -1076,7 +1097,13 @@ function CustomerSortableHeader({
   );
 }
 
-export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateRange = [] }) {
+export default function ComputeUsagePage({
+  searchTerm = '',
+  dim = 'month',
+  dateRange = [],
+  computeDataState = { status: 'ready', error: '' },
+  customerSyncState = { status: 'idle', total: 0 },
+}) {
   const tokens = useThemeTokens();
   const [customerSort, setCustomerSort] = useState('usage-desc');
   const [customerColumnFilters, setCustomerColumnFilters] = useState(() => buildInitialCustomerColumnFilters());
@@ -1090,10 +1117,11 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
   const trend = getComputeUsageTrend({ dim, dateRange });
   const versions = getComputeVersionConsumption();
   const distribution = getComputeUsageDistribution();
+  const resourceHealth = getComputeResourceHealth();
   const customers = getComputeCustomerRows();
   const customerRows = useMemo(
-    () => buildCustomerTableRows(customers, overview.totalCustomers),
-    [customers, overview.totalCustomers]
+    () => buildCustomerTableRows(customers),
+    [customers]
   );
   const executive = useMemo(
     () => buildExecutiveSnapshot({ overview, trend, distribution, customerRows }),
@@ -1158,6 +1186,7 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
   );
   const versionInsight = useMemo(() => buildVersionInsight(versionPieData), [versionPieData]);
   const distributionInsight = useMemo(() => buildDistributionInsight(distributionPieData), [distributionPieData]);
+  const resourceHealthInsight = useMemo(() => buildResourceHealthInsight(resourceHealth), [resourceHealth]);
   const customerColumnFilterOptions = useMemo(
     () => CUSTOMER_COLUMN_FILTERS.reduce((options, field) => ({
       ...options,
@@ -1225,6 +1254,25 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
     updateCustomerPage(customerJumpPage);
   }
 
+  if (computeDataState.status === 'idle' || computeDataState.status === 'loading') {
+    return (
+      <div className="cpu-page">
+        <div className="cpu-sync cpu-sync--loading" role="status">
+          <span>正在同步 token 用量数据</span>
+          <b>加载完成后自动显示，不使用本地示例数据。</b>
+        </div>
+        <div className="cpu-skeleton-grid" aria-hidden="true">
+          <div className="cpu-skeleton-card" />
+          <div className="cpu-skeleton-card" />
+          <div className="cpu-skeleton-card" />
+          <div className="cpu-skeleton-card" />
+        </div>
+        <div className="cpu-skeleton-panel cpu-skeleton-panel--tall" />
+        <div className="cpu-skeleton-panel" />
+      </div>
+    );
+  }
+
   return (
     <div className="cpu-page">
       <div className="cpu-kpi-grid">
@@ -1286,6 +1334,27 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
         </Panel>
 
         <Panel
+          className="cpu-panel--health"
+          title="算力消耗构成"
+          sub="OCR · VOC · 视频 · 回复拦截 · 对话测试"
+          active={matchesTerm(SEARCH_KEYWORDS.health, searchTerm)}
+        >
+          <div className="cpu-health" aria-label="算力消耗构成">
+            {resourceHealth.map((row) => (
+              <div className="cpu-health-row" key={row.key}>
+                <span className="cpu-health-row__name">{row.name}</span>
+                <span className="cpu-health-row__bar" aria-hidden="true">
+                  <i style={{ width: `${Math.min(100, Math.max(0, Number(row.usage) || 0))}%`, background: row.color }} />
+                </span>
+                <span className="cpu-health-row__value">{formatPct(row.usage)}</span>
+                <span className="cpu-health-row__state">{row.trend || row.state}</span>
+              </div>
+            ))}
+          </div>
+          <div className="cpu-panel-insight">{resourceHealthInsight}</div>
+        </Panel>
+
+        <Panel
           className="cpu-panel--pie cpu-panel--version-pie"
           title="各版本算力消耗"
           active={matchesTerm(SEARCH_KEYWORDS.version, searchTerm)}
@@ -1315,6 +1384,11 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
         active={matchesTerm(SEARCH_KEYWORDS.customer, searchTerm)}
       >
         <div className="cpu-customer-toolbar">
+          {customerSyncState.status === 'loading' && (
+            <span className="cpu-customer-sync" role="status">
+              客户数据同步中 {formatInt(customers.length)}/{formatInt(customerSyncState.total)}
+            </span>
+          )}
           <span className="cpu-customer-range">
             {formatInt(customerRangeStart)}-{formatInt(customerEndIndex)} / {formatInt(customerTotal)}
           </span>
