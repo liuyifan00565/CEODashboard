@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-10 11:03:44 CST  更新内容: 删除年度累计回款大数字上方的小标签，并将年度拆解入口移到年度回款结构标题右上方。 */
 /* 更新时间: 2026-07-10 10:54:38 CST  更新内容: 将“点击查看近期明细”从月度卡总标题右侧移到本月回款结构半环图标题右上方。 */
 /* 更新时间: 2026-07-10 10:53:56 CST  更新内容: 删除月度回款大数字上方重复的“本月回款”小标签，进一步收敛数字区层级。 */
 /* 更新时间: 2026-07-10 10:51:28 CST  更新内容: 年度目标进度条移除累计/目标文字和外围胶囊，只保留进度条与完成率百分比。 */
@@ -405,12 +406,17 @@ function MonthlyRecoveryStructure({ structure, option, detailDisabled, onDetailC
   );
 }
 
-function AnnualRecoveryStructure({ structure, option }) {
+function AnnualRecoveryStructure({ structure, option, detailDisabled, onDetailClick }) {
   return (
     <RecoveryStructure
       structure={structure}
       option={option}
       periodMeta={ANNUAL_STRUCTURE_META}
+      action={(
+        <DetailLink disabled={detailDisabled} onClick={onDetailClick}>
+          点击查看年度拆解
+        </DetailLink>
+      )}
     />
   );
 }
@@ -532,17 +538,10 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             <div>
               <h2>年度回款总览</h2>
             </div>
-            <DetailLink
-              disabled={!yearKpiCard || !onOpenKpi}
-              onClick={() => onOpenKpi(yearKpiCard)}
-            >
-              点击查看年度拆解
-            </DetailLink>
           </header>
 
           <div className="op-annual-grid">
             <div className="op-annual-primary">
-              <span className="op-summary-label">年度累计回款</span>
               <div className="op-month-primary-value-row op-annual-primary-value-row">
                 <b>{formatWan(KPI.yearRecovered)}万</b>
                 <span className="op-summary-sub op-month-refund-note">退款{formatWan(KPI.yearRefund ?? 0)}万</span>
@@ -570,6 +569,8 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             <AnnualRecoveryStructure
               structure={annualStructure}
               option={annualStructureOption}
+              detailDisabled={!yearKpiCard || !onOpenKpi}
+              onDetailClick={() => onOpenKpi(yearKpiCard)}
             />
 
             <OperatingSituation

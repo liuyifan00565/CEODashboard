@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 11:03:07 CST
+ 更新内容: 回归测试锁定年度累计回款小标签删除，并将年度拆解入口移到年度回款结构标题右上方。
+*/
+/*
  更新时间: 2026-07-10 10:56:13 CST
  更新内容: 回归测试锁定侧栏搜索折叠态图标与文字使用单行弹性布局。
 */
@@ -1357,7 +1361,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /const annualChannelRows = getChannelCompletionRows\('year'\);/);
   assert.match(operatingOverviewSource, /const annualStructure = useMemo\(\(\) => buildChannelStructure\(annualChannelRows\), \[annualChannelRows\]\);/);
   assert.match(operatingOverviewSource, /chartName: '年度回款结构'/);
-  assert.match(operatingOverviewSource, /年度累计回款/);
+  assert.doesNotMatch(operatingOverviewSource, /<span className="op-summary-label">年度累计回款<\/span>/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-summary-label">本月回款<\/span>/);
   assert.match(operatingOverviewSource, /<div className="op-month-primary-value-row op-annual-primary-value-row">[\s\S]*?<b>\{formatWan\(KPI\.yearRecovered\)\}万<\/b>[\s\S]*?退款\{formatWan\(KPI\.yearRefund \?\? 0\)\}万/);
   assert.match(operatingOverviewSource, /年度目标/);
@@ -1382,6 +1386,9 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.doesNotMatch(operatingOverviewSource, /<EChart option=\{annualOption\}/);
   assert.doesNotMatch(operatingOverviewSource, /当前年度完成率略高于时间进度/);
   assert.match(operatingOverviewSource, /点击查看年度拆解/);
+  assert.match(operatingOverviewSource, /function AnnualRecoveryStructure\(\{ structure, option, detailDisabled, onDetailClick \}\)[\s\S]*?action=\{\([\s\S]*?<DetailLink disabled=\{detailDisabled\} onClick=\{onDetailClick\}>[\s\S]*?点击查看年度拆解/);
+  assert.match(operatingOverviewSource, /<AnnualRecoveryStructure[\s\S]*?detailDisabled=\{!yearKpiCard \|\| !onOpenKpi\}[\s\S]*?onDetailClick=\{\(\) => onOpenKpi\(yearKpiCard\)\}/);
+  assert.doesNotMatch(operatingOverviewSource, /<header className="op-section-head">[\s\S]*?点击查看年度拆解[\s\S]*?<\/header>/);
   assert.doesNotMatch(operatingOverviewSource, /明细 &gt;/);
   assert.match(operatingOverviewSource, /onOpenKpi\(yearKpiCard\)/);
   assert.doesNotMatch(operatingOverviewSource, /getOperatingOverviewMetrics/);
@@ -1694,7 +1701,7 @@ test('uses one channel completion panel with month and year switching', () => {
 test('opens monthly and annual drilldowns from the operating overview with contextual modal labels', () => {
   assert.match(operatingOverviewSource, /function OperatingOverview\(\{ searchTerm = '', monthKpiCard, yearKpiCard, onOpenKpi \}\)/);
   assert.match(operatingOverviewSource, /detailDisabled=\{!monthKpiCard \|\| !onOpenKpi\}/);
-  assert.match(operatingOverviewSource, /disabled=\{!yearKpiCard \|\| !onOpenKpi\}/);
+  assert.match(operatingOverviewSource, /detailDisabled=\{!yearKpiCard \|\| !onOpenKpi\}/);
   assert.match(kpiModalSource, /const initialDim = isCost \? 'month' : card\.key === 'year' \? 'year' : 'month';/);
   assert.match(kpiModalSource, /const modalTitle = isCost \? '投入趋势与环比' : card\.key === 'year' \? '年度回款明细' : card\.key === 'month' \? '月度回款明细' : card\.title;/);
   assert.match(kpiModalSource, /<h3 className="km-title">\{modalTitle\}<\/h3>/);
