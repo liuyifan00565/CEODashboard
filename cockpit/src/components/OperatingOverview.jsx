@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-10 15:36:50 CST  更新内容: 将月度与年度下钻入口移到回款结构半环图右下方，并保留透明大点击热区。 */
 /* 更新时间: 2026-07-10 15:16:00 CST  更新内容: 合并远端经营布局，保留月度业绩和渠道经营区的福小客洞察定位标识。 */
 /* 更新时间: 2026-07-10 13:12:05 CST  更新内容: 临时预览回款半环左侧主标签向内收缩，缩短标签到半环的引导距离。 */
 /* 更新时间: 2026-07-10 11:55:10 CST  更新内容: 回款半环未完成外部标签向内收缩，让文字更靠近半环。 */
@@ -386,14 +387,14 @@ function RecoveryStructure({ structure, option, periodMeta, action = null }) {
           <h2>{periodMeta.chartName}</h2>
           <span>单位：万元</span>
         </div>
-        {action}
       </div>
 
       <div
-        className="op-channel-chart-wrap"
+        className={action ? 'op-channel-chart-wrap op-channel-chart-wrap--with-detail' : 'op-channel-chart-wrap'}
         aria-label={`${periodMeta.centerLabel} ${formatPct(structure.completion)}，${periodMeta.recoveredLabel} ${formatWan(structure.totalRecovered)} 万`}
       >
         <EChart className="op-channel-chart" option={option} style={{ height: '100%' }} />
+        {action}
       </div>
     </div>
   );
