@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-10 15:49:48 CST  更新内容: 年度下钻入口改回与月度一致的半环右下位置，不再额外上移。 */
 /* 更新时间: 2026-07-10 15:42:33 CST  更新内容: 年度下钻入口上收并让年度进度条保持更高层级，避免透明热区挡住进度条。 */
 /* 更新时间: 2026-07-10 15:36:50 CST  更新内容: 月度与年度下钻入口固定到半环图右下方，并用透明大热区支持点击周边跳转。 */
 /* 更新时间: 2026-07-10 13:39:13 CST  更新内容: 临时预览月度半环保持左移和放大但下放到标题下方，避免压住本月回款结构标题，待确认后再提交。 */
@@ -232,12 +233,6 @@
 .op-channel-chart-wrap .op-detail-link:focus-visible:not(:disabled) {
   border-radius: 12px;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
-}
-
-.op-annual-grid .op-channel-chart-wrap .op-detail-link {
-  bottom: clamp(76px, 5.2vw, 92px);
-  min-height: 46px;
-  padding-top: 14px;
 }
 
 .op-month-grid {

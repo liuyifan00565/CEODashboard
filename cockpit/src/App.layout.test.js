@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:49:48 CST
+ 更新内容: 回归测试锁定年度下钻入口与月度共用同一半环右下定位，不再额外上移。
+*/
+/*
  更新时间: 2026-07-10 15:42:33 CST
  更新内容: 回归测试锁定年度下钻入口不遮挡年度进度条，进度条层级高于入口透明热区。
 */
@@ -1430,7 +1434,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /<MonthlyRecoveryStructure[\s\S]*?detailDisabled=\{!monthKpiCard \|\| !onOpenKpi\}[\s\S]*?onDetailClick=\{\(\) => onOpenKpi\(monthKpiCard\)\}/);
   assert.match(operatingOverviewCss, /\.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?right:\s*clamp\(0px, \.65vw, 10px\);[\s\S]*?bottom:\s*clamp\(2px, \.55vw, 10px\);[\s\S]*?min-width:\s*156px;[\s\S]*?min-height:\s*56px;[\s\S]*?padding:\s*24px 6px 8px 28px;[\s\S]*?font-size:\s*12px;/);
   assert.match(operatingOverviewCss, /\.op-channel-chart-wrap \.op-detail-link:focus-visible:not\(:disabled\)\s*\{[\s\S]*?box-shadow:\s*inset 0 0 0 1px rgba\(255,255,255,\.14\);/);
-  assert.match(operatingOverviewCss, /\.op-annual-grid \.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?bottom:\s*clamp\(76px, 5\.2vw, 92px\);[\s\S]*?min-height:\s*46px;[\s\S]*?padding-top:\s*14px;/);
+  assert.doesNotMatch(operatingOverviewCss, /\.op-annual-grid \.op-channel-chart-wrap \.op-detail-link\s*\{/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-structure-head \.op-detail-link/);
   assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
   assert.match(operatingOverviewSource, /<h2>年度回款总览<\/h2>/);
