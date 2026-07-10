@@ -1,4 +1,24 @@
 /*
+ 更新时间: 2026-07-10 11:33:58 CST
+ 更新内容: 回归测试锁定月度/年度回款结构区左移、结构入口向左下移动，以及年度进度条下移。
+*/
+/*
+ 更新时间: 2026-07-10 11:33:41 CST
+ 更新内容: 回归测试同步经营情况渠道行距继续加大到 16px，低高度桌面档 13px。
+*/
+/*
+ 更新时间: 2026-07-10 11:30:29 CST
+ 更新内容: 回归测试同步经营情况渠道行距继续加大到 12px，低高度桌面档 10px。
+*/
+/*
+ 更新时间: 2026-07-10 11:26:30 CST
+ 更新内容: 回归测试锁定右侧经营情况四个渠道行距放大，避免列表重新贴紧。
+*/
+/*
+ 更新时间: 2026-07-10 11:22:18 CST
+ 更新内容: 回归测试锁定月度/年度经营主卡收小到 220px 半环图区，低有效高度桌面档压到 204px，确保月度经营趋势完整进入首屏。
+*/
+/*
  更新时间: 2026-07-10 11:10:16 CST
  更新内容: 回归测试改为锁定经营总览回款半环对齐首页版本情况实际 250px 图高和 340-460px 图宽。
 */
@@ -1358,6 +1378,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /function MonthlyRecoveryStructure\(\{ structure, option, detailDisabled, onDetailClick \}\)[\s\S]*?action=\{\([\s\S]*?<DetailLink disabled=\{detailDisabled\} onClick=\{onDetailClick\}>[\s\S]*?点击查看近期明细/);
   assert.match(operatingOverviewSource, /<MonthlyRecoveryStructure[\s\S]*?detailDisabled=\{!monthKpiCard \|\| !onOpenKpi\}[\s\S]*?onDetailClick=\{\(\) => onOpenKpi\(monthKpiCard\)\}/);
   assert.match(operatingOverviewCss, /\.op-structure-head \.op-detail-link\s*\{[\s\S]*?font-size:\s*12px;/);
+  assert.match(operatingOverviewCss, /\.op-structure-head \.op-detail-link\s*\{[\s\S]*?margin:\s*2px 10px 0 0;/);
   assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
   assert.match(operatingOverviewSource, /<h2>年度回款总览<\/h2>/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">年度经营进度<\/span>/);
@@ -1438,7 +1459,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewCss, /backdrop-filter:\s*var\(--dashboard-card-blur\);/);
   assert.match(operatingOverviewCss, /box-shadow:\s*var\(--dashboard-card-shadow\);/);
   assert.match(operatingOverviewCss, /\.op-annual-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(330px, 1\.02fr\) minmax\(340px, \.8fr\) minmax\(330px, 1\.08fr\);/);
-  assert.match(operatingOverviewCss, /\.op-annual-primary b\s*\{[\s\S]*?font-size:\s*clamp\(42px, 4\.6vw, 64px\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-primary b\s*\{[\s\S]*?font-size:\s*clamp\(38px, 4\.1vw, 58px\);/);
   assert.match(operatingOverviewSource, /<div className="op-month-primary-facts op-annual-primary-facts">[\s\S]*?<div\s+className="op-annual-progress-footer"/);
   assert.doesNotMatch(cssRuleBody(operatingOverviewCss, '.op-annual-progress-footer'), /grid-row:/);
   assert.match(operatingOverviewCss, /\.op-annual-grid \.op-operating-side\s*\{[\s\S]*?grid-column:\s*3;[\s\S]*?grid-row:\s*1 \/ span 2;/);
@@ -1461,17 +1482,19 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   const progressTitleBlock = cssRuleBody(operatingOverviewCss, '.op-progress-head h1');
   const primaryValueBlock = cssRuleBody(operatingOverviewCss, '.op-month-primary b');
 
-  assert.match(progressTitleBlock, /font-size:\s*clamp\(20px, 1\.8vw, 25px\);/);
+  assert.match(progressTitleBlock, /font-size:\s*clamp\(19px, 1\.65vw, 23px\);/);
   assert.match(progressTitleBlock, /font-weight:\s*700;/);
-  assert.match(primaryValueBlock, /font-size:\s*clamp\(48px, 5\.4vw, 74px\);/);
+  assert.match(primaryValueBlock, /font-size:\s*clamp\(44px, 4\.9vw, 66px\);/);
   assert.match(primaryValueBlock, /font-weight:\s*840;/);
   assert.match(monthGridBlock, /border-top:\s*1px solid rgba\(255,255,255,\.035\);/);
   assert.match(monthGridBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.035\);/);
   assert.match(operatingOverviewCss, /\.op-month-primary-value-row\s*\{[\s\S]*?align-items:\s*flex-end;/);
-  assert.match(operatingOverviewCss, /\.op-month-refund-note\s*\{[\s\S]*?margin-bottom:\s*clamp\(5px, \.55vw, 8px\);/);
-  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 250px;[\s\S]*?align-content:\s*start;/);
-  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?width:\s*clamp\(340px, 28vw, 460px\);[\s\S]*?height:\s*250px;[\s\S]*?min-height:\s*250px;/);
-  assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*250px;/);
+  assert.match(operatingOverviewCss, /\.op-month-refund-note\s*\{[\s\S]*?margin-bottom:\s*clamp\(3px, \.4vw, 6px\);/);
+  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 220px;[\s\S]*?align-content:\s*start;/);
+  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?margin-left:\s*-16px;[\s\S]*?margin-right:\s*8px;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?width:\s*clamp\(320px, 25vw, 420px\);[\s\S]*?height:\s*220px;[\s\S]*?min-height:\s*220px;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*220px;/);
+  assert.match(operatingOverviewCss, /\.op-channel-list\s*\{[\s\S]*?gap:\s*16px;/);
   assert.match(operatingOverviewCss, /\.op-channel-item\s*\{[\s\S]*?min-height:\s*30px;/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-structure-progress/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-progress-track/);
@@ -1495,11 +1518,11 @@ test('replaces the annual rhythm chart with a yearly recovery overview footer', 
   assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{[\s\S]*?margin-top:\s*clamp\(10px, \.85vw, 14px\);/);
   assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{[\s\S]*?transform:\s*none;/);
   const annualProgressMainBlock = cssRuleBody(operatingOverviewCss, '.op-annual-progress-main');
-  assert.match(annualProgressMainBlock, /min-height:\s*20px;/);
+  assert.match(annualProgressMainBlock, /min-height:\s*18px;/);
   assert.match(annualProgressMainBlock, /grid-template-columns:\s*minmax\(140px, 1fr\) auto;/);
   assert.match(annualProgressMainBlock, /gap:\s*clamp\(8px, \.8vw, 12px\);/);
   assert.doesNotMatch(annualProgressMainBlock, /border:|background:|box-shadow:|padding:/);
-  assert.match(operatingOverviewCss, /\.op-annual-progress-track\s*\{[\s\S]*?height:\s*10px;[\s\S]*?border-radius:\s*999px;[\s\S]*?background:\s*var\(--bar-track\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-progress-track\s*\{[\s\S]*?height:\s*8px;[\s\S]*?border-radius:\s*999px;[\s\S]*?background:\s*var\(--bar-track\);/);
   assert.match(operatingOverviewCss, /\.op-annual-fill\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(142,134,255,\.78\), rgba\(228,184,215,\.62\)\);/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-annual-progress-meta\s*\{/);
   assert.doesNotMatch(operatingOverviewSource, /overviewMetrics\.annualTimeProgress/);
@@ -1813,7 +1836,9 @@ test('keeps month year trend and finance metrics balanced across 1K and 2K scree
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:18px;/);
   assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?flex:none;[\s\S]*?grid-template-rows:clamp\(350px,36vh,386px\);/);
   assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?grid-template-rows:clamp\(320px,34vh,350px\);[\s\S]*?grid-template-rows:minmax\(136px,\.82fr\) minmax\(176px,1\.08fr\);/);
-  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-overview \{[\s\S]*?gap: 10px;/);
+  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-overview \{[\s\S]*?gap: 8px;/);
+  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows:\s*auto 204px;[\s\S]*?height:\s*204px;/);
+  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-channel-list \{[\s\S]*?gap: 13px;/);
   assert.doesNotMatch(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows: auto 148px;[\s\S]*?height: 148px;/);
   assert.match(dashboardCss, /@media \(min-width:2200px\) and \(min-height:1300px\)\{[\s\S]*?\.dash-secondary-grid\{[\s\S]*?grid-template-rows:410px;/);
   assert.match(dashboardCss, /\.dash-version-row \.vf-panel\{[\s\S]*?min-height:280px;/);
