@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:15:00 CST
+ 更新内容: 覆盖福小客总览分区、算力切页顶部定位、平滑滚动与短暂玻璃焦点反馈。
+*/
+/*
  更新时间: 2026-07-09 18:07:32 CST
  更新内容: 经营总览回归测试按截图红线同步月度与年度主卡继续上收后的 190px 回款结构图区高度。
 */
@@ -1262,6 +1266,28 @@ test('keeps the operating story overview while restoring secondary KPI companion
   assert.match(appSource, /function handleOpenCard/);
   assert.match(appSource, /<KpiCard card=\{card\} onOpen=\{handleOpenCard\} \/>/);
   assert.doesNotMatch(appSource, /sidePanel=\{<ChannelPanel/);
+});
+
+test('AI insight navigation locates overview sections and switches to the compute page', () => {
+  assert.match(appSource, /const pendingAiInsightRef = useRef\(null\);/);
+  assert.match(appSource, /function focusAiInsightTarget\(target\)/);
+  assert.match(appSource, /querySelector\(`\[data-ai-insight-target="\$\{target\}"\]`\)/);
+  assert.match(appSource, /classList\.add\('ai-insight-focus'\)/);
+  assert.match(appSource, /const focusBlock = target === 'compute' \? 'start' : 'center';/);
+  assert.match(appSource, /scrollIntoView\(\{ behavior: 'smooth', block: focusBlock \}\)/);
+  assert.match(appSource, /function handleAiInsightNavigation\(target\)/);
+  assert.match(appSource, /target === 'compute'/);
+  assert.match(appSource, /setActiveMenu\('compute'\)/);
+  assert.match(appSource, /setActiveMenu\('overview'\)/);
+  assert.match(appSource, /onNavigateInsight=\{handleAiInsightNavigation\}/);
+  assert.match(appSource, /data-ai-insight-target="trend"/);
+  assert.match(appSource, /data-ai-insight-target="versions"/);
+  assert.match(operatingOverviewSource, /data-ai-insight-target="performance"/);
+  assert.match(operatingOverviewSource, /data-ai-insight-target=\{insightTarget\}/);
+  assert.match(operatingOverviewSource, /insightTarget="channels"/);
+  assert.match(computePageSource, /data-ai-insight-target="compute"/);
+  assert.match(dashboardCss, /\[data-ai-insight-target\]\s*\{[\s\S]*?scroll-margin-top:\s*96px;/);
+  assert.match(dashboardCss, /\.ai-insight-focus\s*\{[\s\S]*?outline:[\s\S]*?var\(--line-2\)[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
 });
 
 test('places the AI mascot inside a subdued sidebar status card', () => {

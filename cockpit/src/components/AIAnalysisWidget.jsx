@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:08:00 CST
+ 更新内容: 接入会话级事实简报与 CEO 分析定位，续费实时计算，并将月报表述收敛为无阈值的续费观察。
+*/
+/*
  更新时间: 2026-07-09 13:18:11 CST
  更新内容: 对齐福客帧级 motion bridge 后的 wave/guide/click 时长，避免动作未播完就被切回 resting 状态。
 */
@@ -56,18 +60,21 @@ import ShinyText from './ShinyText/ShinyText';
 import {
   CHANNEL_ROI,
   CHANNELS,
+  COMPUTE_OVERVIEW,
+  COMPUTE_USAGE_TREND,
   KPI,
   KPI_DERIVED,
   META,
   MONTHLY_TREND,
-  RENEWAL_OVERVIEW,
+  OPERATING_OVERVIEW_METRICS,
   VERSIONS,
+  getRenewalModalData,
 } from '../data/mock';
 import {
   MASCOT_ACTIONS,
-  getIdleCompanionCue,
   getSpeechAction,
 } from '../lib/mascotCompanion';
+import { buildBusinessBrief } from '../lib/businessBrief';
 import {
   buildHoverCueCacheKey,
   getHoverCueTextFromElement,
@@ -83,15 +90,40 @@ const INITIAL_MESSAGE = {
 };
 
 const QUICK_PROMPTS = [
-  '本月经营最需要 CEO 关注的三个问题是什么？',
-  '哪个销售维度拖后腿，应该怎么处理？',
-  '从 ROI 和目标完成率看，下个月预算怎么调？',
+  {
+    id: 'daily-brief',
+    label: '今日简报',
+    prompt: '请生成今日经营简报。若当前快照没有单独的今日销售额，请明确说明没有单独的今日销售额，以下结论基于截至当前页面的本月累计数据，不要把累计值写成当日值。',
+  },
+  {
+    id: 'monthly-report',
+    label: '本月报告',
+    prompt: '请生成本月经营报告，按业绩、渠道、版本、算力、续费观察和下一步动作分段，并严格区分事实、可能原因、数据缺口和下一步动作。',
+  },
+  {
+    id: 'channel-version',
+    label: '渠道与版本',
+    prompt: '请分析渠道完成率与核心版本构成：先列事实，再说明可能原因、数据缺口和建议；试用版与增购包不要作为核心版本。',
+  },
+  {
+    id: 'revenue-compute',
+    label: '业绩与算力',
+    prompt: '请对照业绩回款与算力新增、消耗、余额和使用趋势，判断两者是否同步；只描述数据支持的事实，原因必须标注为可能原因。',
+  },
+];
+const INSIGHT_ACTIONS = [
+  { target: 'performance', label: '业绩', icon: 'target' },
+  { target: 'channels', label: '渠道', icon: 'channel' },
+  { target: 'trend', label: '趋势', icon: 'calendar' },
+  { target: 'versions', label: '版本', icon: 'overview' },
+  { target: 'compute', label: '算力', icon: 'compute' },
 ];
 const HOVER_CUE_DELAY = 900;
 const HOVER_CUE_DURATION = 4200;
 const HOVER_BUBBLE_COOLDOWN = 6000;
-const DEFAULT_BUBBLE_INTERVAL = 10000;
-const DEFAULT_BUBBLE_DURATION = 4000;
+const BUSINESS_BRIEF_DELAY = 1800;
+const BUSINESS_BRIEF_DURATION = 7200;
+const BUSINESS_BRIEF_STORAGE_PREFIX = 'ceo-dashboard:business-brief';
 const GREETING_WAVE_DELAY = 240;
 const GREETING_WAVE_DURATION = 1200;
 const GUIDE_MOTION_DURATION = 1200;
@@ -115,8 +147,13 @@ function buildDashboardSnapshot(activeMenu, dim, channelKey) {
     channels: CHANNELS,
     channelRoi: CHANNEL_ROI,
     versions: VERSIONS,
-    renewal: RENEWAL_OVERVIEW,
+    renewal: getRenewalModalData('all', 'month', 'all').overview,
     trend: MONTHLY_TREND,
+    operating: OPERATING_OVERVIEW_METRICS,
+    compute: {
+      overview: COMPUTE_OVERVIEW,
+      usageTrend: COMPUTE_USAGE_TREND,
+    },
   };
 }
 
@@ -142,7 +179,14 @@ async function readStream(response, onChunk, signal) {
   if (tail) onChunk(tail);
 }
 
-export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', companionCue, context = 'dashboard' }) {
+export default function AIAnalysisWidget({
+  activeMenu,
+  dim,
+  channelKey = 'all',
+  companionCue,
+  context = 'dashboard',
+  onNavigateInsight,
+}) {
   const [open, setOpen] = useState(false);
   const [mascotAction, setMascotActionState] = useState(MASCOT_ACTIONS.idle);
   const [bubbleCue, setBubbleCue] = useState(null);
@@ -161,17 +205,21 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   const bubbleTimerRef = useRef(null);
   const bubbleExitTimerRef = useRef(null);
   const greetingWaveTimerRef = useRef(null);
+  const businessBriefTimerRef = useRef(null);
+  const businessBriefShownRef = useRef(new Set());
+  const showCompanionCueRef = useRef(null);
   const bubbleFrameRef = useRef(null);
   const hoverCueTimerRef = useRef(null);
   const hoverCueAbortRef = useRef(null);
   const hoverCueCacheRef = useRef(new Map());
   const hoverCueActiveKeyRef = useRef('');
   const hoverCueRequestIdRef = useRef(0);
-  const idlePromptIndexRef = useRef(0);
   const lastBubbleShownAtRef = useRef(0);
   const openStateRef = useRef(false);
 
   const snapshot = useMemo(() => buildDashboardSnapshot(activeMenu, dim, channelKey), [activeMenu, dim, channelKey]);
+  const businessBrief = useMemo(() => buildBusinessBrief(snapshot), [snapshot]);
+  showCompanionCueRef.current = showCompanionCue;
 
   useEffect(() => {
     openStateRef.current = open;
@@ -293,11 +341,48 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
     clearTimeout(bubbleTimerRef.current);
     clearTimeout(bubbleExitTimerRef.current);
     clearTimeout(greetingWaveTimerRef.current);
+    clearTimeout(businessBriefTimerRef.current);
     clearTimeout(hoverCueTimerRef.current);
     if (bubbleFrameRef.current) {
       window.cancelAnimationFrame(bubbleFrameRef.current);
     }
   }, []);
+
+  useEffect(() => {
+    if (context !== 'dashboard') return undefined;
+
+    const businessMonth = snapshot.meta?.monthLabel || 'current';
+    const storageKey = `${BUSINESS_BRIEF_STORAGE_PREFIX}:${businessMonth}`;
+    if (businessBriefShownRef.current.has(storageKey)) return undefined;
+    try {
+      if (window.sessionStorage.getItem(storageKey) === 'shown') {
+        businessBriefShownRef.current.add(storageKey);
+        return undefined;
+      }
+    } catch {
+      // The brief still works when storage is unavailable (for example, strict privacy mode).
+    }
+
+    businessBriefTimerRef.current = window.setTimeout(() => {
+      const shown = showCompanionCueRef.current?.(
+        { text: businessBrief.text, action: MASCOT_ACTIONS.talk },
+        {
+          openDialog: false,
+          duration: BUSINESS_BRIEF_DURATION,
+        },
+      );
+      if (!shown) return;
+      businessBriefShownRef.current.add(storageKey);
+
+      try {
+        window.sessionStorage.setItem(storageKey, 'shown');
+      } catch {
+        // Avoid blocking the dashboard when storage is unavailable.
+      }
+    }, BUSINESS_BRIEF_DELAY);
+
+    return () => clearTimeout(businessBriefTimerRef.current);
+  }, [businessBrief, context, snapshot.meta?.monthLabel]);
 
   useEffect(() => {
     greetingWaveTimerRef.current = window.setTimeout(() => {
@@ -398,22 +483,6 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
   }, [companionCue]);
 
   useEffect(() => {
-    if (open) return undefined;
-
-    const idleTimer = window.setInterval(() => {
-      if (hoverCueActiveKeyRef.current) return;
-      idlePromptIndexRef.current += 1;
-      showCompanionCue(getIdleCompanionCue(idlePromptIndexRef.current), {
-        openDialog: false,
-        duration: DEFAULT_BUBBLE_DURATION,
-        respectCooldown: true,
-      });
-    }, DEFAULT_BUBBLE_INTERVAL);
-
-    return () => window.clearInterval(idleTimer);
-  }, [open]);
-
-  useEffect(() => {
     setMascotAction((current) => (
       current === MASCOT_ACTIONS.click || current === MASCOT_ACTIONS.guide ? current : getRestingMascotAction(open)
     ));
@@ -493,6 +562,11 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
 
   function closeAiDialog() {
     setOpen(false);
+  }
+
+  function handleInsightAction(target) {
+    onNavigateInsight?.(target);
+    closeAiDialog();
   }
 
   function handleMascotClick() {
@@ -622,10 +696,24 @@ export default function AIAnalysisWidget({ activeMenu, dim, channelKey = 'all', 
                 </button>
               </header>
 
+              <div className="ai-insight-actions" aria-label="定位看板指标">
+                {INSIGHT_ACTIONS.map((action) => (
+                  <button
+                    key={action.target}
+                    type="button"
+                    title={`定位到${action.label}数据`}
+                    onClick={() => handleInsightAction(action.target)}
+                  >
+                    <AppIcon name={action.icon} size={15} />
+                    <span>{action.label}</span>
+                  </button>
+                ))}
+              </div>
+
               <div className="ai-quick-list" aria-label="快捷问题">
-                {QUICK_PROMPTS.map((prompt) => (
-                  <button key={prompt} type="button" onClick={() => submit(prompt)} disabled={loading}>
-                    {prompt}
+                {QUICK_PROMPTS.map((item) => (
+                  <button key={item.id} type="button" onClick={() => submit(item.prompt)} disabled={loading}>
+                    {item.label}
                   </button>
                 ))}
               </div>

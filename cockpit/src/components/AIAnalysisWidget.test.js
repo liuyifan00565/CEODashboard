@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:15:00 CST
+ 更新内容: 覆盖短屏滚动、会话与内存去重、实时续费观察、CEO 快捷分析、算力快照和看板定位入口。
+*/
+/*
  更新时间: 2026-07-09 13:18:11 CST
  更新内容: 验收 AI 小人临时动作时长与福客帧级 motion bridge 对齐，避免 guide/click 未播完就切回 resting。
 */
@@ -134,18 +138,68 @@ test('plays a visible greeting wave shortly after the launcher first mounts', ()
   assert.doesNotMatch(componentSource, /onMouseEnter=\{[^}]*wave/);
 });
 
-test('shows default Fu Xiaoke bubbles every 10 seconds only when no readable text is hovered', () => {
-  assert.match(componentSource, /const DEFAULT_BUBBLE_INTERVAL = 10000;/);
-  assert.match(componentSource, /const DEFAULT_BUBBLE_DURATION = 4000;/);
+test('shows one factual business brief per browser session and business month', () => {
+  assert.match(componentSource, /import \{ buildBusinessBrief \} from '\.\.\/lib\/businessBrief';/);
+  assert.match(componentSource, /const BUSINESS_BRIEF_DELAY = 1800;/);
+  assert.match(componentSource, /const BUSINESS_BRIEF_DURATION = 7200;/);
+  assert.match(componentSource, /const BUSINESS_BRIEF_STORAGE_PREFIX = 'ceo-dashboard:business-brief';/);
   assert.match(componentSource, /const \[bubbleCue,\s*setBubbleCue\] = useState\(null\);/);
   assert.match(componentSource, /const \[bubbleVisible,\s*setBubbleVisible\] = useState\(false\);/);
-  assert.match(componentSource, /const idlePromptIndexRef = useRef\(0\);/);
-  assert.match(componentSource, /if \(hoverCueActiveKeyRef\.current\) return;/);
-  assert.match(componentSource, /idlePromptIndexRef\.current \+= 1;/);
-  assert.match(componentSource, /showCompanionCue\(getIdleCompanionCue\(idlePromptIndexRef\.current\), \{\s*openDialog: false,\s*duration: DEFAULT_BUBBLE_DURATION,\s*respectCooldown: true,\s*\}\);/s);
-  assert.match(componentSource, /\}, DEFAULT_BUBBLE_INTERVAL\);/);
+  assert.match(componentSource, /const businessBriefTimerRef = useRef\(null\);/);
+  assert.match(componentSource, /const businessBriefShownRef = useRef\(new Set\(\)\);/);
+  assert.match(componentSource, /const showCompanionCueRef = useRef\(null\);/);
+  assert.match(componentSource, /buildBusinessBrief\(snapshot\)/);
+  assert.match(componentSource, /window\.sessionStorage\.getItem\(storageKey\)/);
+  assert.match(componentSource, /window\.sessionStorage\.setItem\(storageKey, 'shown'\)/);
+  assert.match(componentSource, /businessBriefShownRef\.current\.has\(storageKey\)/);
+  assert.match(componentSource, /businessBriefShownRef\.current\.add\(storageKey\)/);
+  assert.match(componentSource, /showCompanionCueRef\.current\?\.\(\s*\{ text: businessBrief\.text, action: MASCOT_ACTIONS\.talk \},\s*\{\s*openDialog: false,\s*duration: BUSINESS_BRIEF_DURATION,\s*\},\s*\);/s);
   assert.match(componentSource, /className=\{`ai-bubble\$\{bubbleVisible \? ' ai-bubble--visible' : ''\}`\}/);
+  assert.doesNotMatch(componentSource, /DEFAULT_BUBBLE_INTERVAL|getIdleCompanionCue|idlePromptIndexRef|window\.setInterval/);
   assert.doesNotMatch(componentSource, /ai-bubble-name/);
+});
+
+test('includes CEO quick analysis prompts and deterministic dashboard data in the AI snapshot', () => {
+  assert.match(componentSource, /label: '今日简报'/);
+  assert.match(componentSource, /label: '本月报告'/);
+  assert.match(componentSource, /label: '渠道与版本'/);
+  assert.match(componentSource, /label: '业绩与算力'/);
+  assert.match(componentSource, /没有单独的今日销售额/);
+  assert.match(componentSource, /事实、可能原因、数据缺口和下一步动作/);
+  assert.match(componentSource, /续费观察/);
+  assert.doesNotMatch(componentSource, /续费风险/);
+  assert.match(componentSource, /OPERATING_OVERVIEW_METRICS/);
+  assert.match(componentSource, /COMPUTE_OVERVIEW/);
+  assert.match(componentSource, /COMPUTE_USAGE_TREND/);
+  assert.match(componentSource, /getRenewalModalData/);
+  assert.match(componentSource, /operating: OPERATING_OVERVIEW_METRICS/);
+  assert.match(componentSource, /compute: \{\s*overview: COMPUTE_OVERVIEW,\s*usageTrend: COMPUTE_USAGE_TREND,/s);
+  assert.match(componentSource, /renewal: getRenewalModalData\('all', 'month', 'all'\)\.overview/);
+  assert.doesNotMatch(componentSource, /RENEWAL_OVERVIEW/);
+});
+
+test('offers compact controls for locating the relevant dashboard sections', () => {
+  assert.match(componentSource, /onNavigateInsight/);
+  assert.match(componentSource, /const INSIGHT_ACTIONS = \[/);
+  assert.match(componentSource, /target: 'performance'/);
+  assert.match(componentSource, /target: 'channels'/);
+  assert.match(componentSource, /target: 'trend'/);
+  assert.match(componentSource, /target: 'versions'/);
+  assert.match(componentSource, /target: 'compute'/);
+  assert.match(componentSource, /className="ai-insight-actions" aria-label="定位看板指标"/);
+  assert.match(componentSource, /onNavigateInsight\?\.\(target\)/);
+});
+
+test('keeps the mobile AI dialog viewport-fixed without dropping the launcher glass blur', () => {
+  const mobileBlock = componentCss.match(/@media \(max-width:\s*760px\)\s*\{(?<body>[\s\S]*?)\n\}/)?.groups?.body ?? '';
+
+  assert.match(mobileBlock, /\.ai-widget\s*\{[\s\S]*?-webkit-backdrop-filter:\s*none;[\s\S]*?backdrop-filter:\s*none;/);
+  assert.match(mobileBlock, /\.ai-widget::before\s*\{[\s\S]*?backdrop-filter:\s*var\(--dashboard-card-blur\);/);
+  assert.match(mobileBlock, /\.ai-card-wrap\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?left:\s*12px;[\s\S]*?right:\s*12px;[\s\S]*?bottom:\s*12px;/);
+  assert.match(mobileBlock, /\.ai-insight-actions\s*\{[\s\S]*?grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/);
+  assert.match(mobileBlock, /\.ai-card \.border-glow-inner\s*\{[\s\S]*?max-height:\s*calc\(100dvh - 24px\);/);
+  assert.match(mobileBlock, /\.ai-card-inner\s*\{[\s\S]*?min-height:\s*0;[\s\S]*?height:\s*min\(548px, calc\(100dvh - 24px\)\);[\s\S]*?overflow-y:\s*auto;/);
+  assert.match(mobileBlock, /\.ai-message-list\s*\{[\s\S]*?min-height:\s*96px;/);
 });
 
 test('delays and throttles readable-text hover bubbles', () => {
@@ -229,9 +283,10 @@ test('keeps the AI dialog content and behavior intact', () => {
   assert.match(componentSource, /<section className="ai-card-inner" aria-label="AI 分析对话框">/);
   assert.match(componentSource, /<h2>AI 经营分析<\/h2>/);
   assert.match(componentSource, /<p>通义 Qwen3\.7 Max · 当前页面数据<\/p>/);
-  assert.match(componentSource, /本月经营最需要 CEO 关注的三个问题是什么？/);
-  assert.match(componentSource, /哪个销售维度拖后腿，应该怎么处理？/);
-  assert.match(componentSource, /从 ROI 和目标完成率看，下个月预算怎么调？/);
+  assert.match(componentSource, /今日简报/);
+  assert.match(componentSource, /本月报告/);
+  assert.match(componentSource, /渠道与版本/);
+  assert.match(componentSource, /业绩与算力/);
   assert.match(componentSource, /placeholder="问一下当前经营数据\.\.\."/);
   assert.match(componentSource, /fetch\('\/api\/ai\/analyze'/);
 });

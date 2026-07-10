@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 12:28:00 CST
+ 更新内容: 新增福小客指标定位的滚动留白与短暂玻璃焦点反馈，不改变卡片底色。
+*/
+/*
  更新时间: 2026-07-08 16:57:24 CST
  更新内容: 删除顶部“更新数据”按钮残留样式，右侧工具栏只保留搜索控件。
 */
@@ -429,3 +433,13 @@
 }
 .glass-toggle:hover{color:var(--txt);border-color:var(--line-2)}
 .glass-toggle--on{color:var(--txt);border-color:var(--line-2);background:var(--ai-chip-hover)}
+.dash-content [data-ai-insight-target] {
+  scroll-margin-top: 96px;
+}
+
+.dash-content .ai-insight-focus {
+  outline: 2px solid var(--line-2);
+  outline-offset: 5px;
+  box-shadow: var(--glass-shadow);
+  transition: outline-color .2s ease, box-shadow .2s ease;
+}

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-10 12:28:00 CST  更新内容: 为月度业绩和渠道经营区增加福小客洞察定位标识。 */
 /* 更新时间: 2026-07-09 17:39:04 CST  更新内容: 年度目标进度条改为内嵌在年度左侧事实区两个胶囊下方，避免 grid 位移导致被卡片裁切消失。 */
 /* 更新时间: 2026-07-09 17:28:41 CST  更新内容: 回款半环 tooltip 加入扇区色标识并传入当前扇区色，避免悬浮信息像临时调试弹窗。 */
 /* 更新时间: 2026-07-09 17:16:09 CST  更新内容: 年度目标进度 footer 删除可见标题文字，并让进度条向左贴近累计/目标数字。 */
@@ -406,9 +407,9 @@ function AnnualRecoveryStructure({ structure, option }) {
   );
 }
 
-function OperatingSituation({ structure, subLabel = '实际回款 / 目标回款' }) {
+function OperatingSituation({ structure, subLabel = '实际回款 / 目标回款', insightTarget }) {
   return (
-    <aside className="op-operating-side">
+    <aside className="op-operating-side" data-ai-insight-target={insightTarget}>
       <div className="op-operating-head">
         <div>
           <h2>经营情况</h2>
@@ -481,7 +482,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
   return (
     <div className="op-overview">
       <SearchResultBorder active={matchesSearchTerm(progressKeywords, searchTerm)} className="op-search-result op-search-result--progress">
-        <section className="op-panel op-panel--progress" data-anim>
+        <section className="op-panel op-panel--progress" data-ai-insight-target="performance" data-anim>
           <header className="op-progress-head">
             <div>
               <h1>{progressTitle}</h1>
@@ -517,6 +518,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
 
             <OperatingSituation
               structure={monthlyStructure}
+              insightTarget="channels"
             />
           </div>
         </section>

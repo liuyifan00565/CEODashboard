@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 14:55:00 CST
+ 更新内容: 接入福小客经营洞察定位，并让长算力页按顶部而非页面中段对齐。
+*/
+/*
  更新时间: 2026-07-09 13:13:45 CST
  更新内容: 为经营总览与数据维护之间的侧边导航切换传递模式标识，配合侧栏平滑换组动效。
 */
@@ -229,6 +233,8 @@ export default function App() {
   const secondaryGridRef = useRef(null);
   const pendingMenuScrollRef = useRef(false);
   const pendingSearchScrollRef = useRef(false);
+  const pendingAiInsightRef = useRef(null);
+  const aiInsightFocusTimerRef = useRef(null);
   const isMaintenancePage = maintenanceMode;
   const isComputePage = activeMenu === 'compute';
   const activeChannelKey = getDashboardChannelKey(activeMenu);
@@ -365,6 +371,52 @@ export default function App() {
     });
   }
 
+  function focusAiInsightTarget(target) {
+    const root = gridRef.current;
+    const targetNode = root?.querySelector(`[data-ai-insight-target="${target}"]`);
+    if (!targetNode) return false;
+
+    root.querySelectorAll('.ai-insight-focus').forEach((node) => {
+      node.classList.remove('ai-insight-focus');
+    });
+    clearTimeout(aiInsightFocusTimerRef.current);
+    targetNode.classList.add('ai-insight-focus');
+    const focusBlock = target === 'compute' ? 'start' : 'center';
+    targetNode.scrollIntoView({ behavior: 'smooth', block: focusBlock });
+    aiInsightFocusTimerRef.current = window.setTimeout(() => {
+      targetNode.classList.remove('ai-insight-focus');
+    }, 2200);
+    return true;
+  }
+
+  function handleAiInsightNavigation(target) {
+    pendingAiInsightRef.current = target;
+    pendingMenuScrollRef.current = false;
+    setMaintenanceMode(false);
+
+    if (target === 'compute') {
+      if (activeMenu === 'compute') {
+        requestAnimationFrame(() => {
+          focusAiInsightTarget(target);
+          pendingAiInsightRef.current = null;
+        });
+      } else {
+        setActiveMenu('compute');
+      }
+      return;
+    }
+
+    if (maintenanceMode || activeMenu === 'compute') {
+      setActiveMenu('overview');
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      focusAiInsightTarget(target);
+      pendingAiInsightRef.current = null;
+    });
+  }
+
   function jumpToNextSearchResult() {
     if (!searchStats.total) return;
     pendingSearchScrollRef.current = true;
@@ -436,6 +488,21 @@ export default function App() {
     };
   }, [contentKey, dashboardDataVersion]);
 
+  useLayoutEffect(() => {
+    const target = pendingAiInsightRef.current;
+    if (!target) return undefined;
+
+    const focusFrame = requestAnimationFrame(() => {
+      focusAiInsightTarget(target);
+      pendingAiInsightRef.current = null;
+    });
+    return () => cancelAnimationFrame(focusFrame);
+  }, [contentKey, dashboardDataVersion]);
+
+  useEffect(() => () => {
+    clearTimeout(aiInsightFocusTimerRef.current);
+  }, []);
+
   if (!isDashboardDataReady) {
     return (
       <div className="app">
@@ -465,6 +532,7 @@ export default function App() {
             channelKey={activeChannelKey}
             companionCue={companionCue}
             context={maintenanceMode ? 'maintenance' : 'dashboard'}
+            onNavigateInsight={handleAiInsightNavigation}
           />
         </aside>
 
@@ -535,7 +603,7 @@ export default function App() {
                 />
 
                 <div className="dash-secondary-grid" ref={secondaryGridRef}>
-                  <div className="dash-secondary-cell dash-secondary-cell--trend" data-anim>
+                  <div className="dash-secondary-cell dash-secondary-cell--trend" data-ai-insight-target="trend" data-anim>
                     <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.trend, searchTerm)}>
                       <MonthlyTrend channelKey={activeChannelKey} />
                     </SearchResultBorder>
@@ -556,7 +624,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="dash-secondary-cell dash-secondary-cell--version" data-anim>
+                  <div className="dash-secondary-cell dash-secondary-cell--version" data-ai-insight-target="versions" data-anim>
                     <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.version, searchTerm)}>
                       <VersionFinancePanel channelKey={activeChannelKey} />
                     </SearchResultBorder>

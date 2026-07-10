@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 14:58:00 CST
+ 更新内容: 新增 AI 指标定位工具栏，并让移动弹窗在短视口和动态键盘高度下保持可滚动可达。
+*/
+/*
  Update time: 2026-07-07 18:12:09 CST
  Update content: Reserve guarded runtime space for the AI mascot launcher so laptop, wave, guide and idle sprites are never clipped.
 */
@@ -276,6 +280,53 @@
   gap: 8px;
 }
 
+.ai-insight-actions {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.ai-insight-actions button {
+  min-width: 0;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 7px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: transparent;
+  color: color-mix(in srgb, var(--txt) 88%, transparent);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color .18s ease, background .18s ease, color .18s ease;
+}
+
+.ai-insight-actions button:hover {
+  border-color: color-mix(in srgb, var(--line-2) 72%, var(--txt) 28%);
+  background: var(--ai-chip-hover);
+  color: var(--txt);
+}
+
+.ai-insight-actions button:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--line-2));
+  outline-offset: 2px;
+}
+
+.ai-insight-actions svg {
+  flex: 0 0 auto;
+}
+
+.ai-insight-actions span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .ai-quick-list button {
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -422,6 +473,20 @@
   .ai-widget {
     align-items: flex-end;
     padding: 8px 10px;
+    isolation: isolate;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .ai-widget::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    -webkit-backdrop-filter: var(--dashboard-card-blur);
+    backdrop-filter: var(--dashboard-card-blur);
+    pointer-events: none;
   }
 
   .ai-orb {
@@ -452,7 +517,12 @@
     transform: rotate(45deg);
   }
 
+  .ai-insight-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .ai-card-wrap {
+    position: fixed;
     left: 12px;
     right: 12px;
     bottom: 12px;
@@ -460,8 +530,20 @@
     transform-origin: right bottom;
   }
 
+  .ai-card .border-glow-inner {
+    max-height: calc(100dvh - 24px);
+  }
+
   .ai-card-inner {
-    min-height: 480px;
+    min-height: 0;
+    height: min(548px, calc(100dvh - 24px));
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .ai-message-list {
+    min-height: 96px;
   }
 }
 

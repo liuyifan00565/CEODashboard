@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 12:28:00 CST
+ 更新内容: 为算力经营页增加福小客洞察定位标识。
+*/
+/*
  更新时间: 2026-07-08 18:51:50 CST
  更新内容: 算力页升级为经营健康驾驶舱，新增利用率、风险客户、供需关系、版本效率洞察与客户动作标签。
 */
@@ -1226,7 +1230,7 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
   }
 
   return (
-    <div className="cpu-page">
+    <div className="cpu-page" data-ai-insight-target="compute">
       <div className="cpu-kpi-grid">
         {kpis.map((item) => (
           <KpiCard
