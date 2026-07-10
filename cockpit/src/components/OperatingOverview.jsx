@@ -1,3 +1,6 @@
+/* 更新时间: 2026-07-10 10:54:38 CST  更新内容: 将“点击查看近期明细”从月度卡总标题右侧移到本月回款结构半环图标题右上方。 */
+/* 更新时间: 2026-07-10 10:53:56 CST  更新内容: 删除月度回款大数字上方重复的“本月回款”小标签，进一步收敛数字区层级。 */
+/* 更新时间: 2026-07-10 10:51:28 CST  更新内容: 年度目标进度条移除累计/目标文字和外围胶囊，只保留进度条与完成率百分比。 */
 /* 更新时间: 2026-07-09 17:39:04 CST  更新内容: 年度目标进度条改为内嵌在年度左侧事实区两个胶囊下方，避免 grid 位移导致被卡片裁切消失。 */
 /* 更新时间: 2026-07-09 17:28:41 CST  更新内容: 回款半环 tooltip 加入扇区色标识并传入当前扇区色，避免悬浮信息像临时调试弹窗。 */
 /* 更新时间: 2026-07-09 17:16:09 CST  更新内容: 年度目标进度 footer 删除可见标题文字，并让进度条向左贴近累计/目标数字。 */
@@ -366,7 +369,7 @@ function channelStructureOption(structure, periodMeta, tokens) {
   };
 }
 
-function RecoveryStructure({ structure, option, periodMeta }) {
+function RecoveryStructure({ structure, option, periodMeta, action = null }) {
   return (
     <div className="op-recovery-structure">
       <div className="op-structure-head">
@@ -374,6 +377,7 @@ function RecoveryStructure({ structure, option, periodMeta }) {
           <h2>{periodMeta.chartName}</h2>
           <span>单位：万元</span>
         </div>
+        {action}
       </div>
 
       <div
@@ -386,12 +390,17 @@ function RecoveryStructure({ structure, option, periodMeta }) {
   );
 }
 
-function MonthlyRecoveryStructure({ structure, option }) {
+function MonthlyRecoveryStructure({ structure, option, detailDisabled, onDetailClick }) {
   return (
     <RecoveryStructure
       structure={structure}
       option={option}
       periodMeta={MONTH_STRUCTURE_META}
+      action={(
+        <DetailLink disabled={detailDisabled} onClick={onDetailClick}>
+          点击查看近期明细
+        </DetailLink>
+      )}
     />
   );
 }
@@ -486,17 +495,10 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             <div>
               <h1>{progressTitle}</h1>
             </div>
-            <DetailLink
-              disabled={!monthKpiCard || !onOpenKpi}
-              onClick={() => onOpenKpi(monthKpiCard)}
-            >
-              点击查看近期明细
-            </DetailLink>
           </header>
 
           <div className="op-month-grid">
             <div className="op-month-primary">
-              <span className="op-summary-label">本月回款</span>
               <div className="op-month-primary-value-row">
                 <b>{formatWan(KPI.monthRecovered)}万</b>
                 <span className="op-summary-sub op-month-refund-note">退款{formatWan(KPI.monthRefund ?? 0)}万</span>
@@ -513,6 +515,8 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             <MonthlyRecoveryStructure
               structure={monthlyStructure}
               option={monthlyStructureOption}
+              detailDisabled={!monthKpiCard || !onOpenKpi}
+              onDetailClick={() => onOpenKpi(monthKpiCard)}
             />
 
             <OperatingSituation
@@ -552,10 +556,9 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
               </div>
               <div
                 className="op-annual-progress-footer"
-                aria-label={`年度目标进度 ${formatWan(KPI.yearRecovered)} 万 / ${formatWan(KPI.yearTarget)} 万，完成率 ${formatPct(KPI_DERIVED.yearCompletion)}`}
+                aria-label={`年度目标完成率 ${formatPct(KPI_DERIVED.yearCompletion)}`}
               >
                 <div className="op-annual-progress-main">
-                  <b>{formatWan(KPI.yearRecovered)}万 / {formatWan(KPI.yearTarget)}万</b>
                   <div className="op-annual-progress-track">
                     <span className="op-annual-fill" style={{ width: annualCapsuleWidth }} />
                   </div>

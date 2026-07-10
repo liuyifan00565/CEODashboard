@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-10 10:54:38 CST  更新内容: 月度近期明细入口适配回款结构标题右上方，以更紧凑的文字热区贴近半环图。 */
+/* 更新时间: 2026-07-10 10:51:28 CST  更新内容: 年度目标进度条下移并去除外围胶囊、累计/目标数字，只保留裸进度条和右侧完成率。 */
 /* 更新时间: 2026-07-10 10:32:45 CST  更新内容: 低有效高度桌面档回收月度/年度卡片内部空白，保持主数字字号并确保趋势财务区完整进入首屏。 */
 /* 更新时间: 2026-07-09 18:37:27 CST  更新内容: 为首屏同时露出月度、年度和版本情况继续压缩经营主卡高度，收小图表区、主数字和渠道行高。 */
 /* 更新时间: 2026-07-09 18:07:32 CST  更新内容: 按截图红线继续上收月度与年度经营主卡底部，将回款结构图区高度压到 190px，减少右侧经营列表下方留白。 */
@@ -324,6 +326,12 @@
   margin-top: 5px;
 }
 
+.op-structure-head .op-detail-link {
+  margin: -6px -4px 0 0;
+  padding: 8px 4px;
+  font-size: 12px;
+}
+
 .op-channel-chart-wrap {
   position: relative;
   min-width: 0;
@@ -475,34 +483,19 @@
 .op-annual-progress-footer {
   width: min(calc(100% + clamp(288px, calc(27.5vw - 105px), 424px)), calc(100vw - 96px));
   display: grid;
-  gap: 5px;
   align-self: start;
-  margin-top: clamp(2px, .35vw, 4px);
+  margin-top: clamp(10px, .85vw, 14px);
   transform: none;
   z-index: 2;
 }
 
 .op-annual-progress-main {
   min-width: 0;
-  min-height: 28px;
+  min-height: 20px;
   display: grid;
-  grid-template-columns: auto minmax(140px, 1fr) auto;
+  grid-template-columns: minmax(140px, 1fr) auto;
   align-items: center;
-  gap: clamp(6px, .7vw, 9px);
-  padding: 3px 9px;
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 14px;
-  background: rgba(255,255,255,.026);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
-}
-
-.op-annual-progress-main > b {
-  color: rgba(247,248,252,.88);
-  font-size: 13px;
-  font-weight: 780;
-  line-height: 1;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+  gap: clamp(8px, .8vw, 12px);
 }
 
 .op-annual-progress-main > strong {
@@ -656,7 +649,7 @@
   }
 
   .op-annual-progress-main {
-    min-height: 26px;
+    min-height: 20px;
   }
 }
 
@@ -741,10 +734,6 @@
 
   .op-annual-progress-main {
     grid-template-columns: 1fr auto;
-  }
-
-  .op-annual-progress-main > b {
-    grid-column: 1 / -1;
   }
 
   .op-channel-item {

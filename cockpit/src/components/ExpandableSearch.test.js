@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 10:51:28 CST
+ 更新内容: 新增侧栏搜索形态回归，锁定紧凑高度、完整宽度和折叠态“搜索”标签。
+*/
+/*
  Update time: 2026-07-02 17:18:50 CST
  Update content: Add Word-style search counter and Enter-next navigation regression tests.
 */
@@ -42,4 +46,13 @@ test('uses Enter to jump to the next result without submitting the field', () =>
 test('uses the concise keyword placeholder when search is expanded', () => {
   assert.match(componentSource, /placeholder="请输入关键词"/);
   assert.doesNotMatch(componentSource, /placeholder="搜索经营模块、渠道、版本…"/);
+});
+
+test('supports the compact sidebar placement without changing search behavior', () => {
+  assert.match(componentSource, /placement = 'toolbar'/);
+  assert.match(componentSource, /const isSidebar = placement === 'sidebar';/);
+  assert.match(componentSource, /width=\{isSidebar \? '100%' : expanded \? 318 : 54\}/);
+  assert.match(componentSource, /height=\{isSidebar \? 44 : 54\}/);
+  assert.match(componentSource, /search-wrap--sidebar/);
+  assert.match(componentSource, /<span className="search-label">搜索<\/span>/);
 });

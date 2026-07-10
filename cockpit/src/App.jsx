@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 10:51:28 CST
+ 更新内容: 将搜索入口移到左侧导航下方，并移除主内容独占的搜索顶栏，让经营总览整体上移释放首屏空间。
+*/
+/*
  更新时间: 2026-07-10 10:26:00 CST
  更新内容: 将月度经营趋势、开户数和总投入费比提升到年度总览下方，版本情况下移，优先保证首屏经营决策信息完整可见。
 */
@@ -417,6 +421,15 @@ export default function App() {
             brandTitle="福客经营驾驶舱"
             brandMeta={sidebarBrandMeta}
           />
+          <div className="dash-sidebar-search">
+            <ExpandableSearch
+              placement="sidebar"
+              onChange={setSearchTerm}
+              currentIndex={searchStats.current}
+              totalResults={searchStats.total}
+              onNext={jumpToNextSearchResult}
+            />
+          </div>
           <AIAnalysisWidget
             activeMenu={activeMenu}
             dim={dim}
@@ -427,17 +440,6 @@ export default function App() {
         </aside>
 
         <div className="dash-main">
-          <header className="dash-topbar">
-            <div className="dash-tools">
-              <ExpandableSearch
-                onChange={setSearchTerm}
-                currentIndex={searchStats.current}
-                totalResults={searchStats.total}
-                onNext={jumpToNextSearchResult}
-              />
-            </div>
-          </header>
-
           <div className="dash-content" ref={gridRef} key={contentRenderKey}>
             {isMaintenancePage ? (
               <MaintenancePage activePage={activeMaintenanceMenu} onBack={handleMaintenanceBack} />

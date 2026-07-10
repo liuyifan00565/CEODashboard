@@ -1,4 +1,16 @@
 /*
+ 更新时间: 2026-07-10 10:56:13 CST
+ 更新内容: 侧栏搜索折叠态改为水平弹性布局，确保搜索图标与“搜索”文字稳定保持单行。
+*/
+/*
+ 更新时间: 2026-07-10 10:53:56 CST
+ 更新内容: 主内容桌面端两侧留白最大值由 40px 收到 28px，让总览卡片适度加宽且保持安全边距。
+*/
+/*
+ 更新时间: 2026-07-10 10:51:28 CST
+ 更新内容: 搜索入口改为左侧导航下方的紧凑玻璃行，主内容移除 50px 顶栏并以 18px 顶距直接承接首屏卡片。
+*/
+/*
  更新时间: 2026-07-10 10:32:45 CST
  更新内容: 增加低有效高度桌面档，缩短趋势区并将开户/投入改为不等高分配，兼容系统缩放或浏览器缩放后的首屏完整展示。
 */
@@ -173,31 +185,36 @@
 }
 .dash-aside .sb-root{width:100%}
 
+.dash-sidebar-search{
+  flex:none;width:100%;min-width:0;
+}
+.search-wrap--sidebar{
+  width:100%;margin-left:0;border-radius:12px;
+}
+.search-wrap--sidebar > .glass-surface{
+  width:100%;min-width:0;
+}
+.search-wrap--sidebar .search-inner{
+  justify-content:flex-start;padding:0 8px;gap:4px;
+}
+.search-wrap--sidebar:not(.search-wrap--expanded) .search-ico{
+  width:100%;display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:0 4px;border-radius:10px;
+}
+.search-wrap--sidebar .search-label{
+  color:rgba(255,255,255,.62);font-size:14px;font-weight:500;line-height:1;
+}
+.search-wrap--sidebar .search-input{font-size:13px}
+.search-wrap--sidebar .search-count{min-width:40px;height:26px;padding:0 7px}
+
 .dash-main{
   flex:1;min-width:0;display:flex;flex-direction:column;
-  padding:0 clamp(16px,3vw,40px) 24px;gap:8px;
+  padding:18px clamp(12px,2vw,28px) 24px;gap:8px;
 }
-
-/* ===== 顶栏 ===== */
-.dash-topbar{
-  position:sticky;top:0;z-index:70;
-  display:flex;align-items:center;justify-content:flex-end;gap:12px;row-gap:8px;flex-wrap:wrap;flex:none;min-width:0;
-  margin:0 calc(clamp(16px,3vw,40px) * -1);
-  padding:4px clamp(16px,3vw,40px);
-  min-height:50px;
-}
-.dash-tools{
-  margin-left:auto;display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0;flex:0 1 auto;
-}
-/* 顶栏内的搜索框无需再 auto 推开（外层已用 margin-left:auto） */
-.dash-tools .search-wrap{margin-left:0}
-.dash-tools .fp-glass{flex:0 0 244px;max-width:244px;min-width:244px}
-.dash-tools .sgm-btn{padding:6px 12px}
 
 /* ===== 内容区 ===== */
 .dash-content{
   flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;
-  scroll-margin-top:58px;
+  scroll-margin-top:18px;
 }
 
 /* ===== 经营总览下方业务拆解 ===== */
@@ -444,8 +461,6 @@
   .dash-aside{position:static;width:100%;height:auto;min-height:0}
   .dash-main{padding:0 12px 20px}
   .dash-content{width:100%;max-width:100%;overflow-x:hidden}
-  .dash-topbar{margin:0 -12px;padding:4px 12px;min-height:50px}
-  .dash-tools{flex:1 1 100%;width:100%;max-width:100%;margin-left:0;justify-content:flex-end}
   .dash-version-row .vf-panel{min-height:326px}
   .dash-token-grid{grid-template-columns:1fr}
 }

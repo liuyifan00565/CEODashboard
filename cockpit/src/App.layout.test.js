@@ -1,4 +1,20 @@
 /*
+ 更新时间: 2026-07-10 10:56:13 CST
+ 更新内容: 回归测试锁定侧栏搜索折叠态图标与文字使用单行弹性布局。
+*/
+/*
+ 更新时间: 2026-07-10 10:54:38 CST
+ 更新内容: 回归测试锁定月度“点击查看近期明细”入口移动到回款结构半环图标题右上方。
+*/
+/*
+ 更新时间: 2026-07-10 10:53:56 CST
+ 更新内容: 回归测试锁定主内容窄侧距带来的卡片加宽，并确认月度大数字上方不再重复显示“本月回款”。
+*/
+/*
+ 更新时间: 2026-07-10 10:51:28 CST
+ 更新内容: 回归测试锁定搜索移入左侧导航、主内容上移，以及年度进度条只保留裸进度与完成率百分比。
+*/
+/*
  更新时间: 2026-07-10 10:32:45 CST
  更新内容: 回归测试增加低有效高度桌面档，锁定主卡空白收敛、趋势高度与开户投入不等高分配。
 */
@@ -539,7 +555,7 @@ test('keeps only compute usage in the compute trend chart with clear non-fluores
   assert.doesNotMatch(computePageSource, /name:\s*'总容量'[\s\S]*?type:\s*'line'/);
 });
 
-test('keeps the right toolbar focused on search while data keeps default monthly filters', () => {
+test('keeps search in the compact sidebar while data keeps default monthly filters', () => {
   assert.doesNotMatch(appSource, /import ThemeToggle/);
   assert.doesNotMatch(appSource, /import DateRangePicker/);
   assert.doesNotMatch(appSource, /import Segmented/);
@@ -548,7 +564,9 @@ test('keeps the right toolbar focused on search while data keeps default monthly
   assert.doesNotMatch(appSource, /computePeriod/);
   assert.match(appSource, /const dim = 'month';/);
   assert.match(appSource, /const dateRange = DEFAULT_FILTER_RANGE;/);
-  assert.match(appSource, /<div className="dash-tools">\s*<ExpandableSearch[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
+  assert.match(appSource, /<div className="dash-sidebar-search">\s*<ExpandableSearch[\s\S]*?placement="sidebar"[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
+  assert.doesNotMatch(appSource, /className="dash-topbar"/);
+  assert.match(dashboardCss, /\.search-wrap--sidebar:not\(\.search-wrap--expanded\) \.search-ico\s*\{[\s\S]*?display:flex;[\s\S]*?align-items:center;[\s\S]*?justify-content:flex-start;/);
   assert.doesNotMatch(appSource, /aria-label="更新数据"/);
   assert.doesNotMatch(appSource, /<span>更新数据<\/span>/);
   assert.doesNotMatch(appSource, /<DateRangePicker/);
@@ -587,7 +605,7 @@ test('places the FuKe brand logo above the sidebar navigation instead of the mai
   const sidebarBrandBlock = cssRuleBody(sidebarCss, '.sb-brand');
   const sidebarLogoBlock = cssRuleBody(sidebarCss, '.sb-brand-logo');
   const sidebarTitleBlock = cssRuleBody(sidebarCss, '.sb-brand-copy b');
-  const topbarBlock = cssRuleBody(dashboardCss, '.dash-topbar');
+  const mainBlock = cssRuleBody(dashboardCss, '.dash-main');
 
   assert.match(mockSource, /monthLabel: '2026年6月'/);
   assert.doesNotMatch(mockSource, /monthLabel: '2026 年 6 月'/);
@@ -607,9 +625,8 @@ test('places the FuKe brand logo above the sidebar navigation instead of the mai
   assert.match(sidebarLogoBlock, /height:\s*26px;/);
   assert.match(sidebarTitleBlock, /font-size:\s*14px;/);
   assert.match(sidebarTitleBlock, /font-weight:\s*760;/);
-  assert.match(topbarBlock, /justify-content:\s*flex-end;/);
-  assert.match(topbarBlock, /padding:\s*4px clamp\(16px,3vw,40px\);/);
-  assert.match(topbarBlock, /min-height:\s*50px;/);
+  assert.match(mainBlock, /padding:\s*18px clamp\(12px,2vw,28px\) 24px;/);
+  assert.doesNotMatch(dashboardCss, /\.dash-topbar/);
   assert.doesNotMatch(appSource, /import MetallicPaint from '\.\/components\/MetallicPaint\/MetallicPaint';/);
   assert.doesNotMatch(appSource, /brandMode|brandIdentityText|BRAND_FULL_ENTER_SCROLL|secondaryGridRef/);
   assert.doesNotMatch(appSource, /className=\{`brand-glass brand-glass--\$\{brandMode\}`\}/);
@@ -645,7 +662,7 @@ test('adds a dashboard maintenance entry and a compact sidebar return item that 
   assert.doesNotMatch(appSource, /dash-maintenance-switch--sidebar/);
   assert.doesNotMatch(appSource, /aria-label="返回主界面"/);
   assert.doesNotMatch(appSource, /className="maintenance-glass"/);
-  assert.match(appSource, /<div className="dash-tools">\s*<ExpandableSearch/);
+  assert.match(appSource, /<div className="dash-sidebar-search">\s*<ExpandableSearch\s*placement="sidebar"/);
   assert.doesNotMatch(appSource, /aria-label="更新数据"/);
   assert.doesNotMatch(appSource, /<span>更新数据<\/span>/);
   assert.doesNotMatch(appSource, /className=\{`dash-maintenance-switch\$\{maintenanceMode \? ' dash-maintenance-switch--active' : ''\}`\}/);
@@ -1329,6 +1346,10 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /点击查看近期明细/);
   assert.match(operatingOverviewSource, /className="op-detail-link"/);
   assert.match(operatingOverviewSource, /className="op-detail-link-arrow"/);
+  assert.match(operatingOverviewSource, /function RecoveryStructure\(\{ structure, option, periodMeta, action = null \}\)[\s\S]*?className="op-structure-head"[\s\S]*?\{action\}/);
+  assert.match(operatingOverviewSource, /function MonthlyRecoveryStructure\(\{ structure, option, detailDisabled, onDetailClick \}\)[\s\S]*?action=\{\([\s\S]*?<DetailLink disabled=\{detailDisabled\} onClick=\{onDetailClick\}>[\s\S]*?点击查看近期明细/);
+  assert.match(operatingOverviewSource, /<MonthlyRecoveryStructure[\s\S]*?detailDisabled=\{!monthKpiCard \|\| !onOpenKpi\}[\s\S]*?onDetailClick=\{\(\) => onOpenKpi\(monthKpiCard\)\}/);
+  assert.match(operatingOverviewCss, /\.op-structure-head \.op-detail-link\s*\{[\s\S]*?font-size:\s*12px;/);
   assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
   assert.match(operatingOverviewSource, /<h2>年度回款总览<\/h2>/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">年度经营进度<\/span>/);
@@ -1337,6 +1358,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /const annualStructure = useMemo\(\(\) => buildChannelStructure\(annualChannelRows\), \[annualChannelRows\]\);/);
   assert.match(operatingOverviewSource, /chartName: '年度回款结构'/);
   assert.match(operatingOverviewSource, /年度累计回款/);
+  assert.doesNotMatch(operatingOverviewSource, /<span className="op-summary-label">本月回款<\/span>/);
   assert.match(operatingOverviewSource, /<div className="op-month-primary-value-row op-annual-primary-value-row">[\s\S]*?<b>\{formatWan\(KPI\.yearRecovered\)\}万<\/b>[\s\S]*?退款\{formatWan\(KPI\.yearRefund \?\? 0\)\}万/);
   assert.match(operatingOverviewSource, /年度目标/);
   assert.match(operatingOverviewSource, /年度完成率/);
@@ -1346,7 +1368,8 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /\{annualTargetStatusLabel\} \{formatWan\(annualTargetStatusValue\)\}万/);
   assert.match(operatingOverviewSource, /className="op-annual-progress-footer"/);
   assert.doesNotMatch(operatingOverviewSource, /<span>年度目标进度<\/span>/);
-  assert.match(operatingOverviewSource, /<b>\{formatWan\(KPI\.yearRecovered\)\}万 \/ \{formatWan\(KPI\.yearTarget\)\}万<\/b>/);
+  assert.doesNotMatch(operatingOverviewSource, /<b>\{formatWan\(KPI\.yearRecovered\)\}万 \/ \{formatWan\(KPI\.yearTarget\)\}万<\/b>/);
+  assert.match(operatingOverviewSource, /<strong>\{formatPct\(KPI_DERIVED\.yearCompletion\)\}<\/strong>/);
   assert.doesNotMatch(operatingOverviewSource, /<span>时间进度 \{formatPct\(overviewMetrics\.annualTimeProgress\)\}<\/span>/);
   assert.doesNotMatch(operatingOverviewSource, /后续月均需完成 \{formatWan\(overviewMetrics\.remainingMonthlyRequired\)\}万/);
   assert.doesNotMatch(operatingOverviewSource, /className="op-annual-progress-meta"/);
@@ -1456,12 +1479,15 @@ test('replaces the annual rhythm chart with a yearly recovery overview footer', 
   assert.match(operatingOverviewSource, /className="op-annual-progress-footer"/);
   assert.match(operatingOverviewSource, /className="op-annual-progress-track"/);
   assert.match(operatingOverviewSource, /className="op-annual-fill" style=\{\{ width: annualCapsuleWidth \}\}/);
-  assert.match(operatingOverviewSource, /aria-label=\{`年度目标进度 \$\{formatWan\(KPI\.yearRecovered\)\} 万 \/ \$\{formatWan\(KPI\.yearTarget\)\} 万，完成率 \$\{formatPct\(KPI_DERIVED\.yearCompletion\)\}`\}/);
+  assert.match(operatingOverviewSource, /aria-label=\{`年度目标完成率 \$\{formatPct\(KPI_DERIVED\.yearCompletion\)\}`\}/);
   assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{[\s\S]*?width:\s*min\(calc\(100% \+ clamp\(288px, calc\(27\.5vw - 105px\), 424px\)\), calc\(100vw - 96px\)\);/);
-  assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{[\s\S]*?margin-top:\s*clamp\(2px, \.35vw, 4px\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{[\s\S]*?margin-top:\s*clamp\(10px, \.85vw, 14px\);/);
   assert.match(operatingOverviewCss, /\.op-annual-progress-footer\s*\{[\s\S]*?transform:\s*none;/);
-  assert.match(operatingOverviewCss, /\.op-annual-progress-main\s*\{[\s\S]*?min-height:\s*28px;[\s\S]*?grid-template-columns:\s*auto minmax\(140px, 1fr\) auto;/);
-  assert.match(operatingOverviewCss, /\.op-annual-progress-main\s*\{[\s\S]*?gap:\s*clamp\(6px, \.7vw, 9px\);/);
+  const annualProgressMainBlock = cssRuleBody(operatingOverviewCss, '.op-annual-progress-main');
+  assert.match(annualProgressMainBlock, /min-height:\s*20px;/);
+  assert.match(annualProgressMainBlock, /grid-template-columns:\s*minmax\(140px, 1fr\) auto;/);
+  assert.match(annualProgressMainBlock, /gap:\s*clamp\(8px, \.8vw, 12px\);/);
+  assert.doesNotMatch(annualProgressMainBlock, /border:|background:|box-shadow:|padding:/);
   assert.match(operatingOverviewCss, /\.op-annual-progress-track\s*\{[\s\S]*?height:\s*10px;[\s\S]*?border-radius:\s*999px;[\s\S]*?background:\s*var\(--bar-track\);/);
   assert.match(operatingOverviewCss, /\.op-annual-fill\s*\{[\s\S]*?background:\s*linear-gradient\(135deg, rgba\(142,134,255,\.78\), rgba\(228,184,215,\.62\)\);/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-annual-progress-meta\s*\{/);
@@ -1591,7 +1617,7 @@ test('scrolls the dashboard content into view when a sidebar menu item is select
   assert.match(appSource, /pendingMenuScrollRef\.current = true;/);
   assert.match(appSource, sidebarInvocationPattern);
   assert.match(appSource, /gridRef\.current\?\.scrollIntoView\(\{\s*behavior:\s*'smooth',\s*block:\s*'start'\s*\}\);/);
-  assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:58px;/);
+  assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:18px;/);
 });
 
 test('uses one channel completion panel with month and year switching', () => {
@@ -1667,7 +1693,7 @@ test('uses one channel completion panel with month and year switching', () => {
 
 test('opens monthly and annual drilldowns from the operating overview with contextual modal labels', () => {
   assert.match(operatingOverviewSource, /function OperatingOverview\(\{ searchTerm = '', monthKpiCard, yearKpiCard, onOpenKpi \}\)/);
-  assert.match(operatingOverviewSource, /disabled=\{!monthKpiCard \|\| !onOpenKpi\}/);
+  assert.match(operatingOverviewSource, /detailDisabled=\{!monthKpiCard \|\| !onOpenKpi\}/);
   assert.match(operatingOverviewSource, /disabled=\{!yearKpiCard \|\| !onOpenKpi\}/);
   assert.match(kpiModalSource, /const initialDim = isCost \? 'month' : card\.key === 'year' \? 'year' : 'month';/);
   assert.match(kpiModalSource, /const modalTitle = isCost \? '投入趋势与环比' : card\.key === 'year' \? '年度回款明细' : card\.key === 'month' \? '月度回款明细' : card\.title;/);
@@ -1770,10 +1796,10 @@ test('keeps left ambient glow behind the AI mascot diffused and subordinate', ()
 
 test('keeps month year trend and finance metrics balanced across 1K and 2K screens', () => {
   assert.match(dashboardCss, /\.dash-main\{[\s\S]*?gap:8px;/);
-  assert.match(dashboardCss, /\.dash-topbar\{[\s\S]*?padding:4px clamp\(16px,3vw,40px\);/);
-  assert.match(dashboardCss, /\.dash-topbar\{[\s\S]*?min-height:50px;/);
+  assert.match(dashboardCss, /\.dash-main\{[\s\S]*?padding:18px clamp\(12px,2vw,28px\) 24px;/);
+  assert.doesNotMatch(dashboardCss, /\.dash-topbar/);
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?gap:10px;/);
-  assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:58px;/);
+  assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:18px;/);
   assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?flex:none;[\s\S]*?grid-template-rows:clamp\(350px,36vh,386px\);/);
   assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?grid-template-rows:clamp\(320px,34vh,350px\);[\s\S]*?grid-template-rows:minmax\(136px,\.82fr\) minmax\(176px,1\.08fr\);/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-overview \{[\s\S]*?gap: 10px;[\s\S]*?grid-template-rows: auto 148px;[\s\S]*?height: 148px;/);

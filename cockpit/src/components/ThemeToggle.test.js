@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 10:51:28 CST
+ 更新内容: 顶部主题控件回归同步搜索移入左侧导航，并确认主内容不再渲染工具顶栏。
+*/
+/*
  更新时间: 2026-07-08 16:57:24 CST
  更新内容: 顶部工具栏断言同步删除“更新数据”按钮，继续确认主题切换不在顶栏渲染。
 */
@@ -106,7 +110,8 @@ test('defines a circular GlassSurface theme toggle with persistent theme state',
 test('does not render the theme toggle in the top toolbar', () => {
   assert.doesNotMatch(appSource, /import ThemeToggle from '\.\/components\/ThemeToggle';/);
   assert.doesNotMatch(appSource, /<ThemeToggle\s*\/>/);
-  assert.match(appSource, /<div className="dash-tools">\s*<ExpandableSearch[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
+  assert.match(appSource, /<div className="dash-sidebar-search">\s*<ExpandableSearch[\s\S]*?placement="sidebar"[\s\S]*?onChange=\{setSearchTerm\}[\s\S]*?currentIndex=\{searchStats\.current\}[\s\S]*?totalResults=\{searchStats\.total\}[\s\S]*?onNext=\{jumpToNextSearchResult\}[\s\S]*?\/>\s*<\/div>/);
+  assert.doesNotMatch(appSource, /className="dash-topbar"/);
   assert.doesNotMatch(appSource, /aria-label="更新数据"/);
   assert.doesNotMatch(appSource, /<span>更新数据<\/span>/);
 });
