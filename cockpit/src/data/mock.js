@@ -1,4 +1,10 @@
 /*
+ 更新时间: 2026-07-09 23:10:00 CST
+ 更新内容: appendComputeCustomerRows 改为维护常驻 COMPUTE_CUSTOMER_INDEX（手机号->下标）而不是每次调用都用
+          当前全量数组重建索引，全量客户后台分页同步（~25 次调用）总开销从 O(n²/pageSize) 降到 O(n)；
+          函数改为返回合并后的总行数，调用方不再需要另外调用 getComputeCustomerRows().length 才能拿到计数。
+*/
+/*
  更新时间: 2026-07-09 21:15:00 CST
  更新内容: 新增 appendComputeCustomerRows，供算力页后台分页同步时按手机号增量合并客户行，不整体替换数组。
 */
@@ -766,6 +772,14 @@ export function getComputeCustomerRows() {
   return [...COMPUTE_CUSTOMER_ROWS].sort((a, b) => b.usage - a.usage);
 }
 
+// Kept in sync with COMPUTE_CUSTOMER_ROWS by reindexComputeCustomerRows(), so
+// appendComputeCustomerRows() never has to rebuild it from the full array.
+let COMPUTE_CUSTOMER_INDEX = new Map(COMPUTE_CUSTOMER_ROWS.map((row, index) => [row.phone, index]));
+
+function reindexComputeCustomerRows() {
+  COMPUTE_CUSTOMER_INDEX = new Map(COMPUTE_CUSTOMER_ROWS.map((row, index) => [row.phone, index]));
+}
+
 export function getComputeResourceHealth() {
   return COMPUTE_RESOURCE_HEALTH.filter((row) => row.usage > 0);
 }
@@ -1446,6 +1460,7 @@ export function applyDashboardDataSnapshot(snapshot) {
 
   if (Array.isArray(snapshot.computeCustomerRows)) {
     replaceArray(COMPUTE_CUSTOMER_ROWS, snapshot.computeCustomerRows);
+    reindexComputeCustomerRows();
   }
 
   if (Array.isArray(snapshot.computeResourceHealth)) {
@@ -1460,16 +1475,17 @@ export function applyDashboardDataSnapshot(snapshot) {
 }
 
 export function appendComputeCustomerRows(rows = []) {
-  if (!Array.isArray(rows) || !rows.length) return;
+  if (!Array.isArray(rows) || !rows.length) return COMPUTE_CUSTOMER_ROWS.length;
 
-  const indexByPhone = new Map(COMPUTE_CUSTOMER_ROWS.map((row, index) => [row.phone, index]));
   rows.forEach((row) => {
-    const existingIndex = indexByPhone.get(row.phone);
+    const existingIndex = COMPUTE_CUSTOMER_INDEX.get(row.phone);
     if (existingIndex !== undefined) {
       COMPUTE_CUSTOMER_ROWS[existingIndex] = row;
     } else {
       COMPUTE_CUSTOMER_ROWS.push(row);
-      indexByPhone.set(row.phone, COMPUTE_CUSTOMER_ROWS.length - 1);
+      COMPUTE_CUSTOMER_INDEX.set(row.phone, COMPUTE_CUSTOMER_ROWS.length - 1);
     }
   });
+
+  return COMPUTE_CUSTOMER_ROWS.length;
 }

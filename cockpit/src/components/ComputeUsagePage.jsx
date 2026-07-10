@@ -1,7 +1,9 @@
 /*
- 更新时间: 2026-07-09 22:05:00 CST
- 更新内容: 外部数据未就绪（idle/loading）时提前 return 骨架屏，不再渲染 mock.js 本地示例 KPI/图表/客户数据；
-          就绪后一次性渲染真实内容且不再显示同步条（同步条只出现在骨架屏阶段）。
+ 更新时间: 2026-07-09 23:10:00 CST
+ 更新内容: 清理：客户后台分页同步不再调用 getComputeCustomerRows()（拷贝+排序整个数组）只为读取行数，
+          改用 appendComputeCustomerRows 的返回值；customerSyncState 去掉冗余的 loaded 字段，同步进度
+          展示直接读渲染期已算好的 customers.length；buildCustomerTableRows 去掉对已排序输入的重复排序；
+          骨架屏 shimmer 动画与 dashboard.css 的经营总览骨架屏合并为同一套 CSS，不再各自定义一份。
 */
 /*
  更新时间: 2026-07-09 21:15:00 CST
@@ -235,11 +237,12 @@ function decorateCustomerRow(row, index) {
   };
 }
 
+// rows must already be sorted by usage desc — its only caller passes
+// getComputeCustomerRows(), which sorts on the same key.
 function buildCustomerTableRows(rows) {
-  const sortedRows = [...rows].sort((a, b) => b.usage - a.usage);
-  if (!sortedRows.length) return [];
+  if (!rows.length) return [];
 
-  return sortedRows.map((row, index) => decorateCustomerRow(row, index));
+  return rows.map((row, index) => decorateCustomerRow(row, index));
 }
 
 function buildInitialCustomerColumnFilters() {
@@ -1102,7 +1105,7 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
   const [customerPageSize, setCustomerPageSize] = useState(DEFAULT_CUSTOMER_PAGE_SIZE);
   const [customerPageSizeMenuOpen, setCustomerPageSizeMenuOpen] = useState(false);
   const [customerJumpPage, setCustomerJumpPage] = useState('');
-  const [customerSyncState, setCustomerSyncState] = useState({ status: 'idle', loaded: 0, total: 0 });
+  const [customerSyncState, setCustomerSyncState] = useState({ status: 'idle', total: 0 });
   const periodLabel = DIM_TREND_LABELS[dim] ?? DIM_TREND_LABELS.month;
   const overview = getComputeOverview();
   const trend = getComputeUsageTrend({ dim, dateRange });
@@ -1116,7 +1119,7 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
     let cancelled = false;
 
     async function syncAllCustomers() {
-      setCustomerSyncState({ status: 'loading', loaded: getComputeCustomerRows().length, total: overview.totalCustomers || 0 });
+      setCustomerSyncState({ status: 'loading', total: overview.totalCustomers || 0 });
 
       let page = 1;
       for (;;) {
@@ -1130,9 +1133,8 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
         }
         if (cancelled) return;
 
-        appendComputeCustomerRows(payload.rows);
-        const loaded = getComputeCustomerRows().length;
-        setCustomerSyncState({ status: 'loading', loaded, total: payload.total });
+        const loaded = appendComputeCustomerRows(payload.rows);
+        setCustomerSyncState({ status: 'loading', total: payload.total });
 
         if (!payload.rows.length || payload.rows.length < CUSTOMER_SYNC_PAGE_SIZE || loaded >= payload.total) break;
         page += 1;
@@ -1418,7 +1420,7 @@ export default function ComputeUsagePage({ searchTerm = '', dim = 'month', dateR
         <div className="cpu-customer-toolbar">
           {customerSyncState.status === 'loading' && (
             <span className="cpu-customer-sync" role="status">
-              客户数据同步中 {formatInt(customerSyncState.loaded)}/{formatInt(customerSyncState.total)}
+              客户数据同步中 {formatInt(customers.length)}/{formatInt(customerSyncState.total)}
             </span>
           )}
           <span className="cpu-customer-range">

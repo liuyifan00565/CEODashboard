@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-09 23:10:00 CST
+ 更新内容: 提取 buildCustomerBoardParams，loadExternalComputeSnapshot 和 loadExternalComputeCustomerPage
+          不再各自拼一份几乎相同的客户列表请求参数对象。
+*/
+/*
  更新时间: 2026-07-09 21:15:00 CST
  更新内容: 新增 /api/compute-customers 分页接口（loadExternalComputeCustomerPage / handleComputeCustomersRequest），
           支持前端后台分页拉取全量客户列表，不再受首屏 20 条采样限制；提取 mapCustomerRow 供两处复用。
@@ -290,6 +295,20 @@ function mapCustomerRow(row) {
   };
 }
 
+function buildCustomerBoardParams(window, { page, pageSize }) {
+  return {
+    customer_manager: '',
+    sales_manager: '',
+    start_time: window.start_time,
+    end_time: window.end_time,
+    level: 0,
+    limit_type: 1,
+    page,
+    page_size: pageSize,
+    sort_type: 1,
+  };
+}
+
 export async function loadExternalComputeSnapshot({
   baseUrl,
   token,
@@ -305,17 +324,7 @@ export async function loadExternalComputeSnapshot({
   }
 
   const window = buildExternalComputeRequestWindow(now);
-  const customerBody = {
-    customer_manager: '',
-    sales_manager: '',
-    start_time: window.start_time,
-    end_time: window.end_time,
-    level: 0,
-    limit_type: 1,
-    page: 1,
-    page_size: customerPageSize,
-    sort_type: 1,
-  };
+  const customerBody = buildCustomerBoardParams(window, { page: 1, pageSize: customerPageSize });
 
   const [platformPayload, customerPayload] = await Promise.all([
     getJson({ baseUrl, token, path: platformBoardPath, params: window, fetchImpl }),
@@ -343,17 +352,7 @@ export async function loadExternalComputeCustomerPage({
   }
 
   const window = buildExternalComputeRequestWindow(now);
-  const customerBody = {
-    customer_manager: '',
-    sales_manager: '',
-    start_time: window.start_time,
-    end_time: window.end_time,
-    level: 0,
-    limit_type: 1,
-    page,
-    page_size: pageSize,
-    sort_type: 1,
-  };
+  const customerBody = buildCustomerBoardParams(window, { page, pageSize });
 
   const customerPayload = await getJson({ baseUrl, token, path: customerBoardPath, params: customerBody, fetchImpl });
   const customerBoard = normalizeApiPayload(customerPayload, '客户算力列表');

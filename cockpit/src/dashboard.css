@@ -1,4 +1,10 @@
 /*
+ 更新时间: 2026-07-09 23:10:00 CST
+ 更新内容: skeleton-shimmer 渐变/动画规则扩展为算力页 .cpu-skeleton-card/.cpu-skeleton-panel 共用，
+          去掉 ComputeUsagePage.css 里原本重复定义的同一套 shimmer 动画（keyframes 改名为通用的
+          skeleton-shimmer，不再叫 dash-skeleton-shimmer）。
+*/
+/*
  更新时间: 2026-07-09 22:30:00 CST
  更新内容: 新增经营总览骨架屏占位（.dash-skeleton-strip / .dash-skeleton-block），dashboard-data 未就绪前
           不再渲染本地示例经营数据；不再使用 dashboardDataVersion 强制内容区重挂载。
@@ -197,8 +203,12 @@
   min-height:280px;
 }
 
+/* Shared shimmer recipe: also used by .cpu-skeleton-card/.cpu-skeleton-panel
+   in ComputeUsagePage.css, which is loaded alongside this global stylesheet. */
 .dash-skeleton-strip,
-.dash-skeleton-block{
+.dash-skeleton-block,
+.cpu-skeleton-card,
+.cpu-skeleton-panel{
   border:1px solid var(--dashboard-card-border);
   background:linear-gradient(
     100deg,
@@ -207,10 +217,10 @@
     rgba(255,255,255,.04) 60%
   );
   background-size:200% 100%;
-  animation:dash-skeleton-shimmer 1.6s ease-in-out infinite;
+  animation:skeleton-shimmer 1.6s ease-in-out infinite;
 }
 
-@keyframes dash-skeleton-shimmer{
+@keyframes skeleton-shimmer{
   0%{background-position:200% 0}
   100%{background-position:-200% 0}
 }
