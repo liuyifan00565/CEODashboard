@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 11:15:13 CST
+ 更新内容: 恢复全局 GlassCursor 柔光挂载；月度趋势闪烁改由 SVG 渲染处理。
+*/
+/*
  更新时间: 2026-07-10 10:59:53 CST
  更新内容: 停用全局 GlassCursor 覆盖层，只保留系统原生光标，消除鼠标静止时的页面合成闪烁。
 */
@@ -22,9 +26,13 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import GlassCursor from './components/GlassCursor'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <>
+      <App />
+      <GlassCursor />
+    </>
   </StrictMode>,
 )

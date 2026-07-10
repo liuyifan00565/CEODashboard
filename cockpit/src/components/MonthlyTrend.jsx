@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-10 11:15:13 CST  更新内容: 月度经营趋势切换为 SVG 渲染，保留柱形、曲线和悬浮交互并绕开 Canvas 静止合成闪烁。 */
 /* 更新时间: 2026-07-10 10:59:53 CST  更新内容: 恢复月度趋势原有动画与折线光晕，闪烁问题改由全局鼠标柔光合成层修复。 */
 /* 更新时间: 2026-07-07 16:50:00 CST  更新内容: 柱状图悬浮框对齐 GlassSelect 面板同体系——银紫描边 + 24px 毛玻璃 + 紫光投影 + 16px 圆角，杜绝与下拉框质感割裂。 */
 /* 更新时间: 2026-07-07 14:40:00 CST  更新内容: 月度经营趋势重构数据语义——目标改为背景宽柱(淡灰紫)、回款改为前景窄柱(银紫玫瑰渐变)，完成率细线+圆点且 y 轴超 100% 自动扩展并加 100% 基准线，图例颜色与序列对齐，移除 6 月高亮，未发生月份用虚线占位。 */
@@ -211,7 +212,7 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
         <span className="mt-sub">回款 vs 目标 · 完成率</span>
       </header>
       <div className="mt-chart">
-        <EChart option={option} style={{ height: '100%' }} />
+        <EChart option={option} renderer="svg" style={{ height: '100%' }} />
       </div>
     </section>
   );

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 11:15:13 CST
+ 更新内容: 恢复原有低透明银紫玫瑰鼠标环境柔光；月度趋势通过 SVG 规避闪烁。
+*/
+/*
  更新时间: 2026-07-10 10:59:53 CST
  更新内容: 清空光标柔光样式，彻底移除会参与 Canvas/毛玻璃合成的覆盖层。
 */
@@ -50,3 +54,32 @@
  更新时间: 2026-06-24
  更新内容: 玻璃球指针容器 —— 全屏透明覆盖层，玻璃球跟随鼠标，页面透过显示；显式禁止 Canvas 拦截页面点击。
 */
+
+.glass-cursor-halo{
+  --glass-cursor-x:50vw;
+  --glass-cursor-y:50vh;
+  position:fixed;
+  inset:0;
+  z-index:30;
+  pointer-events:none;
+  opacity:0;
+  background:
+    radial-gradient(
+      420px circle at var(--glass-cursor-x) var(--glass-cursor-y),
+      rgba(184, 156, 255, 0.10),
+      rgba(228, 184, 215, 0.045) 32%,
+      transparent 68%
+    );
+  transition:opacity .18s ease-out;
+  will-change:opacity,background;
+}
+
+.glass-cursor-halo.is-active{
+  opacity:1;
+}
+
+@media (pointer: coarse), (prefers-reduced-motion: reduce){
+  .glass-cursor-halo{
+    display:none;
+  }
+}
