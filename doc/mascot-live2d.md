@@ -1,3 +1,6 @@
+更新时间: 2026-07-10 12:38:00 CST
+更新内容: 福小客 Sprite fallback 与本地 rig 改用共享毫秒级非匀速时间线，待机、循环动作和 bridge 同步自然节奏。
+
 更新时间: 2026-07-09 13:18:11 CST
 更新内容: 补充参考 Live2D motion fade 后的本地实现：使用离散帧 motion bridge 和短 blink/fade 参数，禁止旧帧透明 ghost crossfade。
 
@@ -29,7 +32,9 @@
 
 ## 加载与降级
 
-前端会先检查同源本地 rig、Live2D Core 与模型入口文件是否存在，并拒绝把 HTML fallback 当成模型资源。检测和加载期间，外层 sprite 保持静态首帧；只有确认本地 rig 与真实 Cubism 模型都不可用并进入 fallback 后，sprite 自身的帧动画才会启动，避免启动时出现 sprite、rig 与过渡层多套动画短暂叠加。本地 rig 的动作切换不再使用透明 ghost crossfade，而是用当前动作的 settle 帧和下一动作的 lead-in 帧组成 motion bridge。
+前端会先检查同源本地 rig、Live2D Core 与模型入口文件是否存在，并拒绝把 HTML fallback 当成模型资源。检测和加载期间，外层 sprite 保持静态首帧；只有确认本地 rig 与真实 Cubism 模型都不可用并进入 fallback 后，sprite 自身的帧动画才会启动，避免启动时出现 sprite、rig 与过渡层多套动画短暂叠加。Sprite fallback 与本地 rig 共用同一套毫秒级时间线解析：待机循环为 5.28 秒，每轮只短暂使用一格闭眼帧；说话、思考和提醒在动作端点短停后再回摆；挥手、指引、庆祝和点击使用非匀速起势、主动作、短停和收势节奏。本地 rig 的动作切换不使用透明 ghost crossfade，而是用当前动作的 settle 帧和下一动作的 lead-in 帧组成单层 motion bridge。开启 `prefers-reduced-motion` 时不启动持续时间线或 bridge，只显示目标动作的稳定代表帧。
+
+现有本地 rig 仍是离散帧 renderer，不会在不同姿势之间生成真实骨骼形变。若需要连续的关节插值、物理和表情混合，仍需替换为 Cubism Editor 正式导出的模型与动作资源。
 
 任一文件缺失、内容类型异常、Cubism Core 初始化失败或模型加载失败时，组件会保持 sprite 小人可见并把状态切到 fallback。此过程不影响左下角入口点击，也不会隐藏原有小人。
 

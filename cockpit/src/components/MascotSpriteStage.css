@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 12:34:00 CST
+ 更新内容: 同步福小客非匀速时间线的微动周期，收敛为脚底锚定的 translate-only 自然位移。
+*/
+/*
  更新时间: 2026-07-09 13:18:11 CST
  更新内容: 移除 sprite 旧帧 ghost crossfade，fallback 也只播放 manifest 离散动作帧，避免平移模糊式衔接。
 */
@@ -93,31 +97,37 @@
 
 .mascot-sprite-stage--idle .mascot-sprite-stage__sheet,
 .mascot-sprite-stage--maintenance .mascot-sprite-stage__sheet {
-  animation: mascot-sheet-idle-life 5.8s cubic-bezier(.45, 0, .2, 1) infinite;
+  animation: mascot-sheet-idle-life 5.28s cubic-bezier(.45, 0, .2, 1) infinite;
 }
 
 .mascot-sprite-stage--greeting .mascot-sprite-stage__sheet {
-  animation: mascot-sheet-greeting-life 1.25s cubic-bezier(.2, .82, .2, 1) both;
+  animation: mascot-sheet-greeting-life 1.2s cubic-bezier(.2, .82, .2, 1) both;
 }
 
-.mascot-sprite-stage--guide .mascot-sprite-stage__sheet,
+.mascot-sprite-stage--guide .mascot-sprite-stage__sheet {
+  animation: mascot-sheet-guide-life 1.2s cubic-bezier(.2, .82, .2, 1) both;
+}
+
 .mascot-sprite-stage--click .mascot-sprite-stage__sheet {
-  animation: mascot-sheet-guide-life 1.1s cubic-bezier(.2, .82, .2, 1) both;
+  animation: mascot-sheet-guide-life .9s cubic-bezier(.2, .82, .2, 1) both;
 }
 
 .mascot-sprite-stage--speech .mascot-sprite-stage__sheet {
-  animation: mascot-sheet-talk-life 3.2s cubic-bezier(.45, 0, .2, 1) infinite;
+  animation: mascot-sheet-talk-life 2.57s cubic-bezier(.45, 0, .2, 1) infinite;
 }
 
 .mascot-sprite-stage--focus .mascot-sprite-stage__sheet,
-.mascot-sprite-stage--alert .mascot-sprite-stage__sheet,
 .mascot-sprite-stage--maintenance-review .mascot-sprite-stage__sheet {
-  animation: mascot-sheet-focus-life 3.8s cubic-bezier(.45, 0, .2, 1) infinite;
+  animation: mascot-sheet-focus-life 2.57s cubic-bezier(.45, 0, .2, 1) infinite;
+}
+
+.mascot-sprite-stage--alert .mascot-sprite-stage__sheet {
+  animation: mascot-sheet-focus-life 2.19s cubic-bezier(.4, 0, .2, 1) infinite;
 }
 
 .mascot-sprite-stage--celebrate .mascot-sprite-stage__sheet,
 .mascot-sprite-stage--maintenance-save .mascot-sprite-stage__sheet {
-  animation: mascot-sheet-celebrate-life 1.25s cubic-bezier(.2, .82, .2, 1) both;
+  animation: mascot-sheet-celebrate-life 1.2s cubic-bezier(.2, .82, .2, 1) both;
 }
 
 .mascot-sprite-stage--greeting,
@@ -144,12 +154,12 @@
     transform: translate3d(0, 0, 0);
   }
 
-  34% {
+  36% {
     transform: translate3d(0, -1.2px, 0);
   }
 
-  68% {
-    transform: translate3d(.7px, -.4px, 0);
+  72% {
+    transform: translate3d(.5px, -.35px, 0);
   }
 }
 
@@ -177,9 +187,12 @@
     transform: translate3d(1.6px, -1.4px, 0);
   }
 
-  76%,
-  100% {
+  76% {
     transform: translate3d(.6px, -.4px, 0);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -224,7 +237,7 @@
   }
 
   24% {
-    transform: translate3d(.8px, -2.4px, 0);
+    transform: translate3d(.8px, -2px, 0);
   }
 
   52% {

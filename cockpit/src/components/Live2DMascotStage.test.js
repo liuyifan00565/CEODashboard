@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-10 12:22:00 CST
- 更新内容: 验收本地福小客 rig 与动作 bridge 共用毫秒级时间线，并移除固定 FPS 播放路径。
+ 更新时间: 2026-07-10 12:31:00 CST
+ 更新内容: 验收本地福小客 rig 与动作 bridge 共用毫秒级时间线、同步微动周期，并移除固定 FPS 播放路径。
 */
 /*
  更新时间: 2026-07-09 13:18:11 CST
@@ -213,4 +213,11 @@ test('uses frame-level motion bridges instead of ghost overlays for local rig ac
   assert.doesNotMatch(componentCode, /LOCAL_RIG_MOTION_BRIDGE_FPS/);
   assert.doesNotMatch(componentCode, /1000 \/ animation\.fps/);
   assert.doesNotMatch(componentCode, /transitionGhost|transitionTimeoutRef|mascot-local-live2d-rig__sheet--ghost|mascot-local-live2d-rig__blend-layer/);
+});
+
+test('keeps local rig life motion aligned with the shared action timelines', () => {
+  assert.match(cssCode, /\.mascot-local-live2d-rig--idle\s+\.mascot-local-live2d-rig__sheet,\s*[\s\S]*?\.mascot-local-live2d-rig--maintenance\s+\.mascot-local-live2d-rig__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-idle-life 5\.28s/);
+  assert.match(cssCode, /\.mascot-local-live2d-rig--speech\s+\.mascot-local-live2d-rig__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-talk-life 2\.57s/);
+  assert.match(cssCode, /\.mascot-local-live2d-rig--alert\s+\.mascot-local-live2d-rig__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-focus-life 2\.19s/);
+  assert.doesNotMatch(cssCode, /transform:\s*[^;]*(?:scale|rotate)/);
 });

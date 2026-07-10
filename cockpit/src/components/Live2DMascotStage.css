@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 12:34:00 CST
+ 更新内容: 本地福小客 rig 同步 Sprite 的自然微动周期，并保持单层 translate-only 渲染。
+*/
+/*
  更新时间: 2026-07-09 13:18:11 CST
  更新内容: 移除本地福小客 rig 的 ghost crossfade 样式，动作衔接交给组件内离散帧 motion bridge。
 */
@@ -54,12 +58,39 @@
   backface-visibility: hidden;
 }
 
-.mascot-local-live2d-rig--greeting .mascot-local-live2d-rig__sheet,
-.mascot-local-live2d-rig--guide .mascot-local-live2d-rig__sheet,
-.mascot-local-live2d-rig--click .mascot-local-live2d-rig__sheet,
+.mascot-local-live2d-rig--idle .mascot-local-live2d-rig__sheet,
+.mascot-local-live2d-rig--maintenance .mascot-local-live2d-rig__sheet {
+  animation: mascot-sheet-idle-life 5.28s cubic-bezier(.45, 0, .2, 1) infinite;
+}
+
+.mascot-local-live2d-rig--greeting .mascot-local-live2d-rig__sheet {
+  animation: mascot-sheet-greeting-life 1.2s cubic-bezier(.2, .82, .2, 1) both;
+}
+
+.mascot-local-live2d-rig--guide .mascot-local-live2d-rig__sheet {
+  animation: mascot-sheet-guide-life 1.2s cubic-bezier(.2, .82, .2, 1) both;
+}
+
+.mascot-local-live2d-rig--click .mascot-local-live2d-rig__sheet {
+  animation: mascot-sheet-guide-life .9s cubic-bezier(.2, .82, .2, 1) both;
+}
+
+.mascot-local-live2d-rig--speech .mascot-local-live2d-rig__sheet {
+  animation: mascot-sheet-talk-life 2.57s cubic-bezier(.45, 0, .2, 1) infinite;
+}
+
+.mascot-local-live2d-rig--focus .mascot-local-live2d-rig__sheet,
+.mascot-local-live2d-rig--maintenance-review .mascot-local-live2d-rig__sheet {
+  animation: mascot-sheet-focus-life 2.57s cubic-bezier(.45, 0, .2, 1) infinite;
+}
+
+.mascot-local-live2d-rig--alert .mascot-local-live2d-rig__sheet {
+  animation: mascot-sheet-focus-life 2.19s cubic-bezier(.4, 0, .2, 1) infinite;
+}
+
 .mascot-local-live2d-rig--celebrate .mascot-local-live2d-rig__sheet,
 .mascot-local-live2d-rig--maintenance-save .mascot-local-live2d-rig__sheet {
-  animation: none;
+  animation: mascot-sheet-celebrate-life 1.2s cubic-bezier(.2, .82, .2, 1) both;
 }
 
 .mascot-sprite-stage--live2d-ready .mascot-live2d-stage {

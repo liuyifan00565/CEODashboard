@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-10 12:22:00 CST
- 更新内容: 验收 Sprite fallback 使用共享毫秒级动作时间线，并在减少动态模式显示稳定代表帧。
+ 更新时间: 2026-07-10 12:31:00 CST
+ 更新内容: 验收 Sprite fallback 使用共享毫秒级动作时间线、同步微动周期，并在减少动态模式显示稳定代表帧。
 */
 /*
  更新时间: 2026-07-09 13:18:11 CST
@@ -190,15 +190,18 @@ test('uses authored action frames without text-based fake effects or outer size-
 });
 
 test('adds translate-only inner life motion to keep the mascot from feeling static', () => {
-  assert.match(cssCode, /\.mascot-sprite-stage--idle\s+\.mascot-sprite-stage__sheet,\s*[\s\S]*?\.mascot-sprite-stage--maintenance\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-idle-life 5\.8s/);
-  assert.match(cssCode, /\.mascot-sprite-stage--greeting\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-greeting-life 1\.25s/);
-  assert.match(cssCode, /\.mascot-sprite-stage--guide\s+\.mascot-sprite-stage__sheet,\s*[\s\S]*?\.mascot-sprite-stage--click\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-guide-life 1\.1s/);
-  assert.match(cssCode, /\.mascot-sprite-stage--speech\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-talk-life 3\.2s/);
-  assert.match(cssCode, /\.mascot-sprite-stage--focus\s+\.mascot-sprite-stage__sheet,\s*[\s\S]*?\.mascot-sprite-stage--alert\s+\.mascot-sprite-stage__sheet,\s*[\s\S]*?\.mascot-sprite-stage--maintenance-review\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-focus-life 3\.8s/);
-  assert.match(cssCode, /\.mascot-sprite-stage--celebrate\s+\.mascot-sprite-stage__sheet,\s*[\s\S]*?\.mascot-sprite-stage--maintenance-save\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-celebrate-life 1\.25s/);
+  assert.match(cssCode, /\.mascot-sprite-stage--idle\s+\.mascot-sprite-stage__sheet,\s*[\s\S]*?\.mascot-sprite-stage--maintenance\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-idle-life 5\.28s/);
+  assert.match(cssCode, /\.mascot-sprite-stage--greeting\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-greeting-life 1\.2s/);
+  assert.match(cssCode, /\.mascot-sprite-stage--guide\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-guide-life 1\.2s/);
+  assert.match(cssCode, /\.mascot-sprite-stage--click\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-guide-life \.9s/);
+  assert.match(cssCode, /\.mascot-sprite-stage--speech\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-talk-life 2\.57s/);
+  assert.match(cssCode, /\.mascot-sprite-stage--focus\s+\.mascot-sprite-stage__sheet,\s*[\s\S]*?\.mascot-sprite-stage--maintenance-review\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-focus-life 2\.57s/);
+  assert.match(cssCode, /\.mascot-sprite-stage--alert\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-focus-life 2\.19s/);
+  assert.match(cssCode, /\.mascot-sprite-stage--celebrate\s+\.mascot-sprite-stage__sheet,\s*[\s\S]*?\.mascot-sprite-stage--maintenance-save\s+\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*mascot-sheet-celebrate-life 1\.2s/);
   assert.match(cssCode, /@keyframes mascot-sheet-idle-life/);
   assert.match(cssCode, /@keyframes mascot-sheet-greeting-life/);
   assert.match(cssCode, /@keyframes mascot-sheet-talk-life/);
+  assert.match(cssCode, /translate3d\(0, -1\.2px, 0\)/);
   assert.doesNotMatch(cssCode, /transform:\s*[^;]*(?:scale|rotate)/);
 });
 
