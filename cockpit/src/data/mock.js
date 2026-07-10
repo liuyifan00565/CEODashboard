@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:25:00 CST
+ 更新内容: 二级页趋势和算力日期序列改为只从 dashboard 快照真实明细聚合；无数据库明细时返回空数据，不再前端造数。
+*/
+/*
  更新时间: 2026-07-10 14:50:00 CST
  更新内容: 前端兜底月份、默认算力范围和年份派生改为运行时当前自然月，不再固定 2026-06。
 */
@@ -342,14 +346,6 @@ function findChannel(channelKey) {
   return CHANNELS.find((channel) => channel.key === channelKey) ?? null;
 }
 
-function ratioFor(channel, field, total) {
-  return channel && total ? channel[field] / total : 1;
-}
-
-function scaledWhole(value, ratio) {
-  return Math.max(0, Math.round(value * ratio));
-}
-
 function renewalRate(due, paid) {
   return due ? +((paid / due) * 100).toFixed(1) : 0;
 }
@@ -374,23 +370,44 @@ export const VERSIONS = [
     : 0,
 }));
 
-export function getVersionRows(channelKey = 'all') {
-  const channel = findChannel(channelKey);
-  if (!channel) return VERSIONS;
+function combineVersionRows(rows) {
+  const grouped = new Map();
 
-  const recoveredRatio = ratioFor(channel, 'recovered', KPI.monthRecovered);
-  return VERSIONS.map((version) => {
-    const currentRenewalDue = scaledWhole(version.currentRenewalDue, recoveredRatio);
-    const currentRenewalPaid = scaledWhole(version.currentRenewalPaid, recoveredRatio);
-    return {
-      ...version,
-      units: scaledWhole(version.units, recoveredRatio),
-      recovered: scaledWhole(version.recovered, recoveredRatio),
-      currentRenewalDue,
-      currentRenewalPaid,
-      currentRenewalRate: renewalRate(currentRenewalDue, currentRenewalPaid),
+  rows.forEach((row) => {
+    const key = row.key;
+    if (!key) return;
+    const current = grouped.get(key) ?? {
+      ...row,
+      units: 0,
+      recovered: 0,
+      currentRenewalDue: 0,
+      currentRenewalPaid: 0,
     };
+
+    current.units += Number(row.units) || 0;
+    current.recovered += Number(row.recovered) || 0;
+    current.currentRenewalDue += Number(row.currentRenewalDue) || 0;
+    current.currentRenewalPaid += Number(row.currentRenewalPaid) || 0;
+    current.price = Number(row.price) || current.price || 0;
+    current.mom = Number(row.mom) || current.mom || 0;
+    grouped.set(key, current);
   });
+
+  return [...grouped.values()].map((row) => ({
+    ...row,
+    units: round0(row.units),
+    recovered: round0(row.recovered),
+    currentRenewalDue: round0(row.currentRenewalDue),
+    currentRenewalPaid: round0(row.currentRenewalPaid),
+    currentRenewalRate: renewalRate(row.currentRenewalDue, row.currentRenewalPaid),
+  }));
+}
+
+export function getVersionRows(channelKey = 'all') {
+  const rows = channelKey === 'all'
+    ? VERSIONS
+    : VERSIONS.filter((version) => version.channelKey === channelKey || version.channel_key === channelKey);
+  return combineVersionRows(rows);
 }
 
 function renewalPeriods(month) {
@@ -475,6 +492,10 @@ export const COST_TREND = [
   };
 });
 
+let LIVE_REVENUE_DETAIL_ROWS = [];
+let LIVE_OPENING_DETAIL_ROWS = [];
+let LIVE_VERSION_DETAIL_ROWS = [];
+
 // ===== 算力用量分析（参考原算力看板，算力单位为点，趋势单位为万点）=====
 export const COMPUTE_OVERVIEW = {
   totalCapacity: 2650773741,
@@ -495,9 +516,6 @@ const COMPUTE_ADD_ON = [16, 14, 13, 11, 10, 12, 11, 9, 14, 12, 10, 8, 12, 18, 16
 const COMPUTE_CAPACITY = [2360, 2380, 2376, 2382, 2392, 2388, 2394, 2401, 2410, 2408, 2417, 2440, 2438, 2434, 2441, 2480, 2501, 2512, 2510, 2515, 2512, 2522, 2534, 2540, 2552, 2570, 2582, 2578, 2600];
 const COMPUTE_DEFAULT_RANGE = currentMonthDateRange();
 const COMPUTE_YEAR = String(currentMonthParts().year);
-const COMPUTE_YEAR_NUMBER = Number(COMPUTE_YEAR);
-const COMPUTE_LOOKBACK_YEARS = 5;
-const COMPUTE_LOOKBACK_MONTHS = 36;
 let COMPUTE_USAGE_TREND_IS_EXTERNAL = false;
 let COMPUTE_ACTIVE_DEFAULT_RANGE = [...COMPUTE_DEFAULT_RANGE];
 
@@ -508,14 +526,6 @@ export const COMPUTE_USAGE_TREND = COMPUTE_DAYS.map((day, index) => ({
   capacity: COMPUTE_CAPACITY[index],
 }));
 const COMPUTE_USAGE_TREND_BY_DATE = new Map(COMPUTE_USAGE_TREND.map((row) => [computeTrendDateKey(row.day), row]));
-export const COMPUTE_HALF_YEAR_TREND = [
-  { day: '1月', usage: 2380, addOn: 82, capacity: 19860, target: 2860 },
-  { day: '2月', usage: 2515, addOn: 88, capacity: 20940, target: 2920 },
-  { day: '3月', usage: 2660, addOn: 94, capacity: 22180, target: 3060 },
-  { day: '4月', usage: 2810, addOn: 101, capacity: 23620, target: 3240 },
-  { day: '5月', usage: 2590, addOn: 78, capacity: 24740, target: 3040 },
-  { day: '6月', usage: 3010, addOn: 112, capacity: 26000, target: 3420 },
-];
 
 export const COMPUTE_VERSION_CONSUMPTION = [
   { name: '试用版', value: 2, color: '#94A3B8' },
@@ -585,24 +595,8 @@ function addDays(date, days) {
   return next;
 }
 
-function computeMonthIndex(dateKey) {
-  const [year, month] = String(dateKey).split('-').map(Number);
-  return year * 12 + month - 1;
-}
-
-function computeMonthFromIndex(index) {
-  return {
-    year: Math.floor(index / 12),
-    month: index % 12 + 1,
-  };
-}
-
 function formatComputeDayLabel(dateKey) {
   return dateKey.startsWith(`${COMPUTE_YEAR}-`) ? dateKey.slice(5) : dateKey;
-}
-
-function formatComputeMonthLabel(year, month) {
-  return `${year}.${String(month).padStart(2, '0')}`;
 }
 
 function normalizeComputeDateKey(value) {
@@ -631,24 +625,6 @@ function normalizeComputeDateRange(dateRange) {
   return [keys[0], keys.at(-1)];
 }
 
-function makeSyntheticDayPoint(dateKey) {
-  const [year, month, day] = dateKey.split('-').map(Number);
-  const yearLift = (year - 2023) * 38;
-  const monthLift = month * 5;
-  const wave = (year + month * 13 + day * 7) % 46;
-  const usage = Math.max(260, Math.round(340 + yearLift + monthLift + wave));
-  const addOn = 8 + ((month + day) % 11);
-  const capacity = Math.max(1800, Math.round(2100 + yearLift * 6 + month * 28 + day * 3));
-
-  return {
-    day: formatComputeDayLabel(dateKey),
-    range: dateKey,
-    usage,
-    addOn,
-    capacity,
-  };
-}
-
 function makeComputeDayPoint(dateKey) {
   const existing = COMPUTE_USAGE_TREND_BY_DATE.get(dateKey);
   if (existing) {
@@ -659,35 +635,7 @@ function makeComputeDayPoint(dateKey) {
     };
   }
 
-  return makeSyntheticDayPoint(dateKey);
-}
-
-function makeComputeMonthPoint(index) {
-  const { year, month } = computeMonthFromIndex(index);
-  const label = formatComputeMonthLabel(year, month);
-  const base = year === COMPUTE_YEAR_NUMBER ? COMPUTE_HALF_YEAR_TREND[month - 1] : null;
-
-  if (base) {
-    return { ...base, day: label, range: label };
-  }
-
-  const offset = (COMPUTE_YEAR_NUMBER - year) * 12 + (6 - month);
-  const usage = Math.max(960, Math.round(2780 - offset * 42 + ((year + month * 31) % 96)));
-  const addOn = Math.max(32, Math.round(86 - offset * 1.4 + (month % 4) * 5));
-  const target = Math.max(usage + 260, Math.round(usage * 1.14));
-  const capacity = Math.max(13800, Math.round(24800 - offset * 410 + month * 32));
-
-  return { day: label, range: label, usage, addOn, capacity, target };
-}
-
-function makeComputeYearPoint(year) {
-  const offset = COMPUTE_YEAR_NUMBER - year;
-  const usage = Math.max(6400, Math.round(16320 - offset * 1720));
-  const addOn = Math.max(180, Math.round(610 - offset * 58));
-  const target = Math.max(usage + 1100, Math.round(usage * 1.15));
-  const capacity = Math.max(62000, Math.round(145000 - offset * 11800));
-
-  return { day: `${year}年`, range: `${year}年`, usage, addOn, capacity, target };
+  return null;
 }
 
 function getComputeDayRows(dateRange) {
@@ -696,53 +644,30 @@ function getComputeDayRows(dateRange) {
   const [start, end] = normalizeComputeDateRange(dateRange);
   const rows = [];
   for (let current = parseDateKey(end); formatDateKey(current) >= start; current = addDays(current, -1)) {
-    rows.push(makeComputeDayPoint(formatDateKey(current)));
+    const row = makeComputeDayPoint(formatDateKey(current));
+    if (row) rows.push(row);
   }
 
-  return rows.length ? rows : COMPUTE_USAGE_TREND;
+  return rows;
 }
 
 function getComputeMonthRows(dateRange) {
-  if (COMPUTE_USAGE_TREND_IS_EXTERNAL) return getExternalComputePeriodRows(dateRange, 'month');
-
-  const [start, end] = normalizeComputeDateRange(dateRange);
-  const startIndex = computeMonthIndex(start);
-  const endIndex = computeMonthIndex(end);
-  const lowerIndex = Math.min(startIndex, endIndex - COMPUTE_LOOKBACK_MONTHS + 1);
-  const rows = [];
-
-  for (let index = endIndex; index >= lowerIndex; index -= 1) {
-    rows.push(makeComputeMonthPoint(index));
-  }
-
-  return rows;
+  return getExternalComputePeriodRows(dateRange, 'month');
 }
 
 function getComputeYearRows(dateRange) {
-  if (COMPUTE_USAGE_TREND_IS_EXTERNAL) return getExternalComputePeriodRows(dateRange, 'year');
-
-  const [start, end] = normalizeComputeDateRange(dateRange);
-  const startYear = Number(start.slice(0, 4));
-  const endYear = Number(end.slice(0, 4));
-  const lowerYear = Math.min(startYear, endYear - COMPUTE_LOOKBACK_YEARS + 1);
-  const rows = [];
-
-  for (let year = endYear; year >= lowerYear; year -= 1) {
-    rows.push(makeComputeYearPoint(year));
-  }
-
-  return rows;
+  return getExternalComputePeriodRows(dateRange, 'year');
 }
 
 function getExternalComputeDayRows(dateRange) {
   const [start, end] = normalizeComputeDateRange(dateRange);
   const rows = [];
   for (let current = parseDateKey(end); formatDateKey(current) >= start; current = addDays(current, -1)) {
-    const dateKey = formatDateKey(current);
-    rows.push(COMPUTE_USAGE_TREND_BY_DATE.get(dateKey) ?? makeComputeDayPoint(dateKey));
+    const row = makeComputeDayPoint(formatDateKey(current));
+    if (row) rows.push(row);
   }
 
-  return rows.length ? rows : COMPUTE_USAGE_TREND;
+  return rows;
 }
 
 function getExternalComputePeriodRows(dateRange, period) {
@@ -775,7 +700,7 @@ export function getComputeUsageTrend(request = '30d') {
   }
 
   if (request === '7d') return COMPUTE_USAGE_TREND.slice(-7);
-  if (request === 'half-year') return COMPUTE_HALF_YEAR_TREND;
+  if (request === 'half-year') return getExternalComputePeriodRows(COMPUTE_ACTIVE_DEFAULT_RANGE, 'month');
   return COMPUTE_USAGE_TREND;
 }
 
@@ -801,64 +726,6 @@ export function getComputeResourceHealth() {
   return COMPUTE_RESOURCE_HEALTH.filter((row) => row.usage > 0);
 }
 
-const ORDER_TYPE_TRENDS = {
-  new: {
-    online: [140, 152, 165, 180, 172, 150],
-    south: [64, 70, 76, 82, 74, 66],
-    east: [58, 62, 70, 76, 66, 56],
-    agent: [60, 64, 70, 74, 66, 58],
-  },
-  renewal: {
-    online: [38, 42, 45, 48, 50, 60],
-    south: [22, 24, 26, 28, 30, 30],
-    east: [20, 22, 24, 26, 28, 28],
-    agent: [28, 30, 32, 34, 30, 38],
-  },
-};
-
-const OPENING_ACCOUNT_TRENDS = {
-  monthOpenings: {
-    month: {
-      online: [34, 38, 42, 46, 44, 48],
-      south: [18, 20, 22, 25, 24, 26],
-      east: [16, 18, 20, 22, 21, 22],
-      agent: [20, 22, 24, 27, 27, 30],
-    },
-    day: {
-      online: [8, 10, 9, 12, 11, 13, 10, 12, 14, 15],
-      south: [4, 5, 5, 6, 5, 7, 6, 6, 7, 8],
-      east: [3, 4, 4, 5, 5, 6, 5, 5, 6, 6],
-      agent: [4, 5, 5, 6, 6, 7, 6, 7, 8, 9],
-    },
-    year: {
-      online: [360, 420, 510, 548],
-      south: [180, 220, 270, 292],
-      east: [160, 200, 235, 252],
-      agent: [200, 240, 285, 328],
-    },
-  },
-  todayOpenings: {
-    month: {
-      online: [3, 3, 4, 4, 4, 4],
-      south: [1, 1, 1, 2, 1, 2],
-      east: [1, 1, 1, 1, 1, 1],
-      agent: [1, 2, 1, 1, 2, 2],
-    },
-    day: {
-      online: [3, 3, 4, 3, 4, 4, 5, 4, 4, 4],
-      south: [1, 1, 1, 2, 1, 2, 2, 1, 2, 2],
-      east: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-      agent: [1, 2, 1, 1, 2, 1, 2, 2, 1, 2],
-    },
-    year: {
-      online: [3, 3, 4, 4],
-      south: [1, 1, 2, 2],
-      east: [1, 1, 1, 1],
-      agent: [1, 2, 1, 2],
-    },
-  },
-};
-
 function normalizeSalesKeys(salesKeys) {
   const salesKeySet = new Set(CHANNELS.map((channel) => channel.key));
   const selected = Array.isArray(salesKeys)
@@ -867,21 +734,56 @@ function normalizeSalesKeys(salesKeys) {
   return selected.length ? selected : CHANNELS.map((channel) => channel.key);
 }
 
-function getOrderTypeMonthSeries({ salesKeys, orderType = 'new' } = {}) {
-  const safeKeys = normalizeSalesKeys(salesKeys);
-  const source = ORDER_TYPE_TRENDS[orderType] ?? ORDER_TYPE_TRENDS.new;
+function rowMatchesSales(row, safeKeys) {
+  const channelKey = row.channelKey || row.channel_key || '';
+  if (!channelKey) return safeKeys.length === CHANNELS.length;
+  return safeKeys.includes(channelKey);
+}
 
-  return MONTHLY_TREND.map((month, index) => {
-    const recovered = safeKeys.reduce((sum, key) => sum + (source[key]?.[index] ?? 0), 0);
-    return {
-      label: month.month,
-      value: recovered,
-      prev: index === 0 ? Math.round(recovered * 0.9) : null,
-    };
-  }).map((point, index, list) => ({
+function seriesKey(row, dim) {
+  if (dim === 'year') return String(row.year || row.yearMonth?.slice(0, 4) || row.date?.slice(0, 4) || '');
+  if (dim === 'day') return String(row.date || '');
+  return String(row.yearMonth || row.date?.slice(0, 7) || '');
+}
+
+function seriesLabel(key, dim) {
+  if (!key) return '';
+  if (dim === 'year') return key;
+  if (dim === 'day') return key;
+  const month = Number(String(key).slice(5, 7));
+  return month ? `${month}月` : key;
+}
+
+function seriesSortValue(key, dim) {
+  if (dim === 'year') return Number(key) || 0;
+  return Number(String(key).replaceAll('-', '')) || 0;
+}
+
+function withPreviousValues(points) {
+  return points.map((point, index, list) => ({
     ...point,
-    prev: point.prev ?? list[index - 1].value,
+    prev: index === 0 ? 0 : list[index - 1].value,
   }));
+}
+
+function aggregateDetailSeries(rows, { salesKeys, dim = 'month', valueField = 'value', filter = null } = {}) {
+  const safeKeys = normalizeSalesKeys(salesKeys);
+  const grouped = new Map();
+
+  (rows ?? []).forEach((row) => {
+    if (!rowMatchesSales(row, safeKeys)) return;
+    if (filter && !filter(row)) return;
+    const key = seriesKey(row, dim);
+    if (!key) return;
+    grouped.set(key, (grouped.get(key) ?? 0) + Number(row[valueField] ?? 0));
+  });
+
+  return withPreviousValues([...grouped.entries()]
+    .sort(([a], [b]) => seriesSortValue(a, dim) - seriesSortValue(b, dim))
+    .map(([key, value]) => ({
+      label: seriesLabel(key, dim),
+      value: round1(value),
+    })));
 }
 
 function costTrendValue(row, salesKeys) {
@@ -905,84 +807,46 @@ function getCostSeries({ salesKeys, dim = 'month' } = {}) {
 
   if (dim === 'year') {
     const value = monthSeries.reduce((sum, point) => sum + Number(point.value || 0), 0);
-    return [{ label: '2026', value, prev: Math.round(value * 0.9) }];
+    const year = String(META.monthLabel || '').match(/^\d{4}/)?.[0] ?? String(new Date().getFullYear());
+    return value ? [{ label: year, value, prev: 0 }] : [];
   }
 
-  return monthSeries;
+  return dim === 'month' ? monthSeries : [];
 }
 
-function getOrderTypeSeries({ metric, salesKeys, orderType, dim }) {
-  if (OPENING_ACCOUNT_TRENDS[metric]) {
-    return getOpeningAccountSeries({ metric, salesKeys, dim });
-  }
-
+function getKpiDetailSeries({ metric, salesKeys, orderType = 'all', dim = 'month' }) {
   if (metric === 'cost') {
     return getCostSeries({ salesKeys, dim });
   }
 
-  const monthSeries = getOrderTypeMonthSeries({ metric, salesKeys, orderType });
-  const latest = monthSeries.at(-1)?.value ?? 0;
-
-  if (dim === 'year') {
-    return ['2023', '2024', '2025', '2026'].map((label, index) => {
-      const value = Math.round(latest * [6.8, 7.6, 8.3, 6.4][index]);
-      return { label, value, prev: index === 0 ? Math.round(value * 0.86) : Math.round(latest * [6.8, 7.6, 8.3, 6.4][index - 1]) };
-    });
+  if (metric === 'monthOpenings' || metric === 'todayOpenings') {
+    return aggregateDetailSeries(LIVE_OPENING_DETAIL_ROWS, { salesKeys, dim, valueField: 'value' });
   }
 
-  if (dim === 'day') {
-    const totalWeight = DAY_BASE.reduce((sum, value) => sum + value, 0);
-    return DAY_BASE.map((weight, index) => {
-      const value = Math.max(1, Math.round(latest * (weight / totalWeight)));
-      return {
-        label: `06-${String(index * 3 + 1).padStart(2, '0')}`,
-        value,
-        prev: Math.round(value * 0.9),
-      };
-    });
-  }
-
-  return monthSeries;
-}
-
-function getOpeningAccountSeries({ metric, salesKeys, dim = 'month' }) {
-  const safeKeys = normalizeSalesKeys(salesKeys);
-  const source = OPENING_ACCOUNT_TRENDS[metric] ?? OPENING_ACCOUNT_TRENDS.monthOpenings;
-  const safeDim = source[dim] ? dim : 'month';
-  const labels = safeDim === 'year'
-    ? ['2023', '2024', '2025', '2026']
-    : safeDim === 'day'
-      ? DAY_BASE.map((_, index) => `06-${String(index * 3 + 1).padStart(2, '0')}`)
-      : MONTHLY_TREND.map((month) => month.month);
-  const values = labels.map((_, index) => safeKeys.reduce((sum, key) => sum + (source[safeDim][key]?.[index] ?? 0), 0));
-
-  return values.map((value, index) => {
-    const prev = index === 0 ? Math.round(value * 0.9) : values[index - 1];
-    return {
-      label: labels[index],
-      value,
-      prev: metric === 'monthOpenings' && safeDim === 'month' && index === values.length - 1
-        ? +(value / 1.082).toFixed(1)
-        : prev,
-    };
+  return aggregateDetailSeries(LIVE_REVENUE_DETAIL_ROWS, {
+    salesKeys,
+    dim,
+    valueField: 'value',
+    filter: (row) => !orderType || orderType === 'all' || row.orderType === orderType,
   });
 }
 
 export function getChannelTrend(channelKey = 'all') {
-  const channel = findChannel(channelKey);
-  if (!channel) return MONTHLY_TREND;
+  if (channelKey === 'all') return MONTHLY_TREND;
 
-  const recoveredRatio = ratioFor(channel, 'recovered', KPI.monthRecovered);
-  const targetRatio = ratioFor(channel, 'target', KPI.monthTarget);
-  return MONTHLY_TREND.map((month, index) => {
-    const isLatest = index === MONTHLY_TREND.length - 1;
-    const recovered = isLatest ? channel.recovered : scaledWhole(month.recovered, recoveredRatio);
-    const target = isLatest ? channel.target : scaledWhole(month.target, targetRatio);
+  const channel = findChannel(channelKey);
+  if (!channel) return [];
+
+  const latestMonthLabel = String(META.monthLabel || '').replace(/^\d{4}年/, '');
+  const recoveredSeries = getKpiDetailSeries({ metric: 'recovered', salesKeys: [channelKey], dim: 'month' });
+  return recoveredSeries.map((point) => {
+    const target = point.label === latestMonthLabel ? round0(channel.target) : 0;
+    const recovered = round0(point.value);
     return {
-      ...month,
+      month: point.label,
       recovered,
       target,
-      completion: target ? +((recovered / target) * 100).toFixed(1) : 0,
+      completion: target ? round1((recovered / target) * 100) : 0,
     };
   });
 }
@@ -999,47 +863,35 @@ export function getAnnualRhythmPoints() {
   ];
 }
 
-// ===== KPI 二级卡片：按 销售维度 × 订单类型 × 年/月/日 的柱状数据 =====
+export function getVersionDetailSeries({ salesKeys, mode = 'amount', dim = 'month', versionKey = '' } = {}) {
+  const valueField = mode === 'count' ? 'units' : 'recovered';
+  return aggregateDetailSeries(LIVE_VERSION_DETAIL_ROWS, {
+    salesKeys,
+    dim,
+    valueField,
+    filter: (row) => !versionKey || row.versionKey === versionKey || row.version_key === versionKey,
+  });
+}
+
+// ===== KPI 二级卡片：按真实数据库明细聚合销售维度、订单类型和年/月/日柱状数据。=====
 // 兼容旧签名 getKpiSeries(metric, channel, dim)，新签名 getKpiSeries(metric, { salesKeys, orderType, dim })。
 // 返回 {label, value, prev}[]，prev 用于环比。
-const DAY_BASE = [62, 70, 55, 81, 74, 90, 68, 77, 84, 96];
 export function getKpiSeries(metric, channelOrOptions = 'all', dim = 'month') {
   if (channelOrOptions && typeof channelOrOptions === 'object' && !Array.isArray(channelOrOptions)) {
-    return getOrderTypeSeries({
+    return getKpiDetailSeries({
       metric,
       salesKeys: channelOrOptions.salesKeys,
-      orderType: channelOrOptions.orderType ?? 'new',
+      orderType: channelOrOptions.orderType ?? 'all',
       dim: channelOrOptions.dim ?? dim,
     });
   }
 
   const channel = channelOrOptions;
-  if (OPENING_ACCOUNT_TRENDS[metric]) {
-    return getOpeningAccountSeries({ metric, salesKeys: channel === 'all' ? undefined : [channel], dim });
-  }
-
-  const channelRow = findChannel(channel);
-  const chMul = channelRow ? ratioFor(channelRow, 'recovered', KPI.monthRecovered) : 1;
-  if (dim === 'year') {
-    return ['2023', '2024', '2025', '2026'].map((label, i) => ({
-      label, value: Math.round([2180, 2760, 3380, 3120][i] * chMul),
-      prev: Math.round([1800, 2180, 2760, 3380][i] * chMul),
-    }));
-  }
-  if (dim === 'day') {
-    return DAY_BASE.map((v, i) => ({
-      label: `06-${String(i * 3 + 1).padStart(2, '0')}`,
-      value: Math.round(v * chMul),
-      prev: Math.round(v * 0.9 * chMul),
-    }));
-  }
-  // month
-  const trend = getChannelTrend(channel);
-  return trend.map((m, i) => ({
-    label: m.month,
-    value: m.recovered,
-    prev: i === 0 ? Math.round(m.recovered * 0.9) : trend[i - 1].recovered,
-  }));
+  return getKpiDetailSeries({
+    metric,
+    salesKeys: channel === 'all' ? undefined : [channel],
+    dim,
+  });
 }
 
 // KPI 卡片元信息（用于二级卡片标题/单位）
@@ -1448,6 +1300,17 @@ export function applyDashboardDataSnapshot(snapshot) {
 
   if (Array.isArray(snapshot.openingAccountMetrics)) {
     replaceArray(OPENING_ACCOUNT_METRICS, snapshot.openingAccountMetrics);
+  }
+
+  const detailRows = snapshot.detailRows ?? {};
+  if (Array.isArray(detailRows.revenue)) {
+    LIVE_REVENUE_DETAIL_ROWS = detailRows.revenue;
+  }
+  if (Array.isArray(detailRows.openings)) {
+    LIVE_OPENING_DETAIL_ROWS = detailRows.openings;
+  }
+  if (Array.isArray(detailRows.versions)) {
+    LIVE_VERSION_DETAIL_ROWS = detailRows.versions;
   }
 
   if (snapshot.computeOverview) {

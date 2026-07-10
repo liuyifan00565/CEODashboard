@@ -1,5 +1,8 @@
 # Dashboard Data Aggregation
 
+Update time: 2026-07-10 15:25:00 CST
+Update content: Secondary KPI, channel trend, version detail, opening count trend, renewal period detail, and compute date series now use only database/API rows returned by the runtime snapshot. Frontend proportional trends, fixed day weights, static opening goals, static version option snapshots, and missing-date compute synthesis are disabled; if a database grain has no rows, the UI returns an empty/zero result instead of filling temporary data.
+
 Update time: 2026-07-10 14:50:00 CST
 Update content: Dashboard business month now defaults to the current Beijing calendar month and the frontend default KPI date range follows the current calendar month. `DASHBOARD_MONTH_OVERRIDE` remains available for explicit month overrides.
 
@@ -58,8 +61,10 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 ## 版本与续费
 
 - 版本套数、版本回款、环比：使用 `fact_version_sales_daily` 按 `version_id` 和 `channel_id` 先聚合。
-- 当前续费到期数、已续数：使用 `fact_renewal_daily` 按 `version_id` 先聚合，再关联版本销售结果。
+- 当前续费到期数、已续数：使用 `fact_renewal_daily` 按 `version_id` + `channel_id` 先聚合，再关联同粒度版本销售结果，避免跨渠道重复。
 - 不允许直接把 `fact_version_sales_daily` 与 `fact_renewal_daily` 明细表一对多 JOIN 后再汇总，否则版本套数和回款会被续费行数放大。
+- 版本二级趋势：`/api/dashboard-data.detailRows.versions` 来自 `fact_version_sales_daily` 日级明细聚合，前端只按年/月/日、渠道和版本重新分组，不再按月趋势比例或固定日权重拆分。
+- 续费二级粒度：`fact_renewal_daily` 分别按当月、当年和最新有数据日聚合，并返回对应真实上期；前端不再在缺失年/日粒度时回退复用月度数据。
 
 ## 其他模块
 
@@ -68,7 +73,9 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 - 成本趋势：`costTrend` 按当前业务年份从 `biz_channel_cost_monthly` 聚合各渠道投放成本，并从 `biz_labor_cost_monthly` 聚合人力成本，返回 `{ yearMonth, label, adCost, laborCost, totalCost, channels }`；其中 `channels` 是渠道投放成本拆分，`totalCost = adCost + laborCost`。
 - 总投入费比二级下钻：全渠道视角展示 `totalCost`；选择单个或多个渠道时，主指标只展示所选渠道投放成本合计，底部同时标明全渠道总投入和广告/人力构成。人力成本不强行分摊到单渠道。
 - 开户数：`fact_opening_account_daily.opening_count`。本月开户环比 `previous` 取上一月同表汇总，今日开户 `previous` 取上一个有数据日期的汇总；当无历史日期时回退 0。
+- 开户二级趋势：`/api/dashboard-data.detailRows.openings` 来自 `fact_opening_account_daily`，前端只按真实日级行聚合年/月/日，不再使用固定前端开户趋势数组或写死开户目标。
 - 算力趋势、客户排行、资源健康：默认来自 `fact_compute_usage_daily`、`fact_compute_customer_daily`、`fact_compute_resource_health_daily` 等算力事实表；外部 token/算力接口对应的建表脚本为 `scripts/create_compute_token_usage_tables.sql`。配置 `COMPUTE_API_BASE_URL` 和 `COMPUTE_API_TOKEN` 后，`/api/compute-data` 会通过服务端读取外部算力看板并覆盖运行时算力模块；客户全量明细由 `/api/compute-customers` 分页返回。
+- 算力年/月/日序列：前端只对已加载的 `computeUsageTrend` 日级真实行做聚合；外部接口或数据库缺少的日期不再由前端生成补点。
 - 算力 overview：总容量/新增/已耗来自 `fact_compute_usage_daily`；客户数、客户用量、客户余额、平均回复率、新开客户数、店铺数来自 `fact_compute_customer_daily` 最新快照——新开客户按手机号在更早日期不存在的记录计数，店铺数按 `customer_name` 同理计数；平均回复率取 `AVG(average_reply_rate)`。
 - 算力页前端派生指标：算力利用率 = `consumedCapacity / totalCapacity`；供需关系图把趋势中的用量、按当前总容量缩放后的容量和二者利用率同屏展示；风险客户按客户明细中的低余额（余额不高于 100 万点或余额/用量不高于 3）、高消耗（用量不低于 40 万点）、低回复（平均回复率低于 60%）和零用量标签派生；建议动作由风险标签映射为销售提醒充值、客成激活、客成排查配置、余额预警或高价值场景复盘；版本效率洞察按版本消耗占比计算头部版本和前两版本集中度。
 - 续费：`fact_renewal_daily` 按渠道×版本先聚合当月到期/已续/续费金额，再 LEFT JOIN 上一月同口径聚合得到 `prev_due_count`/`prev_renewed_count`；当上一月无数据时回退 0。
