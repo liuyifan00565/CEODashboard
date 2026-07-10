@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-10 15:16:00 CST
- 更新内容: 合并远端算力后台同步与最新首页布局，保留福小客经营洞察定位和算力顶部对齐。
+ 更新时间: 2026-07-10 15:25:00 CST
+ 更新内容: 将真实算力加载状态传给福小客，防止接口失败时默认算力值进入 AI 经营报告。
 */
 /*
  更新时间: 2026-07-10 16:35:00 CST
@@ -578,6 +578,7 @@ export default function App() {
             channelKey={activeChannelKey}
             companionCue={companionCue}
             context={maintenanceMode ? 'maintenance' : 'dashboard'}
+            computeDataState={computeDataState}
             onNavigateInsight={handleAiInsightNavigation}
           />
         </aside>

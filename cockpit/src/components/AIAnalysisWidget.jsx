@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-10 15:08:00 CST
- 更新内容: 接入会话级事实简报与 CEO 分析定位，续费实时计算，并将月报表述收敛为无阈值的续费观察。
+ 更新时间: 2026-07-10 15:25:00 CST
+ 更新内容: 接入真实算力加载状态，外部算力接口未就绪时只向 Qwen 暴露数据缺口，不传默认数值。
 */
 /*
  更新时间: 2026-07-09 13:18:11 CST
@@ -138,7 +138,9 @@ function makeId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function buildDashboardSnapshot(activeMenu, dim, channelKey) {
+function buildDashboardSnapshot(activeMenu, dim, channelKey, computeDataState) {
+  const computeReady = computeDataState?.status === 'ready';
+
   return {
     meta: META,
     currentView: { activeMenu, dim, channelKey },
@@ -150,10 +152,16 @@ function buildDashboardSnapshot(activeMenu, dim, channelKey) {
     renewal: getRenewalModalData('all', 'month', 'all').overview,
     trend: MONTHLY_TREND,
     operating: OPERATING_OVERVIEW_METRICS,
-    compute: {
-      overview: COMPUTE_OVERVIEW,
-      usageTrend: COMPUTE_USAGE_TREND,
-    },
+    compute: computeReady
+      ? {
+        status: 'ready',
+        overview: COMPUTE_OVERVIEW,
+        usageTrend: COMPUTE_USAGE_TREND,
+      }
+      : {
+        status: computeDataState?.status || 'idle',
+        dataGap: computeDataState?.error || '外部算力数据尚未就绪',
+      },
   };
 }
 
@@ -185,6 +193,7 @@ export default function AIAnalysisWidget({
   channelKey = 'all',
   companionCue,
   context = 'dashboard',
+  computeDataState = { status: 'idle', error: '' },
   onNavigateInsight,
 }) {
   const [open, setOpen] = useState(false);
@@ -217,7 +226,10 @@ export default function AIAnalysisWidget({
   const lastBubbleShownAtRef = useRef(0);
   const openStateRef = useRef(false);
 
-  const snapshot = useMemo(() => buildDashboardSnapshot(activeMenu, dim, channelKey), [activeMenu, dim, channelKey]);
+  const snapshot = useMemo(
+    () => buildDashboardSnapshot(activeMenu, dim, channelKey, computeDataState),
+    [activeMenu, dim, channelKey, computeDataState],
+  );
   const businessBrief = useMemo(() => buildBusinessBrief(snapshot), [snapshot]);
   showCompanionCueRef.current = showCompanionCue;
 

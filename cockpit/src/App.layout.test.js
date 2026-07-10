@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-10 15:16:00 CST
- 更新内容: 合并远端布局回归，并覆盖福小客总览分区、算力切页顶部定位、平滑滚动与玻璃焦点反馈。
+ 更新时间: 2026-07-10 15:24:00 CST
+ 更新内容: 合并远端布局回归，覆盖福小客页面定位，并要求助手接收真实算力加载状态。
 */
 /*
  更新时间: 2026-07-10 14:50:00 CST
@@ -1356,6 +1356,7 @@ test('AI insight navigation locates overview sections and switches to the comput
   assert.match(appSource, /setActiveMenu\('compute'\)/);
   assert.match(appSource, /setActiveMenu\('overview'\)/);
   assert.match(appSource, /onNavigateInsight=\{handleAiInsightNavigation\}/);
+  assert.match(appSource, /<AIAnalysisWidget[\s\S]*?computeDataState=\{computeDataState\}[\s\S]*?onNavigateInsight=\{handleAiInsightNavigation\}/);
   assert.match(appSource, /data-ai-insight-target="trend"/);
   assert.match(appSource, /data-ai-insight-target="versions"/);
   assert.match(operatingOverviewSource, /data-ai-insight-target="performance"/);

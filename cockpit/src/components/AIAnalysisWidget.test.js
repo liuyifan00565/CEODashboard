@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-10 15:15:00 CST
- 更新内容: 覆盖短屏滚动、会话与内存去重、实时续费观察、CEO 快捷分析、算力快照和看板定位入口。
+ 更新时间: 2026-07-10 15:24:00 CST
+ 更新内容: 覆盖短屏、简报去重、实时续费及算力接口未就绪时不向 Qwen 暴露默认算力值。
 */
 /*
  更新时间: 2026-07-09 13:18:11 CST
@@ -173,9 +173,18 @@ test('includes CEO quick analysis prompts and deterministic dashboard data in th
   assert.match(componentSource, /COMPUTE_USAGE_TREND/);
   assert.match(componentSource, /getRenewalModalData/);
   assert.match(componentSource, /operating: OPERATING_OVERVIEW_METRICS/);
-  assert.match(componentSource, /compute: \{\s*overview: COMPUTE_OVERVIEW,\s*usageTrend: COMPUTE_USAGE_TREND,/s);
+  assert.match(componentSource, /compute: computeReady/);
   assert.match(componentSource, /renewal: getRenewalModalData\('all', 'month', 'all'\)\.overview/);
   assert.doesNotMatch(componentSource, /RENEWAL_OVERVIEW/);
+});
+
+test('only exposes compute values to Qwen after external compute data is ready', () => {
+  assert.match(componentSource, /function buildDashboardSnapshot\(activeMenu, dim, channelKey, computeDataState\)/);
+  assert.match(componentSource, /const computeReady = computeDataState\?\.status === 'ready';/);
+  assert.match(componentSource, /compute: computeReady\s*\?\s*\{\s*status: 'ready',\s*overview: COMPUTE_OVERVIEW,\s*usageTrend: COMPUTE_USAGE_TREND,\s*\}\s*:\s*\{/s);
+  assert.match(componentSource, /status: computeDataState\?\.status \|\| 'idle'/);
+  assert.match(componentSource, /dataGap: computeDataState\?\.error \|\| '外部算力数据尚未就绪'/);
+  assert.match(componentSource, /buildDashboardSnapshot\(activeMenu, dim, channelKey, computeDataState\)/);
 });
 
 test('offers compact controls for locating the relevant dashboard sections', () => {
