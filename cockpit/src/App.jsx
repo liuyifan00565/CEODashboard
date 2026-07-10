@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 10:26:00 CST
+ 更新内容: 将月度经营趋势、开户数和总投入费比提升到年度总览下方，版本情况下移，优先保证首屏经营决策信息完整可见。
+*/
+/*
  更新时间: 2026-07-09 18:26:40 CST
  更新内容: 将福客品牌 logo 移入左侧导航上方，主内容顶部只保留搜索，并把版本情况提升到年度总览下方以压缩首屏信息距离。
 */
@@ -448,12 +452,6 @@ export default function App() {
                   onOpenKpi={handleOpenCard}
                 />
 
-                <div className="dash-version-row" data-anim>
-                  <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.version, searchTerm)}>
-                    <VersionFinancePanel channelKey={activeChannelKey} />
-                  </SearchResultBorder>
-                </div>
-
                 <div className="dash-secondary-grid">
                   <div className="dash-secondary-cell dash-secondary-cell--trend" data-anim>
                     <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.trend, searchTerm)}>
@@ -475,6 +473,12 @@ export default function App() {
                       ))}
                     </div>
                   </div>
+                </div>
+
+                <div className="dash-version-row" data-anim>
+                  <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.version, searchTerm)}>
+                    <VersionFinancePanel channelKey={activeChannelKey} />
+                  </SearchResultBorder>
                 </div>
 
                 <div className="dash-secondary-delivery" data-anim>

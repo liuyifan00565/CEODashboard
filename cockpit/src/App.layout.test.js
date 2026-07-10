@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 10:26:00 CST
+ 更新内容: 回归测试锁定首屏先展示月度/年度经营、趋势及开户投入，再展示版本情况，并约束趋势区自适应高度。
+*/
+/*
  更新时间: 2026-07-09 18:45:00 CST
  更新内容: 回归测试同步侧栏品牌 logo 与标题字号收小，避免驾驶舱标题在导航栏内被省略。
 */
@@ -1473,7 +1477,7 @@ test('restores secondary dashboard panels below the operating overview story', (
   assert.match(appSource, /<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
   assert.match(appSource, /className="dash-version-row"/);
   assert.match(appSource, /className="dash-secondary-grid"/);
-  assert.match(appSource, /<div className="dash-version-row" data-anim>[\s\S]*?<VersionFinancePanel channelKey=\{activeChannelKey\} \/>[\s\S]*?<\/div>[\s\S]*?<div className="dash-secondary-grid">/);
+  assert.match(appSource, /<div className="dash-secondary-grid">[\s\S]*?<MonthlyTrend channelKey=\{activeChannelKey\} \/>[\s\S]*?<OpeningMetricCards searchTerm=\{searchTerm\} onOpenSecondary=\{handleOpenCard\} \/>[\s\S]*?<\/div>[\s\S]*?<div className="dash-version-row" data-anim>[\s\S]*?<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);
   assert.match(appSource, /<MonthlyTrend channelKey=\{activeChannelKey\} \/>/);
   assert.match(appSource, /<OpeningMetricCards searchTerm=\{searchTerm\} onOpenSecondary=\{handleOpenCard\} \/>/);
   assert.match(appSource, /<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);
@@ -1756,12 +1760,13 @@ test('keeps left ambient glow behind the AI mascot diffused and subordinate', ()
   assert.doesNotMatch(aiAnalysisWidgetCss, /drop-shadow\(0 0 32px rgba\(139, 124, 255, \.28\)\)/);
 });
 
-test('keeps the main top edge tight so month year and version appear together', () => {
+test('keeps the main top edge tight so month year trend and finance metrics appear together', () => {
   assert.match(dashboardCss, /\.dash-main\{[\s\S]*?gap:8px;/);
   assert.match(dashboardCss, /\.dash-topbar\{[\s\S]*?padding:4px clamp\(16px,3vw,40px\);/);
   assert.match(dashboardCss, /\.dash-topbar\{[\s\S]*?min-height:50px;/);
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?gap:10px;/);
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:58px;/);
+  assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?flex:none;[\s\S]*?grid-template-rows:clamp\(350px,36vh,386px\);/);
   assert.match(dashboardCss, /\.dash-version-row \.vf-panel\{[\s\S]*?min-height:280px;/);
   assert.match(dashboardCss, /\.dash-version-row \.vf-ring-chart\{[\s\S]*?height:250px!important;/);
 });

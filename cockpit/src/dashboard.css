@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 10:26:00 CST
+ 更新内容: 首屏经营趋势与开户投入区上移并采用视口自适应高度，完整承接月度、年度之后的高优先级经营信息，版本情况移至其后。
+*/
+/*
  更新时间: 2026-07-09 18:37:27 CST
  更新内容: 进一步压缩主内容搜索顶栏与内容间距，配合经营主卡收高让版本情况更明显进入首屏。
 */
@@ -230,9 +234,9 @@
 }
 
 .dash-secondary-grid{
-  flex:1;min-height:0;display:grid;gap:16px;
+  flex:none;min-height:0;display:grid;gap:16px;
   grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);
-  grid-template-rows:minmax(300px,1fr);
+  grid-template-rows:clamp(350px,36vh,386px);
   grid-template-areas:
     "trend finance";
 }
