@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-10 17:09:42 CST
+ Update content: Align target maintenance mapper tests with department-level rows; staff facts now roll up into summary department rows instead of rendering user rows.
+*/
+/*
  Update time: 2026-07-09 16:20:00 CST
  Update content: Cover cost maintenance refund amount mapping and rollup.
 */
@@ -25,28 +29,29 @@ const STAFF = [
   { staff_id: 2099, staff_name: '旧账号', department_id: 1002, is_sales: 0, is_enabled: 0, external_bi_user_id: 'wl_x' },
 ];
 
-test('buildTargetSnapshot keeps staff rows and rolls up staff data', () => {
+test('buildTargetSnapshot keeps department rows and rolls up staff actuals', () => {
   const targets = [
-    { year_month: '2026-01', staff_id: 2001, target_amount_yuan: 1000000 },
+    { year_month: '2026-01', department_id: 1002, staff_id: null, target_amount_yuan: 1000000 },
     { year_month: '2026-01', staff_id: 2098, target_amount_yuan: 9990000 },
   ];
   const revenue = [{ ym: '2026-01', staff_id: 2001, amt: 800000, deals: 3 }];
   const { rows, orgTree } = buildTargetSnapshot({ departments: DEPARTMENTS, staff: STAFF, targets, revenue });
 
-  const user = rows.find((r) => r.id === 'user-2001');
-  assert.equal(user.type, 'user');
-  assert.equal(user.name, '王丽英');
-  assert.equal(user.periods.m01.target, 100);
-  assert.equal(user.periods.m01.actual, 80);
-  assert.equal(user.periods.m01.pct, 80);
-  assert.equal(user.periods.m01.status, 'warning');
+  const dept = rows.find((r) => r.id === 'summary-1002');
+  assert.equal(dept.type, 'department');
+  assert.equal(dept.name, '线上销售部');
+  assert.equal(dept.periods.m01.target, 100);
+  assert.equal(dept.periods.m01.actual, 80);
+  assert.equal(dept.periods.m01.pct, 80);
+  assert.equal(dept.periods.m01.status, 'warning');
 
   const all = rows.find((r) => r.id === 'summary-all');
   assert.equal(all.type, 'department');
   assert.equal(all.periods.m01.target, 100);
+  assert.ok(!rows.some((r) => String(r.id).startsWith('user-')));
   assert.ok(!rows.some((r) => r.id === 'user-2099'));
   assert.ok(!rows.some((r) => r.id === 'user-2098'));
-  assert.ok(orgTree.userCount >= 2);
+  assert.ok(orgTree.userCount >= 1);
 });
 
 test('buildTargetSnapshot uses organization-level imports without double counting staff', () => {
@@ -73,27 +78,27 @@ test('buildTargetSnapshot uses organization-level imports without double countin
 
 test('buildTargetSnapshot: target 0 means unset', () => {
   const { rows } = buildTargetSnapshot({ departments: DEPARTMENTS, staff: STAFF, targets: [], revenue: [] });
-  const user = rows.find((r) => r.id === 'user-2001');
-  assert.equal(user.periods.m02.target, 0);
-  assert.equal(user.periods.m02.status, 'unset');
+  const dept = rows.find((r) => r.id === 'summary-1002');
+  assert.equal(dept.periods.m02.target, 0);
+  assert.equal(dept.periods.m02.status, 'unset');
 });
 
 test('buildTargetSnapshot: 120% and above becomes good', () => {
   const targets = [
-    { year_month: '2026-01', staff_id: 2001, target_amount_yuan: 1000000 },
-    { year_month: '2026-02', staff_id: 2001, target_amount_yuan: 1000000 },
+    { year_month: '2026-01', department_id: 1002, staff_id: null, target_amount_yuan: 1000000 },
+    { year_month: '2026-02', department_id: 1002, staff_id: null, target_amount_yuan: 1000000 },
   ];
   const revenue = [
     { ym: '2026-01', staff_id: 2001, amt: 1100000, deals: 3 },
     { ym: '2026-02', staff_id: 2001, amt: 1200000, deals: 4 },
   ];
   const { rows } = buildTargetSnapshot({ departments: DEPARTMENTS, staff: STAFF, targets, revenue });
-  const user = rows.find((r) => r.id === 'user-2001');
+  const dept = rows.find((r) => r.id === 'summary-1002');
 
-  assert.equal(user.periods.m01.pct, 110);
-  assert.equal(user.periods.m01.status, 'warning');
-  assert.equal(user.periods.m02.pct, 120);
-  assert.equal(user.periods.m02.status, 'good');
+  assert.equal(dept.periods.m01.pct, 110);
+  assert.equal(dept.periods.m01.status, 'warning');
+  assert.equal(dept.periods.m02.pct, 120);
+  assert.equal(dept.periods.m02.status, 'good');
 });
 
 test('buildCostSnapshot builds channel rows, summary, roi, and labor rows', () => {

@@ -1,5 +1,8 @@
 # 2026-07-09 目标维护导入功能变更日志
 
+更新时间: 2026-07-10 17:09:42 CST
+更新内容: 目标维护读接口兼容旧库结构；当 `fact_revenue_daily` 尚未被导入流程补充 `department_id` 或 `actual_opening_count` 时，页面读取会通过 `staff_id -> dim_staff.department_id` 解析组织，开户数按 0 处理，避免维护页打开时报 Unknown column。
+
 ## 本次改了什么
 
 这次主要修改的是“数据维护 > 目标维护”里的模板下载和 Excel 导入逻辑。

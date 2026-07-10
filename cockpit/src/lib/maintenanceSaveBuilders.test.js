@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-10 17:09:42 CST
+ Update content: Align target save builder tests with department-level target maintenance rows.
+*/
+/*
  Update time: 2026-07-09 16:20:00 CST
  Update content: Cover cost maintenance refund amount save rows.
 */
@@ -34,12 +38,12 @@ const TARGET_ROWS = [
   { id: 'user-2002', type: 'user', name: '李思雨', periods: { m03: { target: 50 } } },
 ];
 
-test('buildTargetSaveRows: 只发已编辑格，过滤 summary，从 user- 前缀解析 staff_id', () => {
-  const draft = { 'user-2001|m03': 150, 'summary-1002|m03': 999 };
+test('buildTargetSaveRows: 只发已编辑组织格，过滤总计和 user 行，从 summary- 前缀解析 department_id', () => {
+  const draft = { 'summary-1002|m03': 150, 'summary-all|m03': 999, 'user-2001|m03': 888 };
   const out = buildTargetSaveRows(TARGET_ROWS, draft, 2026);
   assert.equal(out.length, 1);
-  assert.equal(out[0].staff_id, '2001');
-  assert.equal(out[0].staff_name, '王丽英');
+  assert.equal(out[0].department_id, '1002');
+  assert.equal(out[0].department_name, '线上销售部');
   assert.equal(out[0].year_month, '2026-03');
   assert.equal(out[0].target_amount_wan, 150);
 });
@@ -50,13 +54,13 @@ test('buildTargetSaveRows: draft 空时产 0 行', () => {
 });
 
 test('buildTargetSaveRows: 月份补零（m10 -> 10）', () => {
-  const out = buildTargetSaveRows(TARGET_ROWS, { 'user-2002|m10': 7 }, 2026);
+  const out = buildTargetSaveRows(TARGET_ROWS, { 'summary-1002|m10': 7 }, 2026);
   assert.equal(out[0].year_month, '2026-10');
   assert.equal(out[0].target_amount_wan, 7);
 });
 
 test('buildTargetSaveRows: 非法月份键被丢弃', () => {
-  const out = buildTargetSaveRows(TARGET_ROWS, { 'user-2001|q1': 5, 'user-2001|year': 9, 'user-2001|m13': 9 }, 2026);
+  const out = buildTargetSaveRows(TARGET_ROWS, { 'summary-1002|q1': 5, 'summary-1002|year': 9, 'summary-1002|m13': 9 }, 2026);
   assert.deepEqual(out, []);
 });
 

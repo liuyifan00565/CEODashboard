@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-10 17:09:42 CST
+ Update content: Align target saver tests with department-level targets and staff_id IS NULL persistence.
+*/
+/*
  Update time: 2026-07-09 16:20:00 CST
  Update content: Cover cost maintenance saving refund_amount_yuan.
 */
@@ -63,50 +67,65 @@ function makeConn(selectFn) {
   return { conn, execs };
 }
 
-test('saveTarget: UPDATE 只写 target_amount_yuan，不碰 opening/order', async () => {
+test('saveTarget: UPDATE 部门级目标，只写 channel_id/target_amount_yuan，不碰 opening/order', async () => {
   const { conn, execs } = makeConn((sql) => {
-    if (sql.includes('FROM dim_staff')) return [{ is_sales: 1, is_enabled: 1, department_id: 1002 }];
+    if (sql.includes('FROM dim_department WHERE department_id')) return [{ department_id: 1002, is_enabled: 1 }];
+    if (sql === 'SELECT department_id, department_code, parent_id FROM dim_department') {
+      return [
+        { department_id: 1001, department_code: 'headquarters', parent_id: null },
+        { department_id: 1002, department_code: 'online-sales', parent_id: 1001 },
+      ];
+    }
+    if (sql.includes('FROM dim_channel')) return [{ id: 3001 }];
     if (sql.includes('FROM biz_target_monthly')) return [{ target_id: 999 }];
     return [];
   });
-  const r = await saveTarget(conn, [{ staff_id: 2001, year_month: '2026-03', target_amount_wan: 150 }]);
+  const r = await saveTarget(conn, [{ department_id: 1002, year_month: '2026-03', target_amount_wan: 150 }]);
   assert.equal(r.written, 1);
   const update = execs.find((e) => e.sql.startsWith('UPDATE'));
   assert.ok(update, '应有 UPDATE');
-  assert.match(update.sql, /SET target_amount_yuan = /);
+  assert.match(update.sql, /SET channel_id = \?, target_amount_yuan = \?/);
   assert.doesNotMatch(update.sql, /target_opening_count|target_order_count/);
-  assert.equal(update.params[0], 1500000); // 150万 -> 1500000元
+  assert.deepEqual(update.params, [3001, 1500000, 999]); // 150万 -> 1500000元
 });
 
 test('saveTarget: 不存在则 INSERT，opening/order 默认 0', async () => {
   const { conn, execs } = makeConn((sql) => {
-    if (sql.includes('FROM dim_staff')) return [{ is_sales: 1, is_enabled: 1, department_id: 1002 }];
+    if (sql.includes('FROM dim_department WHERE department_id')) return [{ department_id: 1002, is_enabled: 1 }];
+    if (sql === 'SELECT department_id, department_code, parent_id FROM dim_department') {
+      return [
+        { department_id: 1001, department_code: 'headquarters', parent_id: null },
+        { department_id: 1002, department_code: 'online-sales', parent_id: 1001 },
+      ];
+    }
+    if (sql.includes('FROM dim_channel')) return [{ id: 3001 }];
     if (sql.includes('COALESCE(MAX')) return [{ nextId: 10001 }];
     return [];
   });
-  await saveTarget(conn, [{ staff_id: 2001, year_month: '2026-03', target_amount_wan: 12 }]);
+  await saveTarget(conn, [{ department_id: 1002, year_month: '2026-03', target_amount_wan: 12 }]);
   const ins = execs.find((e) => e.sql.startsWith('INSERT'));
   assert.ok(ins);
-  assert.match(ins.sql, /target_opening_count, target_order_count\) VALUES \(\?, \?, \?, \?, 0, 0\)/);
+  assert.match(ins.sql, /staff_id, channel_id, target_amount_yuan, target_opening_count, target_order_count\) VALUES \(\?, \?, \?, NULL, \?, \?, 0, 0\)/);
+  assert.deepEqual(ins.params, [10001, '2026-03', 1002, 3001, 120000]);
 });
 
-test('saveTarget: 非法 staff_id/年份被跳过', async () => {
+test('saveTarget: 非法 department_id/年份被跳过', async () => {
   const { conn, execs } = makeConn(() => [{ target_id: 1 }]);
   const r = await saveTarget(conn, [
-    { staff_id: 'x', year_month: '2026-03', target_amount_wan: 1 },
-    { staff_id: 2001, year_month: 'bad', target_amount_wan: 1 },
+    { department_id: 'x', year_month: '2026-03', target_amount_wan: 1 },
+    { department_id: 1002, year_month: 'bad', target_amount_wan: 1 },
   ]);
   assert.equal(r.written, 0);
   assert.equal(r.skipped, 2);
   assert.equal(execs.length, 0);
 });
 
-test('saveTarget: 停用人员被跳过', async () => {
+test('saveTarget: 停用组织被跳过', async () => {
   const { conn, execs } = makeConn((sql) => {
-    if (sql.includes('FROM dim_staff')) return [{ is_sales: 1, is_enabled: 0, department_id: 1002 }];
+    if (sql.includes('FROM dim_department WHERE department_id')) return [{ department_id: 1002, is_enabled: 0 }];
     return [];
   });
-  const r = await saveTarget(conn, [{ staff_id: 2001, year_month: '2026-03', target_amount_wan: 1 }]);
+  const r = await saveTarget(conn, [{ department_id: 1002, year_month: '2026-03', target_amount_wan: 1 }]);
   assert.equal(r.written, 0);
   assert.equal(r.skipped, 1);
   assert.equal(execs.length, 0);
