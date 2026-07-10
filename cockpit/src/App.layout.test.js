@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 11:10:16 CST
+ 更新内容: 回归测试改为锁定经营总览回款半环对齐首页版本情况实际 250px 图高和 340-460px 图宽。
+*/
+/*
  更新时间: 2026-07-10 11:03:07 CST
  更新内容: 回归测试锁定年度累计回款小标签删除，并将年度拆解入口移到年度回款结构标题右上方。
 */
@@ -1415,8 +1419,8 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /colorStops: \[\{ offset: 0, color: '#9B6FAD' \}, \{ offset: 1, color: '#E4B8D7' \}\]/);
   assert.match(operatingOverviewSource, /colorStops: \[\{ offset: 0, color: '#C9A96B' \}, \{ offset: 1, color: '#E3D2A4' \}\]/);
   assert.match(operatingOverviewSource, /animationDuration:\s*900/);
-  assert.match(operatingOverviewSource, /radius:\s*\['57%', '96%'\]/);
-  assert.match(operatingOverviewSource, /center:\s*\['53%', '68%'\]/);
+  assert.match(operatingOverviewSource, /radius:\s*\['45%', '76%'\]/);
+  assert.match(operatingOverviewSource, /center:\s*\['49\.5%', '68%'\]/);
   assert.match(operatingOverviewSource, /overflow:\s*'none'/);
   assert.match(operatingOverviewSource, /borderRadius:\s*8,/);
   assert.match(operatingOverviewSource, /borderColor:\s*'rgba\(255, 255, 255, \.11\)'/);
@@ -1433,7 +1437,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewCss, /border:\s*1px solid var\(--dashboard-card-border\);/);
   assert.match(operatingOverviewCss, /backdrop-filter:\s*var\(--dashboard-card-blur\);/);
   assert.match(operatingOverviewCss, /box-shadow:\s*var\(--dashboard-card-shadow\);/);
-  assert.match(operatingOverviewCss, /\.op-annual-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(330px, 1\.02fr\) minmax\(260px, \.78fr\) minmax\(330px, 1\.08fr\);/);
+  assert.match(operatingOverviewCss, /\.op-annual-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(330px, 1\.02fr\) minmax\(340px, \.8fr\) minmax\(330px, 1\.08fr\);/);
   assert.match(operatingOverviewCss, /\.op-annual-primary b\s*\{[\s\S]*?font-size:\s*clamp\(42px, 4\.6vw, 64px\);/);
   assert.match(operatingOverviewSource, /<div className="op-month-primary-facts op-annual-primary-facts">[\s\S]*?<div\s+className="op-annual-progress-footer"/);
   assert.doesNotMatch(cssRuleBody(operatingOverviewCss, '.op-annual-progress-footer'), /grid-row:/);
@@ -1442,7 +1446,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewCss, /\.op-annual-fill\s*\{/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-annual-capsule\s*\{/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-annual-chart\s*\{/);
-  assert.match(operatingOverviewCss, /\.op-month-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(330px, 1\.02fr\) minmax\(260px, \.78fr\) minmax\(330px, 1\.08fr\);/);
+  assert.match(operatingOverviewCss, /\.op-month-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(330px, 1\.02fr\) minmax\(340px, \.8fr\) minmax\(330px, 1\.08fr\);/);
   assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?border-left:\s*1px solid rgba\(255,255,255,\.035\);[\s\S]*?border-right:\s*1px solid rgba\(255,255,255,\.035\);/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-channel-center/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-panel--channel/);
@@ -1465,9 +1469,9 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   assert.match(monthGridBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.035\);/);
   assert.match(operatingOverviewCss, /\.op-month-primary-value-row\s*\{[\s\S]*?align-items:\s*flex-end;/);
   assert.match(operatingOverviewCss, /\.op-month-refund-note\s*\{[\s\S]*?margin-bottom:\s*clamp\(5px, \.55vw, 8px\);/);
-  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 162px;[\s\S]*?align-content:\s*start;/);
-  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?height:\s*162px;[\s\S]*?min-height:\s*0;/);
-  assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*0;/);
+  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 250px;[\s\S]*?align-content:\s*start;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?width:\s*clamp\(340px, 28vw, 460px\);[\s\S]*?height:\s*250px;[\s\S]*?min-height:\s*250px;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*250px;/);
   assert.match(operatingOverviewCss, /\.op-channel-item\s*\{[\s\S]*?min-height:\s*30px;/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-structure-progress/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-progress-track/);
@@ -1809,7 +1813,8 @@ test('keeps month year trend and finance metrics balanced across 1K and 2K scree
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:18px;/);
   assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?flex:none;[\s\S]*?grid-template-rows:clamp\(350px,36vh,386px\);/);
   assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?grid-template-rows:clamp\(320px,34vh,350px\);[\s\S]*?grid-template-rows:minmax\(136px,\.82fr\) minmax\(176px,1\.08fr\);/);
-  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-overview \{[\s\S]*?gap: 10px;[\s\S]*?grid-template-rows: auto 148px;[\s\S]*?height: 148px;/);
+  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-overview \{[\s\S]*?gap: 10px;/);
+  assert.doesNotMatch(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows: auto 148px;[\s\S]*?height: 148px;/);
   assert.match(dashboardCss, /@media \(min-width:2200px\) and \(min-height:1300px\)\{[\s\S]*?\.dash-secondary-grid\{[\s\S]*?grid-template-rows:410px;/);
   assert.match(dashboardCss, /\.dash-version-row \.vf-panel\{[\s\S]*?min-height:280px;/);
   assert.match(dashboardCss, /\.dash-version-row \.vf-ring-chart\{[\s\S]*?height:250px!important;/);
