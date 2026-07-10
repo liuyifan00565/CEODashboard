@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-10 16:08:00 CST
+ Update content: Use local business brief for daily brief requests and hide raw DashScope error JSON from chat bubbles.
+*/
+/*
  更新时间: 2026-07-10 15:25:00 CST
  更新内容: 接入真实算力加载状态，外部算力接口未就绪时只向 Qwen 暴露数据缺口，不传默认数值。
 */
@@ -89,11 +93,14 @@ const INITIAL_MESSAGE = {
   content: '我会基于当前页面的经营数据做分析。你可以直接问目标差距、销售维度问题、ROI、续费或下一步动作。',
 };
 
+const DAILY_BRIEF_PROMPT = '请生成今日经营简报。若当前快照没有单独的今日销售额，请明确说明没有单独的今日销售额，以下结论基于截至当前页面的本月累计数据，不要把累计值写成当日值。';
+const AI_KEY_MISSING_MESSAGE = 'AI 深度分析未启用，请在服务端配置 DASHSCOPE_API_KEY。基础经营简报可先使用当前页面数据生成。';
+
 const QUICK_PROMPTS = [
   {
     id: 'daily-brief',
     label: '今日简报',
-    prompt: '请生成今日经营简报。若当前快照没有单独的今日销售额，请明确说明没有单独的今日销售额，以下结论基于截至当前页面的本月累计数据，不要把累计值写成当日值。',
+    prompt: DAILY_BRIEF_PROMPT,
   },
   {
     id: 'monthly-report',
@@ -163,6 +170,31 @@ function buildDashboardSnapshot(activeMenu, dim, channelKey, computeDataState) {
         dataGap: computeDataState?.error || '外部算力数据尚未就绪',
       },
   };
+}
+
+function isDailyBriefPrompt(question) {
+  return question === DAILY_BRIEF_PROMPT;
+}
+
+function buildLocalDailyBriefReply(businessBrief) {
+  return `当前快照没有单独今日销售额，以下基于截至当前页面的本月累计数据：${businessBrief.text}`;
+}
+
+function readAiErrorMessage(text, status) {
+  let detail = text;
+
+  try {
+    const payload = JSON.parse(text);
+    detail = payload?.error || payload?.message || text;
+  } catch {
+    detail = text;
+  }
+
+  if (/DASHSCOPE_API_KEY|ALIBABA_API_KEY/.test(detail)) {
+    return AI_KEY_MISSING_MESSAGE;
+  }
+
+  return detail || `AI 分析接口返回 ${status}`;
 }
 
 async function readStream(response, onChunk, signal) {
@@ -612,6 +644,18 @@ export default function AIAnalysisWidget({
     showCompanionCue({ text: '收到，我正在结合当前页面经营数据分析。', action: MASCOT_ACTIONS.think }, { duration: 3600 });
     setDraft('');
     setError('');
+
+    if (isDailyBriefPrompt(question)) {
+      setMessages((current) => [
+        ...current,
+        userMessage,
+        { ...assistantMessage, content: buildLocalDailyBriefReply(businessBrief) },
+      ]);
+      showCompanionCue({ text: '今日简报已按当前页面数据生成。', action: MASCOT_ACTIONS.talk }, { duration: 4200 });
+      playMascotAction(MASCOT_ACTIONS.talk, 1800, false);
+      return;
+    }
+
     setLoading(true);
     setMessages((current) => [...current, userMessage, assistantMessage]);
 
@@ -625,7 +669,7 @@ export default function AIAnalysisWidget({
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || `AI 分析接口返回 ${response.status}`);
+        throw new Error(readAiErrorMessage(text, response.status));
       }
 
       playMascotAction(MASCOT_ACTIONS.talk, 0, true);
@@ -639,9 +683,11 @@ export default function AIAnalysisWidget({
         const message = err.message || 'AI 分析失败，请稍后重试。';
         setError(message);
         showCompanionCue({ text: message, action: MASCOT_ACTIONS.alert }, { duration: 5200 });
-        setMessages((current) => current.map((item) => (
-          item.id === assistantId && !item.content ? { ...item, content: message } : item
-        )));
+        setMessages((current) => (
+          current.some((item) => item.id === assistantId && !item.content)
+            ? current.filter((messageItem) => messageItem.id !== assistantId)
+            : current
+        ));
       }
     } finally {
       setLoading(false);

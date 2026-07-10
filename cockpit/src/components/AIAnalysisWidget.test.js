@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-10 16:05:00 CST
+ Update content: Require the AI assistant to fall back to local business briefs and hide raw DashScope error JSON.
+*/
+/*
  更新时间: 2026-07-10 15:24:00 CST
  更新内容: 覆盖短屏、简报去重、实时续费及算力接口未就绪时不向 Qwen 暴露默认算力值。
 */
@@ -185,6 +189,21 @@ test('only exposes compute values to Qwen after external compute data is ready',
   assert.match(componentSource, /status: computeDataState\?\.status \|\| 'idle'/);
   assert.match(componentSource, /dataGap: computeDataState\?\.error \|\| '外部算力数据尚未就绪'/);
   assert.match(componentSource, /buildDashboardSnapshot\(activeMenu, dim, channelKey, computeDataState\)/);
+});
+
+test('falls back to local business brief instead of showing raw DashScope error JSON', () => {
+  assert.match(componentSource, /const DAILY_BRIEF_PROMPT = /);
+  assert.match(componentSource, /prompt: DAILY_BRIEF_PROMPT/);
+  assert.match(componentSource, /function isDailyBriefPrompt\(question\)/);
+  assert.match(componentSource, /function buildLocalDailyBriefReply\(businessBrief\)/);
+  assert.match(componentSource, /function readAiErrorMessage\(text, status\)/);
+  assert.match(componentSource, /readAiErrorMessage\(text, response\.status\)/);
+  assert.match(componentSource, /if \(isDailyBriefPrompt\(question\)\) \{/);
+  assert.match(componentSource, /content: buildLocalDailyBriefReply\(businessBrief\)/);
+  assert.match(componentSource, /throw new Error\(readAiErrorMessage\(text, response\.status\)\)/);
+  assert.doesNotMatch(componentSource, /\{ \.\.\.item, content: message \}/);
+  assert.match(componentSource, /current\.some\(\(item\) => item\.id === assistantId && !item\.content\)/);
+  assert.match(componentSource, /current\.filter\(\(messageItem\) => messageItem\.id !== assistantId\)/);
 });
 
 test('offers compact controls for locating the relevant dashboard sections', () => {
