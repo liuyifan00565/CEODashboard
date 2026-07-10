@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 12:18:00 CST
+ 更新内容: 为福小客待机与全部运行态动作增加毫秒级非匀速时间线、短眨眼和循环端点停顿。
+*/
+/*
  更新时间: 2026-07-09 13:18:11 CST
  更新内容: 缩短福客待机闭眼播放占比，并为动作帧增加 ping-pong/settle 序列，让 motion 衔接更多依赖帧表而非视觉淡出。
 */
@@ -55,6 +59,7 @@
  更新内容: 新增 AI 小人 2D 帧动画 manifest，统一 48 帧 sprite、四种待机和维护场景动作。
 */
 import { MASCOT_ACTIONS } from './mascotCompanion.js';
+import { getMascotTimelineDuration } from './mascotMotionTimeline.js';
 
 const FRAME_WIDTH = 224;
 const FRAME_HEIGHT = 300;
@@ -62,6 +67,26 @@ const IDLE_FRAMES = Object.freeze([0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 1
 const TWELVE_FRAMES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 const ACTION_PING_PONG_FRAMES = Object.freeze([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
 const ACTION_SETTLE_FRAMES = Object.freeze([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+const IDLE_TIMELINE = motionTimeline(
+  IDLE_FRAMES,
+  [700, 400, 300, 220, 90, 180, 300, 340, 380, 420, 450, 400, 330, 300, 250, 220],
+);
+const CALM_LOOP_TIMELINE = motionTimeline(
+  ACTION_PING_PONG_FRAMES,
+  [130, 110, 100, 90, 90, 90, 90, 100, 110, 120, 140, 220, 140, 120, 110, 100, 90, 90, 100, 110, 130, 190],
+);
+const ALERT_LOOP_TIMELINE = motionTimeline(
+  ACTION_PING_PONG_FRAMES,
+  [105, 90, 80, 75, 75, 75, 80, 85, 95, 105, 120, 190, 120, 105, 95, 85, 80, 75, 80, 90, 105, 180],
+);
+const ONE_SHOT_TIMELINE = motionTimeline(
+  ACTION_SETTLE_FRAMES,
+  [70, 70, 80, 80, 90, 90, 100, 170, 140, 120, 100, 90],
+);
+const CLICK_TIMELINE = motionTimeline(
+  ACTION_SETTLE_FRAMES,
+  [60, 60, 60, 70, 70, 80, 80, 140, 100, 80, 60, 40],
+);
 
 export const MASCOT_ACTION_SHEETS = Object.freeze({
   idleFukeRich: sheetSpec('/mascot-actions/mascot-idle-fuke-rich.png', 16),
@@ -96,7 +121,7 @@ export const MASCOT_ACTION_AUDIT = Object.freeze({
 });
 
 export const MASCOT_IDLE_VARIANTS = Object.freeze([
-  idleVariant('fukeRich', 'idleFukeRich', 7, IDLE_FRAMES),
+  idleVariant('fukeRich', 'idleFukeRich', 7, IDLE_FRAMES, IDLE_TIMELINE),
 ]);
 
 const idleByKey = new Map(MASCOT_IDLE_VARIANTS.map((variant) => [variant.key, variant]));
@@ -124,81 +149,117 @@ function auditSpec(frameCount, maxCenterJitterPx, maxFootJitterPx, minTransparen
   });
 }
 
-function idleVariant(key, sheetKey, fps, frames = TWELVE_FRAMES) {
+function motionTimeline(frames, durations) {
+  return Object.freeze(frames.map((frame, index) => Object.freeze({
+    frame,
+    durationMs: durations[index],
+  })));
+}
+
+function idleVariant(key, sheetKey, fps, frames = TWELVE_FRAMES, timeline = ONE_SHOT_TIMELINE) {
   return Object.freeze({
     key,
     sheetKey,
     frames,
+    timeline,
     fps,
+    durationMs: getMascotTimelineDuration(timeline),
     playback: 'frames',
     loop: true,
+    leadInFrameCount: 2,
+    settleFrameCount: 0,
+    reducedMotionFrame: 0,
   });
 }
 
 function actionSpec(key, sheetKey, fps, extra = {}) {
+  const frames = extra.frames ?? TWELVE_FRAMES;
+  const timeline = extra.timeline ?? motionTimeline(
+    frames,
+    frames.map(() => Math.round(1000 / fps)),
+  );
   return Object.freeze({
     key,
     sheetKey,
-    frames: extra.frames ?? TWELVE_FRAMES,
+    frames,
+    timeline,
     fps,
     playback: 'frames',
     loop: extra.loop ?? true,
-    durationMs: extra.durationMs ?? 0,
+    durationMs: getMascotTimelineDuration(timeline),
     intensity: extra.intensity ?? 'calm',
+    leadInFrameCount: extra.leadInFrameCount ?? 2,
+    settleFrameCount: extra.settleFrameCount ?? (key === MASCOT_ACTIONS.idle ? 0 : 2),
+    reducedMotionFrame: extra.reducedMotionFrame
+      ?? timeline[Math.floor(timeline.length / 2)]?.frame
+      ?? timeline[0]?.frame
+      ?? 0,
   });
 }
 
 export const MASCOT_ANIMATIONS = Object.freeze({
   [MASCOT_ACTIONS.idle]: actionSpec(MASCOT_ACTIONS.idle, defaultIdle.sheetKey, defaultIdle.fps, {
+    frames: IDLE_FRAMES,
+    timeline: IDLE_TIMELINE,
     intensity: 'idle',
+    settleFrameCount: 0,
+    reducedMotionFrame: 0,
   }),
   [MASCOT_ACTIONS.wave]: actionSpec(MASCOT_ACTIONS.wave, 'wave', 10, {
     frames: ACTION_SETTLE_FRAMES,
-    durationMs: 1200,
+    timeline: ONE_SHOT_TIMELINE,
     loop: false,
     intensity: 'greeting',
   }),
   [MASCOT_ACTIONS.guide]: actionSpec(MASCOT_ACTIONS.guide, 'guide', 10, {
     frames: ACTION_SETTLE_FRAMES,
-    durationMs: 1200,
+    timeline: ONE_SHOT_TIMELINE,
     loop: false,
     intensity: 'guide',
   }),
   [MASCOT_ACTIONS.talk]: actionSpec(MASCOT_ACTIONS.talk, 'talk', 8, {
     frames: ACTION_PING_PONG_FRAMES,
+    timeline: CALM_LOOP_TIMELINE,
     intensity: 'speech',
   }),
   [MASCOT_ACTIONS.think]: actionSpec(MASCOT_ACTIONS.think, 'think', 8, {
     frames: ACTION_PING_PONG_FRAMES,
+    timeline: CALM_LOOP_TIMELINE,
     intensity: 'focus',
   }),
   [MASCOT_ACTIONS.alert]: actionSpec(MASCOT_ACTIONS.alert, 'alert', 9, {
     frames: ACTION_PING_PONG_FRAMES,
+    timeline: ALERT_LOOP_TIMELINE,
     intensity: 'alert',
   }),
   [MASCOT_ACTIONS.celebrate]: actionSpec(MASCOT_ACTIONS.celebrate, 'celebrate', 10, {
     frames: ACTION_SETTLE_FRAMES,
-    durationMs: 1200,
+    timeline: ONE_SHOT_TIMELINE,
     loop: false,
     intensity: 'celebrate',
   }),
   [MASCOT_ACTIONS.click]: actionSpec(MASCOT_ACTIONS.click, 'click', 10, {
     frames: ACTION_SETTLE_FRAMES,
-    durationMs: 900,
+    timeline: CLICK_TIMELINE,
     loop: false,
     intensity: 'click',
   }),
   maintenance: actionSpec('maintenance', defaultIdle.sheetKey, defaultIdle.fps, {
+    frames: IDLE_FRAMES,
+    timeline: IDLE_TIMELINE,
     intensity: 'maintenance',
+    settleFrameCount: 0,
+    reducedMotionFrame: 0,
   }),
   maintenanceSave: actionSpec('maintenanceSave', 'celebrate', 10, {
     frames: ACTION_SETTLE_FRAMES,
-    durationMs: 1200,
+    timeline: ONE_SHOT_TIMELINE,
     loop: false,
     intensity: 'maintenance-save',
   }),
   maintenanceReview: actionSpec('maintenanceReview', 'think', 8, {
     frames: ACTION_PING_PONG_FRAMES,
+    timeline: CALM_LOOP_TIMELINE,
     intensity: 'maintenance-review',
   }),
 });
@@ -222,9 +283,14 @@ export function getMascotAnimation(action = MASCOT_ACTIONS.idle, { idleVariant =
       ...MASCOT_ANIMATIONS[MASCOT_ACTIONS.idle],
       sheetKey: variant.sheetKey,
       frames: variant.frames,
+      timeline: variant.timeline,
       fps: variant.fps,
+      durationMs: variant.durationMs,
       playback: variant.playback,
       loop: variant.loop,
+      leadInFrameCount: variant.leadInFrameCount,
+      settleFrameCount: variant.settleFrameCount,
+      reducedMotionFrame: variant.reducedMotionFrame,
       idleVariant: variant.key,
     });
   }

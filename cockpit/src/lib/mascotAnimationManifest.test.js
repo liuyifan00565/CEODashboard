@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 12:14:00 CST
+ 更新内容: 增加福小客 5–6 秒自然待机、短眨眼、非匀速动作和循环端点停顿的时间线验收。
+*/
+/*
  更新时间: 2026-07-09 13:18:11 CST
  更新内容: 验收默认待机只播放一格闭眼，并要求循环动作使用 ping-pong 帧序列减少呆滞和循环硬切。
 */
@@ -258,6 +262,56 @@ test('limits the 2D mascot runtime to approved generated project assets', () => 
   }
   assert.ok(!Object.values(MASCOT_APPROVED_ASSETS.sheets).includes('/mascot-actions/mascot-laptop.png'));
   assert.deepEqual(Object.keys(MASCOT_APPROVED_ASSETS.sheets).sort(), requiredSheetKeys.sort());
+});
+
+test('uses a five-to-six second idle timeline with one brief blink', () => {
+  const idle = getMascotAnimation(MASCOT_ACTIONS.idle);
+  assert.ok(Array.isArray(idle.timeline));
+  assert.ok(idle.durationMs >= 5000 && idle.durationMs <= 6000);
+  const closedEntries = idle.timeline.filter((entry) => entry.frame >= 4 && entry.frame <= 6);
+  assert.deepEqual(closedEntries.map((entry) => entry.frame), [4]);
+  assert.ok(closedEntries[0].durationMs <= 100);
+});
+
+test('uses positive variable durations and valid frame indexes for every action', () => {
+  for (const action of requiredActions) {
+    const animation = MASCOT_ANIMATIONS[action];
+    assert.ok(animation.timeline.length >= 8, `${action} should declare a rich timeline`);
+    assert.ok(
+      animation.timeline.every((entry) => entry.durationMs > 0),
+      `${action} timeline durations should stay positive`,
+    );
+    assert.ok(
+      new Set(animation.timeline.map((entry) => entry.durationMs)).size > 1,
+      `${action} should not play every frame at one uniform speed`,
+    );
+    assert.ok(
+      animation.timeline.every((entry) => (
+        entry.frame >= 0
+        && entry.frame < MASCOT_ACTION_SHEETS[animation.sheetKey].frameCount
+      )),
+      `${action} timeline frames should stay inside its sheet`,
+    );
+  }
+});
+
+test('gives looping actions a calm endpoint hold before reversing', () => {
+  for (const key of [
+    MASCOT_ACTIONS.talk,
+    MASCOT_ACTIONS.think,
+    MASCOT_ACTIONS.alert,
+    'maintenanceReview',
+  ]) {
+    const animation = MASCOT_ANIMATIONS[key];
+    const reverseStart = animation.timeline.findIndex((entry, index) => (
+      index > 0 && entry.frame < animation.timeline[index - 1].frame
+    ));
+    assert.ok(reverseStart > 0, `${key} should use a forward-and-return timeline`);
+    assert.ok(
+      animation.timeline[reverseStart - 1].durationMs >= 180,
+      `${key} should pause briefly at its motion endpoint`,
+    );
+  }
 });
 
 test('uses the stabilized Fu Xiaoke slow idle sheet as the default real frame loop', () => {
