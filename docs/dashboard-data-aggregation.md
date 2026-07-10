@@ -3,6 +3,9 @@
 Update time: 2026-07-10 15:25:00 CST
 Update content: Secondary KPI, channel trend, version detail, opening count trend, renewal period detail, and compute date series now use only database/API rows returned by the runtime snapshot. Frontend proportional trends, fixed day weights, static opening goals, static version option snapshots, and missing-date compute synthesis are disabled; if a database grain has no rows, the UI returns an empty/zero result instead of filling temporary data.
 
+Update time: 2026-07-10 17:20:00 CST
+Update content: Delivery dashboard completion now requires `biz_delivery_target_monthly.target_count`. If the monthly engineer target is not configured, the API keeps real delivery count and value but returns an unset completion, and the frontend shows "目标未配置" instead of a hard-coded 15-order target or 0% completion.
+
 Update time: 2026-07-10 14:50:00 CST
 Update content: Dashboard business month now defaults to the current Beijing calendar month and the frontend default KPI date range follows the current calendar month. `DASHBOARD_MONTH_OVERRIDE` remains available for explicit month overrides.
 
@@ -80,7 +83,7 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 - 算力页前端派生指标：算力利用率 = `consumedCapacity / totalCapacity`；供需关系图把趋势中的用量、按当前总容量缩放后的容量和二者利用率同屏展示；风险客户按客户明细中的低余额（余额不高于 100 万点或余额/用量不高于 3）、高消耗（用量不低于 40 万点）、低回复（平均回复率低于 60%）和零用量标签派生；建议动作由风险标签映射为销售提醒充值、客成激活、客成排查配置、余额预警或高价值场景复盘；版本效率洞察按版本消耗占比计算头部版本和前两版本集中度。
 - 续费：`fact_renewal_daily` 按渠道×版本先聚合当月到期/已续/续费金额，再 LEFT JOIN 上一月同口径聚合得到 `prev_due_count`/`prev_renewed_count`；当上一月无数据时回退 0。
 - 经营节奏：月时间进度按真实日历推导（已过完整月=100%、未到月=0%、当月=已过天数/30），不再使用固定 30 的占位分支；年度时间进度仍按 `latestMonth` 月序 / 12。
-- 交付看板：`fact_delivery_order` 聚合交付单数和金额，`biz_delivery_target_monthly` 提供实施工程师月目标。
+- 交付看板：`fact_delivery_order` 聚合交付单数和金额，`biz_delivery_target_monthly` 提供实施工程师月目标。目标表未配置时不计算完成率、不触发交付预警，前端显示“目标未配置”。
 
 ## Cost Maintenance Refund Amount
 
