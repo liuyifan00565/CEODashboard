@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 12:22:00 CST
+ 更新内容: 验收本地福小客 rig 与动作 bridge 共用毫秒级时间线，并移除固定 FPS 播放路径。
+*/
+/*
  更新时间: 2026-07-09 13:18:11 CST
  更新内容: 验收本地福小客 rig 使用离散帧 motion bridge 衔接动作，并禁止旧 ghost crossfade 层回归。
 */
@@ -199,11 +203,14 @@ test('renders the local Fu Xiaoke rig as a click-through ready layer', () => {
 });
 
 test('uses frame-level motion bridges instead of ghost overlays for local rig action changes', () => {
-  assert.match(componentCode, /LOCAL_RIG_MOTION_BRIDGE_FPS = 14;/);
-  assert.match(componentCode, /function buildLocalRigMotionBridge\(fromAnimation,\s*fromCursor,\s*toAnimation\)/);
-  assert.match(componentCode, /getOutgoingSettleFrames\(fromAnimation,\s*fromCursor\)/);
-  assert.match(componentCode, /toAnimation\.frames\s*\.\s*slice\(0,\s*LOCAL_RIG_LEAD_IN_FRAME_COUNT\)/);
+  assert.match(componentCode, /from\s+['"]\.\.\/lib\/mascotMotionTimeline\.js['"]/);
+  assert.match(componentCode, /buildMascotMotionBridge/);
+  assert.match(componentCode, /resolveMascotTimeline/);
+  assert.match(componentCode, /getMascotReducedMotionFrame/);
   assert.match(componentCode, /const \[motionBridge,\s*setMotionBridge\] = useState\(null\);/);
-  assert.match(componentCode, /motionBridge\?\.frames\[bridgeCursor\]/);
+  assert.match(componentCode, /motionBridge\?\.timeline\[bridgeCursor\]/);
+  assert.match(componentCode, /resolveMascotTimeline\(bridgeAnimation,\s*elapsed\)/);
+  assert.doesNotMatch(componentCode, /LOCAL_RIG_MOTION_BRIDGE_FPS/);
+  assert.doesNotMatch(componentCode, /1000 \/ animation\.fps/);
   assert.doesNotMatch(componentCode, /transitionGhost|transitionTimeoutRef|mascot-local-live2d-rig__sheet--ghost|mascot-local-live2d-rig__blend-layer/);
 });

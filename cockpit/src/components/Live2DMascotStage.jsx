@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 12:27:00 CST
+ 更新内容: 本地福小客 rig 与单层 motion bridge 改为共享毫秒级时间线，并补充减少动态代表帧。
+*/
+/*
  更新时间: 2026-07-09 13:18:11 CST
  更新内容: 本地福小客 rig 改为离散帧 motion bridge，移除旧帧透明 ghost 淡出，让动作衔接更接近 Live2D motion fade 的帧级过渡。
 */
@@ -42,15 +46,18 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { getMascotAnimation, getMascotSheet } from '../lib/mascotAnimationManifest.js';
 import { MASCOT_ACTIONS } from '../lib/mascotCompanion';
+import {
+  buildMascotMotionBridge,
+  getMascotReducedMotionFrame,
+  getMascotTimelineDuration,
+  resolveMascotTimeline,
+} from '../lib/mascotMotionTimeline.js';
 import './Live2DMascotStage.css';
 
 export const MASCOT_LIVE2D_MODEL_SOURCE = '/live2d/fuxiaoke/fuxiaoke.model3.json';
 export const MASCOT_LIVE2D_CORE_SOURCE = '/live2d/live2dcubismcore.min.js';
 
 const LOCAL_FU_XIAOKE_RIG_FORMAT = 'fuxiaoke-local-rig-v1';
-const LOCAL_RIG_MOTION_BRIDGE_FPS = 14;
-const LOCAL_RIG_LEAD_IN_FRAME_COUNT = 3;
-const LOCAL_RIG_SETTLE_FRAME_COUNT = 4;
 const LIVE2D_ACTION_MOTION_GROUPS = Object.freeze({
   [MASCOT_ACTIONS.idle]: ['Idle', 'idle'],
   [MASCOT_ACTIONS.wave]: ['Wave', 'Tap', 'tap_body'],
@@ -255,42 +262,12 @@ function getLocalRigSheetStyle(sheet, framePosition) {
   };
 }
 
-function getAnimationFrameAt(animation, cursor = 0) {
-  const safeCursor = Math.max(0, Math.min(cursor, animation.frames.length - 1));
-  return animation.frames[safeCursor] ?? animation.frames[0] ?? 0;
-}
-
 function createLocalRigFrame(animation, frame) {
   return {
     actionKey: animation.key,
     intensity: animation.intensity,
     sheetKey: animation.sheetKey,
     frame,
-  };
-}
-
-function getOutgoingSettleFrames(animation, cursor) {
-  if (animation.key === MASCOT_ACTIONS.idle) return [];
-  return Array.from({ length: LOCAL_RIG_SETTLE_FRAME_COUNT }, (_, index) => (
-    getAnimationFrameAt(animation, cursor - index)
-  ));
-}
-
-function buildLocalRigMotionBridge(fromAnimation, fromCursor, toAnimation) {
-  if (fromAnimation.key === toAnimation.key && fromAnimation.sheetKey === toAnimation.sheetKey) return null;
-
-  const outgoingFrames = getOutgoingSettleFrames(fromAnimation, fromCursor)
-    .map((frame) => createLocalRigFrame(fromAnimation, frame));
-  const leadInFrames = toAnimation.frames
-    .slice(0, LOCAL_RIG_LEAD_IN_FRAME_COUNT)
-    .map((frame) => createLocalRigFrame(toAnimation, frame));
-  const frames = [...outgoingFrames, ...leadInFrames];
-  if (!frames.length) return null;
-
-  return {
-    frames,
-    targetAction: toAnimation.key,
-    targetCursor: leadInFrames.length,
   };
 }
 
@@ -302,10 +279,11 @@ function FuxiaokeLocalRigStage({ action }) {
   const animationFrameRef = useRef(0);
   const bridgeFrameRef = useRef(0);
   const normalStartCursorRef = useRef(0);
+  const latestActionRef = useRef(action);
   const animation = useMemo(() => getMascotAnimation(displayedAction), [displayedAction]);
-  const currentLocalRigFrame = motionBridge?.frames[bridgeCursor] ?? createLocalRigFrame(
+  const currentLocalRigFrame = motionBridge?.timeline[bridgeCursor] ?? createLocalRigFrame(
     animation,
-    getAnimationFrameAt(animation, frameCursor),
+    animation.timeline[frameCursor]?.frame ?? animation.timeline[0]?.frame ?? 0,
   );
   const sheet = getMascotSheet(currentLocalRigFrame.sheetKey);
   const framePosition = getFramePosition(currentLocalRigFrame.frame, sheet);
@@ -317,10 +295,25 @@ function FuxiaokeLocalRigStage({ action }) {
   }, []);
 
   useEffect(() => {
+    latestActionRef.current = action;
+  }, [action]);
+
+  useEffect(() => {
     if (action === displayedAction || motionBridge) return;
 
     const nextAnimation = getMascotAnimation(action);
-    const bridge = buildLocalRigMotionBridge(animation, frameCursor, nextAnimation);
+    const reduceMotion = typeof window !== 'undefined'
+      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) {
+      const reducedFrame = getMascotReducedMotionFrame(nextAnimation);
+      const reducedCursor = nextAnimation.timeline.findIndex((entry) => entry.frame === reducedFrame);
+      normalStartCursorRef.current = reducedCursor < 0 ? 0 : reducedCursor;
+      setDisplayedAction(action);
+      setFrameCursor(normalStartCursorRef.current);
+      return;
+    }
+
+    const bridge = buildMascotMotionBridge(animation, frameCursor, nextAnimation);
     if (!bridge) {
       normalStartCursorRef.current = 0;
       setDisplayedAction(action);
@@ -334,7 +327,7 @@ function FuxiaokeLocalRigStage({ action }) {
 
   useEffect(() => {
     if (!motionBridge) return undefined;
-    if (typeof window === 'undefined' || motionBridge.frames.length <= 1) {
+    if (typeof window === 'undefined' || motionBridge.timeline.length <= 1) {
       normalStartCursorRef.current = motionBridge.targetCursor;
       setDisplayedAction(motionBridge.targetAction);
       setFrameCursor(motionBridge.targetCursor);
@@ -343,28 +336,32 @@ function FuxiaokeLocalRigStage({ action }) {
     }
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (reduceMotion) {
+      const targetAnimation = getMascotAnimation(latestActionRef.current);
+      const reducedFrame = getMascotReducedMotionFrame(targetAnimation);
+      const reducedCursor = targetAnimation.timeline.findIndex((entry) => entry.frame === reducedFrame);
       normalStartCursorRef.current = 0;
-      setDisplayedAction(motionBridge.targetAction);
-      setFrameCursor(0);
+      setDisplayedAction(latestActionRef.current);
+      setFrameCursor(reducedCursor < 0 ? 0 : reducedCursor);
       setMotionBridge(null);
       return undefined;
     }
 
     const startedAt = performance.now();
-    const frameDuration = 1000 / LOCAL_RIG_MOTION_BRIDGE_FPS;
+    const bridgeAnimation = { timeline: motionBridge.timeline, loop: false };
 
     function tick(now) {
       const elapsed = now - startedAt;
-      const nextBridgeCursor = Math.min(
-        Math.floor(elapsed / frameDuration),
-        motionBridge.frames.length - 1,
-      );
-      setBridgeCursor(nextBridgeCursor);
+      const bridgeMotion = resolveMascotTimeline(bridgeAnimation, elapsed);
+      setBridgeCursor(bridgeMotion.cursor);
 
-      if (nextBridgeCursor >= motionBridge.frames.length - 1) {
-        normalStartCursorRef.current = motionBridge.targetCursor;
-        setDisplayedAction(motionBridge.targetAction);
-        setFrameCursor(motionBridge.targetCursor);
+      if (bridgeMotion.finished) {
+        const latestAction = latestActionRef.current;
+        const targetCursor = latestAction === motionBridge.targetAction
+          ? motionBridge.targetCursor
+          : 0;
+        normalStartCursorRef.current = targetCursor;
+        setDisplayedAction(latestAction);
+        setFrameCursor(targetCursor);
         setMotionBridge(null);
         return;
       }
@@ -380,25 +377,26 @@ function FuxiaokeLocalRigStage({ action }) {
 
   useEffect(() => {
     if (motionBridge) return undefined;
-    if (typeof window === 'undefined' || animation.frames.length <= 1) return undefined;
+    if (typeof window === 'undefined' || animation.timeline.length <= 1) return undefined;
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (reduceMotion) return undefined;
+    if (reduceMotion) {
+      const reducedFrame = getMascotReducedMotionFrame(animation);
+      const reducedCursor = animation.timeline.findIndex((entry) => entry.frame === reducedFrame);
+      setFrameCursor(reducedCursor < 0 ? 0 : reducedCursor);
+      return undefined;
+    }
 
     const startedAt = performance.now();
     const startCursor = normalStartCursorRef.current;
     normalStartCursorRef.current = 0;
-    const frameDuration = 1000 / animation.fps;
+    const startElapsedMs = getMascotTimelineDuration(animation.timeline.slice(0, startCursor));
 
     function tick(now) {
-      const elapsed = now - startedAt;
-      const rawFrameCursor = startCursor + Math.floor(elapsed / frameDuration);
-      const nextFrameCursor = animation.loop
-        ? rawFrameCursor % animation.frames.length
-        : Math.min(rawFrameCursor, animation.frames.length - 1);
+      const elapsed = startElapsedMs + now - startedAt;
+      const motion = resolveMascotTimeline(animation, elapsed);
+      setFrameCursor(motion.cursor);
 
-      setFrameCursor(nextFrameCursor);
-
-      if (!animation.loop && nextFrameCursor >= animation.frames.length - 1) return;
+      if (motion.finished) return;
       animationFrameRef.current = requestAnimationFrame(tick);
     }
 

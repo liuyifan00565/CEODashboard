@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 12:27:00 CST
+ 更新内容: Sprite fallback 改用共享毫秒级动作时间线，并在减少动态模式显示稳定代表帧。
+*/
+/*
  更新时间: 2026-07-09 13:18:11 CST
  更新内容: 移除 sprite fallback 的旧帧透明淡出层，动作衔接改为依赖 manifest 帧序列和本地 rig motion bridge。
 */
@@ -47,6 +51,10 @@ import {
   getMascotSheet,
 } from '../lib/mascotAnimationManifest.js';
 import { MASCOT_ACTIONS } from '../lib/mascotCompanion';
+import {
+  getMascotReducedMotionFrame,
+  resolveMascotTimeline,
+} from '../lib/mascotMotionTimeline.js';
 import Live2DMascotStage from './Live2DMascotStage';
 import './MascotSpriteStage.css';
 
@@ -108,7 +116,7 @@ export default function MascotSpriteStage({
     [action, idleVariant.key],
   );
   const sheet = getMascotSheet(animation.sheetKey);
-  const currentFrame = animation.frames[frameCursor] ?? animation.frames[0] ?? 0;
+  const currentFrame = animation.timeline[frameCursor]?.frame ?? animation.timeline[0]?.frame ?? 0;
   const framePosition = getFramePosition(currentFrame, sheet);
   const stageStyle = getSheetStyle(sheet, framePosition);
   const spriteFallbackActive = live2dStatus === 'fallback';
@@ -126,29 +134,28 @@ export default function MascotSpriteStage({
   }, [animation.key, animation.sheetKey, animation.idleVariant]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || animation.frames.length <= 1) return undefined;
+    if (typeof window === 'undefined' || animation.timeline.length <= 1) return undefined;
     if (!spriteFallbackActive) {
       setFrameCursor(0);
       return undefined;
     }
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (reduceMotion) return undefined;
+    if (reduceMotion) {
+      const reducedFrame = getMascotReducedMotionFrame(animation);
+      const reducedCursor = animation.timeline.findIndex((entry) => entry.frame === reducedFrame);
+      setFrameCursor(reducedCursor < 0 ? 0 : reducedCursor);
+      return undefined;
+    }
 
     const startedAt = performance.now();
-    const frameDuration = 1000 / animation.fps;
 
     function tick(now) {
       const elapsed = now - startedAt;
-      const rawFrameCursor = Math.floor(elapsed / frameDuration);
-      const loopCount = Math.floor(rawFrameCursor / animation.frames.length);
-      const nextFrameCursor = animation.loop
-        ? rawFrameCursor % animation.frames.length
-        : Math.min(rawFrameCursor, animation.frames.length - 1);
+      const motion = resolveMascotTimeline(animation, elapsed);
+      setFrameCursor(motion.cursor);
 
-      setFrameCursor(nextFrameCursor);
-
-      if (animation.loop && loopCount > lastLoopRef.current) {
-        lastLoopRef.current = loopCount;
+      if (animation.loop && motion.loopCount > lastLoopRef.current) {
+        lastLoopRef.current = motion.loopCount;
         if (animation.key === MASCOT_ACTIONS.idle) {
           idleLoopCountRef.current += 1;
           if (idleLoopCountRef.current >= IDLE_LOOPS_BEFORE_VARIANT) {
@@ -158,7 +165,7 @@ export default function MascotSpriteStage({
         }
       }
 
-      if (!animation.loop && nextFrameCursor >= animation.frames.length - 1) return;
+      if (motion.finished) return;
       animationFrameRef.current = requestAnimationFrame(tick);
     }
 

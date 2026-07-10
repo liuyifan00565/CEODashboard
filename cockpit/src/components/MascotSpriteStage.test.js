@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 12:22:00 CST
+ 更新内容: 验收 Sprite fallback 使用共享毫秒级动作时间线，并在减少动态模式显示稳定代表帧。
+*/
+/*
  更新时间: 2026-07-09 13:18:11 CST
  更新内容: 验收 sprite fallback 不再使用旧帧 ghost crossfade，动作衔接改由帧序列与本地 rig motion bridge 承担。
 */
@@ -124,16 +128,18 @@ test('preloads all generated action sheets before action switches need them', ()
   assert.match(componentCode, /preloadMascotActionSheets\(\);/);
 });
 
-test('plays authored frames with requestAnimationFrame and elapsed fps timing', () => {
+test('plays authored frames with the shared variable-duration timeline', () => {
+  assert.match(componentCode, /from\s+['"]\.\.\/lib\/mascotMotionTimeline\.js['"]/);
+  assert.match(componentCode, /resolveMascotTimeline/);
+  assert.match(componentCode, /getMascotReducedMotionFrame/);
   assert.match(componentCode, /const \[frameCursor,\s*setFrameCursor\] = useState\(0\);/);
   assert.match(componentCode, /requestAnimationFrame\(tick\)/);
   assert.match(componentCode, /cancelAnimationFrame\(animationFrameRef\.current\)/);
-  assert.match(componentCode, /const frameDuration = 1000 \/ animation\.fps;/);
-  assert.match(componentCode, /Math\.floor\(elapsed \/ frameDuration\)/);
-  assert.match(componentCode, /animation\.loop/);
-  assert.match(componentCode, /setFrameCursor\(nextFrameCursor\);/);
-  assert.match(componentCode, /const currentFrame = animation\.frames\[frameCursor\] \?\? animation\.frames\[0\] \?\? 0;/);
-  assert.doesNotMatch(componentCode, /const currentFrame = animation\.frames\[0\] \?\? 0;/);
+  assert.match(componentCode, /const motion = resolveMascotTimeline\(animation, elapsed\);/);
+  assert.match(componentCode, /setFrameCursor\(motion\.cursor\);/);
+  assert.match(componentCode, /const currentFrame = animation\.timeline\[frameCursor\]\?\.frame/);
+  assert.doesNotMatch(componentCode, /1000 \/ animation\.fps/);
+  assert.doesNotMatch(componentCode, /Math\.floor\(elapsed \/ frameDuration\)/);
   assert.doesNotMatch(componentCode, /replacementSrc|mascot-sprite-stage__replacement/);
 });
 
@@ -197,6 +203,8 @@ test('adds translate-only inner life motion to keep the mascot from feeling stat
 });
 
 test('includes a reduced-motion static-frame fallback', () => {
+  assert.match(componentCode, /const reducedFrame = getMascotReducedMotionFrame\(animation\);/);
+  assert.match(componentCode, /setFrameCursor\(reducedCursor < 0 \? 0 : reducedCursor\);/);
   assert.match(cssCode, /@media \(prefers-reduced-motion:\s*reduce\)/);
   assert.match(cssCode, /\.mascot-sprite-stage,\s*[\s\S]*?\.mascot-sprite-stage__sheet\s*\{[\s\S]*animation:\s*none;/);
   assert.match(cssCode, /transition:\s*none;/);
