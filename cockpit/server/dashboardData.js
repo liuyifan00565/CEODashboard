@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 17:02:12 CST
+ 更新内容: dashboard 部门回款明细兼容旧库 fact_revenue_daily 无 department_id 的结构，按 staff_id 兜底解析组织，避免接口报 Unknown column。
+*/
+/*
  更新时间: 2026-07-10 15:40:59 CST
  更新内容: 续费快照为每个渠道版本补齐 day/month/year 空粒度，避免二级页因部分粒度字段缺失而漏算。
 */
@@ -725,6 +729,15 @@ async function queryRows(connection, sql, params = []) {
   return rows;
 }
 
+async function tableHasColumn(connection, tableName, columnName) {
+  const rows = await queryRows(
+    connection,
+    'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1',
+    [tableName, columnName],
+  );
+  return rows.length > 0;
+}
+
 async function loadLatestActualMonth(connection) {
   const latestRows = await queryRows(connection, `
     SELECT MAX(actual_month) AS latestMonth
@@ -756,6 +769,10 @@ async function ensureDashboardRefundColumn(connection) {
 export async function buildDashboardSnapshot(connection) {
   const latestMonth = await selectDashboardBusinessMonth(connection);
   await ensureDashboardRefundColumn(connection);
+  const revenueHasDepartmentId = await tableHasColumn(connection, 'fact_revenue_daily', 'department_id');
+  const revenueDepartmentIdSql = revenueHasDepartmentId
+    ? 'COALESCE(r.department_id, s.department_id)'
+    : 's.department_id';
   const prevMonthRows = await queryRows(connection, "SELECT DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(?, '-01'), '%Y-%m-%d'), INTERVAL 1 MONTH), '%Y-%m') AS previousMonth", [latestMonth]);
   const previousMonth = prevMonthRows[0]?.previousMonth;
   const latestYear = String(latestMonth).slice(0, 4);
@@ -888,7 +905,8 @@ export async function buildDashboardSnapshot(connection) {
              c.channel_key,
              ROUND(SUM(r.recovered_amount_yuan) / 10000, 2) AS recovered_wan
       FROM fact_revenue_daily r
-      JOIN dim_department d ON d.department_id = r.department_id
+      LEFT JOIN dim_staff s ON s.staff_id = r.staff_id
+      JOIN dim_department d ON d.department_id = ${revenueDepartmentIdSql}
       LEFT JOIN dim_channel c ON c.channel_id = r.channel_id
       WHERE r.stat_date >= ? AND r.stat_date < ?
         AND d.is_enabled = 1

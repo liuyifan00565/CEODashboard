@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 17:02:12 CST
+ 更新内容: 增加 fact_revenue_daily 无 department_id 旧库兼容回归，防止 dashboard-data 启动后查询部门回款明细报 Unknown column。
+*/
+/*
  更新时间: 2026-07-10 15:40:59 CST
  更新内容: 增加续费快照补齐 day/month/year 空粒度回归，防止真实库部分粒度缺行导致二级页漏算。
 */
@@ -328,6 +332,17 @@ test('filters maintained targets to department-level dashboard rows', () => {
   assert.match(source, /JOIN dim_department d ON d\.department_id = t\.department_id/);
   assert.match(source, /LEFT JOIN dim_channel c ON c\.channel_id = t\.channel_id/);
   assert.ok(source.includes('GROUP BY t.\\`year_month\\`, d.department_id, d.department_name, c.channel_key'));
+});
+
+test('resolves department recovered detail from old or new fact_revenue_daily schema', () => {
+  const source = readFileSync(new URL('./dashboardData.js', import.meta.url), 'utf8');
+
+  assert.match(source, /async function tableHasColumn/);
+  assert.match(source, /tableHasColumn\(connection, 'fact_revenue_daily', 'department_id'\)/);
+  assert.match(source, /'COALESCE\(r\.department_id, s\.department_id\)'/);
+  assert.match(source, /: 's\.department_id';/);
+  assert.match(source, /LEFT JOIN dim_staff s ON s\.staff_id = r\.staff_id/);
+  assert.match(source, /JOIN dim_department d ON d\.department_id = \$\{revenueDepartmentIdSql\}/);
 });
 
 test('selects dashboard business month from explicit override or the current Beijing month', () => {

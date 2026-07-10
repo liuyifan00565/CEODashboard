@@ -1,5 +1,8 @@
 # Dashboard Data Aggregation
 
+Update time: 2026-07-10 17:02:12 CST
+Update content: Department-level recovered detail now detects whether `fact_revenue_daily.department_id` exists. Newer schemas use `COALESCE(r.department_id, staff.department_id)`, while older deployments without the column resolve departments through `fact_revenue_daily.staff_id -> dim_staff.department_id`, preventing `/api/dashboard-data` from failing with `Unknown column 'r.department_id'`.
+
 Update time: 2026-07-10 15:40:59 CST
 Update content: Renewal snapshot rows now always include `day`, `month`, and `year` period objects for every channel/version group. Missing database facts for a grain are represented as zero values instead of an absent field, so secondary renewal pages keep strict real-data semantics without dropping rows because of missing keys.
 
@@ -62,7 +65,7 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 - 当 `fact_revenue_daily` 没有数据时，回退使用 `fact_sales_member_monthly.recovered_amount_yuan`。
 - 本月目标、年度目标、月趋势目标：使用 `biz_target_monthly.target_amount_yuan`，仅取 `staff_id IS NULL` 的部门级目标（目标维护改为按部门录入，历史人员级目标保留在库但不再进入统计）。
 - 渠道目标：`biz_target_monthly.channel_id` 直接关联 `dim_channel` 按渠道汇总，仅取 `staff_id IS NULL` 的部门级目标。
-- 渠道二级明细：本月/年度目标来自 `biz_target_monthly`（按部门），实际回款来自 `fact_revenue_daily.department_id` 聚合；明细粒度由原来的“销售人员”改为“部门”，按部门目标完成率降序排列。
+- 渠道二级明细：本月/年度目标来自 `biz_target_monthly`（按部门），实际回款优先来自 `fact_revenue_daily.department_id` 聚合；旧库没有该列时通过 `fact_revenue_daily.staff_id -> dim_staff.department_id` 解析组织。明细粒度由原来的“销售人员”改为“部门”，按部门目标完成率降序排列。
 
 ## 版本与续费
 
