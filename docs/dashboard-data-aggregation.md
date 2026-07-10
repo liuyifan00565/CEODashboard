@@ -1,5 +1,8 @@
 # Dashboard Data Aggregation
 
+Update time: 2026-07-10 15:40:59 CST
+Update content: Renewal snapshot rows now always include `day`, `month`, and `year` period objects for every channel/version group. Missing database facts for a grain are represented as zero values instead of an absent field, so secondary renewal pages keep strict real-data semantics without dropping rows because of missing keys.
+
 Update time: 2026-07-10 15:25:00 CST
 Update content: Secondary KPI, channel trend, version detail, opening count trend, renewal period detail, and compute date series now use only database/API rows returned by the runtime snapshot. Frontend proportional trends, fixed day weights, static opening goals, static version option snapshots, and missing-date compute synthesis are disabled; if a database grain has no rows, the UI returns an empty/zero result instead of filling temporary data.
 
@@ -67,7 +70,7 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 - 当前续费到期数、已续数：使用 `fact_renewal_daily` 按 `version_id` + `channel_id` 先聚合，再关联同粒度版本销售结果，避免跨渠道重复。
 - 不允许直接把 `fact_version_sales_daily` 与 `fact_renewal_daily` 明细表一对多 JOIN 后再汇总，否则版本套数和回款会被续费行数放大。
 - 版本二级趋势：`/api/dashboard-data.detailRows.versions` 来自 `fact_version_sales_daily` 日级明细聚合，前端只按年/月/日、渠道和版本重新分组，不再按月趋势比例或固定日权重拆分。
-- 续费二级粒度：`fact_renewal_daily` 分别按当月、当年和最新有数据日聚合，并返回对应真实上期；前端不再在缺失年/日粒度时回退复用月度数据。
+- 续费二级粒度：`fact_renewal_daily` 分别按当月、当年和最新有数据日聚合，并返回对应真实上期；后端为每个渠道/版本固定补齐 `day/month/year` 三个对象，某粒度没有真实事实时该对象为 0 值；前端不再在缺失年/日粒度时回退复用月度数据。
 
 ## 其他模块
 
