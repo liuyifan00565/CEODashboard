@@ -1,5 +1,9 @@
 /*
  更新时间: 2026-07-10 10:26:00 CST
+ 更新内容: 首页建立 1K/2K 双密度响应式布局：1080p 保持首屏信息完整，2K 放大趋势财务区并让版本情况完整入屏。
+*/
+/*
+ 更新时间: 2026-07-10 10:26:00 CST
  更新内容: 首屏经营趋势与开户投入区上移并采用视口自适应高度，完整承接月度、年度之后的高优先级经营信息，版本情况移至其后。
 */
 /*
@@ -236,6 +240,7 @@
 .dash-secondary-grid{
   flex:none;min-height:0;display:grid;gap:16px;
   grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);
+  /* 1K / 1080p 默认紧凑档：保留完整趋势坐标轴和右侧三张经营指标卡。 */
   grid-template-rows:clamp(350px,36vh,386px);
   grid-template-areas:
     "trend finance";
@@ -386,6 +391,13 @@
 .dash-token-sub{color:var(--faint);font-size:14px}
 
 /* ===== 窄屏降级 ===== */
+/* 2K / 1440p 舒展档：提高图表阅读尺度，同时不改变主结构。 */
+@media (min-width:2200px) and (min-height:1300px){
+  .dash-secondary-grid{
+    grid-template-rows:410px;
+  }
+}
+
 @media (max-width:1180px){
   .dash-secondary-grid{
     grid-template-columns:1fr;

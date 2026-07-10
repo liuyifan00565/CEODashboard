@@ -1,5 +1,9 @@
 /*
  更新时间: 2026-07-10 10:26:00 CST
+ 更新内容: 回归测试锁定 1K 默认紧凑档与 2K 舒展档，防止任一分辨率重新出现首屏裁切或信息拥挤。
+*/
+/*
+ 更新时间: 2026-07-10 10:26:00 CST
  更新内容: 回归测试锁定首屏先展示月度/年度经营、趋势及开户投入，再展示版本情况，并约束趋势区自适应高度。
 */
 /*
@@ -1760,13 +1764,14 @@ test('keeps left ambient glow behind the AI mascot diffused and subordinate', ()
   assert.doesNotMatch(aiAnalysisWidgetCss, /drop-shadow\(0 0 32px rgba\(139, 124, 255, \.28\)\)/);
 });
 
-test('keeps the main top edge tight so month year trend and finance metrics appear together', () => {
+test('keeps month year trend and finance metrics balanced across 1K and 2K screens', () => {
   assert.match(dashboardCss, /\.dash-main\{[\s\S]*?gap:8px;/);
   assert.match(dashboardCss, /\.dash-topbar\{[\s\S]*?padding:4px clamp\(16px,3vw,40px\);/);
   assert.match(dashboardCss, /\.dash-topbar\{[\s\S]*?min-height:50px;/);
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?gap:10px;/);
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:58px;/);
   assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?flex:none;[\s\S]*?grid-template-rows:clamp\(350px,36vh,386px\);/);
+  assert.match(dashboardCss, /@media \(min-width:2200px\) and \(min-height:1300px\)\{[\s\S]*?\.dash-secondary-grid\{[\s\S]*?grid-template-rows:410px;/);
   assert.match(dashboardCss, /\.dash-version-row \.vf-panel\{[\s\S]*?min-height:280px;/);
   assert.match(dashboardCss, /\.dash-version-row \.vf-ring-chart\{[\s\S]*?height:250px!important;/);
 });
