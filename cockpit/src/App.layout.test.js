@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 11:55:10 CST
+ 更新内容: 回归测试锁定回款半环未完成标签向内收缩，避免文字远离半环。
+*/
+/*
  更新时间: 2026-07-10 11:44:01 CST
  更新内容: 回归测试锁定年度目标进度条继续下移后的更大上间距。
 */
@@ -1435,6 +1439,8 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /style="--op-channel-tooltip-accent: \$\{swatch\};"/);
   assert.match(operatingOverviewSource, /class="op-channel-tooltip__marker"/);
   assert.match(operatingOverviewSource, /const isIncompleteLabel = item\.isIncomplete && Number\(item\.value\) > 0;/);
+  assert.match(operatingOverviewSource, /const INCOMPLETE_LABEL_EDGE_DISTANCE = '22%';/);
+  assert.match(operatingOverviewSource, /\.\.\.\(isIncompleteLabel \? \{ edgeDistance: INCOMPLETE_LABEL_EDGE_DISTANCE \} : \{\}\),/);
   assert.match(operatingOverviewSource, /图上占比 <strong>\$\{share\}%<\/strong> · 目标 \$\{formatWan\(target\)\} 万 · 完成率 \$\{formatPct\(completion\)\}/);
   assert.match(operatingOverviewSource, /const riskBaseline = Math\.min\(100, completion\);/);
   assert.match(operatingOverviewSource, /risk: row\.warn \|\| rowCompletion < riskBaseline,/);
