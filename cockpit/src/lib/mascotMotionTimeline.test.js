@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-10 12:09:00 CST
- 更新内容: 新增福小客非匀速时间线、减少动态代表帧与单层动作衔接的测试。
+ 更新时间: 2026-07-10 13:01:00 CST
+ 更新内容: 增加 bridge 墙钟计时与快速重定向测试，防止一次性动作被截断或跨动作直跳。
 */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -9,7 +9,9 @@ import {
   buildMascotMotionBridge,
   getMascotReducedMotionFrame,
   getMascotTimelineDuration,
+  retargetMascotMotionBridge,
   resolveMascotTimeline,
+  resolveMascotTimelineFromStart,
 } from './mascotMotionTimeline.js';
 
 const loopAnimation = Object.freeze({
@@ -78,4 +80,51 @@ test('builds one-layer settle and lead-in bridge entries', () => {
 
 test('returns an empty bridge when the action and sheet are unchanged', () => {
   assert.equal(buildMascotMotionBridge(loopAnimation, 1, loopAnimation), null);
+});
+
+test('keeps a one-shot target on its original wall clock while a bridge plays', () => {
+  const clickAnimation = {
+    ...loopAnimation,
+    key: 'click',
+    sheetKey: 'click',
+    loop: false,
+    timeline: Object.freeze([
+      Object.freeze({ frame: 0, durationMs: 200 }),
+      Object.freeze({ frame: 1, durationMs: 300 }),
+      Object.freeze({ frame: 2, durationMs: 400 }),
+    ]),
+  };
+  const bridge = buildMascotMotionBridge(loopAnimation, 2, clickAnimation);
+  const actionStartedAt = 1_000;
+  const bridgeEndedAt = actionStartedAt + getMascotTimelineDuration(bridge.timeline);
+  const caughtUp = resolveMascotTimelineFromStart(clickAnimation, actionStartedAt, bridgeEndedAt);
+
+  assert.deepEqual(
+    caughtUp,
+    resolveMascotTimeline(clickAnimation, getMascotTimelineDuration(bridge.timeline)),
+  );
+  assert.equal(resolveMascotTimelineFromStart(clickAnimation, actionStartedAt, 1_900).finished, true);
+});
+
+test('retargets an active bridge from its current visible frame', () => {
+  const thinkAnimation = {
+    ...loopAnimation,
+    key: 'think',
+    sheetKey: 'think',
+    intensity: 'focus',
+  };
+  const alertAnimation = {
+    ...loopAnimation,
+    key: 'alert',
+    sheetKey: 'alert',
+    intensity: 'alert',
+  };
+  const firstBridge = buildMascotMotionBridge(loopAnimation, 2, thinkAnimation);
+  const currentCursor = 2;
+  const currentFrame = firstBridge.timeline[currentCursor];
+  const retargeted = retargetMascotMotionBridge(firstBridge, currentCursor, alertAnimation);
+
+  assert.deepEqual(retargeted.timeline[0], currentFrame);
+  assert.equal(retargeted.targetAction, 'alert');
+  assert.ok(retargeted.timeline.slice(1).every((entry) => entry.actionKey === 'alert'));
 });

@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-10 12:27:00 CST
- 更新内容: 本地福小客 rig 与单层 motion bridge 改为共享毫秒级时间线，并补充减少动态代表帧。
+ 更新时间: 2026-07-10 13:12:00 CST
+ 更新内容: bridge 改为墙钟追帧并支持当前帧快速重定向，真实 Cubism 路径同步遵守减少动态偏好。
 */
 /*
  更新时间: 2026-07-09 13:18:11 CST
@@ -49,8 +49,9 @@ import { MASCOT_ACTIONS } from '../lib/mascotCompanion';
 import {
   buildMascotMotionBridge,
   getMascotReducedMotionFrame,
-  getMascotTimelineDuration,
+  retargetMascotMotionBridge,
   resolveMascotTimeline,
+  resolveMascotTimelineFromStart,
 } from '../lib/mascotMotionTimeline.js';
 import './Live2DMascotStage.css';
 
@@ -241,6 +242,10 @@ function playFirstAvailableMotion(model, action) {
   return false;
 }
 
+function stopLive2DMotions(model) {
+  model?.internalModel?.motionManager?.stopAllMotions?.();
+}
+
 function getFramePosition(currentFrame, sheet) {
   return {
     x: Math.floor(currentFrame % sheet.columns),
@@ -278,8 +283,7 @@ function FuxiaokeLocalRigStage({ action }) {
   const [bridgeCursor, setBridgeCursor] = useState(0);
   const animationFrameRef = useRef(0);
   const bridgeFrameRef = useRef(0);
-  const normalStartCursorRef = useRef(0);
-  const latestActionRef = useRef(action);
+  const actionStartedAtRef = useRef(0);
   const animation = useMemo(() => getMascotAnimation(displayedAction), [displayedAction]);
   const currentLocalRigFrame = motionBridge?.timeline[bridgeCursor] ?? createLocalRigFrame(
     animation,
@@ -295,11 +299,12 @@ function FuxiaokeLocalRigStage({ action }) {
   }, []);
 
   useEffect(() => {
-    latestActionRef.current = action;
+    actionStartedAtRef.current = performance.now();
   }, [action]);
 
   useEffect(() => {
-    if (action === displayedAction || motionBridge) return;
+    if (!motionBridge && action === displayedAction) return;
+    if (motionBridge?.targetAction === action) return;
 
     const nextAnimation = getMascotAnimation(action);
     const reduceMotion = typeof window !== 'undefined'
@@ -307,28 +312,29 @@ function FuxiaokeLocalRigStage({ action }) {
     if (reduceMotion) {
       const reducedFrame = getMascotReducedMotionFrame(nextAnimation);
       const reducedCursor = nextAnimation.timeline.findIndex((entry) => entry.frame === reducedFrame);
-      normalStartCursorRef.current = reducedCursor < 0 ? 0 : reducedCursor;
       setDisplayedAction(action);
-      setFrameCursor(normalStartCursorRef.current);
+      setFrameCursor(reducedCursor < 0 ? 0 : reducedCursor);
+      setMotionBridge(null);
       return;
     }
 
-    const bridge = buildMascotMotionBridge(animation, frameCursor, nextAnimation);
+    const bridge = motionBridge
+      ? retargetMascotMotionBridge(motionBridge, bridgeCursor, nextAnimation)
+      : buildMascotMotionBridge(animation, frameCursor, nextAnimation);
     if (!bridge) {
-      normalStartCursorRef.current = 0;
       setDisplayedAction(action);
       setFrameCursor(0);
+      setMotionBridge(null);
       return;
     }
 
     setMotionBridge(bridge);
     setBridgeCursor(0);
-  }, [action, animation, displayedAction, frameCursor, motionBridge]);
+  }, [action, animation, bridgeCursor, displayedAction, frameCursor, motionBridge]);
 
   useEffect(() => {
     if (!motionBridge) return undefined;
     if (typeof window === 'undefined' || motionBridge.timeline.length <= 1) {
-      normalStartCursorRef.current = motionBridge.targetCursor;
       setDisplayedAction(motionBridge.targetAction);
       setFrameCursor(motionBridge.targetCursor);
       setMotionBridge(null);
@@ -336,11 +342,10 @@ function FuxiaokeLocalRigStage({ action }) {
     }
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (reduceMotion) {
-      const targetAnimation = getMascotAnimation(latestActionRef.current);
+      const targetAnimation = getMascotAnimation(motionBridge.targetAction);
       const reducedFrame = getMascotReducedMotionFrame(targetAnimation);
       const reducedCursor = targetAnimation.timeline.findIndex((entry) => entry.frame === reducedFrame);
-      normalStartCursorRef.current = 0;
-      setDisplayedAction(latestActionRef.current);
+      setDisplayedAction(motionBridge.targetAction);
       setFrameCursor(reducedCursor < 0 ? 0 : reducedCursor);
       setMotionBridge(null);
       return undefined;
@@ -355,13 +360,8 @@ function FuxiaokeLocalRigStage({ action }) {
       setBridgeCursor(bridgeMotion.cursor);
 
       if (bridgeMotion.finished) {
-        const latestAction = latestActionRef.current;
-        const targetCursor = latestAction === motionBridge.targetAction
-          ? motionBridge.targetCursor
-          : 0;
-        normalStartCursorRef.current = targetCursor;
-        setDisplayedAction(latestAction);
-        setFrameCursor(targetCursor);
+        setDisplayedAction(motionBridge.targetAction);
+        setFrameCursor(motionBridge.targetCursor);
         setMotionBridge(null);
         return;
       }
@@ -386,14 +386,12 @@ function FuxiaokeLocalRigStage({ action }) {
       return undefined;
     }
 
-    const startedAt = performance.now();
-    const startCursor = normalStartCursorRef.current;
-    normalStartCursorRef.current = 0;
-    const startElapsedMs = getMascotTimelineDuration(animation.timeline.slice(0, startCursor));
-
     function tick(now) {
-      const elapsed = startElapsedMs + now - startedAt;
-      const motion = resolveMascotTimeline(animation, elapsed);
+      const motion = resolveMascotTimelineFromStart(
+        animation,
+        actionStartedAtRef.current,
+        now,
+      );
       setFrameCursor(motion.cursor);
 
       if (motion.finished) return;
@@ -433,11 +431,42 @@ export default function Live2DMascotStage({
   const appRef = useRef(null);
   const actionRef = useRef(action);
   const lastActionRef = useRef('');
+  const reducedMotionRef = useRef(false);
   const [localRigReady, setLocalRigReady] = useState(false);
 
   useEffect(() => {
     actionRef.current = action;
   }, [action]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    function syncReducedMotion(event = reducedMotionQuery) {
+      reducedMotionRef.current = Boolean(event.matches);
+      if (reducedMotionRef.current) {
+        stopLive2DMotions(modelRef.current);
+      } else if (modelRef.current) {
+        playFirstAvailableMotion(modelRef.current, actionRef.current);
+        lastActionRef.current = actionRef.current;
+      }
+    }
+
+    syncReducedMotion();
+    if (reducedMotionQuery.addEventListener) {
+      reducedMotionQuery.addEventListener('change', syncReducedMotion);
+    } else {
+      reducedMotionQuery.addListener?.(syncReducedMotion);
+    }
+
+    return () => {
+      if (reducedMotionQuery.removeEventListener) {
+        reducedMotionQuery.removeEventListener('change', syncReducedMotion);
+      } else {
+        reducedMotionQuery.removeListener?.(syncReducedMotion);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -498,7 +527,9 @@ export default function Live2DMascotStage({
         fitModel(model, app);
         modelRef.current = model;
         appRef.current = app;
-        playFirstAvailableMotion(model, actionRef.current);
+        if (!reducedMotionRef.current) {
+          playFirstAvailableMotion(model, actionRef.current);
+        }
         lastActionRef.current = actionRef.current;
         onLoadStateChange?.('ready');
 
@@ -532,6 +563,11 @@ export default function Live2DMascotStage({
 
   useEffect(() => {
     if (!modelRef.current || action === lastActionRef.current) return;
+    if (reducedMotionRef.current) {
+      stopLive2DMotions(modelRef.current);
+      lastActionRef.current = action;
+      return;
+    }
     playFirstAvailableMotion(modelRef.current, action);
     lastActionRef.current = action;
   }, [action]);

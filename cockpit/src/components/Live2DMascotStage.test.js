@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-10 12:31:00 CST
- 更新内容: 验收本地福小客 rig 与动作 bridge 共用毫秒级时间线、同步微动周期，并移除固定 FPS 播放路径。
+ 更新时间: 2026-07-10 13:01:00 CST
+ 更新内容: 增加 bridge 墙钟追帧、快速重定向和真实 Cubism 减少动态停止动作的验收。
 */
 /*
  更新时间: 2026-07-09 13:18:11 CST
@@ -205,7 +205,9 @@ test('renders the local Fu Xiaoke rig as a click-through ready layer', () => {
 test('uses frame-level motion bridges instead of ghost overlays for local rig action changes', () => {
   assert.match(componentCode, /from\s+['"]\.\.\/lib\/mascotMotionTimeline\.js['"]/);
   assert.match(componentCode, /buildMascotMotionBridge/);
+  assert.match(componentCode, /retargetMascotMotionBridge/);
   assert.match(componentCode, /resolveMascotTimeline/);
+  assert.match(componentCode, /resolveMascotTimelineFromStart/);
   assert.match(componentCode, /getMascotReducedMotionFrame/);
   assert.match(componentCode, /const \[motionBridge,\s*setMotionBridge\] = useState\(null\);/);
   assert.match(componentCode, /motionBridge\?\.timeline\[bridgeCursor\]/);
@@ -213,6 +215,23 @@ test('uses frame-level motion bridges instead of ghost overlays for local rig ac
   assert.doesNotMatch(componentCode, /LOCAL_RIG_MOTION_BRIDGE_FPS/);
   assert.doesNotMatch(componentCode, /1000 \/ animation\.fps/);
   assert.doesNotMatch(componentCode, /transitionGhost|transitionTimeoutRef|mascot-local-live2d-rig__sheet--ghost|mascot-local-live2d-rig__blend-layer/);
+});
+
+test('keeps bridge targets on their action wall clock and retargets without direct jumps', () => {
+  assert.match(componentCode, /const actionStartedAtRef = useRef/);
+  assert.match(componentCode, /actionStartedAtRef\.current = performance\.now\(\);/);
+  assert.match(componentCode, /retargetMascotMotionBridge\(motionBridge,\s*bridgeCursor,\s*nextAnimation\)/);
+  assert.match(componentCode, /resolveMascotTimelineFromStart\(\s*animation,\s*actionStartedAtRef\.current,\s*now,?\s*\)/);
+  assert.doesNotMatch(componentCode, /latestAction !== motionBridge\.targetAction[\s\S]*?setDisplayedAction\(latestAction\)/);
+});
+
+test('stops real Cubism motions while reduced motion is active', () => {
+  assert.match(componentCode, /function stopLive2DMotions\(model\)/);
+  assert.match(componentCode, /model\?\.internalModel\?\.motionManager\?\.stopAllMotions\?\.\(\);/);
+  assert.match(componentCode, /const reducedMotionRef = useRef\(false\);/);
+  assert.match(componentCode, /reducedMotionQuery\.addEventListener\('change',\s*syncReducedMotion\)/);
+  assert.match(componentCode, /if \(reducedMotionRef\.current\) \{\s*stopLive2DMotions\(modelRef\.current\);/);
+  assert.match(componentCode, /if \(!reducedMotionRef\.current\) \{\s*playFirstAvailableMotion\(model,\s*actionRef\.current\);/);
 });
 
 test('keeps local rig life motion aligned with the shared action timelines', () => {

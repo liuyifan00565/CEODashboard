@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-10 12:11:00 CST
- 更新内容: 新增福小客毫秒级非匀速时间线解析、减少动态代表帧与单层动作 bridge 构建。
+ 更新时间: 2026-07-10 13:06:00 CST
+ 更新内容: 增加基于动作起始墙钟的追帧解析与 bridge 中途重定向，避免一次性动作被截断或跨姿态直跳。
 */
 
 function getEntryDuration(entry) {
@@ -58,6 +58,12 @@ export function getMascotReducedMotionFrame(animation) {
   return timeline[0]?.frame ?? 0;
 }
 
+export function resolveMascotTimelineFromStart(animation, startedAt, now) {
+  const safeStartedAt = Number(startedAt) || 0;
+  const safeNow = Number(now) || safeStartedAt;
+  return resolveMascotTimeline(animation, Math.max(0, safeNow - safeStartedAt));
+}
+
 function createBridgeEntry(animation, entry) {
   return Object.freeze({
     actionKey: animation.key,
@@ -98,4 +104,24 @@ export function buildMascotMotionBridge(fromAnimation, fromCursor, toAnimation) 
     targetAction: toAnimation.key,
     targetCursor: incoming.length,
   });
+}
+
+export function retargetMascotMotionBridge(motionBridge, currentCursor, toAnimation) {
+  const timeline = motionBridge?.timeline ?? [];
+  if (!timeline.length) return null;
+
+  const safeCursor = Math.max(0, Math.min(Number(currentCursor) || 0, timeline.length - 1));
+  const currentEntry = timeline[safeCursor];
+  const sourceAnimation = Object.freeze({
+    key: currentEntry.actionKey,
+    intensity: currentEntry.intensity,
+    sheetKey: currentEntry.sheetKey,
+    timeline: Object.freeze([Object.freeze({
+      frame: currentEntry.frame,
+      durationMs: currentEntry.durationMs,
+    })]),
+    settleFrameCount: 1,
+  });
+
+  return buildMascotMotionBridge(sourceAnimation, 0, toAnimation);
 }
