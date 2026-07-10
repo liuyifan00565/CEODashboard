@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-10 18:16:45 CST
+ Update content: Remove the stale frozen-name width from the target maintenance period table so the horizontal scroller starts on the real period columns.
+*/
+/*
  Update time: 2026-07-09 18:03:00 CST
  Update content: Move cost maintenance opaque sticky column rules after shared first-column glass rules so every channel row stays opaque.
 */
@@ -939,7 +943,6 @@
 }
 
 .mnt-matrix--target {
-  min-width: calc(var(--mnt-target-name-width) + var(--mnt-target-period-width) * 17);
   min-width: calc(var(--mnt-target-period-width) * 17);
   table-layout: fixed;
 }

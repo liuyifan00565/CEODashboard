@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-10 18:16:45 CST
+ Update content: Align selected target-row scroll button coverage with the filtered visible target rows.
+*/
+/*
  Update time: 2026-07-03 17:28:00 CST
  Update content: Require the left selected-row scroll button to sit inside the frozen name column at the annotated offset.
 */
@@ -31,7 +35,7 @@ test('adds selected-row buttons that scroll the target maintenance period table'
   assert.match(maintenancePageSource, /scrollPane\.scrollBy\(\{\s*left: direction === 'left' \? -scrollDistance : scrollDistance,\s*behavior: 'smooth',\s*\}\);/);
   assert.match(maintenancePageSource, /function TargetRowScrollButton\(\{ direction, scrollPaneRef \}\) \{/);
   assert.match(maintenancePageSource, /event\.stopPropagation\(\);[\s\S]*?scrollTargetPeriods\(scrollPaneRef, direction\);/);
-  assert.match(maintenancePageSource, /const selectedTargetRowIndex = rows\.findIndex\(\(row\) => `target:\$\{row\.id\}` === selectedTargetRow\);/);
+  assert.match(maintenancePageSource, /const selectedTargetRowIndex = visibleTargetRows\.findIndex\(\(row\) => `target:\$\{row\.id\}` === selectedTargetRow\);/);
   assert.match(maintenancePageSource, /selectedTargetRowIndex >= 0 && \([\s\S]*?<div\s+className="mnt-row-scroll-controls"\s+style=\{\{ '--mnt-selected-row-index': selectedTargetRowIndex \}\}[\s\S]*?<TargetRowScrollButton direction="left" scrollPaneRef=\{targetScrollPaneRef\} \/>[\s\S]*?<TargetRowScrollButton direction="right" scrollPaneRef=\{targetScrollPaneRef\} \/>/);
 
   assert.match(targetMatrixBlock, /position:\s*relative;/);

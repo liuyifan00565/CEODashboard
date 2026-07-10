@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-10 18:19:58 CST
+ Update content: Snap target maintenance current-month auto alignment to full period columns so the table does not open on a clipped half column.
+*/
+/*
  Update time: 2026-07-09 16:47:39 CST
  Update content: 成本维护的成本与退款输入框增加“万”单位提示，保持页面录入单位清晰。
 */
@@ -516,8 +520,10 @@ function useTargetCurrentMonthAlignment() {
     if (!currentMonthHeader) return;
 
     const maxScrollLeft = Math.max(0, scrollPane.scrollWidth - scrollPane.clientWidth);
+    const periodWidth = currentMonthHeader.offsetWidth || 172;
     const targetScrollLeft = currentMonthHeader.offsetLeft + currentMonthHeader.offsetWidth - scrollPane.clientWidth;
-    scrollPane.scrollLeft = Math.max(0, Math.min(targetScrollLeft, maxScrollLeft));
+    const snappedScrollLeft = Math.ceil(targetScrollLeft / periodWidth) * periodWidth;
+    scrollPane.scrollLeft = Math.max(0, Math.min(snappedScrollLeft, maxScrollLeft));
   }, []);
 
   return scrollPaneRef;

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-10 18:16:45 CST
+ Update content: Ensure the target maintenance period table width no longer includes the separated frozen name column.
+*/
+/*
  更新时间: 2026-07-08 14:47:03 CST
  更新内容: 固定部门/人员列边缘测试改为要求银紫玫瑰轻渐隐和低存在感右边线，弱化与年月列之间的硬边界。
 */
@@ -32,7 +36,7 @@ test('keeps the target maintenance name column outside the horizontal period scr
 
   assert.match(maintenancePageSource, /const TARGET_PERIOD_COLUMNS = buildTargetPeriodColumns\(MAINTENANCE_PERIOD_COLUMNS, META\.monthLabel\);/);
   assert.doesNotMatch(maintenancePageSource, /TARGET_FIXED_PERIOD_COLUMNS|TARGET_SCROLL_PERIOD_COLUMNS|targetPinned/);
-  assert.match(maintenancePageSource, /<div className="mnt-target-name-pane">[\s\S]*?<table className="mnt-matrix mnt-matrix--target-name">[\s\S]*?<th>部门\/人员<\/th>/);
+  assert.match(maintenancePageSource, /<div className="mnt-target-name-pane">[\s\S]*?<table className="mnt-matrix mnt-matrix--target-name">[\s\S]*?<th>部门<\/th>/);
   assert.match(maintenancePageSource, /<div className="mnt-target-scroll-pane" ref=\{targetScrollPaneRef\}>[\s\S]*?<table className="mnt-matrix mnt-matrix--target">/);
   assert.doesNotMatch(maintenancePageSource, /<table className="mnt-matrix mnt-matrix--target">[\s\S]*?<th>部门\/人员<\/th>/);
 
@@ -52,4 +56,5 @@ test('keeps the target maintenance name column outside the horizontal period scr
   assert.match(targetScrollPaneBlock, /overflow-x:\s*auto;/);
   assert.match(targetScrollPaneBlock, /overflow-y:\s*hidden;/);
   assert.match(targetPeriodTableBlock, /min-width:\s*calc\(var\(--mnt-target-period-width\) \* 17\);/);
+  assert.doesNotMatch(targetPeriodTableBlock, /--mnt-target-name-width/);
 });
