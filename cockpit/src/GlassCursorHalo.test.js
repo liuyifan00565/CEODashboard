@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 15:46:00 CST
+ 更新内容: 光标柔光回归测试改为要求入口不再挂载全局 GlassCursor，避免视口底部裁切出闪烁线光。
+*/
+/*
  更新时间: 2026-07-06 11:23:48 CST
  更新内容: 光标效果回归测试改为要求低存在感银紫玫瑰柔光，并限制为透明环境光层。
 */
@@ -39,10 +43,10 @@ const mainSource = readFileSync(new URL('./main.jsx', import.meta.url), 'utf8');
 const cursorSource = readFileSync(new URL('./components/GlassCursor.jsx', import.meta.url), 'utf8');
 const cursorCss = readFileSync(new URL('./components/GlassCursor.css', import.meta.url), 'utf8');
 
-test('mounts one global cursor ambient light outside the dashboard shell', () => {
+test('does not mount a global cursor ambient light over the dashboard', () => {
   assert.doesNotMatch(appSource, /GlassCursor/);
-  assert.match(mainSource, /import GlassCursor from '\.\/components\/GlassCursor';?/);
-  assert.match(mainSource, /<GlassCursor\s*\/>/);
+  assert.doesNotMatch(mainSource, /import GlassCursor from '\.\/components\/GlassCursor';?/);
+  assert.doesNotMatch(mainSource, /<GlassCursor\s*\/>/);
 });
 
 test('tracks the native pointer with a passive non-interactive halo', () => {
