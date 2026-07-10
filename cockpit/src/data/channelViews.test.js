@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 17:20:00 CST
+ 更新内容: 增加交付目标未配置时不生成 0% 完成率的回归测试。
+*/
+/*
  更新时间: 2026-07-10 15:25:00 CST
  更新内容: 二级页和算力趋势测试同步真实明细口径：无运行时快照明细时返回空，不再断言前端临时趋势。
 */
@@ -81,6 +85,7 @@ import {
   SALES_GROUPS,
   TARGET_MAINTENANCE_ORG_TREE,
   TARGET_MAINTENANCE_ROWS,
+  applyDashboardDataSnapshot,
   getComputeCustomerRows,
   getComputeOverview,
   getComputeResourceHealth,
@@ -434,4 +439,34 @@ test('returns delivery rows and summary against the 15 order monthly target', ()
   assert.equal(summary.targetCount, DELIVERY_TARGET_COUNT);
   assert.equal(summary.people, rows.length);
   assert.ok(summary.averageValuePerPerson > 0);
+});
+
+test('keeps delivery completion unset when database target rows are missing', () => {
+  applyDashboardDataSnapshot({
+    source: 'mysql',
+    deliveryRows: [
+      {
+        key: 'delivery-2101',
+        name: '陈晨',
+        deliveredCount: 10,
+        targetCount: 0,
+        targetConfigured: false,
+        averageOrderPrice: 1.7,
+        valuePerPerson: 16.5,
+        completion: null,
+        warn: false,
+      },
+    ],
+  });
+
+  const rows = getDeliveryRows();
+  const summary = getDeliverySummary();
+
+  assert.equal(rows[0].deliveredCount, 10);
+  assert.equal(rows[0].targetCount, 0);
+  assert.equal(rows[0].completion, null);
+  assert.equal(rows[0].warn, false);
+  assert.equal(summary.targetCount, 0);
+  assert.equal(summary.configuredTargetPeople, 0);
+  assert.equal(summary.allTargetsConfigured, false);
 });

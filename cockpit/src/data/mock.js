@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 17:20:00 CST
+ 更新内容: 交付看板汇总改为按运行时真实目标计算，目标未配置时保留真实交付单数但不生成完成率。
+*/
+/*
  更新时间: 2026-07-10 15:25:00 CST
  更新内容: 二级页趋势和算力日期序列改为只从 dashboard 快照真实明细聚合；无数据库明细时返回空数据，不再前端造数。
 */
@@ -920,7 +924,13 @@ function roundMoney(value) {
 
 export function getDeliveryRows() {
   if (Array.isArray(LIVE_DELIVERY_ROWS)) {
-    return [...LIVE_DELIVERY_ROWS].sort((a, b) => b.completion - a.completion);
+    return [...LIVE_DELIVERY_ROWS].sort((a, b) => {
+      const targetOrder = Number(b.targetConfigured ?? (Number(b.targetCount) > 0)) - Number(a.targetConfigured ?? (Number(a.targetCount) > 0));
+      if (targetOrder) return targetOrder;
+      const completionOrder = Number(b.completion || 0) - Number(a.completion || 0);
+      if (completionOrder) return completionOrder;
+      return Number(b.deliveredCount || 0) - Number(a.deliveredCount || 0);
+    });
   }
 
   return DELIVERY_ENGINEERS.map((row) => {
@@ -932,6 +942,7 @@ export function getDeliveryRows() {
       name: row.name,
       deliveredCount: row.orders,
       targetCount: DELIVERY_TARGET_COUNT,
+      targetConfigured: true,
       averageOrderPrice,
       valuePerPerson,
       completion,
@@ -945,9 +956,15 @@ export function getDeliverySummary() {
   const people = rows.length;
   const totalCount = rows.reduce((sum, row) => sum + row.deliveredCount, 0);
   const totalValue = rows.reduce((sum, row) => sum + row.valuePerPerson, 0);
+  const configuredTargetRows = rows.filter((row) => Number(row.targetCount) > 0);
+  const totalTargetCount = configuredTargetRows.reduce((sum, row) => sum + Number(row.targetCount || 0), 0);
+  const averageTargetPerPerson = configuredTargetRows.length ? roundMoney(totalTargetCount / configuredTargetRows.length) : 0;
   return {
     people,
-    targetCount: DELIVERY_TARGET_COUNT,
+    targetCount: averageTargetPerPerson,
+    totalTargetCount,
+    configuredTargetPeople: configuredTargetRows.length,
+    allTargetsConfigured: people > 0 && configuredTargetRows.length === people,
     totalCount,
     averageCountPerPerson: people ? roundMoney(totalCount / people) : 0,
     averageValuePerPerson: people ? roundMoney(totalValue / people) : 0,

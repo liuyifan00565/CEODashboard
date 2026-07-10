@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-10 17:20:00 CST  更新内容: 交付看板目标改为运行时真实目标展示，目标未配置时不再显示写死 15 单或 0% 完成率。 */
 /* 更新时间: 2026-07-08 17:06:01 CST  更新内容: 交付看板超额交付恢复为 120% 及以上才显示金色和标签，100%-119.9% 保持普通完成态。 */
 /* 更新时间: 2026-07-03 23:33:15 CST  更新内容: 交付看板超额完成行新增金色背景、标签与百分比状态类。 */
 /* 更新时间: 2026-07-03 23:27:50 CST  更新内容: 交付看板超额完成行保留金色完成态，并显示超额交付标签。 */
@@ -10,6 +11,16 @@ import { progressGradient } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './DeliveryPanel.css';
 
+function deliveryTargetCopy(summary) {
+  if (!summary.people) return '暂无交付人员';
+  if (!summary.configuredTargetPeople) return '目标未配置';
+  const target = Number(summary.targetCount) || 0;
+  const targetText = Number.isInteger(target) ? target : target.toFixed(1);
+  return summary.allTargetsConfigured
+    ? `${targetText} 单/月目标`
+    : `部分目标未配置 · ${targetText} 单/月均目标`;
+}
+
 export default function DeliveryPanel() {
   const tokens = useThemeTokens();
   const rows = getDeliveryRows();
@@ -20,7 +31,7 @@ export default function DeliveryPanel() {
       <header className="dlv-head">
         <div>
           <h3 className="dlv-title">交付看板</h3>
-          <span className="dlv-sub">实施工程师 · 知识库配置 · 15 单/月目标</span>
+          <span className="dlv-sub">实施工程师 · 知识库配置 · {deliveryTargetCopy(summary)}</span>
         </div>
       </header>
 
@@ -41,7 +52,8 @@ export default function DeliveryPanel() {
 
       <div className="dlv-list">
         {rows.map((row) => {
-          const pct = row.completion;
+          const hasTarget = Number(row.targetCount) > 0;
+          const pct = hasTarget ? Number(row.completion) || 0 : 0;
           const deliveryProgressPct = Number(pct) || 0;
           const isUnderDelivery = row.warn;
           const isOverDelivery = deliveryProgressPct >= 120;
@@ -61,7 +73,7 @@ export default function DeliveryPanel() {
                   {deliveryTag && <span className={deliveryTagClassName}>{deliveryTag}</span>}
                 </div>
                 <span className="dlv-count">
-                  {row.deliveredCount} 单 / 目标 {row.targetCount} 单
+                  {row.deliveredCount} 单 {hasTarget ? `/ 目标 ${row.targetCount} 单` : '/ 目标未配置'}
                 </span>
               </div>
 
@@ -74,12 +86,12 @@ export default function DeliveryPanel() {
                 <div className="dlv-bar">
                   <span
                     style={{
-                      width: `${Math.min(pct, 100)}%`,
+                      width: hasTarget ? `${Math.min(pct, 100)}%` : '0%',
                       background: deliveryProgressBackground,
                     }}
                   />
                 </div>
-                <b className={deliveryProgressPctClassName}>{pct}%</b>
+                <b className={deliveryProgressPctClassName}>{hasTarget ? `${pct}%` : '未配置'}</b>
               </div>
             </div>
           );

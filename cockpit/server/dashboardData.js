@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-10 17:20:00 CST
+ 更新内容: 交付看板目标未配置时返回 null 完成率和 targetConfigured=false，避免把缺失目标误显示为 0%。
+*/
+/*
  更新时间: 2026-07-10 15:25:00 CST
  更新内容: dashboard 快照补充回款、开户、版本的真实日级明细行，并按真实续费事实表返回月/年/日粒度，供前端二级页停用临时趋势。
 */
@@ -564,12 +568,19 @@ function makeDeliveryRows(rows) {
       name: row.engineer_name,
       deliveredCount,
       targetCount,
+      targetConfigured: targetCount > 0,
       averageOrderPrice: deliveredCount ? round1(valuePerPerson / deliveredCount) : 0,
       valuePerPerson,
-      completion: pct(deliveredCount, targetCount),
+      completion: targetCount ? pct(deliveredCount, targetCount) : null,
       warn: targetCount ? deliveredCount / targetCount < 0.8 : false,
     };
-  }).sort((a, b) => b.completion - a.completion);
+  }).sort((a, b) => {
+    const targetOrder = Number(b.targetConfigured) - Number(a.targetConfigured);
+    if (targetOrder) return targetOrder;
+    const completionOrder = Number(b.completion || 0) - Number(a.completion || 0);
+    if (completionOrder) return completionOrder;
+    return Number(b.deliveredCount || 0) - Number(a.deliveredCount || 0);
+  });
 }
 
 export function mapDashboardRowsToSnapshot(rows) {
