@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 16:03:26 CST
+ 更新内容: 回归测试隐藏数据维护侧边栏的组织维护与渠道维护入口，同时确认两个页面的元数据继续保留。
+*/
+/*
  更新时间: 2026-07-13 15:08:41 CST
  更新内容: 回归测试恢复数据维护侧边栏的组织维护入口，并锁定四个维护入口的顺序、键、图标和页面元数据。
 */
@@ -129,18 +133,18 @@ test('defines only overview and compute usage menu entries in the sidebar', () =
   );
 });
 
-test('defines all four data maintenance sidebar entries separately from the main dashboard menu', () => {
+test('defines only target and cost entries in the data maintenance sidebar', () => {
   assert.deepEqual(
     MAINTENANCE_MENU.map((item) => item.name),
-    ['目标维护', '成本维护', '组织维护', '渠道维护']
+    ['目标维护', '成本维护']
   );
   assert.deepEqual(
     MAINTENANCE_MENU.map((item) => item.key),
-    ['target-maintenance', 'cost-maintenance', 'org-maintenance', 'channel-maintenance']
+    ['target-maintenance', 'cost-maintenance']
   );
   assert.deepEqual(
     MAINTENANCE_MENU.map((item) => item.icon),
-    ['target', 'cost', 'organization', 'channel']
+    ['target', 'cost']
   );
   assert.deepEqual(
     MENU.map((item) => item.name),
@@ -159,11 +163,11 @@ test('defines maintenance period columns matching the reference yearly matrix', 
   );
 });
 
-test('returns page metadata for all four maintenance screens', () => {
-  assert.deepEqual(
-    MAINTENANCE_MENU.map((item) => getMaintenancePageMeta(item.key).title),
-    ['目标维护', '成本维护', '组织维护', '渠道维护']
-  );
+test('keeps metadata for all four maintenance screens', () => {
+  assert.equal(getMaintenancePageMeta('target-maintenance').title, '目标维护');
+  assert.equal(getMaintenancePageMeta('cost-maintenance').title, '成本维护');
+  assert.equal(getMaintenancePageMeta('org-maintenance').title, '组织维护');
+  assert.equal(getMaintenancePageMeta('channel-maintenance').title, '渠道维护');
   assert.equal(getMaintenancePageMeta('target-maintenance').scope, '所有部门');
   assert.equal(getMaintenancePageMeta('cost-maintenance').scope, '全部渠道');
   assert.equal(getMaintenancePageMeta('org-maintenance').scope, 'BI销售 21 人 / 卫瓴人员 28 人');

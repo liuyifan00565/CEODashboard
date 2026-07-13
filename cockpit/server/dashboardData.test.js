@@ -1,4 +1,4 @@
-/* Update time: 2026-07-13 16:55:00 CST  Update content: Add regression coverage that channel member drilldowns prefer staff-level monthly sales facts over department fallback rows. */
+/* 更新时间: 2026-07-13 16:40:31 CST  更新内容: 选择性合并数据维护代码，恢复拉取前的主界面数据聚合回归测试。 */
 /*
  更新时间: 2026-07-10 17:02:12 CST
  更新内容: 增加 fact_revenue_daily 无 department_id 旧库兼容回归，防止 dashboard-data 启动后查询部门回款明细报 Unknown column。
@@ -317,46 +317,6 @@ test('includes maintained target departments in channel member details without s
   assert.equal(zhaoyang.recovered, 0);
   assert.equal(zhaoyang.yearTarget, 180);
   assert.equal(zhaoyang.yearRecovered, 12);
-});
-
-test('prefers staff-level monthly sales facts for channel member details', () => {
-  const snapshot = mapDashboardRowsToSnapshot({
-    latestMonth: '2026-07',
-    channels: [
-      { channel_id: 3001, channel_key: 'online', channel_name: '线上' },
-    ],
-    salesMemberMonthly: [
-      { year_month: '2026-06', staff_id: 2001, staff_name: '张三', channel_key: 'online', recovered_wan: 20, target_wan: 8 },
-      { year_month: '2026-07', staff_id: 2001, staff_name: '张三', channel_key: 'online', recovered_wan: 30, target_wan: 10 },
-    ],
-    revenueDaily: [
-      { year_month: '2026-07', channel_key: 'online', recovered_wan: 30 },
-    ],
-    monthlyTargets: [
-      { year_month: '2026-07', target_wan: 100 },
-    ],
-    channelTargets: [
-      { channel_key: 'online', target_wan: 100 },
-    ],
-    yearChannelTargets: [
-      { channel_key: 'online', target_wan: 100 },
-    ],
-    memberTargets: [
-      { year_month: '2026-07', department_id: 1010, department_name: '线上销售部', channel_key: 'online', target_wan: 100 },
-    ],
-    memberRecovered: [
-      { year_month: '2026-07', department_id: 1010, department_name: '线上销售部', channel_key: 'online', recovered_wan: 30 },
-    ],
-  });
-
-  const zhangsan = snapshot.salesMemberRows.find((row) => row.name === '张三');
-  assert.ok(zhangsan);
-  assert.equal(zhangsan.group, 'online');
-  assert.equal(zhangsan.target, 10);
-  assert.equal(zhangsan.recovered, 30);
-  assert.equal(zhangsan.yearTarget, 18);
-  assert.equal(zhangsan.yearRecovered, 50);
-  assert.equal(snapshot.salesMemberRows.some((row) => row.name === '线上销售部'), false);
 });
 
 test('pre-aggregates renewal facts before joining version sales', () => {

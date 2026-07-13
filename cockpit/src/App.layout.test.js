@@ -1,4 +1,4 @@
-/* Update time: 2026-07-13 16:35:00 CST  Update content: Add regression coverage for opening channel member details directly from operating overview rows. */
+/* 更新时间: 2026-07-13 16:40:31 CST  更新内容: 选择性合并数据维护代码，恢复拉取前的主界面布局回归断言。 */
 /*
  更新时间: 2026-07-13 14:50:37 CST
  更新内容: 回归测试恢复算力饼图原字号，并锁定主界面两张回款结构半环图的更小标注。
@@ -1572,16 +1572,6 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /const riskBaseline = Math\.min\(100, completion\);/);
   assert.match(operatingOverviewSource, /risk: row\.warn \|\| rowCompletion < riskBaseline,/);
   assert.match(operatingOverviewSource, /\{row\.risk && <span className="op-channel-risk">风险<\/span>\}/);
-  assert.match(operatingOverviewSource, /import \{ ChannelMemberModal \} from '\.\/ChannelPanel';/);
-  assert.match(operatingOverviewSource, /getSalesMemberRows/);
-  assert.match(operatingOverviewSource, /function OperatingSituation\(\{ structure, subLabel = .*?, insightTarget, period, onChannelClick \}\)/);
-  assert.match(operatingOverviewSource, /<button[\s\S]*?className=\{`op-channel-item\$\{row\.risk \? ' op-channel-item--warn' : ''\}`\}[\s\S]*?onClick=\{\(\) => onChannelClick\(row, period\)\}/);
-  assert.match(operatingOverviewSource, /period="month"[\s\S]*?onChannelClick=\{handleOpenChannelDetail\}/);
-  assert.match(operatingOverviewSource, /period="year"[\s\S]*?onChannelClick=\{handleOpenChannelDetail\}/);
-  assert.match(operatingOverviewSource, /<ChannelMemberModal[\s\S]*?openRow=\{openChannelDetail\.row\}[\s\S]*?period=\{openChannelDetail\.period\}[\s\S]*?members=\{openChannelMembers\}/);
-  assert.match(channelPanelSource, /export function ChannelMemberModal\(\{ openRow, period, members, onClose \}\)/);
-  assert.match(operatingOverviewCss, /\.op-channel-item\s*\{[\s\S]*?appearance:\s*none;/);
-  assert.match(operatingOverviewCss, /\.op-channel-item::after/);
   assert.match(operatingOverviewSource, /colorStops: \[\{ offset: 0, color: '#8E86FF' \}, \{ offset: 1, color: '#E4B8D7' \}\]/);
   assert.match(operatingOverviewSource, /colorStops: \[\{ offset: 0, color: '#B89CFF' \}, \{ offset: 1, color: '#D9D1FF' \}\]/);
   assert.match(operatingOverviewSource, /colorStops: \[\{ offset: 0, color: '#9B6FAD' \}, \{ offset: 1, color: '#E4B8D7' \}\]/);
