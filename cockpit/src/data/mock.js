@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 16:03:26 CST
+ 更新内容: 隐藏数据维护侧边栏的组织维护与渠道维护入口，保留两个页面及其数据和接口能力。
+*/
+/*
  更新时间: 2026-07-13 15:08:41 CST
  更新内容: 永久恢复数据维护侧边栏的组织维护入口，删除临时可见性开关并保持四个维护入口固定顺序。
 */
@@ -984,8 +988,6 @@ export const MENU = [
 export const MAINTENANCE_MENU = [
   { key: 'target-maintenance', name: '目标维护', icon: 'target' },
   { key: 'cost-maintenance', name: '成本维护', icon: 'cost' },
-  { key: 'org-maintenance', name: '组织维护', icon: 'organization' },
-  { key: 'channel-maintenance', name: '渠道维护', icon: 'channel' },
 ];
 
 const MAINTENANCE_MONTH_KEYS = ['m01', 'm02', 'm03', 'm04', 'm05', 'm06', 'm07', 'm08', 'm09', 'm10', 'm11', 'm12'];
