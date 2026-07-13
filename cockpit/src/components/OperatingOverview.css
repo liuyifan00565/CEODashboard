@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-13 14:50:10 CST  更新内容: 月度经营进度与年度回款总览卡片增加顶部内边距，统一改善主标题贴近上边框的拥挤感。 */
 /* 更新时间: 2026-07-13 14:26:21 CST  更新内容: 本月回款结构饼图复用年度图的垂直位移参数，修正月度图视觉位置明显偏低。 */
 /* 更新时间: 2026-07-13 14:18:11 CST  更新内容: 按标注框将月度近期明细入口从蓝框整体右移 102px 到红框，纵向位置与按钮尺寸不变。 */
 /* 更新时间: 2026-07-13 14:02:04 CST  更新内容: 按完整截图实测将月度近期明细文字左移 42.43px，使首字“点”精确对齐饼图右半区起点，纵向和尺寸不变。 */
@@ -116,7 +117,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-block: clamp(3px, .35vw, 6px);
+  padding-block: clamp(14px, 1vw, 16px) clamp(3px, .35vw, 6px);
 }
 
 .op-panel--annual {
@@ -124,7 +125,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-block: clamp(3px, .35vw, 6px);
+  padding-block: clamp(14px, 1vw, 16px) clamp(3px, .35vw, 6px);
 }
 
 .op-search-result {
@@ -712,7 +713,7 @@
 
   .op-panel,
   .op-panel--annual {
-    padding-block: 4px;
+    padding-block: 14px 4px;
   }
 
   .op-recovery-structure {
