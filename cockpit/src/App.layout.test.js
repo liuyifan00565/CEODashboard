@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 10:07:26 CST
+ 更新内容: 回归测试锁定成本维护不再展示赢单，仅保留成本、成交、退款和 ROI。
+*/
+/*
  更新时间: 2026-07-10 15:57:27 CST
  更新内容: 回归测试锁定年度下钻入口位于年度进度条上方，不落到进度条下边。
 */
@@ -836,6 +840,11 @@ test('builds the target and cost maintenance pages from reference matrix content
   assert.match(maintenancePageSource, /渠道成本维护/);
   assert.match(maintenancePageSource, /人力成本维护/);
   assert.match(maintenancePageSource, /保存成本/);
+});
+
+test('keeps only cost, deals, refund and ROI in cost maintenance periods', () => {
+  assert.doesNotMatch(maintenancePageSource, /<div className="mnt-mini-line">赢单 \{formatWan\(period\.actual\)\}<\/div>/);
+  assert.match(maintenancePageSource, /<span>成本<\/span>[\s\S]*?<div className="mnt-mini-line">成交 \{period\.deals\} 单<\/div>[\s\S]*?<span>退款<\/span>[\s\S]*?<div className="mnt-mini-line mnt-mini-line--strong">ROI \{formatRoi\(period\.roi\)\}<\/div>/);
 });
 
 test('omits template download controls from the import dialog', () => {
