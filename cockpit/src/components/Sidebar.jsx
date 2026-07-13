@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-13 14:25:00 CST  更新内容: 侧栏品牌副标题拆分为独立行，支持月份左对齐、当前视角右对齐。 */
 /* 更新时间: 2026-07-09 18:26:40 CST  更新内容: 侧边导航顶部新增福客驾驶舱品牌 logo 区，承接主内容顶部移出的品牌识别信息。 */
 /* 更新时间: 2026-07-09 13:13:45 CST  更新内容: 侧边导航新增模式换组过渡，经营总览与数据维护切换时先柔和淡出再进入。 */
 /* 更新时间: 2026-07-05 16:12:00 CST  更新内容: 侧边导航恢复 220px 图标加文字分组结构，兼顾管理识别效率与轻玻璃质感。 */
@@ -124,7 +125,13 @@ export default function Sidebar({
           </span>
           <span className="sb-brand-copy">
             <b>{brandTitle}</b>
-            {brandMeta && <small>{brandMeta}</small>}
+            {brandMeta && (
+              <small>
+                {brandMeta.split('\n').map((line, index) => (
+                  <span key={`${line}-${index}`}>{line}</span>
+                ))}
+              </small>
+            )}
           </span>
         </div>
         {sections.map((section) => (

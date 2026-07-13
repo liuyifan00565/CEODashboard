@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 14:24:00 CST
+ 更新内容: 回归测试锁定侧栏品牌月份左对齐，并让当前视角与标题“舱”字的右边缘对齐。
+*/
+/*
  更新时间: 2026-07-13 14:30:00 CST
  更新内容: 回归测试锁定侧栏品牌副标题分两行展示，月份与 CEO 视角各占一行。
 */
@@ -701,11 +705,14 @@ test('keeps overview card placement stable when search result wrappers appear', 
   assert.doesNotMatch(operatingOverviewCss, /\.op-search-result--channel/);
 });
 
-test('places the FuKe brand logo above the sidebar navigation with month and context on separate lines', () => {
+test('places the FuKe brand month left and context right on separate lines', () => {
   const sidebarBrandBlock = cssRuleBody(sidebarCss, '.sb-brand');
   const sidebarLogoBlock = cssRuleBody(sidebarCss, '.sb-brand-logo');
+  const sidebarCopyBlock = cssRuleBody(sidebarCss, '.sb-brand-copy');
   const sidebarTitleBlock = cssRuleBody(sidebarCss, '.sb-brand-copy b');
   const sidebarMetaBlock = cssRuleBody(sidebarCss, '.sb-brand-copy small');
+  const sidebarMetaLineBlock = cssRuleBody(sidebarCss, '.sb-brand-copy small span');
+  const sidebarContextLineBlock = cssRuleBody(sidebarCss, '.sb-brand-copy small span + span');
   const mainBlock = cssRuleBody(dashboardCss, '.dash-main');
 
   assert.match(mockSource, /monthLabel: currentMonthLabel\(\)/);
@@ -720,15 +727,21 @@ test('places the FuKe brand logo above the sidebar navigation with month and con
   assert.match(sidebarSource, /<div className="sb-brand" aria-label=\{`\$\{brandTitle\}\$\{brandMeta \? ` \$\{brandMeta\}` : ''\}`\}>/);
   assert.match(sidebarSource, /<span className="sb-brand-logo" aria-hidden="true">[\s\S]*?<MetallicPaint[\s\S]*?imageSrc="\/logo-black\.png"[\s\S]*?\/>[\s\S]*?<\/span>/);
   assert.match(sidebarSource, /<b>\{brandTitle\}<\/b>/);
-  assert.match(sidebarSource, /\{brandMeta && <small>\{brandMeta\}<\/small>\}/);
+  assert.match(sidebarSource, /\{brandMeta && \([\s\S]*?<small>[\s\S]*?brandMeta\.split\('\\n'\)\.map\(\(line, index\) => \([\s\S]*?<span key=\{`\$\{line\}-\$\{index\}`\}>\{line\}<\/span>[\s\S]*?<\/small>[\s\S]*?\)\}/);
   assert.match(sidebarBrandBlock, /min-height:\s*58px;/);
   assert.match(sidebarBrandBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.055\);/);
   assert.match(sidebarLogoBlock, /width:\s*34px;/);
   assert.match(sidebarLogoBlock, /height:\s*26px;/);
+  assert.match(sidebarCopyBlock, /flex:\s*0 1 auto;/);
+  assert.match(sidebarCopyBlock, /width:\s*max-content;/);
+  assert.match(sidebarCopyBlock, /max-width:\s*calc\(100% - 42px\);/);
   assert.match(sidebarTitleBlock, /font-size:\s*14px;/);
   assert.match(sidebarTitleBlock, /font-weight:\s*760;/);
-  assert.match(sidebarMetaBlock, /white-space:\s*pre-line;/);
-  assert.doesNotMatch(sidebarMetaBlock, /white-space:\s*nowrap;/);
+  assert.match(sidebarMetaBlock, /display:\s*grid;/);
+  assert.match(sidebarMetaBlock, /text-align:\s*left;/);
+  assert.doesNotMatch(sidebarMetaBlock, /white-space:\s*pre-line;/);
+  assert.match(sidebarMetaLineBlock, /white-space:\s*nowrap;/);
+  assert.match(sidebarContextLineBlock, /text-align:\s*right;/);
   assert.match(mainBlock, /padding:\s*18px clamp\(12px,2vw,28px\) 24px;/);
   assert.doesNotMatch(dashboardCss, /\.dash-topbar/);
   assert.doesNotMatch(appSource, /import MetallicPaint from '\.\/components\/MetallicPaint\/MetallicPaint';/);
