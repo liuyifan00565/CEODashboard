@@ -1,4 +1,10 @@
 /*
+ 更新时间: 2026-07-13 22:20:00 CST
+ 更新内容: 新增 .dash-section-eyebrow，为“版本与交付”标签页的两个面板各加一行小标签（销售侧·版本构成 /
+          履约侧·交付产能），让合并展示的两块内容看起来是有意分组，而不是随意拼在一起；
+          .dash-version-row/.dash-secondary-delivery 改为纵向 flex 并统一 8px 间距容纳新标签。
+*/
+/*
  更新时间: 2026-07-13 19:20:00 CST
  更新内容: .dash-finance-kpi-item--cost 两栏宽度由 1.3fr/1fr 改为等分 1fr/1fr，让总投入卡和广告ROI 小卡宽度一致，
           与开户数行的两张小卡拼成统一的 2×2 网格（四张卡片大小一致），呼应 experiment 分支的等宽卡片条效果。
@@ -256,9 +262,20 @@
 }
 
 /* ===== 经营总览下方业务拆解 ===== */
+.dash-section-eyebrow{
+  flex:none;
+  color:var(--faint);
+  font-size:12px;
+  font-weight:650;
+  letter-spacing:.04em;
+  padding-left:4px;
+}
 .dash-version-row{
   flex:none;
   min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
 }
 .dash-version-row .search-result-border,
 .dash-version-row .search-result-border .search-result-border__content{height:100%}
@@ -341,6 +358,9 @@
 
 .dash-secondary-delivery{
   flex:none;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
 }
 .dash-secondary-delivery .search-result-border,
 .dash-secondary-delivery .search-result-border .search-result-border__content{height:100%}

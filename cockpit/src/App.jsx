@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-13 22:20:00 CST
+ 更新内容: “版本与交付”标签页两个面板各加一行 .dash-section-eyebrow 小标签（销售侧·版本构成 /
+          履约侧·交付产能），让合并展示更像有意的分组而不是随意拼接。
+*/
+/*
  更新时间: 2026-07-13 20:30:00 CST
  更新内容: 侧边导航在算力用量分析之后新增“版本与交付”入口，把经营总览页下方的版本情况(VersionFinancePanel)
           和交付面板(DeliveryPanel)移到独立标签页；handleAiInsightNavigation 的 target==='versions'
@@ -604,12 +609,14 @@ export default function App() {
             ) : isVersionDeliveryPage ? (
               <>
                 <div className="dash-version-row" data-ai-insight-target="versions" data-anim>
+                  <div className="dash-section-eyebrow">销售侧 · 版本构成</div>
                   <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.version, searchTerm)}>
                     <VersionFinancePanel channelKey={activeChannelKey} />
                   </SearchResultBorder>
                 </div>
 
                 <div className="dash-secondary-delivery" data-anim>
+                  <div className="dash-section-eyebrow">履约侧 · 交付产能</div>
                   <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.delivery, searchTerm)}>
                     <DeliveryPanel />
                   </SearchResultBorder>
