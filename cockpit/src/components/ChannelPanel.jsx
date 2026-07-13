@@ -1,4 +1,4 @@
-/* Update time: 2026-07-13 16:45:00 CST  Update content: Export the existing channel member detail modal so operating overview rows can open it directly. */
+/* Update time: 2026-07-13 17:35:00 CST  Update content: Keep member detail modal scoped to ChannelPanel after operating overview rollback. */
 /* 更新时间: 2026-07-08 18:22:00 CST  更新内容: 渠道人员明细弹窗标题补齐本月/年度口径，副标题明确当前渠道、单位和完成率排序规则。 */
 /* 更新时间: 2026-07-08 17:28:57 CST  更新内容: 渠道完成进度条接入 120% 超额阈值，100%-119.9% 不再显示金色。 */
 /* 更新时间: 2026-07-08 16:37:08 CST  更新内容: 渠道二级人员明细跟随本月/年度切换读取对应周期数据。 */
@@ -53,7 +53,7 @@ const CHANNEL_TABLE_COLUMNS = {
   ],
 };
 
-export function ChannelMemberModal({ openRow, period, members, onClose }) {
+function ChannelMemberModal({ openRow, period, members, onClose }) {
   const tokens = useThemeTokens();
   const periodLabel = period === 'year' ? '年度' : '本月';
   const modalTitle = openRow ? `${openRow.name}${periodLabel}人员完成明细` : '';

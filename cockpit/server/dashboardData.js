@@ -2,7 +2,7 @@
  更新时间: 2026-07-10 17:02:12 CST
  更新内容: dashboard 部门回款明细兼容旧库 fact_revenue_daily 无 department_id 的结构，按 staff_id 兜底解析组织，避免接口报 Unknown column。
 */
-/* Update time: 2026-07-13 16:55:00 CST  Update content: Channel member drilldowns prefer staff-level monthly sales facts when available, falling back to department rows only when staff facts are absent. */
+/* Update time: 2026-07-13 17:35:00 CST  Update content: Roll back staff-level sales member preference added for operating overview channel drilldown. */
 /*
  更新时间: 2026-07-10 15:40:59 CST
  更新内容: 续费快照为每个渠道版本补齐 day/month/year 空粒度，避免二级页因部分粒度字段缺失而漏算。
@@ -83,14 +83,6 @@ const DB_DEFAULTS = {
 
 // 本地排查时可临时填入 YYYY-MM；默认走北京时间当前自然月。
 const TEMP_DASHBOARD_MONTH_OVERRIDE = '';
-
-const STAFF_CHANNEL_KEY_SQL = `COALESCE(NULLIF(s.channel_key, ''), CASE
-  WHEN d.department_code = 'online-sales' THEN 'online'
-  WHEN d.department_code = 'south-sales' THEN 'south'
-  WHEN d.department_code = 'east-sales' THEN 'east'
-  WHEN d.department_code = 'agent-sales' THEN 'agent'
-  ELSE NULL
-END)`;
 
 const STAFF_OR_FACT_CHANNEL_KEY_SQL = `COALESCE(NULLIF(s.channel_key, ''), CASE
   WHEN d.department_code = 'online-sales' THEN 'online'
@@ -416,48 +408,6 @@ function addMemberMetric(map, row, field) {
   map.set(key, current);
 }
 
-function makeStaffSalesMemberRows(salesRows, latestMonth, latestYear) {
-  const memberMap = new Map();
-
-  salesRows
-    .filter((row) => String(row.year_month).startsWith(latestYear) && String(row.year_month) <= latestMonth)
-    .forEach((row) => {
-      const staffId = row.staff_id;
-      const channelKey = row.channel_key;
-      if (staffId == null || !channelKey) return;
-
-      const key = `${channelKey}:${staffId}`;
-      const current = memberMap.get(key) ?? {
-        key: `staff-${staffId}`,
-        group: channelKey,
-        name: row.staff_name,
-        monthTarget: 0,
-        monthRecovered: 0,
-        yearTarget: 0,
-        yearRecovered: 0,
-      };
-
-      if (row.year_month === latestMonth) {
-        current.monthTarget += num(row.target_wan);
-        current.monthRecovered += num(row.recovered_wan);
-      }
-
-      current.yearTarget += num(row.target_wan);
-      current.yearRecovered += num(row.recovered_wan);
-      memberMap.set(key, current);
-    });
-
-  return [...memberMap.values()].map((row) => completionRow({
-    ...row,
-    target: round0(row.monthTarget),
-    recovered: round0(row.monthRecovered),
-    monthTarget: round0(row.monthTarget),
-    monthRecovered: round0(row.monthRecovered),
-    yearTarget: round0(row.yearTarget),
-    yearRecovered: round0(row.yearRecovered),
-  }));
-}
-
 function makeSalesMemberRows({
   salesRows,
   targetRows = [],
@@ -466,10 +416,6 @@ function makeSalesMemberRows({
   latestYear,
   useRevenueDaily,
 }) {
-  if (salesRows.length) {
-    return makeStaffSalesMemberRows(salesRows, latestMonth, latestYear);
-  }
-
   if (!targetRows.length && !recoveredRows.length) {
     return salesRows.map((row) => completionRow({
       key: `staff-${row.staff_id}`,

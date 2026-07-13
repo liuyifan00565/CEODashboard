@@ -1,4 +1,4 @@
-/* Update time: 2026-07-13 16:45:00 CST  Update content: Add clickable affordance for operating situation channel rows that open member details. */
+/* Update time: 2026-07-13 17:35:00 CST  Update content: Remove operating overview channel row click affordance after rollback. */
 /* 更新时间: 2026-07-13 14:50:10 CST  更新内容: 月度经营进度与年度回款总览卡片增加顶部内边距，统一改善主标题贴近上边框的拥挤感。 */
 /* 更新时间: 2026-07-13 14:26:21 CST  更新内容: 本月回款结构饼图复用年度图的垂直位移参数，修正月度图视觉位置明显偏低。 */
 /* 更新时间: 2026-07-13 14:18:11 CST  更新内容: 按标注框将月度近期明细入口从蓝框整体右移 102px 到红框，纵向位置与按钮尺寸不变。 */
@@ -441,12 +441,10 @@
 }
 
 .op-channel-item {
-  appearance: none;
   position: relative;
   min-width: 0;
-  width: 100%;
   display: grid;
-  grid-template-columns: 10px minmax(0, 1fr) minmax(74px, auto) auto;
+  grid-template-columns: 10px minmax(0, 1fr) minmax(74px, auto);
   align-items: center;
   gap: 10px;
   min-height: 30px;
@@ -454,33 +452,12 @@
   border: 1px solid transparent;
   border-radius: 12px;
   background: transparent;
-  text-align: left;
-  font: inherit;
-  cursor: pointer;
   transition: background .22s ease, border-color .22s ease;
 }
 
-.op-channel-item:hover,
-.op-channel-item:focus-visible {
+.op-channel-item:hover {
   background: var(--glass-cell-hover);
   border-color: rgba(255,255,255,.08);
-  outline: none;
-}
-
-.op-channel-item::after {
-  content: ">";
-  color: rgba(247,248,252,.46);
-  font-size: 15px;
-  font-weight: 760;
-  line-height: 1;
-  transform: translateX(-1px);
-  transition: color .2s ease, transform .2s ease;
-}
-
-.op-channel-item:hover::after,
-.op-channel-item:focus-visible::after {
-  color: rgba(247,248,252,.82);
-  transform: translateX(1px);
 }
 
 .op-channel-item--warn {
