@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 00:00:00 CST
+ Update content: Cover target maintenance saving department actual completion amount into fact_revenue_daily.
+*/
+/*
  Update time: 2026-07-10 17:09:42 CST
  Update content: Align target saver tests with department-level targets and staff_id IS NULL persistence.
 */
@@ -129,6 +133,32 @@ test('saveTarget: 停用组织被跳过', async () => {
   assert.equal(r.written, 0);
   assert.equal(r.skipped, 1);
   assert.equal(execs.length, 0);
+});
+
+test('saveTarget: actual amount saves to fact_revenue_daily without touching target table', async () => {
+  const { conn, execs } = makeConn((sql) => {
+    if (sql.includes('INFORMATION_SCHEMA.COLUMNS')) {
+      return [{ COLUMN_NAME: 'department_id' }, { COLUMN_NAME: 'actual_opening_count' }];
+    }
+    if (sql.includes('FROM dim_department WHERE department_id')) return [{ department_id: 1002, is_enabled: 1 }];
+    if (sql === 'SELECT department_id, department_code, parent_id FROM dim_department') {
+      return [
+        { department_id: 1001, department_code: 'headquarters', parent_id: null },
+        { department_id: 1002, department_code: 'online-sales', parent_id: 1001 },
+      ];
+    }
+    if (sql.includes('FROM dim_channel')) return [{ id: 3001 }];
+    if (sql.includes('FROM fact_revenue_daily')) return [];
+    if (sql.includes('COALESCE(MAX') && sql.includes('fact_revenue_daily')) return [{ nextId: 8001 }];
+    return [];
+  });
+  const r = await saveTarget(conn, [{ department_id: 1002, year_month: '2026-03', actual_amount_wan: 88.5 }]);
+  assert.equal(r.written, 1);
+  const targetWrite = execs.find((e) => e.sql.includes('biz_target_monthly'));
+  assert.equal(targetWrite, undefined);
+  const insert = execs.find((e) => e.sql.startsWith('INSERT INTO fact_revenue_daily'));
+  assert.ok(insert);
+  assert.deepEqual(insert.params, [8001, '2026-03-01', 1002, 3001, 885000, 0, 0]);
 });
 
 test('saveCost: 按 (year_month, channel_id) upsert investment_amount_yuan', async () => {

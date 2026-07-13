@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 00:00:00 CST
+ Update content: Target maintenance save can persist department monthly actual completion amounts into fact_revenue_daily.
+*/
+/*
  Update time: 2026-07-09 14:51:22 CST
  Update content: saveTarget 改为部门级:按 (year_month, department_id, staff_id IS NULL) upsert,
    staff_id 置 NULL,channel_id 由 resolveDepartmentChannelId 解析(从 maintenanceImport 复用并 export),
@@ -42,7 +46,7 @@
           复用 maintenanceImport.js 的 WAN_TO_YUAN / readJsonBody / sendJson，避免口径漂移。
 */
 import { createDbConnection, queryRows, nextId } from './db.js';
-import { WAN_TO_YUAN, readJsonBody, sendJson, resolveDepartmentChannelId } from './maintenanceImport.js';
+import { WAN_TO_YUAN, readJsonBody, sendJson, resolveDepartmentChannelId, ensureRevenueDailyColumns } from './maintenanceImport.js';
 import { buildDepartmentChannelKeyMap } from './departmentChannel.js';
 
 function isTempId(value, prefix) {
@@ -93,10 +97,56 @@ async function saveNewChannelGroups(connection, groups = [], errors = []) {
 
 /** 目标维护：按 (year_month, department_id, staff_id IS NULL) 部分列 upsert，仅写 target_amount_yuan。
  *  部门级目标：staff_id 置 NULL，channel_id 由部门解析。部门须存在于 dim_department 且启用。 */
+function hasOwnValue(row, field) {
+  return Object.prototype.hasOwnProperty.call(row || {}, field);
+}
+
+async function saveDepartmentTargetAmount(connection, { departmentId, yearMonth, channelId, amountWan }) {
+  const amountYuan = WAN_TO_YUAN(amountWan);
+  const existing = await queryRows(connection, 'SELECT target_id FROM biz_target_monthly WHERE `year_month` = ? AND department_id = ? AND staff_id IS NULL LIMIT 1', [yearMonth, departmentId]);
+  if (existing[0]?.target_id) {
+    await connection.execute(
+      'UPDATE biz_target_monthly SET channel_id = ?, target_amount_yuan = ? WHERE target_id = ?',
+      [channelId, amountYuan, existing[0].target_id],
+    );
+  } else {
+    const id = await nextId(connection, 'biz_target_monthly', 'target_id');
+    await connection.execute(
+      'INSERT INTO biz_target_monthly (target_id, `year_month`, department_id, staff_id, channel_id, target_amount_yuan, target_opening_count, target_order_count) VALUES (?, ?, ?, NULL, ?, ?, 0, 0)',
+      [id, yearMonth, departmentId, channelId, amountYuan],
+    );
+  }
+}
+
+async function saveDepartmentActualAmount(connection, { departmentId, yearMonth, channelId, amountWan }) {
+  const statDate = `${yearMonth}-01`;
+  const amountYuan = WAN_TO_YUAN(amountWan);
+  const existing = await queryRows(
+    connection,
+    "SELECT id FROM fact_revenue_daily WHERE stat_date = ? AND department_id = ? AND staff_id IS NULL AND order_type = 'manual_department' LIMIT 1",
+    [statDate, departmentId],
+  );
+  if (existing[0]?.id) {
+    await connection.execute(
+      'UPDATE fact_revenue_daily SET channel_id = ?, recovered_amount_yuan = ? WHERE id = ?',
+      [channelId, amountYuan, existing[0].id],
+    );
+  } else {
+    const id = await nextId(connection, 'fact_revenue_daily', 'id');
+    await connection.execute(
+      "INSERT INTO fact_revenue_daily (id, stat_date, department_id, channel_id, staff_id, version_id, order_type, recovered_amount_yuan, actual_opening_count, order_count) VALUES (?, ?, ?, ?, NULL, NULL, 'manual_department', ?, ?, ?)",
+      [id, statDate, departmentId, channelId, amountYuan, 0, 0],
+    );
+  }
+}
+
 export async function saveTarget(connection, rows) {
   let written = 0;
   let skipped = 0;
   const errors = [];
+  if ((Array.isArray(rows) ? rows : []).some((row) => hasOwnValue(row, 'actual_amount_wan'))) {
+    await ensureRevenueDailyColumns(connection);
+  }
   for (const row of rows) {
     const departmentId = Number(row.department_id);
     const yearMonth = String(row.year_month || '');
@@ -119,21 +169,26 @@ export async function saveTarget(connection, rows) {
       continue;
     }
     const channelId = await resolveDepartmentChannelId(connection, departmentId);
-    const amountYuan = WAN_TO_YUAN(row.target_amount_wan);
-    const existing = await queryRows(connection, 'SELECT target_id FROM biz_target_monthly WHERE `year_month` = ? AND department_id = ? AND staff_id IS NULL LIMIT 1', [yearMonth, departmentId]);
-    if (existing[0]?.target_id) {
-      await connection.execute(
-        'UPDATE biz_target_monthly SET channel_id = ?, target_amount_yuan = ? WHERE target_id = ?',
-        [channelId, amountYuan, existing[0].target_id],
-      );
-    } else {
-      const id = await nextId(connection, 'biz_target_monthly', 'target_id');
-      await connection.execute(
-        'INSERT INTO biz_target_monthly (target_id, `year_month`, department_id, staff_id, channel_id, target_amount_yuan, target_opening_count, target_order_count) VALUES (?, ?, ?, NULL, ?, ?, 0, 0)',
-        [id, yearMonth, departmentId, channelId, amountYuan],
-      );
+    let rowWritten = false;
+    if (hasOwnValue(row, 'target_amount_wan')) {
+      await saveDepartmentTargetAmount(connection, {
+        departmentId,
+        yearMonth,
+        channelId,
+        amountWan: row.target_amount_wan,
+      });
+      rowWritten = true;
     }
-    written += 1;
+    if (hasOwnValue(row, 'actual_amount_wan')) {
+      await saveDepartmentActualAmount(connection, {
+        departmentId,
+        yearMonth,
+        channelId,
+        amountWan: row.actual_amount_wan,
+      });
+      rowWritten = true;
+    }
+    if (rowWritten) written += 1;
   }
   return { written, skipped, errors };
 }

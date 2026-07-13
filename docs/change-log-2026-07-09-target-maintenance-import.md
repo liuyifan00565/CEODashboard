@@ -1,13 +1,30 @@
 # 2026-07-09 目标维护导入功能变更日志
 
-更新时间: 2026-07-10 17:09:42 CST
-更新内容: 目标维护读接口兼容旧库结构；当 `fact_revenue_daily` 尚未被导入流程补充 `department_id` 或 `actual_opening_count` 时，页面读取会通过 `staff_id -> dim_staff.department_id` 解析组织，开户数按 0 处理，避免维护页打开时报 Unknown column。
+更新时间: 2026-07-13 00:00:00 CST
+更新内容: 目标维护页内编辑支持同一组织同一月份同时维护“目标金额”和“完成金额”；目标金额写入 `biz_target_monthly.target_amount_yuan`，完成金额写入 `fact_revenue_daily.recovered_amount_yuan`。
+
+历史更新: 2026-07-10 17:09:42 CST
+历史内容: 目标维护读接口兼容旧库结构；当 `fact_revenue_daily` 尚未被导入流程补充 `department_id` 或 `actual_opening_count` 时，页面读取会通过 `staff_id -> dim_staff.department_id` 解析组织，开户数按 0 处理，避免维护页打开时报 Unknown column。
 
 ## 本次改了什么
 
 这次主要修改的是“数据维护 > 目标维护”里的模板下载和 Excel 导入逻辑。
 
 原来的目标维护模板偏向“人员维度”，也就是按某个人填写每月目标。现在已经调整成“组织维度”，也就是按某个组织填写每月目标或每月实际完成情况。
+
+## 页内编辑的变化
+
+在“目标维护”的年度表格里，每个组织每个月现在会同时显示两类金额：
+
+1. 目标
+   - 表示这个组织这个月计划完成多少回款。
+   - 保存后写入 `biz_target_monthly.target_amount_yuan`。
+
+2. 完成
+   - 表示这个组织这个月实际完成了多少回款。
+   - 保存后写入 `fact_revenue_daily.recovered_amount_yuan`。
+
+页面里的完成率不是手工填写的字段，而是系统用“完成 / 目标”自动算出来的。Excel 导入和页面直接编辑使用同一套组织 + 月份口径，所以可以通过模板批量导入，也可以在页面里改单个组织单个月份的数。
 
 ## 下载模板的变化
 

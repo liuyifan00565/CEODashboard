@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 00:00:00 CST
+ Update content: Export revenue daily schema guard for target maintenance actual amount saves.
+*/
+/*
  Update time: 2026-07-09 14:51:22 CST
  Update content: export resolveDepartmentChannelId 供 maintenanceSave.saveTarget 复用:目标维护页内编辑改为
    部门级保存时,需由 department_id 解析 channel_id 写入 biz_target_monthly(staff_id IS NULL)。
@@ -76,7 +80,7 @@ export async function resolveDepartmentChannelId(connection, departmentId) {
   return rows[0]?.id ?? null;
 }
 
-async function ensureRevenueDailyColumns(connection) {
+export async function ensureRevenueDailyColumns(connection) {
   const columns = await queryRows(
     connection,
     "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'fact_revenue_daily' AND COLUMN_NAME IN ('department_id', 'actual_opening_count')",

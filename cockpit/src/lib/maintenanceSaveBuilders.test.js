@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 00:00:00 CST
+ Update content: Cover target maintenance save rows carrying both target and actual amount edits.
+*/
+/*
  Update time: 2026-07-10 17:09:42 CST
  Update content: Align target save builder tests with department-level target maintenance rows.
 */
@@ -62,6 +66,19 @@ test('buildTargetSaveRows: 月份补零（m10 -> 10）', () => {
 test('buildTargetSaveRows: 非法月份键被丢弃', () => {
   const out = buildTargetSaveRows(TARGET_ROWS, { 'summary-1002|q1': 5, 'summary-1002|year': 9, 'summary-1002|m13': 9 }, 2026);
   assert.deepEqual(out, []);
+});
+
+test('buildTargetSaveRows: same department month can save target and actual amount together', () => {
+  const draft = {
+    'summary-1002|m03|target': 150,
+    'summary-1002|m03|actual': 88.5,
+  };
+  const out = buildTargetSaveRows(TARGET_ROWS, draft, 2026);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].department_id, '1002');
+  assert.equal(out[0].year_month, '2026-03');
+  assert.equal(out[0].target_amount_wan, 150);
+  assert.equal(out[0].actual_amount_wan, 88.5);
 });
 
 const COST_SNAPSHOT = {

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 00:00:00 CST
+ Update content: Target maintenance save rows support separate target and actual amount draft fields for the same department month.
+*/
+/*
  Update time: 2026-07-09 14:51:22 CST
  Update content: buildTargetSaveRows 改为部门级:处理 summary-<deptId> 行,输出 {department_id, department_name,
    year_month, target_amount_wan},不再输出 staff_id(由后端 saveTarget 置 NULL),与目标维护页部门级录入对齐。
@@ -48,6 +52,15 @@ function splitCostDraftKey(key) {
   };
 }
 
+function splitTargetDraftKey(key) {
+  const parts = String(key || '').split('|');
+  return {
+    rowId: parts[0] || '',
+    monthKey: parts[1] || '',
+    valueField: parts[2] || 'target',
+  };
+}
+
 /**
  * 目标维护：把 draft（"summary-<deptId>|mXX" -> 万）转成部门级保存行。
  * 只产出 draft 命中且对应部门行(排除 summary-all 合计行)的格；staff_id 由后端置 NULL。
@@ -62,20 +75,27 @@ export function buildTargetSaveRows(rows, draft, year) {
       .filter((r) => r && r.type === 'department' && typeof r.id === 'string' && r.id.startsWith('summary-') && r.id !== 'summary-all')
       .map((r) => [r.id, r]),
   );
-  const out = [];
+  const outByKey = new Map();
   for (const [key, value] of Object.entries(draft || {})) {
-    const { rowId, field: monthKey } = splitDraftKey(key);
+    const { rowId, monthKey, valueField } = splitTargetDraftKey(key);
     const mm = monthKeyToMM(monthKey);
     const row = deptRows.get(rowId);
     if (!mm || !row) continue;
-    out.push({
+    const yearMonth = `${year}-${mm}`;
+    const mapKey = `${rowId}|${yearMonth}`;
+    const existing = outByKey.get(mapKey) || {
       department_id: rowId.slice('summary-'.length),
       department_name: row.name,
-      year_month: `${year}-${mm}`,
-      target_amount_wan: Number(value) || 0,
-    });
+      year_month: yearMonth,
+    };
+    if (valueField === 'actual') {
+      existing.actual_amount_wan = Number(value) || 0;
+    } else {
+      existing.target_amount_wan = Number(value) || 0;
+    }
+    outByKey.set(mapKey, existing);
   }
-  return out;
+  return Array.from(outByKey.values());
 }
 
 /**

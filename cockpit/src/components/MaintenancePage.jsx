@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 00:00:00 CST
+ Update content: Target maintenance month cells show editable target and actual completion amount fields.
+*/
+/*
  Update time: 2026-07-10 18:19:58 CST
  Update content: Snap target maintenance current-month auto alignment to full period columns so the table does not open on a clipped half column.
 */
@@ -570,6 +574,25 @@ function TargetPeriodHeader({ column }) {
   );
 }
 
+function TargetAmountInput({ label, value, onChange, ariaLabel }) {
+  return (
+    <label className="mnt-target-edit-row">
+      <span className="mnt-target-edit-label">{label}</span>
+      <span className="mnt-target-input-wrap">
+        <input
+          className="mnt-number-input mnt-target-input"
+          type="number"
+          min="0"
+          defaultValue={value}
+          onChange={(e) => onChange?.(e.target.value)}
+          aria-label={ariaLabel}
+        />
+        <span className="mnt-target-input-unit">万</span>
+      </span>
+    </label>
+  );
+}
+
 function TargetPeriodCell({ row, column, onEdit }) {
   const period = row.periods[column.key];
   const editable = row.type === 'department' && column.month && row.id !== 'summary-all';
@@ -578,23 +601,27 @@ function TargetPeriodCell({ row, column, onEdit }) {
     <td
       className={`mnt-period-cell ${editable ? 'mnt-period-cell--editable' : 'mnt-period-cell--readonly'}`}
       data-target-editable={editable ? 'true' : 'false'}
-      title={editable ? '可填写目标' : '汇总目标，不可直接填写'}
+      title={editable ? '可填写目标和实际完成' : '汇总数据，不可直接填写'}
     >
       {editable ? (
-        <div className="mnt-target-input-wrap">
-          <input
-            className="mnt-number-input mnt-target-input"
-            type="number"
-            min="0"
-            defaultValue={period.target}
-            onChange={(e) => onEdit?.(row.id, column.key, e.target.value)}
-            aria-label={`${row.name}${column.label}目标`}
+        <div className="mnt-target-edit-stack">
+          <TargetAmountInput
+            label="目标"
+            value={period.target}
+            onChange={(value) => onEdit?.(row.id, column.key, 'target', value)}
+            ariaLabel={`${row.name}${column.label}目标`}
           />
-          <span className="mnt-target-input-unit">万</span>
+          <TargetAmountInput
+            label="完成"
+            value={period.actual}
+            onChange={(value) => onEdit?.(row.id, column.key, 'actual', value)}
+            ariaLabel={`${row.name}${column.label}完成`}
+          />
         </div>
       ) : (
         <div className="mnt-target-readonly-value">
-          <strong>{formatWan(period.target)}</strong>
+          <span>目标 <strong>{formatWan(period.target)}</strong></span>
+          <span>完成 <strong>{formatWan(period.actual)}</strong></span>
         </div>
       )}
       <ProgressLine period={period} />
@@ -625,8 +652,8 @@ const TargetMaintenancePage = forwardRef(function TargetMaintenancePage({ markDi
     collect: () => ({ rows: buildTargetSaveRows(rowList, draftRef.current, year), laborRows: [], deletions: [] }),
   }), [rowList, year]);
 
-  function handleEdit(rowId, monthKey, value) {
-    draftRef.current[`${rowId}|${monthKey}`] = Number(value) || 0;
+  function handleEdit(rowId, monthKey, field, value) {
+    draftRef.current[`${rowId}|${monthKey}|${field}`] = Number(value) || 0;
     markDirty();
   }
 
