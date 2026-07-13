@@ -1,5 +1,9 @@
 /*
  Update time: 2026-07-13 00:00:00 CST
+ Update content: Restore target month cells to table layout and align completion-rate text/progress bars by a fixed content area.
+*/
+/*
+ Update time: 2026-07-13 00:00:00 CST
  Update content: Pin target maintenance progress lines to a shared bottom slot so bars align across cells.
 */
 /*
@@ -981,12 +985,6 @@
   max-width: var(--mnt-target-period-width);
 }
 
-.mnt-matrix--target .mnt-period-cell {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  align-content: stretch;
-}
-
 .mnt-matrix--target-name th,
 .mnt-matrix--target th {
   height: var(--mnt-target-head-height);
@@ -1241,11 +1239,12 @@
 }
 
 .mnt-target-cell-main {
-  min-height: 0;
+  height: 74px;
+  min-height: 74px;
 }
 
 .mnt-target-progress-slot {
-  align-self: end;
+  margin-top: 0;
 }
 
 .mnt-target-progress-slot .mnt-mini-line {
