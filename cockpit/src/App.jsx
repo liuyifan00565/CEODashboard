@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-13 18:10:00 CST
+ 更新内容: 首页总投入旁新增广告ROI 小卡（AdRoiCard），总投入·费比卡片区域从整行独占改为与广告ROI 小卡
+          左右分栏，总投入随之变窄；点击广告ROI 小卡复用总投入的成本二级弹窗。
+*/
+/*
  更新时间: 2026-07-13 14:31:00 CST
  更新内容: 侧栏品牌副标题改为月份与当前视角分行展示，避免窄侧栏内信息被省略。
 */
@@ -193,6 +198,7 @@ import VersionFinancePanel from './components/VersionFinancePanel';
 import DeliveryPanel from './components/DeliveryPanel';
 import ComputeUsagePage from './components/ComputeUsagePage';
 import OpeningMetricCards from './components/OpeningMetricCards';
+import AdRoiCard from './components/AdRoiCard';
 import MaintenancePage from './components/MaintenancePage';
 import OperatingOverview from './components/OperatingOverview';
 
@@ -621,10 +627,11 @@ export default function App() {
                         <OpeningMetricCards searchTerm={searchTerm} onOpenSecondary={handleOpenCard} />
                       </div>
                       {financeKpiCards.map((card) => (
-                        <div className="dash-finance-kpi-item" data-kpi-key={card.key} key={card.key}>
+                        <div className="dash-finance-kpi-item dash-finance-kpi-item--cost" data-kpi-key={card.key} key={card.key}>
                           <SearchResultBorder active={matchesSearchTerm(card.keywords, searchTerm)}>
                             <KpiCard card={card} onOpen={handleOpenCard} />
                           </SearchResultBorder>
+                          <AdRoiCard searchTerm={searchTerm} onOpen={handleOpenCard} costCard={card} />
                         </div>
                       ))}
                     </div>

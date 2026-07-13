@@ -1,4 +1,10 @@
 /*
+ 更新时间: 2026-07-13 18:10:00 CST
+ 更新内容: .dash-finance-kpi-item--cost 改为总投入卡 + 广告ROI 小卡左右两栏（总投入变窄）；低有效高度桌面档
+          （max-height:1071px）下开户数行与投入行栏高由 .82fr/1.08fr 失衡改为等分 1fr/1fr，
+          避免开户数小卡被系统性挤扁而没有填满应得空间。
+*/
+/*
  更新时间: 2026-07-10 15:16:00 CST
  更新内容: 合并远端算力骨架样式，保留福小客指标定位的滚动留白与短暂玻璃焦点反馈。
 */
@@ -314,6 +320,19 @@
   min-height:0;
   height:100%;
 }
+.dash-finance-kpi-item--cost{
+  display:grid;
+  grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);
+  gap:14px;
+}
+.dash-finance-kpi-item--cost > *{
+  min-width:0;
+  min-height:0;
+}
+.dash-finance-kpi-item--cost .opening-metric-card{
+  min-height:0;
+  height:100%;
+}
 
 .dash-secondary-delivery{
   flex:none;
@@ -439,13 +458,13 @@
 .dash-token-sub{color:var(--faint);font-size:14px}
 
 /* ===== 窄屏降级 ===== */
-/* 低有效高度桌面档：不缩月度主数字，优先回收容器空白并把更多高度留给投入卡。 */
+/* 低有效高度桌面档：开户数行与投入行等高分配，避免开户数小卡被系统性挤扁。 */
 @media (min-width:1181px) and (max-height:1071px){
   .dash-main{gap:6px}
   .dash-content{gap:8px;scroll-margin-top:56px}
   .dash-secondary-grid{grid-template-rows:clamp(320px,34vh,350px);gap:14px}
   .dash-finance-kpis{
-    grid-template-rows:minmax(136px,.82fr) minmax(176px,1.08fr);
+    grid-template-rows:repeat(2,minmax(156px,1fr));
     gap:8px;
   }
   .dash-secondary-cell .mt-panel{padding:14px}
@@ -456,10 +475,13 @@
   .dash-finance-kpi-item .kpi-card__sub{font-size:13px;line-height:1.35}
   .dash-finance-kpi-item .kpi-card__meta{min-height:18px;margin-top:2px}
   .dash-finance-kpi-item .kpi-card__hint{margin-top:2px;font-size:12px}
-  .dash-finance-kpi-item--openings .opening-metric-card{padding:10px 14px}
-  .dash-finance-kpi-item--openings .opening-metric-card__value{font-size:32px}
+  .dash-finance-kpi-item--openings .opening-metric-card,
+  .dash-finance-kpi-item--cost .opening-metric-card{padding:10px 14px}
+  .dash-finance-kpi-item--openings .opening-metric-card__value,
+  .dash-finance-kpi-item--cost .opening-metric-card__value{font-size:32px}
   .dash-finance-kpi-item--openings .opening-metric-card__sparkline{height:26px}
-  .dash-finance-kpi-item--openings .opening-metric-card__hint{font-size:12px}
+  .dash-finance-kpi-item--openings .opening-metric-card__hint,
+  .dash-finance-kpi-item--cost .opening-metric-card__hint{font-size:12px}
 }
 
 /* 2K / 1440p 舒展档：提高图表阅读尺度，同时不改变主结构。 */
@@ -490,6 +512,7 @@
   .dash-content{width:100%;max-width:100%;overflow-x:hidden}
   .dash-version-row .vf-panel{min-height:326px}
   .dash-token-grid{grid-template-columns:1fr}
+  .dash-finance-kpi-item--cost{grid-template-columns:1fr}
 }
 
 /* FluidGlass 玻璃指针开关 */

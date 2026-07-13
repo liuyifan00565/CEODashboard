@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-13 18:10:00 CST  更新内容: 同步开户数/投入行等高分配修复——回归断言从 .82fr/1.08fr 失衡
+   改为 repeat(2,minmax(156px,1fr)) 等分，匹配开户数小卡不再被系统性挤扁。 */
 /* 更新时间: 2026-07-13 16:40:31 CST  更新内容: 选择性合并数据维护代码，恢复拉取前的主界面布局回归断言。 */
 /*
  更新时间: 2026-07-13 14:50:37 CST
@@ -1976,7 +1978,7 @@ test('keeps month year trend and finance metrics balanced across 1K and 2K scree
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?gap:10px;/);
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:18px;/);
   assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?flex:none;[\s\S]*?grid-template-rows:clamp\(350px,36vh,386px\);/);
-  assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?grid-template-rows:clamp\(320px,34vh,350px\);[\s\S]*?grid-template-rows:minmax\(136px,\.82fr\) minmax\(176px,1\.08fr\);/);
+  assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?grid-template-rows:clamp\(320px,34vh,350px\);[\s\S]*?grid-template-rows:repeat\(2,minmax\(156px,1fr\)\);/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-overview \{[\s\S]*?gap: 8px;/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows:\s*auto 208px;[\s\S]*?height:\s*208px;/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-channel-list \{[\s\S]*?gap: 13px;/);

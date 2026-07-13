@@ -5,8 +5,10 @@
           新增的日/月/年切换使用。
 */
 /*
- 更新时间: 2026-07-13 16:30:00 CST
- 更新内容: 总投入·费比卡片副标题新增广告ROI（KPI_DERIVED.roi = 本月回款 / 广告投入），并补充 ROI 搜索关键词。
+ 更新时间: 2026-07-13 18:10:00 CST
+ 更新内容: 新增 getAdRoiMetric()，读取运行时 KPI_DERIVED.roi 和 COST_TREND 上一月广告投入算出的环比，
+          供首页新增的“广告ROI”小卡（与开户数小卡同款样式，放在总投入旁）使用；撤回此前直接拼进总投入
+          副标题的“· 广告ROI”文案，改为独立卡片展示。
 */
 /*
  更新时间: 2026-07-13 16:03:26 CST
@@ -909,6 +911,25 @@ export function getYearlyTrend() {
   return YEARLY_TREND;
 }
 
+// 广告ROI 小卡：与开户数小卡同款样式，环比读取 COST_TREND 上一条（上月）广告投入 + KPI.lastMonthRecovered。
+export function getAdRoiMetric() {
+  const previousRow = COST_TREND.length > 1 ? COST_TREND[COST_TREND.length - 2] : null;
+  const previousAdCost = Number(previousRow?.adCost) || 0;
+  const previousRoi = previousAdCost ? KPI.lastMonthRecovered / previousAdCost : 0;
+  const roi = KPI_DERIVED.roi;
+  const delta = previousRoi ? +(((roi - previousRoi) / previousRoi) * 100).toFixed(1) : 0;
+
+  return {
+    key: 'ad-roi',
+    title: '广告ROI',
+    value: roi,
+    unit: '',
+    delta,
+    compareLabel: '较上月',
+    keywords: ['广告ROI', 'ROI', '投入产出比', '广告'],
+  };
+}
+
 export function getAnnualRhythmPoints() {
   const firstMonth = MONTHLY_TREND[0];
   const rawCurrent = MONTHLY_TREND.reduce((sum, row) => sum + row.recovered, 0);
@@ -956,7 +977,7 @@ export function getKpiSeries(metric, channelOrOptions = 'all', dim = 'month') {
 export const KPI_CARDS = [
   { key: 'month',  title: '本月回款', metric: 'recovered', unit: '万', value: KPI.monthRecovered, sub: `本月目标 ${KPI.monthTarget} 万`, progress: KPI_DERIVED.monthCompletion, progressLabel: '本月目标完成率', gap: KPI_DERIVED.monthGap, delta: KPI_DERIVED.monthMoM, keywords: ['本月回款', '回款', '退款', '目标', '完成率', '缺口'] },
   { key: 'year',   title: '年度累计回款', metric: 'recovered', unit: '万', value: KPI.yearRecovered, sub: `年度目标 ${KPI.yearTarget} 万`, progress: KPI_DERIVED.yearCompletion, progressLabel: '年度目标完成率', gap: KPI_DERIVED.yearGap, delta: KPI_DERIVED.yearYoY, keywords: ['年度累计', '年度回款', '回款', '退款', '年度', '年目标', '缺口'] },
-  { key: 'cost',   title: '总投入 · 费比', metric: 'cost', unit: '万', value: KPI.totalCost, sub: `广告 ${KPI.adCost} 万 + 人力 ${KPI.laborCost} 万 · 费比 ${KPI_DERIVED.costRatio}% · 广告ROI ${KPI_DERIVED.roi}`, gap: null, delta: null, keywords: ['投入', '成本', '费比', '广告', '人力', 'ROI', '广告ROI'] },
+  { key: 'cost',   title: '总投入 · 费比', metric: 'cost', unit: '万', value: KPI.totalCost, sub: `广告 ${KPI.adCost} 万 + 人力 ${KPI.laborCost} 万 · 费比 ${KPI_DERIVED.costRatio}%`, gap: null, delta: null, keywords: ['投入', '成本', '费比', '广告', '人力'] },
   { key: 'renewal', title: '续费率', metric: 'renewalRate', unit: '%', decimals: 1, value: RENEWAL_OVERVIEW.rate, sub: `到期 ${RENEWAL_OVERVIEW.due} 单 · 已续 ${RENEWAL_OVERVIEW.renewed} 单 · 续费 ${RENEWAL_OVERVIEW.revenue} 万`, progress: RENEWAL_OVERVIEW.rate, progressLabel: '当期续费率', gap: null, delta: RENEWAL_OVERVIEW.delta, keywords: ['续费率', '续费', '复购', '版本', '销售'] },
 ];
 
