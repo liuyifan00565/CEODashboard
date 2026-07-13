@@ -1,8 +1,8 @@
+/* 更新时间: 2026-07-13 16:40:31 CST  更新内容: 选择性合并数据维护代码，恢复拉取前的主界面数据聚合逻辑。 */
 /*
  更新时间: 2026-07-10 17:02:12 CST
  更新内容: dashboard 部门回款明细兼容旧库 fact_revenue_daily 无 department_id 的结构，按 staff_id 兜底解析组织，避免接口报 Unknown column。
 */
-/* Update time: 2026-07-13 17:35:00 CST  Update content: Roll back staff-level sales member preference added for operating overview channel drilldown. */
 /*
  更新时间: 2026-07-10 15:40:59 CST
  更新内容: 续费快照为每个渠道版本补齐 day/month/year 空粒度，避免二级页因部分粒度字段缺失而漏算。
@@ -83,6 +83,14 @@ const DB_DEFAULTS = {
 
 // 本地排查时可临时填入 YYYY-MM；默认走北京时间当前自然月。
 const TEMP_DASHBOARD_MONTH_OVERRIDE = '';
+
+const STAFF_CHANNEL_KEY_SQL = `COALESCE(NULLIF(s.channel_key, ''), CASE
+  WHEN d.department_code = 'online-sales' THEN 'online'
+  WHEN d.department_code = 'south-sales' THEN 'south'
+  WHEN d.department_code = 'east-sales' THEN 'east'
+  WHEN d.department_code = 'agent-sales' THEN 'agent'
+  ELSE NULL
+END)`;
 
 const STAFF_OR_FACT_CHANNEL_KEY_SQL = `COALESCE(NULLIF(s.channel_key, ''), CASE
   WHEN d.department_code = 'online-sales' THEN 'online'

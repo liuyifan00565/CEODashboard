@@ -1,4 +1,4 @@
-/* Update time: 2026-07-13 17:35:00 CST  Update content: Remove operating overview channel row click affordance after rollback. */
+/* 更新时间: 2026-07-13 16:40:31 CST  更新内容: 选择性合并数据维护代码，恢复拉取前的经营总览界面样式。 */
 /* 更新时间: 2026-07-13 14:50:10 CST  更新内容: 月度经营进度与年度回款总览卡片增加顶部内边距，统一改善主标题贴近上边框的拥挤感。 */
 /* 更新时间: 2026-07-13 14:26:21 CST  更新内容: 本月回款结构饼图复用年度图的垂直位移参数，修正月度图视觉位置明显偏低。 */
 /* 更新时间: 2026-07-13 14:18:11 CST  更新内容: 按标注框将月度近期明细入口从蓝框整体右移 102px 到红框，纵向位置与按钮尺寸不变。 */
@@ -444,7 +444,7 @@
   position: relative;
   min-width: 0;
   display: grid;
-  grid-template-columns: 10px minmax(0, 1fr) minmax(74px, auto);
+  grid-template-columns: 10px minmax(0, 1fr) minmax(74px, auto) auto;
   align-items: center;
   gap: 10px;
   min-height: 30px;

@@ -1,4 +1,4 @@
-/* Update time: 2026-07-13 17:35:00 CST  Update content: Remove staff-level channel drilldown regression after operating overview popup rollback. */
+/* 更新时间: 2026-07-13 16:40:31 CST  更新内容: 选择性合并数据维护代码，恢复拉取前的主界面数据聚合回归测试。 */
 /*
  更新时间: 2026-07-10 17:02:12 CST
  更新内容: 增加 fact_revenue_daily 无 department_id 旧库兼容回归，防止 dashboard-data 启动后查询部门回款明细报 Unknown column。

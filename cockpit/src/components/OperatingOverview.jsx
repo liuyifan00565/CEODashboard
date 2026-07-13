@@ -1,4 +1,4 @@
-/* Update time: 2026-07-13 17:35:00 CST  Update content: Roll back operating overview channel row click-through member detail modal. */
+/* 更新时间: 2026-07-13 16:40:31 CST  更新内容: 选择性合并数据维护代码，恢复拉取前的经营总览界面实现。 */
 /* 更新时间: 2026-07-13 14:50:37 CST  更新内容: 缩小主界面本月与年度回款结构半环图外围渠道名称和占比字号。 */
 /* 更新时间: 2026-07-10 15:36:50 CST  更新内容: 将月度与年度下钻入口移到回款结构半环图右下方，并保留透明大点击热区。 */
 /* 更新时间: 2026-07-10 15:16:00 CST  更新内容: 合并远端经营布局，保留月度业绩和渠道经营区的福小客洞察定位标识。 */
@@ -444,10 +444,7 @@ function OperatingSituation({ structure, subLabel = '实际回款 / 目标回款
 
       <div className="op-channel-list">
         {structure.rows.map((row) => (
-          <div
-            className={`op-channel-item${row.risk ? ' op-channel-item--warn' : ''}`}
-            key={row.key}
-          >
+          <div className={`op-channel-item${row.risk ? ' op-channel-item--warn' : ''}`} key={row.key}>
             <span
               className="op-channel-swatch"
               style={{ background: row.swatch, boxShadow: `0 0 12px ${row.swatch}55` }}
@@ -506,6 +503,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
   const targetStatusRisk = monthTargetGap > 0;
   const targetStatusLabel = targetStatusRisk ? '剩余目标' : '超额完成';
   const targetStatusValue = targetStatusRisk ? monthTargetGap : monthTargetOver;
+
   return (
     <div className="op-overview">
       <SearchResultBorder active={matchesSearchTerm(progressKeywords, searchTerm)} className="op-search-result op-search-result--progress">
