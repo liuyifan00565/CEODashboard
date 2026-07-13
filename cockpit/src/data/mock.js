@@ -1,14 +1,18 @@
 /*
+ 更新时间: 2026-07-13 18:10:00 CST
+ 更新内容: 新增 getAdRoiMetric()，读取运行时 KPI_DERIVED.roi 和 COST_TREND 上一月广告投入算出的环比，
+          供首页新增的“广告ROI”小卡（与开户数小卡同款样式，放在总投入旁）使用；撤回此前直接拼进总投入
+          副标题的“· 广告ROI”文案，改为独立卡片展示。
+*/
+/*
  更新时间: 2026-07-13 16:50:00 CST
  更新内容: 新增 DAILY_REVENUE_TREND/YEARLY_TREND 占位数据和 getDailyRevenueTrend()/getYearlyTrend()，
           applyDashboardDataSnapshot 新增 dailyRevenueTrend/yearlyTrend 字段处理，供月度经营趋势图
           新增的日/月/年切换使用。
 */
 /*
- 更新时间: 2026-07-13 18:10:00 CST
- 更新内容: 新增 getAdRoiMetric()，读取运行时 KPI_DERIVED.roi 和 COST_TREND 上一月广告投入算出的环比，
-          供首页新增的“广告ROI”小卡（与开户数小卡同款样式，放在总投入旁）使用；撤回此前直接拼进总投入
-          副标题的“· 广告ROI”文案，改为独立卡片展示。
+ 更新时间: 2026-07-13 16:48:56 CST
+ 更新内容: 每个渠道的成本口径改为运营成本 + 人力成本，并保留 adCost 兼容字段。
 */
 /*
  更新时间: 2026-07-13 16:03:26 CST
@@ -176,12 +180,13 @@ export const KPI = {
   lastYearSameRecovered: 2760, // 去年同期（年度环比用）
   monthRefund: 0,          // 本月退款
   yearRefund: 0,           // 年度累计退款
-  totalCost: 156,          // 总投入费用（广告+人力）
-  adCost: 96,              // 渠道广告/投放成本
+  totalCost: 156,          // 总投入费用（运营+人力）
+  operationsCost: 96,      // 渠道运营成本
+  adCost: 96,              // 兼容旧字段，值等于 operationsCost
   laborCost: 60,           // 人力成本
   received: 486,           // 已回款
   receivable: 96,          // 应收/未回款
-  // ROI = 赢单金额 / 广告费
+  // ROI = 回款 / 运营成本
 };
 
 export const KPI_DERIVED = {
@@ -193,7 +198,7 @@ export const KPI_DERIVED = {
   yearYoY: +((KPI.yearRecovered - KPI.lastYearSameRecovered) / KPI.lastYearSameRecovered * 100).toFixed(1), // +13.0
   costRatio: +(KPI.totalCost / KPI.monthRecovered * 100).toFixed(1),         // 32.1 费比
   channelRoi: +(KPI.monthRecovered / KPI.totalCost).toFixed(2),              // 3.12 销售投入 ROI
-  roi: +(KPI.monthRecovered / KPI.adCost).toFixed(2),                        // 5.06 ROI
+  roi: +(KPI.monthRecovered / KPI.operationsCost).toFixed(2),                // 5.06 ROI
 };
 
 export const OPERATING_OVERVIEW_METRICS = {
@@ -535,12 +540,13 @@ export const COST_TREND = [
   { yearMonth: '2026-05', label: '5月', channels: { online: 50, south: 18, east: 20, agent: 10 }, laborCost: 58 },
   { yearMonth: '2026-06', label: '6月', channels: CHANNEL_INVESTMENT_BY_KEY, laborCost: KPI.laborCost },
 ].map((row) => {
-  const adCost = Object.values(row.channels).reduce((sum, value) => sum + Number(value || 0), 0);
+  const operationsCost = Object.values(row.channels).reduce((sum, value) => sum + Number(value || 0), 0);
   return {
     ...row,
-    adCost,
+    operationsCost,
+    adCost: operationsCost,
     laborCost: Number(row.laborCost) || 0,
-    totalCost: adCost + (Number(row.laborCost) || 0),
+    totalCost: operationsCost + (Number(row.laborCost) || 0),
   };
 });
 
@@ -977,7 +983,7 @@ export function getKpiSeries(metric, channelOrOptions = 'all', dim = 'month') {
 export const KPI_CARDS = [
   { key: 'month',  title: '本月回款', metric: 'recovered', unit: '万', value: KPI.monthRecovered, sub: `本月目标 ${KPI.monthTarget} 万`, progress: KPI_DERIVED.monthCompletion, progressLabel: '本月目标完成率', gap: KPI_DERIVED.monthGap, delta: KPI_DERIVED.monthMoM, keywords: ['本月回款', '回款', '退款', '目标', '完成率', '缺口'] },
   { key: 'year',   title: '年度累计回款', metric: 'recovered', unit: '万', value: KPI.yearRecovered, sub: `年度目标 ${KPI.yearTarget} 万`, progress: KPI_DERIVED.yearCompletion, progressLabel: '年度目标完成率', gap: KPI_DERIVED.yearGap, delta: KPI_DERIVED.yearYoY, keywords: ['年度累计', '年度回款', '回款', '退款', '年度', '年目标', '缺口'] },
-  { key: 'cost',   title: '总投入 · 费比', metric: 'cost', unit: '万', value: KPI.totalCost, sub: `广告 ${KPI.adCost} 万 + 人力 ${KPI.laborCost} 万 · 费比 ${KPI_DERIVED.costRatio}%`, gap: null, delta: null, keywords: ['投入', '成本', '费比', '广告', '人力'] },
+  { key: 'cost',   title: '总投入 · 费比', metric: 'cost', unit: '万', value: KPI.totalCost, sub: `运营 ${KPI.operationsCost} 万 + 人力 ${KPI.laborCost} 万 · 费比 ${KPI_DERIVED.costRatio}%`, gap: null, delta: null, keywords: ['投入', '成本', '费比', '运营', '人力'] },
   { key: 'renewal', title: '续费率', metric: 'renewalRate', unit: '%', decimals: 1, value: RENEWAL_OVERVIEW.rate, sub: `到期 ${RENEWAL_OVERVIEW.due} 单 · 已续 ${RENEWAL_OVERVIEW.renewed} 单 · 续费 ${RENEWAL_OVERVIEW.revenue} 万`, progress: RENEWAL_OVERVIEW.rate, progressLabel: '当期续费率', gap: null, delta: RENEWAL_OVERVIEW.delta, keywords: ['续费率', '续费', '复购', '版本', '销售'] },
 ];
 
@@ -1098,17 +1104,15 @@ function targetPeriod(target, actual) {
   return { target: safeTarget, actual: safeActual, pct, status: safeTarget ? maintenanceStatus(pct) : 'unset' };
 }
 
-function costPeriod(cost, actual, deals = 0, refund = 0) {
-  const safeCost = Math.max(0, Math.round(Number(cost || 0)));
+function costPeriod(operations, labor, actual, deals = 0, refund = 0) {
+  const safeOperations = Math.max(0, Math.round(Number(operations || 0)));
+  const safeLabor = Math.max(0, Math.round(Number(labor || 0)));
+  const totalCost = safeOperations + safeLabor;
   const safeActual = Math.max(0, Math.round(Number(actual || 0)));
   const safeDeals = Math.max(0, Math.round(Number(deals || 0)));
   const safeRefund = Math.max(0, Math.round(Number(refund || 0)));
-  const roi = safeCost ? +((safeActual - safeCost) / safeCost).toFixed(2) : 0;
-  return { cost: safeCost, actual: safeActual, deals: safeDeals, refund: safeRefund, roi };
-}
-
-function laborPeriod(cost) {
-  return { cost: Math.max(0, Math.round(Number(cost || 0))) };
+  const roi = totalCost ? +((safeActual - totalCost) / totalCost).toFixed(2) : 0;
+  return { operations: safeOperations, labor: safeLabor, totalCost, actual: safeActual, deals: safeDeals, refund: safeRefund, roi };
 }
 
 function sumValues(keys, periods, field) {
@@ -1129,37 +1133,27 @@ function createTargetPeriods(monthTargets, monthActuals) {
   return periods;
 }
 
-function createCostPeriods(monthCosts, monthActuals, monthDeals, monthRefunds = []) {
+function createCostPeriods(monthOperations, monthActuals, monthDeals, monthRefunds = [], monthLabor = []) {
   const periods = {};
   MAINTENANCE_MONTH_KEYS.forEach((key, index) => {
-    periods[key] = costPeriod(monthCosts[index] ?? 0, monthActuals[index] ?? 0, monthDeals[index] ?? 0, monthRefunds[index] ?? 0);
+    periods[key] = costPeriod(monthOperations[index] ?? 0, monthLabor[index] ?? 0, monthActuals[index] ?? 0, monthDeals[index] ?? 0, monthRefunds[index] ?? 0);
   });
   Object.entries(MAINTENANCE_QUARTERS).forEach(([key, months]) => {
     periods[key] = costPeriod(
-      sumValues(months, periods, 'cost'),
+      sumValues(months, periods, 'operations'),
+      sumValues(months, periods, 'labor'),
       sumValues(months, periods, 'actual'),
       sumValues(months, periods, 'deals'),
       sumValues(months, periods, 'refund')
     );
   });
   periods.year = costPeriod(
-    sumValues(MAINTENANCE_MONTH_KEYS, periods, 'cost'),
+    sumValues(MAINTENANCE_MONTH_KEYS, periods, 'operations'),
+    sumValues(MAINTENANCE_MONTH_KEYS, periods, 'labor'),
     sumValues(MAINTENANCE_MONTH_KEYS, periods, 'actual'),
     sumValues(MAINTENANCE_MONTH_KEYS, periods, 'deals'),
     sumValues(MAINTENANCE_MONTH_KEYS, periods, 'refund')
   );
-  return periods;
-}
-
-function createLaborPeriods(monthCosts) {
-  const periods = {};
-  MAINTENANCE_MONTH_KEYS.forEach((key, index) => {
-    periods[key] = laborPeriod(monthCosts[index] ?? 0);
-  });
-  Object.entries(MAINTENANCE_QUARTERS).forEach(([key, months]) => {
-    periods[key] = laborPeriod(sumValues(months, periods, 'cost'));
-  });
-  periods.year = laborPeriod(sumValues(MAINTENANCE_MONTH_KEYS, periods, 'cost'));
   return periods;
 }
 
@@ -1209,11 +1203,6 @@ export const COST_MAINTENANCE_ROWS = [
   { id: 'south_events', type: 'channel', name: '华南会销', parentId: 'group_offline', periods: createCostPeriods([22, 24, 26, 28, 28, 28, 30, 31, 32, 33, 34, 35], [72, 78, 88, 92, 84, 96, 0, 0, 0, 0, 0, 0], [7, 8, 9, 10, 8, 10, 0, 0, 0, 0, 0, 0]) },
   { id: 'east_events', type: 'channel', name: '华东会销', parentId: 'group_offline', periods: createCostPeriods([30, 32, 34, 36, 38, 38, 40, 42, 44, 45, 46, 48], [70, 74, 82, 86, 76, 84, 0, 0, 0, 0, 0, 0], [6, 7, 8, 8, 7, 8, 0, 0, 0, 0, 0, 0]) },
   { id: 'agent_rebate', type: 'channel', name: '代理返点', parentId: 'group_agent', periods: createCostPeriods([12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21, 22], [62, 68, 74, 82, 88, 96, 0, 0, 0, 0, 0, 0], [6, 7, 8, 8, 9, 10, 0, 0, 0, 0, 0, 0]) },
-];
-
-export const LABOR_COST_MAINTENANCE_ROWS = [
-  { id: 'labor-sales', name: '销售部人力成本', periods: createLaborPeriods([48, 50, 52, 54, 58, 60, 62, 64, 66, 68, 70, 72]) },
-  { id: 'labor-marketing', name: '市场部人力成本', periods: createLaborPeriods([28, 30, 31, 32, 34, 36, 37, 38, 39, 40, 41, 42]) },
 ];
 
 export const ORG_MAINTENANCE_DEPARTMENTS = [
@@ -1322,7 +1311,7 @@ function updateKpiCardsFromRuntimeData() {
     },
     cost: {
       value: KPI.totalCost,
-      sub: `广告 ${KPI.adCost} 万 + 人力 ${KPI.laborCost} 万 · 费比 ${KPI_DERIVED.costRatio}%`,
+      sub: `运营 ${KPI.operationsCost} 万 + 人力 ${KPI.laborCost} 万 · 费比 ${KPI_DERIVED.costRatio}%`,
     },
     renewal: {
       value: renewalOverview.rate,

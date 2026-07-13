@@ -1,7 +1,7 @@
 # 阿里云 AMD64 Docker 离线部署说明
 
-更新时间: 2026-07-10 17:20:59 CST
-更新内容: 修复离线交付包规范，明确默认携带生产 `.env`、应用与 MySQL 镜像、版本追踪、密钥状态、迁移执行和健康检查等待。
+更新时间: 2026-07-13 16:48:56 CST
+更新内容: 交付包新增运营成本、人力成本渠道月表迁移，安装和升级时自动补齐字段及唯一键。
 
 ## 1) 打包
 
@@ -46,6 +46,7 @@ deploy_artifacts/ceodashboard-aliyun-amd64-deploy-YYYYMMDD-HHMMSS.tar.gz
 - `images/mysql-8.4-amd64.tar.gz`：MySQL 镜像，`linux/amd64`
 - `docker/db-init/ceo_dashboard_full.sql`：MySQL 空卷首次初始化数据
 - `docker/migrations/20260709_compute_token_usage_tables.sql`：升级时补齐算力表结构
+- `docker/migrations/20260713_cost_components.sql`：升级时拆分渠道月运营成本与人力成本，并修复渠道月份唯一键
 
 ## 3) 必填环境变量
 

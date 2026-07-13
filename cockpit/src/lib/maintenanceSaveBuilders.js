@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 16:48:56 CST
+ Update content: Cost maintenance save builder merges per-channel operations and labor inputs into one monthly database row.
+*/
+/*
  Update time: 2026-07-13 00:00:00 CST
  Update content: Target maintenance save rows support separate target and actual amount draft fields for the same department month.
 */
@@ -48,7 +52,7 @@ function splitCostDraftKey(key) {
   return {
     rowId: parts[0] || '',
     monthKey: parts[1] || '',
-    valueField: parts[2] || 'cost',
+    valueField: parts[2] || 'operations',
   };
 }
 
@@ -99,53 +103,43 @@ export function buildTargetSaveRows(rows, draft, year) {
 }
 
 /**
- * 成本维护：把 draft 转成渠道成本行 + 人力成本行。
- * 渠道行键 "channel_id|mXX"；人力行键 "labor-<cost_type>|mXX"。
- * @returns {{ rows: Array, laborRows: Array }}
+ * 成本维护：把同一渠道月份的运营、人力和退款 draft 合并为一条渠道成本行。
+ * @returns {{ rows: Array }}
  */
 export function buildCostSaveRows(snapshot, draft, year) {
   const rows = Array.isArray(snapshot?.rows) ? snapshot.rows : [];
-  const laborRows = Array.isArray(snapshot?.laborRows) ? snapshot.laborRows : [];
   const channelRows = new Map(
     rows.filter((r) => r && r.type === 'channel' && r.id != null).map((r) => [String(r.id), r]),
   );
-  const laborMap = new Map(laborRows.filter((r) => r && r.id).map((r) => [r.id, r]));
 
   const costRowsByKey = new Map();
-  const laborOut = [];
   for (const [key, value] of Object.entries(draft || {})) {
     const { rowId, monthKey, valueField } = splitCostDraftKey(key);
     const mm = monthKeyToMM(monthKey);
     if (!mm) continue;
     const yearMonth = `${year}-${mm}`;
-    if (rowId.startsWith('labor-')) {
-      const laborRow = laborMap.get(rowId);
-      if (!laborRow) continue;
-      laborOut.push({
-        cost_type: rowId.slice('labor-'.length),
-        year_month: yearMonth,
-        amount_wan: Number(value) || 0,
-      });
+    const chRow = channelRows.get(rowId);
+    if (!chRow) continue;
+    const mapKey = `${rowId}|${yearMonth}`;
+    const sourcePeriod = chRow.periods?.[monthKey];
+    const existing = costRowsByKey.get(mapKey) || {
+      channel_id: rowId,
+      channel_name: chRow.name,
+      year_month: yearMonth,
+      operations_amount_wan: Number(sourcePeriod?.operations) || 0,
+      labor_amount_wan: sourcePeriod?.laborConfigured === false ? null : Number(sourcePeriod?.labor) || 0,
+      refund_amount_wan: Number(sourcePeriod?.refund) || 0,
+    };
+    if (valueField === 'refund') {
+      existing.refund_amount_wan = Number(value) || 0;
+    } else if (valueField === 'labor') {
+      existing.labor_amount_wan = Number(value) || 0;
     } else {
-      const chRow = channelRows.get(rowId);
-      if (!chRow) continue;
-      const mapKey = `${rowId}|${yearMonth}`;
-      const existing = costRowsByKey.get(mapKey) || {
-        channel_id: rowId,
-        channel_name: chRow.name,
-        year_month: yearMonth,
-        investment_amount_wan: Number(chRow.periods?.[monthKey]?.cost) || 0,
-        refund_amount_wan: Number(chRow.periods?.[monthKey]?.refund) || 0,
-      };
-      if (valueField === 'refund') {
-        existing.refund_amount_wan = Number(value) || 0;
-      } else {
-        existing.investment_amount_wan = Number(value) || 0;
-      }
-      costRowsByKey.set(mapKey, existing);
+      existing.operations_amount_wan = Number(value) || 0;
     }
+    costRowsByKey.set(mapKey, existing);
   }
-  return { rows: Array.from(costRowsByKey.values()), laborRows: laborOut };
+  return { rows: Array.from(costRowsByKey.values()) };
 }
 
 /**

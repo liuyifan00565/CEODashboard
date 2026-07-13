@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 16:48:56 CST
+ 更新内容: 成本维护回归改为每个渠道月同时包含运营成本、人力成本和合计，不再检查独立人力成本行。
+*/
+/*
  更新时间: 2026-07-13 16:03:26 CST
  更新内容: 回归测试隐藏数据维护侧边栏的组织维护与渠道维护入口，同时确认两个页面的元数据继续保留。
 */
@@ -82,7 +86,6 @@ import {
   COST_MAINTENANCE_CHANNELS,
   COST_MAINTENANCE_ROWS,
   DELIVERY_TARGET_COUNT,
-  LABOR_COST_MAINTENANCE_ROWS,
   MAINTENANCE_MENU,
   MAINTENANCE_PERIOD_COLUMNS,
   META,
@@ -200,16 +203,13 @@ test('classifies target maintenance progress with gold reserved for 120 percent 
   assert.doesNotMatch(mockSource, /if \(pct >= 100\) return 'good';/);
 });
 
-test('provides cost maintenance channel rows and labor cost rows', () => {
+test('provides operations and labor costs on every cost maintenance channel row', () => {
   assert.ok(COST_MAINTENANCE_CHANNELS.some((channel) => channel.name === '全部渠道'));
   assert.ok(COST_MAINTENANCE_CHANNELS.some((channel) => channel.kind === '大类'));
-  assert.ok(COST_MAINTENANCE_ROWS.every((row) => row.periods.m06.cost >= 0));
+  assert.ok(COST_MAINTENANCE_ROWS.every((row) => row.periods.m06.operations >= 0));
+  assert.ok(COST_MAINTENANCE_ROWS.every((row) => row.periods.m06.labor >= 0));
+  assert.ok(COST_MAINTENANCE_ROWS.every((row) => row.periods.m06.totalCost === row.periods.m06.operations + row.periods.m06.labor));
   assert.ok(COST_MAINTENANCE_ROWS.every((row) => row.periods.m06.actual >= 0));
-  assert.deepEqual(
-    LABOR_COST_MAINTENANCE_ROWS.map((row) => row.name),
-    ['销售部人力成本', '市场部人力成本']
-  );
-  assert.ok(LABOR_COST_MAINTENANCE_ROWS.every((row) => row.periods.year.cost > row.periods.m06.cost));
 });
 
 test('provides organization maintenance departments and BI users', () => {
