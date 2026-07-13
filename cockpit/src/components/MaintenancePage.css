@@ -1,5 +1,9 @@
 /*
  Update time: 2026-07-13 00:00:00 CST
+ Update content: Align readonly target/actual rows with editable target/actual input rows in target maintenance cells.
+*/
+/*
+ Update time: 2026-07-13 00:00:00 CST
  Update content: Format target maintenance readonly target/actual values on one line with right-aligned numbers.
 */
 /*
@@ -1370,7 +1374,7 @@
 .mnt-target-readonly-value {
   min-height: 28px;
   display: grid;
-  gap: 3px;
+  gap: 4px;
   background: transparent;
   border: 0;
   color: var(--muted);
@@ -1380,15 +1384,16 @@
 
 .mnt-target-readonly-value span {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: baseline;
-  column-gap: 8px;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 5px;
+  min-height: 26px;
 }
 
 .mnt-target-readonly-value strong {
   color: inherit;
-  font-weight: 720;
-  text-align: right;
+  font-weight: 800;
+  text-align: left;
   white-space: nowrap;
 }
 
