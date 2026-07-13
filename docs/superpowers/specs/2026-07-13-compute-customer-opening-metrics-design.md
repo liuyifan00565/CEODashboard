@@ -1,5 +1,8 @@
 # Compute Customer Opening Metrics Design
 
+更新时间: 2026-07-13 14:48:00 CST
+更新内容: 明确本月开户数和今日开户数由接口提供，优先直接读取接口开户字段，缺失时再用算力全量客户快照差分计算。
+
 更新时间: 2026-07-13 14:40:00 CST
 更新内容: 明确本月开户数和今日开户数由接口提供，并允许在开户事实表缺失时使用算力全量客户快照差分计算。
 
@@ -7,7 +10,7 @@
 
 The CEO dashboard currently renders `本月开户数` and `今日开户数` from `overview.openingAccountMetrics` in `/api/dashboard/bootstrap`.
 
-The preferred source is `fact_opening_account_daily.opening_count`. The compute customer table `fact_compute_customer_daily` is confirmed to represent all customers for each snapshot date, so the API can also derive opening counts from daily customer-count differences when the opening fact table is unavailable or empty for the requested period.
+The preferred source is a direct opening-count field from the upstream interface or synchronized fact table. In the current local schema, that direct field is `fact_opening_account_daily.opening_count`. The compute customer table `fact_compute_customer_daily` is confirmed to represent all customers for each snapshot date, so the API can also derive opening counts from daily customer-count differences when direct opening-count data is unavailable or empty for the requested period.
 
 ## Goal
 
@@ -15,7 +18,7 @@ Expose opening metrics from the API as explicit dashboard fields so the frontend
 
 ## Data Sources
 
-- Primary: `fact_opening_account_daily`
+- Primary: direct opening-count data from the upstream interface or `fact_opening_account_daily`
   - `monthOpenings.current_count`: sum of `opening_count` from the requested month.
   - `monthOpenings.previous_count`: sum of `opening_count` from the previous month.
   - `todayOpenings.current_count`: `opening_count` for the dashboard business date.
@@ -61,9 +64,9 @@ When fallback is used, `source` is `compute_customer_snapshot`.
 
 ## Selection Rules
 
-1. Query `fact_opening_account_daily` for the requested month and comparison periods.
-2. Use the primary source when either requested metric has non-zero primary data.
-3. If the primary source has no usable rows for both metrics, derive both metrics from `fact_compute_customer_daily`.
+1. Query direct opening-count data for the requested month and comparison periods.
+2. Use direct opening-count data when either requested metric has non-zero primary data.
+3. If direct opening-count data has no usable rows for both metrics, derive both metrics from `fact_compute_customer_daily`.
 4. Return the same frontend display fields regardless of source.
 
 ## Error Handling
@@ -74,7 +77,7 @@ When fallback is used, `source` is `compute_customer_snapshot`.
 
 ## Testing
 
-- Add a server test proving the existing primary opening fact rows still build the same card values.
+- Add a server test proving direct opening-count rows still build the same card values.
 - Add a server test proving compute customer snapshots derive daily and monthly opening counts.
 - Add a server test proving fallback clamps negative customer-count differences to zero.
 
@@ -83,5 +86,5 @@ When fallback is used, `source` is `compute_customer_snapshot`.
 Update the dashboard README data-source section when implementation lands:
 
 - Opening metrics are provided by `/api/dashboard/bootstrap`.
-- The API prefers `fact_opening_account_daily`.
-- If the opening fact table is empty, the API derives counts from full daily snapshots in `fact_compute_customer_daily`.
+- The API prefers direct opening-count data.
+- If direct opening-count data is empty, the API derives counts from full daily snapshots in `fact_compute_customer_daily`.
