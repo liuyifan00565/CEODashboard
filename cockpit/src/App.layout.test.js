@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-13 20:30:00 CST  更新内容: 同步 AI 洞察导航泛化为 targetMenu 三态分支（compute/
+   version-delivery/overview）后的回归断言，不再要求源码里出现字面量 setActiveMenu('compute')/('overview')。 */
 /* 更新时间: 2026-07-13 18:10:00 CST  更新内容: 同步开户数/投入行等高分配修复——回归断言从 .82fr/1.08fr 失衡
    改为 repeat(2,minmax(156px,1fr)) 等分，匹配开户数小卡不再被系统性挤扁。 */
 /* 更新时间: 2026-07-13 16:48:56 CST  更新内容: 回归锁定每个渠道可分别填写运营成本与人力成本。 */
@@ -1447,9 +1449,8 @@ test('AI insight navigation locates overview sections and switches to the comput
   assert.match(appSource, /const focusBlock = target === 'compute' \? 'start' : 'center';/);
   assert.match(appSource, /scrollIntoView\(\{ behavior: 'smooth', block: focusBlock \}\)/);
   assert.match(appSource, /function handleAiInsightNavigation\(target\)/);
-  assert.match(appSource, /target === 'compute'/);
-  assert.match(appSource, /setActiveMenu\('compute'\)/);
-  assert.match(appSource, /setActiveMenu\('overview'\)/);
+  assert.match(appSource, /target === 'compute' \? 'compute' : target === 'versions' \? 'version-delivery' : 'overview'/);
+  assert.match(appSource, /setActiveMenu\(targetMenu\)/);
   assert.match(appSource, /onNavigateInsight=\{handleAiInsightNavigation\}/);
   assert.match(appSource, /<AIAnalysisWidget[\s\S]*?computeDataState=\{computeDataState\}[\s\S]*?onNavigateInsight=\{handleAiInsightNavigation\}/);
   assert.match(appSource, /data-ai-insight-target="trend"/);

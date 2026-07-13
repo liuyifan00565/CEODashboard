@@ -1,4 +1,10 @@
 /*
+ 更新时间: 2026-07-13 20:30:00 CST
+ 更新内容: 侧边导航在算力用量分析之后新增“版本与交付”入口，把经营总览页下方的版本情况(VersionFinancePanel)
+          和交付面板(DeliveryPanel)移到独立标签页；handleAiInsightNavigation 的 target==='versions'
+          分支同步改为跳转新标签页而不是经营总览。
+*/
+/*
  更新时间: 2026-07-13 18:10:00 CST
  更新内容: 首页总投入旁新增广告ROI 小卡（AdRoiCard），总投入·费比卡片区域从整行独占改为与广告ROI 小卡
           左右分栏，总投入随之变窄；点击广告ROI 小卡复用总投入的成本二级弹窗。
@@ -263,6 +269,7 @@ export default function App() {
   const aiInsightFocusTimerRef = useRef(null);
   const isMaintenancePage = maintenanceMode;
   const isComputePage = activeMenu === 'compute';
+  const isVersionDeliveryPage = activeMenu === 'version-delivery';
   const activeChannelKey = getDashboardChannelKey(activeMenu);
   const activeMenuLabel = getDashboardMenuLabel(activeMenu);
   const activeContextLabel = maintenanceMode
@@ -434,27 +441,16 @@ export default function App() {
     pendingMenuScrollRef.current = false;
     setMaintenanceMode(false);
 
-    if (target === 'compute') {
-      if (activeMenu === 'compute') {
-        requestAnimationFrame(() => {
-          focusAiInsightTarget(target);
-          pendingAiInsightRef.current = null;
-        });
-      } else {
-        setActiveMenu('compute');
-      }
-      return;
-    }
+    const targetMenu = target === 'compute' ? 'compute' : target === 'versions' ? 'version-delivery' : 'overview';
 
-    if (maintenanceMode || activeMenu === 'compute') {
-      setActiveMenu('overview');
-      return;
+    if (activeMenu === targetMenu) {
+      requestAnimationFrame(() => {
+        focusAiInsightTarget(target);
+        pendingAiInsightRef.current = null;
+      });
+    } else {
+      setActiveMenu(targetMenu);
     }
-
-    requestAnimationFrame(() => {
-      focusAiInsightTarget(target);
-      pendingAiInsightRef.current = null;
-    });
   }
 
   function jumpToNextSearchResult() {
@@ -605,6 +601,20 @@ export default function App() {
                 computeDataState={computeDataState}
                 customerSyncState={computeCustomerSyncState}
               />
+            ) : isVersionDeliveryPage ? (
+              <>
+                <div className="dash-version-row" data-ai-insight-target="versions" data-anim>
+                  <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.version, searchTerm)}>
+                    <VersionFinancePanel channelKey={activeChannelKey} />
+                  </SearchResultBorder>
+                </div>
+
+                <div className="dash-secondary-delivery" data-anim>
+                  <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.delivery, searchTerm)}>
+                    <DeliveryPanel />
+                  </SearchResultBorder>
+                </div>
+              </>
             ) : (
               <>
                 <OperatingOverview
@@ -636,18 +646,6 @@ export default function App() {
                       ))}
                     </div>
                   </div>
-                </div>
-
-                <div className="dash-version-row" data-ai-insight-target="versions" data-anim>
-                  <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.version, searchTerm)}>
-                    <VersionFinancePanel channelKey={activeChannelKey} />
-                  </SearchResultBorder>
-                </div>
-
-                <div className="dash-secondary-delivery" data-anim>
-                  <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.delivery, searchTerm)}>
-                    <DeliveryPanel />
-                  </SearchResultBorder>
                 </div>
               </>
             )}

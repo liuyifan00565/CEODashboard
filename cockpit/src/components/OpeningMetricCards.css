@@ -1,4 +1,10 @@
 /*
+ 更新时间: 2026-07-13 20:00:00 CST
+ 更新内容: .opening-metric-card 补上 width:100%——<button> 元素即使设了 display:grid，宽度默认仍按内容
+          fit-content 收缩，不会像 <div> 一样自动撑满 .search-result-border__content 父级宽度，导致卡片
+          右侧一直留白（本月/今日开户数和总投入旁的广告ROI 小卡都受影响）。
+*/
+/*
  更新时间: 2026-07-06 00:20:59 CST
  更新内容: 开户数小卡片 hover 统一复用月度趋势悬浮亮边玻璃反馈。
 */
@@ -27,6 +33,7 @@
 
 .opening-metric-card {
   position: relative;
+  width: 100%;
   min-height: 132px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

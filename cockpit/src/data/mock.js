@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 20:30:00 CST
+ 更新内容: 侧边导航新增“版本与交付”入口（compute 之后），承接原经营总览页下方的版本情况和交付面板。
+*/
+/*
  更新时间: 2026-07-13 18:10:00 CST
  更新内容: 新增 getAdRoiMetric()，读取运行时 KPI_DERIVED.roi 和 COST_TREND 上一月广告投入算出的环比，
           供首页新增的“广告ROI”小卡（与开户数小卡同款样式，放在总投入旁）使用；撤回此前直接拼进总投入
@@ -1056,6 +1060,7 @@ export function getDeliverySummary() {
 export const MENU = [
   { key: 'overview', name: '经营总览', channelKey: 'all' },
   { key: 'compute', name: '算力用量分析', channelKey: 'all' },
+  { key: 'version-delivery', name: '版本与交付', channelKey: 'all', icon: 'delivery' },
 ];
 
 export const MAINTENANCE_MENU = [

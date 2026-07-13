@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 20:30:00 CST
+ 更新内容: 同步侧边导航新增“版本与交付”入口的回归断言。
+*/
+/*
  更新时间: 2026-07-13 16:48:56 CST
  更新内容: 成本维护回归改为每个渠道月同时包含运营成本、人力成本和合计，不再检查独立人力成本行。
 */
@@ -125,14 +129,14 @@ function byKey(rows, key) {
   return rows.find((row) => row.key === key);
 }
 
-test('defines only overview and compute usage menu entries in the sidebar', () => {
+test('defines overview, compute usage, and version-delivery menu entries in the sidebar', () => {
   assert.deepEqual(
     MENU.map((item) => item.name),
-    ['经营总览', '算力用量分析']
+    ['经营总览', '算力用量分析', '版本与交付']
   );
   assert.deepEqual(
     MENU.map((item) => getDashboardChannelKey(item.key)),
-    ['all', 'all']
+    ['all', 'all', 'all']
   );
 });
 
@@ -151,7 +155,7 @@ test('defines only target and cost entries in the data maintenance sidebar', () 
   );
   assert.deepEqual(
     MENU.map((item) => item.name),
-    ['经营总览', '算力用量分析']
+    ['经营总览', '算力用量分析', '版本与交付']
   );
 });
 
