@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 22:00:00 CST
+ 更新内容: 同步年度回款半环图“未完成”标注位从 y:156 改为 y:238（避免与线下华南 y:158 重叠）的回归断言。
+*/
+/*
  更新时间: 2026-07-08 18:22:00 CST
  更新内容: KPI 二级弹窗回归同步当前筛选、主结论和成本纯文字摘要结构。
 */
@@ -200,7 +204,7 @@ test('renders month and year recovery cards with the ECharts half-donut layout',
   assert.match(componentSource, /const INCOMPLETE_PERCENT_COLOR = '#ffffff';/);
   assert.doesNotMatch(componentSource, /function recoveryPiePercentRichKey/);
   assert.doesNotMatch(componentSource, /function recoveryPiePercentLabelFormatter/);
-  assert.match(componentSource, /const RECOVERY_YEAR_LABEL_SLOTS = \{[\s\S]*?'线上': \{ y: 78 \},[\s\S]*?'代理': \{ y: 118 \},[\s\S]*?'线下华南': \{ y: 158 \},[\s\S]*?'线下华东': \{ y: 198 \},[\s\S]*?'未完成': \{ y: 156 \},[\s\S]*?\};/);
+  assert.match(componentSource, /const RECOVERY_YEAR_LABEL_SLOTS = \{[\s\S]*?'线上': \{ y: 78 \},[\s\S]*?'代理': \{ y: 118 \},[\s\S]*?'线下华南': \{ y: 158 \},[\s\S]*?'线下华东': \{ y: 198 \},[\s\S]*?'未完成': \{ y: 238 \},[\s\S]*?\};/);
   assert.match(componentSource, /function recoveryPieLabelSlot\(params\) \{[\s\S]*?if \(text\.includes\('华东'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['线下华东'\];[\s\S]*?if \(text\.includes\('华南'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['线下华南'\];[\s\S]*?if \(text\.includes\('代理'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['代理'\];[\s\S]*?if \(text\.includes\('未完成'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['未完成'\];[\s\S]*?if \(text\.includes\('线上'\)\) return RECOVERY_YEAR_LABEL_SLOTS\['线上'\];[\s\S]*?\}/);
   assert.match(componentSource, /function recoveryPieLabelLayout\(params, cardKey\) \{[\s\S]*?if \(cardKey !== 'year'\) return undefined;[\s\S]*?const slot = recoveryPieLabelSlot\(params\);[\s\S]*?return \{[\s\S]*?y: slot\.y,[\s\S]*?hideOverlap: false,[\s\S]*?\};[\s\S]*?\}/);
   assert.match(componentSource, /label:\s*\{[\s\S]*?position:\s*'outside'[\s\S]*?distanceToLabelLine:\s*4/);

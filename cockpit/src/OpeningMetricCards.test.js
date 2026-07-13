@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 21:30:00 CST
+ 更新内容: 同步 sparkline 从固定 96px 贴右下角改为撑满卡片整行的回归断言。
+*/
+/*
  更新时间: 2026-07-10 15:25:00 CST
  更新内容: 开户二级趋势测试改为数据库明细快照前为空，避免继续要求前端静态开户趋势。
 */
@@ -105,7 +109,7 @@ test('implements compact horizontal opening-account cards', () => {
   assert.doesNotMatch(componentSource, /▲ \{formatDelta\(metric\.delta\)\}/);
   assert.match(cssSource, /\.opening-metric-cards\s*\{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/);
   assert.match(cssSource, /\.opening-metric-card\s*\{[\s\S]*?min-height:\s*132px;[\s\S]*?border:\s*1px solid var\(--dashboard-card-border\);[\s\S]*?background:\s*var\(--dashboard-card-bg\);[\s\S]*?backdrop-filter:\s*var\(--dashboard-card-blur\);[\s\S]*?box-shadow:\s*var\(--dashboard-card-shadow\);/);
-  assert.match(cssSource, /\.opening-metric-card__sparkline\s*\{[\s\S]*?grid-column:\s*2;[\s\S]*?width:\s*96px;[\s\S]*?height:\s*32px;/);
+  assert.match(cssSource, /\.opening-metric-card__sparkline\s*\{[\s\S]*?grid-column:\s*1 \/ -1;[\s\S]*?width:\s*100%;[\s\S]*?height:\s*32px;/);
   assert.match(cssSource, /\.opening-metric-card__sparkline-path\s*\{[\s\S]*?stroke:\s*var\(--brand-lavender\);/);
   assert.match(cssSource, /\.opening-metric-card__hint\s*\{[\s\S]*?grid-column:\s*1 \/ -1;[\s\S]*?color:\s*var\(--faint\);/);
   assert.doesNotMatch(cssSource, /\.opening-metric-card::before/);

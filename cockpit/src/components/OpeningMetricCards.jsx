@@ -1,4 +1,10 @@
 /*
+ 更新时间: 2026-07-13 21:30:00 CST
+ 更新内容: sparkline 从固定 96px 贴右下角改为撑满卡片整行——此前卡片补上 width:100% 后变宽，
+          但 sparkline 仍卡在 grid-template-columns 的 auto 窄列里，看起来又小又偏右下；viewBox 同步
+          从 96 拓宽到 200 并加 preserveAspectRatio="none"，撑满时不再需要大幅非等比拉伸。
+*/
+/*
  更新时间: 2026-07-03 23:48:36 CST
  更新内容: 本月开户数与今日开户数卡片增加复用现有日维度数据的近 7 日 sparkline。
 */
@@ -28,7 +34,7 @@ function getSparklinePoints(metric) {
   return getKpiSeries(metric.metric, { dim: 'day' }).slice(-7);
 }
 
-function sparklinePath(points, width = 96, height = 32, padding = 3) {
+function sparklinePath(points, width = 200, height = 32, padding = 3) {
   if (!points.length) return '';
   const values = points.map((point) => Number(point.value) || 0);
   const min = Math.min(...values);
@@ -51,7 +57,8 @@ function Sparkline({ metric }) {
   return (
     <svg
       className="opening-metric-card__sparkline"
-      viewBox="0 0 96 32"
+      viewBox="0 0 200 32"
+      preserveAspectRatio="none"
       role="img"
       aria-label={`${metric.title}近 7 日开户趋势`}
       focusable="false"

@@ -1,3 +1,10 @@
+/*
+ 更新时间: 2026-07-13 21:00:00 CST
+ 更新内容: makeMonthlyTrend 改为按 monthlyTargets 和 recoveredRows 两边年月的并集构建月份骨架，不再只依赖
+          monthlyTargets 是否存在——此前目标维护未配置任何月份时（biz_target_monthly 为空），即使当月有
+          真实回款，月度经营趋势图也会整月空白；现在无目标的月份 target 按 0 处理（完成率随之为 0%），
+          与交付看板"目标未配置"时仍展示真实数据的口径保持一致。
+*/
 /* 更新时间: 2026-07-13 16:48:56 CST  更新内容: 总成本改为各渠道运营成本 + 各渠道人力成本；旧无渠道人力仅在新字段未维护时回退。 */
 /*
  更新时间: 2026-07-13 17:20:00 CST
@@ -353,13 +360,19 @@ function makeChannelRoi({ channelRows, channelCosts }) {
 
 function makeMonthlyTrend({ monthlyTargets, recoveredRows, latestMonth, currentMonthTarget }) {
   const recoveredByMonth = groupSum(recoveredRows, 'year_month', 'recovered_wan');
-  return monthlyTargets
-    .filter((row) => monthNumber(row.year_month) <= monthNumber(latestMonth))
-    .map((row) => {
-      const recovered = round0(recoveredByMonth.get(row.year_month));
-      const target = row.year_month === latestMonth ? currentMonthTarget : round0(row.target_wan);
+  const targetByMonth = groupSum(monthlyTargets, 'year_month', 'target_wan');
+  const months = new Set([
+    ...monthlyTargets.map((row) => row.year_month),
+    ...recoveredRows.map((row) => row.year_month),
+  ]);
+  return [...months]
+    .filter((yearMonth) => monthNumber(yearMonth) <= monthNumber(latestMonth))
+    .sort()
+    .map((yearMonth) => {
+      const recovered = round0(recoveredByMonth.get(yearMonth));
+      const target = yearMonth === latestMonth ? currentMonthTarget : round0(targetByMonth.get(yearMonth));
       return {
-        month: monthName(row.year_month),
+        month: monthName(yearMonth),
         target,
         recovered,
         completion: pct(recovered, target),
