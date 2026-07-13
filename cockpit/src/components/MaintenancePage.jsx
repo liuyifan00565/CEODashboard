@@ -1,5 +1,9 @@
 /*
  Update time: 2026-07-13 00:00:00 CST
+ Update content: Wrap target maintenance progress lines so progress bars align at the bottom of month cells.
+*/
+/*
+ Update time: 2026-07-13 00:00:00 CST
  Update content: Target maintenance month cells show editable target and actual completion amount fields.
 */
 /*
@@ -603,28 +607,32 @@ function TargetPeriodCell({ row, column, onEdit }) {
       data-target-editable={editable ? 'true' : 'false'}
       title={editable ? '可填写目标和实际完成' : '汇总数据，不可直接填写'}
     >
-      {editable ? (
-        <div className="mnt-target-edit-stack">
-          <TargetAmountInput
-            label="目标"
-            value={period.target}
-            onChange={(value) => onEdit?.(row.id, column.key, 'target', value)}
-            ariaLabel={`${row.name}${column.label}目标`}
-          />
-          <TargetAmountInput
-            label="完成"
-            value={period.actual}
-            onChange={(value) => onEdit?.(row.id, column.key, 'actual', value)}
-            ariaLabel={`${row.name}${column.label}完成`}
-          />
-        </div>
-      ) : (
-        <div className="mnt-target-readonly-value">
-          <span>目标 <strong>{formatWan(period.target)}</strong></span>
-          <span>完成 <strong>{formatWan(period.actual)}</strong></span>
-        </div>
-      )}
-      <ProgressLine period={period} />
+      <div className="mnt-target-cell-main">
+        {editable ? (
+          <div className="mnt-target-edit-stack">
+            <TargetAmountInput
+              label="目标"
+              value={period.target}
+              onChange={(value) => onEdit?.(row.id, column.key, 'target', value)}
+              ariaLabel={`${row.name}${column.label}目标`}
+            />
+            <TargetAmountInput
+              label="完成"
+              value={period.actual}
+              onChange={(value) => onEdit?.(row.id, column.key, 'actual', value)}
+              ariaLabel={`${row.name}${column.label}完成`}
+            />
+          </div>
+        ) : (
+          <div className="mnt-target-readonly-value">
+            <span>目标 <strong>{formatWan(period.target)}</strong></span>
+            <span>完成 <strong>{formatWan(period.actual)}</strong></span>
+          </div>
+        )}
+      </div>
+      <div className="mnt-target-progress-slot">
+        <ProgressLine period={period} />
+      </div>
     </td>
   );
 }

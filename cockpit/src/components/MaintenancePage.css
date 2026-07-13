@@ -1,5 +1,9 @@
 /*
  Update time: 2026-07-13 00:00:00 CST
+ Update content: Pin target maintenance progress lines to a shared bottom slot so bars align across cells.
+*/
+/*
+ Update time: 2026-07-13 00:00:00 CST
  Update content: Align target maintenance split name/month tables after adding target and actual editors.
 */
 /*
@@ -977,6 +981,12 @@
   max-width: var(--mnt-target-period-width);
 }
 
+.mnt-matrix--target .mnt-period-cell {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-content: stretch;
+}
+
 .mnt-matrix--target-name th,
 .mnt-matrix--target th {
   height: var(--mnt-target-head-height);
@@ -1228,6 +1238,18 @@
 
 .mnt-period-cell--editable {
   vertical-align: top;
+}
+
+.mnt-target-cell-main {
+  min-height: 0;
+}
+
+.mnt-target-progress-slot {
+  align-self: end;
+}
+
+.mnt-target-progress-slot .mnt-mini-line {
+  margin-top: 0;
 }
 
 .mnt-target-edit-stack {
