@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 15:08:41 CST
+ 更新内容: 永久恢复数据维护侧边栏的组织维护入口，删除临时可见性开关并保持四个维护入口固定顺序。
+*/
+/*
  更新时间: 2026-07-10 17:20:00 CST
  更新内容: 交付看板汇总改为按运行时真实目标计算，目标未配置时保留真实交付单数但不生成完成率。
 */
@@ -977,12 +981,10 @@ export const MENU = [
   { key: 'compute', name: '算力用量分析', channelKey: 'all' },
 ];
 
-const ORG_MAINTENANCE_VISIBLE = false;
-
 export const MAINTENANCE_MENU = [
   { key: 'target-maintenance', name: '目标维护', icon: 'target' },
   { key: 'cost-maintenance', name: '成本维护', icon: 'cost' },
-  ...(ORG_MAINTENANCE_VISIBLE ? [{ key: 'org-maintenance', name: '组织维护', icon: 'organization' }] : []),
+  { key: 'org-maintenance', name: '组织维护', icon: 'organization' },
   { key: 'channel-maintenance', name: '渠道维护', icon: 'channel' },
 ];
 

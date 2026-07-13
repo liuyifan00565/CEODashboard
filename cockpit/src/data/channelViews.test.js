@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 15:08:41 CST
+ 更新内容: 回归测试恢复数据维护侧边栏的组织维护入口，并锁定四个维护入口的顺序、键、图标和页面元数据。
+*/
+/*
  更新时间: 2026-07-10 17:20:00 CST
  更新内容: 增加交付目标未配置时不生成 0% 完成率的回归测试。
 */
@@ -125,18 +129,18 @@ test('defines only overview and compute usage menu entries in the sidebar', () =
   );
 });
 
-test('defines visible data maintenance sidebar entries separately from the main dashboard menu', () => {
+test('defines all four data maintenance sidebar entries separately from the main dashboard menu', () => {
   assert.deepEqual(
     MAINTENANCE_MENU.map((item) => item.name),
-    ['目标维护', '成本维护', '渠道维护']
+    ['目标维护', '成本维护', '组织维护', '渠道维护']
   );
   assert.deepEqual(
     MAINTENANCE_MENU.map((item) => item.key),
-    ['target-maintenance', 'cost-maintenance', 'channel-maintenance']
+    ['target-maintenance', 'cost-maintenance', 'org-maintenance', 'channel-maintenance']
   );
   assert.deepEqual(
     MAINTENANCE_MENU.map((item) => item.icon),
-    ['target', 'cost', 'channel']
+    ['target', 'cost', 'organization', 'channel']
   );
   assert.deepEqual(
     MENU.map((item) => item.name),
@@ -155,10 +159,10 @@ test('defines maintenance period columns matching the reference yearly matrix', 
   );
 });
 
-test('returns page metadata for visible maintenance screens and keeps hidden org metadata', () => {
+test('returns page metadata for all four maintenance screens', () => {
   assert.deepEqual(
     MAINTENANCE_MENU.map((item) => getMaintenancePageMeta(item.key).title),
-    ['目标维护', '成本维护', '渠道维护']
+    ['目标维护', '成本维护', '组织维护', '渠道维护']
   );
   assert.equal(getMaintenancePageMeta('target-maintenance').scope, '所有部门');
   assert.equal(getMaintenancePageMeta('cost-maintenance').scope, '全部渠道');
