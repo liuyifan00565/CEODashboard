@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-13 14:28:00 CST
- 更新内容: 跟随 144px 单一白色模糊光面，并扩大边缘淡出距离，形成无同心分层且不裁切的散光。
+ 更新时间: 2026-07-13 14:28:17 CST
+ 更新内容: 将单一白色散光半径扩大到 88px，并把边缘淡出距离增加到 144px，适配更宽的模糊光域。
 */
 /*
  更新时间: 2026-07-06 11:23:48 CST
@@ -31,9 +31,9 @@
 import { useEffect, useRef } from 'react';
 import './GlassCursor.css';
 
-const EDGE_FADE_DISTANCE = 112;
+const EDGE_FADE_DISTANCE = 144;
 const EDGE_HIDE_DISTANCE = 16;
-const HALO_RADIUS = 72;
+const HALO_RADIUS = 88;
 
 export default function GlassCursor() {
   const haloRef = useRef(null);

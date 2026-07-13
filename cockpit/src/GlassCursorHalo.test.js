@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-13 14:28:00 CST
- 更新内容: 锁定单一白色模糊光面实现，禁止多段径向渐变造成同心分层，并保留边缘隐藏约束。
+ 更新时间: 2026-07-13 14:28:17 CST
+ 更新内容: 锁定更大更散的 176px 单一白色光面、64px 模糊和 144px 边缘淡出参数。
 */
 /*
  更新时间: 2026-07-10 15:46:00 CST
@@ -60,8 +60,8 @@ test('tracks the native pointer with a passive non-interactive halo', () => {
   assert.match(cursorSource, /window\.requestAnimationFrame\(renderHalo\)/);
   assert.match(cursorSource, /window\.cancelAnimationFrame\(animationFrameId\)/);
   assert.match(cursorSource, /window\.addEventListener\('pointermove', handlePointerMove, \{ passive: true \}\);/);
-  assert.match(cursorSource, /const EDGE_FADE_DISTANCE = 112;/);
-  assert.match(cursorSource, /const HALO_RADIUS = 72;/);
+  assert.match(cursorSource, /const EDGE_FADE_DISTANCE = 144;/);
+  assert.match(cursorSource, /const HALO_RADIUS = 88;/);
   assert.match(cursorSource, /style\.left = `\$\{x - HALO_RADIUS\}px`;/);
   assert.match(cursorSource, /style\.top = `\$\{y - HALO_RADIUS\}px`;/);
   assert.match(cursorSource, /Math\.min\(x, y, window\.innerWidth - x, window\.innerHeight - y\)/);
@@ -78,14 +78,14 @@ test('tracks the native pointer with a passive non-interactive halo', () => {
 test('uses one blurred white light plane without concentric gradient layers', () => {
   assert.match(cursorCss, /\.glass-cursor-halo\s*\{/);
   assert.match(cursorCss, /position:\s*fixed;/);
-  assert.match(cursorCss, /top:\s*-240px;/);
-  assert.match(cursorCss, /left:\s*-240px;/);
-  assert.match(cursorCss, /width:\s*144px;/);
-  assert.match(cursorCss, /height:\s*144px;/);
+  assert.match(cursorCss, /top:\s*-320px;/);
+  assert.match(cursorCss, /left:\s*-320px;/);
+  assert.match(cursorCss, /width:\s*176px;/);
+  assert.match(cursorCss, /height:\s*176px;/);
   assert.match(cursorCss, /pointer-events:\s*none;/);
   assert.match(cursorCss, /z-index:\s*30;/);
-  assert.match(cursorCss, /background:\s*rgba\(255,255,255,\.20\);/);
-  assert.match(cursorCss, /filter:\s*blur\(48px\);/);
+  assert.match(cursorCss, /background:\s*rgba\(255,255,255,\.16\);/);
+  assert.match(cursorCss, /filter:\s*blur\(64px\);/);
   assert.match(cursorCss, /\.glass-cursor-halo\.is-active\s*\{[\s\S]*?opacity:\s*var\(--glass-cursor-edge-opacity\);/);
   assert.match(cursorCss, /@media \(pointer:\s*coarse\), \(prefers-reduced-motion:\s*reduce\)/);
   assert.match(cursorCss, /display:\s*none;/);
