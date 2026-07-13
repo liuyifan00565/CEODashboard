@@ -1,3 +1,4 @@
+/* Update time: 2026-07-13 16:45:00 CST  Update content: Add clickable affordance for operating situation channel rows that open member details. */
 /* 更新时间: 2026-07-10 15:57:27 CST  更新内容: 年度下钻入口移到年度进度条上方的半环右下区域，避免落到进度条下边。 */
 /* 更新时间: 2026-07-10 15:55:14 CST  更新内容: 月度与年度下钻入口共用更扁的右下热区，避免年度入口矩形与进度条相交。 */
 /* 更新时间: 2026-07-10 15:49:48 CST  更新内容: 年度下钻入口改回与月度一致的半环右下位置，不再额外上移。 */
@@ -418,8 +419,10 @@
 }
 
 .op-channel-item {
+  appearance: none;
   position: relative;
   min-width: 0;
+  width: 100%;
   display: grid;
   grid-template-columns: 10px minmax(0, 1fr) minmax(74px, auto) auto;
   align-items: center;
@@ -429,12 +432,33 @@
   border: 1px solid transparent;
   border-radius: 12px;
   background: transparent;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
   transition: background .22s ease, border-color .22s ease;
 }
 
-.op-channel-item:hover {
+.op-channel-item:hover,
+.op-channel-item:focus-visible {
   background: var(--glass-cell-hover);
   border-color: rgba(255,255,255,.08);
+  outline: none;
+}
+
+.op-channel-item::after {
+  content: ">";
+  color: rgba(247,248,252,.46);
+  font-size: 15px;
+  font-weight: 760;
+  line-height: 1;
+  transform: translateX(-1px);
+  transition: color .2s ease, transform .2s ease;
+}
+
+.op-channel-item:hover::after,
+.op-channel-item:focus-visible::after {
+  color: rgba(247,248,252,.82);
+  transform: translateX(1px);
 }
 
 .op-channel-item--warn {

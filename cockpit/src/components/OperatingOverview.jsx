@@ -1,4 +1,5 @@
 /* 更新时间: 2026-07-10 15:36:50 CST  更新内容: 将月度与年度下钻入口移到回款结构半环图右下方，并保留透明大点击热区。 */
+/* Update time: 2026-07-13 16:45:00 CST  Update content: Make operating situation channel rows open the existing channel member detail modal directly. */
 /* 更新时间: 2026-07-10 15:16:00 CST  更新内容: 合并远端经营布局，保留月度业绩和渠道经营区的福小客洞察定位标识。 */
 /* 更新时间: 2026-07-10 13:12:05 CST  更新内容: 临时预览回款半环左侧主标签向内收缩，缩短标签到半环的引导距离。 */
 /* 更新时间: 2026-07-10 11:55:10 CST  更新内容: 回款半环未完成外部标签向内收缩，让文字更靠近半环。 */
@@ -48,14 +49,16 @@
 /* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 经营总览提高信息密度，加入月度/年度节奏判断、年度虚线目标和顶部明细入口。 */
 /* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 本月回款主数字改为静态权威值，避免截图或首屏加载时显示滚动中间态。 */
 /* 更新时间: 2026-07-05 18:20:00 CST  更新内容: 新增经营总览三段融合布局，本月为主视角、年度为节奏背景、渠道为原因拆解。 */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import SearchResultBorder from './SearchResultBorder';
 import EChart from './EChart';
+import { ChannelMemberModal } from './ChannelPanel';
 import {
   META,
   KPI,
   KPI_DERIVED,
   getChannelCompletionRows,
+  getSalesMemberRows,
 } from '../data/mock';
 import { matchesSearchTerm } from '../lib/searchMatch';
 import { useThemeTokens } from '../lib/theme';
@@ -430,7 +433,9 @@ function AnnualRecoveryStructure({ structure, option, detailDisabled, onDetailCl
   );
 }
 
-function OperatingSituation({ structure, subLabel = '实际回款 / 目标回款', insightTarget }) {
+function OperatingSituation({ structure, subLabel = '实际回款 / 目标回款', insightTarget, period, onChannelClick }) {
+  const periodLabel = period === 'year' ? '年度' : '本月';
+
   return (
     <aside className="op-operating-side" data-ai-insight-target={insightTarget}>
       <div className="op-operating-head">
@@ -442,7 +447,13 @@ function OperatingSituation({ structure, subLabel = '实际回款 / 目标回款
 
       <div className="op-channel-list">
         {structure.rows.map((row) => (
-          <div className={`op-channel-item${row.risk ? ' op-channel-item--warn' : ''}`} key={row.key}>
+          <button
+            type="button"
+            className={`op-channel-item${row.risk ? ' op-channel-item--warn' : ''}`}
+            key={row.key}
+            onClick={() => onChannelClick(row, period)}
+            aria-label={`查看${row.name}${periodLabel}人员完成明细`}
+          >
             <span
               className="op-channel-swatch"
               style={{ background: row.swatch, boxShadow: `0 0 12px ${row.swatch}55` }}
@@ -459,7 +470,7 @@ function OperatingSituation({ structure, subLabel = '实际回款 / 目标回款
               {row.gap > 0 && <span>缺口 {formatWan(row.gap)}万</span>}
             </div>
             {row.risk && <span className="op-channel-risk">风险</span>}
-          </div>
+          </button>
         ))}
       </div>
     </aside>
@@ -482,6 +493,7 @@ function DetailLink({ disabled, onClick, children }) {
 
 export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearKpiCard, onOpenKpi }) {
   const tokens = useThemeTokens();
+  const [openChannelDetail, setOpenChannelDetail] = useState(null);
   const progressTitle = `${META.monthLabel}经营进度`;
   const progressKeywords = [progressTitle, ...PROGRESS_KEYWORDS_BASE];
   const monthChannelRows = getChannelCompletionRows('month');
@@ -501,6 +513,13 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
   const targetStatusRisk = monthTargetGap > 0;
   const targetStatusLabel = targetStatusRisk ? '剩余目标' : '超额完成';
   const targetStatusValue = targetStatusRisk ? monthTargetGap : monthTargetOver;
+  const openChannelMembers = openChannelDetail
+    ? getSalesMemberRows(openChannelDetail.row.key, openChannelDetail.period)
+    : [];
+
+  function handleOpenChannelDetail(row, period) {
+    setOpenChannelDetail({ row, period });
+  }
 
   return (
     <div className="op-overview">
@@ -537,6 +556,8 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             <OperatingSituation
               structure={monthlyStructure}
               insightTarget="channels"
+              period="month"
+              onChannelClick={handleOpenChannelDetail}
             />
           </div>
         </section>
@@ -586,11 +607,21 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             <OperatingSituation
               structure={annualStructure}
               subLabel="年度回款 / 年度目标"
+              period="year"
+              onChannelClick={handleOpenChannelDetail}
             />
 
           </div>
         </section>
       </SearchResultBorder>
+      {openChannelDetail && (
+        <ChannelMemberModal
+          openRow={openChannelDetail.row}
+          period={openChannelDetail.period}
+          members={openChannelMembers}
+          onClose={() => setOpenChannelDetail(null)}
+        />
+      )}
     </div>
   );
 }
