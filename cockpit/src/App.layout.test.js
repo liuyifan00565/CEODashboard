@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-13 14:50:37 CST
+ 更新内容: 回归测试恢复算力饼图原字号，并锁定主界面两张回款结构半环图的更小标注。
+*/
+/*
+ 更新时间: 2026-07-13 14:48:53 CST
+ 更新内容: 回归测试锁定侧栏 AI 小人入口取消状态卡外观，仅展示小人与助手文案。
+*/
+/*
  更新时间: 2026-07-13 14:44:47 CST
  更新内容: 回归测试锁定算力页饼图外围名称为 12px、占比为 11px。
 */
@@ -1255,9 +1263,9 @@ test('keeps compute pie labels and tooltip cards readable around donut charts', 
   assert.doesNotMatch(computePageSource, /distanceToLabelLine:\s*0/);
   assert.doesNotMatch(computePageSource, /bleedMargin:\s*12/);
   assert.match(computePageSource, /labelLine:\s*\{[\s\S]*?show:\s*true,[\s\S]*?lineStyle:/);
-  assert.match(computePageSource, /label:\s*\{[\s\S]*?fontSize:\s*12,[\s\S]*?lineHeight:\s*18/);
-  assert.match(computePageSource, /name:\s*\{[\s\S]*?fontSize:\s*12,[\s\S]*?fontWeight:\s*820,[\s\S]*?textShadowBlur:\s*8/);
-  assert.match(computePageSource, /value:\s*\{[\s\S]*?color:\s*tokens\.chartText,[\s\S]*?fontSize:\s*11,[\s\S]*?fontWeight:\s*780/);
+  assert.match(computePageSource, /label:\s*\{[\s\S]*?fontSize:\s*14,[\s\S]*?lineHeight:\s*18/);
+  assert.match(computePageSource, /name:\s*\{[\s\S]*?fontSize:\s*14,[\s\S]*?fontWeight:\s*820,[\s\S]*?textShadowBlur:\s*8/);
+  assert.match(computePageSource, /value:\s*\{[\s\S]*?color:\s*tokens\.chartText,[\s\S]*?fontSize:\s*13,[\s\S]*?fontWeight:\s*780/);
   assert.match(computePageSource, /const COMPUTE_STACKED_PIE_LABELS = new Set\(\['卓越版'\]\);/);
   assert.match(computePageSource, /function formatComputePieLabel\(params\)/);
   assert.match(computePageSource, /COMPUTE_STACKED_PIE_LABELS\.has\(String\(params\.name\)\)/);
@@ -1449,13 +1457,14 @@ test('AI insight navigation locates overview sections and switches to the comput
   assert.match(dashboardCss, /\.ai-insight-focus\s*\{[\s\S]*?outline:[\s\S]*?var\(--line-2\)[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
 });
 
-test('places the AI mascot inside a subdued sidebar status card', () => {
+test('places the AI mascot beside assistant copy without a sidebar status card', () => {
   const aiWidgetBlock = cssRuleBody(aiAnalysisWidgetCss, '.ai-widget');
 
   assert.match(aiAnalysisWidgetSource, /<div className="ai-status-copy" aria-hidden="true">[\s\S]*?<span>AI 助手<\/span>[\s\S]*?<b>经营分析<\/b>[\s\S]*?<\/div>/);
-  assert.match(aiWidgetBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.04\);/);
-  assert.match(aiWidgetBlock, /border:\s*1px solid rgba\(255,\s*255,\s*255,\s*\.08\);/);
-  assert.match(aiWidgetBlock, /border-radius:\s*18px;/);
+  assert.match(aiWidgetBlock, /background:\s*transparent;/);
+  assert.match(aiWidgetBlock, /border:\s*0;/);
+  assert.match(aiWidgetBlock, /border-radius:\s*0;/);
+  assert.match(aiWidgetBlock, /box-shadow:\s*none;/);
   assert.match(aiAnalysisWidgetCss, /\.ai-status-copy\s*\{[\s\S]*?display:\s*grid;[\s\S]*?gap:\s*3px;/);
   assert.match(aiAnalysisWidgetCss, /\.ai-card-wrap\s*\{[\s\S]*?left:\s*244px;/);
 });
@@ -1570,6 +1579,8 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /radius:\s*\['45%', '76%'\]/);
   assert.match(operatingOverviewSource, /center:\s*\['49\.5%', '68%'\]/);
   assert.match(operatingOverviewSource, /overflow:\s*'none'/);
+  assert.match(operatingOverviewSource, /name:\s*\{[\s\S]*?fontSize:\s*11,[\s\S]*?fontWeight:\s*850/);
+  assert.match(operatingOverviewSource, /percent:\s*\{[\s\S]*?fontSize:\s*10,[\s\S]*?fontWeight:\s*850/);
   assert.match(operatingOverviewSource, /borderRadius:\s*8,/);
   assert.match(operatingOverviewSource, /borderColor:\s*'rgba\(255, 255, 255, \.11\)'/);
   assert.match(operatingOverviewSource, /shadowColor:\s*'rgba\(184, 156, 255, \.08\)'/);
