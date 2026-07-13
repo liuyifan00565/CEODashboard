@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 14:31:00 CST
+ 更新内容: 侧栏品牌副标题改为月份与当前视角分行展示，避免窄侧栏内信息被省略。
+*/
+/*
  更新时间: 2026-07-10 15:25:00 CST
  更新内容: 将真实算力加载状态传给福小客，防止接口失败时默认算力值进入 AI 经营报告。
 */
@@ -258,7 +262,7 @@ export default function App() {
   const activeContextLabel = maintenanceMode
     ? '数据维护'
     : activeMenu === 'overview' ? 'CEO视角' : activeMenuLabel;
-  const sidebarBrandMeta = `${META.monthLabel} · ${activeContextLabel}`;
+  const sidebarBrandMeta = `${META.monthLabel}\n${activeContextLabel}`;
   const sidebarItems = maintenanceMode ? MAINTENANCE_SIDEBAR_ITEMS : DASHBOARD_SIDEBAR_ITEMS;
   const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const sidebarTransitionKey = maintenanceMode ? 'maintenance' : 'dashboard';

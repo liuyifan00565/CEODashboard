@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 14:48:53 CST
+ 更新内容: 移除左下角 AI 小人入口的卡片背景、边框、圆角、模糊和阴影，仅保留小人与助手文案。
+*/
+/*
  更新时间: 2026-07-10 14:58:00 CST
  更新内容: 新增 AI 指标定位工具栏，并让移动弹窗在短视口和动态键盘高度下保持可滚动可达。
 */
@@ -57,14 +61,14 @@
   width: 100%;
   min-height: 168px;
   margin-top: auto;
-  padding: 8px 10px;
+  padding: 8px 0;
   box-sizing: border-box;
-  border: 1px solid rgba(255, 255, 255, .08);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, .04);
-  -webkit-backdrop-filter: var(--dashboard-card-blur);
-  backdrop-filter: var(--dashboard-card-blur);
-  box-shadow: 0 16px 42px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .055);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
 }
 
 .ai-orb {
@@ -472,21 +476,7 @@
 @media (max-width: 760px) {
   .ai-widget {
     align-items: flex-end;
-    padding: 8px 10px;
-    isolation: isolate;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-
-  .ai-widget::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    -webkit-backdrop-filter: var(--dashboard-card-blur);
-    backdrop-filter: var(--dashboard-card-blur);
-    pointer-events: none;
+    padding: 8px 0;
   }
 
   .ai-orb {

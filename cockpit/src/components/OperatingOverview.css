@@ -1,4 +1,12 @@
 /* Update time: 2026-07-13 16:45:00 CST  Update content: Add clickable affordance for operating situation channel rows that open member details. */
+/* 更新时间: 2026-07-13 14:50:10 CST  更新内容: 月度经营进度与年度回款总览卡片增加顶部内边距，统一改善主标题贴近上边框的拥挤感。 */
+/* 更新时间: 2026-07-13 14:26:21 CST  更新内容: 本月回款结构饼图复用年度图的垂直位移参数，修正月度图视觉位置明显偏低。 */
+/* 更新时间: 2026-07-13 14:18:11 CST  更新内容: 按标注框将月度近期明细入口从蓝框整体右移 102px 到红框，纵向位置与按钮尺寸不变。 */
+/* 更新时间: 2026-07-13 14:02:04 CST  更新内容: 按完整截图实测将月度近期明细文字左移 42.43px，使首字“点”精确对齐饼图右半区起点，纵向和尺寸不变。 */
+/* 更新时间: 2026-07-13 11:07:08 CST  更新内容: 按截图将月度近期明细文字向右恢复，使首字“点”对应饼图右半区起点标线，纵向位置不变。 */
+/* 更新时间: 2026-07-13 10:46:03 CST  更新内容: 修正月度近期明细入口横向基准，改为文字左边而非透明热区左边对齐饼图右半区起点。 */
+/* 更新时间: 2026-07-13 10:36:43 CST  更新内容: 仅调整月度近期明细入口位置，使底边对齐线下华东行、左边对齐饼图右半区起点，不改变其它布局。 */
+/* 更新时间: 2026-07-13 10:23:42 CST  更新内容: 月度回款结构饼图复用年度图的画布宽高与缩放比例，确保两个周期显示尺寸一致。 */
 /* 更新时间: 2026-07-10 15:57:27 CST  更新内容: 年度下钻入口移到年度进度条上方的半环右下区域，避免落到进度条下边。 */
 /* 更新时间: 2026-07-10 15:55:14 CST  更新内容: 月度与年度下钻入口共用更扁的右下热区，避免年度入口矩形与进度条相交。 */
 /* 更新时间: 2026-07-10 15:49:48 CST  更新内容: 年度下钻入口改回与月度一致的半环右下位置，不再额外上移。 */
@@ -110,7 +118,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-block: clamp(3px, .35vw, 6px);
+  padding-block: clamp(14px, 1vw, 16px) clamp(3px, .35vw, 6px);
 }
 
 .op-panel--annual {
@@ -118,7 +126,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-block: clamp(3px, .35vw, 6px);
+  padding-block: clamp(14px, 1vw, 16px) clamp(3px, .35vw, 6px);
 }
 
 .op-search-result {
@@ -242,6 +250,20 @@
   bottom: 44px;
 }
 
+@media (min-width: 1241px) {
+  .op-month-grid .op-channel-chart-wrap .op-detail-link {
+    left: calc(49.35% + clamp(-16px, -1vw, -10px) + 59.57px);
+    right: auto;
+    bottom: 12px;
+  }
+}
+
+@media (min-width: 1241px) and (max-height: 1071px) {
+  .op-month-grid .op-channel-chart-wrap .op-detail-link {
+    bottom: 19px;
+  }
+}
+
 .op-month-grid {
   --op-grid-column-gap: clamp(8px, 1vw, 14px);
   display: grid;
@@ -357,7 +379,7 @@
 .op-recovery-structure {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto 210px;
+  grid-template-rows: auto 218px;
   align-content: start;
   gap: 0;
   margin-left: -16px;
@@ -384,10 +406,10 @@
 .op-channel-chart-wrap {
   position: relative;
   min-width: 0;
-  width: clamp(320px, 25vw, 420px);
+  width: clamp(380px, 29vw, 480px);
   max-width: 100%;
-  height: 210px;
-  min-height: 210px;
+  height: 218px;
+  min-height: 218px;
   justify-self: center;
   display: grid;
   place-items: center;
@@ -402,7 +424,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  min-height: 210px;
+  min-height: 218px;
 }
 
 .op-operating-side {
@@ -543,7 +565,7 @@
 }
 
 .op-month-grid .op-channel-chart {
-  transform: translate(clamp(-16px, -1vw, -10px), clamp(8px, .75vw, 14px)) scale(1.24);
+  transform: translate(clamp(-16px, -1vw, -10px), clamp(-34px, -2.4vw, -24px)) scale(1.3);
   transform-origin: 50% 42%;
 }
 
@@ -715,11 +737,11 @@
 
   .op-panel,
   .op-panel--annual {
-    padding-block: 4px;
+    padding-block: 14px 4px;
   }
 
   .op-recovery-structure {
-    grid-template-rows: auto 194px;
+    grid-template-rows: auto 208px;
   }
 
   .op-annual-grid .op-recovery-structure {
@@ -729,9 +751,9 @@
   }
 
   .op-channel-chart-wrap {
-    width: clamp(300px, 23vw, 392px);
-    height: 194px;
-    min-height: 194px;
+    width: clamp(360px, 27.5vw, 440px);
+    height: 208px;
+    min-height: 208px;
   }
 
   .op-annual-grid .op-channel-chart-wrap {
@@ -741,7 +763,7 @@
   }
 
   .op-channel-chart {
-    min-height: 194px;
+    min-height: 208px;
   }
 
   .op-channel-list {
