@@ -1,5 +1,9 @@
 /*
  Update time: 2026-07-13 00:00:00 CST
+ Update content: Revert target summary readonly values to lightweight compact text layout.
+*/
+/*
+ Update time: 2026-07-13 00:00:00 CST
  Update content: Use muted readonly capsules for target summary values so they align visually with editable input rows.
 */
 /*
@@ -1382,72 +1386,26 @@
 .mnt-target-readonly-value {
   min-height: 28px;
   display: grid;
-  gap: 4px;
+  gap: 8px;
   background: transparent;
   border: 0;
   color: var(--muted);
   font-size: 12px;
+  opacity: .72;
 }
 
-.mnt-target-readonly-row {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  align-items: center;
-  column-gap: 5px;
-  min-height: 26px;
-}
-
-.mnt-target-readonly-label {
-  font-size: 11px;
-  font-weight: 760;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.mnt-target-readonly-amount {
-  position: relative;
-  isolation: isolate;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
+.mnt-target-readonly-value span {
+  display: inline-flex;
+  align-items: baseline;
   gap: 6px;
-  width: 118px;
-  min-height: 26px;
-  border: 1px solid color-mix(in srgb, var(--txt) 18%, var(--line-2));
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--glass-cell-hover) 34%, transparent);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, .07),
-    inset 0 1px 0 rgba(255, 255, 255, .08);
-  padding: 0 9px 0 12px;
-  overflow: hidden;
-}
-
-.mnt-target-readonly-amount::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 5px;
-  bottom: 5px;
-  width: 3px;
-  border-radius: 0 99px 99px 0;
-  background: color-mix(in srgb, var(--txt) 30%, transparent);
-  opacity: .42;
-  pointer-events: none;
+  min-height: 18px;
+  white-space: nowrap;
 }
 
 .mnt-target-readonly-value strong {
   color: inherit;
   font-weight: 800;
   text-align: left;
-  white-space: nowrap;
-}
-
-.mnt-target-readonly-unit {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 760;
-  line-height: 1;
   white-space: nowrap;
 }
 
