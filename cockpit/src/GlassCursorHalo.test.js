@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 14:28:00 CST
+ 更新内容: 锁定单一白色模糊光面实现，禁止多段径向渐变造成同心分层，并保留边缘隐藏约束。
+*/
+/*
  更新时间: 2026-07-10 15:46:00 CST
  更新内容: 光标柔光回归测试改为要求入口不再挂载全局 GlassCursor，避免视口底部裁切出闪烁线光。
 */
@@ -43,19 +47,27 @@ const mainSource = readFileSync(new URL('./main.jsx', import.meta.url), 'utf8');
 const cursorSource = readFileSync(new URL('./components/GlassCursor.jsx', import.meta.url), 'utf8');
 const cursorCss = readFileSync(new URL('./components/GlassCursor.css', import.meta.url), 'utf8');
 
-test('does not mount a global cursor ambient light over the dashboard', () => {
+test('mounts one local cursor light beside the dashboard', () => {
   assert.doesNotMatch(appSource, /GlassCursor/);
-  assert.doesNotMatch(mainSource, /import GlassCursor from '\.\/components\/GlassCursor';?/);
-  assert.doesNotMatch(mainSource, /<GlassCursor\s*\/>/);
+  assert.match(mainSource, /import GlassCursor from '\.\/components\/GlassCursor';?/);
+  assert.match(mainSource, /<GlassCursor\s*\/>/);
 });
 
 test('tracks the native pointer with a passive non-interactive halo', () => {
   assert.match(cursorSource, /import \{ useEffect, useRef \} from 'react';/);
   assert.match(cursorSource, /import '\.\/GlassCursor\.css';/);
   assert.match(cursorSource, /const haloRef = useRef\(null\);/);
+  assert.match(cursorSource, /window\.requestAnimationFrame\(renderHalo\)/);
+  assert.match(cursorSource, /window\.cancelAnimationFrame\(animationFrameId\)/);
   assert.match(cursorSource, /window\.addEventListener\('pointermove', handlePointerMove, \{ passive: true \}\);/);
-  assert.match(cursorSource, /style\.setProperty\('--glass-cursor-x', `\$\{event\.clientX\}px`\);/);
-  assert.match(cursorSource, /style\.setProperty\('--glass-cursor-y', `\$\{event\.clientY\}px`\);/);
+  assert.match(cursorSource, /const EDGE_FADE_DISTANCE = 112;/);
+  assert.match(cursorSource, /const HALO_RADIUS = 72;/);
+  assert.match(cursorSource, /style\.left = `\$\{x - HALO_RADIUS\}px`;/);
+  assert.match(cursorSource, /style\.top = `\$\{y - HALO_RADIUS\}px`;/);
+  assert.match(cursorSource, /Math\.min\(x, y, window\.innerWidth - x, window\.innerHeight - y\)/);
+  assert.match(cursorSource, /const EDGE_HIDE_DISTANCE = 16;/);
+  assert.match(cursorSource, /\(edgeDistance - EDGE_HIDE_DISTANCE\) \/ EDGE_FADE_DISTANCE/);
+  assert.match(cursorSource, /style\.setProperty\('--glass-cursor-edge-opacity', edgeOpacity\.toFixed\(3\)\);/);
   assert.match(cursorSource, /classList\.add\('is-active'\);/);
   assert.match(cursorSource, /window\.removeEventListener\('pointermove', handlePointerMove\);/);
   assert.match(cursorSource, /<div ref=\{haloRef\} className="glass-cursor-halo" aria-hidden="true" \/>/);
@@ -63,19 +75,27 @@ test('tracks the native pointer with a passive non-interactive halo', () => {
   assert.doesNotMatch(cursorSource, /cursor:\s*'none'|cursor\s*=\s*['"]none/);
 });
 
-test('uses only the restrained silver violet rose radial light', () => {
+test('uses one blurred white light plane without concentric gradient layers', () => {
   assert.match(cursorCss, /\.glass-cursor-halo\s*\{/);
   assert.match(cursorCss, /position:\s*fixed;/);
-  assert.match(cursorCss, /inset:\s*0;/);
+  assert.match(cursorCss, /top:\s*-240px;/);
+  assert.match(cursorCss, /left:\s*-240px;/);
+  assert.match(cursorCss, /width:\s*144px;/);
+  assert.match(cursorCss, /height:\s*144px;/);
   assert.match(cursorCss, /pointer-events:\s*none;/);
   assert.match(cursorCss, /z-index:\s*30;/);
-  assert.match(cursorCss, /radial-gradient\(\s*420px circle at var\(--glass-cursor-x\) var\(--glass-cursor-y\),\s*rgba\(184,\s*156,\s*255,\s*0\.10\),\s*rgba\(228,\s*184,\s*215,\s*0\.045\) 32%,\s*transparent 68%\s*\)/);
-  assert.match(cursorCss, /\.glass-cursor-halo\.is-active\s*\{[\s\S]*?opacity:\s*1;/);
+  assert.match(cursorCss, /background:\s*rgba\(255,255,255,\.20\);/);
+  assert.match(cursorCss, /filter:\s*blur\(48px\);/);
+  assert.match(cursorCss, /\.glass-cursor-halo\.is-active\s*\{[\s\S]*?opacity:\s*var\(--glass-cursor-edge-opacity\);/);
   assert.match(cursorCss, /@media \(pointer:\s*coarse\), \(prefers-reduced-motion:\s*reduce\)/);
   assert.match(cursorCss, /display:\s*none;/);
 
+  assert.doesNotMatch(cursorCss, /inset:\s*0/);
+  assert.doesNotMatch(cursorCss, /--glass-cursor-[xy]/);
+  assert.doesNotMatch(cursorCss, /radial-gradient/);
+  assert.doesNotMatch(cursorCss, /will-change|translate3d|backface-visibility|contain:/);
   assert.doesNotMatch(cursorCss, /glass-cursor-fixed/);
-  assert.doesNotMatch(cursorCss, /box-shadow|filter:\s*blur|saturate\(/);
+  assert.doesNotMatch(cursorCss, /box-shadow|saturate\(/);
   assert.doesNotMatch(cursorCss, /z-index:\s*2147483647/);
   assert.doesNotMatch(cursorCss, /cursor:\s*none/);
 });

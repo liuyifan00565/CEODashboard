@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 14:28:00 CST
+ 更新内容: 移除多段径向渐变，改用 144px 单一白色光面加 48px 模糊形成连续无分层散光。
+*/
+/*
  更新时间: 2026-07-06 11:23:48 CST
  更新内容: 新增跟随原生光标的低透明 420px 银紫玫瑰径向柔光，并在触屏或减少动态时隐藏。
 */
@@ -48,26 +52,23 @@
 */
 
 .glass-cursor-halo{
-  --glass-cursor-x:50vw;
-  --glass-cursor-y:50vh;
+  --glass-cursor-edge-opacity:0;
   position:fixed;
-  inset:0;
+  top:-240px;
+  left:-240px;
+  width:144px;
+  height:144px;
   z-index:30;
   pointer-events:none;
   opacity:0;
-  background:
-    radial-gradient(
-      420px circle at var(--glass-cursor-x) var(--glass-cursor-y),
-      rgba(184, 156, 255, 0.10),
-      rgba(228, 184, 215, 0.045) 32%,
-      transparent 68%
-    );
-  transition:opacity .18s ease-out;
-  will-change:opacity,background;
+  border-radius:50%;
+  background:rgba(255,255,255,.20);
+  filter:blur(48px);
+  transition:opacity .16s ease-out;
 }
 
 .glass-cursor-halo.is-active{
-  opacity:1;
+  opacity:var(--glass-cursor-edge-opacity);
 }
 
 @media (pointer: coarse), (prefers-reduced-motion: reduce){

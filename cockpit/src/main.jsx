@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 14:05:44 CST
+ 更新内容: 恢复全局 GlassCursor 局部白色柔光挂载，使用固定尺寸光斑避免全屏径向层产生闪烁线光。
+*/
+/*
  更新时间: 2026-07-10 15:46:00 CST
  更新内容: 移除全局 GlassCursor 光标柔光挂载，避免鼠标靠近视口底部时径向光被裁切成闪烁线光。
 */
@@ -22,9 +26,13 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import GlassCursor from './components/GlassCursor'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <>
+      <App />
+      <GlassCursor />
+    </>
   </StrictMode>,
 )
