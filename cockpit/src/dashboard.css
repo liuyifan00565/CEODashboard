@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-13 19:20:00 CST
+ 更新内容: .dash-finance-kpi-item--cost 两栏宽度由 1.3fr/1fr 改为等分 1fr/1fr，让总投入卡和广告ROI 小卡宽度一致，
+          与开户数行的两张小卡拼成统一的 2×2 网格（四张卡片大小一致），呼应 experiment 分支的等宽卡片条效果。
+*/
+/*
  更新时间: 2026-07-13 18:10:00 CST
  更新内容: .dash-finance-kpi-item--cost 改为总投入卡 + 广告ROI 小卡左右两栏（总投入变窄）；低有效高度桌面档
           （max-height:1071px）下开户数行与投入行栏高由 .82fr/1.08fr 失衡改为等分 1fr/1fr，
@@ -322,7 +327,7 @@
 }
 .dash-finance-kpi-item--cost{
   display:grid;
-  grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);
+  grid-template-columns:repeat(2,minmax(0,1fr));
   gap:14px;
 }
 .dash-finance-kpi-item--cost > *{

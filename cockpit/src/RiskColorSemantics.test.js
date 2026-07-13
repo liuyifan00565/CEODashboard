@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-13 19:20:00 CST
+ 更新内容: 同步完成率折线样式回调补 `= {}` 默认参数的修复——断言改为匹配 `({ value } = {})`，并新增
+          symbolSize/fontWeight 回调断言，防止日视图（完成率数据为 null）时崩白屏的回归。
+*/
+/*
  更新时间: 2026-07-08 17:28:57 CST
  更新内容: 渠道完成条风险语义同步 120% 超额阈值，防止 100%-119.9% 渠道显示金色。
 */
@@ -158,8 +163,11 @@ test('layers target behind recovered and avoids current-month highlight in the m
   assert.match(monthlyTrendSource, /function completionPointColor\(value, tokens\)/);
   assert.match(monthlyTrendSource, /isRiskCompletion\(value\) \? tokens\.chartRiskPoint/);
   assert.match(monthlyTrendSource, /Number\(value\) >= 100 \? tokens\.semanticGoal : tokens\.chartRateLine/);
-  assert.match(monthlyTrendSource, /itemStyle:\s*\{ color: \(\{ value \}\) => completionPointColor\(value, tokens\)/);
-  assert.match(monthlyTrendSource, /label:\s*\{[\s\S]*?color: \(\{ value \}\) => completionPointColor\(value, tokens\)/);
+  assert.match(monthlyTrendSource, /itemStyle:\s*\{ color: \(\{ value \} = \{\}\) => completionPointColor\(value, tokens\)/);
+  assert.match(monthlyTrendSource, /label:\s*\{[\s\S]*?color: \(\{ value \} = \{\}\) => completionPointColor\(value, tokens\)/);
+  // ECharts 给 null 数据点的样式回调传 undefined 而非 {value:null}，解构必须带默认值兜底，否则整页崩白屏
+  assert.match(monthlyTrendSource, /symbolSize:\s*\(\{ value \} = \{\}\) => \(isRiskCompletion\(value\) \? 8 : 5\)/);
+  assert.match(monthlyTrendSource, /fontWeight:\s*\(\{ value \} = \{\}\) => \(isRiskCompletion\(value\) \? 850 : 650\)/);
 });
 
 test('keeps channel and delivery progress bars on the same risk rule', () => {

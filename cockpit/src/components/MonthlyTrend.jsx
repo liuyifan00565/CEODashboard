@@ -1,3 +1,9 @@
+/* 更新时间: 2026-07-13 19:20:00 CST  更新内容: 日视图并入统一的 buildBarTrendOption，与月/年共用同一套图表外壳
+   （图例、双 Y 轴、柱线组合、悬浮框样式），不再是单独的迷你柱状图；因 biz_target_monthly 无日粒度目标，
+   日视图的目标柱和完成率线数据为 null（不渲染），悬浮框按数值是否为 null 过滤对应行，避免出现空目标提示。
+   X 轴标签按类目数量自适应抽稀间隔，日视图类目多时不再全部铺满。完成率折线的 symbolSize/itemStyle.color/
+   label.color/label.fontWeight 回调补上 `= {}` 默认参数——ECharts 给 null 数据点回调时传的是 undefined
+   而非 {value:null}，之前的 `({value}) =>` 解构会直接抛 TypeError 把整个页面崩白屏。 */
 /* 更新时间: 2026-07-13 17:10:00 CST  更新内容: 新增年/月/日切换（Segmented）。月/年视图共用回款+目标+完成率柱线组合，
    日视图读取 getDailyRevenueTrend() 展示本月每日回款柱状图；因 biz_target_monthly 无日粒度目标，日视图不展示
    目标柱和完成率线，只保留实际回款单一系列。 */
@@ -107,7 +113,7 @@ function buildBarTrendOption({ trend, labelKey, tokens }) {
       valueFormatter: null,
       formatter: (params) => {
         const head = `<div style="color:${faint};margin-bottom:4px">${params[0].axisValue}</div>`;
-        const rows = params.map((p) => {
+        const rows = params.filter((p) => p.value != null).map((p) => {
           const v = p.seriesName === '完成率' ? `${p.value}%` : `${p.value} 万`;
           return `<div style="display:flex;align-items:center;gap:6px;line-height:1.7">
             <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${p.color}"></span>
@@ -127,6 +133,7 @@ function buildBarTrendOption({ trend, labelKey, tokens }) {
         color: faint,
         fontSize: 13,
         fontWeight: 520,
+        interval: Math.max(0, Math.ceil(months.length / 10) - 1),
       },
     },
     yAxis: [
@@ -197,15 +204,15 @@ function buildBarTrendOption({ trend, labelKey, tokens }) {
         yAxisIndex: 1,
         smooth: true,
         symbol: 'circle',
-        symbolSize: ({ value }) => (isRiskCompletion(value) ? 8 : 5),
+        symbolSize: ({ value } = {}) => (isRiskCompletion(value) ? 8 : 5),
         lineStyle: { color: tokens.chartRateLine, width: 1.5, opacity: 0.72 },
-        itemStyle: { color: ({ value }) => completionPointColor(value, tokens), borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
+        itemStyle: { color: ({ value } = {}) => completionPointColor(value, tokens), borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
         label: {
           show: true,
           position: 'top',
-          color: ({ value }) => completionPointColor(value, tokens),
+          color: ({ value } = {}) => completionPointColor(value, tokens),
           fontSize: 13,
-          fontWeight: ({ value }) => (isRiskCompletion(value) ? 850 : 650),
+          fontWeight: ({ value } = {}) => (isRiskCompletion(value) ? 850 : 650),
           formatter: '{c}%',
         },
         markLine: {
@@ -223,66 +230,16 @@ function buildBarTrendOption({ trend, labelKey, tokens }) {
   return option;
 }
 
-// 日视图：biz_target_monthly 没有日粒度目标，只展示实际每日回款，不构造目标/完成率。
-function buildDayTrendOption(tokens) {
-  const dailyTrend = getDailyRevenueTrend();
-  const labels = dailyTrend.map(d => d.day);
-  const recovered = dailyTrend.map(d => d.recovered);
-
-  const txt = tokens.chartText;
-  const muted = tokens.chartMuted;
-  const faint = tokens.chartMuted;
-  const line = tokens.chartGrid;
-
-  return {
-    animation: false,
-    backgroundColor: 'transparent',
-    textStyle: { color: muted, fontFamily: 'inherit' },
-    grid: { top: 24, left: 8, right: 8, bottom: 4, containLabel: true },
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      backgroundColor: tokens.chartTooltipBg,
-      borderColor: 'rgba(190, 175, 255, 0.24)',
-      borderWidth: 1,
-      extraCssText: 'border-radius:16px; backdrop-filter:blur(24px) saturate(145%); -webkit-backdrop-filter:blur(24px) saturate(145%); box-shadow:0 18px 60px rgba(0,0,0,.45), 0 0 36px rgba(142,134,255,.18); padding:10px 12px;',
-      textStyle: { color: txt, fontSize: 14 },
-      formatter: (params) => {
-        const p = params[0];
-        return `<div style="color:${faint};margin-bottom:4px">${p.axisValue}</div>
-          <div style="display:flex;align-items:center;gap:6px;line-height:1.7">
-            <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${p.color}"></span>
-            <span style="color:${muted}">回款</span>
-            <span style="color:${txt};margin-left:auto;font-weight:600">${p.value} 万</span>
-          </div>`;
-      },
-    },
-    xAxis: {
-      type: 'category',
-      data: labels,
-      axisLine: { lineStyle: { color: line } },
-      axisTick: { show: false },
-      axisLabel: { color: faint, fontSize: 11, interval: Math.max(0, Math.ceil(labels.length / 10) - 1) },
-    },
-    yAxis: {
-      type: 'value',
-      name: '万元',
-      nameTextStyle: { color: faint, fontSize: 13, padding: [0, 0, 0, 8] },
-      axisLabel: { color: faint, fontSize: 13 },
-      splitLine: { lineStyle: { color: line } },
-      axisLine: { show: false },
-    },
-    series: [
-      {
-        name: '回款',
-        type: 'bar',
-        barWidth: 10,
-        barCategoryGap: '32%',
-        itemStyle: { color: actualBarColor(tokens), borderRadius: [3, 3, 0, 0] },
-        data: recovered,
-      },
-    ],
-  };
+// 日视图：biz_target_monthly 没有日粒度目标，把每日回款映射成与月/年相同的 {day,target,recovered,completion}
+// 形状（target/completion 置 null）后交给统一的 buildBarTrendOption，目标柱和完成率线因数据为 null 而不渲染，
+// 但图例、双 Y 轴、柱状与悬浮框外壳都与月/年视图完全一致。
+function buildDayTrend() {
+  return getDailyRevenueTrend().map((row) => ({
+    day: row.day,
+    target: null,
+    recovered: row.recovered,
+    completion: null,
+  }));
 }
 
 export default function MonthlyTrend({ channelKey = 'all' }) {
@@ -290,7 +247,7 @@ export default function MonthlyTrend({ channelKey = 'all' }) {
   const [dim, setDim] = useState('month');
 
   const option = useMemo(() => {
-    if (dim === 'day') return buildDayTrendOption(tokens);
+    if (dim === 'day') return buildBarTrendOption({ trend: buildDayTrend(), labelKey: 'day', tokens });
     if (dim === 'year') return buildBarTrendOption({ trend: getYearlyTrend(), labelKey: 'year', tokens });
     return buildBarTrendOption({ trend: getChannelTrend(channelKey), labelKey: 'month', tokens });
   }, [dim, channelKey, tokens]);
