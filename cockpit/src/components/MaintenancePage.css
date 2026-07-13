@@ -1,5 +1,9 @@
 /*
  Update time: 2026-07-13 00:00:00 CST
+ Update content: Align target maintenance split name/month tables after adding target and actual editors.
+*/
+/*
+ Update time: 2026-07-13 00:00:00 CST
  Update content: Target maintenance cells add compact target and actual editor row styles.
 */
 /*
@@ -772,6 +776,8 @@
 .mnt-matrix-wrap--target {
   --mnt-target-name-width: 186px;
   --mnt-target-period-width: 172px;
+  --mnt-target-head-height: 54px;
+  --mnt-target-row-height: 142px;
   overflow: hidden;
   overflow-y: auto;
 }
@@ -973,12 +979,12 @@
 
 .mnt-matrix--target-name th,
 .mnt-matrix--target th {
-  height: 54px;
+  height: var(--mnt-target-head-height);
 }
 
 .mnt-matrix--target-name td,
 .mnt-matrix--target td {
-  height: 100px;
+  height: var(--mnt-target-row-height);
 }
 
 .mnt-user-table {
@@ -1226,7 +1232,7 @@
 
 .mnt-target-edit-stack {
   display: grid;
-  gap: 5px;
+  gap: 4px;
 }
 
 .mnt-target-edit-row {
@@ -1242,6 +1248,15 @@
   font-weight: 760;
   line-height: 1;
   white-space: nowrap;
+}
+
+.mnt-target-edit-row .mnt-target-input-wrap {
+  min-height: 26px;
+  border-radius: 9px;
+}
+
+.mnt-target-edit-row .mnt-target-input {
+  font-size: 12px;
 }
 
 .mnt-target-input-wrap,
