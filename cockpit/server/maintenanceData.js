@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 18:53:01 CST
+ Update content: Cost maintenance also reads independent marketing labor while sales labor remains derived from channel rows.
+*/
+/*
  Update time: 2026-07-13 16:48:56 CST
  Update content: Cost maintenance reads per-channel operations and labor costs after running the backward-compatible schema migration.
 */
@@ -105,12 +109,13 @@ async function readTarget(connection, year) {
 
 async function readCost(connection, year) {
   await ensureCostSchema(connection);
-  const [channels, costs, revenue] = await Promise.all([
+  const [channels, costs, revenue, labor] = await Promise.all([
     queryRows(connection, 'SELECT channel_id, channel_name, parent_id, is_enabled FROM dim_channel WHERE is_enabled = 1'),
     queryRows(connection, 'SELECT `year_month`, channel_id, operations_amount_yuan, labor_amount_yuan, refund_amount_yuan FROM biz_channel_cost_monthly WHERE `year_month` LIKE ?', [`${year}-%`]),
     queryRows(connection, "SELECT DATE_FORMAT(stat_date, '%Y-%m') AS ym, channel_id, SUM(recovered_amount_yuan) AS amt, SUM(order_count) AS deals FROM fact_revenue_daily WHERE stat_date BETWEEN ? AND ? GROUP BY channel_id, ym", [`${year}-01-01`, `${year}-12-31`]),
+    queryRows(connection, "SELECT `year_month`, cost_type, amount_yuan FROM biz_labor_cost_monthly WHERE `year_month` LIKE ? AND cost_type = 'marketing'", [`${year}-%`]),
   ]);
-  return buildCostSnapshot({ channels, costs, revenue });
+  return buildCostSnapshot({ channels, costs, revenue, labor });
 }
 
 async function readOrg(connection) {

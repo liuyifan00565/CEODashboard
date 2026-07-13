@@ -3,6 +3,10 @@
  更新内容: 侧边导航新增“版本与交付”入口（compute 之后），承接原经营总览页下方的版本情况和交付面板。
 */
 /*
+ 更新时间: 2026-07-13 18:53:01 CST
+ 更新内容: 成本维护样例恢复销售部人力自动汇总和市场部人力独立维护。
+*/
+/*
  更新时间: 2026-07-13 18:10:00 CST
  更新内容: 新增 getAdRoiMetric()，读取运行时 KPI_DERIVED.roi 和 COST_TREND 上一月广告投入算出的环比，
           供首页新增的“广告ROI”小卡（与开户数小卡同款样式，放在总投入旁）使用；撤回此前直接拼进总投入
@@ -1162,6 +1166,18 @@ function createCostPeriods(monthOperations, monthActuals, monthDeals, monthRefun
   return periods;
 }
 
+function createLaborPeriods(monthCosts) {
+  const periods = {};
+  MAINTENANCE_MONTH_KEYS.forEach((key, index) => {
+    periods[key] = { cost: Number(monthCosts[index]) || 0 };
+  });
+  Object.entries(MAINTENANCE_QUARTERS).forEach(([key, months]) => {
+    periods[key] = { cost: sumValues(months, periods, 'cost') };
+  });
+  periods.year = { cost: sumValues(MAINTENANCE_MONTH_KEYS, periods, 'cost') };
+  return periods;
+}
+
 export const TARGET_MAINTENANCE_ORG_TREE = {
   id: 'all',
   name: '成都福客人工智能',
@@ -1203,11 +1219,20 @@ export const COST_MAINTENANCE_CHANNELS = [
 ];
 
 export const COST_MAINTENANCE_ROWS = [
-  { id: 'group_paid_flow', type: 'group', name: '付费流量', periods: createCostPeriods([58, 62, 66, 70, 74, 74, 78, 80, 82, 84, 86, 88], [172, 184, 196, 205, 188, 210, 0, 0, 0, 0, 0, 0], [18, 20, 21, 23, 20, 24, 0, 0, 0, 0, 0, 0]) },
-  { id: 'online_ads', type: 'channel', name: '线上广告', parentId: 'group_paid_flow', periods: createCostPeriods([58, 62, 66, 70, 74, 74, 78, 80, 82, 84, 86, 88], [172, 184, 196, 205, 188, 210, 0, 0, 0, 0, 0, 0], [18, 20, 21, 23, 20, 24, 0, 0, 0, 0, 0, 0]) },
-  { id: 'south_events', type: 'channel', name: '华南会销', parentId: 'group_offline', periods: createCostPeriods([22, 24, 26, 28, 28, 28, 30, 31, 32, 33, 34, 35], [72, 78, 88, 92, 84, 96, 0, 0, 0, 0, 0, 0], [7, 8, 9, 10, 8, 10, 0, 0, 0, 0, 0, 0]) },
-  { id: 'east_events', type: 'channel', name: '华东会销', parentId: 'group_offline', periods: createCostPeriods([30, 32, 34, 36, 38, 38, 40, 42, 44, 45, 46, 48], [70, 74, 82, 86, 76, 84, 0, 0, 0, 0, 0, 0], [6, 7, 8, 8, 7, 8, 0, 0, 0, 0, 0, 0]) },
-  { id: 'agent_rebate', type: 'channel', name: '代理返点', parentId: 'group_agent', periods: createCostPeriods([12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21, 22], [62, 68, 74, 82, 88, 96, 0, 0, 0, 0, 0, 0], [6, 7, 8, 8, 9, 10, 0, 0, 0, 0, 0, 0]) },
+  { id: 'group_paid_flow', type: 'group', name: '付费流量', periods: createCostPeriods([58, 62, 66, 70, 74, 74, 78, 80, 82, 84, 86, 88], [172, 184, 196, 205, 188, 210, 0, 0, 0, 0, 0, 0], [18, 20, 21, 23, 20, 24, 0, 0, 0, 0, 0, 0], [], [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41]) },
+  { id: 'online_ads', type: 'channel', name: '线上广告', parentId: 'group_paid_flow', periods: createCostPeriods([58, 62, 66, 70, 74, 74, 78, 80, 82, 84, 86, 88], [172, 184, 196, 205, 188, 210, 0, 0, 0, 0, 0, 0], [18, 20, 21, 23, 20, 24, 0, 0, 0, 0, 0, 0], [], [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41]) },
+  { id: 'south_events', type: 'channel', name: '华南会销', parentId: 'group_offline', periods: createCostPeriods([22, 24, 26, 28, 28, 28, 30, 31, 32, 33, 34, 35], [72, 78, 88, 92, 84, 96, 0, 0, 0, 0, 0, 0], [7, 8, 9, 10, 8, 10, 0, 0, 0, 0, 0, 0], [], [12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17]) },
+  { id: 'east_events', type: 'channel', name: '华东会销', parentId: 'group_offline', periods: createCostPeriods([30, 32, 34, 36, 38, 38, 40, 42, 44, 45, 46, 48], [70, 74, 82, 86, 76, 84, 0, 0, 0, 0, 0, 0], [6, 7, 8, 8, 7, 8, 0, 0, 0, 0, 0, 0], [], [11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16]) },
+  { id: 'agent_rebate', type: 'channel', name: '代理返点', parentId: 'group_agent', periods: createCostPeriods([12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21, 22], [62, 68, 74, 82, 88, 96, 0, 0, 0, 0, 0, 0], [6, 7, 8, 8, 9, 10, 0, 0, 0, 0, 0, 0], [], [5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8]) },
+];
+
+const SALES_LABOR_BY_MONTH = MAINTENANCE_MONTH_KEYS.map((monthKey) => COST_MAINTENANCE_ROWS
+  .filter((row) => row.type === 'channel')
+  .reduce((sum, row) => sum + Number(row.periods[monthKey]?.labor || 0), 0));
+
+export const LABOR_COST_MAINTENANCE_ROWS = [
+  { id: 'labor-sales', costType: 'sales', name: '销售部人力成本', source: '四个渠道人力成本合计', editable: false, periods: createLaborPeriods(SALES_LABOR_BY_MONTH) },
+  { id: 'labor-marketing', costType: 'marketing', name: '市场部人力成本', source: '独立维护', editable: true, periods: createLaborPeriods([28, 30, 29, 31, 30, 32, 33, 33, 34, 35, 35, 36]) },
 ];
 
 export const ORG_MAINTENANCE_DEPARTMENTS = [

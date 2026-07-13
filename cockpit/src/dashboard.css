@@ -1,8 +1,26 @@
 /*
+ 更新时间: 2026-07-13 22:50:00 CST
+ 更新内容: 合并远端趋势/经营指标行收紧高度分支——.dash-secondary-grid 改用 --dash-secondary-content-height
+          CSS 变量 + calc(...-14px) 收边；低有效高度桌面档下开户数行/投入行的栏高延续本地等分修复
+          （minmax(...,1fr) 而非 .82fr/1.08fr），避免开户数小卡重新被系统性挤扁。
+*/
+/*
  更新时间: 2026-07-13 22:20:00 CST
  更新内容: 新增 .dash-section-eyebrow，为“版本与交付”标签页的两个面板各加一行小标签（销售侧·版本构成 /
           履约侧·交付产能），让合并展示的两块内容看起来是有意分组，而不是随意拼在一起；
           .dash-version-row/.dash-secondary-delivery 改为纵向 flex 并统一 8px 间距容纳新标签。
+*/
+/*
+ 更新时间: 2026-07-13 19:54:35 CST
+ 更新内容: 版本情况洞察随卡片底边上移到半环下方，并裁掉截图白线以下的桌面端空白区域。
+*/
+/*
+ 更新时间: 2026-07-13 19:46:24 CST
+ 更新内容: 保留当前趋势与经营指标内容尺寸，仅移除红线以下 14px 底部区域，并在新底边重建圆角玻璃边框。
+*/
+/*
+ 更新时间: 2026-07-13 19:37:49 CST
+ 更新内容: 按截图红线保持趋势与经营指标卡横向宽度不变，将整行桌面高度统一上收约 14px。
 */
 /*
  更新时间: 2026-07-13 19:20:00 CST
@@ -313,11 +331,20 @@
   bottom:10px;
 }
 
+@media (min-width:1181px){
+  .dash-version-row .vf-panel{
+    height:262px;
+    min-height:262px;
+    overflow:hidden;
+  }
+}
+
 .dash-secondary-grid{
+  --dash-secondary-content-height:clamp(336px,34.5vh,372px);
   flex:none;min-height:0;display:grid;gap:16px;
   grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);
   /* 1K / 1080p 默认紧凑档：保留完整趋势坐标轴和右侧三张经营指标卡。 */
-  grid-template-rows:clamp(350px,36vh,386px);
+  grid-template-rows:calc(var(--dash-secondary-content-height) - 14px);
   grid-template-areas:
     "trend finance";
 }
@@ -406,6 +433,38 @@
 .dash-secondary-cell .mt-chart{flex:1;min-height:0}
 .dash-secondary-cell .mt-chart > div{height:100%!important;min-height:180px}
 
+@media (min-width:1181px){
+  .dash-secondary-cell{
+    position:relative;
+    overflow:hidden;
+    border-radius:0 0 16px 16px;
+    isolation:isolate;
+  }
+  .dash-secondary-cell::after{
+    content:"";
+    position:absolute;
+    z-index:6;
+    right:0;
+    bottom:0;
+    left:0;
+    height:16px;
+    border:1px solid var(--dashboard-card-border);
+    border-top:0;
+    border-radius:0 0 16px 16px;
+    pointer-events:none;
+  }
+  .dash-secondary-cell:hover::after,
+  .dash-secondary-cell:focus-within::after{
+    border-color:rgba(255,255,255,.34);
+  }
+  .dash-secondary-cell--trend > .search-result-border,
+  .dash-secondary-cell--trend > .search-result-border > .search-result-border__content,
+  .dash-secondary-cell--trend .mt-panel,
+  .dash-secondary-cell--finance .dash-finance-kpis{
+    height:var(--dash-secondary-content-height);
+  }
+}
+
 /* ===== 搜索命中边框 ===== */
 .search-result-border{
   position:relative;
@@ -487,9 +546,13 @@
 @media (min-width:1181px) and (max-height:1071px){
   .dash-main{gap:6px}
   .dash-content{gap:8px;scroll-margin-top:56px}
-  .dash-secondary-grid{grid-template-rows:clamp(320px,34vh,350px);gap:14px}
+  .dash-secondary-grid{
+    --dash-secondary-content-height:clamp(306px,32.5vh,336px);
+    grid-template-rows:calc(var(--dash-secondary-content-height) - 14px);
+    gap:14px;
+  }
   .dash-finance-kpis{
-    grid-template-rows:repeat(2,minmax(156px,1fr));
+    grid-template-rows:repeat(2,minmax(146px,1fr));
     gap:8px;
   }
   .dash-secondary-cell .mt-panel{padding:14px}
@@ -512,7 +575,8 @@
 /* 2K / 1440p 舒展档：提高图表阅读尺度，同时不改变主结构。 */
 @media (min-width:2200px) and (min-height:1300px){
   .dash-secondary-grid{
-    grid-template-rows:410px;
+    --dash-secondary-content-height:396px;
+    grid-template-rows:382px;
   }
 }
 

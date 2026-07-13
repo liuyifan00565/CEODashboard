@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-13 19:26:40 CST  更新内容: 年度折叠条保持原宽度，加粗常驻进度条并在右侧显示年度完成百分比。 */
+/* 更新时间: 2026-07-13 19:23:27 CST  更新内容: 年度回款总览与月度经营进度互换位置，年度总览默认收起为标题、进度条和展开箭头。 */
 /* 更新时间: 2026-07-13 16:40:31 CST  更新内容: 选择性合并数据维护代码，恢复拉取前的经营总览界面实现。 */
 /* 更新时间: 2026-07-13 14:50:37 CST  更新内容: 缩小主界面本月与年度回款结构半环图外围渠道名称和占比字号。 */
 /* 更新时间: 2026-07-10 15:36:50 CST  更新内容: 将月度与年度下钻入口移到回款结构半环图右下方，并保留透明大点击热区。 */
@@ -50,7 +52,7 @@
 /* 更新时间: 2026-07-05 19:10:30 CST  更新内容: 经营总览提高信息密度，加入月度/年度节奏判断、年度虚线目标和顶部明细入口。 */
 /* 更新时间: 2026-07-05 18:32:00 CST  更新内容: 本月回款主数字改为静态权威值，避免截图或首屏加载时显示滚动中间态。 */
 /* 更新时间: 2026-07-05 18:20:00 CST  更新内容: 新增经营总览三段融合布局，本月为主视角、年度为节奏背景、渠道为原因拆解。 */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import SearchResultBorder from './SearchResultBorder';
 import EChart from './EChart';
 import {
@@ -484,6 +486,7 @@ function DetailLink({ disabled, onClick, children }) {
 
 export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearKpiCard, onOpenKpi }) {
   const tokens = useThemeTokens();
+  const [annualExpanded, setAnnualExpanded] = useState(false);
   const progressTitle = `${META.monthLabel}经营进度`;
   const progressKeywords = [progressTitle, ...PROGRESS_KEYWORDS_BASE];
   const monthChannelRows = getChannelCompletionRows('month');
@@ -506,6 +509,75 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
 
   return (
     <div className="op-overview">
+      <SearchResultBorder active={matchesSearchTerm(ANNUAL_KEYWORDS, searchTerm)} className="op-search-result op-search-result--annual">
+        <section className={`op-panel op-panel--annual${annualExpanded ? ' is-expanded' : ''}`} data-anim>
+          <header className="op-annual-summary">
+            <h2>年度回款总览</h2>
+            <div
+              className="op-annual-summary-progress"
+              role="progressbar"
+              aria-label="年度目标完成进度"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow={Math.min(Math.max(Math.round(KPI_DERIVED.yearCompletion), 0), 100)}
+              aria-valuetext={formatPct(KPI_DERIVED.yearCompletion)}
+            >
+              <div className="op-annual-progress-track">
+                <span className="op-annual-fill" style={{ width: annualCapsuleWidth }} />
+              </div>
+              <strong>{formatPct(KPI_DERIVED.yearCompletion)}</strong>
+            </div>
+            <button
+              type="button"
+              className="op-annual-toggle"
+              aria-expanded={annualExpanded}
+              aria-controls="annual-overview-details"
+              aria-label={annualExpanded ? '收起年度回款总览' : '展开年度回款总览'}
+              onClick={() => setAnnualExpanded((expanded) => !expanded)}
+            >
+              <span className="op-annual-toggle-icon" aria-hidden="true" />
+            </button>
+          </header>
+
+          <div
+            id="annual-overview-details"
+            className="op-annual-details"
+            aria-hidden={!annualExpanded}
+            inert={!annualExpanded}
+          >
+            <div className="op-annual-details-inner">
+              <div className="op-annual-grid">
+                <div className="op-annual-primary">
+                  <div className="op-month-primary-value-row op-annual-primary-value-row">
+                    <b>{formatWan(KPI.yearRecovered)}万</b>
+                    <span className="op-summary-sub op-month-refund-note">退款{formatWan(KPI.yearRefund ?? 0)}万</span>
+                  </div>
+                  <span className="op-summary-sub">年度目标 {formatWan(KPI.yearTarget)}万</span>
+                  <div className="op-month-primary-facts op-annual-primary-facts">
+                    <span>年目标完成率 {formatPct(KPI_DERIVED.yearCompletion)}</span>
+                    <span className={annualTargetStatusRisk ? 'op-month-primary-fact--risk' : 'op-month-primary-fact--over'}>
+                      {annualTargetStatusLabel} {formatWan(annualTargetStatusValue)}万
+                    </span>
+                  </div>
+                </div>
+
+                <AnnualRecoveryStructure
+                  structure={annualStructure}
+                  option={annualStructureOption}
+                  detailDisabled={!yearKpiCard || !onOpenKpi}
+                  onDetailClick={() => onOpenKpi(yearKpiCard)}
+                />
+
+                <OperatingSituation
+                  structure={annualStructure}
+                  subLabel="年度回款 / 年度目标"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      </SearchResultBorder>
+
       <SearchResultBorder active={matchesSearchTerm(progressKeywords, searchTerm)} className="op-search-result op-search-result--progress">
         <section className="op-panel op-panel--progress" data-ai-insight-target="performance" data-anim>
           <header className="op-progress-head">
@@ -540,56 +612,6 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
               structure={monthlyStructure}
               insightTarget="channels"
             />
-          </div>
-        </section>
-      </SearchResultBorder>
-
-      <SearchResultBorder active={matchesSearchTerm(ANNUAL_KEYWORDS, searchTerm)} className="op-search-result op-search-result--annual">
-        <section className="op-panel op-panel--annual" data-anim>
-          <header className="op-section-head">
-            <div>
-              <h2>年度回款总览</h2>
-            </div>
-          </header>
-
-          <div className="op-annual-grid">
-            <div className="op-annual-primary">
-              <div className="op-month-primary-value-row op-annual-primary-value-row">
-                <b>{formatWan(KPI.yearRecovered)}万</b>
-                <span className="op-summary-sub op-month-refund-note">退款{formatWan(KPI.yearRefund ?? 0)}万</span>
-              </div>
-              <span className="op-summary-sub">年度目标 {formatWan(KPI.yearTarget)}万</span>
-              <div className="op-month-primary-facts op-annual-primary-facts">
-                <span>年目标完成率 {formatPct(KPI_DERIVED.yearCompletion)}</span>
-                <span className={annualTargetStatusRisk ? 'op-month-primary-fact--risk' : 'op-month-primary-fact--over'}>
-                  {annualTargetStatusLabel} {formatWan(annualTargetStatusValue)}万
-                </span>
-              </div>
-              <div
-                className="op-annual-progress-footer"
-                aria-label={`年度目标完成率 ${formatPct(KPI_DERIVED.yearCompletion)}`}
-              >
-                <div className="op-annual-progress-main">
-                  <div className="op-annual-progress-track">
-                    <span className="op-annual-fill" style={{ width: annualCapsuleWidth }} />
-                  </div>
-                  <strong>{formatPct(KPI_DERIVED.yearCompletion)}</strong>
-                </div>
-              </div>
-            </div>
-
-            <AnnualRecoveryStructure
-              structure={annualStructure}
-              option={annualStructureOption}
-              detailDisabled={!yearKpiCard || !onOpenKpi}
-              onDetailClick={() => onOpenKpi(yearKpiCard)}
-            />
-
-            <OperatingSituation
-              structure={annualStructure}
-              subLabel="年度回款 / 年度目标"
-            />
-
           </div>
         </section>
       </SearchResultBorder>

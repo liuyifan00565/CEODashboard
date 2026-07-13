@@ -1,12 +1,15 @@
+/* 更新时间: 2026-07-13 22:40:00 CST  更新内容: 合并远端完成率趋势线视觉增强分支——symbolSize 改回按 ECharts
+   真实回调签名直接接收 value（不解构），itemStyle.color/label.color/label.fontWeight 仍是 params 对象但补上
+   `= {}` 默认参数兜底：ECharts 给 null 数据点的回调传 undefined 而非 {value:null}，纯解构 `({value}) =>`
+   会直接抛 TypeError 把整个页面崩白屏（日视图完成率整列为 null 时必现）。 */
 /* 更新时间: 2026-07-13 19:20:00 CST  更新内容: 日视图并入统一的 buildBarTrendOption，与月/年共用同一套图表外壳
    （图例、双 Y 轴、柱线组合、悬浮框样式），不再是单独的迷你柱状图；因 biz_target_monthly 无日粒度目标，
    日视图的目标柱和完成率线数据为 null（不渲染），悬浮框按数值是否为 null 过滤对应行，避免出现空目标提示。
-   X 轴标签按类目数量自适应抽稀间隔，日视图类目多时不再全部铺满。完成率折线的 symbolSize/itemStyle.color/
-   label.color/label.fontWeight 回调补上 `= {}` 默认参数——ECharts 给 null 数据点回调时传的是 undefined
-   而非 {value:null}，之前的 `({value}) =>` 解构会直接抛 TypeError 把整个页面崩白屏。 */
+   X 轴标签按类目数量自适应抽稀间隔，日视图类目多时不再全部铺满。 */
 /* 更新时间: 2026-07-13 17:10:00 CST  更新内容: 新增年/月/日切换（Segmented）。月/年视图共用回款+目标+完成率柱线组合，
    日视图读取 getDailyRevenueTrend() 展示本月每日回款柱状图；因 biz_target_monthly 无日粒度目标，日视图不展示
    目标柱和完成率线，只保留实际回款单一系列。 */
+/* 更新时间: 2026-07-13 11:25:44 CST  更新内容: 月度完成率趋势线改为清晰银紫色，采用 2.8px、90% 透明度、0.25 平滑度、7/9px 分级点和 6px 轻外发光，并在数据项明确写入状态色，确保 94.5% 等正常值不显示红色。 */
 /* 更新时间: 2026-07-10 10:49:21 CST  更新内容: 固定月度趋势配置引用并关闭画布动画与折线模糊光晕，消除无交互时反复闪烁。 */
 /* 更新时间: 2026-07-07 16:50:00 CST  更新内容: 柱状图悬浮框对齐 GlassSelect 面板同体系——银紫描边 + 24px 毛玻璃 + 紫光投影 + 16px 圆角，杜绝与下拉框质感割裂。 */
 /* 更新时间: 2026-07-07 14:40:00 CST  更新内容: 月度经营趋势重构数据语义——目标改为背景宽柱(淡灰紫)、回款改为前景窄柱(银紫玫瑰渐变)，完成率细线+圆点且 y 轴超 100% 自动扩展并加 100% 基准线，图例颜色与序列对齐，移除 6 月高亮，未发生月份用虚线占位。 */
@@ -202,10 +205,16 @@ function buildBarTrendOption({ trend, labelKey, tokens }) {
         name: '完成率',
         type: 'line',
         yAxisIndex: 1,
-        smooth: true,
+        smooth: 0.25,
         symbol: 'circle',
-        symbolSize: ({ value } = {}) => (isRiskCompletion(value) ? 8 : 5),
-        lineStyle: { color: tokens.chartRateLine, width: 1.5, opacity: 0.72 },
+        symbolSize: value => (isRiskCompletion(value) ? 9 : 7),
+        lineStyle: {
+          color: tokens.chartRateLine,
+          width: 2.8,
+          opacity: 0.9,
+          shadowBlur: 6,
+          shadowColor: 'rgba(185, 182, 232, 0.36)',
+        },
         itemStyle: { color: ({ value } = {}) => completionPointColor(value, tokens), borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
         label: {
           show: true,
@@ -222,7 +231,17 @@ function buildBarTrendOption({ trend, labelKey, tokens }) {
           lineStyle: { color: tokens.chartRateLine, type: 'dashed', width: 1, opacity: 0.35 },
           data: [{ yAxis: 100 }],
         },
-        data: completion.map((value, index) => (isPlaceholderMonth(trend[index]) ? null : value)),
+        data: completion.map((value, index) => {
+          if (isPlaceholderMonth(trend[index])) return null;
+          const pointColor = completionPointColor(value, tokens);
+          const risk = isRiskCompletion(value);
+          return {
+            value,
+            symbolSize: risk ? 9 : 7,
+            itemStyle: { color: pointColor },
+            label: { color: pointColor, fontWeight: risk ? 850 : 650 },
+          };
+        }),
       },
     ],
   };

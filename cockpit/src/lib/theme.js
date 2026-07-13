@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 11:25:44 CST
+ 更新内容: 月度完成率趋势线 token 调整为偏亮银紫色 #B9B6E8，保持深色玻璃背景上的清晰对比。
+*/
+/*
  更新时间: 2026-07-06 10:48:16 CST
  更新内容: 扩展主题读取层，暴露银紫玫瑰高亮、业务语义色与图表专用 token。
 */
@@ -69,7 +73,7 @@ const FALLBACK_TOKENS = {
   chartActualBarTop: '#B89CFF',
   chartActualBarBottom: '#8E86FF',
   chartTargetBar: 'rgba(255,255,255,0.13)',
-  chartRateLine: '#D9D1FF',
+  chartRateLine: '#B9B6E8',
   chartRiskPoint: '#F06A8B',
   chartGoalLine: '#C9A96B',
 };
