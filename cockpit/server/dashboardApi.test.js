@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 14:58:00 CST
+ 更新内容: 增加开户数直接字段优先与算力全量客户快照差分兜底的接口聚合测试。
+*/
+/*
  更新时间: 2026-07-06 14:57:00 CST
  更新内容: 增加驾驶舱 MySQL 聚合接口的经营总览与算力数据构造回归测试。
 */
@@ -63,10 +67,53 @@ test('builds overview KPI, channel, trend and version data from MySQL-shaped row
   assert.equal(payload.versions[0].recovered, 17);
   assert.equal(payload.renewalRows[0].periods.month.revenue, 13);
   assert.equal(payload.openingAccountMetrics[0].value, 18);
+  assert.equal(payload.openingAccountMetrics[0].source, 'opening_account');
   assert.equal(payload.salesMemberRows[0].recovered, 120);
   assert.equal(payload.deliveryRows[0].deliveredCount, 3);
   assert.equal(payload.deliveryRows[0].targetCount, 5);
   assert.equal(payload.deliverySummary.people, 1);
+});
+
+test('derives opening metrics from full compute customer snapshots when direct rows are empty', () => {
+  const payload = buildOverviewPayload({
+    year: 2026,
+    month: 6,
+    computeCustomerSnapshotRows: [
+      { stat_date: '2026-04-30', customer_count: 80 },
+      { stat_date: '2026-05-31', customer_count: 100 },
+      { stat_date: '2026-06-28', customer_count: 115 },
+      { stat_date: '2026-06-29', customer_count: 118 },
+      { stat_date: '2026-06-30', customer_count: 126 },
+    ],
+  });
+
+  const monthOpenings = payload.openingAccountMetrics.find((metric) => metric.metric === 'monthOpenings');
+  const todayOpenings = payload.openingAccountMetrics.find((metric) => metric.metric === 'todayOpenings');
+
+  assert.equal(monthOpenings.value, 26);
+  assert.equal(monthOpenings.delta, 30);
+  assert.equal(monthOpenings.source, 'compute_customer_snapshot');
+  assert.equal(todayOpenings.value, 8);
+  assert.equal(todayOpenings.delta, 166.7);
+  assert.equal(todayOpenings.source, 'compute_customer_snapshot');
+});
+
+test('clamps negative compute snapshot opening differences to zero', () => {
+  const payload = buildOverviewPayload({
+    year: 2026,
+    month: 6,
+    computeCustomerSnapshotRows: [
+      { stat_date: '2026-04-30', customer_count: 100 },
+      { stat_date: '2026-05-31', customer_count: 98 },
+      { stat_date: '2026-06-29', customer_count: 96 },
+      { stat_date: '2026-06-30', customer_count: 95 },
+    ],
+  });
+
+  assert.equal(payload.openingAccountMetrics[0].value, 0);
+  assert.equal(payload.openingAccountMetrics[0].source, 'compute_customer_snapshot');
+  assert.equal(payload.openingAccountMetrics[1].value, 0);
+  assert.equal(payload.openingAccountMetrics[1].source, 'compute_customer_snapshot');
 });
 
 test('builds compute overview, trend, pies and customer rows from MySQL-shaped rows', () => {

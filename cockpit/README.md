@@ -1,5 +1,8 @@
 # CEO 经营驾驶舱 React Demo
 
+更新时间: 2026-07-13 14:58:00 CST
+更新内容: 同步开户数指标由接口返回，优先使用开户事实表，缺失时使用算力全量客户快照差分兜底的统计口径。
+
 更新时间: 2026-07-06 12:25:08 CST
 更新内容: 补充经营总览和算力用量分析通过 `/api/dashboard/bootstrap` 读取 MySQL 聚合数据的说明。
 
@@ -93,14 +96,14 @@ GET /api/dashboard/bootstrap?year=2026&month=6
 - `biz_target_monthly`：按渠道、月份聚合目标。
 - `biz_channel_cost_monthly`、`biz_labor_cost_monthly`：聚合广告投入、人力成本和总投入。
 - `fact_version_sales_daily`、`fact_renewal_daily`：聚合版本销量、回款和续费数据。
-- `fact_opening_account_daily`：聚合本月开户数和今日开户数。
+- `fact_opening_account_daily`：优先聚合本月开户数和今日开户数。
 - `fact_sales_member_monthly`：聚合销售人员目标完成情况。
 - `fact_delivery_order`、`biz_delivery_target_monthly`：聚合交付人员交付单数、目标和人效。
 
 算力用量分析主要读取：
 
 - `fact_compute_usage_daily`：聚合算力容量、新增和消耗趋势。
-- `fact_compute_customer_daily`：聚合客户算力排行、余额和平均回复率。
+- `fact_compute_customer_daily`：聚合客户算力排行、余额和平均回复率；当开户事实表没有可用数据时，接口会把该表按每日全量客户快照做差分，兜底计算本月开户数和今日开户数。
 - `fact_compute_version_consumption_daily`：聚合版本算力消耗占比。
 - `fact_compute_usage_distribution_daily`、`dim_compute_usage_bucket`：聚合算力用量分布。
 - `fact_compute_resource_health_daily`、`dim_compute_resource`：聚合资源健康度。
@@ -115,7 +118,7 @@ GET /api/dashboard/bootstrap?year=2026&month=6
 
 `总投入 · 费比` 卡片的大字展示费比百分比；总投入、广告和人力金额保留在副文案中，用于说明费比的投入构成。
 
-首页本年目标完成情况卡片下方新增 `本月开户数` 和 `今日开户数` 两张低高度小卡片，当前读取 `src/data/mock.js` 中的 `OPENING_ACCOUNT_METRICS` 虚拟演示数据，并展示相对上月/昨日的涨幅趋势。两张小卡片点击后复用 KPI 二级弹窗样式和销售维度、年/月/日筛选控件，但图表数据会切换为对应的开户数趋势。后续接入真实接口时，应由 BI/API 返回开户数、对应对比周期涨幅，以及销售维度下的年/月/日开户数趋势。
+首页本年目标完成情况卡片下方新增 `本月开户数` 和 `今日开户数` 两张低高度小卡片。卡片优先展示 `/api/dashboard/bootstrap` 返回的 `overview.openingAccountMetrics`；接口先读取 `fact_opening_account_daily.opening_count`，如果开户事实表没有可用数据，再用 `fact_compute_customer_daily` 的每日全量客户快照差分计算。前端只消费接口返回结果，不在浏览器侧用客户数自行相减。两张小卡片点击后复用 KPI 二级弹窗样式和销售维度、年/月/日筛选控件，但图表数据会切换为对应的开户数趋势。
 
 ## 菜单与销售维度口径
 

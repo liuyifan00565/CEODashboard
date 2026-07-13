@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 14:58:00 CST
+ 更新内容: 开户数接口聚合优先使用开户事实表，缺失时用算力全量客户快照差分兜底。
+*/
+/*
  更新时间: 2026-07-06 14:57:00 CST
  更新内容: 新增主驾驶舱 MySQL 聚合接口，向经营总览和算力用量分析提供数据库同步数据。
 */
@@ -73,6 +77,15 @@ function yearMonth(year, month) {
 function previousYearMonth(year, month) {
   if (month > 1) return yearMonth(year, month - 1);
   return `${Number(year) - 1}-12`;
+}
+
+function previousMonthStart(yearMonthValue) {
+  const [year, month] = String(yearMonthValue).split('-').map(Number);
+  return `${previousYearMonth(year, month)}-01`;
+}
+
+function nextMonthStart(year, month) {
+  return month === 12 ? `${Number(year) + 1}-01-01` : `${yearMonth(year, month + 1)}-01`;
 }
 
 function rowMonthNumber(row) {
@@ -264,8 +277,80 @@ function buildRenewalRows(rows) {
   });
 }
 
-function buildOpeningMetrics(rows) {
+function metricCount(row, fieldName) {
+  return Number(row?.[fieldName] ?? row?.[fieldName.replace(/_([a-z])/g, (_, char) => char.toUpperCase())] ?? 0);
+}
+
+function hasDirectOpeningRows(rows) {
+  return rows.some((row) => metricCount(row, 'current_count') || metricCount(row, 'previous_count'));
+}
+
+function normalizeSnapshotRows(rows) {
+  return rows
+    .map((row) => ({
+      statDate: normalizeStatDate(row.stat_date ?? row.statDate),
+      customerCount: round0(row.customer_count ?? row.customerCount),
+    }))
+    .filter((row) => row.statDate)
+    .sort((a, b) => a.statDate.localeCompare(b.statDate));
+}
+
+function latestSnapshotBefore(rows, dateExclusive) {
+  return [...rows].reverse().find((row) => row.statDate < dateExclusive) ?? null;
+}
+
+function latestSnapshotInRange(rows, startInclusive, endExclusive) {
+  return [...rows].reverse().find((row) => row.statDate >= startInclusive && row.statDate < endExclusive) ?? null;
+}
+
+function positiveDiff(current, previous) {
+  if (!current || !previous) return 0;
+  return Math.max(round0(current.customerCount - previous.customerCount), 0);
+}
+
+function buildComputeSnapshotOpeningRows({ year, month, snapshotRows }) {
+  const rows = normalizeSnapshotRows(snapshotRows);
+  if (!rows.length) return [];
+
+  const currentYm = yearMonth(year, month);
+  const currentStart = `${currentYm}-01`;
+  const nextMonth = nextMonthStart(year, month);
+  const previousStart = previousMonthStart(currentYm);
+  const currentLatest = latestSnapshotInRange(rows, currentStart, nextMonth);
+  const beforeCurrent = latestSnapshotBefore(rows, currentStart);
+  const beforePrevious = latestSnapshotBefore(rows, previousStart);
+  const previousDaily = currentLatest ? latestSnapshotBefore(rows, currentLatest.statDate) : null;
+  const beforePreviousDaily = previousDaily ? latestSnapshotBefore(rows, previousDaily.statDate) : null;
+
+  return [
+    {
+      metric: 'monthOpenings',
+      current_count: positiveDiff(currentLatest, beforeCurrent),
+      previous_count: positiveDiff(beforeCurrent, beforePrevious),
+    },
+    {
+      metric: 'todayOpenings',
+      current_count: positiveDiff(currentLatest, previousDaily),
+      previous_count: positiveDiff(previousDaily, beforePreviousDaily),
+    },
+  ];
+}
+
+function openingSourceFor(rows, fallbackRows) {
+  if (hasDirectOpeningRows(rows)) return 'opening_account';
+  if (fallbackRows.length) return 'compute_customer_snapshot';
+  return 'empty';
+}
+
+function buildOpeningMetrics(rows, { year, month, computeCustomerSnapshotRows = [] } = {}) {
+  const fallbackRows = buildComputeSnapshotOpeningRows({ year, month, snapshotRows: computeCustomerSnapshotRows });
+  const source = openingSourceFor(rows, fallbackRows);
+  const metricRows = source === 'opening_account' ? rows : fallbackRows;
   const byMetric = new Map(rows.map((row) => [row.metric, row]));
+  if (source !== 'opening_account') {
+    byMetric.clear();
+    metricRows.forEach((row) => byMetric.set(row.metric, row));
+  }
   const monthOpenings = byMetric.get('monthOpenings') ?? { current_count: 0, previous_count: 0 };
   const todayOpenings = byMetric.get('todayOpenings') ?? { current_count: 0, previous_count: 0 };
   return [
@@ -278,6 +363,7 @@ function buildOpeningMetrics(rows) {
       delta: deltaPct(monthOpenings.current_count ?? monthOpenings.currentCount, monthOpenings.previous_count ?? monthOpenings.previousCount),
       compareLabel: '较上月',
       keywords: ['开户', '本月开户数'],
+      source,
     },
     {
       key: 'today-openings',
@@ -288,6 +374,7 @@ function buildOpeningMetrics(rows) {
       delta: deltaPct(todayOpenings.current_count ?? todayOpenings.currentCount, todayOpenings.previous_count ?? todayOpenings.previousCount),
       compareLabel: '较昨日',
       keywords: ['开户', '今日开户数'],
+      source,
     },
   ];
 }
@@ -359,6 +446,7 @@ export function buildOverviewPayload({
   versionRows = [],
   renewalRows = [],
   openingRows = [],
+  computeCustomerSnapshotRows = [],
   salesMemberRows = [],
   deliveryRows = [],
   deliveryTargetRows = [],
@@ -403,7 +491,7 @@ export function buildOverviewPayload({
     monthlyTrend: buildTrend({ year, month, revenueMap, targetMap }),
     versions: buildVersions(versionRows, renewalPayload),
     renewalRows: renewalPayload,
-    openingAccountMetrics: buildOpeningMetrics(openingRows),
+    openingAccountMetrics: buildOpeningMetrics(openingRows, { year, month, computeCustomerSnapshotRows }),
     deliveryRows: deliveryPayload,
     deliverySummary: buildDeliverySummary(deliveryPayload),
   };
@@ -505,7 +593,7 @@ async function loadOverview(conn, year, month) {
   const currentYm = yearMonth(year, month);
   const lastYm = previousYearMonth(year, month);
   const currentStart = `${currentYm}-01`;
-  const nextMonth = month === 12 ? `${Number(year) + 1}-01-01` : `${yearMonth(year, month + 1)}-01`;
+  const nextMonth = nextMonthStart(year, month);
   const today = `${currentYm}-${month === 2 ? '28' : '30'}`;
   const yesterday = `${currentYm}-${month === 2 ? '27' : '29'}`;
 
@@ -518,6 +606,7 @@ async function loadOverview(conn, year, month) {
     versionRows,
     renewalRows,
     openingRows,
+    computeCustomerSnapshotRows,
     salesMemberRows,
     deliveryRows,
     deliveryTargetRows,
@@ -593,6 +682,15 @@ async function loadOverview(conn, year, month) {
     ),
     selectAll(
       conn,
+      `SELECT stat_date, COUNT(*) AS customer_count
+       FROM fact_compute_customer_daily
+       WHERE stat_date >= ? AND stat_date < ?
+       GROUP BY stat_date
+       ORDER BY stat_date`,
+      [previousMonthStart(lastYm), nextMonth]
+    ),
+    selectAll(
+      conn,
       `SELECT s.staff_id, s.staff_name, c.channel_key, c.channel_name, c.channel_id,
               SUM(m.target_amount_yuan) AS target_yuan,
               SUM(m.recovered_amount_yuan) AS recovered_yuan
@@ -634,6 +732,7 @@ async function loadOverview(conn, year, month) {
     versionRows,
     renewalRows,
     openingRows,
+    computeCustomerSnapshotRows,
     salesMemberRows,
     deliveryRows,
     deliveryTargetRows,
@@ -643,7 +742,7 @@ async function loadOverview(conn, year, month) {
 async function loadCompute(conn, year, month) {
   const currentYm = yearMonth(year, month);
   const currentStart = `${currentYm}-01`;
-  const nextMonth = month === 12 ? `${Number(year) + 1}-01-01` : `${yearMonth(year, month + 1)}-01`;
+  const nextMonth = nextMonthStart(year, month);
 
   const [usageRows, customerRows, versionRows, distributionRows, resourceRows] = await Promise.all([
     selectAll(
