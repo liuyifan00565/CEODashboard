@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 14:02:04 CST
+ 更新内容: 回归测试按页面实测锁定月度近期明细首字“点”左移 42.43px 后精确对齐饼图右半区起点。
+*/
+/*
  更新时间: 2026-07-13 11:07:08 CST
  更新内容: 回归测试按截图锁定月度近期明细首字“点”对应饼图右半区起点标线。
 */
@@ -1468,7 +1472,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewCss, /\.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?right:\s*clamp\(0px, \.65vw, 10px\);[\s\S]*?bottom:\s*-8px;[\s\S]*?min-width:\s*156px;[\s\S]*?min-height:\s*28px;[\s\S]*?padding:\s*8px 6px 6px 28px;[\s\S]*?font-size:\s*12px;/);
   assert.match(operatingOverviewCss, /\.op-channel-chart-wrap \.op-detail-link:focus-visible:not\(:disabled\)\s*\{[\s\S]*?box-shadow:\s*inset 0 0 0 1px rgba\(255,255,255,\.14\);/);
   assert.match(operatingOverviewCss, /\.op-annual-grid \.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?bottom:\s*44px;/);
-  assert.match(operatingOverviewCss, /@media \(min-width: 1241px\) \{[\s\S]*?\.op-month-grid \.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?left:\s*calc\(49\.35% \+ clamp\(-16px, -1vw, -10px\)\);[\s\S]*?right:\s*auto;[\s\S]*?bottom:\s*12px;/);
+  assert.match(operatingOverviewCss, /@media \(min-width: 1241px\) \{[\s\S]*?\.op-month-grid \.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?left:\s*calc\(49\.35% \+ clamp\(-16px, -1vw, -10px\) - 42\.43px\);[\s\S]*?right:\s*auto;[\s\S]*?bottom:\s*12px;/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1241px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-month-grid \.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?bottom:\s*19px;/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-structure-head \.op-detail-link/);
   assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
