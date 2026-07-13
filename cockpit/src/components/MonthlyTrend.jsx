@@ -1,3 +1,6 @@
+/* 更新时间: 2026-07-13 17:10:00 CST  更新内容: 新增年/月/日切换（Segmented）。月/年视图共用回款+目标+完成率柱线组合，
+   日视图读取 getDailyRevenueTrend() 展示本月每日回款柱状图；因 biz_target_monthly 无日粒度目标，日视图不展示
+   目标柱和完成率线，只保留实际回款单一系列。 */
 /* 更新时间: 2026-07-10 10:49:21 CST  更新内容: 固定月度趋势配置引用并关闭画布动画与折线模糊光晕，消除无交互时反复闪烁。 */
 /* 更新时间: 2026-07-07 16:50:00 CST  更新内容: 柱状图悬浮框对齐 GlassSelect 面板同体系——银紫描边 + 24px 毛玻璃 + 紫光投影 + 16px 圆角，杜绝与下拉框质感割裂。 */
 /* 更新时间: 2026-07-07 14:40:00 CST  更新内容: 月度经营趋势重构数据语义——目标改为背景宽柱(淡灰紫)、回款改为前景窄柱(银紫玫瑰渐变)，完成率细线+圆点且 y 轴超 100% 自动扩展并加 100% 基准线，图例颜色与序列对齐，移除 6 月高亮，未发生月份用虚线占位。 */
@@ -7,12 +10,25 @@
 /* 更新时间: 2026-07-03 18:54:17 CST  更新内容: 月度趋势回款柱与完成率标签按 80 以下红色、80-99 紫色、100 及以上金色三档分色。 */
 /* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 月度经营趋势回款柱按完成率 80% 风险线分色，危险月份直接使用风险色。 */
 /* 更新时间: 2026-06-29 10:45:53  更新内容: 月度经营趋势图例改为静态说明，并将目标与回款柱重叠展示。 */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import EChart from './EChart';
-import { getChannelTrend } from '../data/mock';
+import Segmented from './Segmented';
+import { getChannelTrend, getDailyRevenueTrend, getYearlyTrend } from '../data/mock';
 import { isRiskCompletion } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './MonthlyTrend.css';
+
+const DIM_OPTS = [
+  { value: 'year', label: '年' },
+  { value: 'month', label: '月' },
+  { value: 'day', label: '日' },
+];
+
+const DIM_HEADING = {
+  day: { title: '每日经营趋势', sub: '本月每日回款' },
+  month: { title: '月度经营趋势', sub: '回款 vs 目标 · 完成率' },
+  year: { title: '年度经营趋势', sub: '回款 vs 目标 · 完成率' },
+};
 
 function completionPointColor(value, tokens) {
   return isRiskCompletion(value) ? tokens.chartRiskPoint : Number(value) >= 100 ? tokens.semanticGoal : tokens.chartRateLine;
@@ -43,9 +59,8 @@ function isPlaceholderMonth(item) {
   return item == null || item.recovered == null || Number.isNaN(Number(item.recovered));
 }
 
-function buildMonthlyTrendOption(channelKey, tokens) {
-  const trend = getChannelTrend(channelKey);
-  const months = trend.map(m => m.month);
+function buildBarTrendOption({ trend, labelKey, tokens }) {
+  const months = trend.map(m => m[labelKey]);
   const target = trend.map(m => m.target);
   const recovered = trend.map(m => m.recovered);
   const completion = trend.map(m => m.completion);
@@ -208,15 +223,88 @@ function buildMonthlyTrendOption(channelKey, tokens) {
   return option;
 }
 
+// 日视图：biz_target_monthly 没有日粒度目标，只展示实际每日回款，不构造目标/完成率。
+function buildDayTrendOption(tokens) {
+  const dailyTrend = getDailyRevenueTrend();
+  const labels = dailyTrend.map(d => d.day);
+  const recovered = dailyTrend.map(d => d.recovered);
+
+  const txt = tokens.chartText;
+  const muted = tokens.chartMuted;
+  const faint = tokens.chartMuted;
+  const line = tokens.chartGrid;
+
+  return {
+    animation: false,
+    backgroundColor: 'transparent',
+    textStyle: { color: muted, fontFamily: 'inherit' },
+    grid: { top: 24, left: 8, right: 8, bottom: 4, containLabel: true },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      backgroundColor: tokens.chartTooltipBg,
+      borderColor: 'rgba(190, 175, 255, 0.24)',
+      borderWidth: 1,
+      extraCssText: 'border-radius:16px; backdrop-filter:blur(24px) saturate(145%); -webkit-backdrop-filter:blur(24px) saturate(145%); box-shadow:0 18px 60px rgba(0,0,0,.45), 0 0 36px rgba(142,134,255,.18); padding:10px 12px;',
+      textStyle: { color: txt, fontSize: 14 },
+      formatter: (params) => {
+        const p = params[0];
+        return `<div style="color:${faint};margin-bottom:4px">${p.axisValue}</div>
+          <div style="display:flex;align-items:center;gap:6px;line-height:1.7">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${p.color}"></span>
+            <span style="color:${muted}">回款</span>
+            <span style="color:${txt};margin-left:auto;font-weight:600">${p.value} 万</span>
+          </div>`;
+      },
+    },
+    xAxis: {
+      type: 'category',
+      data: labels,
+      axisLine: { lineStyle: { color: line } },
+      axisTick: { show: false },
+      axisLabel: { color: faint, fontSize: 11, interval: Math.max(0, Math.ceil(labels.length / 10) - 1) },
+    },
+    yAxis: {
+      type: 'value',
+      name: '万元',
+      nameTextStyle: { color: faint, fontSize: 13, padding: [0, 0, 0, 8] },
+      axisLabel: { color: faint, fontSize: 13 },
+      splitLine: { lineStyle: { color: line } },
+      axisLine: { show: false },
+    },
+    series: [
+      {
+        name: '回款',
+        type: 'bar',
+        barWidth: 10,
+        barCategoryGap: '32%',
+        itemStyle: { color: actualBarColor(tokens), borderRadius: [3, 3, 0, 0] },
+        data: recovered,
+      },
+    ],
+  };
+}
+
 export default function MonthlyTrend({ channelKey = 'all' }) {
   const tokens = useThemeTokens();
-  const option = useMemo(() => buildMonthlyTrendOption(channelKey, tokens), [channelKey, tokens]);
+  const [dim, setDim] = useState('month');
+
+  const option = useMemo(() => {
+    if (dim === 'day') return buildDayTrendOption(tokens);
+    if (dim === 'year') return buildBarTrendOption({ trend: getYearlyTrend(), labelKey: 'year', tokens });
+    return buildBarTrendOption({ trend: getChannelTrend(channelKey), labelKey: 'month', tokens });
+  }, [dim, channelKey, tokens]);
+
+  const heading = DIM_HEADING[dim] ?? DIM_HEADING.month;
 
   return (
     <section className="mt-panel">
       <header className="mt-head">
-        <h3 className="mt-title">月度经营趋势</h3>
-        <span className="mt-sub">回款 vs 目标 · 完成率</span>
+        <div className="mt-head-text">
+          <h3 className="mt-title">{heading.title}</h3>
+          <span className="mt-sub">{heading.sub}</span>
+        </div>
+        <Segmented options={DIM_OPTS} value={dim} onChange={setDim} />
       </header>
       <div className="mt-chart">
         <EChart option={option} style={{ height: '100%' }} />

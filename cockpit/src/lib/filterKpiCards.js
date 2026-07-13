@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 16:30:00 CST
+ 更新内容: 总投入·费比卡片副标题新增广告ROI（本期回款 / 广告投入），紧跟在广告/人力拆分之后展示。
+*/
+/*
  更新时间: 2026-07-10 14:50:00 CST
  更新内容: 默认 KPI 日期范围改为运行时当前自然月，不再固定 2026-06。
 */
@@ -365,9 +369,10 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
   const adCost = scaled(config.adCost, factor);
   const laborCost = scaled(config.laborCost, factor);
   const costRatio = recovered ? round1((cost / recovered) * 100) : KPI_DERIVED.costRatio;
+  const adRoi = adCost ? round2(recovered / adCost) : 0;
   const costSub = channelContext.channelKey === 'all'
-    ? `全渠道总投入 ${cost} 万 · 广告 ${adCost} 万 + 人力 ${laborCost} 万`
-    : `当前渠道投入 ${cost} 万 · 全渠道总投入 ${KPI.totalCost} 万 · 费比 ${costRatio}%`;
+    ? `全渠道总投入 ${cost} 万 · 广告 ${adCost} 万 + 人力 ${laborCost} 万 · 广告ROI ${adRoi}`
+    : `当前渠道投入 ${cost} 万 · 全渠道总投入 ${KPI.totalCost} 万 · 费比 ${costRatio}% · 广告ROI ${adRoi}`;
 
   const cardsByKey = new Map(KPI_CARDS.map((card) => [card.key, card]));
   const monthCard = cardsByKey.get('month');

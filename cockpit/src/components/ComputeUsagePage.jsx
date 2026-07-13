@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-13 16:40:00 CST
+ 更新内容: KPI 条新增“在用账户数”卡片（总客户数减零用量分布档），复用现有客户分布数据，不新增面板；
+          栅格从 4 卡改为 5 卡等宽填满。
+*/
+/*
  更新时间: 2026-07-13 14:50:37 CST
  更新内容: 撤回误改的算力用量饼图标注字号，恢复名称 14px、占比 13px。
 */
@@ -356,6 +361,8 @@ function buildExecutiveSnapshot({ overview, trend, distribution, customerRows })
   const usageDelta = (Number(latest.usage) || 0) - (Number(previous.usage) || 0);
   const usageDeltaRate = percentOf(usageDelta, previous.usage || latest.usage);
   const averageCustomerUsage = Math.round((Number(overview.customerUsage) || 0) / Math.max(Number(overview.customerCount) || 1, 1));
+  const activeAccountCount = Math.max((Number(overview.customerCount) || 0) - zeroUsage, 0);
+  const activeAccountRate = percentOf(activeAccountCount, overview.customerCount);
 
   let status = '健康';
   let tone = 'healthy';
@@ -388,6 +395,8 @@ function buildExecutiveSnapshot({ overview, trend, distribution, customerRows })
     zeroUsage,
     peakUsage: Math.max(...trend.map((point) => Number(point.usage) || 0), 0),
     averageCustomerUsage,
+    activeAccountCount,
+    activeAccountRate,
     usageDeltaLabel: `${usageDelta >= 0 ? '较前期 +' : '较前期 '}${formatPct(usageDeltaRate)}`,
     metrics: [
       { label: '供需差', value: formatSignedInt(netCapacity) },
@@ -1172,6 +1181,14 @@ export default function ComputeUsagePage({
       meta: `低余额 ${formatInt(executive.lowBalanceCount)} · 低回复 ${formatInt(executive.lowReplyCount)}`,
       tone: 'add',
       keywords: ['高风险客户', '风险客户', '低余额', '低回复', '高消耗'],
+    },
+    {
+      label: '在用账户数',
+      value: formatInt(executive.activeAccountCount),
+      sub: `占总客户 ${formatPct(executive.activeAccountRate)}`,
+      meta: `零用量 ${formatInt(executive.zeroUsage)} 个`,
+      tone: 'active',
+      keywords: ['在用账户数', '活跃账户', '在用客户', '激活'],
     },
   ];
 

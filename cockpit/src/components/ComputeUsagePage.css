@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 16:40:00 CST
+ 更新内容: KPI 条从 4 卡改为 5 卡（新增在用账户数），栅格改为 repeat(5, minmax(0, 1fr)) 让新卡片等宽填满整行。
+*/
+/*
  更新时间: 2026-07-09 23:10:00 CST
  更新内容: .cpu-skeleton-card/.cpu-skeleton-panel 的渐变/动画改为复用 dashboard.css 里共享的 skeleton-shimmer
           样式（原来这里和经营总览骨架屏各自定义了一份完全相同的 shimmer 动画），本文件只保留尺寸相关规则。
@@ -94,7 +98,7 @@
 
 .cpu-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -185,7 +189,8 @@
 .cpu-kpi--capacity,
 .cpu-kpi--burn,
 .cpu-kpi--add,
-.cpu-kpi--reply {
+.cpu-kpi--reply,
+.cpu-kpi--active {
   --cpu-accent: rgba(255,255,255,.82);
 }
 

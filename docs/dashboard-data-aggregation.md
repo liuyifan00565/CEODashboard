@@ -1,5 +1,14 @@
 # Dashboard Data Aggregation
 
+更新时间: 2026-07-13 17:20:00 CST
+更新内容:
+- 经营总览趋势图新增年/月/日切换。快照新增 `dailyRevenueTrend`（本月每日回款，`fact_revenue_daily` 按天聚合，
+  无日粒度目标，只有实际回款）和 `yearlyTrend`（按自然年聚合的回款/目标，`fact_revenue_daily` 按 `YEAR(stat_date)`
+  聚合回款，`biz_target_monthly`（`staff_id IS NULL`）按年份前 4 位聚合目标；只返回数据库里实际存在的年份，
+  历史年份不做退款额调整）。
+- 总投入·费比卡片副标题新增“广告ROI”= 当前筛选范围回款 / 广告投入，与费比使用同一套按渠道/日期范围缩放的口径。
+- 算力用量分析页 KPI 条新增“在用账户数” = 总客户数 - 零用量分布档，复用现有客户分布数据，不新增查询。
+
 Update time: 2026-07-10 17:02:12 CST
 Update content: Department-level recovered detail now detects whether `fact_revenue_daily.department_id` exists. Newer schemas use `COALESCE(r.department_id, staff.department_id)`, while older deployments without the column resolve departments through `fact_revenue_daily.staff_id -> dim_staff.department_id`, preventing `/api/dashboard-data` from failing with `Unknown column 'r.department_id'`.
 
@@ -66,6 +75,8 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 - 本月目标、年度目标、月趋势目标：使用 `biz_target_monthly.target_amount_yuan`，仅取 `staff_id IS NULL` 的部门级目标（目标维护改为按部门录入，历史人员级目标保留在库但不再进入统计）。
 - 渠道目标：`biz_target_monthly.channel_id` 直接关联 `dim_channel` 按渠道汇总，仅取 `staff_id IS NULL` 的部门级目标。
 - 渠道二级明细：本月/年度目标来自 `biz_target_monthly`（按部门），实际回款优先来自 `fact_revenue_daily.department_id` 聚合；旧库没有该列时通过 `fact_revenue_daily.staff_id -> dim_staff.department_id` 解析组织。明细粒度由原来的“销售人员”改为“部门”，按部门目标完成率降序排列。
+- 经营总览趋势图日视图：`dailyRevenueTrend` 只在当前业务月范围内按天聚合 `fact_revenue_daily.recovered_amount_yuan`，不做退款扣减，不展示目标/完成率。
+- 经营总览趋势图年视图：`yearlyTrend` 按自然年聚合 `fact_revenue_daily` 全部历史回款，与 `biz_target_monthly`（`staff_id IS NULL`，按年份前 4 位分组）目标配对；数据库只有当年数据时只返回一条记录。
 
 ## 版本与续费
 
@@ -80,13 +91,13 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 - 渠道投入：`biz_channel_cost_monthly.investment_amount_yuan`。
 - 人力成本：`biz_labor_cost_monthly.amount_yuan`。
 - 成本趋势：`costTrend` 按当前业务年份从 `biz_channel_cost_monthly` 聚合各渠道投放成本，并从 `biz_labor_cost_monthly` 聚合人力成本，返回 `{ yearMonth, label, adCost, laborCost, totalCost, channels }`；其中 `channels` 是渠道投放成本拆分，`totalCost = adCost + laborCost`。
-- 总投入费比二级下钻：全渠道视角展示 `totalCost`；选择单个或多个渠道时，主指标只展示所选渠道投放成本合计，底部同时标明全渠道总投入和广告/人力构成。人力成本不强行分摊到单渠道。
+- 总投入费比二级下钻：全渠道视角展示 `totalCost`；选择单个或多个渠道时，主指标只展示所选渠道投放成本合计，底部同时标明全渠道总投入和广告/人力构成。人力成本不强行分摊到单渠道。副标题额外附加“广告ROI” = 当前筛选范围回款 / 广告投入（`adCost` 为 0 时记为 0）。
 - 开户数：`fact_opening_account_daily.opening_count`。本月开户环比 `previous` 取上一月同表汇总，今日开户 `previous` 取上一个有数据日期的汇总；当无历史日期时回退 0。
 - 开户二级趋势：`/api/dashboard-data.detailRows.openings` 来自 `fact_opening_account_daily`，前端只按真实日级行聚合年/月/日，不再使用固定前端开户趋势数组或写死开户目标。
 - 算力趋势、客户排行、资源健康：默认来自 `fact_compute_usage_daily`、`fact_compute_customer_daily`、`fact_compute_resource_health_daily` 等算力事实表；外部 token/算力接口对应的建表脚本为 `scripts/create_compute_token_usage_tables.sql`。配置 `COMPUTE_API_BASE_URL` 和 `COMPUTE_API_TOKEN` 后，`/api/compute-data` 会通过服务端读取外部算力看板并覆盖运行时算力模块；客户全量明细由 `/api/compute-customers` 分页返回。
 - 算力年/月/日序列：前端只对已加载的 `computeUsageTrend` 日级真实行做聚合；外部接口或数据库缺少的日期不再由前端生成补点。
 - 算力 overview：总容量/新增/已耗来自 `fact_compute_usage_daily`；客户数、客户用量、客户余额、平均回复率、新开客户数、店铺数来自 `fact_compute_customer_daily` 最新快照——新开客户按手机号在更早日期不存在的记录计数，店铺数按 `customer_name` 同理计数；平均回复率取 `AVG(average_reply_rate)`。
-- 算力页前端派生指标：算力利用率 = `consumedCapacity / totalCapacity`；供需关系图把趋势中的用量、按当前总容量缩放后的容量和二者利用率同屏展示；风险客户按客户明细中的低余额（余额不高于 100 万点或余额/用量不高于 3）、高消耗（用量不低于 40 万点）、低回复（平均回复率低于 60%）和零用量标签派生；建议动作由风险标签映射为销售提醒充值、客成激活、客成排查配置、余额预警或高价值场景复盘；版本效率洞察按版本消耗占比计算头部版本和前两版本集中度。
+- 算力页前端派生指标：算力利用率 = `consumedCapacity / totalCapacity`；供需关系图把趋势中的用量、按当前总容量缩放后的容量和二者利用率同屏展示；风险客户按客户明细中的低余额（余额不高于 100 万点或余额/用量不高于 3）、高消耗（用量不低于 40 万点）、低回复（平均回复率低于 60%）和零用量标签派生；建议动作由风险标签映射为销售提醒充值、客成激活、客成排查配置、余额预警或高价值场景复盘；版本效率洞察按版本消耗占比计算头部版本和前两版本集中度。在用账户数 = 总客户数 - 用量分布中“算力用量=0”档，复用现有 `computeUsageDistribution` 数据，不新增查询。
 - 续费：`fact_renewal_daily` 按渠道×版本先聚合当月到期/已续/续费金额，再 LEFT JOIN 上一月同口径聚合得到 `prev_due_count`/`prev_renewed_count`；当上一月无数据时回退 0。
 - 经营节奏：月时间进度按真实日历推导（已过完整月=100%、未到月=0%、当月=已过天数/30），不再使用固定 30 的占位分支；年度时间进度仍按 `latestMonth` 月序 / 12。
 - 交付看板：`fact_delivery_order` 聚合交付单数和金额，`biz_delivery_target_monthly` 提供实施工程师月目标。目标表未配置时不计算完成率、不触发交付预警，前端显示“目标未配置”。

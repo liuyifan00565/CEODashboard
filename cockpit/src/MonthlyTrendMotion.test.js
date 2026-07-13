@@ -1,4 +1,10 @@
 /*
+ 更新时间: 2026-07-13 17:10:00 CST
+ 更新内容: 同步年/月/日切换重构后的静态渲染守卫断言——option 改为按 dim 分支选取 buildDayTrendOption/
+          buildBarTrendOption 并通过 useMemo 依赖 [dim, channelKey, tokens] 缓存，仍要求两个 option 构造函数
+          都关闭画布动画，防止无交互时反复重绘并闪烁。
+*/
+/*
  更新时间: 2026-07-10 10:49:21 CST
  更新内容: 增加月度经营趋势静态渲染守卫，防止完成率曲线在无交互时反复重绘并闪烁。
 */
@@ -9,12 +15,13 @@ import test from 'node:test';
 const monthlyTrendSource = readFileSync(new URL('./components/MonthlyTrend.jsx', import.meta.url), 'utf8');
 
 test('keeps the monthly trend canvas stable when dashboard state changes', () => {
-  assert.match(monthlyTrendSource, /import \{ useMemo \} from 'react';/);
+  assert.match(monthlyTrendSource, /import \{ useMemo, useState \} from 'react';/);
   assert.match(
     monthlyTrendSource,
-    /const option = useMemo\(\(\) => buildMonthlyTrendOption\(channelKey, tokens\), \[channelKey, tokens\]\);/,
+    /}, \[dim, channelKey, tokens\]\);/,
   );
-  assert.match(monthlyTrendSource, /const option = \{[\s\S]*?animation:\s*false,/);
+  assert.match(monthlyTrendSource, /function buildBarTrendOption\(\{ trend, labelKey, tokens \}\) \{[\s\S]*?animation:\s*false,/);
+  assert.match(monthlyTrendSource, /function buildDayTrendOption\(tokens\) \{[\s\S]*?animation:\s*false,/);
 });
 
 test('renders the completion-rate line without a blinking canvas glow', () => {

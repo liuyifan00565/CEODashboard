@@ -1,4 +1,10 @@
 /*
+ 更新时间: 2026-07-13 17:20:00 CST
+ 更新内容: 新增本月每日回款查询（GROUP BY DATE_FORMAT(stat_date, '%Y-%m-%d')）和按自然年聚合的回款/目标查询，
+          快照新增 dailyRevenueTrend/yearlyTrend 字段，供经营总览页月度经营趋势图新增的日/月/年切换使用；
+          年视图只返回数据库里实际存在的年份，不做多年回款的退款额调整（历史年份 refundRows 未取）。
+*/
+/*
  更新时间: 2026-07-10 17:02:12 CST
  更新内容: dashboard 部门回款明细兼容旧库 fact_revenue_daily 无 department_id 的结构，按 staff_id 兜底解析组织，避免接口报 Unknown column。
 */
@@ -354,6 +360,28 @@ function makeMonthlyTrend({ monthlyTargets, recoveredRows, latestMonth, currentM
         completion: pct(recovered, target),
       };
     });
+}
+
+// 本月每日回款，供经营总览趋势图的日视图使用；biz_target_monthly 无日粒度目标，只返回实际回款。
+function makeDailyRevenueTrend(rows = []) {
+  return (rows ?? []).map((row) => ({
+    day: String(row.day_key).slice(5),
+    date: row.day_key,
+    recovered: round0(row.recovered_wan),
+  }));
+}
+
+// 按自然年聚合的回款/目标，供经营总览趋势图的年视图使用；只返回数据库里实际存在的年份。
+function makeYearlyTrend({ yearlyRecovered = [], yearlyTargets = [] }) {
+  const normalizeYear = (rows) => rows.map((row) => ({ ...row, year: String(row.year) }));
+  const recoveredByYear = groupSum(normalizeYear(yearlyRecovered), 'year', 'recovered_wan');
+  const targetByYear = groupSum(normalizeYear(yearlyTargets), 'year', 'target_wan');
+  const years = new Set([...recoveredByYear.keys(), ...targetByYear.keys()]);
+  return [...years].filter(Boolean).sort().map((year) => {
+    const recovered = round0(recoveredByYear.get(year));
+    const target = round0(targetByYear.get(year));
+    return { year, target, recovered, completion: pct(recovered, target) };
+  });
 }
 
 function makeCostTrend({ channelCosts = [], laborCosts = [], latestMonth }) {
@@ -732,6 +760,8 @@ export function mapDashboardRowsToSnapshot(rows) {
     channels,
     channelRoi: makeChannelRoi({ channelRows: channels, channelCosts: rows.channelCosts ?? [] }),
     monthlyTrend: makeMonthlyTrend({ monthlyTargets: rows.monthlyTargets ?? [], recoveredRows, latestMonth, currentMonthTarget }),
+    dailyRevenueTrend: makeDailyRevenueTrend(rows.dailyRevenue),
+    yearlyTrend: makeYearlyTrend({ yearlyRecovered: rows.yearlyRevenue ?? [], yearlyTargets: rows.yearlyTargets ?? [] }),
     costTrend,
     salesMemberRows: makeSalesMemberRows({
       salesRows: yearSalesRows,
@@ -825,11 +855,18 @@ export async function buildDashboardSnapshot(connection) {
   const latestYear = String(latestMonth).slice(0, 4);
   const lastYearMonth = `${Number(latestYear) - 1}-${String(latestMonth).slice(5, 7)}`;
   const nextYear = String(Number(latestYear) + 1);
+  const [latestMonthYearNum, latestMonthNum] = String(latestMonth).split('-').map(Number);
+  const nextMonthBoundary = latestMonthNum === 12
+    ? `${latestMonthYearNum + 1}-01-01`
+    : `${latestMonthYearNum}-${String(latestMonthNum + 1).padStart(2, '0')}-01`;
 
   const [
     channels,
     salesMemberMonthly,
     revenueDaily,
+    dailyRevenue,
+    yearlyRevenue,
+    yearlyTargets,
     previousMonthSales,
     lastYearSales,
     monthlyTargets,
@@ -883,6 +920,29 @@ export async function buildDashboardSnapshot(connection) {
       GROUP BY DATE_FORMAT(r.stat_date, '%Y-%m'), c.channel_key
       ORDER BY \`year_month\`, c.channel_key
     `, [`${latestYear}-01-01`, `${nextYear}-01-01`]),
+    queryRows(connection, `
+      SELECT DATE_FORMAT(r.stat_date, '%Y-%m-%d') AS day_key,
+             ROUND(SUM(r.recovered_amount_yuan) / 10000, 2) AS recovered_wan
+      FROM fact_revenue_daily r
+      WHERE r.stat_date >= ? AND r.stat_date < ?
+      GROUP BY DATE_FORMAT(r.stat_date, '%Y-%m-%d')
+      ORDER BY day_key
+    `, [`${latestMonth}-01`, nextMonthBoundary]),
+    queryRows(connection, `
+      SELECT YEAR(r.stat_date) AS \`year\`,
+             ROUND(SUM(r.recovered_amount_yuan) / 10000, 2) AS recovered_wan
+      FROM fact_revenue_daily r
+      GROUP BY YEAR(r.stat_date)
+      ORDER BY \`year\`
+    `),
+    queryRows(connection, `
+      SELECT LEFT(t.\`year_month\`, 4) AS \`year\`,
+             ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
+      FROM biz_target_monthly t
+      WHERE t.staff_id IS NULL
+      GROUP BY LEFT(t.\`year_month\`, 4)
+      ORDER BY \`year\`
+    `),
     queryRows(connection, `
       SELECT f.\`year_month\`, ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
              ROUND(SUM(f.recovered_amount_yuan) / 10000, 2) AS recovered_wan
@@ -1269,6 +1329,9 @@ export async function buildDashboardSnapshot(connection) {
     channels,
     salesMemberMonthly,
     revenueDaily,
+    dailyRevenue,
+    yearlyRevenue,
+    yearlyTargets,
     previousMonthSales,
     lastYearSales,
     monthlyTargets,

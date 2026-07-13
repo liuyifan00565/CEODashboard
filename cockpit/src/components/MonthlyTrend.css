@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-13 17:10:00 CST  更新内容: 新增 .mt-head-text 包裹标题+副标题，为新增的年/月/日切换按钮腾出位置，.mt-head 改为 center 对齐。 */
 /* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 月度经营趋势面板接入统一黑曜石玻璃卡片变量，匹配全站高级配色。 */
 /* 更新时间: 2026-06-24  更新内容: 新建“月度经营趋势”面板样式（玻璃质感容器，前缀 mt-） */
 .mt-panel {
@@ -12,10 +13,17 @@
 
 .mt-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
+}
+
+.mt-head-text {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
 }
 
 .mt-title {

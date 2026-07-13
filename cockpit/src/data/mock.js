@@ -1,4 +1,14 @@
 /*
+ 更新时间: 2026-07-13 16:50:00 CST
+ 更新内容: 新增 DAILY_REVENUE_TREND/YEARLY_TREND 占位数据和 getDailyRevenueTrend()/getYearlyTrend()，
+          applyDashboardDataSnapshot 新增 dailyRevenueTrend/yearlyTrend 字段处理，供月度经营趋势图
+          新增的日/月/年切换使用。
+*/
+/*
+ 更新时间: 2026-07-13 16:30:00 CST
+ 更新内容: 总投入·费比卡片副标题新增广告ROI（KPI_DERIVED.roi = 本月回款 / 广告投入），并补充 ROI 搜索关键词。
+*/
+/*
  更新时间: 2026-07-13 15:08:41 CST
  更新内容: 永久恢复数据维护侧边栏的组织维护入口，删除临时可见性开关并保持四个维护入口固定顺序。
 */
@@ -483,6 +493,34 @@ export const MONTHLY_TREND = [
   { month: '6月', target: 580, recovered: 486 },
 ].map(m => ({ ...m, completion: +(m.recovered / m.target * 100).toFixed(1) }));
 
+// 本月每日回款占位数据，粗略汇总接近 KPI.monthRecovered；biz_target_monthly 无日粒度目标，
+// 日视图只展示实际回款，不构造目标/完成率。
+const DAILY_REVENUE_VALUE_TEMPLATE = [
+  14, 15, 17, 13, 18, 16, 15, 19, 14, 17, 16, 15, 18, 17, 14,
+  16, 19, 15, 17, 16, 14, 18, 16, 15, 17, 19, 14, 16, 18, 17, 15,
+];
+export const DAILY_REVENUE_TREND = (() => {
+  const { year, monthKey, lastDay } = currentMonthParts();
+  return Array.from({ length: Number(lastDay) }, (_, index) => {
+    const dayNum = String(index + 1).padStart(2, '0');
+    return {
+      day: `${monthKey}-${dayNum}`,
+      date: `${year}-${monthKey}-${dayNum}`,
+      recovered: DAILY_REVENUE_VALUE_TEMPLATE[index % DAILY_REVENUE_VALUE_TEMPLATE.length],
+    };
+  });
+})();
+
+// ===== 年度经营趋势（近 4 年，单位：万元）=====
+// 前 3 年为演示占位值，当前年直接复用 KPI.yearTarget/yearRecovered 保持口径一致；
+// 真实数据来自 fact_revenue_daily 按年聚合，数据库积累不足 4 年时接口侧只返回已有年份。
+export const YEARLY_TREND = [
+  { year: '2023', target: 4200, recovered: 3550 },
+  { year: '2024', target: 4800, recovered: 4120 },
+  { year: '2025', target: 5300, recovered: 4680 },
+  { year: '2026', target: KPI.yearTarget, recovered: KPI.yearRecovered },
+].map(y => ({ ...y, completion: y.target ? +(y.recovered / y.target * 100).toFixed(1) : 0 }));
+
 export const COST_TREND = [
   { yearMonth: '2026-01', label: '1月', channels: { online: 38, south: 14, east: 16, agent: 8 }, laborCost: 50 },
   { yearMonth: '2026-02', label: '2月', channels: { online: 40, south: 15, east: 17, agent: 9 }, laborCost: 52 },
@@ -859,6 +897,14 @@ export function getChannelTrend(channelKey = 'all') {
   });
 }
 
+export function getDailyRevenueTrend() {
+  return DAILY_REVENUE_TREND;
+}
+
+export function getYearlyTrend() {
+  return YEARLY_TREND;
+}
+
 export function getAnnualRhythmPoints() {
   const firstMonth = MONTHLY_TREND[0];
   const rawCurrent = MONTHLY_TREND.reduce((sum, row) => sum + row.recovered, 0);
@@ -906,7 +952,7 @@ export function getKpiSeries(metric, channelOrOptions = 'all', dim = 'month') {
 export const KPI_CARDS = [
   { key: 'month',  title: '本月回款', metric: 'recovered', unit: '万', value: KPI.monthRecovered, sub: `本月目标 ${KPI.monthTarget} 万`, progress: KPI_DERIVED.monthCompletion, progressLabel: '本月目标完成率', gap: KPI_DERIVED.monthGap, delta: KPI_DERIVED.monthMoM, keywords: ['本月回款', '回款', '退款', '目标', '完成率', '缺口'] },
   { key: 'year',   title: '年度累计回款', metric: 'recovered', unit: '万', value: KPI.yearRecovered, sub: `年度目标 ${KPI.yearTarget} 万`, progress: KPI_DERIVED.yearCompletion, progressLabel: '年度目标完成率', gap: KPI_DERIVED.yearGap, delta: KPI_DERIVED.yearYoY, keywords: ['年度累计', '年度回款', '回款', '退款', '年度', '年目标', '缺口'] },
-  { key: 'cost',   title: '总投入 · 费比', metric: 'cost', unit: '万', value: KPI.totalCost, sub: `广告 ${KPI.adCost} 万 + 人力 ${KPI.laborCost} 万 · 费比 ${KPI_DERIVED.costRatio}%`, gap: null, delta: null, keywords: ['投入', '成本', '费比', '广告', '人力'] },
+  { key: 'cost',   title: '总投入 · 费比', metric: 'cost', unit: '万', value: KPI.totalCost, sub: `广告 ${KPI.adCost} 万 + 人力 ${KPI.laborCost} 万 · 费比 ${KPI_DERIVED.costRatio}% · 广告ROI ${KPI_DERIVED.roi}`, gap: null, delta: null, keywords: ['投入', '成本', '费比', '广告', '人力', 'ROI', '广告ROI'] },
   { key: 'renewal', title: '续费率', metric: 'renewalRate', unit: '%', decimals: 1, value: RENEWAL_OVERVIEW.rate, sub: `到期 ${RENEWAL_OVERVIEW.due} 单 · 已续 ${RENEWAL_OVERVIEW.renewed} 单 · 续费 ${RENEWAL_OVERVIEW.revenue} 万`, progress: RENEWAL_OVERVIEW.rate, progressLabel: '当期续费率', gap: null, delta: RENEWAL_OVERVIEW.delta, keywords: ['续费率', '续费', '复购', '版本', '销售'] },
 ];
 
@@ -1300,6 +1346,14 @@ export function applyDashboardDataSnapshot(snapshot) {
 
   if (Array.isArray(snapshot.monthlyTrend)) {
     replaceArray(MONTHLY_TREND, snapshot.monthlyTrend);
+  }
+
+  if (Array.isArray(snapshot.dailyRevenueTrend)) {
+    replaceArray(DAILY_REVENUE_TREND, snapshot.dailyRevenueTrend);
+  }
+
+  if (Array.isArray(snapshot.yearlyTrend)) {
+    replaceArray(YEARLY_TREND, snapshot.yearlyTrend);
   }
 
   if (Array.isArray(snapshot.costTrend)) {
