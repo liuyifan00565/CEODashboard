@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-13 19:26:40 CST  更新内容: 年度折叠条保持宽度不变，加粗进度条并在右侧补充完成百分比。 */
+/* 更新时间: 2026-07-13 19:23:27 CST  更新内容: 年度回款总览改为顶部紧凑折叠进度条并与月度经营进度互换位置，补充箭头状态和展开动效。 */
 /* 更新时间: 2026-07-13 16:40:31 CST  更新内容: 选择性合并数据维护代码，恢复拉取前的经营总览界面样式。 */
 /* 更新时间: 2026-07-13 14:50:10 CST  更新内容: 月度经营进度与年度回款总览卡片增加顶部内边距，统一改善主标题贴近上边框的拥挤感。 */
 /* 更新时间: 2026-07-13 14:26:21 CST  更新内容: 本月回款结构饼图复用年度图的垂直位移参数，修正月度图视觉位置明显偏低。 */
@@ -88,8 +90,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
-    "progress"
-    "annual";
+    "annual"
+    "progress";
   gap: 10px;
 }
 
@@ -125,8 +127,7 @@
   grid-area: annual;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding-block: clamp(14px, 1vw, 16px) clamp(3px, .35vw, 6px);
+  padding: 12px clamp(16px, 1.6vw, 22px);
 }
 
 .op-search-result {
@@ -146,8 +147,7 @@
   height: 100%;
 }
 
-.op-progress-head,
-.op-section-head {
+.op-progress-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -166,7 +166,7 @@
 }
 
 .op-progress-head h1,
-.op-section-head h2,
+.op-annual-summary h2,
 .op-structure-head h2,
 .op-operating-head h2 {
   margin: 0;
@@ -180,12 +180,96 @@
   line-height: 1.1;
 }
 
-.op-section-head h2,
+.op-annual-summary h2,
 .op-structure-head h2,
 .op-operating-head h2 {
   font-size: 16px;
   font-weight: 720;
   line-height: 1.18;
+}
+
+.op-annual-summary {
+  min-height: 32px;
+  display: grid;
+  grid-template-columns: max-content minmax(140px, 1fr) 32px;
+  align-items: center;
+  gap: clamp(14px, 1.6vw, 24px);
+}
+
+.op-annual-summary-progress {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.op-annual-summary-progress > strong {
+  color: var(--txt);
+  font-size: 13px;
+  font-weight: 820;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.op-annual-toggle {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(247,248,252,.68);
+  cursor: pointer;
+  transition: color .2s ease, background .2s ease, border-color .2s ease;
+}
+
+.op-annual-toggle:hover,
+.op-annual-toggle:focus-visible {
+  border-color: rgba(255,255,255,.28);
+  background: var(--glass-cell-hover);
+  color: var(--txt);
+  outline: none;
+}
+
+.op-annual-toggle-icon {
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform .24s ease;
+}
+
+.op-panel--annual.is-expanded .op-annual-toggle-icon {
+  transform: translateY(2px) rotate(225deg);
+}
+
+.op-annual-details {
+  display: grid;
+  grid-template-rows: 0fr;
+  margin-top: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: grid-template-rows .28s ease, margin-top .28s ease, opacity .2s ease, visibility 0s linear .28s;
+}
+
+.op-annual-details-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.op-panel--annual.is-expanded .op-annual-details {
+  grid-template-rows: 1fr;
+  margin-top: 10px;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
 }
 
 .op-detail-link {
@@ -573,37 +657,10 @@
   padding-block: 2px;
 }
 
-.op-annual-progress-footer {
-  width: min(calc(100% + clamp(288px, calc(27.5vw - 105px), 424px)), calc(100vw - 96px));
-  display: grid;
-  align-self: start;
-  margin-top: clamp(18px, 1.35vw, 24px);
-  transform: translateY(clamp(34px, 2.6vw, 42px));
-  z-index: 4;
-}
-
-.op-annual-progress-main {
-  min-width: 0;
-  min-height: 18px;
-  display: grid;
-  grid-template-columns: minmax(140px, 1fr) auto;
-  align-items: center;
-  gap: clamp(8px, .8vw, 12px);
-}
-
-.op-annual-progress-main > strong {
-  color: var(--txt);
-  font-size: 13px;
-  font-weight: 820;
-  line-height: 1;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-
 .op-annual-progress-track {
   position: relative;
   min-width: 0;
-  height: 16px;
+  height: 14px;
   border-radius: 999px;
   background: var(--bar-track);
   border: 1px solid rgba(255,255,255,.075);
@@ -712,8 +769,7 @@
     gap: 6px;
   }
 
-  .op-panel,
-  .op-panel--annual {
+  .op-panel--progress {
     padding-block: 14px 4px;
   }
 
@@ -757,9 +813,6 @@
     padding-block: 2px;
   }
 
-  .op-annual-progress-main {
-    min-height: 18px;
-  }
 }
 
 @media (max-width: 1240px) {
@@ -772,14 +825,9 @@
     grid-column: 1 / -1;
   }
 
-  .op-annual-grid .op-operating-side,
-  .op-annual-progress-footer {
+  .op-annual-grid .op-operating-side {
     grid-column: 1 / -1;
     grid-row: auto;
-  }
-
-  .op-annual-progress-footer {
-    width: 100%;
   }
 
   .op-channel-list {
@@ -835,9 +883,23 @@
     padding: 14px;
   }
 
-  .op-progress-head,
-  .op-section-head {
+  .op-progress-head {
     flex-direction: column;
+  }
+
+  .op-annual-summary {
+    grid-template-columns: minmax(0, 1fr) 32px;
+    gap: 10px 14px;
+  }
+
+  .op-annual-summary-progress {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .op-annual-toggle {
+    grid-column: 2;
+    grid-row: 1;
   }
 
   .op-month-primary b {
@@ -850,10 +912,6 @@
 
   .op-channel-list {
     grid-template-columns: 1fr;
-  }
-
-  .op-annual-progress-main {
-    grid-template-columns: 1fr auto;
   }
 
   .op-channel-item {
@@ -877,4 +935,11 @@
     white-space: normal;
   }
 
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .op-annual-details,
+  .op-annual-toggle-icon {
+    transition: none;
+  }
 }
