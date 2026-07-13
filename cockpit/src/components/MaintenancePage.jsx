@@ -1,5 +1,9 @@
 /*
  Update time: 2026-07-13 00:00:00 CST
+ Update content: Split readonly target values into number and unit pieces to match editable input formatting.
+*/
+/*
+ Update time: 2026-07-13 00:00:00 CST
  Update content: Wrap target maintenance progress lines so progress bars align at the bottom of month cells.
 */
 /*
@@ -597,6 +601,18 @@ function TargetAmountInput({ label, value, onChange, ariaLabel }) {
   );
 }
 
+function TargetReadonlyAmount({ label, value }) {
+  return (
+    <span className="mnt-target-readonly-row">
+      <span className="mnt-target-readonly-label">{label}</span>
+      <span className="mnt-target-readonly-amount">
+        <strong>{Number(value || 0).toLocaleString('zh-CN')}</strong>
+        <span className="mnt-target-readonly-unit">万</span>
+      </span>
+    </span>
+  );
+}
+
 function TargetPeriodCell({ row, column, onEdit }) {
   const period = row.periods[column.key];
   const editable = row.type === 'department' && column.month && row.id !== 'summary-all';
@@ -625,8 +641,8 @@ function TargetPeriodCell({ row, column, onEdit }) {
           </div>
         ) : (
           <div className="mnt-target-readonly-value">
-            <span>目标 <strong>{formatWan(period.target)}</strong></span>
-            <span>完成 <strong>{formatWan(period.actual)}</strong></span>
+            <TargetReadonlyAmount label="目标" value={period.target} />
+            <TargetReadonlyAmount label="完成" value={period.actual} />
           </div>
         )}
       </div>

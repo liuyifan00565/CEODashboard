@@ -1,5 +1,9 @@
 /*
  Update time: 2026-07-13 00:00:00 CST
+ Update content: Match readonly target amount number/unit alignment with editable input rows.
+*/
+/*
+ Update time: 2026-07-13 00:00:00 CST
  Update content: Align readonly target/actual rows with editable target/actual input rows in target maintenance cells.
 */
 /*
@@ -1382,7 +1386,7 @@
   opacity: .68;
 }
 
-.mnt-target-readonly-value span {
+.mnt-target-readonly-row {
   display: grid;
   grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
@@ -1390,10 +1394,35 @@
   min-height: 26px;
 }
 
+.mnt-target-readonly-label {
+  font-size: 11px;
+  font-weight: 760;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.mnt-target-readonly-amount {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  width: 118px;
+  min-height: 26px;
+  padding: 0 9px 0 12px;
+}
+
 .mnt-target-readonly-value strong {
   color: inherit;
   font-weight: 800;
   text-align: left;
+  white-space: nowrap;
+}
+
+.mnt-target-readonly-unit {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1;
   white-space: nowrap;
 }
 
