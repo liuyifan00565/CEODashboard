@@ -1,5 +1,9 @@
 /*
  Update time: 2026-07-13 00:00:00 CST
+ Update content: Format target maintenance readonly target/actual values on one line with right-aligned numbers.
+*/
+/*
+ Update time: 2026-07-13 00:00:00 CST
  Update content: Restore target month cells to table layout and align completion-rate text/progress bars by a fixed content area.
 */
 /*
@@ -1374,9 +1378,18 @@
   opacity: .68;
 }
 
+.mnt-target-readonly-value span {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 8px;
+}
+
 .mnt-target-readonly-value strong {
   color: inherit;
   font-weight: 720;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .mnt-progress {
