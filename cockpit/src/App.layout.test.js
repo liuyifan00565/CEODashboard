@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-13 16:40:31 CST  更新内容: 选择性合并数据维护代码，恢复拉取前的主界面布局回归断言。 */
+/* 更新时间: 2026-07-13 16:48:56 CST  更新内容: 回归锁定每个渠道可分别填写运营成本与人力成本。 */
 /*
  更新时间: 2026-07-13 14:50:37 CST
  更新内容: 回归测试恢复算力饼图原字号，并锁定主界面两张回款结构半环图的更小标注。
@@ -894,15 +894,16 @@ test('builds the target and cost maintenance pages from reference matrix content
   assert.match(maintenancePageSource, /保存目标/);
   assert.match(maintenancePageSource, /年度目标/);
   assert.match(maintenancePageSource, /目标维护/);
-  assert.match(maintenancePageSource, /case 'cost-maintenance': return \{ costChannels: d\.channels, costRows: d\.rows, laborRows: d\.laborRows \};/);
+  assert.match(maintenancePageSource, /case 'cost-maintenance': return \{ costChannels: d\.channels, costRows: d\.rows \};/);
   assert.match(maintenancePageSource, /渠道成本维护/);
-  assert.match(maintenancePageSource, /人力成本维护/);
+  assert.match(maintenancePageSource, /handleCostFieldEdit\(row\.id, column\.key, 'operations'/);
+  assert.match(maintenancePageSource, /handleCostFieldEdit\(row\.id, column\.key, 'labor'/);
   assert.match(maintenancePageSource, /保存成本/);
 });
 
-test('keeps only cost, deals, refund and ROI in cost maintenance periods', () => {
+test('keeps channel operations, labor, deals, refund and ROI in cost maintenance periods', () => {
   assert.doesNotMatch(maintenancePageSource, /<div className="mnt-mini-line">赢单 \{formatWan\(period\.actual\)\}<\/div>/);
-  assert.match(maintenancePageSource, /<span>成本<\/span>[\s\S]*?<div className="mnt-mini-line">成交 \{period\.deals\} 单<\/div>[\s\S]*?<span>退款<\/span>[\s\S]*?<div className="mnt-mini-line mnt-mini-line--strong">ROI \{formatRoi\(period\.roi\)\}<\/div>/);
+  assert.match(maintenancePageSource, /<span>运营<\/span>[\s\S]*?<span>人力<\/span>[\s\S]*?<div className="mnt-mini-line">成交 \{period\.deals\} 单<\/div>[\s\S]*?<span>退款<\/span>[\s\S]*?<div className="mnt-mini-line mnt-mini-line--strong">ROI \{formatRoi\(period\.roi\)\}<\/div>/);
 });
 
 test('omits template download controls from the import dialog', () => {

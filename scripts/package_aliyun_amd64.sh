@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# 更新时间: 2026-07-10 17:20:59 CST
-# 更新内容: 完善阿里云 AMD64 离线交付包，加入 MySQL 镜像、生产 .env、密钥状态、版本文件、迁移执行和健康检查等待。
+# 更新时间: 2026-07-13 16:48:56 CST
+# 更新内容: 阿里云交付包新增运营/人力成本数据库迁移，安装与更新均在健康检查前执行。
 
 set -euo pipefail
 
@@ -482,6 +482,7 @@ require_file "$ROOT_DIR/cockpit/Dockerfile.prod"
 require_file "$ROOT_DIR/docker-compose.aliyun.yml"
 require_file "$ROOT_DIR/docker/db-init/ceo_dashboard_full.sql"
 require_file "$ROOT_DIR/scripts/create_compute_token_usage_tables.sql"
+require_file "$ROOT_DIR/scripts/migrate_cost_components.sql"
 
 rm -rf "$WORK_DIR"
 mkdir -p "$WORK_DIR/images" "$WORK_DIR/docker/db-init" "$WORK_DIR/docker/migrations"
@@ -519,6 +520,7 @@ cp "$ROOT_DIR/docker-compose.aliyun.yml" "$WORK_DIR/docker-compose.yml"
 cp "$ROOT_DIR/docker-compose.aliyun.yml" "$WORK_DIR/docker-compose.aliyun.yml"
 cp "$ROOT_DIR/docker/db-init/ceo_dashboard_full.sql" "$WORK_DIR/docker/db-init/ceo_dashboard_full.sql"
 cp "$ROOT_DIR/scripts/create_compute_token_usage_tables.sql" "$WORK_DIR/docker/migrations/20260709_compute_token_usage_tables.sql"
+cp "$ROOT_DIR/scripts/migrate_cost_components.sql" "$WORK_DIR/docker/migrations/20260713_cost_components.sql"
 write_env_example "$WORK_DIR/.env.example"
 write_env_key_status "$WORK_DIR/ENV_KEY_STATUS.txt" "$WORK_DIR/.env"
 write_version_file "$WORK_DIR/VERSION.txt"

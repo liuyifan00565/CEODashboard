@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 16:48:56 CST
+ Update content: Cost snapshots expose editable operations and labor costs on every channel-month row.
+*/
+/*
  Update time: 2026-07-09 14:51:22 CST
  Update content: buildTargetSnapshot 改为部门级:不再生成人员明细行(user 行),部门目标 rollup 不再回退
    人员目标(只用部门级 directTarget + 子部门累加);回款 actual 仍按人员汇总到部门;左侧树改显示子部门数。
@@ -34,17 +38,15 @@ function targetPeriod(target, actual) {
   return { target: t, actual: a, pct, status: maintenanceStatus(pct, t) };
 }
 
-function costPeriod(cost, actual, deals, refund) {
-  const c = Math.round(Number(cost || 0) * 100) / 100;
+function costPeriod(operations, labor, actual, deals, refund, laborConfigured = false) {
+  const o = Math.round(Number(operations || 0) * 100) / 100;
+  const l = Math.round(Number(labor || 0) * 100) / 100;
+  const totalCost = Math.round((o + l) * 100) / 100;
   const a = Math.round(Number(actual || 0) * 100) / 100;
   const d = Math.round(Number(deals || 0));
   const r = Math.round(Number(refund || 0) * 100) / 100;
-  const roi = c ? Math.round(((a - c) / c) * 100) / 100 : 0;
-  return { cost: c, actual: a, deals: d, refund: r, roi };
-}
-
-function laborPeriod(cost) {
-  return { cost: Math.round(Number(cost || 0) * 100) / 100 };
+  const roi = totalCost ? Math.round(((a - totalCost) / totalCost) * 100) / 100 : 0;
+  return { operations: o, labor: l, laborConfigured: Boolean(laborConfigured), totalCost, actual: a, deals: d, refund: r, roi };
 }
 
 function buildTargetPeriods(monthTarget, monthActual) {
@@ -63,37 +65,25 @@ function buildTargetPeriods(monthTarget, monthActual) {
   return periods;
 }
 
-function buildCostPeriods(monthCost, monthActual, monthDeals, monthRefund = []) {
+function buildCostPeriods(monthOperations, monthLabor, monthActual, monthDeals, monthRefund = [], monthLaborConfigured = []) {
   const periods = {};
   ALL_MONTH_KEYS.forEach((k, i) => {
-    periods[k] = costPeriod(monthCost[i], monthActual[i], monthDeals[i], monthRefund[i]);
+    periods[k] = costPeriod(monthOperations[i], monthLabor[i], monthActual[i], monthDeals[i], monthRefund[i], monthLaborConfigured[i]);
   });
   Object.entries(QUARTER_MONTHS).forEach(([q, keys]) => {
-    const c = keys.reduce((s, k) => s + (periods[k].cost || 0), 0);
+    const o = keys.reduce((s, k) => s + (periods[k].operations || 0), 0);
+    const l = keys.reduce((s, k) => s + (periods[k].labor || 0), 0);
     const a = keys.reduce((s, k) => s + (periods[k].actual || 0), 0);
     const d = keys.reduce((s, k) => s + (periods[k].deals || 0), 0);
     const r = keys.reduce((s, k) => s + (periods[k].refund || 0), 0);
-    periods[q] = costPeriod(c, a, d, r);
+    periods[q] = costPeriod(o, l, a, d, r, keys.some((k) => periods[k].laborConfigured));
   });
-  const cYear = ALL_MONTH_KEYS.reduce((s, k) => s + (periods[k].cost || 0), 0);
+  const operationsYear = ALL_MONTH_KEYS.reduce((s, k) => s + (periods[k].operations || 0), 0);
+  const laborYear = ALL_MONTH_KEYS.reduce((s, k) => s + (periods[k].labor || 0), 0);
   const aYear = ALL_MONTH_KEYS.reduce((s, k) => s + (periods[k].actual || 0), 0);
   const dYear = ALL_MONTH_KEYS.reduce((s, k) => s + (periods[k].deals || 0), 0);
   const rYear = ALL_MONTH_KEYS.reduce((s, k) => s + (periods[k].refund || 0), 0);
-  periods.year = costPeriod(cYear, aYear, dYear, rYear);
-  return periods;
-}
-
-function buildLaborPeriods(monthCost) {
-  const periods = {};
-  ALL_MONTH_KEYS.forEach((k, i) => {
-    periods[k] = laborPeriod(monthCost[i]);
-  });
-  Object.entries(QUARTER_MONTHS).forEach(([q, keys]) => {
-    const c = keys.reduce((s, k) => s + (periods[k].cost || 0), 0);
-    periods[q] = laborPeriod(c);
-  });
-  const cYear = ALL_MONTH_KEYS.reduce((s, k) => s + (periods[k].cost || 0), 0);
-  periods.year = laborPeriod(cYear);
+  periods.year = costPeriod(operationsYear, laborYear, aYear, dYear, rYear, ALL_MONTH_KEYS.some((k) => periods[k].laborConfigured));
   return periods;
 }
 
@@ -240,18 +230,21 @@ export function buildTargetSnapshot({ departments = [], staff = [], targets = []
   return { orgTree, rows };
 }
 
-const LABOR_NAME = { sales: '销售部人力成本', marketing: '市场部人力成本', delivery: '实施部人力成本' };
-const DEFAULT_LABOR_TYPES = ['sales', 'marketing'];
-
-export function buildCostSnapshot({ channels = [], costs = [], revenue = [], labor = [] } = {}) {
+export function buildCostSnapshot({ channels = [], costs = [], revenue = [] } = {}) {
   const costByChannel = new Map();
+  const laborByChannel = new Map();
+  const laborConfiguredByChannel = new Map();
   const refundByChannel = new Map();
   costs.forEach((c) => {
     const mk = monthKeyFromYM(c.year_month);
     if (!ALL_MONTH_KEYS.includes(mk)) return;
     if (!costByChannel.has(c.channel_id)) costByChannel.set(c.channel_id, {});
+    if (!laborByChannel.has(c.channel_id)) laborByChannel.set(c.channel_id, {});
+    if (!laborConfiguredByChannel.has(c.channel_id)) laborConfiguredByChannel.set(c.channel_id, {});
     if (!refundByChannel.has(c.channel_id)) refundByChannel.set(c.channel_id, {});
-    costByChannel.get(c.channel_id)[mk] = roundWan(c.investment_amount_yuan);
+    costByChannel.get(c.channel_id)[mk] = roundWan(c.operations_amount_yuan);
+    laborByChannel.get(c.channel_id)[mk] = roundWan(c.labor_amount_yuan);
+    laborConfiguredByChannel.get(c.channel_id)[mk] = c.labor_amount_yuan != null;
     refundByChannel.get(c.channel_id)[mk] = roundWan(c.refund_amount_yuan);
   });
   const actualByChannel = new Map();
@@ -267,13 +260,17 @@ export function buildCostSnapshot({ channels = [], costs = [], revenue = [], lab
 
   const rows = [];
   const allCost = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (costByChannel.get(c.channel_id)?.[mk] || 0), 0));
+  const allLabor = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (laborByChannel.get(c.channel_id)?.[mk] || 0), 0));
+  const allLaborConfigured = ALL_MONTH_KEYS.map((mk) => channels.some((c) => laborConfiguredByChannel.get(c.channel_id)?.[mk]));
   const allRefund = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (refundByChannel.get(c.channel_id)?.[mk] || 0), 0));
   const allActual = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (actualByChannel.get(c.channel_id)?.[mk] || 0), 0));
   const allDeals = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (dealsByChannel.get(c.channel_id)?.[mk] || 0), 0));
-  rows.push({ id: 'summary-all', type: 'group', name: '全部渠道', periods: buildCostPeriods(allCost, allActual, allDeals, allRefund) });
+  rows.push({ id: 'summary-all', type: 'group', name: '全部渠道', periods: buildCostPeriods(allCost, allLabor, allActual, allDeals, allRefund, allLaborConfigured) });
 
   channels.forEach((c) => {
     const cb = costByChannel.get(c.channel_id) || {};
+    const lb = laborByChannel.get(c.channel_id) || {};
+    const laborConfigured = laborConfiguredByChannel.get(c.channel_id) || {};
     const rb = refundByChannel.get(c.channel_id) || {};
     const ab = actualByChannel.get(c.channel_id) || {};
     const db = dealsByChannel.get(c.channel_id) || {};
@@ -284,9 +281,11 @@ export function buildCostSnapshot({ channels = [], costs = [], revenue = [], lab
       parentId: 'summary-all',
       periods: buildCostPeriods(
         ALL_MONTH_KEYS.map((mk) => cb[mk] || 0),
+        ALL_MONTH_KEYS.map((mk) => lb[mk] || 0),
         ALL_MONTH_KEYS.map((mk) => ab[mk] || 0),
         ALL_MONTH_KEYS.map((mk) => db[mk] || 0),
         ALL_MONTH_KEYS.map((mk) => rb[mk] || 0),
+        ALL_MONTH_KEYS.map((mk) => Boolean(laborConfigured[mk])),
       ),
     });
   });
@@ -302,24 +301,7 @@ export function buildCostSnapshot({ channels = [], costs = [], revenue = [], lab
     })),
   ];
 
-  const laborByType = new Map();
-  labor.forEach((l) => {
-    const mk = monthKeyFromYM(l.year_month);
-    if (!ALL_MONTH_KEYS.includes(mk)) return;
-    if (!laborByType.has(l.cost_type)) laborByType.set(l.cost_type, {});
-    laborByType.get(l.cost_type)[mk] = roundWan(l.amount_yuan);
-  });
-  const laborTypes = [...new Set([...DEFAULT_LABOR_TYPES, ...laborByType.keys()])];
-  const laborRows = laborTypes.map((costType) => {
-    const bucket = laborByType.get(costType) || {};
-    return {
-      id: `labor-${costType}`,
-      name: LABOR_NAME[costType] || `${costType} 人力成本`,
-      periods: buildLaborPeriods(ALL_MONTH_KEYS.map((mk) => bucket[mk] || 0)),
-    };
-  });
-
-  return { channels: navChannels, rows, laborRows };
+  return { channels: navChannels, rows };
 }
 
 function deriveSourceName(s) {

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 16:48:56 CST
+ 更新内容: 总投入卡片构成文案改为运营成本 + 人力成本。
+*/
+/*
  更新时间: 2026-07-10 14:50:00 CST
  更新内容: 默认 KPI 日期范围改为运行时当前自然月，不再固定 2026-06。
 */
@@ -366,7 +370,7 @@ export function getFilteredKpiCards({ dim = 'month', dateRange = DEFAULT_FILTER_
   const laborCost = scaled(config.laborCost, factor);
   const costRatio = recovered ? round1((cost / recovered) * 100) : KPI_DERIVED.costRatio;
   const costSub = channelContext.channelKey === 'all'
-    ? `全渠道总投入 ${cost} 万 · 广告 ${adCost} 万 + 人力 ${laborCost} 万`
+    ? `全渠道总投入 ${cost} 万 · 运营 ${adCost} 万 + 人力 ${laborCost} 万`
     : `当前渠道投入 ${cost} 万 · 全渠道总投入 ${KPI.totalCost} 万 · 费比 ${costRatio}%`;
 
   const cardsByKey = new Map(KPI_CARDS.map((card) => [card.key, card]));

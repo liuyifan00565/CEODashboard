@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 16:48:56 CST
+ Update content: 每个渠道月份可分别填写运营成本与人力成本，移除无渠道归属的独立人力成本表。
+*/
+/*
  Update time: 2026-07-13 10:07:26 CST
  Update content: 成本维护移除赢单金额展示，仅保留成本、成交、退款和 ROI。
 */
@@ -735,13 +739,12 @@ const TargetMaintenancePage = forwardRef(function TargetMaintenancePage({ markDi
   );
 });
 
-const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty, status, costChannels, costRows, laborRows, year }, ref) {
+const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty, status, costChannels, costRows, year }, ref) {
   const [channels, setChannels] = useState(costChannels ?? EMPTY_ARRAY);
   const [allRows, setAllRows] = useState(costRows ?? EMPTY_ARRAY);
   const [selectedChannel, setSelectedChannel] = useState('all');
   const [selectedCostRow, setSelectedCostRow] = useState(null);
   const [pendingDeleteId, setPendingDeleteId] = useState('');
-  const laborList = laborRows ?? EMPTY_ARRAY;
   const draftRef = useRef({});
   const deletedChannelIdsRef = useRef([]);
   useEffect(() => {
@@ -773,19 +776,14 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
 
   useImperativeHandle(ref, () => ({
     collect: () => {
-      const r = buildCostSaveRows({ rows: allRows, laborRows: laborList }, draftRef.current, year);
-      return { rows: r.rows, laborRows: r.laborRows, groups: buildChannelGroupSaveRows(channels), deletions: deletedChannelIdsRef.current };
+      const r = buildCostSaveRows({ rows: allRows }, draftRef.current, year);
+      return { rows: r.rows, groups: buildChannelGroupSaveRows(channels), deletions: deletedChannelIdsRef.current };
     },
     addCostChannel,
-  }), [allRows, channels, laborList, selectedChannel, year]);
-
-  function handleEdit(rowId, monthKey, value) {
-    draftRef.current[`${rowId}|${monthKey}`] = Number(value) || 0;
-    markDirty();
-  }
+  }), [allRows, channels, selectedChannel, year]);
 
   function handleCostFieldEdit(rowId, monthKey, field, value) {
-    const key = field === 'refund' ? `${rowId}|${monthKey}|refund` : `${rowId}|${monthKey}`;
+    const key = `${rowId}|${monthKey}|${field}`;
     draftRef.current[key] = Number(value) || 0;
     markDirty();
   }
@@ -793,7 +791,7 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
   function buildEmptyCostPeriods() {
     return MAINTENANCE_PERIOD_COLUMNS.reduce((periods, column) => ({
       ...periods,
-      [column.key]: { cost: 0, actual: 0, deals: 0, refund: 0, roi: 0 },
+      [column.key]: { operations: 0, labor: 0, laborConfigured: false, totalCost: 0, actual: 0, deals: 0, refund: 0, roi: 0 },
     }), {});
   }
 
@@ -900,21 +898,42 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
                         <td key={column.key} className="mnt-period-cell mnt-period-cell--cost">
                           {editable ? (
                             <label className="mnt-inline-field">
-                              <span>成本</span>
+                              <span>运营</span>
                               <div className="mnt-cost-unit-input-wrap">
                                 <input
                                   className="mnt-number-input mnt-cost-unit-input"
                                   type="number"
                                   min="0"
-                                  defaultValue={period.cost}
-                                  onChange={(e) => handleCostFieldEdit(row.id, column.key, 'cost', e.target.value)}
-                                  aria-label={`${row.name}${column.label}成本`}
+                                  defaultValue={period.operations}
+                                  onChange={(e) => handleCostFieldEdit(row.id, column.key, 'operations', e.target.value)}
+                                  aria-label={`${row.name}${column.label}运营成本`}
                                 />
                                 <span className="mnt-cost-unit-input-unit">万</span>
                               </div>
                             </label>
                           ) : (
-                            <div className="mnt-mini-line">成本 {formatWan(period.cost)}</div>
+                            <div className="mnt-mini-line">运营 {formatWan(period.operations)}</div>
+                          )}
+                          {editable ? (
+                            <label className="mnt-inline-field">
+                              <span>人力</span>
+                              <div className="mnt-cost-unit-input-wrap">
+                                <input
+                                  className="mnt-number-input mnt-cost-unit-input"
+                                  type="number"
+                                  min="0"
+                                  defaultValue={period.labor}
+                                  onChange={(e) => handleCostFieldEdit(row.id, column.key, 'labor', e.target.value)}
+                                  aria-label={`${row.name}${column.label}人力成本`}
+                                />
+                                <span className="mnt-cost-unit-input-unit">万</span>
+                              </div>
+                            </label>
+                          ) : (
+                            <>
+                              <div className="mnt-mini-line">人力 {formatWan(period.labor)}</div>
+                              <div className="mnt-mini-line mnt-mini-line--strong">合计 {formatWan(period.totalCost)}</div>
+                            </>
                           )}
                           <div className="mnt-mini-line">成交 {period.deals} 单</div>
                           {editable ? (
@@ -936,40 +955,6 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
                             <div className="mnt-mini-line">退款 {formatWan(period.refund)}</div>
                           )}
                           <div className="mnt-mini-line mnt-mini-line--strong">ROI {formatRoi(period.roi)}</div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </MatrixShell>
-        </Panel>
-        <Panel title="人力成本维护" meta="销售部 / 市场部" className="mnt-main-panel">
-          <MatrixShell className="mnt-matrix-wrap--short">
-            <table className="mnt-matrix mnt-matrix--labor">
-              <thead>
-                <tr>
-                  <th>成本类型</th>
-                  {MAINTENANCE_PERIOD_COLUMNS.map((column) => <th key={column.key}>{column.label}</th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {laborList.map((row) => (
-                  <tr key={row.id} {...getSelectableRowProps(`labor:${row.id}`, selectedCostRow, setSelectedCostRow)}>
-                    <td className="mnt-name-cell">
-                      <strong>{row.name}</strong>
-                      <span>部门月度固定成本</span>
-                    </td>
-                    {MAINTENANCE_PERIOD_COLUMNS.map((column) => {
-                      const period = row.periods[column.key];
-                      return (
-                        <td key={column.key} className="mnt-period-cell">
-                          {column.month ? (
-                            <input className="mnt-control mnt-number-input" type="number" min="0" defaultValue={period.cost} onChange={(e) => handleEdit(row.id, column.key, e.target.value)} />
-                          ) : (
-                            <strong>{formatWan(period.cost)}</strong>
-                          )}
                         </td>
                       );
                     })}
@@ -1439,7 +1424,7 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
     const d = data || {};
     switch (activePage) {
       case 'target-maintenance': return { rows: d.rows, orgTree: d.orgTree };
-      case 'cost-maintenance': return { costChannels: d.channels, costRows: d.rows, laborRows: d.laborRows };
+      case 'cost-maintenance': return { costChannels: d.channels, costRows: d.rows };
       case 'org-maintenance': return { departments: d.departments, users: d.users };
       case 'channel-maintenance': return { groups: d.groups, sources: d.sources };
       default: return {};

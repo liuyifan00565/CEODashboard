@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-13 16:40:31 CST  更新内容: 选择性合并数据维护代码，恢复拉取前的主界面数据聚合回归测试。 */
+/* 更新时间: 2026-07-13 16:48:56 CST  更新内容: 成本快照回归改为运营成本 + 人力成本，并保留 adCost 兼容别名。 */
 /*
  更新时间: 2026-07-10 17:02:12 CST
  更新内容: 增加 fact_revenue_daily 无 department_id 旧库兼容回归，防止 dashboard-data 启动后查询部门回款明细报 Unknown column。
@@ -88,22 +88,22 @@ test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
       { channel_key: 'agent', target_wan: 658.32 },
     ],
     channelCosts: [
-      { channel_key: 'online', investment_wan: 31.11 },
-      { channel_key: 'south', investment_wan: 19.31 },
-      { channel_key: 'east', investment_wan: 17.7 },
-      { channel_key: 'agent', investment_wan: 9.12 },
+      { channel_key: 'online', operations_wan: 31.11, labor_wan: 40 },
+      { channel_key: 'south', operations_wan: 19.31, labor_wan: 20 },
+      { channel_key: 'east', operations_wan: 17.7, labor_wan: 12 },
+      { channel_key: 'agent', operations_wan: 9.12, labor_wan: 10 },
     ],
     laborCosts: [
       { cost_type: 'sales', amount_wan: 54.41 },
       { cost_type: 'marketing', amount_wan: 27.21 },
     ],
     channelCostTrend: [
-      { year_month: '2026-05', channel_key: 'online', investment_wan: 35 },
-      { year_month: '2026-05', channel_key: 'south', investment_wan: 20 },
-      { year_month: '2026-06', channel_key: 'online', investment_wan: 31.11 },
-      { year_month: '2026-06', channel_key: 'south', investment_wan: 19.31 },
-      { year_month: '2026-06', channel_key: 'east', investment_wan: 17.7 },
-      { year_month: '2026-06', channel_key: 'agent', investment_wan: 9.12 },
+      { year_month: '2026-05', channel_key: 'online', operations_wan: 35, labor_wan: 45 },
+      { year_month: '2026-05', channel_key: 'south', operations_wan: 20, labor_wan: 27 },
+      { year_month: '2026-06', channel_key: 'online', operations_wan: 31.11, labor_wan: 40 },
+      { year_month: '2026-06', channel_key: 'south', operations_wan: 19.31, labor_wan: 20 },
+      { year_month: '2026-06', channel_key: 'east', operations_wan: 17.7, labor_wan: 12 },
+      { year_month: '2026-06', channel_key: 'agent', operations_wan: 9.12, labor_wan: 10 },
     ],
     laborCostTrend: [
       { year_month: '2026-05', cost_type: 'sales', amount_wan: 50 },
@@ -137,6 +137,7 @@ test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
   assert.equal(snapshot.kpi.yearRefund, 0);
   assert.equal(snapshot.kpi.totalCost, 159);
   assert.equal(snapshot.kpi.adCost, 77);
+  assert.equal(snapshot.kpi.operationsCost, 77);
   assert.equal(snapshot.kpi.laborCost, 82);
   assert.equal(snapshot.kpiDerived.monthCompletion, 125);
   assert.equal(snapshot.kpiDerived.yearCompletion, 10.7);
@@ -146,12 +147,13 @@ test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
     [['online', 244, 157, 1836, false], ['south', 98, 106, 1241, false], ['east', 86, 97, 1139, false], ['agent', 92, 56, 658, false]]
   );
   assert.equal(snapshot.monthlyTrend.at(-1).recovered, 520);
-  assert.equal(snapshot.channelRoi.find((row) => row.key === 'online').investment, 31);
+  assert.equal(snapshot.channelRoi.find((row) => row.key === 'online').investment, 71);
   assert.deepEqual(snapshot.costTrend.map((row) => [row.yearMonth, row.adCost, row.laborCost, row.totalCost]), [
     ['2026-05', 55, 72, 127],
     ['2026-06', 77, 82, 159],
   ]);
-  assert.deepEqual(snapshot.costTrend.at(-1).channels, { online: 31, south: 19, east: 18, agent: 9 });
+  assert.deepEqual(snapshot.costTrend.map((row) => row.operationsCost), [55, 77]);
+  assert.deepEqual(snapshot.costTrend.at(-1).channels, { online: 71, south: 39, east: 30, agent: 19 });
   assert.deepEqual(snapshot.renewalRows[0].periods.day, { due: 0, renewed: 0, revenue: 0, prevDue: 0, prevRenewed: 0 });
   assert.deepEqual(snapshot.renewalRows[0].periods.month, { due: 20, renewed: 18, revenue: 88, prevDue: 18, prevRenewed: 15 });
   assert.deepEqual(snapshot.renewalRows[0].periods.year, { due: 0, renewed: 0, revenue: 0, prevDue: 0, prevRenewed: 0 });

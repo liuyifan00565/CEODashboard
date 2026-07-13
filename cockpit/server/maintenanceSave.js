@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 16:48:56 CST
+ Update content: Cost maintenance atomically upserts operations and labor costs on the same channel-month row.
+*/
+/*
  Update time: 2026-07-13 00:00:00 CST
  Update content: Target maintenance save can persist department monthly actual completion amounts into fact_revenue_daily.
 */
@@ -46,6 +50,7 @@
           复用 maintenanceImport.js 的 WAN_TO_YUAN / readJsonBody / sendJson，避免口径漂移。
 */
 import { createDbConnection, queryRows, nextId } from './db.js';
+import { ensureCostSchema } from './costSchema.js';
 import { WAN_TO_YUAN, readJsonBody, sendJson, resolveDepartmentChannelId, ensureRevenueDailyColumns } from './maintenanceImport.js';
 import { buildDepartmentChannelKeyMap } from './departmentChannel.js';
 
@@ -216,20 +221,9 @@ async function deleteCostChannels(connection, deletions = [], year) {
   return { deleted, skipped, errors };
 }
 
-/** 成本维护：可先新增 dim_channel，再按 (year_month, channel_id) upsert biz_channel_cost_monthly，最后处理渠道删除。 */
-async function ensureChannelCostRefundColumn(connection) {
-  const rows = await queryRows(
-    connection,
-    "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'biz_channel_cost_monthly' AND COLUMN_NAME = 'refund_amount_yuan'",
-  );
-  if (!rows.length) {
-    await connection.execute('ALTER TABLE biz_channel_cost_monthly ADD COLUMN refund_amount_yuan DECIMAL(14,2) NOT NULL DEFAULT 0 COMMENT \'refund amount for cost maintenance\' AFTER investment_amount_yuan');
-  }
-}
-
+/** 成本维护：可先新增 dim_channel，再按 (year_month, channel_id) 原子 upsert 运营与人力成本，最后处理渠道删除。 */
 export async function saveCost(connection, rows, groups = [], deletions = [], year) {
   const errors = [];
-  await ensureChannelCostRefundColumn(connection);
   const channelRes = await saveNewChannelGroups(connection, groups, errors);
   let written = channelRes.written;
   let skipped = channelRes.skipped;
@@ -245,15 +239,15 @@ export async function saveCost(connection, rows, groups = [], deletions = [], ye
       errors.push({ field: 'channel_id|year_month', message: `成本行键非法，跳过：channel_id=${row.channel_id} year_month=${yearMonth}` });
       continue;
     }
-    const amountYuan = WAN_TO_YUAN(row.investment_amount_wan);
+    const amountYuan = WAN_TO_YUAN(row.operations_amount_wan);
+    const laborYuan = row.labor_amount_wan == null ? null : WAN_TO_YUAN(row.labor_amount_wan);
     const refundYuan = WAN_TO_YUAN(row.refund_amount_wan);
-    const existing = await queryRows(connection, 'SELECT cost_id FROM biz_channel_cost_monthly WHERE `year_month` = ? AND channel_id = ?', [yearMonth, channelId]);
-    if (existing[0]?.cost_id) {
-      await connection.execute('UPDATE biz_channel_cost_monthly SET investment_amount_yuan = ?, refund_amount_yuan = ? WHERE cost_id = ?', [amountYuan, refundYuan, existing[0].cost_id]);
-    } else {
-      const id = await nextId(connection, 'biz_channel_cost_monthly', 'cost_id');
-      await connection.execute('INSERT INTO biz_channel_cost_monthly (cost_id, `year_month`, channel_id, investment_amount_yuan, refund_amount_yuan) VALUES (?, ?, ?, ?, ?)', [id, yearMonth, channelId, amountYuan, refundYuan]);
-    }
+    await connection.execute(
+      `INSERT INTO biz_channel_cost_monthly (\`year_month\`, channel_id, operations_amount_yuan, labor_amount_yuan, refund_amount_yuan)
+       VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE operations_amount_yuan = VALUES(operations_amount_yuan), labor_amount_yuan = VALUES(labor_amount_yuan), refund_amount_yuan = VALUES(refund_amount_yuan)`,
+      [yearMonth, channelId, amountYuan, laborYuan, refundYuan],
+    );
     written += 1;
   }
   const deletionRes = await deleteCostChannels(connection, deletions, year);
@@ -274,13 +268,12 @@ export async function saveLabor(connection, rows) {
       continue;
     }
     const amountYuan = WAN_TO_YUAN(row.amount_wan);
-    const existing = await queryRows(connection, 'SELECT labor_cost_id FROM biz_labor_cost_monthly WHERE `year_month` = ? AND cost_type = ?', [yearMonth, costType]);
-    if (existing[0]?.labor_cost_id) {
-      await connection.execute('UPDATE biz_labor_cost_monthly SET amount_yuan = ? WHERE labor_cost_id = ?', [amountYuan, existing[0].labor_cost_id]);
-    } else {
-      const id = await nextId(connection, 'biz_labor_cost_monthly', 'labor_cost_id');
-      await connection.execute('INSERT INTO biz_labor_cost_monthly (labor_cost_id, `year_month`, cost_type, amount_yuan) VALUES (?, ?, ?, ?)', [id, yearMonth, costType, amountYuan]);
-    }
+    await connection.execute(
+      `INSERT INTO biz_labor_cost_monthly (\`year_month\`, cost_type, amount_yuan)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE amount_yuan = VALUES(amount_yuan)`,
+      [yearMonth, costType, amountYuan],
+    );
     written += 1;
   }
   return { written, skipped, errors };
@@ -454,12 +447,11 @@ const SAVERS = {
   'target-maintenance': (conn, body) => saveTarget(conn, body.rows || []),
   'cost-maintenance': async (conn, body) => {
     const costRes = await saveCost(conn, body.rows || [], body.groups || [], body.deletions || [], body.year);
-    const laborRes = await saveLabor(conn, body.laborRows || []);
     return {
-      written: costRes.written + laborRes.written,
-      skipped: costRes.skipped + laborRes.skipped,
+      written: costRes.written,
+      skipped: costRes.skipped,
       deleted: costRes.deleted || 0,
-      errors: [...costRes.errors, ...laborRes.errors],
+      errors: costRes.errors,
     };
   },
   'org-maintenance': (conn, body) => saveOrg(conn, body.rows || [], body.departments || []),
@@ -479,6 +471,7 @@ export async function persistSave(pageKey, body) {
   }
   const connection = await createDbConnection();
   try {
+    if (pageKey === 'cost-maintenance') await ensureCostSchema(connection);
     await connection.beginTransaction();
     const result = await saver(connection, body || {});
     await connection.commit();

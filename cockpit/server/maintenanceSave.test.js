@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 16:48:56 CST
+ Update content: Cover atomic upserts for separate operations and labor costs using database business keys.
+*/
+/*
  Update time: 2026-07-13 00:00:00 CST
  Update content: Cover target maintenance saving department actual completion amount into fact_revenue_daily.
 */
@@ -161,14 +165,21 @@ test('saveTarget: actual amount saves to fact_revenue_daily without touching tar
   assert.deepEqual(insert.params, [8001, '2026-03-01', 1002, 3001, 885000, 0, 0]);
 });
 
-test('saveCost: 按 (year_month, channel_id) upsert investment_amount_yuan', async () => {
-  const { conn, execs } = makeConn(() => [{ cost_id: 5 }]);
-  const r = await saveCost(conn, [{ channel_id: 3001, year_month: '2026-03', investment_amount_wan: 50 }]);
+test('saveCost: 按 (year_month, channel_id) 原子 upsert 运营和人力成本', async () => {
+  const { conn, execs } = makeConn(() => []);
+  const r = await saveCost(conn, [{ channel_id: 3001, year_month: '2026-03', operations_amount_wan: 50, labor_amount_wan: 20 }]);
   assert.equal(r.written, 1);
-  const update = execs.find((e) => e.sql.startsWith('UPDATE'));
-  assert.match(update.sql, /SET investment_amount_yuan = \?, refund_amount_yuan = \?/);
-  assert.equal(update.params[0], 500000);
-  assert.equal(update.params[1], 0);
+  const upsert = execs.find((e) => e.sql.startsWith('INSERT INTO biz_channel_cost_monthly'));
+  assert.match(upsert.sql, /operations_amount_yuan, labor_amount_yuan, refund_amount_yuan/);
+  assert.match(upsert.sql, /ON DUPLICATE KEY UPDATE operations_amount_yuan = VALUES\(operations_amount_yuan\)/);
+  assert.deepEqual(upsert.params, ['2026-03', 3001, 500000, 200000, 0]);
+});
+
+test('saveCost: 仅编辑运营成本时保留尚未配置的人力成本 NULL', async () => {
+  const { conn, execs } = makeConn(() => []);
+  await saveCost(conn, [{ channel_id: 3003, year_month: '2026-07', operations_amount_wan: 18, labor_amount_wan: null }]);
+  const upsert = execs.find((entry) => /INSERT INTO biz_channel_cost_monthly/.test(entry.sql));
+  assert.deepEqual(upsert.params, ['2026-07', 3003, 180000, null, 0]);
 });
 
 test('saveCost: 新增渠道后映射临时 channel_id 再写成本', async () => {
@@ -180,7 +191,7 @@ test('saveCost: 新增渠道后映射临时 channel_id 再写成本', async () =
   });
   const r = await saveCost(
     conn,
-    [{ channel_id: 'new-channel-5', year_month: '2026-03', investment_amount_wan: 12, refund_amount_wan: 2 }],
+    [{ channel_id: 'new-channel-5', year_month: '2026-03', operations_amount_wan: 12, labor_amount_wan: 4, refund_amount_wan: 2 }],
     [{ channel_id: 'new-channel-5', channel_name: '新增渠道 5', parent_id: '', is_enabled: 1 }],
   );
   assert.equal(r.written, 2);
@@ -189,7 +200,7 @@ test('saveCost: 新增渠道后映射临时 channel_id 再写成本', async () =
   assert.equal(channelInsert.params[0], 3100);
   const costInsert = execs.find((e) => e.sql.startsWith('INSERT INTO biz_channel_cost_monthly'));
   assert.ok(costInsert);
-  assert.deepEqual(costInsert.params, [5100, '2026-03', 3100, 120000, 20000]);
+  assert.deepEqual(costInsert.params, ['2026-03', 3100, 120000, 40000, 20000]);
 });
 
 test('saveCost: 删除渠道会停用渠道并清理当前年份成本', async () => {
@@ -204,25 +215,21 @@ test('saveCost: 删除渠道会停用渠道并清理当前年份成本', async (
   assert.deepEqual(costDelete.params, [3002, '2026-%']);
 });
 
-test('saveLabor: upsert 键为 (year_month, cost_type)，仅写 amount_yuan', async () => {
-  const { conn, execs } = makeConn((sql) => {
-    if (sql.includes('biz_labor_cost_monthly')) return [{ labor_cost_id: 600000 }];
-    return [];
-  });
+test('saveLabor: 按 (year_month, cost_type) 原子 upsert amount_yuan', async () => {
+  const { conn, execs } = makeConn(() => []);
   await saveLabor(conn, [{ cost_type: 'sales', year_month: '2026-03', amount_wan: 53 }]);
-  const update = execs.find((e) => e.sql.startsWith('UPDATE'));
-  assert.ok(update);
-  assert.match(update.sql, /SET amount_yuan = /);
-  // SELECT 走 selectFn：验证键含 year_month 与 cost_type
-  assert.equal(update.params[0], 530000);
+  const upsert = execs.find((e) => e.sql.startsWith('INSERT INTO biz_labor_cost_monthly'));
+  assert.ok(upsert);
+  assert.match(upsert.sql, /ON DUPLICATE KEY UPDATE amount_yuan = VALUES\(amount_yuan\)/);
+  assert.deepEqual(upsert.params, ['2026-03', 'sales', 530000]);
 });
 
-test('saveLabor: 不存在则 INSERT (labor_cost_id, year_month, cost_type, amount_yuan)', async () => {
+test('saveLabor: INSERT 依赖自增 labor_cost_id', async () => {
   const { conn, execs } = makeConn(() => []);
   await saveLabor(conn, [{ cost_type: 'marketing', year_month: '2026-04', amount_wan: 27 }]);
   const ins = execs.find((e) => e.sql.startsWith('INSERT'));
   assert.ok(ins);
-  assert.match(ins.sql, /INSERT INTO biz_labor_cost_monthly \(labor_cost_id, `year_month`, cost_type, amount_yuan\)/);
+  assert.match(ins.sql, /INSERT INTO biz_labor_cost_monthly \(`year_month`, cost_type, amount_yuan\)/);
 });
 
 test('saveOrg: UPDATE 只写 department_id/channel_key/is_sales/is_enabled，不碰 external_bi_user_id；跳过合成部门', async () => {

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 16:48:56 CST
+ Update content: Cost import writes per-channel operations and labor costs through one atomic monthly-channel upsert.
+*/
+/*
  Update time: 2026-07-13 00:00:00 CST
  Update content: Export revenue daily schema guard for target maintenance actual amount saves.
 */
@@ -14,6 +18,7 @@
 import { getImportConfig } from '../src/lib/maintenanceImportConfig.js';
 import { mapAndValidate } from '../src/lib/excelImport.js';
 import { createDbConnection, queryRows, nextId } from './db.js';
+import { ensureCostSchema } from './costSchema.js';
 import { resolveDepartmentChannelKey } from './departmentChannel.js';
 
 export function readJsonBody(req, limitBytes = 5 * 1024 * 1024) {
@@ -185,18 +190,7 @@ export async function persistActual(connection, rows) {
   return { written, skipped, errors };
 }
 
-async function ensureChannelCostRefundColumn(connection) {
-  const rows = await queryRows(
-    connection,
-    "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'biz_channel_cost_monthly' AND COLUMN_NAME = 'refund_amount_yuan'",
-  );
-  if (!rows.length) {
-    await connection.execute('ALTER TABLE biz_channel_cost_monthly ADD COLUMN refund_amount_yuan DECIMAL(14,2) NOT NULL DEFAULT 0 COMMENT \'refund amount for cost maintenance\' AFTER investment_amount_yuan');
-  }
-}
-
 async function persistCost(connection, rows) {
-  await ensureChannelCostRefundColumn(connection);
   let written = 0;
   let skipped = 0;
   const errors = [];
@@ -207,15 +201,15 @@ async function persistCost(connection, rows) {
       errors.push({ row: null, field: 'channel_name', message: `渠道不存在，跳过：${row.channel_name}` });
       continue;
     }
-    const amountYuan = WAN_TO_YUAN(row.investment_amount_yuan);
+    const amountYuan = WAN_TO_YUAN(row.operations_amount_wan);
+    const laborYuan = row.labor_amount_wan == null ? null : WAN_TO_YUAN(row.labor_amount_wan);
     const refundYuan = WAN_TO_YUAN(row.refund_amount_yuan);
-    const existing = await queryRows(connection, 'SELECT cost_id FROM biz_channel_cost_monthly WHERE `year_month` = ? AND channel_id = ?', [row.cost_month, channelId]);
-    if (existing[0]?.cost_id) {
-      await connection.execute('UPDATE biz_channel_cost_monthly SET investment_amount_yuan = ?, refund_amount_yuan = ? WHERE cost_id = ?', [amountYuan, refundYuan, existing[0].cost_id]);
-    } else {
-      const id = await nextId(connection, 'biz_channel_cost_monthly', 'cost_id');
-      await connection.execute('INSERT INTO biz_channel_cost_monthly (cost_id, `year_month`, channel_id, investment_amount_yuan, refund_amount_yuan) VALUES (?, ?, ?, ?, ?)', [id, row.cost_month, channelId, amountYuan, refundYuan]);
-    }
+    await connection.execute(
+      `INSERT INTO biz_channel_cost_monthly (\`year_month\`, channel_id, operations_amount_yuan, labor_amount_yuan, refund_amount_yuan)
+       VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE operations_amount_yuan = VALUES(operations_amount_yuan), labor_amount_yuan = VALUES(labor_amount_yuan), refund_amount_yuan = VALUES(refund_amount_yuan)`,
+      [row.cost_month, channelId, amountYuan, laborYuan, refundYuan],
+    );
     written += 1;
   }
   return { written, skipped, errors };
@@ -362,6 +356,7 @@ export async function persistImport(pageKey, rows, options = {}) {
   }
   const connection = await createDbConnection();
   try {
+    if (pageKey === 'cost-maintenance') await ensureCostSchema(connection);
     await connection.beginTransaction();
     const result = await persister(connection, rows, options);
     await connection.commit();

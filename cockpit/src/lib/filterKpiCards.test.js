@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 16:48:56 CST
+ 更新内容: 总投入费比卡片文案回归改为运营/人力成本构成。
+*/
+/*
  更新时间: 2026-07-10 14:50:00 CST
  更新内容: 默认日期范围回归改为运行时当前自然月，不再要求 2026 年 6 月整月。
 */
@@ -141,7 +145,7 @@ test('shows the cost ratio percentage as the main value on the cost card', () =>
   assert.equal(cost.displayUnit, '%');
   assert.equal(cost.displayDecimals, 1);
   assert.match(cost.sub, /全渠道总投入 156 万/);
-  assert.match(cost.sub, /广告 96 万 \+ 人力 60 万/);
+  assert.match(cost.sub, /运营 96 万 \+ 人力 60 万/);
 });
 
 test('marks channel cost cards as current channel investment with all-channel total context', () => {

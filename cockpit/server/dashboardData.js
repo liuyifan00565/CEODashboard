@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-13 16:40:31 CST  更新内容: 选择性合并数据维护代码，恢复拉取前的主界面数据聚合逻辑。 */
+/* 更新时间: 2026-07-13 16:48:56 CST  更新内容: 总成本改为各渠道运营成本 + 各渠道人力成本；旧无渠道人力仅在新字段未维护时回退。 */
 /*
  更新时间: 2026-07-10 17:02:12 CST
  更新内容: dashboard 部门回款明细兼容旧库 fact_revenue_daily 无 department_id 的结构，按 staff_id 兜底解析组织，避免接口报 Unknown column。
@@ -74,6 +74,7 @@
  更新内容: 新增真实 MySQL dashboard 数据聚合接口，将 ceo_dashboard 表汇总为前端可覆盖的经营快照。
 */
 import mysql from 'mysql2/promise';
+import { ensureCostSchema } from './costSchema.js';
 
 const DB_DEFAULTS = {
   host: '127.0.0.1',
@@ -236,6 +237,7 @@ function completionRow(row) {
 }
 
 function makeKpiDerived(kpi) {
+  const operationsCost = num(kpi.operationsCost ?? kpi.adCost);
   return {
     monthCompletion: pct(kpi.monthRecovered, kpi.monthTarget),
     monthGap: Math.max(0, round0(kpi.monthTarget - kpi.monthRecovered)),
@@ -245,7 +247,7 @@ function makeKpiDerived(kpi) {
     yearYoY: kpi.lastYearSameRecovered ? round1(((kpi.yearRecovered - kpi.lastYearSameRecovered) / kpi.lastYearSameRecovered) * 100) : 0,
     costRatio: pct(kpi.totalCost, kpi.monthRecovered),
     channelRoi: kpi.totalCost ? round2(kpi.monthRecovered / kpi.totalCost) : 0,
-    roi: kpi.adCost ? round2(kpi.monthRecovered / kpi.adCost) : 0,
+    roi: operationsCost ? round2(kpi.monthRecovered / operationsCost) : 0,
   };
 }
 
@@ -325,7 +327,10 @@ function makeChannelRows({
 function makeChannelRoi({ channelRows, channelCosts }) {
   const costByChannel = byKey(channelCosts, 'channel_key');
   return channelRows.map((channel) => {
-    const investment = round0(costByChannel.get(channel.key)?.investment_wan);
+    const costRow = costByChannel.get(channel.key);
+    const operations = num(costRow?.operations_wan ?? costRow?.investment_wan);
+    const labor = num(costRow?.labor_wan);
+    const investment = round0(operations + labor);
     const roi = investment ? round2(channel.recovered / investment) : 0;
     return {
       key: channel.key,
@@ -359,22 +364,30 @@ function makeMonthlyTrend({ monthlyTargets, recoveredRows, latestMonth, currentM
 function makeCostTrend({ channelCosts = [], laborCosts = [], latestMonth }) {
   const months = new Set();
   const channelByMonth = new Map();
-  const laborByMonth = new Map();
+  const operationsByMonth = new Map();
+  const channelLaborByMonth = new Map();
+  const configuredLaborMonths = new Set();
+  const legacyLaborByMonth = new Map();
 
   for (const row of channelCosts) {
     const yearMonth = row.year_month || latestMonth;
     if (!yearMonth) continue;
     months.add(yearMonth);
     const channels = channelByMonth.get(yearMonth) ?? {};
-    channels[row.channel_key] = num(channels[row.channel_key]) + num(row.investment_wan);
+    const operations = num(row.operations_wan ?? row.investment_wan);
+    const labor = num(row.labor_wan);
+    channels[row.channel_key] = num(channels[row.channel_key]) + operations + labor;
     channelByMonth.set(yearMonth, channels);
+    operationsByMonth.set(yearMonth, num(operationsByMonth.get(yearMonth)) + operations);
+    channelLaborByMonth.set(yearMonth, num(channelLaborByMonth.get(yearMonth)) + labor);
+    if (row.labor_wan != null) configuredLaborMonths.add(yearMonth);
   }
 
   for (const row of laborCosts) {
     const yearMonth = row.year_month || latestMonth;
     if (!yearMonth) continue;
     months.add(yearMonth);
-    laborByMonth.set(yearMonth, num(laborByMonth.get(yearMonth)) + num(row.amount_wan));
+    legacyLaborByMonth.set(yearMonth, num(legacyLaborByMonth.get(yearMonth)) + num(row.amount_wan));
   }
 
   return [...months]
@@ -385,14 +398,17 @@ function makeCostTrend({ channelCosts = [], laborCosts = [], latestMonth }) {
       const roundedChannels = Object.fromEntries(
         Object.entries(channels).map(([channelKey, value]) => [channelKey, round0(value)])
       );
-      const adCost = round0(Object.values(channels).reduce((total, value) => total + num(value), 0));
-      const laborCost = round0(laborByMonth.get(yearMonth));
+      const operationsCost = round0(operationsByMonth.get(yearMonth));
+      const laborCost = round0(configuredLaborMonths.has(yearMonth)
+        ? channelLaborByMonth.get(yearMonth)
+        : legacyLaborByMonth.get(yearMonth));
       return {
         yearMonth,
         label: monthName(yearMonth),
-        adCost,
+        operationsCost,
+        adCost: operationsCost,
         laborCost,
-        totalCost: adCost + laborCost,
+        totalCost: operationsCost + laborCost,
         channels: roundedChannels,
       };
     });
@@ -634,8 +650,14 @@ export function mapDashboardRowsToSnapshot(rows) {
   const currentMonthTarget = round0(currentMonthlyTarget?.target_wan ?? sum(currentSalesRows, 'target_wan'));
   const annualTarget = round0(sum(rows.monthlyTargets ?? [], 'target_wan'));
   const yearRecovered = round0(sum(useRevenueDaily ? yearRevenueRows : yearSalesRows, 'recovered_wan'));
-  const adCost = round0(sum(rows.channelCosts ?? [], 'investment_wan'));
-  const laborCost = round0(sum(rows.laborCosts ?? [], 'amount_wan'));
+  const operationsCost = round0((rows.channelCosts ?? []).reduce(
+    (total, row) => total + num(row.operations_wan ?? row.investment_wan),
+    0,
+  ));
+  const hasChannelLabor = (rows.channelCosts ?? []).some((row) => row.labor_wan != null);
+  const laborCost = round0(hasChannelLabor
+    ? sum(rows.channelCosts ?? [], 'labor_wan')
+    : sum(rows.laborCosts ?? [], 'amount_wan'));
   const monthTargetGap = Math.max(0, currentMonthTarget - currentMonthRecovered);
   const kpi = {
     monthRecovered: currentMonthRecovered,
@@ -646,8 +668,9 @@ export function mapDashboardRowsToSnapshot(rows) {
     lastYearSameRecovered: round0(sum(lastYearSalesRows, 'recovered_wan')),
     monthRefund,
     yearRefund,
-    totalCost: adCost + laborCost,
-    adCost,
+    totalCost: operationsCost + laborCost,
+    operationsCost,
+    adCost: operationsCost,
     laborCost,
     received: currentMonthRecovered,
     receivable: monthTargetGap,
@@ -757,19 +780,9 @@ async function selectDashboardBusinessMonth(connection) {
   return process.env.DASHBOARD_MONTH_OVERRIDE || TEMP_DASHBOARD_MONTH_OVERRIDE || chinaTodayYMD().yearMonth || await loadLatestActualMonth(connection);
 }
 
-async function ensureDashboardRefundColumn(connection) {
-  const rows = await queryRows(
-    connection,
-    "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'biz_channel_cost_monthly' AND COLUMN_NAME = 'refund_amount_yuan'",
-  );
-  if (!rows.length) {
-    await connection.execute('ALTER TABLE biz_channel_cost_monthly ADD COLUMN refund_amount_yuan DECIMAL(14,2) NOT NULL DEFAULT 0 COMMENT \'refund amount for dashboard net recovery\' AFTER investment_amount_yuan');
-  }
-}
-
 export async function buildDashboardSnapshot(connection) {
   const latestMonth = await selectDashboardBusinessMonth(connection);
-  await ensureDashboardRefundColumn(connection);
+  await ensureCostSchema(connection);
   const revenueHasDepartmentId = await tableHasColumn(connection, 'fact_revenue_daily', 'department_id');
   const revenueDepartmentIdSql = revenueHasDepartmentId
     ? 'COALESCE(r.department_id, s.department_id)'
@@ -916,7 +929,9 @@ export async function buildDashboardSnapshot(connection) {
       ORDER BY \`year_month\`, channel_key, d.department_id
     `, [`${latestYear}-01-01`, `${nextYear}-01-01`]),
     queryRows(connection, `
-      SELECT c.channel_key, ROUND(cost.investment_amount_yuan / 10000, 2) AS investment_wan
+      SELECT c.channel_key,
+             ROUND(cost.operations_amount_yuan / 10000, 2) AS operations_wan,
+             ROUND(cost.labor_amount_yuan / 10000, 2) AS labor_wan
       FROM biz_channel_cost_monthly cost
       JOIN dim_channel c ON c.channel_id = cost.channel_id
       WHERE cost.\`year_month\` = ?
@@ -927,7 +942,9 @@ export async function buildDashboardSnapshot(connection) {
       WHERE \`year_month\` = ?
     `, [latestMonth]),
     queryRows(connection, `
-      SELECT cost.\`year_month\`, c.channel_key, ROUND(SUM(cost.investment_amount_yuan) / 10000, 2) AS investment_wan
+      SELECT cost.\`year_month\`, c.channel_key,
+             ROUND(SUM(cost.operations_amount_yuan) / 10000, 2) AS operations_wan,
+             ROUND(SUM(cost.labor_amount_yuan) / 10000, 2) AS labor_wan
       FROM biz_channel_cost_monthly cost
       JOIN dim_channel c ON c.channel_id = cost.channel_id
       WHERE cost.\`year_month\` LIKE CONCAT(?, '%')

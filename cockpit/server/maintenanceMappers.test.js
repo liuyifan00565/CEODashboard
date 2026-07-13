@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 16:48:56 CST
+ Update content: Cover operations-cost mapping separately from editable labor cost, while retaining refund and ROI rollups.
+*/
+/*
  Update time: 2026-07-10 17:09:42 CST
  Update content: Align target maintenance mapper tests with department-level rows; staff facts now roll up into summary department rows instead of rendering user rows.
 */
@@ -101,18 +105,14 @@ test('buildTargetSnapshot: 120% and above becomes good', () => {
   assert.equal(dept.periods.m02.status, 'good');
 });
 
-test('buildCostSnapshot builds channel rows, summary, roi, and labor rows', () => {
+test('buildCostSnapshot builds per-channel operations and labor costs with total-cost ROI', () => {
   const channels = [
     { channel_id: 3001, channel_name: '线上', parent_id: null, is_enabled: 1 },
     { channel_id: 3002, channel_name: '华南线下', parent_id: null, is_enabled: 1 },
   ];
-  const costs = [{ year_month: '2026-01', channel_id: 3001, investment_amount_yuan: 500000, refund_amount_yuan: 120000 }];
-  const revenue = [{ ym: '2026-01', channel_id: 3001, amt: 750000, deals: 5 }];
-  const labor = [
-    { year_month: '2026-01', cost_type: 'sales', amount_yuan: 530000 },
-    { year_month: '2026-01', cost_type: 'marketing', amount_yuan: 260000 },
-  ];
-  const { channels: nav, rows, laborRows } = buildCostSnapshot({ channels, costs, revenue, labor });
+  const costs = [{ year_month: '2026-01', channel_id: 3001, operations_amount_yuan: 500000, labor_amount_yuan: 200000, refund_amount_yuan: 120000 }];
+  const revenue = [{ ym: '2026-01', channel_id: 3001, amt: 1050000, deals: 5 }];
+  const { channels: nav, rows } = buildCostSnapshot({ channels, costs, revenue });
 
   assert.equal(nav[0].id, 'all');
   assert.equal(nav[1].id, '3001');
@@ -120,27 +120,33 @@ test('buildCostSnapshot builds channel rows, summary, roi, and labor rows', () =
 
   const ch = rows.find((r) => r.id === '3001');
   assert.equal(ch.type, 'channel');
-  assert.equal(ch.periods.m01.cost, 50);
-  assert.equal(ch.periods.m01.actual, 75);
+  assert.equal(ch.periods.m01.operations, 50);
+  assert.equal(ch.periods.m01.labor, 20);
+  assert.equal(ch.periods.m01.laborConfigured, true);
+  assert.equal(ch.periods.m01.totalCost, 70);
+  assert.equal(ch.periods.m01.actual, 105);
   assert.equal(ch.periods.m01.deals, 5);
   assert.equal(ch.periods.m01.refund, 12);
   assert.equal(ch.periods.m01.roi, 0.5);
 
   const all = rows.find((r) => r.id === 'summary-all');
   assert.equal(all.type, 'group');
-  assert.equal(all.periods.m01.cost, 50);
+  assert.equal(all.periods.m01.operations, 50);
+  assert.equal(all.periods.m01.labor, 20);
+  assert.equal(all.periods.m01.totalCost, 70);
   assert.equal(all.periods.m01.refund, 12);
-
-  assert.equal(laborRows.length, 2);
-  assert.equal(laborRows.find((l) => l.id === 'labor-sales').name, '销售部人力成本');
-  assert.equal(laborRows.find((l) => l.id === 'labor-sales').periods.m01.cost, 53);
 });
 
-test('buildCostSnapshot creates default labor rows for empty year', () => {
-  const { laborRows } = buildCostSnapshot({ channels: [], costs: [], revenue: [], labor: [] });
-  assert.equal(laborRows.length, 2);
-  assert.ok(laborRows.some((row) => row.id === 'labor-sales'));
-  assert.ok(laborRows.some((row) => row.id === 'labor-marketing'));
+test('buildCostSnapshot gives every channel an editable zero labor cost for an empty year', () => {
+  const { rows } = buildCostSnapshot({
+    channels: [{ channel_id: 3003, channel_name: '华东线下', parent_id: null, is_enabled: 1 }],
+    costs: [],
+    revenue: [],
+  });
+  const east = rows.find((row) => row.id === '3003');
+  assert.equal(east.periods.m01.operations, 0);
+  assert.equal(east.periods.m01.labor, 0);
+  assert.equal(east.periods.m01.laborConfigured, false);
 });
 
 test('buildOrgSnapshot maps departments and staff source names', () => {

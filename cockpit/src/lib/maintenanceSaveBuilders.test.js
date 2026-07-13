@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 16:48:56 CST
+ Update content: Cover separate operations-cost and labor-cost save payloads for cost maintenance.
+*/
+/*
  Update time: 2026-07-13 00:00:00 CST
  Update content: Cover target maintenance save rows carrying both target and actual amount edits.
 */
@@ -84,33 +88,25 @@ test('buildTargetSaveRows: same department month can save target and actual amou
 const COST_SNAPSHOT = {
   rows: [
     { id: 'summary-all', type: 'group', name: '全部渠道', periods: {} },
-    { id: '3001', type: 'channel', name: '线上', periods: { m03: { cost: 50 } } },
-    { id: '3002', type: 'channel', name: '华南线下', periods: { m03: { cost: 30 } } },
-  ],
-  laborRows: [
-    { id: 'labor-sales', name: '销售部人力成本', periods: { m03: { cost: 53 } } },
-    { id: 'labor-marketing', name: '市场部人力成本', periods: { m03: { cost: 27 } } },
+    { id: '3001', type: 'channel', name: '线上', periods: { m03: { operations: 50, labor: 20 } } },
+    { id: '3002', type: 'channel', name: '华南线下', periods: { m03: { operations: 30, labor: 12 } } },
   ],
 };
 
-test('buildCostSaveRows: 渠道行 + 人力行分开，过滤 summary，解析 id 前缀', () => {
-  const draft = { '3001|m03': 60, 'labor-sales|m04': 55 };
-  const { rows, laborRows } = buildCostSaveRows(COST_SNAPSHOT, draft, 2026);
+test('buildCostSaveRows: 同一渠道月份合并运营成本和人力成本', () => {
+  const draft = { '3001|m03|operations': 60, '3001|m03|labor': 25 };
+  const { rows } = buildCostSaveRows(COST_SNAPSHOT, draft, 2026);
   assert.equal(rows.length, 1);
   assert.equal(rows[0].channel_id, '3001');
   assert.equal(rows[0].channel_name, '线上');
   assert.equal(rows[0].year_month, '2026-03');
-  assert.equal(rows[0].investment_amount_wan, 60);
-  assert.equal(laborRows.length, 1);
-  assert.equal(laborRows[0].cost_type, 'sales');
-  assert.equal(laborRows[0].year_month, '2026-04');
-  assert.equal(laborRows[0].amount_wan, 55);
+  assert.equal(rows[0].operations_amount_wan, 60);
+  assert.equal(rows[0].labor_amount_wan, 25);
 });
 
-test('buildCostSaveRows: draft 空时双数组皆空', () => {
-  const { rows, laborRows } = buildCostSaveRows(COST_SNAPSHOT, {}, 2026);
+test('buildCostSaveRows: draft 空时无渠道成本行', () => {
+  const { rows } = buildCostSaveRows(COST_SNAPSHOT, {}, 2026);
   assert.deepEqual(rows, []);
-  assert.deepEqual(laborRows, []);
 });
 
 test('buildCostSaveRows: 新增渠道成本保留临时 channel_id 交给后端映射', () => {
@@ -118,28 +114,40 @@ test('buildCostSaveRows: 新增渠道成本保留临时 channel_id 交给后端�
     ...COST_SNAPSHOT,
     rows: [
       ...COST_SNAPSHOT.rows,
-      { id: 'new-channel-5', type: 'channel', name: '新增渠道 5', periods: { m03: { cost: 0 } } },
+      { id: 'new-channel-5', type: 'channel', name: '新增渠道 5', periods: { m03: { operations: 0, labor: 0, laborConfigured: false } } },
     ],
   };
-  const { rows } = buildCostSaveRows(snapshot, { 'new-channel-5|m03': 12 }, 2026);
+  const { rows } = buildCostSaveRows(snapshot, { 'new-channel-5|m03|operations': 12 }, 2026);
   assert.equal(rows.length, 1);
   assert.equal(rows[0].channel_id, 'new-channel-5');
   assert.equal(rows[0].channel_name, '新增渠道 5');
-  assert.equal(rows[0].investment_amount_wan, 12);
+  assert.equal(rows[0].operations_amount_wan, 12);
+  assert.equal(rows[0].labor_amount_wan, null);
 });
 
-test('buildCostSaveRows: refund draft merges with existing investment amount', () => {
+test('buildCostSaveRows: editing operations preserves unconfigured labor as null', () => {
   const snapshot = {
     rows: [
-      { id: '3001', type: 'channel', name: 'online', periods: { m03: { cost: 50, refund: 3 } } },
+      { id: '3003', type: 'channel', name: '华东线下', periods: { m07: { operations: 17.81, labor: 0, laborConfigured: false } } },
     ],
-    laborRows: [],
+  };
+  const { rows } = buildCostSaveRows(snapshot, { '3003|m07|operations': 18 }, 2026);
+  assert.equal(rows[0].operations_amount_wan, 18);
+  assert.equal(rows[0].labor_amount_wan, null);
+});
+
+test('buildCostSaveRows: refund draft merges with existing operations amount', () => {
+  const snapshot = {
+    rows: [
+      { id: '3001', type: 'channel', name: 'online', periods: { m03: { operations: 50, labor: 20, refund: 3 } } },
+    ],
   };
   const { rows } = buildCostSaveRows(snapshot, { '3001|m03|refund': 8 }, 2026);
   assert.equal(rows.length, 1);
   assert.equal(rows[0].channel_id, '3001');
   assert.equal(rows[0].year_month, '2026-03');
-  assert.equal(rows[0].investment_amount_wan, 50);
+  assert.equal(rows[0].operations_amount_wan, 50);
+  assert.equal(rows[0].labor_amount_wan, 20);
   assert.equal(rows[0].refund_amount_wan, 8);
 });
 
