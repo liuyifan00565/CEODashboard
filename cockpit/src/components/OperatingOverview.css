@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-13 10:23:42 CST  更新内容: 月度回款结构饼图复用年度图的画布宽高与缩放比例，确保两个周期显示尺寸一致。 */
 /* 更新时间: 2026-07-10 15:57:27 CST  更新内容: 年度下钻入口移到年度进度条上方的半环右下区域，避免落到进度条下边。 */
 /* 更新时间: 2026-07-10 15:55:14 CST  更新内容: 月度与年度下钻入口共用更扁的右下热区，避免年度入口矩形与进度条相交。 */
 /* 更新时间: 2026-07-10 15:49:48 CST  更新内容: 年度下钻入口改回与月度一致的半环右下位置，不再额外上移。 */
@@ -356,7 +357,7 @@
 .op-recovery-structure {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto 210px;
+  grid-template-rows: auto 218px;
   align-content: start;
   gap: 0;
   margin-left: -16px;
@@ -383,10 +384,10 @@
 .op-channel-chart-wrap {
   position: relative;
   min-width: 0;
-  width: clamp(320px, 25vw, 420px);
+  width: clamp(380px, 29vw, 480px);
   max-width: 100%;
-  height: 210px;
-  min-height: 210px;
+  height: 218px;
+  min-height: 218px;
   justify-self: center;
   display: grid;
   place-items: center;
@@ -401,7 +402,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  min-height: 210px;
+  min-height: 218px;
 }
 
 .op-operating-side {
@@ -519,7 +520,7 @@
 }
 
 .op-month-grid .op-channel-chart {
-  transform: translate(clamp(-16px, -1vw, -10px), clamp(8px, .75vw, 14px)) scale(1.24);
+  transform: translate(clamp(-16px, -1vw, -10px), clamp(8px, .75vw, 14px)) scale(1.3);
   transform-origin: 50% 42%;
 }
 
@@ -695,7 +696,7 @@
   }
 
   .op-recovery-structure {
-    grid-template-rows: auto 194px;
+    grid-template-rows: auto 208px;
   }
 
   .op-annual-grid .op-recovery-structure {
@@ -705,9 +706,9 @@
   }
 
   .op-channel-chart-wrap {
-    width: clamp(300px, 23vw, 392px);
-    height: 194px;
-    min-height: 194px;
+    width: clamp(360px, 27.5vw, 440px);
+    height: 208px;
+    min-height: 208px;
   }
 
   .op-annual-grid .op-channel-chart-wrap {
@@ -717,7 +718,7 @@
   }
 
   .op-channel-chart {
-    min-height: 194px;
+    min-height: 208px;
   }
 
   .op-channel-list {

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 10:23:42 CST
+ 更新内容: 回归测试锁定月度回款结构饼图与年度图使用相同画布尺寸和缩放比例。
+*/
+/*
  更新时间: 2026-07-13 10:07:26 CST
  更新内容: 回归测试锁定成本维护不再展示赢单，仅保留成本、成交、退款和 ROI。
 */
@@ -1567,10 +1571,11 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   assert.match(monthGridBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.035\);/);
   assert.match(operatingOverviewCss, /\.op-month-primary-value-row\s*\{[\s\S]*?align-items:\s*flex-end;/);
   assert.match(operatingOverviewCss, /\.op-month-refund-note\s*\{[\s\S]*?margin-bottom:\s*clamp\(3px, \.4vw, 6px\);/);
-  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 210px;[\s\S]*?align-content:\s*start;/);
+  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 218px;[\s\S]*?align-content:\s*start;/);
   assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?margin-left:\s*-16px;[\s\S]*?margin-right:\s*8px;/);
-  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?width:\s*clamp\(320px, 25vw, 420px\);[\s\S]*?height:\s*210px;[\s\S]*?min-height:\s*210px;/);
-  assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*210px;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?width:\s*clamp\(380px, 29vw, 480px\);[\s\S]*?height:\s*218px;[\s\S]*?min-height:\s*218px;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*218px;/);
+  assert.match(operatingOverviewCss, /\.op-month-grid \.op-channel-chart\s*\{[\s\S]*?scale\(1\.3\);/);
   assert.match(operatingOverviewCss, /\.op-channel-list\s*\{[\s\S]*?gap:\s*16px;/);
   assert.match(operatingOverviewCss, /\.op-channel-item\s*\{[\s\S]*?min-height:\s*30px;/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-structure-progress/);
@@ -1914,7 +1919,7 @@ test('keeps month year trend and finance metrics balanced across 1K and 2K scree
   assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?flex:none;[\s\S]*?grid-template-rows:clamp\(350px,36vh,386px\);/);
   assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?grid-template-rows:clamp\(320px,34vh,350px\);[\s\S]*?grid-template-rows:minmax\(136px,\.82fr\) minmax\(176px,1\.08fr\);/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-overview \{[\s\S]*?gap: 8px;/);
-  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows:\s*auto 204px;[\s\S]*?height:\s*204px;/);
+  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows:\s*auto 208px;[\s\S]*?height:\s*208px;/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-channel-list \{[\s\S]*?gap: 13px;/);
   assert.doesNotMatch(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows: auto 148px;[\s\S]*?height: 148px;/);
   assert.match(dashboardCss, /@media \(min-width:2200px\) and \(min-height:1300px\)\{[\s\S]*?\.dash-secondary-grid\{[\s\S]*?grid-template-rows:410px;/);
