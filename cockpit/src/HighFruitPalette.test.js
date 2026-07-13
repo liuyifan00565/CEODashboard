@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 11:25:44 CST
+ 更新内容: 月度完成率趋势线配色与视觉权重断言同步为 #B9B6E8、2.8px、90% 透明度及 6px 轻外发光。
+*/
+/*
  更新时间: 2026-07-06 10:48:16 CST
  更新内容: 新增高级果味银紫玫瑰全站配色契约测试，锁定高亮面积、用途 token 与业务语义隔离。
 */
@@ -39,7 +43,7 @@ test('defines high-fruit palette tokens by usage instead of raw color names', ()
   assert.match(block, /--chart-actual-bar-top:#B89CFF;/);
   assert.match(block, /--chart-actual-bar-bottom:#8E86FF;/);
   assert.match(block, /--chart-target-bar:rgba\(255,255,255,0\.13\);/);
-  assert.match(block, /--chart-rate-line:#D9D1FF;/);
+  assert.match(block, /--chart-rate-line:#B9B6E8;/);
   assert.match(block, /--chart-risk-point:#F06A8B;/);
   assert.match(block, /--chart-goal-line:#C9A96B;/);
   assert.match(block, /--chart-grid:rgba\(247,243,255,0\.08\);/);
@@ -68,13 +72,13 @@ test('exposes chart and semantic tokens through the theme reader', () => {
   assert.match(themeSource, /semanticCapacity:\s*'#7EA7FF'/);
   assert.match(themeSource, /chartActualBarTop:\s*'#B89CFF'/);
   assert.match(themeSource, /chartTargetBar:\s*'rgba\(255,255,255,0\.13\)'/);
-  assert.match(themeSource, /chartRateLine:\s*'#D9D1FF'/);
+  assert.match(themeSource, /chartRateLine:\s*'#B9B6E8'/);
 });
 
 test('monthly trend gives actual values the highest weight and pushes references back', () => {
   assert.match(monthlyTrendSource, /actualBarColor\(tokens\)/);
   assert.match(monthlyTrendSource, /targetBarColor\(tokens\)/);
-  assert.match(monthlyTrendSource, /lineStyle:\s*\{ color: tokens\.chartRateLine, width: 1\.5, opacity: 0\.72/);
+  assert.match(monthlyTrendSource, /lineStyle:\s*\{[\s\S]*?color: tokens\.chartRateLine,[\s\S]*?width: 2\.8,[\s\S]*?opacity: 0\.9,[\s\S]*?shadowBlur: 6,[\s\S]*?shadowColor: 'rgba\(185, 182, 232, 0\.36\)'/);
   assert.match(monthlyTrendSource, /isRiskCompletion\(value\) \? tokens\.chartRiskPoint/);
   assert.doesNotMatch(monthlyTrendSource, /COLOR\.warn/);
   assert.doesNotMatch(monthlyTrendSource, /tokens\.chartBarMuted/);

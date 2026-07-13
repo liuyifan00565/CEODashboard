@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-13 11:25:44 CST  更新内容: 月度完成率趋势线改为清晰银紫色，采用 2.8px、90% 透明度、0.25 平滑度、7/9px 分级点和 6px 轻外发光，并在数据项明确写入状态色，确保 94.5% 等正常值不显示红色。 */
 /* 更新时间: 2026-07-10 10:49:21 CST  更新内容: 固定月度趋势配置引用并关闭画布动画与折线模糊光晕，消除无交互时反复闪烁。 */
 /* 更新时间: 2026-07-07 16:50:00 CST  更新内容: 柱状图悬浮框对齐 GlassSelect 面板同体系——银紫描边 + 24px 毛玻璃 + 紫光投影 + 16px 圆角，杜绝与下拉框质感割裂。 */
 /* 更新时间: 2026-07-07 14:40:00 CST  更新内容: 月度经营趋势重构数据语义——目标改为背景宽柱(淡灰紫)、回款改为前景窄柱(银紫玫瑰渐变)，完成率细线+圆点且 y 轴超 100% 自动扩展并加 100% 基准线，图例颜色与序列对齐，移除 6 月高亮，未发生月份用虚线占位。 */
@@ -180,10 +181,16 @@ function buildMonthlyTrendOption(channelKey, tokens) {
         name: '完成率',
         type: 'line',
         yAxisIndex: 1,
-        smooth: true,
+        smooth: 0.25,
         symbol: 'circle',
-        symbolSize: ({ value }) => (isRiskCompletion(value) ? 8 : 5),
-        lineStyle: { color: tokens.chartRateLine, width: 1.5, opacity: 0.72 },
+        symbolSize: value => (isRiskCompletion(value) ? 9 : 7),
+        lineStyle: {
+          color: tokens.chartRateLine,
+          width: 2.8,
+          opacity: 0.9,
+          shadowBlur: 6,
+          shadowColor: 'rgba(185, 182, 232, 0.36)',
+        },
         itemStyle: { color: ({ value }) => completionPointColor(value, tokens), borderColor: tokens.chartPointBorder, borderWidth: 1.5 },
         label: {
           show: true,
@@ -200,7 +207,17 @@ function buildMonthlyTrendOption(channelKey, tokens) {
           lineStyle: { color: tokens.chartRateLine, type: 'dashed', width: 1, opacity: 0.35 },
           data: [{ yAxis: 100 }],
         },
-        data: completion.map((value, index) => (isPlaceholderMonth(trend[index]) ? null : value)),
+        data: completion.map((value, index) => {
+          if (isPlaceholderMonth(trend[index])) return null;
+          const pointColor = completionPointColor(value, tokens);
+          const risk = isRiskCompletion(value);
+          return {
+            value,
+            symbolSize: risk ? 9 : 7,
+            itemStyle: { color: pointColor },
+            label: { color: pointColor, fontWeight: risk ? 850 : 650 },
+          };
+        }),
       },
     ],
   };

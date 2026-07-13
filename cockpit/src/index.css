@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 11:25:44 CST
+ 更新内容: 深色主题月度完成率趋势线 token 改为 #B9B6E8 银紫色，增强核心指标辨识度。
+*/
+/*
  更新时间: 2026-07-07 15:40:00 CST
  更新内容: 卡片材质再调一轮——更通透半透明底、更柔浅紫白描边、顶部冷紫内高光、更软双层扩散阴影；背景叠中央蓝紫雾面光并让左下氛围光更自然扩散。
 */
@@ -128,7 +132,7 @@
   --chart-actual-bar-top:#B89CFF;
   --chart-actual-bar-bottom:#8E86FF;
   --chart-target-bar:rgba(255,255,255,0.13);
-  --chart-rate-line:#D9D1FF;
+  --chart-rate-line:#B9B6E8;
   --chart-risk-point:#F06A8B;
   --chart-goal-line:#C9A96B;
   --brand-purple:#8E86FF;
