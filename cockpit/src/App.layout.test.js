@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 14:30:00 CST
+ 更新内容: 回归测试锁定侧栏品牌副标题分两行展示，月份与 CEO 视角各占一行。
+*/
+/*
  更新时间: 2026-07-13 14:02:04 CST
  更新内容: 回归测试按页面实测锁定月度近期明细首字“点”左移 42.43px 后精确对齐饼图右半区起点。
 */
@@ -693,15 +697,17 @@ test('keeps overview card placement stable when search result wrappers appear', 
   assert.doesNotMatch(operatingOverviewCss, /\.op-search-result--channel/);
 });
 
-test('places the FuKe brand logo above the sidebar navigation instead of the main topbar', () => {
+test('places the FuKe brand logo above the sidebar navigation with month and context on separate lines', () => {
   const sidebarBrandBlock = cssRuleBody(sidebarCss, '.sb-brand');
   const sidebarLogoBlock = cssRuleBody(sidebarCss, '.sb-brand-logo');
   const sidebarTitleBlock = cssRuleBody(sidebarCss, '.sb-brand-copy b');
+  const sidebarMetaBlock = cssRuleBody(sidebarCss, '.sb-brand-copy small');
   const mainBlock = cssRuleBody(dashboardCss, '.dash-main');
 
   assert.match(mockSource, /monthLabel: currentMonthLabel\(\)/);
   assert.doesNotMatch(mockSource, /monthLabel: '2026年6月'/);
-  assert.match(appSource, /const sidebarBrandMeta = `\$\{META\.monthLabel\} · \$\{activeContextLabel\}`;/);
+  assert.match(appSource, /const sidebarBrandMeta = `\$\{META\.monthLabel\}\\n\$\{activeContextLabel\}`;/);
+  assert.doesNotMatch(appSource, /const sidebarBrandMeta = `\$\{META\.monthLabel\} · \$\{activeContextLabel\}`;/);
   assert.match(appSource, /brandTitle="福客经营驾驶舱"/);
   assert.match(appSource, /brandMeta=\{sidebarBrandMeta\}/);
   assert.match(sidebarSource, /import MetallicPaint from '\.\/MetallicPaint\/MetallicPaint';/);
@@ -717,6 +723,8 @@ test('places the FuKe brand logo above the sidebar navigation instead of the mai
   assert.match(sidebarLogoBlock, /height:\s*26px;/);
   assert.match(sidebarTitleBlock, /font-size:\s*14px;/);
   assert.match(sidebarTitleBlock, /font-weight:\s*760;/);
+  assert.match(sidebarMetaBlock, /white-space:\s*pre-line;/);
+  assert.doesNotMatch(sidebarMetaBlock, /white-space:\s*nowrap;/);
   assert.match(mainBlock, /padding:\s*18px clamp\(12px,2vw,28px\) 24px;/);
   assert.doesNotMatch(dashboardCss, /\.dash-topbar/);
   assert.doesNotMatch(appSource, /import MetallicPaint from '\.\/components\/MetallicPaint\/MetallicPaint';/);
