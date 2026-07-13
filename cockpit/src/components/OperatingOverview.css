@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-13 10:36:43 CST  更新内容: 仅调整月度近期明细入口位置，使底边对齐线下华东行、左边对齐饼图右半区起点，不改变其它布局。 */
 /* 更新时间: 2026-07-13 10:23:42 CST  更新内容: 月度回款结构饼图复用年度图的画布宽高与缩放比例，确保两个周期显示尺寸一致。 */
 /* 更新时间: 2026-07-10 15:57:27 CST  更新内容: 年度下钻入口移到年度进度条上方的半环右下区域，避免落到进度条下边。 */
 /* 更新时间: 2026-07-10 15:55:14 CST  更新内容: 月度与年度下钻入口共用更扁的右下热区，避免年度入口矩形与进度条相交。 */
@@ -240,6 +241,20 @@
 
 .op-annual-grid .op-channel-chart-wrap .op-detail-link {
   bottom: 44px;
+}
+
+@media (min-width: 1241px) {
+  .op-month-grid .op-channel-chart-wrap .op-detail-link {
+    left: calc(49.35% + clamp(-16px, -1vw, -10px));
+    right: auto;
+    bottom: 12px;
+  }
+}
+
+@media (min-width: 1241px) and (max-height: 1071px) {
+  .op-month-grid .op-channel-chart-wrap .op-detail-link {
+    bottom: 19px;
+  }
 }
 
 .op-month-grid {
