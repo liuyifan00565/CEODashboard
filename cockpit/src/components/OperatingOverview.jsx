@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-13 14:50:37 CST  更新内容: 缩小主界面本月与年度回款结构半环图外围渠道名称和占比字号。 */
 /* 更新时间: 2026-07-10 15:36:50 CST  更新内容: 将月度与年度下钻入口移到回款结构半环图右下方，并保留透明大点击热区。 */
 /* 更新时间: 2026-07-10 15:16:00 CST  更新内容: 合并远端经营布局，保留月度业绩和渠道经营区的福小客洞察定位标识。 */
 /* 更新时间: 2026-07-10 13:12:05 CST  更新内容: 临时预览回款半环左侧主标签向内收缩，缩短标签到半环的引导距离。 */
@@ -323,7 +324,7 @@ function channelStructureOption(structure, periodMeta, tokens) {
           rich: {
             name: {
               color: tokens.chartText,
-              fontSize: 13,
+              fontSize: 11,
               fontWeight: 850,
               lineHeight: 17,
               align: 'center',
@@ -332,7 +333,7 @@ function channelStructureOption(structure, periodMeta, tokens) {
             },
             percent: {
               color: tokens.chartText,
-              fontSize: 12,
+              fontSize: 10,
               fontWeight: 850,
               lineHeight: 15,
               align: 'center',
