@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 19:54:35 CST
+ 更新内容: 回归锁定版本情况洞察上移并裁掉截图白线以下的桌面端空白区域。
+*/
+/*
  更新时间: 2026-07-13 19:46:24 CST
  更新内容: 截图红线回归锁定保留当前内容尺寸，只移除底部区域并在新底边恢复圆角卡片形式。
 */
@@ -21,4 +25,9 @@ test('removes the annotated bottom strip without scaling content or changing col
   assert.match(dashboardCss, /\.dash-secondary-cell::after\{[\s\S]*?border:1px solid var\(--dashboard-card-border\);[\s\S]*?border-radius:0 0 16px 16px;/);
   assert.match(dashboardCss, /\.dash-secondary-cell--trend \.mt-panel,[\s\S]*?\.dash-secondary-cell--finance \.dash-finance-kpis\{[\s\S]*?height:var\(--dash-secondary-content-height\);/);
   assert.match(dashboardCss, /@media \(min-width:2200px\) and \(min-height:1300px\)\{[\s\S]*?--dash-secondary-content-height:396px;[\s\S]*?grid-template-rows:382px;/);
+});
+
+test('moves the version insight up and crops the annotated bottom strip', () => {
+  assert.match(dashboardCss, /\.dash-version-row \.vf-insight\{[\s\S]*?left:22px;[\s\S]*?bottom:10px;/);
+  assert.match(dashboardCss, /@media \(min-width:1181px\)\{[\s\S]*?\.dash-version-row \.vf-panel\{[\s\S]*?height:262px;[\s\S]*?min-height:262px;[\s\S]*?overflow:hidden;/);
 });
