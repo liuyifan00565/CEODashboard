@@ -2,7 +2,6 @@
  更新时间: 2026-07-10 17:02:12 CST
  更新内容: dashboard 部门回款明细兼容旧库 fact_revenue_daily 无 department_id 的结构，按 staff_id 兜底解析组织，避免接口报 Unknown column。
 */
-/* Update time: 2026-07-13 17:10:00 CST  Update content: Staff daily revenue fills current-month recovered amounts in channel member drilldowns. */
 /* Update time: 2026-07-13 16:55:00 CST  Update content: Channel member drilldowns prefer staff-level monthly sales facts when available, falling back to department rows only when staff facts are absent. */
 /*
  更新时间: 2026-07-10 15:40:59 CST
@@ -417,7 +416,7 @@ function addMemberMetric(map, row, field) {
   map.set(key, current);
 }
 
-function makeStaffSalesMemberRows(salesRows, staffRecoveredRows, latestMonth, latestYear) {
+function makeStaffSalesMemberRows(salesRows, latestMonth, latestYear) {
   const memberMap = new Map();
 
   salesRows
@@ -440,34 +439,10 @@ function makeStaffSalesMemberRows(salesRows, staffRecoveredRows, latestMonth, la
 
       if (row.year_month === latestMonth) {
         current.monthTarget += num(row.target_wan);
+        current.monthRecovered += num(row.recovered_wan);
       }
 
       current.yearTarget += num(row.target_wan);
-      memberMap.set(key, current);
-    });
-
-  const recoveredSourceRows = staffRecoveredRows.length ? staffRecoveredRows : salesRows;
-  recoveredSourceRows
-    .filter((row) => String(row.year_month).startsWith(latestYear) && String(row.year_month) <= latestMonth)
-    .forEach((row) => {
-      const staffId = row.staff_id;
-      const channelKey = row.channel_key;
-      if (staffId == null || !channelKey) return;
-
-      const key = `${channelKey}:${staffId}`;
-      const current = memberMap.get(key) ?? {
-        key: `staff-${staffId}`,
-        group: channelKey,
-        name: row.staff_name,
-        monthTarget: 0,
-        monthRecovered: 0,
-        yearTarget: 0,
-        yearRecovered: 0,
-      };
-
-      if (row.year_month === latestMonth) {
-        current.monthRecovered += num(row.recovered_wan);
-      }
       current.yearRecovered += num(row.recovered_wan);
       memberMap.set(key, current);
     });
@@ -487,13 +462,12 @@ function makeSalesMemberRows({
   salesRows,
   targetRows = [],
   recoveredRows = [],
-  staffRecoveredRows = [],
   latestMonth,
   latestYear,
   useRevenueDaily,
 }) {
   if (salesRows.length) {
-    return makeStaffSalesMemberRows(salesRows, staffRecoveredRows, latestMonth, latestYear);
+    return makeStaffSalesMemberRows(salesRows, latestMonth, latestYear);
   }
 
   if (!targetRows.length && !recoveredRows.length) {
@@ -763,7 +737,6 @@ export function mapDashboardRowsToSnapshot(rows) {
       salesRows: yearSalesRows,
       targetRows: rows.memberTargets ?? [],
       recoveredRows: applyRefundsToRecoveredRows(rows.memberRecovered ?? [], refundRows),
-      staffRecoveredRows: applyRefundsToRecoveredRows(rows.staffRecoveredRows ?? [], refundRows),
       latestMonth,
       latestYear,
       useRevenueDaily,
@@ -864,7 +837,6 @@ export async function buildDashboardSnapshot(connection) {
     yearChannelTargets,
     memberTargets,
     memberRecovered,
-    staffRecoveredRows,
     channelCosts,
     laborCosts,
     channelCostTrend,
@@ -988,21 +960,6 @@ export async function buildDashboardSnapshot(connection) {
       GROUP BY DATE_FORMAT(r.stat_date, '%Y-%m'), d.department_id, d.department_name, c.channel_key
       HAVING channel_key IS NOT NULL
       ORDER BY \`year_month\`, channel_key, d.department_id
-    `, [`${latestYear}-01-01`, `${nextYear}-01-01`]),
-    queryRows(connection, `
-      SELECT DATE_FORMAT(r.stat_date, '%Y-%m') AS \`year_month\`, s.staff_id, s.staff_name,
-             ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
-             ROUND(SUM(r.recovered_amount_yuan) / 10000, 2) AS recovered_wan
-      FROM fact_revenue_daily r
-      JOIN dim_staff s ON s.staff_id = r.staff_id
-      LEFT JOIN dim_department d ON d.department_id = s.department_id
-      LEFT JOIN dim_channel c ON c.channel_id = r.channel_id
-      WHERE r.stat_date >= ? AND r.stat_date < ?
-        AND s.is_enabled = 1
-        AND s.is_sales = 1
-      GROUP BY DATE_FORMAT(r.stat_date, '%Y-%m'), s.staff_id, s.staff_name, channel_key
-      HAVING channel_key IS NOT NULL
-      ORDER BY \`year_month\`, channel_key, s.staff_id
     `, [`${latestYear}-01-01`, `${nextYear}-01-01`]),
     queryRows(connection, `
       SELECT c.channel_key, ROUND(cost.investment_amount_yuan / 10000, 2) AS investment_wan
@@ -1319,7 +1276,6 @@ export async function buildDashboardSnapshot(connection) {
     yearChannelTargets,
     memberTargets,
     memberRecovered,
-    staffRecoveredRows,
     channelCosts,
     laborCosts,
     channelCostTrend,

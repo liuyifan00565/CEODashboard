@@ -1,4 +1,3 @@
-/* Update time: 2026-07-13 17:10:00 CST  Update content: Add regression coverage that staff daily revenue fills current-month channel member drilldowns. */
 /* Update time: 2026-07-13 16:55:00 CST  Update content: Add regression coverage that channel member drilldowns prefer staff-level monthly sales facts over department fallback rows. */
 /*
  更新时间: 2026-07-10 17:02:12 CST
@@ -358,39 +357,6 @@ test('prefers staff-level monthly sales facts for channel member details', () =>
   assert.equal(zhangsan.yearTarget, 18);
   assert.equal(zhangsan.yearRecovered, 50);
   assert.equal(snapshot.salesMemberRows.some((row) => row.name === '线上销售部'), false);
-});
-
-test('uses staff daily revenue for current-month channel member recovered amount', () => {
-  const snapshot = mapDashboardRowsToSnapshot({
-    latestMonth: '2026-07',
-    channels: [
-      { channel_id: 3001, channel_key: 'online', channel_name: '线上' },
-    ],
-    salesMemberMonthly: [
-      { year_month: '2026-06', staff_id: 2001, staff_name: '张三', channel_key: 'online', recovered_wan: 20, target_wan: 8 },
-    ],
-    staffRecoveredRows: [
-      { year_month: '2026-06', staff_id: 2001, staff_name: '张三', channel_key: 'online', recovered_wan: 20 },
-      { year_month: '2026-07', staff_id: 2001, staff_name: '张三', channel_key: 'online', recovered_wan: 44 },
-    ],
-    revenueDaily: [
-      { year_month: '2026-07', channel_key: 'online', recovered_wan: 44 },
-    ],
-    monthlyTargets: [
-      { year_month: '2026-07', target_wan: 100 },
-    ],
-    channelTargets: [
-      { channel_key: 'online', target_wan: 100 },
-    ],
-    yearChannelTargets: [
-      { channel_key: 'online', target_wan: 100 },
-    ],
-  });
-
-  const zhangsan = snapshot.salesMemberRows.find((row) => row.name === '张三');
-  assert.ok(zhangsan);
-  assert.equal(zhangsan.recovered, 44);
-  assert.equal(zhangsan.yearRecovered, 64);
 });
 
 test('pre-aggregates renewal facts before joining version sales', () => {
