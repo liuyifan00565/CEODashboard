@@ -1,5 +1,53 @@
 /* Update time: 2026-07-13 16:35:00 CST  Update content: Add regression coverage for opening channel member details directly from operating overview rows. */
 /*
+ 更新时间: 2026-07-13 14:50:37 CST
+ 更新内容: 回归测试恢复算力饼图原字号，并锁定主界面两张回款结构半环图的更小标注。
+*/
+/*
+ 更新时间: 2026-07-13 14:48:53 CST
+ 更新内容: 回归测试锁定侧栏 AI 小人入口取消状态卡外观，仅展示小人与助手文案。
+*/
+/*
+ 更新时间: 2026-07-13 14:44:47 CST
+ 更新内容: 回归测试锁定算力页饼图外围名称为 12px、占比为 11px。
+*/
+/*
+ 更新时间: 2026-07-13 14:24:00 CST
+ 更新内容: 回归测试锁定侧栏品牌月份左对齐，并让当前视角与标题“舱”字的右边缘对齐。
+*/
+/*
+ 更新时间: 2026-07-13 14:30:00 CST
+ 更新内容: 回归测试锁定侧栏品牌副标题分两行展示，月份与 CEO 视角各占一行。
+*/
+/*
+ 更新时间: 2026-07-13 14:02:04 CST
+ 更新内容: 回归测试按页面实测锁定月度近期明细首字“点”左移 42.43px 后精确对齐饼图右半区起点。
+*/
+/*
+ 更新时间: 2026-07-13 11:07:08 CST
+ 更新内容: 回归测试按截图锁定月度近期明细首字“点”对应饼图右半区起点标线。
+*/
+/*
+ 更新时间: 2026-07-13 10:46:03 CST
+ 更新内容: 回归测试锁定月度近期明细文字左边对齐饼图右半区起点，而不是透明按钮热区左边。
+*/
+/*
+ 更新时间: 2026-07-13 10:36:43 CST
+ 更新内容: 回归测试锁定月度近期明细入口独立对齐饼图右半区起点和线下华东行底边，不影响年度入口。
+*/
+/*
+ 更新时间: 2026-07-13 14:18:11 CST
+ 更新内容: 回归测试按标注框锁定月度近期明细入口整体右移 102px，纵向位置与尺寸保持不变。
+*/
+/*
+ 更新时间: 2026-07-13 10:23:42 CST
+ 更新内容: 回归测试锁定月度回款结构饼图与年度图使用相同画布尺寸和缩放比例。
+*/
+/*
+ 更新时间: 2026-07-13 10:07:26 CST
+ 更新内容: 回归测试锁定成本维护不再展示赢单，仅保留成本、成交、退款和 ROI。
+*/
+/*
  更新时间: 2026-07-10 15:57:27 CST
  更新内容: 回归测试锁定年度下钻入口位于年度进度条上方，不落到进度条下边。
 */
@@ -670,15 +718,20 @@ test('keeps overview card placement stable when search result wrappers appear', 
   assert.doesNotMatch(operatingOverviewCss, /\.op-search-result--channel/);
 });
 
-test('places the FuKe brand logo above the sidebar navigation instead of the main topbar', () => {
+test('places the FuKe brand month left and context right on separate lines', () => {
   const sidebarBrandBlock = cssRuleBody(sidebarCss, '.sb-brand');
   const sidebarLogoBlock = cssRuleBody(sidebarCss, '.sb-brand-logo');
+  const sidebarCopyBlock = cssRuleBody(sidebarCss, '.sb-brand-copy');
   const sidebarTitleBlock = cssRuleBody(sidebarCss, '.sb-brand-copy b');
+  const sidebarMetaBlock = cssRuleBody(sidebarCss, '.sb-brand-copy small');
+  const sidebarMetaLineBlock = cssRuleBody(sidebarCss, '.sb-brand-copy small span');
+  const sidebarContextLineBlock = cssRuleBody(sidebarCss, '.sb-brand-copy small span + span');
   const mainBlock = cssRuleBody(dashboardCss, '.dash-main');
 
   assert.match(mockSource, /monthLabel: currentMonthLabel\(\)/);
   assert.doesNotMatch(mockSource, /monthLabel: '2026年6月'/);
-  assert.match(appSource, /const sidebarBrandMeta = `\$\{META\.monthLabel\} · \$\{activeContextLabel\}`;/);
+  assert.match(appSource, /const sidebarBrandMeta = `\$\{META\.monthLabel\}\\n\$\{activeContextLabel\}`;/);
+  assert.doesNotMatch(appSource, /const sidebarBrandMeta = `\$\{META\.monthLabel\} · \$\{activeContextLabel\}`;/);
   assert.match(appSource, /brandTitle="福客经营驾驶舱"/);
   assert.match(appSource, /brandMeta=\{sidebarBrandMeta\}/);
   assert.match(sidebarSource, /import MetallicPaint from '\.\/MetallicPaint\/MetallicPaint';/);
@@ -687,13 +740,21 @@ test('places the FuKe brand logo above the sidebar navigation instead of the mai
   assert.match(sidebarSource, /<div className="sb-brand" aria-label=\{`\$\{brandTitle\}\$\{brandMeta \? ` \$\{brandMeta\}` : ''\}`\}>/);
   assert.match(sidebarSource, /<span className="sb-brand-logo" aria-hidden="true">[\s\S]*?<MetallicPaint[\s\S]*?imageSrc="\/logo-black\.png"[\s\S]*?\/>[\s\S]*?<\/span>/);
   assert.match(sidebarSource, /<b>\{brandTitle\}<\/b>/);
-  assert.match(sidebarSource, /\{brandMeta && <small>\{brandMeta\}<\/small>\}/);
+  assert.match(sidebarSource, /\{brandMeta && \([\s\S]*?<small>[\s\S]*?brandMeta\.split\('\\n'\)\.map\(\(line, index\) => \([\s\S]*?<span key=\{`\$\{line\}-\$\{index\}`\}>\{line\}<\/span>[\s\S]*?<\/small>[\s\S]*?\)\}/);
   assert.match(sidebarBrandBlock, /min-height:\s*58px;/);
   assert.match(sidebarBrandBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.055\);/);
   assert.match(sidebarLogoBlock, /width:\s*34px;/);
   assert.match(sidebarLogoBlock, /height:\s*26px;/);
+  assert.match(sidebarCopyBlock, /flex:\s*0 1 auto;/);
+  assert.match(sidebarCopyBlock, /width:\s*max-content;/);
+  assert.match(sidebarCopyBlock, /max-width:\s*calc\(100% - 42px\);/);
   assert.match(sidebarTitleBlock, /font-size:\s*14px;/);
   assert.match(sidebarTitleBlock, /font-weight:\s*760;/);
+  assert.match(sidebarMetaBlock, /display:\s*grid;/);
+  assert.match(sidebarMetaBlock, /text-align:\s*left;/);
+  assert.doesNotMatch(sidebarMetaBlock, /white-space:\s*pre-line;/);
+  assert.match(sidebarMetaLineBlock, /white-space:\s*nowrap;/);
+  assert.match(sidebarContextLineBlock, /text-align:\s*right;/);
   assert.match(mainBlock, /padding:\s*18px clamp\(12px,2vw,28px\) 24px;/);
   assert.doesNotMatch(dashboardCss, /\.dash-topbar/);
   assert.doesNotMatch(appSource, /import MetallicPaint from '\.\/components\/MetallicPaint\/MetallicPaint';/);
@@ -837,6 +898,11 @@ test('builds the target and cost maintenance pages from reference matrix content
   assert.match(maintenancePageSource, /渠道成本维护/);
   assert.match(maintenancePageSource, /人力成本维护/);
   assert.match(maintenancePageSource, /保存成本/);
+});
+
+test('keeps only cost, deals, refund and ROI in cost maintenance periods', () => {
+  assert.doesNotMatch(maintenancePageSource, /<div className="mnt-mini-line">赢单 \{formatWan\(period\.actual\)\}<\/div>/);
+  assert.match(maintenancePageSource, /<span>成本<\/span>[\s\S]*?<div className="mnt-mini-line">成交 \{period\.deals\} 单<\/div>[\s\S]*?<span>退款<\/span>[\s\S]*?<div className="mnt-mini-line mnt-mini-line--strong">ROI \{formatRoi\(period\.roi\)\}<\/div>/);
 });
 
 test('omits template download controls from the import dialog', () => {
@@ -1392,13 +1458,14 @@ test('AI insight navigation locates overview sections and switches to the comput
   assert.match(dashboardCss, /\.ai-insight-focus\s*\{[\s\S]*?outline:[\s\S]*?var\(--line-2\)[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
 });
 
-test('places the AI mascot inside a subdued sidebar status card', () => {
+test('places the AI mascot beside assistant copy without a sidebar status card', () => {
   const aiWidgetBlock = cssRuleBody(aiAnalysisWidgetCss, '.ai-widget');
 
   assert.match(aiAnalysisWidgetSource, /<div className="ai-status-copy" aria-hidden="true">[\s\S]*?<span>AI 助手<\/span>[\s\S]*?<b>经营分析<\/b>[\s\S]*?<\/div>/);
-  assert.match(aiWidgetBlock, /background:\s*rgba\(255,\s*255,\s*255,\s*\.04\);/);
-  assert.match(aiWidgetBlock, /border:\s*1px solid rgba\(255,\s*255,\s*255,\s*\.08\);/);
-  assert.match(aiWidgetBlock, /border-radius:\s*18px;/);
+  assert.match(aiWidgetBlock, /background:\s*transparent;/);
+  assert.match(aiWidgetBlock, /border:\s*0;/);
+  assert.match(aiWidgetBlock, /border-radius:\s*0;/);
+  assert.match(aiWidgetBlock, /box-shadow:\s*none;/);
   assert.match(aiAnalysisWidgetCss, /\.ai-status-copy\s*\{[\s\S]*?display:\s*grid;[\s\S]*?gap:\s*3px;/);
   assert.match(aiAnalysisWidgetCss, /\.ai-card-wrap\s*\{[\s\S]*?left:\s*244px;/);
 });
@@ -1444,6 +1511,8 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewCss, /\.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?right:\s*clamp\(0px, \.65vw, 10px\);[\s\S]*?bottom:\s*-8px;[\s\S]*?min-width:\s*156px;[\s\S]*?min-height:\s*28px;[\s\S]*?padding:\s*8px 6px 6px 28px;[\s\S]*?font-size:\s*12px;/);
   assert.match(operatingOverviewCss, /\.op-channel-chart-wrap \.op-detail-link:focus-visible:not\(:disabled\)\s*\{[\s\S]*?box-shadow:\s*inset 0 0 0 1px rgba\(255,255,255,\.14\);/);
   assert.match(operatingOverviewCss, /\.op-annual-grid \.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?bottom:\s*44px;/);
+  assert.match(operatingOverviewCss, /@media \(min-width: 1241px\) \{[\s\S]*?\.op-month-grid \.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?left:\s*calc\(49\.35% \+ clamp\(-16px, -1vw, -10px\) \+ 59\.57px\);[\s\S]*?right:\s*auto;[\s\S]*?bottom:\s*12px;/);
+  assert.match(operatingOverviewCss, /@media \(min-width: 1241px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-month-grid \.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?bottom:\s*19px;/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-structure-head \.op-detail-link/);
   assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
   assert.match(operatingOverviewSource, /<h2>年度回款总览<\/h2>/);
@@ -1521,6 +1590,8 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /radius:\s*\['45%', '76%'\]/);
   assert.match(operatingOverviewSource, /center:\s*\['49\.5%', '68%'\]/);
   assert.match(operatingOverviewSource, /overflow:\s*'none'/);
+  assert.match(operatingOverviewSource, /name:\s*\{[\s\S]*?fontSize:\s*11,[\s\S]*?fontWeight:\s*850/);
+  assert.match(operatingOverviewSource, /percent:\s*\{[\s\S]*?fontSize:\s*10,[\s\S]*?fontWeight:\s*850/);
   assert.match(operatingOverviewSource, /borderRadius:\s*8,/);
   assert.match(operatingOverviewSource, /borderColor:\s*'rgba\(255, 255, 255, \.11\)'/);
   assert.match(operatingOverviewSource, /shadowColor:\s*'rgba\(184, 156, 255, \.08\)'/);
@@ -1569,10 +1640,11 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   assert.match(monthGridBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.035\);/);
   assert.match(operatingOverviewCss, /\.op-month-primary-value-row\s*\{[\s\S]*?align-items:\s*flex-end;/);
   assert.match(operatingOverviewCss, /\.op-month-refund-note\s*\{[\s\S]*?margin-bottom:\s*clamp\(3px, \.4vw, 6px\);/);
-  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 210px;[\s\S]*?align-content:\s*start;/);
+  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 218px;[\s\S]*?align-content:\s*start;/);
   assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?margin-left:\s*-16px;[\s\S]*?margin-right:\s*8px;/);
-  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?width:\s*clamp\(320px, 25vw, 420px\);[\s\S]*?height:\s*210px;[\s\S]*?min-height:\s*210px;/);
-  assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*210px;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?width:\s*clamp\(380px, 29vw, 480px\);[\s\S]*?height:\s*218px;[\s\S]*?min-height:\s*218px;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*218px;/);
+  assert.match(operatingOverviewCss, /\.op-month-grid \.op-channel-chart\s*\{[\s\S]*?scale\(1\.3\);/);
   assert.match(operatingOverviewCss, /\.op-channel-list\s*\{[\s\S]*?gap:\s*16px;/);
   assert.match(operatingOverviewCss, /\.op-channel-item\s*\{[\s\S]*?min-height:\s*30px;/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-structure-progress/);
@@ -1916,7 +1988,7 @@ test('keeps month year trend and finance metrics balanced across 1K and 2K scree
   assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?flex:none;[\s\S]*?grid-template-rows:clamp\(350px,36vh,386px\);/);
   assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?grid-template-rows:clamp\(320px,34vh,350px\);[\s\S]*?grid-template-rows:minmax\(136px,\.82fr\) minmax\(176px,1\.08fr\);/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-overview \{[\s\S]*?gap: 8px;/);
-  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows:\s*auto 204px;[\s\S]*?height:\s*204px;/);
+  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows:\s*auto 208px;[\s\S]*?height:\s*208px;/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-channel-list \{[\s\S]*?gap: 13px;/);
   assert.doesNotMatch(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows: auto 148px;[\s\S]*?height: 148px;/);
   assert.match(dashboardCss, /@media \(min-width:2200px\) and \(min-height:1300px\)\{[\s\S]*?\.dash-secondary-grid\{[\s\S]*?grid-template-rows:410px;/);

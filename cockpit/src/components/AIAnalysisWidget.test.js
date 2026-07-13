@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 14:48:53 CST
+ 更新内容: 回归测试锁定桌面与移动端左下角 AI 小人入口均为无卡片容器的小人与两行助手文案。
+*/
+/*
  Update time: 2026-07-10 16:05:00 CST
  Update content: Require the AI assistant to fall back to local business briefs and hide raw DashScope error JSON.
 */
@@ -218,11 +222,11 @@ test('offers compact controls for locating the relevant dashboard sections', () 
   assert.match(componentSource, /onNavigateInsight\?\.\(target\)/);
 });
 
-test('keeps the mobile AI dialog viewport-fixed without dropping the launcher glass blur', () => {
+test('keeps the mobile AI dialog viewport-fixed while the launcher remains cardless', () => {
   const mobileBlock = componentCss.match(/@media \(max-width:\s*760px\)\s*\{(?<body>[\s\S]*?)\n\}/)?.groups?.body ?? '';
 
-  assert.match(mobileBlock, /\.ai-widget\s*\{[\s\S]*?-webkit-backdrop-filter:\s*none;[\s\S]*?backdrop-filter:\s*none;/);
-  assert.match(mobileBlock, /\.ai-widget::before\s*\{[\s\S]*?backdrop-filter:\s*var\(--dashboard-card-blur\);/);
+  assert.match(mobileBlock, /\.ai-widget\s*\{[\s\S]*?padding:\s*8px 0;/);
+  assert.doesNotMatch(mobileBlock, /\.ai-widget::before\s*\{/);
   assert.match(mobileBlock, /\.ai-card-wrap\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?left:\s*12px;[\s\S]*?right:\s*12px;[\s\S]*?bottom:\s*12px;/);
   assert.match(mobileBlock, /\.ai-insight-actions\s*\{[\s\S]*?grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/);
   assert.match(mobileBlock, /\.ai-card \.border-glow-inner\s*\{[\s\S]*?max-height:\s*calc\(100dvh - 24px\);/);
@@ -330,12 +334,17 @@ test('uses theme-specific AI dialog card backgrounds', () => {
   assert.doesNotMatch(lightBlock, /--ai-card-bg:\s*#120F17;/);
 });
 
-test('styles the launcher as a sidebar status card with a transparent 2D sprite mascot and speech bubble', () => {
+test('styles the launcher as a cardless 2D sprite mascot with assistant copy and speech bubble', () => {
   assert.match(componentSource, /<div className="ai-status-copy" aria-hidden="true">[\s\S]*?<span>AI 助手<\/span>[\s\S]*?<b>经营分析<\/b>/);
   assert.match(componentCss, /\.ai-widget\s*\{[^}]*min-height:\s*168px;/s);
   assert.match(componentCss, /\.ai-widget\s*\{[^}]*gap:\s*4px;/s);
-  assert.match(componentCss, /\.ai-widget\s*\{[^}]*padding:\s*8px 10px;/s);
-  assert.match(componentCss, /\.ai-widget\s*\{[^}]*background:\s*rgba\(255,\s*255,\s*255,\s*\.04\);/s);
+  assert.match(componentCss, /\.ai-widget\s*\{[^}]*padding:\s*8px 0;/s);
+  assert.match(componentCss, /\.ai-widget\s*\{[^}]*border:\s*0;/s);
+  assert.match(componentCss, /\.ai-widget\s*\{[^}]*border-radius:\s*0;/s);
+  assert.match(componentCss, /\.ai-widget\s*\{[^}]*background:\s*transparent;/s);
+  assert.match(componentCss, /\.ai-widget\s*\{[^}]*backdrop-filter:\s*none;/s);
+  assert.match(componentCss, /\.ai-widget\s*\{[^}]*box-shadow:\s*none;/s);
+  assert.doesNotMatch(componentCss, /\.ai-widget::before\s*\{/);
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*width:\s*116px;/s);
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*height:\s*152px;/s);
   assert.match(componentCss, /\.ai-orb\s*\{[^}]*background:\s*transparent;/s);

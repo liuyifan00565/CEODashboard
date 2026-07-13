@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-13 14:25:00 CST  更新内容: 侧栏品牌月份保持左对齐，第二行当前视角与标题“舱”字右边缘对齐。 */
+/* 更新时间: 2026-07-13 14:31:00 CST  更新内容: 侧栏品牌副标题按换行符展示月份与当前视角，确保两项信息各占一行。 */
 /* 更新时间: 2026-07-09 18:45:00 CST  更新内容: 收小侧栏品牌 logo 与标题字号，确保“福客经营驾驶舱”在 220px 导航栏内完整显示。 */
 /* 更新时间: 2026-07-09 18:26:40 CST  更新内容: 为侧边导航顶部品牌 logo 区补充紧凑玻璃内嵌样式，让品牌位于导航项上方且不抢占主内容首屏。 */
 /* 更新时间: 2026-07-09 13:13:45 CST  更新内容: 侧边导航增加经营总览/数据维护换组淡入淡出与稳定高度，减少切换生硬跳变。 */
@@ -51,7 +53,9 @@
 }
 
 .sb-brand-copy {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
+  width: max-content;
+  max-width: calc(100% - 42px);
   min-width: 0;
   display: grid;
   gap: 5px;
@@ -71,14 +75,25 @@
 
 .sb-brand-copy small {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
   color: rgba(247,248,252,.54);
   font-size: 12px;
   font-weight: 650;
   line-height: 1.1;
   letter-spacing: 0;
+  text-align: left;
+}
+
+.sb-brand-copy small span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sb-brand-copy small span + span {
+  text-align: right;
 }
 
 .sb-section + .sb-section {

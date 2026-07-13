@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 10:07:26 CST
+ Update content: 成本维护移除赢单金额展示，仅保留成本、成交、退款和 ROI。
+*/
+/*
  Update time: 2026-07-13 00:00:00 CST
  Update content: Switch target summary readonly values back to compact text rows.
 */
@@ -13,7 +17,7 @@
 /*
  Update time: 2026-07-13 00:00:00 CST
  Update content: Target maintenance month cells show editable target and actual completion amount fields.
-*/
+ */
 /*
  Update time: 2026-07-10 18:19:58 CST
  Update content: Snap target maintenance current-month auto alignment to full period columns so the table does not open on a clipped half column.
@@ -912,7 +916,6 @@ const CostMaintenancePage = forwardRef(function CostMaintenancePage({ markDirty,
                           ) : (
                             <div className="mnt-mini-line">成本 {formatWan(period.cost)}</div>
                           )}
-                          <div className="mnt-mini-line">赢单 {formatWan(period.actual)}</div>
                           <div className="mnt-mini-line">成交 {period.deals} 单</div>
                           {editable ? (
                             <label className="mnt-inline-field">

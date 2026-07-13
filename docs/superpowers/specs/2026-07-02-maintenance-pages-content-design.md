@@ -1,4 +1,8 @@
 <!--
+更新时间: 2026-07-13 10:07:26 CST
+更新内容: 成本维护页面移除赢单金额展示，仅保留成本、成交、退款和 ROI；ROI 计算口径不变。
+-->
+<!--
 Update time: 2026-07-09 16:20:00 CST
 Update content: Cost maintenance adds channel monthly refund amount, stored as `biz_channel_cost_monthly.refund_amount_yuan`.
 -->
@@ -112,7 +116,7 @@ Update content: Cost maintenance adds channel monthly refund amount, stored as `
 - `dim_channel`: 渠道树。
 - `biz_channel_cost_monthly`: 渠道投放成本。
 - `biz_labor_cost_monthly`: 人力成本。
-- `fact_revenue_daily`: 赢单金额和成交单数。
+- `fact_revenue_daily`: 成交单数，以及仅用于计算 ROI 的赢单金额；页面不再单独展示赢单金额。
 
 ### 页面内容
 
@@ -128,8 +132,9 @@ Update content: Cost maintenance adds channel monthly refund amount, stored as `
 1. 渠道成本维护
    - 行：渠道汇总 + 渠道明细。
    - 列：全年、季度、月份。
-   - 可编辑字段：投入成本，对应 `investment_amount_yuan`。
-   - 只读指标：赢单金额、成交单数、ROI。
+   - 可编辑字段：投入成本和退款金额，分别对应 `investment_amount_yuan` 和 `refund_amount_yuan`。
+   - 页面指标按成本、成交、退款、ROI 的顺序展示，不再单独展示赢单金额。
+   - 只读指标：成交单数、ROI。
    - ROI 口径：当月赢单金额和当月投入成本计算得出。
 
 2. 人力成本维护
