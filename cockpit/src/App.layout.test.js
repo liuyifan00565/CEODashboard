@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 14:44:47 CST
+ 更新内容: 回归测试锁定算力页饼图外围名称为 12px、占比为 11px。
+*/
+/*
  更新时间: 2026-07-13 14:24:00 CST
  更新内容: 回归测试锁定侧栏品牌月份左对齐，并让当前视角与标题“舱”字的右边缘对齐。
 */
@@ -1251,9 +1255,9 @@ test('keeps compute pie labels and tooltip cards readable around donut charts', 
   assert.doesNotMatch(computePageSource, /distanceToLabelLine:\s*0/);
   assert.doesNotMatch(computePageSource, /bleedMargin:\s*12/);
   assert.match(computePageSource, /labelLine:\s*\{[\s\S]*?show:\s*true,[\s\S]*?lineStyle:/);
-  assert.match(computePageSource, /label:\s*\{[\s\S]*?fontSize:\s*14,[\s\S]*?lineHeight:\s*18/);
-  assert.match(computePageSource, /name:\s*\{[\s\S]*?fontSize:\s*14,[\s\S]*?fontWeight:\s*820,[\s\S]*?textShadowBlur:\s*8/);
-  assert.match(computePageSource, /value:\s*\{[\s\S]*?color:\s*tokens\.chartText,[\s\S]*?fontSize:\s*13,[\s\S]*?fontWeight:\s*780/);
+  assert.match(computePageSource, /label:\s*\{[\s\S]*?fontSize:\s*12,[\s\S]*?lineHeight:\s*18/);
+  assert.match(computePageSource, /name:\s*\{[\s\S]*?fontSize:\s*12,[\s\S]*?fontWeight:\s*820,[\s\S]*?textShadowBlur:\s*8/);
+  assert.match(computePageSource, /value:\s*\{[\s\S]*?color:\s*tokens\.chartText,[\s\S]*?fontSize:\s*11,[\s\S]*?fontWeight:\s*780/);
   assert.match(computePageSource, /const COMPUTE_STACKED_PIE_LABELS = new Set\(\['卓越版'\]\);/);
   assert.match(computePageSource, /function formatComputePieLabel\(params\)/);
   assert.match(computePageSource, /COMPUTE_STACKED_PIE_LABELS\.has\(String\(params\.name\)\)/);

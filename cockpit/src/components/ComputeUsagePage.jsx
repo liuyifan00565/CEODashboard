@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 14:44:47 CST
+ 更新内容: 缩小算力用量分析页两张饼图外围名称与占比标注的字号。
+*/
+/*
  更新时间: 2026-07-10 15:16:00 CST
  更新内容: 合并算力后台同步状态，并让加载骨架和完成页面都保留福小客洞察定位标识。
 */
@@ -918,13 +922,13 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
           show: true,
           position: 'outer',
           color: tokens.chartText,
-          fontSize: 14,
+          fontSize: 12,
           lineHeight: 18,
           formatter: formatComputePieLabel,
           rich: {
             name: {
               color: tokens.chartText,
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: 820,
               lineHeight: 18,
               textShadowColor: 'rgba(0,0,0,.52)',
@@ -932,7 +936,7 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
             },
             value: {
               color: tokens.chartText,
-              fontSize: 13,
+              fontSize: 11,
               fontWeight: 780,
               lineHeight: 18,
               textShadowColor: 'rgba(0,0,0,.52)',
