@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-13 19:46:24 CST
+ 更新内容: 保留当前趋势与经营指标内容尺寸，仅移除红线以下 14px 底部区域，并在新底边重建圆角玻璃边框。
+*/
+/*
+ 更新时间: 2026-07-13 19:37:49 CST
+ 更新内容: 按截图红线保持趋势与经营指标卡横向宽度不变，将整行桌面高度统一上收约 14px。
+*/
+/*
  更新时间: 2026-07-10 15:16:00 CST
  更新内容: 合并远端算力骨架样式，保留福小客指标定位的滚动留白与短暂玻璃焦点反馈。
 */
@@ -286,10 +294,11 @@
 }
 
 .dash-secondary-grid{
+  --dash-secondary-content-height:clamp(336px,34.5vh,372px);
   flex:none;min-height:0;display:grid;gap:16px;
   grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);
   /* 1K / 1080p 默认紧凑档：保留完整趋势坐标轴和右侧三张经营指标卡。 */
-  grid-template-rows:clamp(350px,36vh,386px);
+  grid-template-rows:calc(var(--dash-secondary-content-height) - 14px);
   grid-template-areas:
     "trend finance";
 }
@@ -361,6 +370,38 @@
 .dash-secondary-cell .mt-sub{font-size:13px;color:var(--faint)}
 .dash-secondary-cell .mt-chart{flex:1;min-height:0}
 .dash-secondary-cell .mt-chart > div{height:100%!important;min-height:180px}
+
+@media (min-width:1181px){
+  .dash-secondary-cell{
+    position:relative;
+    overflow:hidden;
+    border-radius:0 0 16px 16px;
+    isolation:isolate;
+  }
+  .dash-secondary-cell::after{
+    content:"";
+    position:absolute;
+    z-index:6;
+    right:0;
+    bottom:0;
+    left:0;
+    height:16px;
+    border:1px solid var(--dashboard-card-border);
+    border-top:0;
+    border-radius:0 0 16px 16px;
+    pointer-events:none;
+  }
+  .dash-secondary-cell:hover::after,
+  .dash-secondary-cell:focus-within::after{
+    border-color:rgba(255,255,255,.34);
+  }
+  .dash-secondary-cell--trend > .search-result-border,
+  .dash-secondary-cell--trend > .search-result-border > .search-result-border__content,
+  .dash-secondary-cell--trend .mt-panel,
+  .dash-secondary-cell--finance .dash-finance-kpis{
+    height:var(--dash-secondary-content-height);
+  }
+}
 
 /* ===== 搜索命中边框 ===== */
 .search-result-border{
@@ -443,9 +484,13 @@
 @media (min-width:1181px) and (max-height:1071px){
   .dash-main{gap:6px}
   .dash-content{gap:8px;scroll-margin-top:56px}
-  .dash-secondary-grid{grid-template-rows:clamp(320px,34vh,350px);gap:14px}
+  .dash-secondary-grid{
+    --dash-secondary-content-height:clamp(306px,32.5vh,336px);
+    grid-template-rows:calc(var(--dash-secondary-content-height) - 14px);
+    gap:14px;
+  }
   .dash-finance-kpis{
-    grid-template-rows:minmax(136px,.82fr) minmax(176px,1.08fr);
+    grid-template-rows:minmax(130px,.82fr) minmax(168px,1.08fr);
     gap:8px;
   }
   .dash-secondary-cell .mt-panel{padding:14px}
@@ -465,7 +510,8 @@
 /* 2K / 1440p 舒展档：提高图表阅读尺度，同时不改变主结构。 */
 @media (min-width:2200px) and (min-height:1300px){
   .dash-secondary-grid{
-    grid-template-rows:410px;
+    --dash-secondary-content-height:396px;
+    grid-template-rows:382px;
   }
 }
 

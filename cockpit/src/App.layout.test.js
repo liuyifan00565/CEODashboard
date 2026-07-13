@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-13 19:46:24 CST  更新内容: 回归锁定趋势经营指标行保留当前内容尺寸，仅移除红线以下区域并重建圆角底边。 */
+/* 更新时间: 2026-07-13 19:37:49 CST  更新内容: 回归锁定月度主卡与趋势经营指标行按截图红线收紧高度，横向列宽保持不变。 */
 /* 更新时间: 2026-07-13 19:26:40 CST  更新内容: 回归锁定年度折叠条使用加粗进度条并在右侧显示完成百分比。 */
 /* 更新时间: 2026-07-13 19:23:27 CST  更新内容: 回归锁定年度回款总览置顶并默认折叠为标题、进度条和展开箭头。 */
 /* 更新时间: 2026-07-13 18:53:01 CST  更新内容: 回归锁定销售部人力自动汇总、市场部人力独立维护。 */
@@ -1638,10 +1640,10 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   assert.match(monthGridBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.035\);/);
   assert.match(operatingOverviewCss, /\.op-month-primary-value-row\s*\{[\s\S]*?align-items:\s*flex-end;/);
   assert.match(operatingOverviewCss, /\.op-month-refund-note\s*\{[\s\S]*?margin-bottom:\s*clamp\(3px, \.4vw, 6px\);/);
-  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 218px;[\s\S]*?align-content:\s*start;/);
+  assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*auto 200px;[\s\S]*?align-content:\s*start;/);
   assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?margin-left:\s*-16px;[\s\S]*?margin-right:\s*8px;/);
-  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?width:\s*clamp\(380px, 29vw, 480px\);[\s\S]*?height:\s*218px;[\s\S]*?min-height:\s*218px;/);
-  assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*218px;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?width:\s*clamp\(380px, 29vw, 480px\);[\s\S]*?height:\s*200px;[\s\S]*?min-height:\s*200px;/);
+  assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*200px;/);
   assert.match(operatingOverviewCss, /\.op-month-grid \.op-channel-chart\s*\{[\s\S]*?scale\(1\.3\);/);
   assert.match(operatingOverviewCss, /\.op-channel-list\s*\{[\s\S]*?gap:\s*16px;/);
   assert.match(operatingOverviewCss, /\.op-channel-item\s*\{[\s\S]*?min-height:\s*30px;/);
@@ -1985,13 +1987,13 @@ test('keeps month year trend and finance metrics balanced across 1K and 2K scree
   assert.doesNotMatch(dashboardCss, /\.dash-topbar/);
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?gap:10px;/);
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:18px;/);
-  assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?flex:none;[\s\S]*?grid-template-rows:clamp\(350px,36vh,386px\);/);
-  assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?grid-template-rows:clamp\(320px,34vh,350px\);[\s\S]*?grid-template-rows:minmax\(136px,\.82fr\) minmax\(176px,1\.08fr\);/);
+  assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?--dash-secondary-content-height:clamp\(336px,34\.5vh,372px\);[\s\S]*?grid-template-rows:calc\(var\(--dash-secondary-content-height\) - 14px\);/);
+  assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?--dash-secondary-content-height:clamp\(306px,32\.5vh,336px\);[\s\S]*?grid-template-rows:calc\(var\(--dash-secondary-content-height\) - 14px\);[\s\S]*?grid-template-rows:minmax\(130px,\.82fr\) minmax\(168px,1\.08fr\);/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-overview \{[\s\S]*?gap: 8px;/);
-  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows:\s*auto 208px;[\s\S]*?height:\s*208px;/);
+  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows:\s*auto 190px;[\s\S]*?height:\s*190px;/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-channel-list \{[\s\S]*?gap: 13px;/);
   assert.doesNotMatch(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows: auto 148px;[\s\S]*?height: 148px;/);
-  assert.match(dashboardCss, /@media \(min-width:2200px\) and \(min-height:1300px\)\{[\s\S]*?\.dash-secondary-grid\{[\s\S]*?grid-template-rows:410px;/);
+  assert.match(dashboardCss, /@media \(min-width:2200px\) and \(min-height:1300px\)\{[\s\S]*?\.dash-secondary-grid\{[\s\S]*?--dash-secondary-content-height:396px;[\s\S]*?grid-template-rows:382px;/);
   assert.match(dashboardCss, /\.dash-version-row \.vf-panel\{[\s\S]*?min-height:280px;/);
   assert.match(dashboardCss, /\.dash-version-row \.vf-ring-chart\{[\s\S]*?height:250px!important;/);
 });
