@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-13 18:53:01 CST  更新内容: 回归锁定销售部人力自动汇总、市场部人力独立维护。 */
 /* 更新时间: 2026-07-13 16:48:56 CST  更新内容: 回归锁定每个渠道可分别填写运营成本与人力成本。 */
 /*
  更新时间: 2026-07-13 14:50:37 CST
@@ -894,8 +895,12 @@ test('builds the target and cost maintenance pages from reference matrix content
   assert.match(maintenancePageSource, /保存目标/);
   assert.match(maintenancePageSource, /年度目标/);
   assert.match(maintenancePageSource, /目标维护/);
-  assert.match(maintenancePageSource, /case 'cost-maintenance': return \{ costChannels: d\.channels, costRows: d\.rows \};/);
+  assert.match(maintenancePageSource, /case 'cost-maintenance': return \{ costChannels: d\.channels, costRows: d\.rows, laborRows: d\.laborRows \};/);
   assert.match(maintenancePageSource, /渠道成本维护/);
+  assert.match(maintenancePageSource, /部门人力成本/);
+  assert.match(maintenancePageSource, /销售部人力成本/);
+  assert.match(maintenancePageSource, /市场部人力成本/);
+  assert.match(maintenancePageSource, /handleDepartmentLaborEdit\(row\.id, column\.key, e\.target\.value\)/);
   assert.match(maintenancePageSource, /handleCostFieldEdit\(row\.id, column\.key, 'operations'/);
   assert.match(maintenancePageSource, /handleCostFieldEdit\(row\.id, column\.key, 'labor'/);
   assert.match(maintenancePageSource, /保存成本/);

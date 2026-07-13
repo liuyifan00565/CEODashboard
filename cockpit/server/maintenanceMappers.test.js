@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 18:53:01 CST
+ Update content: Cover derived sales-department labor and independently maintained marketing-department labor in cost snapshots.
+*/
+/*
  Update time: 2026-07-13 16:48:56 CST
  Update content: Cover operations-cost mapping separately from editable labor cost, while retaining refund and ROI rollups.
 */
@@ -105,14 +109,15 @@ test('buildTargetSnapshot: 120% and above becomes good', () => {
   assert.equal(dept.periods.m02.status, 'good');
 });
 
-test('buildCostSnapshot builds per-channel operations and labor costs with total-cost ROI', () => {
+test('buildCostSnapshot builds channel costs plus derived sales and independent marketing labor', () => {
   const channels = [
     { channel_id: 3001, channel_name: '线上', parent_id: null, is_enabled: 1 },
     { channel_id: 3002, channel_name: '华南线下', parent_id: null, is_enabled: 1 },
   ];
   const costs = [{ year_month: '2026-01', channel_id: 3001, operations_amount_yuan: 500000, labor_amount_yuan: 200000, refund_amount_yuan: 120000 }];
   const revenue = [{ ym: '2026-01', channel_id: 3001, amt: 1050000, deals: 5 }];
-  const { channels: nav, rows } = buildCostSnapshot({ channels, costs, revenue });
+  const labor = [{ year_month: '2026-01', cost_type: 'marketing', amount_yuan: 270000 }];
+  const { channels: nav, rows, laborRows } = buildCostSnapshot({ channels, costs, revenue, labor });
 
   assert.equal(nav[0].id, 'all');
   assert.equal(nav[1].id, '3001');
@@ -135,6 +140,15 @@ test('buildCostSnapshot builds per-channel operations and labor costs with total
   assert.equal(all.periods.m01.labor, 20);
   assert.equal(all.periods.m01.totalCost, 70);
   assert.equal(all.periods.m01.refund, 12);
+
+  const sales = laborRows.find((row) => row.costType === 'sales');
+  const marketing = laborRows.find((row) => row.costType === 'marketing');
+  assert.equal(sales.name, '销售部人力成本');
+  assert.equal(sales.editable, false);
+  assert.equal(sales.periods.m01.cost, 20);
+  assert.equal(marketing.name, '市场部人力成本');
+  assert.equal(marketing.editable, true);
+  assert.equal(marketing.periods.m01.cost, 27);
 });
 
 test('buildCostSnapshot gives every channel an editable zero labor cost for an empty year', () => {

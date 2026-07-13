@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-13 18:53:01 CST  更新内容: 成本快照将四个渠道人力汇总为销售部人力，并额外计入独立市场部人力。 */
 /* 更新时间: 2026-07-13 16:48:56 CST  更新内容: 成本快照回归改为运营成本 + 人力成本，并保留 adCost 兼容别名。 */
 /*
  更新时间: 2026-07-10 17:02:12 CST
@@ -135,10 +136,10 @@ test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
   assert.equal(snapshot.kpi.yearTarget, 4874);
   assert.equal(snapshot.kpi.monthRefund, 0);
   assert.equal(snapshot.kpi.yearRefund, 0);
-  assert.equal(snapshot.kpi.totalCost, 159);
+  assert.equal(snapshot.kpi.totalCost, 186);
   assert.equal(snapshot.kpi.adCost, 77);
   assert.equal(snapshot.kpi.operationsCost, 77);
-  assert.equal(snapshot.kpi.laborCost, 82);
+  assert.equal(snapshot.kpi.laborCost, 109);
   assert.equal(snapshot.kpiDerived.monthCompletion, 125);
   assert.equal(snapshot.kpiDerived.yearCompletion, 10.7);
   assert.equal(snapshot.operatingOverviewMetrics.remainingMonthlyRequired, 726);
@@ -149,8 +150,8 @@ test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
   assert.equal(snapshot.monthlyTrend.at(-1).recovered, 520);
   assert.equal(snapshot.channelRoi.find((row) => row.key === 'online').investment, 71);
   assert.deepEqual(snapshot.costTrend.map((row) => [row.yearMonth, row.adCost, row.laborCost, row.totalCost]), [
-    ['2026-05', 55, 72, 127],
-    ['2026-06', 77, 82, 159],
+    ['2026-05', 55, 94, 149],
+    ['2026-06', 77, 109, 186],
   ]);
   assert.deepEqual(snapshot.costTrend.map((row) => row.operationsCost), [55, 77]);
   assert.deepEqual(snapshot.costTrend.at(-1).channels, { online: 71, south: 39, east: 30, agent: 19 });
@@ -158,6 +159,22 @@ test('maps mysql dashboard rows into strict live dashboard snapshot', () => {
   assert.deepEqual(snapshot.renewalRows[0].periods.month, { due: 20, renewed: 18, revenue: 88, prevDue: 18, prevRenewed: 15 });
   assert.deepEqual(snapshot.renewalRows[0].periods.year, { due: 0, renewed: 0, revenue: 0, prevDue: 0, prevRenewed: 0 });
   assert.equal(snapshot.salesMemberRows.find((row) => row.key === 'staff-2004').group, 'east');
+});
+
+test('falls back to legacy sales plus marketing labor only when channel labor is wholly unconfigured', () => {
+  const snapshot = mapDashboardRowsToSnapshot({
+    latestMonth: '2026-06',
+    channelCosts: [{ channel_key: 'east', operations_wan: 18, labor_wan: null }],
+    laborCosts: [
+      { cost_type: 'sales', amount_wan: 54 },
+      { cost_type: 'marketing', amount_wan: 27 },
+    ],
+  });
+
+  assert.equal(snapshot.kpi.operationsCost, 18);
+  assert.equal(snapshot.kpi.laborCost, 81);
+  assert.equal(snapshot.kpi.totalCost, 99);
+  assert.equal(snapshot.costTrend[0].laborCost, 81);
 });
 
 test('chinaTodayYMD 在任意进程时区下都返回北京时间当地的今天', () => {

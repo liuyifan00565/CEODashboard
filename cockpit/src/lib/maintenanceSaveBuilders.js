@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 18:53:01 CST
+ Update content: Cost saves include independent marketing labor drafts and never persist derived sales-department labor.
+*/
+/*
  Update time: 2026-07-13 16:48:56 CST
  Update content: Cost maintenance save builder merges per-channel operations and labor inputs into one monthly database row.
 */
@@ -104,10 +108,11 @@ export function buildTargetSaveRows(rows, draft, year) {
 
 /**
  * 成本维护：把同一渠道月份的运营、人力和退款 draft 合并为一条渠道成本行。
- * @returns {{ rows: Array }}
+ * @returns {{ rows: Array, laborRows: Array }}
  */
 export function buildCostSaveRows(snapshot, draft, year) {
   const rows = Array.isArray(snapshot?.rows) ? snapshot.rows : [];
+  const departmentLaborRows = Array.isArray(snapshot?.laborRows) ? snapshot.laborRows : [];
   const channelRows = new Map(
     rows.filter((r) => r && r.type === 'channel' && r.id != null).map((r) => [String(r.id), r]),
   );
@@ -139,7 +144,28 @@ export function buildCostSaveRows(snapshot, draft, year) {
     }
     costRowsByKey.set(mapKey, existing);
   }
-  return { rows: Array.from(costRowsByKey.values()) };
+  const editableMarketingRows = new Map(
+    departmentLaborRows
+      .filter((row) => row?.editable !== false && row?.costType === 'marketing')
+      .map((row) => [String(row.id), row]),
+  );
+  const laborRowsByKey = new Map();
+  for (const [key, value] of Object.entries(draft || {})) {
+    const { rowId, monthKey, valueField } = splitCostDraftKey(key);
+    const row = editableMarketingRows.get(rowId);
+    const mm = monthKeyToMM(monthKey);
+    if (!row || !mm || valueField !== 'cost') continue;
+    const yearMonth = `${year}-${mm}`;
+    laborRowsByKey.set(`${row.costType}|${yearMonth}`, {
+      cost_type: row.costType,
+      year_month: yearMonth,
+      amount_wan: Number(value) || 0,
+    });
+  }
+  return {
+    rows: Array.from(costRowsByKey.values()),
+    laborRows: Array.from(laborRowsByKey.values()),
+  };
 }
 
 /**

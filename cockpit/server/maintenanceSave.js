@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 18:53:01 CST
+ Update content: Cost maintenance saves marketing labor independently and rejects direct sales-labor writes because sales is channel-derived.
+*/
+/*
  Update time: 2026-07-13 16:48:56 CST
  Update content: Cost maintenance atomically upserts operations and labor costs on the same channel-month row.
 */
@@ -254,7 +258,7 @@ export async function saveCost(connection, rows, groups = [], deletions = [], ye
   return { written, skipped: skipped + deletionRes.skipped, deleted: deletionRes.deleted, errors: [...errors, ...deletionRes.errors] };
 }
 
-/** 人力成本维护：按 (year_month, cost_type) upsert biz_labor_cost_monthly，仅写 amount_yuan。 */
+/** 市场部人力成本维护：按 (year_month, marketing) upsert；销售部由四个渠道汇总，不单独写。 */
 export async function saveLabor(connection, rows) {
   let written = 0;
   let skipped = 0;
@@ -262,9 +266,9 @@ export async function saveLabor(connection, rows) {
   for (const row of rows) {
     const costType = String(row.cost_type || '');
     const yearMonth = String(row.year_month || '');
-    if (!costType || !/^\d{4}-\d{2}$/.test(yearMonth)) {
+    if (costType !== 'marketing' || !/^\d{4}-\d{2}$/.test(yearMonth)) {
       skipped += 1;
-      errors.push({ field: 'cost_type|year_month', message: `人力成本行键非法，跳过：cost_type=${costType} year_month=${yearMonth}` });
+      errors.push({ field: 'cost_type|year_month', message: `仅市场部人力成本可独立维护，跳过：cost_type=${costType} year_month=${yearMonth}` });
       continue;
     }
     const amountYuan = WAN_TO_YUAN(row.amount_wan);
@@ -447,11 +451,12 @@ const SAVERS = {
   'target-maintenance': (conn, body) => saveTarget(conn, body.rows || []),
   'cost-maintenance': async (conn, body) => {
     const costRes = await saveCost(conn, body.rows || [], body.groups || [], body.deletions || [], body.year);
+    const laborRes = await saveLabor(conn, body.laborRows || []);
     return {
-      written: costRes.written,
-      skipped: costRes.skipped,
+      written: costRes.written + laborRes.written,
+      skipped: costRes.skipped + laborRes.skipped,
       deleted: costRes.deleted || 0,
-      errors: costRes.errors,
+      errors: [...costRes.errors, ...laborRes.errors],
     };
   },
   'org-maintenance': (conn, body) => saveOrg(conn, body.rows || [], body.departments || []),

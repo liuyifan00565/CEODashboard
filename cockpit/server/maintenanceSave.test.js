@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 18:53:01 CST
+ Update content: Restrict department labor writes to independently maintained marketing cost; sales labor is derived from channels.
+*/
+/*
  Update time: 2026-07-13 16:48:56 CST
  Update content: Cover atomic upserts for separate operations and labor costs using database business keys.
 */
@@ -217,11 +221,19 @@ test('saveCost: 删除渠道会停用渠道并清理当前年份成本', async (
 
 test('saveLabor: 按 (year_month, cost_type) 原子 upsert amount_yuan', async () => {
   const { conn, execs } = makeConn(() => []);
-  await saveLabor(conn, [{ cost_type: 'sales', year_month: '2026-03', amount_wan: 53 }]);
+  await saveLabor(conn, [{ cost_type: 'marketing', year_month: '2026-03', amount_wan: 53 }]);
   const upsert = execs.find((e) => e.sql.startsWith('INSERT INTO biz_labor_cost_monthly'));
   assert.ok(upsert);
   assert.match(upsert.sql, /ON DUPLICATE KEY UPDATE amount_yuan = VALUES\(amount_yuan\)/);
-  assert.deepEqual(upsert.params, ['2026-03', 'sales', 530000]);
+  assert.deepEqual(upsert.params, ['2026-03', 'marketing', 530000]);
+});
+
+test('saveLabor: 销售部人力由四个渠道汇总，不允许单独落库', async () => {
+  const { conn, execs } = makeConn(() => []);
+  const result = await saveLabor(conn, [{ cost_type: 'sales', year_month: '2026-03', amount_wan: 53 }]);
+  assert.equal(result.written, 0);
+  assert.equal(result.skipped, 1);
+  assert.equal(execs.some((e) => e.sql.startsWith('INSERT INTO biz_labor_cost_monthly')), false);
 });
 
 test('saveLabor: INSERT 依赖自增 labor_cost_id', async () => {

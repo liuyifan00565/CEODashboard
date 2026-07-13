@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 18:53:01 CST
+ Update content: Cost snapshots derive sales-department labor from channel labor and expose marketing-department labor as an independent row.
+*/
+/*
  Update time: 2026-07-13 16:48:56 CST
  Update content: Cost snapshots expose editable operations and labor costs on every channel-month row.
 */
@@ -84,6 +88,22 @@ function buildCostPeriods(monthOperations, monthLabor, monthActual, monthDeals, 
   const dYear = ALL_MONTH_KEYS.reduce((s, k) => s + (periods[k].deals || 0), 0);
   const rYear = ALL_MONTH_KEYS.reduce((s, k) => s + (periods[k].refund || 0), 0);
   periods.year = costPeriod(operationsYear, laborYear, aYear, dYear, rYear, ALL_MONTH_KEYS.some((k) => periods[k].laborConfigured));
+  return periods;
+}
+
+function laborPeriod(cost) {
+  return { cost: Math.round(Number(cost || 0) * 100) / 100 };
+}
+
+function buildLaborPeriods(monthCosts) {
+  const periods = {};
+  ALL_MONTH_KEYS.forEach((key, index) => {
+    periods[key] = laborPeriod(monthCosts[index]);
+  });
+  Object.entries(QUARTER_MONTHS).forEach(([quarter, keys]) => {
+    periods[quarter] = laborPeriod(keys.reduce((sum, key) => sum + periods[key].cost, 0));
+  });
+  periods.year = laborPeriod(ALL_MONTH_KEYS.reduce((sum, key) => sum + periods[key].cost, 0));
   return periods;
 }
 
@@ -230,7 +250,7 @@ export function buildTargetSnapshot({ departments = [], staff = [], targets = []
   return { orgTree, rows };
 }
 
-export function buildCostSnapshot({ channels = [], costs = [], revenue = [] } = {}) {
+export function buildCostSnapshot({ channels = [], costs = [], revenue = [], labor = [] } = {}) {
   const costByChannel = new Map();
   const laborByChannel = new Map();
   const laborConfiguredByChannel = new Map();
@@ -301,7 +321,33 @@ export function buildCostSnapshot({ channels = [], costs = [], revenue = [] } = 
     })),
   ];
 
-  return { channels: navChannels, rows };
+  const marketingByMonth = new Map();
+  labor.forEach((row) => {
+    if (String(row.cost_type) !== 'marketing') return;
+    const monthKey = monthKeyFromYM(row.year_month);
+    if (!ALL_MONTH_KEYS.includes(monthKey)) return;
+    marketingByMonth.set(monthKey, (marketingByMonth.get(monthKey) || 0) + roundWan(row.amount_yuan));
+  });
+  const laborRows = [
+    {
+      id: 'labor-sales',
+      costType: 'sales',
+      name: '销售部人力成本',
+      source: '四个渠道人力成本合计',
+      editable: false,
+      periods: buildLaborPeriods(allLabor),
+    },
+    {
+      id: 'labor-marketing',
+      costType: 'marketing',
+      name: '市场部人力成本',
+      source: '独立维护',
+      editable: true,
+      periods: buildLaborPeriods(ALL_MONTH_KEYS.map((key) => marketingByMonth.get(key) || 0)),
+    },
+  ];
+
+  return { channels: navChannels, rows, laborRows };
 }
 
 function deriveSourceName(s) {

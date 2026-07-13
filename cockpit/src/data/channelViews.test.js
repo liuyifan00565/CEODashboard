@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-13 18:53:01 CST
+ 更新内容: 成本维护样例恢复销售部自动汇总行与市场部独立维护行。
+*/
+/*
  更新时间: 2026-07-13 16:48:56 CST
  更新内容: 成本维护回归改为每个渠道月同时包含运营成本、人力成本和合计，不再检查独立人力成本行。
 */
@@ -85,6 +89,7 @@ import {
   COST_TREND,
   COST_MAINTENANCE_CHANNELS,
   COST_MAINTENANCE_ROWS,
+  LABOR_COST_MAINTENANCE_ROWS,
   DELIVERY_TARGET_COUNT,
   MAINTENANCE_MENU,
   MAINTENANCE_PERIOD_COLUMNS,
@@ -210,6 +215,14 @@ test('provides operations and labor costs on every cost maintenance channel row'
   assert.ok(COST_MAINTENANCE_ROWS.every((row) => row.periods.m06.labor >= 0));
   assert.ok(COST_MAINTENANCE_ROWS.every((row) => row.periods.m06.totalCost === row.periods.m06.operations + row.periods.m06.labor));
   assert.ok(COST_MAINTENANCE_ROWS.every((row) => row.periods.m06.actual >= 0));
+  const sales = LABOR_COST_MAINTENANCE_ROWS.find((row) => row.costType === 'sales');
+  const marketing = LABOR_COST_MAINTENANCE_ROWS.find((row) => row.costType === 'marketing');
+  const channelLabor = COST_MAINTENANCE_ROWS
+    .filter((row) => row.type === 'channel')
+    .reduce((sum, row) => sum + row.periods.m06.labor, 0);
+  assert.equal(sales.periods.m06.cost, channelLabor);
+  assert.equal(sales.editable, false);
+  assert.equal(marketing.editable, true);
 });
 
 test('provides organization maintenance departments and BI users', () => {

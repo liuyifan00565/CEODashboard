@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-13 18:53:01 CST
+ Update content: Cover marketing labor saves while excluding derived sales-department labor from the payload.
+*/
+/*
  Update time: 2026-07-13 16:48:56 CST
  Update content: Cover separate operations-cost and labor-cost save payloads for cost maintenance.
 */
@@ -91,6 +95,10 @@ const COST_SNAPSHOT = {
     { id: '3001', type: 'channel', name: '线上', periods: { m03: { operations: 50, labor: 20 } } },
     { id: '3002', type: 'channel', name: '华南线下', periods: { m03: { operations: 30, labor: 12 } } },
   ],
+  laborRows: [
+    { id: 'labor-sales', costType: 'sales', editable: false, periods: { m03: { cost: 32 } } },
+    { id: 'labor-marketing', costType: 'marketing', editable: true, periods: { m03: { cost: 27 } } },
+  ],
 };
 
 test('buildCostSaveRows: 同一渠道月份合并运营成本和人力成本', () => {
@@ -105,8 +113,19 @@ test('buildCostSaveRows: 同一渠道月份合并运营成本和人力成本', (
 });
 
 test('buildCostSaveRows: draft 空时无渠道成本行', () => {
-  const { rows } = buildCostSaveRows(COST_SNAPSHOT, {}, 2026);
+  const { rows, laborRows } = buildCostSaveRows(COST_SNAPSHOT, {}, 2026);
   assert.deepEqual(rows, []);
+  assert.deepEqual(laborRows, []);
+});
+
+test('buildCostSaveRows: only independently maintained marketing labor is persisted', () => {
+  const draft = {
+    'labor-sales|m03|cost': 99,
+    'labor-marketing|m03|cost': 30,
+  };
+  const { rows, laborRows } = buildCostSaveRows(COST_SNAPSHOT, draft, 2026);
+  assert.deepEqual(rows, []);
+  assert.deepEqual(laborRows, [{ cost_type: 'marketing', year_month: '2026-03', amount_wan: 30 }]);
 });
 
 test('buildCostSaveRows: 新增渠道成本保留临时 channel_id 交给后端映射', () => {

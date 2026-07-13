@@ -1,3 +1,7 @@
+/*
+ Update time: 2026-07-13 18:53:01 CST
+ Update content: Dashboard labor combines channel-derived sales labor with independent marketing labor, with legacy fallback for unconfigured channel labor.
+*/
 /* 更新时间: 2026-07-13 16:48:56 CST  更新内容: 总成本改为各渠道运营成本 + 各渠道人力成本；旧无渠道人力仅在新字段未维护时回退。 */
 /*
  更新时间: 2026-07-10 17:02:12 CST
@@ -368,6 +372,7 @@ function makeCostTrend({ channelCosts = [], laborCosts = [], latestMonth }) {
   const channelLaborByMonth = new Map();
   const configuredLaborMonths = new Set();
   const legacyLaborByMonth = new Map();
+  const marketingLaborByMonth = new Map();
 
   for (const row of channelCosts) {
     const yearMonth = row.year_month || latestMonth;
@@ -388,6 +393,9 @@ function makeCostTrend({ channelCosts = [], laborCosts = [], latestMonth }) {
     if (!yearMonth) continue;
     months.add(yearMonth);
     legacyLaborByMonth.set(yearMonth, num(legacyLaborByMonth.get(yearMonth)) + num(row.amount_wan));
+    if (row.cost_type === 'marketing') {
+      marketingLaborByMonth.set(yearMonth, num(marketingLaborByMonth.get(yearMonth)) + num(row.amount_wan));
+    }
   }
 
   return [...months]
@@ -400,7 +408,7 @@ function makeCostTrend({ channelCosts = [], laborCosts = [], latestMonth }) {
       );
       const operationsCost = round0(operationsByMonth.get(yearMonth));
       const laborCost = round0(configuredLaborMonths.has(yearMonth)
-        ? channelLaborByMonth.get(yearMonth)
+        ? num(channelLaborByMonth.get(yearMonth)) + num(marketingLaborByMonth.get(yearMonth))
         : legacyLaborByMonth.get(yearMonth));
       return {
         yearMonth,
@@ -655,8 +663,12 @@ export function mapDashboardRowsToSnapshot(rows) {
     0,
   ));
   const hasChannelLabor = (rows.channelCosts ?? []).some((row) => row.labor_wan != null);
+  const marketingLaborCost = sum(
+    (rows.laborCosts ?? []).filter((row) => row.cost_type === 'marketing'),
+    'amount_wan',
+  );
   const laborCost = round0(hasChannelLabor
-    ? sum(rows.channelCosts ?? [], 'labor_wan')
+    ? sum(rows.channelCosts ?? [], 'labor_wan') + marketingLaborCost
     : sum(rows.laborCosts ?? [], 'amount_wan'));
   const monthTargetGap = Math.max(0, currentMonthTarget - currentMonthRecovered);
   const kpi = {
