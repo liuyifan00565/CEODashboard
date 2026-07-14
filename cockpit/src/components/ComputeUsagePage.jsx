@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 16:43:57 CST
+ 更新内容: 继续关闭算力页两张饼图的鼠标事件、hover/select/blur 状态位移和面板入场位移，避免圆环仍然晃动。
+*/
+/*
  更新时间: 2026-07-14 16:35:00 CST
  更新内容: 关闭各版本算力消耗和算力用量分布饼图的入场动画、状态过渡与悬浮放大，保持初始尺寸不动。
 */
@@ -932,6 +936,12 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
         avoidLabelOverlap: true,
         minShowLabelAngle: 1,
         padAngle: 1,
+        silent: true,
+        selectedMode: false,
+        selectedOffset: 0,
+        legendHoverLink: false,
+        hoverAnimation: false,
+        cursor: 'default',
         itemStyle: {
           borderRadius: 8,
           borderColor: 'rgba(255, 255, 255, .12)',
@@ -979,6 +989,20 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
             shadowColor: 'rgba(255,255,255,.18)',
           },
         },
+        select: {
+          disabled: true,
+          scale: false,
+          scaleSize: 0,
+          itemStyle: {
+            borderWidth: 2,
+          },
+        },
+        blur: {
+          disabled: true,
+          itemStyle: {
+            opacity: 1,
+          },
+        },
         data: data.map((item) => ({
           name: item.name,
           value: item.value,
@@ -1017,11 +1041,11 @@ function KpiCard({ label, value, sub, meta, tone, active }) {
   );
 }
 
-function Panel({ className = '', title, sub, active, children }) {
+function Panel({ className = '', title, sub, active, animate = true, children }) {
   return (
     <section
       className={`cpu-panel ${className}${active ? ' cpu-panel--match' : ''}`}
-      data-anim
+      data-anim={animate ? '' : undefined}
       data-search-match={active ? 'true' : undefined}
     >
       <header className="cpu-panel__head">
@@ -1395,6 +1419,7 @@ export default function ComputeUsagePage({
         <Panel
           className="cpu-panel--pie cpu-panel--version-pie"
           title="各版本算力消耗"
+          animate={false}
           active={matchesTerm(SEARCH_KEYWORDS.version, searchTerm)}
         >
           <div className="cpu-pie-wrap">
@@ -1406,6 +1431,7 @@ export default function ComputeUsagePage({
         <Panel
           className="cpu-panel--pie cpu-panel--usage-pie"
           title="算力用量分布"
+          animate={false}
           active={matchesTerm(SEARCH_KEYWORDS.distribution, searchTerm)}
         >
           <div className="cpu-pie-wrap">
