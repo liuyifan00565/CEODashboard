@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 10:00:00 CST
+ 更新内容: 侧边导航“版本与交付”入口改回纯“交付”，同步更新回归断言。
+*/
+/*
  更新时间: 2026-07-13 20:30:00 CST
  更新内容: 同步侧边导航新增“版本与交付”入口的回归断言。
 */
@@ -134,10 +138,10 @@ function byKey(rows, key) {
   return rows.find((row) => row.key === key);
 }
 
-test('defines overview, compute usage, and version-delivery menu entries in the sidebar', () => {
+test('defines overview, compute usage, and delivery menu entries in the sidebar', () => {
   assert.deepEqual(
     MENU.map((item) => item.name),
-    ['经营总览', '算力用量分析', '版本与交付']
+    ['经营总览', '算力用量分析', '交付']
   );
   assert.deepEqual(
     MENU.map((item) => getDashboardChannelKey(item.key)),
@@ -160,7 +164,7 @@ test('defines only target and cost entries in the data maintenance sidebar', () 
   );
   assert.deepEqual(
     MENU.map((item) => item.name),
-    ['经营总览', '算力用量分析', '版本与交付']
+    ['经营总览', '算力用量分析', '交付']
   );
 });
 

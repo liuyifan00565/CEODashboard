@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-14 10:00:00 CST  更新内容: 版本情况移回经营总览页，AI 洞察导航 targetMenu 简化回
+   compute/overview 两态；同步更新版本/交付相关断言。 */
 /* 更新时间: 2026-07-13 20:30:00 CST  更新内容: 同步 AI 洞察导航泛化为 targetMenu 三态分支（compute/
    version-delivery/overview）后的回归断言，不再要求源码里出现字面量 setActiveMenu('compute')/('overview')。 */
 /* 更新时间: 2026-07-13 19:46:24 CST  更新内容: 回归锁定趋势经营指标行保留当前内容尺寸，仅移除红线以下区域并重建圆角底边。 */
@@ -1458,7 +1460,7 @@ test('AI insight navigation locates overview sections and switches to the comput
   assert.match(appSource, /const focusBlock = target === 'compute' \? 'start' : 'center';/);
   assert.match(appSource, /scrollIntoView\(\{ behavior: 'smooth', block: focusBlock \}\)/);
   assert.match(appSource, /function handleAiInsightNavigation\(target\)/);
-  assert.match(appSource, /target === 'compute' \? 'compute' : target === 'versions' \? 'version-delivery' : 'overview'/);
+  assert.match(appSource, /target === 'compute' \? 'compute' : 'overview'/);
   assert.match(appSource, /setActiveMenu\(targetMenu\)/);
   assert.match(appSource, /onNavigateInsight=\{handleAiInsightNavigation\}/);
   assert.match(appSource, /<AIAnalysisWidget[\s\S]*?computeDataState=\{computeDataState\}[\s\S]*?onNavigateInsight=\{handleAiInsightNavigation\}/);
@@ -1702,7 +1704,7 @@ test('restores secondary dashboard panels below the operating overview story', (
   assert.match(appSource, /<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
   assert.match(appSource, /className="dash-version-row"/);
   assert.match(appSource, /className="dash-secondary-grid"/);
-  assert.match(appSource, /<div className="dash-secondary-grid">[\s\S]*?<MonthlyTrend channelKey=\{activeChannelKey\} \/>[\s\S]*?<OpeningMetricCards searchTerm=\{searchTerm\} onOpenSecondary=\{handleOpenCard\} \/>[\s\S]*?<\/div>[\s\S]*?<div className="dash-version-row" data-anim>[\s\S]*?<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);
+  assert.match(appSource, /<div className="dash-secondary-grid">[\s\S]*?<MonthlyTrend channelKey=\{activeChannelKey\} \/>[\s\S]*?<OpeningMetricCards searchTerm=\{searchTerm\} onOpenSecondary=\{handleOpenCard\} \/>[\s\S]*?<\/div>[\s\S]*?<div className="dash-version-row"[\s\S]*?data-anim>[\s\S]*?<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);
   assert.match(appSource, /<MonthlyTrend channelKey=\{activeChannelKey\} \/>/);
   assert.match(appSource, /<OpeningMetricCards searchTerm=\{searchTerm\} onOpenSecondary=\{handleOpenCard\} \/>/);
   assert.match(appSource, /<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);

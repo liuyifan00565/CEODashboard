@@ -1,4 +1,10 @@
 /*
+ 更新时间: 2026-07-14 10:00:00 CST
+ 更新内容: 版本情况(VersionFinancePanel)移回经营总览页（恢复到月度趋势/开户投入区块下方），
+          侧边导航“版本与交付”入口改为纯“交付”页，只保留交付面板(DeliveryPanel)；
+          handleAiInsightNavigation 的 target==='versions' 分支同步改回跳转经营总览。
+*/
+/*
  更新时间: 2026-07-13 22:20:00 CST
  更新内容: “版本与交付”标签页两个面板各加一行 .dash-section-eyebrow 小标签（销售侧·版本构成 /
           履约侧·交付产能），让合并展示更像有意的分组而不是随意拼接。
@@ -274,7 +280,7 @@ export default function App() {
   const aiInsightFocusTimerRef = useRef(null);
   const isMaintenancePage = maintenanceMode;
   const isComputePage = activeMenu === 'compute';
-  const isVersionDeliveryPage = activeMenu === 'version-delivery';
+  const isDeliveryPage = activeMenu === 'delivery';
   const activeChannelKey = getDashboardChannelKey(activeMenu);
   const activeMenuLabel = getDashboardMenuLabel(activeMenu);
   const activeContextLabel = maintenanceMode
@@ -446,7 +452,7 @@ export default function App() {
     pendingMenuScrollRef.current = false;
     setMaintenanceMode(false);
 
-    const targetMenu = target === 'compute' ? 'compute' : target === 'versions' ? 'version-delivery' : 'overview';
+    const targetMenu = target === 'compute' ? 'compute' : 'overview';
 
     if (activeMenu === targetMenu) {
       requestAnimationFrame(() => {
@@ -606,22 +612,12 @@ export default function App() {
                 computeDataState={computeDataState}
                 customerSyncState={computeCustomerSyncState}
               />
-            ) : isVersionDeliveryPage ? (
-              <>
-                <div className="dash-version-row" data-ai-insight-target="versions" data-anim>
-                  <div className="dash-section-eyebrow">销售侧 · 版本构成</div>
-                  <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.version, searchTerm)}>
-                    <VersionFinancePanel channelKey={activeChannelKey} />
-                  </SearchResultBorder>
-                </div>
-
-                <div className="dash-secondary-delivery" data-anim>
-                  <div className="dash-section-eyebrow">履约侧 · 交付产能</div>
-                  <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.delivery, searchTerm)}>
-                    <DeliveryPanel />
-                  </SearchResultBorder>
-                </div>
-              </>
+            ) : isDeliveryPage ? (
+              <div className="dash-secondary-delivery" data-anim>
+                <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.delivery, searchTerm)}>
+                  <DeliveryPanel />
+                </SearchResultBorder>
+              </div>
             ) : (
               <>
                 <OperatingOverview
@@ -653,6 +649,12 @@ export default function App() {
                       ))}
                     </div>
                   </div>
+                </div>
+
+                <div className="dash-version-row" data-ai-insight-target="versions" data-anim>
+                  <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.version, searchTerm)}>
+                    <VersionFinancePanel channelKey={activeChannelKey} />
+                  </SearchResultBorder>
                 </div>
               </>
             )}

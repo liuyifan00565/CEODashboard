@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-14 10:00:00 CST
+ 更新内容: 版本情况(VersionFinancePanel)移回经营总览页，侧边导航“版本与交付”入口改为纯“交付”，
+          只承载交付面板(DeliveryPanel)。
+*/
+/*
  更新时间: 2026-07-13 20:30:00 CST
  更新内容: 侧边导航新增“版本与交付”入口（compute 之后），承接原经营总览页下方的版本情况和交付面板。
 */
@@ -1064,7 +1069,7 @@ export function getDeliverySummary() {
 export const MENU = [
   { key: 'overview', name: '经营总览', channelKey: 'all' },
   { key: 'compute', name: '算力用量分析', channelKey: 'all' },
-  { key: 'version-delivery', name: '版本与交付', channelKey: 'all', icon: 'delivery' },
+  { key: 'delivery', name: '交付', channelKey: 'all', icon: 'delivery' },
 ];
 
 export const MAINTENANCE_MENU = [

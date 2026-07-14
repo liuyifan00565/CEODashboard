@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-14 10:00:00 CST
+ 更新内容: 版本情况(VersionFinancePanel)移回经营总览页，“交付”页只剩交付面板；移除仅供合并展示使用的
+          .dash-section-eyebrow，.dash-version-row/.dash-secondary-delivery 简化回单子元素容器。
+*/
+/*
  更新时间: 2026-07-13 22:50:00 CST
  更新内容: 合并远端趋势/经营指标行收紧高度分支——.dash-secondary-grid 改用 --dash-secondary-content-height
           CSS 变量 + calc(...-14px) 收边；低有效高度桌面档下开户数行/投入行的栏高延续本地等分修复
@@ -280,20 +285,9 @@
 }
 
 /* ===== 经营总览下方业务拆解 ===== */
-.dash-section-eyebrow{
-  flex:none;
-  color:var(--faint);
-  font-size:12px;
-  font-weight:650;
-  letter-spacing:.04em;
-  padding-left:4px;
-}
 .dash-version-row{
   flex:none;
   min-width:0;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
 }
 .dash-version-row .search-result-border,
 .dash-version-row .search-result-border .search-result-border__content{height:100%}
@@ -385,9 +379,6 @@
 
 .dash-secondary-delivery{
   flex:none;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
 }
 .dash-secondary-delivery .search-result-border,
 .dash-secondary-delivery .search-result-border .search-result-border__content{height:100%}
