@@ -1,4 +1,14 @@
 /*
+ 更新时间: 2026-07-14 11:07:04 CST
+ 更新内容: 修复本月/今日开户数、总投入·费比、广告ROI 四张小卡在 1181-1240px 宽/≤1071px 高笔记本档下边缘被裁切——
+          .dash-finance-kpis 高度此前被 var(--dash-secondary-content-height) 覆盖为 306px，比其父级
+          .dash-secondary-cell--finance 实际可用的 292px(=content-height - 14px)多出 14px，被父级
+          overflow:hidden 从底部切掉，正好切在总投入/广告ROI 那一行；改回 height:100% 让子级不再超出父级。
+          同时把该档 grid-template-rows 的行高下限从 146px 收紧到 140px 与新可用空间匹配，并让空的
+          kpi-card__meta（总投入卡没有涨跌/缺口数据时）折叠为 0 高度，腾出内部空间避免"点击展开二级"被自身
+          卡片的 overflow:hidden 裁掉。
+*/
+/*
  更新时间: 2026-07-14 11:00:00 CST
  更新内容: 新增 .dash-sidebar-account，侧边栏搜索框下方显示登录用户名与退出登录入口。
 */
@@ -469,9 +479,11 @@
   }
   .dash-secondary-cell--trend > .search-result-border,
   .dash-secondary-cell--trend > .search-result-border > .search-result-border__content,
-  .dash-secondary-cell--trend .mt-panel,
-  .dash-secondary-cell--finance .dash-finance-kpis{
+  .dash-secondary-cell--trend .mt-panel{
     height:var(--dash-secondary-content-height);
+  }
+  .dash-secondary-cell--finance .dash-finance-kpis{
+    height:100%;
   }
 }
 
@@ -562,7 +574,7 @@
     gap:14px;
   }
   .dash-finance-kpis{
-    grid-template-rows:repeat(2,minmax(146px,1fr));
+    grid-template-rows:repeat(2,minmax(140px,1fr));
     gap:8px;
   }
   .dash-secondary-cell .mt-panel{padding:14px}
@@ -570,8 +582,12 @@
   .dash-finance-kpi-item .kpi-card{gap:3px;padding:12px 16px}
   .dash-finance-kpi-item .kpi-card__title{font-size:13px}
   .dash-finance-kpi-item .kpi-card__value{font-size:34px}
-  .dash-finance-kpi-item .kpi-card__sub{font-size:13px;line-height:1.35}
+  .dash-finance-kpi-item .kpi-card__sub{
+    font-size:13px;line-height:1.35;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
   .dash-finance-kpi-item .kpi-card__meta{min-height:18px;margin-top:2px}
+  .dash-finance-kpi-item .kpi-card__meta:empty{min-height:0;margin-top:0}
   .dash-finance-kpi-item .kpi-card__hint{margin-top:2px;font-size:12px}
   .dash-finance-kpi-item--openings .opening-metric-card,
   .dash-finance-kpi-item--cost .opening-metric-card{padding:10px 14px}
