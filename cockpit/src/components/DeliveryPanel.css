@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 21:10:00 CST
- 更新内容: 优化交付环比半环卡样式，改善状态改为明确绿色，半环与文字分区展示，并为超过 100% 的变化增加标记。
+ 更新时间: 2026-07-14 21:25:00 CST
+ 更新内容: 修复交付环比半环卡裁切问题，放大半环视觉区域，确保半环完整显示。
 */
 /*
  更新时间: 2026-07-14 12:10:00 CST
@@ -547,14 +547,14 @@
   justify-self: end;
   width: 184px;
   display: grid;
-  grid-template-rows: 58px auto;
+  grid-template-rows: 96px auto;
   gap: 6px;
 }
 
 .dlv-compare-gauge__visual {
   position: relative;
   width: 184px;
-  height: 58px;
+  height: 96px;
   overflow: hidden;
 }
 

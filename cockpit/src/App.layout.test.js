@@ -565,7 +565,7 @@
  Update time: 2026-07-09 14:42:00 CST
  Update content: Cover target maintenance import dialog downloading the bundled two-sheet template.
 */
-/* 更新时间: 2026-07-14 21:10:00 CST  更新内容: 回归锁定交付环比半环卡的绿色语义、文字避让和超 100% 标记。 */
+/* 更新时间: 2026-07-14 21:25:00 CST  更新内容: 回归锁定交付环比半环卡的绿色语义、文字避让、超 100% 标记和半环完整显示。 */
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -1863,7 +1863,9 @@ test('renders month-over-month delivery comparison as readable semi-ring delta c
   assert.match(deliveryPanelCss, /\.dlv-compare-grid/);
   assert.match(deliveryPanelCss, /\.dlv-compare-card/);
   assert.match(deliveryPanelCss, /\.dlv-compare-gauge/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-gauge\s*\{[\s\S]*?grid-template-rows:\s*96px auto;/);
   assert.match(deliveryPanelCss, /\.dlv-compare-gauge__visual/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-gauge__visual\s*\{[\s\S]*?height:\s*96px;/);
   assert.match(deliveryPanelCss, /\.dlv-compare-gauge__copy/);
   assert.doesNotMatch(deliveryPanelCss, /\.dlv-compare-gauge__copy\s*\{[^}]*position:\s*absolute;/);
   assert.match(deliveryPanelCss, /\.dlv-compare-gauge__arc--good/);
