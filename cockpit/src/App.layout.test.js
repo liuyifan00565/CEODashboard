@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 09:52:18 CST  更新内容: 回归锁定月度经营进度标题下移到目标区，并仅收紧卡片顶部留白。 */
 /* 更新时间: 2026-07-14 10:00:00 CST  更新内容: 版本情况移回经营总览页，AI 洞察导航 targetMenu 简化回
    compute/overview 两态；同步更新版本/交付相关断言。 */
 /* 更新时间: 2026-07-13 20:30:00 CST  更新内容: 同步 AI 洞察导航泛化为 targetMenu 三态分支（compute/
@@ -1634,12 +1635,15 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
 });
 
 test('polishes the operating progress hierarchy with whitespace-first grouping', () => {
+  const progressPanelBlock = cssRuleBody(operatingOverviewCss, '.op-panel--progress');
   const monthGridBlock = cssRuleBody(operatingOverviewCss, '.op-month-grid');
   const progressTitleBlock = cssRuleBody(operatingOverviewCss, '.op-progress-head h1');
   const primaryValueBlock = cssRuleBody(operatingOverviewCss, '.op-month-primary b');
 
+  assert.match(progressPanelBlock, /padding-block:\s*clamp\(8px, \.6vw, 10px\) clamp\(3px, \.35vw, 6px\);/);
   assert.match(progressTitleBlock, /font-size:\s*clamp\(19px, 1\.65vw, 23px\);/);
   assert.match(progressTitleBlock, /font-weight:\s*700;/);
+  assert.match(progressTitleBlock, /transform:\s*translateY\(18px\);/);
   assert.match(primaryValueBlock, /font-size:\s*clamp\(44px, 4\.9vw, 66px\);/);
   assert.match(primaryValueBlock, /font-weight:\s*840;/);
   assert.match(monthGridBlock, /border-top:\s*1px solid rgba\(255,255,255,\.035\);/);
@@ -1996,6 +2000,7 @@ test('keeps month year trend and finance metrics balanced across 1K and 2K scree
   assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?--dash-secondary-content-height:clamp\(336px,34\.5vh,372px\);[\s\S]*?grid-template-rows:calc\(var\(--dash-secondary-content-height\) - 14px\);/);
   assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?--dash-secondary-content-height:clamp\(306px,32\.5vh,336px\);[\s\S]*?grid-template-rows:calc\(var\(--dash-secondary-content-height\) - 14px\);[\s\S]*?grid-template-rows:repeat\(2,minmax\(146px,1fr\)\);/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-overview \{[\s\S]*?gap: 8px;/);
+  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-panel--progress \{[\s\S]*?padding-block: 9px 4px;/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows:\s*auto 190px;[\s\S]*?height:\s*190px;/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-channel-list \{[\s\S]*?gap: 13px;/);
   assert.doesNotMatch(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows: auto 148px;[\s\S]*?height: 148px;/);
