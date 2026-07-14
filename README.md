@@ -1,7 +1,7 @@
 # CEO Dashboard
 
-更新时间: 2026-07-14 16:00:00 CST
-更新内容: 新增公司级月度业绩导入，按权威总额、渠道和来源承接 2026 年 1-6 月数据及年度/月度目标。
+更新时间: 2026-07-14 16:30:00 CST
+更新内容: 公司月度业绩仅导入 4-6 月明细表，按线上、代理、华南线下、华东线下展示，不读取 Sheet1 或其它渠道列。
 
 CEO Dashboard 是经营驾驶舱项目。前端位于 `cockpit/`，生产运行时由 Node 服务同时提供 React 静态页面、真实 MySQL 数据接口、外部算力接口代理和 AI 小人分析接口。
 
@@ -41,7 +41,7 @@ docker exec ceodashboard-cockpit node server/importCompanyRevenue.js /tmp/compan
 docker restart ceodashboard-cockpit
 ```
 
-公司月度事实优先驱动 KPI、趋势和渠道结构；订单表继续驱动人员级下钻。导入同时保存 6000 万年度目标与工作簿中已明确给出的 4-12 月月度目标。
+公司月度事实优先驱动 KPI、趋势和渠道结构；订单表继续驱动人员级下钻。导入只读取 `福客2026年4-6月业绩`：`直营` 映射为线上，`代理` 映射为代理，`其中线下：华南/华东` 分别映射为华南线下/华东线下；不读取 `Sheet1`、线下父级合计、代理细分、南棠渠道、特殊渠道或目标。
 
 ## 阿里云镜像交付
 
@@ -51,7 +51,7 @@ docker restart ceodashboard-cockpit
 bash scripts/package_aliyun_amd64.sh
 ```
 
-脚本默认读取并校验 `cockpit/.env.local`，生成包含生产 `.env`、应用镜像、`mysql:8.4` 离线镜像、`install.sh`、`update.sh`、`ENV_KEY_STATUS.txt`、`VERSION.txt` 和数据库迁移脚本的完整交付包。迁移脚本会补齐算力表、渠道月运营/人力成本字段、自营收入订单级事实表，以及公司级月度回款和年度目标表。
+脚本默认读取并校验 `cockpit/.env.local`，生成包含生产 `.env`、应用镜像、`mysql:8.4` 离线镜像、`install.sh`、`update.sh`、`ENV_KEY_STATUS.txt`、`VERSION.txt` 和数据库迁移脚本的完整交付包。迁移脚本会补齐算力表、渠道月运营/人力成本字段、自营收入订单级事实表，以及公司级月度回款事实表。
 
 如需复用已有交付包里的运行时配置：
 

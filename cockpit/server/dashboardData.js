@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 16:48:00 CST
+ 更新内容: 公司月度 total 独立驱动 KPI/趋势，四渠道行驱动结构；成交来源继续读取真实订单，不使用本工作簿忽略列。
+*/
+/*
  更新时间: 2026-07-14 15:45:00 CST
  更新内容: 公司级月度业绩事实优先驱动 KPI、趋势、渠道与来源结构；订单明细继续用于人员下钻，避免重叠月份重复计数。
 */
@@ -748,20 +752,23 @@ export function mapDashboardRowsToSnapshot(rows) {
   const currentSalesRows = salesRows.filter((row) => row.year_month === latestMonth);
   const yearSalesRows = salesRows.filter((row) => String(row.year_month).startsWith(latestYear));
   const revenueRows = applyRefundsToRecoveredRows(rows.revenueDaily ?? [], recoveredRefundRows);
-  const useRevenueDaily = revenueRows.length > 0;
+  const monthlyTotalRows = rows.useRevenueMonthly ? (rows.monthlyRevenueTotals ?? []) : [];
+  const kpiRevenueRows = monthlyTotalRows.length ? monthlyTotalRows : revenueRows;
+  const useRevenueDaily = kpiRevenueRows.length > 0;
   const currentRevenueRows = revenueRows.filter((row) => row.year_month === latestMonth);
-  const previousRevenueRows = revenueRows.filter((row) => row.year_month === previousMonth);
+  const previousRevenueRows = kpiRevenueRows.filter((row) => row.year_month === previousMonth);
   const yearRevenueRows = revenueRows.filter((row) => String(row.year_month).startsWith(latestYear) && monthNumber(row.year_month) <= monthNumber(latestMonth));
-  const recoveredRows = useRevenueDaily ? revenueRows : yearSalesRows;
+  const currentKpiRevenueRows = kpiRevenueRows.filter((row) => row.year_month === latestMonth);
+  const yearKpiRevenueRows = kpiRevenueRows.filter((row) => String(row.year_month).startsWith(latestYear) && monthNumber(row.year_month) <= monthNumber(latestMonth));
+  const recoveredRows = useRevenueDaily ? kpiRevenueRows : yearSalesRows;
   const currentRecoveredRows = useRevenueDaily ? currentRevenueRows : currentSalesRows;
   const monthRefund = round0(sum(refundRows.filter((row) => row.year_month === latestMonth), 'refund_wan'));
   const yearRefund = round0(sum(refundRows.filter((row) => String(row.year_month).startsWith(latestYear) && monthNumber(row.year_month) <= monthNumber(latestMonth)), 'refund_wan'));
-  const currentMonthRecovered = round0(sum(currentRecoveredRows, 'recovered_wan'));
+  const currentMonthRecovered = round0(sum(useRevenueDaily ? currentKpiRevenueRows : currentSalesRows, 'recovered_wan'));
   const currentMonthlyTarget = (rows.monthlyTargets ?? []).find((row) => row.year_month === latestMonth);
   const currentMonthTarget = round0(currentMonthlyTarget?.target_wan ?? sum(currentSalesRows, 'target_wan'));
-  const configuredAnnualTarget = (rows.yearlyTargets ?? []).find((row) => String(row.year) === latestYear);
-  const annualTarget = round0(configuredAnnualTarget?.target_wan ?? sum(rows.monthlyTargets ?? [], 'target_wan'));
-  const yearRecovered = round0(sum(useRevenueDaily ? yearRevenueRows : yearSalesRows, 'recovered_wan'));
+  const annualTarget = round0(sum(rows.monthlyTargets ?? [], 'target_wan'));
+  const yearRecovered = round0(sum(useRevenueDaily ? yearKpiRevenueRows : yearSalesRows, 'recovered_wan'));
   const operationsCost = round0((rows.channelCosts ?? []).reduce(
     (total, row) => total + num(row.operations_wan ?? row.investment_wan),
     0,
@@ -951,7 +958,6 @@ export async function buildDashboardSnapshot(connection) {
   const nextYear = String(Number(latestYear) + 1);
   const useRevenueOrders = await revenueOrderRowsExist(connection, latestYear);
   const useRevenueMonthly = await revenueMonthlyRowsExist(connection, latestYear);
-  const useAnnualTargets = await tableExists(connection, 'biz_target_annual');
   const [latestMonthYearNum, latestMonthNum] = String(latestMonth).split('-').map(Number);
   const nextMonthBoundary = latestMonthNum === 12
     ? `${latestMonthYearNum + 1}-01-01`
@@ -961,6 +967,7 @@ export async function buildDashboardSnapshot(connection) {
     channels,
     salesMemberMonthly,
     revenueDaily,
+    monthlyRevenueTotals,
     dailyRevenue,
     yearlyRevenue,
     yearlyTargets,
@@ -1039,7 +1046,7 @@ export async function buildDashboardSnapshot(connection) {
       FROM fact_revenue_channel_monthly m
       LEFT JOIN dim_channel c ON c.channel_id = m.channel_id
       WHERE m.\`year_month\` LIKE CONCAT(?, '%')
-        AND m.record_level IN ('channel', 'adjustment')
+        AND m.record_level = 'channel'
       GROUP BY m.\`year_month\`, c.channel_key
       ORDER BY m.\`year_month\`, c.channel_key
     `, [latestYear]) : useRevenueOrders ? queryRows(connection, `
@@ -1062,6 +1069,13 @@ export async function buildDashboardSnapshot(connection) {
       GROUP BY DATE_FORMAT(r.stat_date, '%Y-%m'), c.channel_key
       ORDER BY \`year_month\`, c.channel_key
     `, [`${latestYear}-01-01`, `${nextYear}-01-01`]),
+    useRevenueMonthly ? queryRows(connection, `
+      SELECT \`year_month\`, ROUND(SUM(net_amount_yuan) / 10000, 2) AS recovered_wan
+      FROM fact_revenue_channel_monthly
+      WHERE \`year_month\` LIKE CONCAT(?, '%') AND record_level = 'total'
+      GROUP BY \`year_month\`
+      ORDER BY \`year_month\`
+    `, [latestYear]) : Promise.resolve([]),
     useRevenueMonthly ? queryRows(connection, `
       SELECT CONCAT(\`year_month\`, '-01') AS day_key,
              ROUND(SUM(net_amount_yuan) / 10000, 2) AS recovered_wan
@@ -1104,11 +1118,7 @@ export async function buildDashboardSnapshot(connection) {
       GROUP BY YEAR(r.stat_date)
       ORDER BY \`year\`
     `),
-    useAnnualTargets ? queryRows(connection, `
-      SELECT target_year AS \`year\`, ROUND(target_amount_yuan / 10000, 2) AS target_wan
-      FROM biz_target_annual
-      ORDER BY target_year
-    `) : queryRows(connection, `
+    queryRows(connection, `
       SELECT LEFT(t.\`year_month\`, 4) AS \`year\`,
              ROUND(SUM(t.target_amount_yuan) / 10000, 2) AS target_wan
       FROM biz_target_monthly t
@@ -1121,7 +1131,7 @@ export async function buildDashboardSnapshot(connection) {
              ROUND(SUM(m.net_amount_yuan) / 10000, 2) AS recovered_wan
       FROM fact_revenue_channel_monthly m
       LEFT JOIN dim_channel c ON c.channel_id = m.channel_id
-      WHERE m.\`year_month\` = ? AND m.record_level IN ('channel', 'adjustment')
+      WHERE m.\`year_month\` = ? AND m.record_level = 'channel'
       GROUP BY m.\`year_month\`, c.channel_key
     `, [previousMonth]) : useRevenueOrders ? queryRows(connection, `
       SELECT DATE_FORMAT(o.stat_date, '%Y-%m') AS \`year_month\`, ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
@@ -1149,7 +1159,7 @@ export async function buildDashboardSnapshot(connection) {
              ROUND(SUM(m.net_amount_yuan) / 10000, 2) AS recovered_wan
       FROM fact_revenue_channel_monthly m
       LEFT JOIN dim_channel c ON c.channel_id = m.channel_id
-      WHERE m.\`year_month\` <= ? AND LEFT(m.\`year_month\`, 4) = ? AND m.record_level IN ('channel', 'adjustment')
+      WHERE m.\`year_month\` <= ? AND LEFT(m.\`year_month\`, 4) = ? AND m.record_level = 'channel'
       GROUP BY m.\`year_month\`, c.channel_key
     `, [lastYearMonth, Number(latestYear) - 1]) : useRevenueOrders ? queryRows(connection, `
       SELECT DATE_FORMAT(o.stat_date, '%Y-%m') AS \`year_month\`, ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
@@ -1538,23 +1548,7 @@ export async function buildDashboardSnapshot(connection) {
       WHERE DATE_FORMAT(d.delivery_date, '%Y-%m') = ?
       GROUP BY d.engineer_id, s.staff_name
     `, [latestMonth]),
-    useRevenueMonthly ? queryRows(connection, `
-      SELECT CONCAT('monthly-', MIN(m.monthly_revenue_id)) AS sourceKey,
-             m.source_name_raw AS sourceName,
-             c.channel_key AS channelKey,
-             ROUND(SUM(m.gross_amount_yuan) / 10000, 2) AS recovered,
-             0 AS dealCount,
-             0 AS customerCount,
-             CONCAT(m.\`year_month\`, '-01') AS periodStart,
-             LAST_DAY(CONCAT(m.\`year_month\`, '-01')) AS periodEnd,
-             'gmv' AS metric
-      FROM fact_revenue_channel_monthly m
-      LEFT JOIN dim_channel c ON c.channel_id = m.channel_id
-      WHERE m.\`year_month\` = ? AND m.record_level = 'source'
-      GROUP BY m.source_name_raw, c.channel_key, m.\`year_month\`
-      HAVING recovered > 0
-      ORDER BY recovered DESC
-    `, [latestMonth]) : useRevenueOrders ? queryRows(connection, `
+    useRevenueOrders ? queryRows(connection, `
       SELECT sourceKey, sourceName, channelKey,
         ROUND(SUM(net_amount_yuan) / 10000, 2) AS recovered,
         COUNT(*) AS dealCount,
@@ -1689,6 +1683,7 @@ export async function buildDashboardSnapshot(connection) {
     channels,
     salesMemberMonthly,
     revenueDaily,
+    monthlyRevenueTotals,
     dailyRevenue,
     yearlyRevenue,
     yearlyTargets,

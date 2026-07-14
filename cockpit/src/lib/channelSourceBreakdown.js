@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 15:50:00 CST
- 更新内容: 来源聚合保留月度汇总的 GMV 口径标识，避免把无退款分摊的渠道细分误标为净回款。
+ 更新时间: 2026-07-14 16:30:00 CST
+ 更新内容: 成交来源聚合仅保留订单级净回款数据，不再透传月度渠道 GMV 标识。
 */
 /*
  更新时间: 2026-07-14 14:04:11 CST
@@ -25,14 +25,12 @@ export function buildChannelSourceBreakdown(rows, channelKey = 'all') {
         recovered: 0,
         dealCount: 0,
         customerCount: 0,
-        metric: row.metric || 'net',
         periodStart: '',
         periodEnd: '',
       };
       current.recovered += numberValue(row.recovered);
       current.dealCount += numberValue(row.dealCount);
       current.customerCount += numberValue(row.customerCount);
-      if (row.metric === 'gmv') current.metric = 'gmv';
       if (row.periodStart && (!current.periodStart || row.periodStart < current.periodStart)) current.periodStart = row.periodStart;
       if (row.periodEnd && (!current.periodEnd || row.periodEnd > current.periodEnd)) current.periodEnd = row.periodEnd;
       grouped.set(name, current);

@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 15:50:00 CST
- 更新内容: 成交来源卡按数据标识切换 GMV/净回款口径，月度汇总不再显示虚假的成交笔数和客户数。
+ 更新时间: 2026-07-14 16:30:00 CST
+ 更新内容: 成交来源恢复订单级净回款口径，不再将公司月度渠道汇总展示为成交来源。
 */
 /*
  更新时间: 2026-07-14 14:36:00 CST
@@ -48,7 +48,7 @@ function buildDonutRows(rows) {
   return [...primary, other];
 }
 
-function SourceRanking({ rows, isGmv }) {
+function SourceRanking({ rows }) {
   return (
     <div className="channel-source-panel__list">
       {rows.map((row, index) => (
@@ -63,8 +63,8 @@ function SourceRanking({ rows, isGmv }) {
               <span style={{ width: `${Math.max(2, row.share)}%` }} />
             </div>
             <div className="channel-source-row__meta">
-              <span>{isGmv ? '月度渠道汇总' : `${row.dealCount} 笔成交`}</span>
-              {!isGmv && <span>{row.customerCount} 个客户</span>}
+              <span>{row.dealCount} 笔成交</span>
+              <span>{row.customerCount} 个客户</span>
               <b>{row.share.toFixed(1)}%</b>
             </div>
           </div>
@@ -77,8 +77,6 @@ function SourceRanking({ rows, isGmv }) {
 export default function ChannelSourcePanel({ channelKey = 'all' }) {
   const [detailOpen, setDetailOpen] = useState(false);
   const rows = buildChannelSourceBreakdown(CHANNEL_SOURCE_BREAKDOWN, channelKey);
-  const isGmv = rows.some((row) => row.metric === 'gmv');
-  const metricLabel = isGmv ? 'GMV' : '净回款';
   const periodLabel = channelSourcePeriodLabel(rows);
   const totalRecovered = rows.reduce((sum, row) => sum + row.recovered, 0);
   const donutRows = buildDonutRows(rows);
@@ -105,15 +103,15 @@ export default function ChannelSourcePanel({ channelKey = 'all' }) {
       formatter: ({ name, value, percent, data }) => `
         <div class="source-ring-tooltip">
           <div class="source-ring-tooltip__name">成交来源 · ${name}</div>
-          <div class="source-ring-tooltip__value">${metricLabel} <strong>${formatWan(value)} 万</strong></div>
-          <div class="source-ring-tooltip__meta">${isGmv ? '月度渠道汇总' : `${data.dealCount} 笔成交`} · 占比 <strong>${percent}%</strong></div>
+          <div class="source-ring-tooltip__value">净回款 <strong>${formatWan(value)} 万</strong></div>
+          <div class="source-ring-tooltip__meta">${data.dealCount} 笔成交 · 占比 <strong>${percent}%</strong></div>
         </div>
       `,
       extraCssText: 'padding:0;border:0;background:transparent;box-shadow:none;pointer-events:none;',
     },
     title: {
       text: formatWan(totalRecovered),
-      subtext: `${metricLabel}（万）`,
+      subtext: '净回款（万）',
       left: '50%',
       top: '41%',
       textAlign: 'center',
@@ -167,7 +165,7 @@ export default function ChannelSourcePanel({ channelKey = 'all' }) {
         dealCount: row.dealCount,
       })),
     }],
-  }), [donutRows, isGmv, metricLabel, totalRecovered]);
+  }), [donutRows, totalRecovered]);
 
   const modal = detailOpen ? (
     <div className="source-detail-overlay" role="dialog" aria-modal="true" aria-labelledby="source-detail-title">
@@ -176,11 +174,11 @@ export default function ChannelSourcePanel({ channelKey = 'all' }) {
         <header className="source-detail-head">
           <div>
             <h2 id="source-detail-title">成交来源明细</h2>
-            <p>{periodLabel} · {metricLabel}口径 · {rows.length} 个来源</p>
+            <p>{periodLabel} · 净回款口径 · {rows.length} 个来源</p>
           </div>
           <button className="source-detail-close" type="button" aria-label="关闭" onClick={() => setDetailOpen(false)}>×</button>
         </header>
-        {rows.length ? <SourceRanking rows={rows} isGmv={isGmv} /> : <div className="channel-source-panel__empty">当前渠道暂无来源数据</div>}
+        {rows.length ? <SourceRanking rows={rows} /> : <div className="channel-source-panel__empty">当前渠道暂无来源数据</div>}
       </section>
     </div>
   ) : null;
@@ -203,7 +201,7 @@ export default function ChannelSourcePanel({ channelKey = 'all' }) {
         <header className="channel-source-panel__head">
           <div>
             <h2>成交来源</h2>
-            <p>{periodLabel} · {metricLabel}口径</p>
+            <p>{periodLabel} · 净回款口径</p>
           </div>
           <span>{rows.length} 个来源</span>
         </header>

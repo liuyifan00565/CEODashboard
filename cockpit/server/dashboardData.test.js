@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 15:55:00 CST
- 更新内容: 回归覆盖公司级月度事实优先、年度目标直读与退款不重复扣减。
+ 更新时间: 2026-07-14 16:40:00 CST
+ 更新内容: 回归覆盖公司 total 独立驱动 KPI、四渠道驱动结构、月目标汇总与退款不重复扣减。
 */
 /*
  更新时间: 2026-07-14 14:29:30 CST
@@ -441,23 +441,29 @@ test('uses authoritative monthly company facts without double-counting order row
       { year_month: '2026-06', channel_key: 'online', recovered_wan: 119.24 },
       { year_month: '2026-06', channel_key: 'agent', recovered_wan: 101.25 },
     ],
+    monthlyRevenueTotals: [
+      { year_month: '2026-04', recovered_wan: 226.37 },
+      { year_month: '2026-05', recovered_wan: 432.79 },
+      { year_month: '2026-06', recovered_wan: 294.98 },
+    ],
     monthlyTargets: [
       { year_month: '2026-05', target_wan: 300 },
       { year_month: '2026-06', target_wan: 500 },
     ],
-    yearlyTargets: [{ year: '2026', target_wan: 6000 }],
     refundRows: [
       { year_month: '2026-05', channel_key: 'online', refund_wan: 3.98 },
       { year_month: '2026-06', channel_key: 'online', refund_wan: 8.66 },
     ],
   });
 
-  assert.equal(snapshot.kpi.monthRecovered, 220);
-  assert.equal(snapshot.kpi.yearRecovered, 513);
+  assert.equal(snapshot.kpi.monthRecovered, 295);
+  assert.equal(snapshot.kpi.yearRecovered, 954);
   assert.equal(snapshot.kpi.monthRefund, 9);
   assert.equal(snapshot.kpi.yearRefund, 13);
-  assert.equal(snapshot.kpi.yearTarget, 6000);
-  assert.equal(snapshot.meta.annualTarget, 6000);
+  assert.equal(snapshot.kpi.yearTarget, 800);
+  assert.equal(snapshot.meta.annualTarget, 800);
+  assert.equal(snapshot.channels.find((row) => row.key === 'online').recovered, 119);
+  assert.equal(snapshot.channels.find((row) => row.key === 'agent').recovered, 101);
 });
 
 test('pre-aggregates renewal facts before joining version sales', () => {
