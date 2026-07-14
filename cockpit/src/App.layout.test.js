@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-14 15:25:00 CST  更新内容: 回归锁定登录门禁临时关闭：App 使用 LOGIN_DISABLED_USER 初始化为已认证，
+   不再导入 LoginPage/fetchCurrentUser/logout，保留侧边栏账号展示结构。 */
 /* 更新时间: 2026-07-14 11:35:00 CST  更新内容: 品牌区第二行（登录用户名）改为左对齐，移除原为"当前视角"
    设计的右对齐规则，同步更新测试名称与断言。 */
 /* 更新时间: 2026-07-14 11:25:00 CST  更新内容: 行高下限断言从 146px 同步为 140px，匹配 dashboard.css 修复
@@ -752,7 +754,12 @@ test('places the FuKe brand month and account name on separate left-aligned line
 
   assert.match(mockSource, /monthLabel: currentMonthLabel\(\)/);
   assert.doesNotMatch(mockSource, /monthLabel: '2026年6月'/);
+  assert.match(appSource, /const LOGIN_DISABLED_USER = \{[\s\S]*?displayName: '免登录模式',[\s\S]*?\};/);
+  assert.match(appSource, /const \[authState, setAuthState\] = useState\(\{ status: 'authenticated', user: LOGIN_DISABLED_USER \}\);/);
   assert.match(appSource, /const sidebarBrandMeta = `\$\{META\.monthLabel\}\\n\$\{authState\.user\?\.displayName \|\| authState\.user\?\.username \|\| ''\}`;/);
+  assert.doesNotMatch(appSource, /import LoginPage from '\.\/components\/LoginPage';/);
+  assert.doesNotMatch(appSource, /fetchCurrentUser\(\)/);
+  assert.doesNotMatch(appSource, /await logout\(\)/);
   assert.doesNotMatch(appSource, /const sidebarBrandMeta = `\$\{META\.monthLabel\} · \$\{activeContextLabel\}`;/);
   assert.match(appSource, /brandTitle="福客经营驾驶舱"/);
   assert.match(appSource, /brandMeta=\{sidebarBrandMeta\}/);

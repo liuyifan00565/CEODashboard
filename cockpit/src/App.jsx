@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-14 15:25:00 CST
+ 更新内容: 临时禁用登录门禁但保留登录代码：应用启动直接进入已认证状态，不再请求 /api/auth/me 或展示 LoginPage；
+          退出登录在禁用期内仅恢复免登录用户，后续重新打开门禁时可复用现有 auth/lib 与 LoginPage。
+*/
+/*
  更新时间: 2026-07-14 11:20:00 CST
  更新内容: 侧栏品牌区第二行由当前页面名(activeContextLabel)改为登录用户名，不再展示"我们在哪个页面"；
           移除随之无用的 activeContextLabel/activeMenuLabel/getDashboardMenuLabel；退出登录按钮从
@@ -231,7 +236,6 @@ import OpeningMetricCards from './components/OpeningMetricCards';
 import AdRoiCard from './components/AdRoiCard';
 import MaintenancePage from './components/MaintenancePage';
 import OperatingOverview from './components/OperatingOverview';
-import LoginPage from './components/LoginPage';
 
 import {
   appendComputeCustomerRows,
@@ -242,7 +246,6 @@ import {
   getDashboardChannelKey,
 } from './data/mock';
 import { loadComputeCustomerPage, loadComputeData, loadDashboardData } from './data/liveData';
-import { fetchCurrentUser, logout } from './lib/auth';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
 import { matchesSearchTerm } from './lib/searchMatch';
@@ -250,6 +253,12 @@ import './dashboard.css';
 
 const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU[0]?.key ?? 'target-maintenance';
 const CUSTOMER_SYNC_PAGE_SIZE = 200;
+const LOGIN_DISABLED_USER = {
+  id: 'login-disabled',
+  username: '免登录',
+  displayName: '免登录模式',
+  role: 'temporary',
+};
 
 const DASHBOARD_SIDEBAR_ITEMS = [
   ...MENU.map((item) => ({ ...item, section: '导航', icon: item.icon ?? item.key })),
@@ -286,7 +295,7 @@ export default function App() {
   const [dashboardDataState, setDashboardDataState] = useState({ status: 'loading', error: '' });
   const [computeDataState, setComputeDataState] = useState({ status: 'idle', error: '' });
   const [computeCustomerSyncState, setComputeCustomerSyncState] = useState({ status: 'idle', total: 0 });
-  const [authState, setAuthState] = useState({ status: 'loading', user: null });
+  const [authState, setAuthState] = useState({ status: 'authenticated', user: LOGIN_DISABLED_USER });
 
   const gridRef = useRef(null);
   const pendingMenuScrollRef = useRef(false);
@@ -311,24 +320,6 @@ export default function App() {
     () => filteredKpiCards.find((card) => card.key === openCard?.key) ?? openCard ?? null,
     [filteredKpiCards, openCard]
   );
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetchCurrentUser()
-      .then((user) => {
-        if (cancelled) return;
-        setAuthState({ status: user ? 'authenticated' : 'unauthenticated', user });
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setAuthState({ status: 'unauthenticated', user: null });
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (authState.status !== 'authenticated') return undefined;
@@ -580,13 +571,8 @@ export default function App() {
     clearTimeout(aiInsightFocusTimerRef.current);
   }, []);
 
-  function handleLoggedIn(user) {
-    setAuthState({ status: 'authenticated', user });
-  }
-
-  async function handleLogout() {
-    await logout();
-    setAuthState({ status: 'unauthenticated', user: null });
+  function handleLogout() {
+    setAuthState({ status: 'authenticated', user: LOGIN_DISABLED_USER });
   }
 
   if (authState.status === 'loading') {
@@ -598,10 +584,6 @@ export default function App() {
         </main>
       </div>
     );
-  }
-
-  if (authState.status === 'unauthenticated') {
-    return <LoginPage onLoggedIn={handleLoggedIn} />;
   }
 
   if (!isDashboardDataReady) {
