@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 16:47:26 CST
+ 更新内容: 去掉 AI 小人入口旁文案后，将小人入口在侧栏空白区域水平居中显示。
+*/
+/*
  更新时间: 2026-07-13 14:48:53 CST
  更新内容: 移除左下角 AI 小人入口的卡片背景、边框、圆角、模糊和阴影，仅保留小人与助手文案。
 */
@@ -56,8 +60,8 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: flex-start;
-  gap: 4px;
+  justify-content: center;
+  gap: 0;
   width: 100%;
   min-height: 168px;
   margin-top: auto;
@@ -92,27 +96,6 @@
   --mascot-visible-width: 96px;
   --mascot-visible-height: 128.58px;
   --mascot-stage-guard: 10px;
-}
-
-.ai-status-copy {
-  display: grid;
-  gap: 3px;
-  min-width: 0;
-}
-
-.ai-status-copy span {
-  color: rgba(247,248,252,.46);
-  font-size: 12px;
-  font-weight: 650;
-  line-height: 1.1;
-}
-
-.ai-status-copy b {
-  color: rgba(247,248,252,.78);
-  font-size: 14px;
-  font-weight: 650;
-  line-height: 1.15;
-  white-space: nowrap;
 }
 
 .ai-orb:focus-visible {
@@ -475,7 +458,7 @@
 
 @media (max-width: 760px) {
   .ai-widget {
-    align-items: flex-end;
+    align-items: center;
     padding: 8px 0;
   }
 

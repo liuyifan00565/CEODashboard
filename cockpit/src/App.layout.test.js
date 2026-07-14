@@ -1,4 +1,5 @@
 /* 更新时间: 2026-07-14 16:35:43 CST  更新内容: 回归锁定交付渠道行选择联动右侧渠道人员完成情况及初始选择提示。 */
+/* 更新时间: 2026-07-14 16:47:26 CST  更新内容: 回归锁定侧栏 AI 小人入口移除旁侧文案，并在空白区域居中显示。 */
 /* 更新时间: 2026-07-14 15:30:13 CST  更新内容: 回归锁定交付演示快照仅由显式环境开关启用，并在页面显示非生产数据标识。 */
 /* 更新时间: 2026-07-14 15:11:44 CST  更新内容: 交付页回归锁定 KPI 后六项月度对比带、58/42 同屏执行明细及双断点响应式布局。 */
 /* 更新时间: 2026-07-14 15:20:00 CST  更新内容: 回归锁定月度半环标题恢复且不增高主卡，并移除 KPI 隐藏提示遗留的底部空白。 */
@@ -1575,15 +1576,18 @@ test('AI insight navigation locates overview sections and switches to the comput
   assert.match(dashboardCss, /\.ai-insight-focus\s*\{[\s\S]*?outline:[\s\S]*?var\(--line-2\)[\s\S]*?box-shadow:\s*var\(--glass-shadow\);/);
 });
 
-test('places the AI mascot beside assistant copy without a sidebar status card', () => {
+test('centers the AI mascot launcher without assistant copy or a sidebar status card', () => {
   const aiWidgetBlock = cssRuleBody(aiAnalysisWidgetCss, '.ai-widget');
 
-  assert.match(aiAnalysisWidgetSource, /<div className="ai-status-copy" aria-hidden="true">[\s\S]*?<span>AI 助手<\/span>[\s\S]*?<b>经营分析<\/b>[\s\S]*?<\/div>/);
+  assert.doesNotMatch(aiAnalysisWidgetSource, /ai-status-copy/);
+  assert.doesNotMatch(aiAnalysisWidgetSource, /<span>AI 助手<\/span>/);
+  assert.doesNotMatch(aiAnalysisWidgetSource, /<b>经营分析<\/b>/);
   assert.match(aiWidgetBlock, /background:\s*transparent;/);
   assert.match(aiWidgetBlock, /border:\s*0;/);
   assert.match(aiWidgetBlock, /border-radius:\s*0;/);
   assert.match(aiWidgetBlock, /box-shadow:\s*none;/);
-  assert.match(aiAnalysisWidgetCss, /\.ai-status-copy\s*\{[\s\S]*?display:\s*grid;[\s\S]*?gap:\s*3px;/);
+  assert.match(aiWidgetBlock, /justify-content:\s*center;/);
+  assert.doesNotMatch(aiAnalysisWidgetCss, /\.ai-status-copy/);
   assert.match(aiAnalysisWidgetCss, /\.ai-card-wrap\s*\{[\s\S]*?left:\s*244px;/);
 });
 
