@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-14 21:30:00 CST
+ 更新内容: 退出登录改为小按钮样式（描边+玻璃底+hover 上浮），而不是纯文字链接；顺带清理合并时
+          残留的 .dash-sidebar-account__name 死代码（该行用户名已并入品牌区第二行，这里早已不再渲染）。
+*/
+/*
  更新时间: 2026-07-14 11:43:09 CST
  更新内容: 修复财务四小卡"幽灵线"——.dash-secondary-cell::after 是横跨整个单元格底部的装饰描边，
           :hover 状态是挂在 .dash-secondary-cell 本身，鼠标落在其任意子元素（即财务区 4 张小卡中的
@@ -308,19 +313,27 @@
 .search-wrap--sidebar .search-count{min-width:40px;height:26px;padding:0 7px}
 
 .dash-sidebar-account{
-  flex:none;width:100%;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  flex:none;width:100%;min-width:0;
   padding:0 4px;
 }
-.dash-sidebar-account__name{
-  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  color:var(--faint);font-size:13px;font-weight:600;
-}
 .dash-sidebar-account__logout{
-  flex:none;border:none;background:none;padding:0;
-  color:var(--muted);font-size:12px;font-weight:650;cursor:pointer;
-  transition:color .2s ease;
+  min-height:26px;
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:0 10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--glass-cell);
+  color:var(--muted);
+  font-size:12px;font-weight:650;
+  cursor:pointer;
+  transition:transform .2s ease, border-color .2s ease, background .2s ease, color .2s ease;
 }
-.dash-sidebar-account__logout:hover{color:var(--txt)}
+.dash-sidebar-account__logout:hover{
+  transform:translateY(-1px);
+  border-color:var(--line-2);
+  background:var(--glass-cell-hover);
+  color:var(--txt);
+}
 
 .dash-main{
   flex:1;min-width:0;display:flex;flex-direction:column;
