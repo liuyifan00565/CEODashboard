@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-14 11:43:09 CST
+ 更新内容: 修复财务四小卡"幽灵线"——.dash-secondary-cell::after 是横跨整个单元格底部的装饰描边，
+          :hover 状态是挂在 .dash-secondary-cell 本身，鼠标落在其任意子元素（即财务区 4 张小卡中的
+          任意一张）上都会让这条贯穿全宽、与具体某张卡片无关的描边一起变亮，视觉上像是遗留自"总投入曾经
+          独占整行"时期、和现在 2×2 卡片布局对不上的幽灵线；新增 .dash-secondary-cell--finance 专属覆盖，
+          取消财务单元格的这层联动高亮，趋势图面板(--trend)保留原有整面板 hover 反馈不受影响。
+*/
+/*
  更新时间: 2026-07-14 11:23:51 CST
  更新内容: 修复财务四小卡两个新问题——1) 总投入·费比卡的 padding(12px 16px)与另外三张卡(10px 14px)不一致，
           导致"点击展开二级"文字左边距和上下留白对不齐，统一改为 10px 14px；2) 四张卡贴着
@@ -296,11 +304,15 @@
 .search-wrap--sidebar .search-count{min-width:40px;height:26px;padding:0 7px}
 
 .dash-sidebar-account{
-  flex:none;width:100%;min-width:0;
+  flex:none;width:100%;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;
   padding:0 4px;
 }
+.dash-sidebar-account__name{
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--faint);font-size:13px;font-weight:600;
+}
 .dash-sidebar-account__logout{
-  border:none;background:none;padding:0;
+  flex:none;border:none;background:none;padding:0;
   color:var(--muted);font-size:12px;font-weight:650;cursor:pointer;
   transition:color .2s ease;
 }
@@ -480,6 +492,13 @@
   .dash-secondary-cell:hover::after,
   .dash-secondary-cell:focus-within::after{
     border-color:rgba(255,255,255,.34);
+  }
+  /* .dash-secondary-cell::after 是横跨整个单元格底部的装饰描边，:hover 会随鼠标落在单元格内任意子元素
+     上而整条一起变亮。趋势图是单一可悬浮面板，这样没问题；但财务区现在拆成 4 张独立小卡，悬浮任意一张都会
+     点亮这条与当前卡片无关、横跨全宽的"幽灵线"，取消财务单元格的这个联动，只留每张卡片自己的描边+阴影反馈。 */
+  .dash-secondary-cell--finance:hover::after,
+  .dash-secondary-cell--finance:focus-within::after{
+    border-color:var(--dashboard-card-border);
   }
   /* 财务四小卡贴着 .dash-secondary-cell 的 overflow:hidden 边界铺满，hover 的 translateY(-2px)
      上移动效会把上排卡片顶边顶出裁切、下排卡片底边和固定不动的 ::after 装饰边框错位露线，
