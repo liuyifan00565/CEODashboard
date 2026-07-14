@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 13:49:44 CST  更新内容: 回归锁定目标维护保存或导入后自动刷新经营总览快照。 */
 /* 更新时间: 2026-07-14 13:40:09 CST  更新内容: 回归锁定经营总览渠道行与半环扇区点击打开人员级回款明细。 */
 /* 更新时间: 2026-07-14 13:35:39 CST  更新内容: 回归锁定交付页稳定默认加载器，避免 effect 因函数身份变化无限重载。 */
 /* 更新时间: 2026-07-14 12:11:48 CST  更新内容: 增加数据更新状态汇总卡复选框右置布局回归，避免通用 span 样式覆盖标题行 flex。 */
@@ -909,8 +910,12 @@ test('renders data maintenance as four independent pages instead of the dashboar
   assert.match(appSource, /import MaintenancePage from '\.\/components\/MaintenancePage';/);
   assert.match(appSource, /const isMaintenancePage = maintenanceMode;/);
   assert.match(appSource, /function handleMaintenanceBack\(\) \{[\s\S]*?setMaintenanceMode\(false\);[\s\S]*?setActiveMenu\('overview'\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?\}/);
-  assert.match(appSource, /isMaintenancePage \? \([\s\S]*?<MaintenancePage activePage=\{activeMaintenanceMenu\} onBack=\{handleMaintenanceBack\} \/>[\s\S]*?\) : isComputePage \? \(/);
-  assert.match(maintenancePageSource, /export default function MaintenancePage\(\{ activePage = 'target-maintenance' \}\)/);
+  assert.match(appSource, /const \[dashboardDataVersion, setDashboardDataVersion\] = useState\(0\);/);
+  assert.match(appSource, /\}, \[authState\.status, dashboardDataVersion\]\);/);
+  assert.match(appSource, /isMaintenancePage \? \([\s\S]*?<MaintenancePage[\s\S]*?activePage=\{activeMaintenanceMenu\}[\s\S]*?onBack=\{handleMaintenanceBack\}[\s\S]*?onDataChanged=\{\(\) => setDashboardDataVersion\(\(version\) => version \+ 1\)\}[\s\S]*?\/>[\s\S]*?\) : isComputePage \? \(/);
+  assert.match(maintenancePageSource, /export default function MaintenancePage\(\{ activePage = 'target-maintenance', onDataChanged \}\)/);
+  assert.match(maintenancePageSource, /function handleImported\(\) \{[\s\S]*?onDataChanged\?\.\(\);/);
+  assert.match(maintenancePageSource, /setDataVersion\(\(v\) => v \+ 1\);[\s\S]*?markSaved\(\);[\s\S]*?onDataChanged\?\.\(\);/);
   assert.match(maintenancePageSource, /const PAGE_RENDERERS = \{/);
   assert.match(maintenancePageSource, /'target-maintenance': TargetMaintenancePage/);
   assert.match(maintenancePageSource, /'cost-maintenance': CostMaintenancePage/);

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 13:49:44 CST
+ 更新内容: 维护数据保存或导入成功后通知 App 刷新经营快照，避免首页继续显示旧目标。
+*/
+/*
  更新时间: 2026-07-14 11:40:00 CST
  更新内容: 数据维护新增只读数据更新看板，支持小时级自动刷新、顶部多选状态筛选和数据拉取时效展示。
 */
@@ -1583,7 +1587,7 @@ const PAGE_RENDERERS = {
   'channel-maintenance': ChannelMaintenancePage,
 };
 
-export default function MaintenancePage({ activePage = 'target-maintenance' }) {
+export default function MaintenancePage({ activePage = 'target-maintenance', onDataChanged }) {
   const [statusByPage, setStatusByPage] = useState({});
   const [importOpen, setImportOpen] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
@@ -1662,6 +1666,7 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
     // 导入写库后重拉数据，让表单显示新行
     setDataVersion((v) => v + 1);
     markSaved();
+    onDataChanged?.();
   }
 
   function handlePageAction(action) {
@@ -1706,6 +1711,7 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
       // 写库后重拉，让表单回显数据库最新值并清空 draft（重挂载）
       setDataVersion((v) => v + 1);
       markSaved();
+      onDataChanged?.();
       if (result?.errors?.length) {
         setSaveError(`部分行未写入：${result.errors.map((e) => e.message).join('；')}`);
       }

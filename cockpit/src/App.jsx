@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 13:49:44 CST
+ 更新内容: 数据维护保存或导入后重新加载经营快照，使线上月度目标无需刷新浏览器即可更新。
+*/
+/*
  更新时间: 2026-07-14 15:25:00 CST
  更新内容: 临时禁用登录门禁但保留登录代码：应用启动直接进入已认证状态，不再请求 /api/auth/me 或展示 LoginPage；
           退出登录在禁用期内仅恢复免登录用户，后续重新打开门禁时可复用现有 auth/lib 与 LoginPage。
@@ -293,6 +297,7 @@ export default function App() {
   const [openCard, setOpenCard] = useState(null);
   const [companionCue, setCompanionCue] = useState(null);
   const [dashboardDataState, setDashboardDataState] = useState({ status: 'loading', error: '' });
+  const [dashboardDataVersion, setDashboardDataVersion] = useState(0);
   const [computeDataState, setComputeDataState] = useState({ status: 'idle', error: '' });
   const [computeCustomerSyncState, setComputeCustomerSyncState] = useState({ status: 'idle', total: 0 });
   const [authState, setAuthState] = useState({ status: 'authenticated', user: LOGIN_DISABLED_USER });
@@ -338,7 +343,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [authState.status]);
+  }, [authState.status, dashboardDataVersion]);
 
   useEffect(() => {
     if (dashboardDataState.status !== 'ready' || computeDataState.status !== 'idle') return undefined;
@@ -642,7 +647,11 @@ export default function App() {
         <div className="dash-main">
           <div className="dash-content" ref={gridRef} key={contentKey}>
             {isMaintenancePage ? (
-              <MaintenancePage activePage={activeMaintenanceMenu} onBack={handleMaintenanceBack} />
+              <MaintenancePage
+                activePage={activeMaintenanceMenu}
+                onBack={handleMaintenanceBack}
+                onDataChanged={() => setDashboardDataVersion((version) => version + 1)}
+              />
             ) : isComputePage ? (
               <ComputeUsagePage
                 searchTerm={searchTerm}

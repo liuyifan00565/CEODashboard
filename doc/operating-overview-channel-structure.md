@@ -1,5 +1,8 @@
 # 经营总览月度/年度回款主卡与回款结构
 
+更新时间: 2026-07-14 13:49:44 CST
+更新内容: 明确真实收入与目标数据分离；目标维护保存或导入后自动刷新经营快照，线上月度进度无需浏览器刷新即可更新。
+
 更新时间: 2026-07-13 19:46:24 CST
 更新内容: 保留当前趋势与经营指标内容尺寸，不再继续等比缩小；只移除截图红线以下 14px 底部区域，并在新底边重建玻璃圆角与边框。
 
@@ -156,6 +159,9 @@
 
 ## 数据来源
 
+- Excel 自营收入文件只写入实际收入、退款、人员、客户、订单和来源等事实字段，不生成或猜测目标。
+- 月度、年度及渠道目标独立读取 `biz_target_monthly` 的部门级配置；人员目标只有数据库存在人员分配时才可展示，不能由实际收入反推。
+- 目标维护保存或导入成功后，`MaintenancePage` 通知 `App` 重新请求 `/api/dashboard-data`，回到经营总览时直接显示最新目标。
 - 月度主卡继续读取 `KPI.monthRecovered`、`KPI.monthTarget` 和 `KPI_DERIVED.monthCompletion`。
 - 渠道行数据继续使用前端统一方法 `getChannelCompletionRows('month')`。
 - 年度总览读取 `KPI.yearRecovered`、`KPI.yearTarget`、`KPI_DERIVED.yearCompletion` 和 `getChannelCompletionRows('year')`。
