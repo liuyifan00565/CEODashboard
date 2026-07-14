@@ -4,6 +4,10 @@
    四张小卡边缘裁切时的调整；并修正上条改动误伤自身注释文本的 getDashboardMenuLabel 断言。 */
 /* 更新时间: 2026-07-14 11:20:00 CST  更新内容: 侧栏品牌区第二行改为登录用户名，同步移除 activeContextLabel/
    activeMenuLabel/getDashboardMenuLabel 相关断言。 */
+/* 更新时间: 2026-07-14 12:35:00 CST  更新内容: 交付页回归切换为售前试用长看板，覆盖模块顺序、状态处理、环图筛选与透明页面容器。 */
+/* 更新时间: 2026-07-14 10:02:17 CST  更新内容: 回归锁定月度经营进度卡只下裁玻璃表面顶部，不移动标题与三栏内容。 */
+/* 更新时间: 2026-07-14 10:35:00 CST  更新内容: 增加交付与运营协同看板结构回归，覆盖流程、工单责任和权限成本控制区块。 */
+/* 更新时间: 2026-07-14 09:52:18 CST  更新内容: 回归锁定月度经营进度标题下移到目标区，并仅收紧卡片顶部留白。 */
 /* 更新时间: 2026-07-14 10:00:00 CST  更新内容: 版本情况移回经营总览页，AI 洞察导航 targetMenu 简化回
    compute/overview 两态；同步更新版本/交付相关断言。 */
 /* 更新时间: 2026-07-13 20:30:00 CST  更新内容: 同步 AI 洞察导航泛化为 targetMenu 三态分支（compute/
@@ -573,6 +577,7 @@ const monthlyTrendSource = readFileSync(new URL('./components/MonthlyTrend.jsx',
 const aiAnalysisWidgetCss = readFileSync(new URL('./components/AIAnalysisWidget.css', import.meta.url), 'utf8');
 const aiAnalysisWidgetSource = readFileSync(new URL('./components/AIAnalysisWidget.jsx', import.meta.url), 'utf8');
 const mascotSpriteStageCss = readFileSync(new URL('./components/MascotSpriteStage.css', import.meta.url), 'utf8');
+const deliveryPanelSource = readFileSync(new URL('./components/DeliveryPanel.jsx', import.meta.url), 'utf8');
 const deliveryPanelCss = readFileSync(new URL('./components/DeliveryPanel.css', import.meta.url), 'utf8');
 const channelPanelSource = readFileSync(new URL('./components/ChannelPanel.jsx', import.meta.url), 'utf8');
 const channelPanelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
@@ -1639,12 +1644,24 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
 });
 
 test('polishes the operating progress hierarchy with whitespace-first grouping', () => {
+  const progressPanelBlock = cssRuleBody(operatingOverviewCss, '.op-panel--progress');
+  const progressPanelSurfaceBlock = cssRuleBody(operatingOverviewCss, '.op-panel--progress::before');
   const monthGridBlock = cssRuleBody(operatingOverviewCss, '.op-month-grid');
   const progressTitleBlock = cssRuleBody(operatingOverviewCss, '.op-progress-head h1');
   const primaryValueBlock = cssRuleBody(operatingOverviewCss, '.op-month-primary b');
 
+  assert.match(progressPanelBlock, /padding-block:\s*clamp\(8px, \.6vw, 10px\) clamp\(3px, \.35vw, 6px\);/);
+  assert.match(progressPanelBlock, /background:\s*transparent;/);
+  assert.match(progressPanelBlock, /border-color:\s*transparent;/);
+  assert.match(progressPanelSurfaceBlock, /inset:\s*14px 0 0;/);
+  assert.match(progressPanelSurfaceBlock, /background:\s*var\(--dashboard-card-bg\);/);
+  assert.match(progressPanelSurfaceBlock, /border:\s*1px solid var\(--dashboard-card-border\);/);
+  assert.match(progressPanelSurfaceBlock, /backdrop-filter:\s*var\(--dashboard-card-blur\);/);
+  assert.match(progressPanelSurfaceBlock, /box-shadow:\s*var\(--dashboard-card-shadow\);/);
+  assert.match(operatingOverviewCss, /\.op-panel--progress > \*\s*\{[\s\S]*?position:\s*relative;[\s\S]*?z-index:\s*1;/);
   assert.match(progressTitleBlock, /font-size:\s*clamp\(19px, 1\.65vw, 23px\);/);
   assert.match(progressTitleBlock, /font-weight:\s*700;/);
+  assert.match(progressTitleBlock, /transform:\s*translateY\(18px\);/);
   assert.match(primaryValueBlock, /font-size:\s*clamp\(44px, 4\.9vw, 66px\);/);
   assert.match(primaryValueBlock, /font-weight:\s*840;/);
   assert.match(monthGridBlock, /border-top:\s*1px solid rgba\(255,255,255,\.035\);/);
@@ -1722,9 +1739,47 @@ test('restores secondary dashboard panels below the operating overview story', (
   assert.doesNotMatch(dashboardCss, /\.dash-kpis/);
 });
 
-test('gives the version panel the same hover halo as the monthly trend panel', () => {
+test('renders the presale trial delivery dashboard in the required long-page order', () => {
+  assert.match(deliveryPanelSource, /loadPresaleTrialDashboard/);
+  assert.match(deliveryPanelSource, /<h2 id="delivery-dashboard-title">交付看板<\/h2>/);
+  assert.match(deliveryPanelSource, /售前试用转化与配置负载/);
+  assert.match(deliveryPanelSource, /选择交付看板月份/);
+  assert.match(deliveryPanelSource, /截至 \{updatedAt \|\| '2026-07-14 10:30'\}/);
+
+  const orderedLabels = [
+    '当前试用客户',
+    '试用转化率',
+    '预计成交金额',
+    '风险及超期',
+    '当前试用客户分布',
+    '试用阶段与风险',
+    '本月与上月交付对比',
+    '渠道 / 团队转化情况',
+    '配置人员负载',
+  ];
+  let cursor = -1;
+  orderedLabels.forEach((label) => {
+    const nextIndex = deliveryPanelSource.indexOf(label, cursor + 1);
+    assert.ok(nextIndex > cursor, `${label} should follow the previous delivery dashboard module`);
+    cursor = nextIndex;
+  });
+
+  assert.match(deliveryPanelSource, /dataState\.status === 'loading' && <LoadingView \/>/);
+  assert.match(deliveryPanelSource, /<DataState status="error"[\s\S]*?setReloadKey/);
+  assert.match(deliveryPanelSource, /dataState\.status === 'empty'[\s\S]*?<DataState status="empty" \/>/);
+  assert.match(deliveryPanelSource, /activeDistributionTotal > 0[\s\S]*?buildDistributionOption[\s\S]*?: null/);
+  assert.match(deliveryPanelSource, /\{distributionOption \? \([\s\S]*?<EChart option=\{distributionOption\} onEvents=\{chartEvents\}[\s\S]*?: <EmptyBlock text="该月暂无可用的渠道分布数据" \/>\}/);
+  assert.match(deliveryPanelSource, /setSelectedChannel\(\(current\) => current === params\.data\.key \? null : params\.data\.key\)/);
+  assert.match(deliveryPanelSource, /filterConversionRows\(allConversionRows, selectedChannel\)/);
+  assert.match(deliveryPanelCss, /\.dlv-overview-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 42fr\) minmax\(0, 58fr\);/);
+  assert.match(deliveryPanelCss, /\.dlv-panel\s*\{[\s\S]*?overflow:\s*visible;/);
+  assert.doesNotMatch(deliveryPanelSource, /客户均价|目标未配置|交付流程可视化|工单与责任分配/);
+});
+
+test('gives the version panel the same hover halo as the monthly trend panel without styling the delivery page root', () => {
   assert.match(dashboardCss, /\.dash-secondary-cell \.mt-panel,\s*[\s\S]*?\.dash-version-row \.vf-panel\s*\{[\s\S]*?isolation:isolate;[\s\S]*?transition:border-color \.22s ease, box-shadow \.22s ease;/);
-  assert.match(dashboardCss, /\.dash-secondary-cell \.mt-panel:hover,\s*[\s\S]*?\.dash-version-row \.vf-panel:hover,\s*[\s\S]*?\.dash-version-row \.vf-panel:focus-within,[\s\S]*?\.dash-secondary-delivery \.dlv-panel:hover,[\s\S]*?\.dash-secondary-delivery \.dlv-panel:focus-within\s*\{[\s\S]*?border-color:rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:var\(--glass-shadow\);/);
+  assert.match(dashboardCss, /\.dash-secondary-cell \.mt-panel:hover,\s*[\s\S]*?\.dash-version-row \.vf-panel:hover,\s*[\s\S]*?\.dash-version-row \.vf-panel:focus-within\s*\{[\s\S]*?border-color:rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:var\(--glass-shadow\);/);
+  assert.doesNotMatch(dashboardCss, /\.dash-secondary-delivery \.dlv-panel:(?:hover|focus-within)/);
 });
 
 test('gives every dashboard card the shared hover halo', () => {
@@ -1916,7 +1971,7 @@ test('removes the yearly risk forecast block so recovery cards stay on channel c
 test('matches overview cards to the neutral dark glass recipe', () => {
   const kpiCardBlock = cssRuleBody(kpiCardCss, '.kpi-card');
   const operatingPanelBlock = cssRuleBody(operatingOverviewCss, '.op-panel');
-  const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-panel');
+  const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-card');
   const channelPanelBlock = cssRuleBody(channelPanelCss, '.ch-panel');
   const versionPanelBlock = cssRuleBody(versionFinancePanelCss, '.vf-panel');
   const openingCardBlock = cssRuleBody(openingMetricCardsCss, '.opening-metric-card');
@@ -1951,7 +2006,8 @@ test('keeps channel secondary detail modal on the unified focused glass backgrou
 
 test('keeps operating overview panels free of hover flow borders', () => {
   const operatingPanelBlock = cssRuleBody(operatingOverviewCss, '.op-panel');
-  const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-panel');
+  const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-card');
+  const deliveryRootBlock = cssRuleBody(deliveryPanelCss, '.dlv-panel');
 
   assert.doesNotMatch(dashboardCss, /@property --dash-flow-angle/);
   assert.doesNotMatch(dashboardCss, /\.dash-secondary-cell \.mt-panel::before/);
@@ -1962,9 +2018,12 @@ test('keeps operating overview panels free of hover flow borders', () => {
   assert.doesNotMatch(dashboardCss, /conic-gradient\(\s*from var\(--dash-flow-angle\)/);
   assert.doesNotMatch(dashboardCss, /rgba\(244,114,182/);
   assert.doesNotMatch(dashboardCss, /rgba\(192,132,252/);
-  assert.match(dashboardCss, /\.dash-secondary-delivery \.dlv-panel\{[\s\S]*?transition:border-color \.22s ease, box-shadow \.22s ease;/);
   assert.match(operatingPanelBlock, /background:\s*var\(--dashboard-card-bg\);/);
   assert.match(deliveryPanelBlock, /background:\s*var\(--dashboard-card-bg\);/);
+  assert.match(deliveryRootBlock, /background:\s*transparent;/);
+  assert.match(deliveryRootBlock, /border:\s*0;/);
+  assert.match(deliveryRootBlock, /box-shadow:\s*none;/);
+  assert.doesNotMatch(deliveryRootBlock, /height:\s*100%/);
 });
 
 test('uses static trend legend and overlapping target versus recovered bars', () => {
@@ -2001,6 +2060,7 @@ test('keeps month year trend and finance metrics balanced across 1K and 2K scree
   assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?--dash-secondary-content-height:clamp\(336px,34\.5vh,372px\);[\s\S]*?grid-template-rows:calc\(var\(--dash-secondary-content-height\) - 14px\);/);
   assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?--dash-secondary-content-height:clamp\(306px,32\.5vh,336px\);[\s\S]*?grid-template-rows:calc\(var\(--dash-secondary-content-height\) - 14px\);[\s\S]*?grid-template-rows:repeat\(2,minmax\(140px,1fr\)\);/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-overview \{[\s\S]*?gap: 8px;/);
+  assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-panel--progress \{[\s\S]*?padding-block: 9px 4px;/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows:\s*auto 190px;[\s\S]*?height:\s*190px;/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-channel-list \{[\s\S]*?gap: 13px;/);
   assert.doesNotMatch(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows: auto 148px;[\s\S]*?height: 148px;/);

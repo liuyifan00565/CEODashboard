@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-14 10:02:17 CST  更新内容: 月度经营进度卡的玻璃表面顶部下裁 14px，明显收紧标题上方留白，同时保持标题与三栏内容位置不变。 */
+/* 更新时间: 2026-07-14 09:52:18 CST  更新内容: 月度经营进度标题下移到原标注目标区，并收紧卡片顶部留白；其它三栏位置、尺寸和玻璃样式保持不变。 */
 /* 更新时间: 2026-07-13 19:37:49 CST  更新内容: 按截图红线保持卡片横向宽度不变，将回款结构图区桌面高度收紧到 200px、低有效高度档收紧到 190px。 */
 /* 更新时间: 2026-07-13 19:26:40 CST  更新内容: 年度折叠条保持宽度不变，加粗进度条并在右侧补充完成百分比。 */
 /* 更新时间: 2026-07-13 19:23:27 CST  更新内容: 年度回款总览改为顶部紧凑折叠进度条并与月度经营进度互换位置，补充箭头状态和展开动效。 */
@@ -118,10 +120,48 @@
 
 .op-panel--progress {
   grid-area: progress;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-block: clamp(14px, 1vw, 16px) clamp(3px, .35vw, 6px);
+  background: transparent;
+  border-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  padding-block: clamp(8px, .6vw, 10px) clamp(3px, .35vw, 6px);
+}
+
+.op-panel--progress::before {
+  content: '';
+  position: absolute;
+  inset: 14px 0 0;
+  z-index: 0;
+  pointer-events: none;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 16px;
+  background: var(--dashboard-card-bg);
+  -webkit-backdrop-filter: var(--dashboard-card-blur);
+  backdrop-filter: var(--dashboard-card-blur);
+  box-shadow: var(--dashboard-card-shadow);
+  transition: border-color .22s ease, box-shadow .22s ease;
+}
+
+.op-panel--progress > * {
+  position: relative;
+  z-index: 1;
+}
+
+.op-panel--progress:hover,
+.op-panel--progress:focus-within {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.op-panel--progress:hover::before,
+.op-panel--progress:focus-within::before {
+  border-color: rgba(255,255,255,.34);
+  box-shadow: var(--glass-shadow);
 }
 
 .op-panel--annual {
@@ -179,6 +219,7 @@
   font-size: clamp(19px, 1.65vw, 23px);
   font-weight: 700;
   line-height: 1.1;
+  transform: translateY(18px);
 }
 
 .op-annual-summary h2,
@@ -771,7 +812,7 @@
   }
 
   .op-panel--progress {
-    padding-block: 14px 4px;
+    padding-block: 9px 4px;
   }
 
   .op-recovery-structure {

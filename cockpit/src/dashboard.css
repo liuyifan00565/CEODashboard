@@ -29,6 +29,10 @@
  更新内容: 新增 .dash-sidebar-account，侧边栏搜索框下方显示登录用户名与退出登录入口。
 */
 /*
+ 更新时间: 2026-07-14 14:40:00 CST
+ 更新内容: 交付页容器改为自然滚动，移除旧交付单卡片的整页悬浮边框与固定高度约束。
+*/
+/*
  更新时间: 2026-07-14 10:00:00 CST
  更新内容: 版本情况(VersionFinancePanel)移回经营总览页，“交付”页只剩交付面板；移除仅供合并展示使用的
           .dash-section-eyebrow，.dash-version-row/.dash-secondary-delivery 简化回单子元素容器。
@@ -424,9 +428,13 @@
 
 .dash-secondary-delivery{
   flex:none;
+  min-width:0;
 }
 .dash-secondary-delivery .search-result-border,
-.dash-secondary-delivery .search-result-border .search-result-border__content{height:100%}
+.dash-secondary-delivery .search-result-border .search-result-border__content{
+  min-width:0;
+  height:auto;
+}
 
 .dash-secondary-cell .mt-panel,
 .dash-version-row .vf-panel{
@@ -446,21 +454,14 @@
   overflow:hidden;
 }
 
-.dash-secondary-delivery .dlv-panel{
-  isolation:isolate;
-  transition:border-color .22s ease, box-shadow .22s ease;
-}
-.dash-secondary-cell .mt-panel > *,
-.dash-secondary-delivery .dlv-panel > *{
+.dash-secondary-cell .mt-panel > *{
   position:relative;
   z-index:1;
 }
 .dash-secondary-cell .mt-panel:hover,
 .dash-secondary-cell .mt-panel:focus-within,
 .dash-version-row .vf-panel:hover,
-.dash-version-row .vf-panel:focus-within,
-.dash-secondary-delivery .dlv-panel:hover,
-.dash-secondary-delivery .dlv-panel:focus-within{
+.dash-version-row .vf-panel:focus-within{
   border-color:rgba(255,255,255,.34);
   box-shadow:var(--glass-shadow);
 }

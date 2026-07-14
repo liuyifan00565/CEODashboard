@@ -1,5 +1,8 @@
 # CEO 经营驾驶舱 React Demo
 
+更新时间: 2026-07-14 11:12:37 CST
+更新内容: 交付看板重构为售前试用转化与配置负载长页面；说明集中演示数据、双 cohort、风险分层、月份联动、14 单负载阈值及旧 deliveryRows 兼容边界。
+
 更新时间: 2026-07-13 19:46:24 CST
 更新内容: 保留当前趋势与经营指标内容尺寸，不再继续等比缩小；仅移除红线以下底部区域，并在新底边恢复完整圆角卡片形式。
 
@@ -221,7 +224,7 @@ DB_NAME=ceo_dashboard
 
 当前首页回款文案保持“回款”，实际值优先来自 `fact_revenue_daily.recovered_amount_yuan`，按月份和渠道扣减 `biz_channel_cost_monthly.refund_amount_yuan` 后聚合；当日级回款表没有数据时，才回退到 `fact_sales_member_monthly.recovered_amount_yuan`。`/api/dashboard-data` 会返回 `kpi.monthRefund` 和 `kpi.yearRefund`，用于展示本月和年度累计退款额。月目标、年度目标和渠道目标统一来自 `biz_target_monthly.target_amount_yuan`，且只统计 `staff_id IS NULL` 的部门级目标；渠道目标直接按 `biz_target_monthly.channel_id` 关联 `dim_channel` 汇总。渠道二级部门明细按本月/年度分别使用目标维护与日级回款聚合，新增部门只要有维护目标，即使销售月表尚未生成也会出现在对应渠道下钻中。导入完整数据库后，年度累计实际会按当年 1 月到当前月的日级净回款累计，不再只等于单月销售人员月表回款，也不会显示旧 mock。
 
-渠道完成的实际回款优先来自 `dim_channel` + `fact_revenue_daily`，渠道投入来自 `biz_channel_cost_monthly`，人力成本来自 `biz_labor_cost_monthly`。`/api/dashboard-data` 同时返回 `costTrend`，按月输出 `{ yearMonth, label, adCost, laborCost, totalCost, channels }`；总投入费比二级下钻中，全渠道视角展示 `totalCost`，单渠道视角只展示该渠道投放成本，并在底部补充全渠道总投入与广告/人力构成，人力成本不分摊到单渠道。版本销售先按 `fact_version_sales_daily` 聚合版本套数和回款，续费数据先按 `fact_renewal_daily.version_id` 聚合后再关联版本销售，避免一对多 JOIN 放大销售金额。开户、算力和交付模块分别读取 `fact_opening_account_daily`、算力事实表和 `fact_delivery_order`/`biz_delivery_target_monthly`。
+渠道完成的实际回款优先来自 `dim_channel` + `fact_revenue_daily`，渠道投入来自 `biz_channel_cost_monthly`，人力成本来自 `biz_labor_cost_monthly`。`/api/dashboard-data` 同时返回 `costTrend`，按月输出 `{ yearMonth, label, adCost, laborCost, totalCost, channels }`；总投入费比二级下钻中，全渠道视角展示 `totalCost`，单渠道视角只展示该渠道投放成本，并在底部补充全渠道总投入与广告/人力构成，人力成本不分摊到单渠道。版本销售先按 `fact_version_sales_daily` 聚合版本套数和回款，续费数据先按 `fact_renewal_daily.version_id` 聚合后再关联版本销售，避免一对多 JOIN 放大销售金额。开户和算力模块分别读取 `fact_opening_account_daily` 与算力事实表；`/api/dashboard-data.deliveryRows` 继续保留 `fact_delivery_order` / `biz_delivery_target_monthly` 的旧聚合以兼容既有消费者，但新的售前试用交付看板不混用该数据。
 
 数据维护页内保存支持新增组织和渠道大类：前端临时 ID 会在后端先落 `dim_department` / `dim_channel`，再映射给人员或来源；组织保存与目标导入新增销售时会按组织编码自动维护 `dim_staff.channel_key`，渠道来源的“启用”按 `is_excluded` 的反向视图保存。
 
@@ -245,13 +248,15 @@ DB_NAME=ceo_dashboard
 
 渠道完成情况按数据库 `dim_channel.channel_key` 汇总，当前支持 `线上`、`线下华南`、`代理`、`线下华东`，点击后在屏幕正中间弹出部门明细卡片；部门明细跟随本月/年度切换，按对应周期目标完成率降序排列。目标维护与首页目标口径均为部门级（`biz_target_monthly` 取 `staff_id IS NULL`）。
 
-KPI 二级弹窗、月度经营趋势、版本情况和交付面板继续在经营总览下方展示，顶部主故事负责本月和年度节奏判断，下方模块负责进一步拆解原因。
+KPI 二级弹窗、月度经营趋势和版本情况继续在经营总览下方展示；交付看板保留原侧边栏入口并独立展示售前试用转化与配置负载。
 
-## 保留面板演示口径
+## 保留面板与售前试用交付口径
 
-交付、版本、开户数、月度趋势和 KPI 二级弹窗组件已恢复到经营总览首页下方，供用户在看完顶部经营结论后继续下钻业务原因。
+版本、开户数、月度趋势和 KPI 二级弹窗组件保留在经营总览首页下方，供用户在看完顶部经营结论后继续下钻业务原因。
 
-交付面板按 `fact_delivery_order` 和 `biz_delivery_target_monthly` 展示实施工程师客户均价、人均金额价值、交付单数和月目标完成率；低于预警阈值的人员复用现有进度颜色逻辑突出显示。
+交付看板已重构为“售前试用转化与配置负载”长页面，依次展示 4 张核心指标卡、当前试用渠道环图、试用阶段与风险、本月 / 上月比较表、渠道 / 团队成熟队列转化表及配置人员负载表。当前售前试用字段尚未进入数据库快照，页面由 `src/data/presaleTrialDelivery.js` 集中提供 2026-07、2026-06 与比较基线演示数据；月份切换会统一刷新全部模块，缺少完整快照时展示空态，不回退使用旧 `deliveryRows`。
+
+核心转化率按同一批进入试用并到达观察点的客户计算；渠道 / 团队表按上期启动且完成观察窗的成熟队列计算，两种 cohort 不共用分母。风险卡区分临近到期与重点超期，阶段“已超期”保留全部超期客户，未配置负责人和预计金额缺失属于可重叠的数据治理提醒。配置人员负载以 14 单为建议上限：低于 80% 为正常、80% 至 100% 为偏高、超过 100% 为超负荷。完整数据、计算和后端字段缺口见 [`../doc/presale-trial-delivery-dashboard.md`](../doc/presale-trial-delivery-dashboard.md)。
 
 版本情况面板保留左侧半环图和右侧列表型表格源码，数据来自 `fact_version_sales_daily` 和 `dim_product_version`。
 
