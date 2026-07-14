@@ -1,6 +1,6 @@
 /*
  更新时间: 2026-07-14 16:17:20 CST
- 更新内容: 增加算力用量分析的新开客户数覆盖首页今日/本月开户数的回归测试。
+ 更新内容: 增加算力用量分析客户记录数和在用账户数覆盖首页本月/今日开户数的回归测试。
 */
 /*
  更新时间: 2026-07-14 14:04:11 CST
@@ -238,7 +238,7 @@ test('loads compute-only api through explicit token data sync', async () => {
   assert.equal(COMPUTE_OVERVIEW.totalCapacity, 123456);
 });
 
-test('uses compute overview new customers for homepage opening cards when compute data syncs', async () => {
+test('uses compute customer totals and active accounts for homepage opening cards when compute data syncs', async () => {
   const payload = await loadComputeData({
     fetchImpl: async () => ({
       ok: true,
@@ -246,15 +246,18 @@ test('uses compute overview new customers for homepage opening cards when comput
       json: async () => ({
         source: 'mysql',
         computeOverview: {
-          newCustomers: 37,
+          customerCount: 8,
         },
+        computeUsageDistribution: [
+          { name: '算力用量=0', value: 4 },
+        ],
       }),
     }),
   });
 
-  assert.equal(payload.computeOverview.newCustomers, 37);
-  assert.equal(OPENING_ACCOUNT_METRICS.find((metric) => metric.key === 'month-openings')?.value, 37);
-  assert.equal(OPENING_ACCOUNT_METRICS.find((metric) => metric.key === 'today-openings')?.value, 37);
+  assert.equal(payload.computeOverview.customerCount, 8);
+  assert.equal(OPENING_ACCOUNT_METRICS.find((metric) => metric.key === 'month-openings')?.value, 8);
+  assert.equal(OPENING_ACCOUNT_METRICS.find((metric) => metric.key === 'today-openings')?.value, 4);
 });
 
 test('requests a specific customer page for background pagination', async () => {
