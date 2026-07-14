@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 18:59:10 CST
+ 更新内容: 回归锁定特殊渠道结构可独立展示，且公司主指标仍按统一毛回款与退款视图计算。
+*/
+/*
  更新时间: 2026-07-14 18:32:40 CST
  更新内容: 回归锁定跨年选源、退款期间隔离和退款独立月的负净回款口径。
 */
@@ -21,6 +25,10 @@
 /*
  更新时间: 2026-07-14 17:25:00 CST
  更新内容: 回归锁定公司趋势只展示完整渠道月总额，线上订单不补入公司月度总额。
+*/
+/*
+ 更新时间: 2026-07-14 17:50:49 CST
+ 更新内容: 回归锁定特殊渠道仅进入半环结构数据，不进入普通经营渠道。
 */
 /*
  更新时间: 2026-07-14 17:10:00 CST
@@ -513,6 +521,9 @@ test('uses authoritative monthly company facts without double-counting order row
       { year_month: '2026-05', recovered_wan: 436.77 },
       { year_month: '2026-06', recovered_wan: 303.64 },
     ],
+    revenueStructureRows: [
+      { year_month: '2026-05', structure_key: 'special', structure_name: '特殊渠道', recovered_wan: 100 },
+    ],
     monthlyTargets: [
       { year_month: '2026-05', target_wan: 300 },
       { year_month: '2026-06', target_wan: 500 },
@@ -532,6 +543,8 @@ test('uses authoritative monthly company facts without double-counting order row
   assert.equal(snapshot.channels.find((row) => row.key === 'online').recovered, 119);
   assert.equal(snapshot.channels.find((row) => row.key === 'agent').recovered, 101);
   assert.equal(snapshot.salesMemberRows.find((row) => row.key === 'staff-8101')?.yearRecovered, 110);
+  assert.deepEqual(snapshot.revenueStructure.month, []);
+  assert.deepEqual(snapshot.revenueStructure.year, [{ key: 'special', name: '特殊渠道', recovered: 100 }]);
   assert.deepEqual(snapshot.monthlyTrend.map((row) => [row.month, row.recovered]), [
     ['4月', 226],
     ['5月', 433],

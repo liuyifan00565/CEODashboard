@@ -1,14 +1,10 @@
 /*
- 更新时间: 2026-07-14 18:21:07 CST
- 更新内容: 回归锁定 total 退款按渠道退款/回款占比精确分摊，缺失渠道清零且不覆盖既有成本。
+ 更新时间: 2026-07-14 19:06:34 CST
+ 更新内容: 回归锁定公司月度导入默认保留订单事实，防止权威月度切源误删跨年人员与成交来源下钻。
 */
 /*
- 更新时间: 2026-07-14 18:03:20 CST
- 更新内容: 回归锁定公司月度回款导入使用渠道自然键与数据库自增主键，不再通过 MAX(id)+1 抢号。
-*/
-/*
- 更新时间: 2026-07-14 16:20:00 CST
- 更新内容: 回归锁定仅解析 4-6 月明细表总额及现有四渠道，线下使用华南/华东细分列。
+ 更新时间: 2026-07-14 19:02:00 CST
+ 更新内容: 回归锁定自增主键、权威退款精确分摊，以及南棠归并和特殊渠道结构项的合并行为。
 */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -22,7 +18,7 @@ test('parses only the April-June detail sheet and its primary channel columns', 
   const parsed = parseCompanyRevenueWorkbook(fs.readFileSync(workbookPath), 'company.xlsx');
   assert.deepEqual(parsed.summary.months, ['2026-04', '2026-05', '2026-06']);
   assert.equal(parsed.summary.totalRows, 3);
-  assert.equal(parsed.summary.factRows, 12);
+  assert.equal(parsed.summary.factRows, 13);
   assert.equal(parsed.summary.netAmountYuan, 9541407.5);
   assert.equal(parsed.summary.refundAmountYuan, 170306.5);
 
@@ -31,8 +27,16 @@ test('parses only the April-June detail sheet and its primary channel columns', 
   assert.equal(aprilTotal.refund_amount_yuan, 32106.5);
   const juneChannels = parsed.facts.filter((row) => row.year_month === '2026-06' && row.record_level === 'channel');
   assert.deepEqual(juneChannels.map((row) => row.channel_key), ['online', 'agent', 'south', 'east']);
+  assert.equal(juneChannels.find((row) => row.channel_key === 'agent').gross_amount_yuan, 1142511);
   assert.equal(juneChannels.find((row) => row.channel_key === 'south').gross_amount_yuan, 478333);
   assert.equal(juneChannels.find((row) => row.channel_key === 'east').gross_amount_yuan, 136600);
+  const mayAgent = parsed.facts.find((row) => row.year_month === '2026-05' && row.channel_key === 'agent');
+  assert.equal(mayAgent.gross_amount_yuan, 1292827);
+  assert.equal(mayAgent.refund_amount_yuan, 11800);
+  const special = parsed.facts.find((row) => row.year_month === '2026-05' && row.record_level === 'structure');
+  assert.equal(special.source_name_raw, '特殊渠道');
+  assert.equal(special.gross_amount_yuan, 1000000);
+  assert.equal(special.channel_key, null);
   assert.ok(parsed.facts.every((row) => row.source_sheet === '福客2026年4-6月业绩'));
   assert.ok(parsed.facts.every((row) => !['source', 'adjustment'].includes(row.record_level)));
 });
@@ -71,6 +75,8 @@ test('uses database auto-increment IDs for company revenue channels and import b
 
   assert.equal(result.batchId, '9201');
   assert.equal(result.importedRows, 2);
+  assert.equal(statements.some((entry) => entry.sql === 'DELETE FROM fact_revenue_order'), false);
+  assert.equal(statements.some((entry) => entry.sql === "DELETE FROM import_batch WHERE module = 'self-operated-revenue'"), false);
   assert.equal(statements.some((entry) => /nextId|COALESCE\(MAX/i.test(entry.sql)), false);
   const channelInsert = statements.find((entry) => entry.sql.startsWith('INSERT INTO dim_channel'));
   assert.doesNotMatch(channelInsert.sql, /\(channel_id,/);

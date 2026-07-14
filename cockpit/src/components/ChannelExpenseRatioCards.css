@@ -1,0 +1,140 @@
+/*
+ 更新时间: 2026-07-14 17:57:29 CST
+ 更新内容: 新增渠道费比小卡样式，视觉复用 opening-metric-card 同款玻璃卡片体系（背景/描边/圆角/阴影），
+          4 张卡一行，窄屏降级为 2 列/1 列。
+*/
+.channel-cost-section {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.channel-cost-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.channel-cost-head h2 {
+  margin: 0;
+  color: var(--txt);
+  font-size: 16px;
+  font-weight: 720;
+  letter-spacing: 0;
+}
+
+.channel-cost-head span {
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.channel-cost-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+}
+
+.channel-cost-card {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 14px;
+  background: var(--dashboard-card-bg);
+  -webkit-backdrop-filter: var(--dashboard-card-blur);
+  backdrop-filter: var(--dashboard-card-blur);
+  box-shadow: var(--dashboard-card-shadow);
+  transition: border-color .22s ease, box-shadow .22s ease;
+}
+
+.channel-cost-card:hover {
+  border-color: rgba(255,255,255,.34);
+  box-shadow: var(--glass-shadow);
+}
+
+.channel-cost-card--warn {
+  border-color: rgba(var(--warn-rgb), .28);
+  background: rgba(var(--warn-rgb), .045);
+}
+
+.channel-cost-card__title {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.channel-cost-card__main {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.channel-cost-card__value {
+  color: var(--txt);
+  font-size: clamp(26px, 2.2vw, 32px);
+  font-weight: 850;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.channel-cost-card__unit {
+  color: var(--faint);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.channel-cost-card__meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+
+.channel-cost-card__meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channel-cost-card__roi {
+  margin-top: auto;
+  padding-top: 4px;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.channel-cost-card__roi b {
+  color: var(--muted);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.channel-cost-card--warn .channel-cost-card__roi b {
+  color: var(--warn);
+}
+
+@media (max-width: 1180px) {
+  .channel-cost-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .channel-cost-cards {
+    grid-template-columns: 1fr;
+  }
+}

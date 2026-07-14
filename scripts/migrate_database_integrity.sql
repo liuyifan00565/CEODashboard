@@ -1,3 +1,5 @@
+-- 更新时间: 2026-07-14 19:02:00 CST
+-- 更新内容: 公司月度事实允许每月一个无渠道 structure 展示项，并在存量库替换旧作用域列与 CHECK 约束，确保该项不进入 total/channel 聚合。
 -- 更新时间: 2026-07-14 18:32:40 CST
 -- 更新内容: 新增父组织优先的有效目标视图；公司月度 total 为显式零值且无渠道时仍生成未归属行。
 -- 更新时间: 2026-07-14 18:25:00 CST
@@ -221,6 +223,7 @@ BEGIN
     WHERE NOT (
       (record_level = 'total' AND channel_id IS NULL)
       OR (record_level = 'channel' AND channel_id IS NOT NULL)
+      OR (record_level = 'structure' AND channel_id IS NULL)
     )
     LIMIT 1
   ) THEN
@@ -230,15 +233,35 @@ BEGIN
 
   IF EXISTS (
     SELECT `year_month`, record_level,
-           CASE WHEN record_level = 'total' THEN 0 ELSE channel_id END AS scope_channel_id
+           CASE WHEN record_level = 'channel' THEN channel_id ELSE 0 END AS scope_channel_id
     FROM fact_revenue_channel_monthly
     GROUP BY `year_month`, record_level,
-             CASE WHEN record_level = 'total' THEN 0 ELSE channel_id END
+             CASE WHEN record_level = 'channel' THEN channel_id ELSE 0 END
     HAVING COUNT(*) > 1
     LIMIT 1
   ) THEN
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'fact_revenue_channel_monthly 存在重复月份层级渠道事实，请先修复后再迁移';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'fact_revenue_channel_monthly'
+      AND COLUMN_NAME = 'scope_channel_id'
+      AND LOCATE('''channel''', GENERATION_EXPRESSION) = 0
+  ) THEN
+    IF EXISTS (
+      SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'fact_revenue_channel_monthly'
+        AND INDEX_NAME = 'uq_revenue_monthly_month_level_scope'
+    ) THEN
+      ALTER TABLE fact_revenue_channel_monthly
+        DROP INDEX uq_revenue_monthly_month_level_scope;
+    END IF;
+    ALTER TABLE fact_revenue_channel_monthly
+      DROP COLUMN scope_channel_id;
   END IF;
 
   IF NOT EXISTS (
@@ -249,8 +272,8 @@ BEGIN
   ) THEN
     ALTER TABLE fact_revenue_channel_monthly
       ADD COLUMN scope_channel_id BIGINT
-      GENERATED ALWAYS AS (CASE WHEN record_level = 'total' THEN 0 ELSE channel_id END) VIRTUAL
-      COMMENT '月度层级唯一键作用域；total 固定为 0，channel 使用渠道ID'
+      GENERATED ALWAYS AS (CASE WHEN record_level = 'channel' THEN channel_id ELSE 0 END) VIRTUAL
+      COMMENT '月度层级唯一键作用域；total/structure 固定为 0，channel 使用渠道ID'
       AFTER channel_id;
   END IF;
 
@@ -275,7 +298,7 @@ BEGIN
       DROP FOREIGN KEY fk_revenue_monthly_channel_id;
   END IF;
 
-  IF NOT EXISTS (
+  IF EXISTS (
     SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
     WHERE CONSTRAINT_SCHEMA = DATABASE()
       AND TABLE_NAME = 'fact_revenue_channel_monthly'
@@ -283,11 +306,15 @@ BEGIN
       AND CONSTRAINT_TYPE = 'CHECK'
   ) THEN
     ALTER TABLE fact_revenue_channel_monthly
-      ADD CONSTRAINT chk_revenue_monthly_level_channel CHECK (
-        (record_level = 'total' AND channel_id IS NULL)
-        OR (record_level = 'channel' AND channel_id IS NOT NULL)
-      );
+      DROP CHECK chk_revenue_monthly_level_channel;
   END IF;
+
+  ALTER TABLE fact_revenue_channel_monthly
+    ADD CONSTRAINT chk_revenue_monthly_level_channel CHECK (
+      (record_level = 'total' AND channel_id IS NULL)
+      OR (record_level = 'channel' AND channel_id IS NOT NULL)
+      OR (record_level = 'structure' AND channel_id IS NULL)
+    );
 
   IF NOT EXISTS (
     SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS

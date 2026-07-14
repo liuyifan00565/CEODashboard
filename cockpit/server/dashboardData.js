@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 18:59:10 CST
+ 更新内容: 合并特殊渠道结构与渠道费比；主 KPI 及日/月/年趋势继续统一读取自然年选源毛回款视图并独立扣减统一退款。
+*/
+/*
  更新时间: 2026-07-14 18:32:40 CST
  更新内容: 主指标及跨期趋势统一读取自然年选源视图，目标统一读取父组织优先的有效目标视图；退款独立月也能成为当前业务月。
 */
@@ -21,6 +25,17 @@
 /*
  更新时间: 2026-07-14 17:25:00 CST
  更新内容: 公司 KPI 与月度趋势仅展示具备完整渠道月总额的月份；1-3 月线上订单只保留用于人员和订单下钻。
+*/
+/*
+ 更新时间: 2026-07-14 17:55:47 CST
+ 更新内容: 新增 makeChannelExpenseRatio，按渠道分别计算费比——线上渠道成本 = 投流(operations)+人力(labor)，
+          线下三个渠道（华南/华东/代理）成本只算人力，不计入投流，因为线下不做付费投流；
+          快照新增 channelExpenseRatio 字段供首页新的渠道费比小卡使用，与已有 channelRoi（线上线下口径一致的
+          泛用投入产出比，供 AI 分析和总投入卡下钻复用）区分开，避免改动 channelRoi 影响其现有消费方。
+*/
+/*
+ 更新时间: 2026-07-14 17:50:49 CST
+ 更新内容: 看板仅使用公司月度大数，并向回款半环返回不作为独立经营渠道的特殊渠道结构金额。
 */
 /*
  更新时间: 2026-07-14 17:10:00 CST
@@ -401,7 +416,7 @@ function makeChannelRows({
     const recovered = round0(recoveredByChannel.get(channel.channel_key));
     const target = round0(targetByChannel.get(channel.channel_key));
     const yearRecovered = yearRecoveredRows.length
-      ? round0(yearRecoveredByChannel.get(channel.channel_key))
+      ? round2(yearRecoveredByChannel.get(channel.channel_key))
       : monthRecoveredTotal ? round0(yearlyRecovered * (recovered / monthRecoveredTotal)) : recovered;
     const yearTarget = yearTargetRows.length
       ? round0(yearTargetByChannel.get(channel.channel_key))
@@ -440,6 +455,31 @@ function makeChannelRoi({ channelRows, channelCosts }) {
   }).sort((a, b) => b.roi - a.roi);
 }
 
+function makeChannelExpenseRatio({ channelRows, channelCosts }) {
+  const costByChannel = byKey(channelCosts, 'channel_key');
+  return channelRows.map((channel) => {
+    const costRow = costByChannel.get(channel.key);
+    const isOnline = channel.key === 'online';
+    const adCost = isOnline ? round0(num(costRow?.operations_wan ?? costRow?.investment_wan)) : 0;
+    const laborCost = round0(num(costRow?.labor_wan));
+    const cost = adCost + laborCost;
+    const roi = cost ? round2(channel.recovered / cost) : 0;
+    return {
+      key: channel.key,
+      name: channel.name,
+      recovered: channel.recovered,
+      adCost,
+      laborCost,
+      cost,
+      costRatio: pct(cost, channel.recovered),
+      roi,
+      basis: isOnline ? 'adLabor' : 'laborOnly',
+      warn: roi > 0 && roi < 2.5,
+      strong: roi >= 4,
+    };
+  });
+}
+
 function makeMonthlyTrend({ monthlyTargets, recoveredRows, latestMonth, currentMonthTarget }) {
   const latestYear = String(latestMonth).slice(0, 4);
   const recoveredByMonth = groupSum(recoveredRows, 'year_month', 'recovered_wan');
@@ -462,6 +502,27 @@ function makeMonthlyTrend({ monthlyTargets, recoveredRows, latestMonth, currentM
         completion: pct(recovered, target),
       };
     });
+}
+
+function makeRevenueStructureRows(rows = [], latestMonth, latestYear) {
+  const normalized = rows.map((row) => ({
+    key: row.structure_key || 'special',
+    name: row.structure_name || '特殊渠道',
+    yearMonth: row.year_month,
+    recovered: round0(row.recovered_wan),
+  }));
+  const yearly = new Map();
+  normalized
+    .filter((row) => String(row.yearMonth).startsWith(latestYear))
+    .forEach((row) => {
+      const current = yearly.get(row.key) ?? { key: row.key, name: row.name, recovered: 0 };
+      current.recovered += row.recovered;
+      yearly.set(row.key, current);
+    });
+  return {
+    month: normalized.filter((row) => row.yearMonth === latestMonth),
+    year: [...yearly.values()],
+  };
 }
 
 // 本月每日回款，供经营总览趋势图的日视图使用；biz_target_monthly 无日粒度目标，只返回实际回款。
@@ -907,7 +968,9 @@ export function mapDashboardRowsToSnapshot(rows) {
     kpiDerived,
     operatingOverviewMetrics,
     channels,
+    revenueStructure: makeRevenueStructureRows(rows.revenueStructureRows ?? [], latestMonth, latestYear),
     channelRoi: makeChannelRoi({ channelRows: channels, channelCosts: rows.channelCosts ?? [] }),
+    channelExpenseRatio: makeChannelExpenseRatio({ channelRows: channels, channelCosts: rows.channelCosts ?? [] }),
     channelSourceBreakdown: rows.channelSourceBreakdown ?? [],
     monthlyTrend: makeMonthlyTrend({ monthlyTargets: rows.monthlyTargets ?? [], recoveredRows, latestMonth, currentMonthTarget }),
     dailyRevenueTrend: makeDailyRevenueTrend(applyRefundsToRecoveredRows(rows.dailyRevenue ?? [], latestMonthRefundRows)),
@@ -1029,6 +1092,7 @@ export async function buildDashboardSnapshot(connection) {
     salesMemberMonthly,
     revenueDaily,
     monthlyRevenueTotals,
+    revenueStructureRows,
     dailyRevenue,
     yearlyRevenue,
     yearlyTargets,
@@ -1121,6 +1185,15 @@ export async function buildDashboardSnapshot(connection) {
       GROUP BY DATE_FORMAT(r.stat_date, '%Y-%m')
       ORDER BY \`year_month\`
     `, [`${latestYear}-01-01`, `${nextYear}-01-01`]) : Promise.resolve([]),
+    useRevenueMonthly ? queryRows(connection, `
+      SELECT \`year_month\`, 'special' AS structure_key,
+             COALESCE(source_name_raw, '特殊渠道') AS structure_name,
+             ROUND(SUM(net_amount_yuan) / 10000, 2) AS recovered_wan
+      FROM fact_revenue_channel_monthly
+      WHERE \`year_month\` LIKE CONCAT(?, '%') AND record_level = 'structure'
+      GROUP BY \`year_month\`, COALESCE(source_name_raw, '特殊渠道')
+      ORDER BY \`year_month\`, structure_name
+    `, [latestYear]) : Promise.resolve([]),
     queryRows(connection, `
       SELECT DATE_FORMAT(r.stat_date, '%Y-%m-%d') AS day_key,
              DATE_FORMAT(r.stat_date, '%Y-%m') AS \`year_month\`, c.channel_key,
@@ -1662,6 +1735,7 @@ export async function buildDashboardSnapshot(connection) {
     salesMemberMonthly,
     revenueDaily,
     monthlyRevenueTotals,
+    revenueStructureRows,
     dailyRevenue,
     yearlyRevenue,
     yearlyTargets,

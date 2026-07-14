@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 17:22:41 CST  更新内容: 去掉经营进度三栏内容区顶部内部分隔线，避免标题右侧出现多余横线。 */
 /* 更新时间: 2026-07-14 15:20:00 CST  更新内容: 月度半环恢复绝对定位结构标题，保持当前图表位置和主卡高度不变。 */
 /* 更新时间: 2026-07-14 15:03:00 CST  更新内容: 考虑主卡顶部标题行占位，将月度和年度半环在内容区内再下移约 20px，卡片高度保持不变。 */
 /* 更新时间: 2026-07-14 14:52:00 CST  更新内容: 根据运行页面截图将月度和年度半环再下移约 20px，使可见半环中心与结构列中心对齐。 */
@@ -335,7 +336,7 @@
   align-items: stretch;
   column-gap: var(--op-grid-column-gap);
   row-gap: clamp(1px, .25vw, 3px);
-  border-top: 1px solid rgba(255,255,255,.035);
+  border-top: 0;
   border-bottom: 1px solid rgba(255,255,255,.035);
   padding: clamp(4px, .35vw, 6px) 0;
 }
@@ -347,7 +348,7 @@
   align-items: stretch;
   column-gap: var(--op-grid-column-gap);
   row-gap: clamp(1px, .25vw, 3px);
-  border-top: 1px solid rgba(255,255,255,.035);
+  border-top: 0;
   border-bottom: 1px solid rgba(255,255,255,.035);
   padding: clamp(4px, .35vw, 6px) 0;
 }

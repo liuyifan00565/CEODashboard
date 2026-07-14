@@ -1,4 +1,22 @@
 /*
+ 更新时间: 2026-07-14 17:50:00 CST
+ 更新内容: 算力页两张饼图从静态图片恢复为交互式 EChart，启用 tooltip 悬浮卡片和轻微 emphasis 放大，
+           保留 animation:false 防止圆环晃动。
+*/
+/*
+ 更新时间: 2026-07-14 17:45:00 CST
+ 更新内容: 算力用量分布圆环图为全部 6 个切片定义 labelSlot，去掉 side 约束，
+           避免 >10000 和 0-100 等小扇区标签走 shiftY 自由浮动导致与引导线脱节。
+*/
+/*
+ 更新时间: 2026-07-14 17:29:42 CST
+ 更新内容: 算力用量分布圆环图修正顶部小扇区引导线对齐，并让右侧长标签自动换行显示百分比。
+*/
+/*
+ 更新时间: 2026-07-14 17:14:00 CST
+ 更新内容: 算力页两张饼图恢复原 ECharts 大小与样式，但渲染为静态图片展示，避免圆环继续晃动。
+ */
+/*
  更新时间: 2026-07-14 16:35:00 CST
  更新内容: 关闭各版本算力消耗和算力用量分布饼图的入场动画、状态过渡与悬浮放大，保持初始尺寸不动。
 */
@@ -80,7 +98,8 @@
  更新时间: 2026-07-02 16:52:00 CST
  更新内容: 算力用量表格筛选、排序、分页和下拉控制改用统一 AppIcon 线性图标。
 */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import * as echarts from 'echarts';
 
 import AppIcon from './AppIcon';
 import EChart from './EChart';
@@ -135,14 +154,21 @@ const COMPUTE_RING_COLORS = [
   '#A6C878',
   '#F06A8B',
 ];
-const COMPUTE_VERSION_RIGHT_LABEL_SLOTS = {
-  '试用版': -82,
-  '企业版': -42,
-  '旗舰版': -2,
-  '免费版': 38,
-  '卓越版': 86,
+const COMPUTE_PIE_LABEL_SLOTS = {
+  '试用版': { side: 'right', y: -82, align: 'left' },
+  '企业版': { side: 'right', y: -42, align: 'left' },
+  '旗舰版': { side: 'right', y: -2, align: 'left' },
+  '免费版': { side: 'right', y: 38, align: 'left' },
+  '卓越版': { side: 'right', y: 86, align: 'left' },
+  /* 算力用量分布 — 6 个切片全部定义 slot，避免小扇区引导线与标签脱节 */
+  '算力用量=0':           { y: -88, align: 'left' },
+  '算力用量>10000':       { y: -96, align: 'left' },
+  '0<算力用量<=100':      { y: -60, align: 'left' },
+  '100<算力用量<=1000':   { y: -24, align: 'left' },
+  '1000<算力用量<=5000':  { y: 12,  align: 'left' },
+  '5000<算力用量<=10000': { y: 48,  align: 'left' },
 };
-const COMPUTE_STACKED_PIE_LABELS = new Set(['卓越版']);
+const COMPUTE_STACKED_PIE_LABELS = new Set(['卓越版', '100<算力用量<=1000']);
 const LOW_REPLY_RATE = 60;
 const LOW_BALANCE_POINTS = 1000000;
 const HIGH_USAGE_POINTS = 400000;
@@ -455,16 +481,30 @@ function computePieLabelLayout(params) {
   if (!params.rect || !params.labelRect) return { moveOverlap: 'shiftY' };
 
   const name = String(params.name ?? params.data?.name ?? '');
-  const yOffset = COMPUTE_VERSION_RIGHT_LABEL_SLOTS[name];
+  const slot = COMPUTE_PIE_LABEL_SLOTS[name];
   const isRightLabel = params.labelRect.x > params.rect.x + params.rect.width / 2;
 
-  if (yOffset == null || !isRightLabel) return { moveOverlap: 'shiftY' };
+  if (!slot) return { moveOverlap: 'shiftY' };
+  if (slot.side === 'right' && !isRightLabel) return { moveOverlap: 'shiftY' };
+  if (slot.side === 'left' && isRightLabel) return { moveOverlap: 'shiftY' };
+
+  const y = params.rect.y + params.rect.height / 2 + slot.y;
+  const labelLinePoints = Array.isArray(params.labelLinePoints)
+    ? params.labelLinePoints.map((point) => [...point])
+    : null;
+
+  if (labelLinePoints?.length) {
+    const lastIndex = labelLinePoints.length - 1;
+    labelLinePoints[lastIndex][1] = y;
+    if (lastIndex > 0) labelLinePoints[lastIndex - 1][1] = y;
+  }
 
   return {
-    y: params.rect.y + params.rect.height / 2 + yOffset,
-    align: 'left',
+    y,
+    align: slot.align,
     verticalAlign: 'middle',
     hideOverlap: false,
+    ...(labelLinePoints ? { labelLinePoints } : {}),
   };
 }
 
@@ -932,6 +972,12 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
         avoidLabelOverlap: true,
         minShowLabelAngle: 1,
         padAngle: 1,
+        silent: false,
+        selectedMode: false,
+        selectedOffset: 0,
+        legendHoverLink: false,
+        hoverAnimation: false,
+        cursor: 'pointer',
         itemStyle: {
           borderRadius: 8,
           borderColor: 'rgba(255, 255, 255, .12)',
@@ -971,12 +1017,26 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
         },
         ...(naturalLabelLayout ? {} : { labelLayout: computePieLabelLayout }),
         emphasis: {
+          disabled: false,
+          scale: false,
+          scaleSize: 0,
+          itemStyle: {
+            shadowBlur: 28,
+            shadowColor: 'rgba(255,255,255,.22)',
+          },
+        },
+        select: {
           disabled: true,
           scale: false,
           scaleSize: 0,
           itemStyle: {
-            shadowBlur: 18,
-            shadowColor: 'rgba(255,255,255,.18)',
+            borderWidth: 2,
+          },
+        },
+        blur: {
+          disabled: true,
+          itemStyle: {
+            opacity: 1,
           },
         },
         data: data.map((item) => ({
@@ -1004,6 +1064,95 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
   };
 }
 
+function StaticEChartImage({ option, label }) {
+  const containerRef = useRef(null);
+  const rendererRef = useRef(null);
+  const chartRef = useRef(null);
+  const [imageSrc, setImageSrc] = useState('');
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const renderer = rendererRef.current;
+    if (!container || !renderer) return undefined;
+
+    let disposed = false;
+    let renderFrameId = 0;
+    let captureFrameId = 0;
+    let settleFrameId = 0;
+
+    function cancelPendingFrames() {
+      if (renderFrameId) window.cancelAnimationFrame(renderFrameId);
+      if (captureFrameId) window.cancelAnimationFrame(captureFrameId);
+      if (settleFrameId) window.cancelAnimationFrame(settleFrameId);
+      renderFrameId = 0;
+      captureFrameId = 0;
+      settleFrameId = 0;
+    }
+
+    function disposeChart() {
+      chartRef.current?.dispose();
+      chartRef.current = null;
+    }
+
+    function scheduleStaticRender() {
+      cancelPendingFrames();
+      renderFrameId = window.requestAnimationFrame(renderStaticImage);
+    }
+
+    function renderStaticImage() {
+      if (disposed) return;
+      renderFrameId = 0;
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (!width || !height) return;
+
+      if (!chartRef.current) {
+        chartRef.current = echarts.init(renderer, null, {
+          renderer: 'canvas',
+          width,
+          height,
+        });
+      } else {
+        chartRef.current.resize({ width, height });
+      }
+      chartRef.current.setOption(option, true);
+      captureFrameId = window.requestAnimationFrame(() => {
+        captureFrameId = 0;
+        settleFrameId = window.requestAnimationFrame(() => {
+          settleFrameId = 0;
+          if (disposed || !chartRef.current) return;
+          setImageSrc(chartRef.current.getDataURL({
+            type: 'png',
+            pixelRatio: window.devicePixelRatio || 2,
+            backgroundColor: 'transparent',
+          }));
+        });
+      });
+    }
+
+    scheduleStaticRender();
+
+    const observer = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(scheduleStaticRender)
+      : null;
+
+    observer?.observe(container);
+    return () => {
+      disposed = true;
+      cancelPendingFrames();
+      observer?.disconnect();
+      disposeChart();
+    };
+  }, [option]);
+
+  return (
+    <div className="cpu-static-echart" ref={containerRef} aria-label={label}>
+      {imageSrc && <img className="cpu-static-echart__image" src={imageSrc} alt="" draggable="false" />}
+      <div className="cpu-static-echart__renderer" ref={rendererRef} aria-hidden="true" />
+    </div>
+  );
+}
+
 function KpiCard({ label, value, sub, meta, tone, active }) {
   return (
     <div className="cpu-kpi-slot" data-anim data-search-match={active ? 'true' : undefined}>
@@ -1017,11 +1166,11 @@ function KpiCard({ label, value, sub, meta, tone, active }) {
   );
 }
 
-function Panel({ className = '', title, sub, active, children }) {
+function Panel({ className = '', title, sub, active, animate = true, children }) {
   return (
     <section
       className={`cpu-panel ${className}${active ? ' cpu-panel--match' : ''}`}
-      data-anim
+      data-anim={animate ? '' : undefined}
       data-search-match={active ? 'true' : undefined}
     >
       <header className="cpu-panel__head">
@@ -1395,6 +1544,7 @@ export default function ComputeUsagePage({
         <Panel
           className="cpu-panel--pie cpu-panel--version-pie"
           title="各版本算力消耗"
+          animate={false}
           active={matchesTerm(SEARCH_KEYWORDS.version, searchTerm)}
         >
           <div className="cpu-pie-wrap">
@@ -1406,6 +1556,7 @@ export default function ComputeUsagePage({
         <Panel
           className="cpu-panel--pie cpu-panel--usage-pie"
           title="算力用量分布"
+          animate={false}
           active={matchesTerm(SEARCH_KEYWORDS.distribution, searchTerm)}
         >
           <div className="cpu-pie-wrap">

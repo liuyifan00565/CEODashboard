@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 16:47:26 CST
+ 更新内容: 移除侧栏 AI 小人入口旁的助手文案，仅保留小人入口用于居中展示。
+*/
+/*
  Update time: 2026-07-10 16:08:00 CST
  Update content: Use local business brief for daily brief requests and hide raw DashScope error JSON from chat bubbles.
 */
@@ -724,10 +728,6 @@ export default function AIAnalysisWidget({
           label="福小客 AI 经营助手"
         />
       </button>
-      <div className="ai-status-copy" aria-hidden="true">
-        <span>AI 助手</span>
-        <b>经营分析</b>
-      </div>
 
       {renderCard && (
         <div className="ai-card-wrap" ref={cardWrapRef}>

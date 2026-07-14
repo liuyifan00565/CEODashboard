@@ -1,3 +1,7 @@
+/* 更新时间: 2026-07-14 19:06:34 CST  更新内容: 特殊渠道作为 total 内部展示项时按比例从四渠道图形份额中扣回，半环合计和完成率不再重复叠加。 */
+/* 更新时间: 2026-07-14 17:50:49 CST  更新内容: 回款半环纳入特殊渠道展示扇区，但不将其列入经营渠道和人员下钻。 */
+/* 更新时间: 2026-07-14 16:52:12 CST  更新内容: 收短回款结构半环外部标签引导折线，保留所有有值渠道标签但避免线条拉得过长。 */
+/* 更新时间: 2026-07-14 16:49:06 CST  更新内容: 回款结构半环所有有值真实渠道均显示外部标签，小渠道使用更近的边距避免“其他”等标签被漏显。 */
 /* 更新时间: 2026-07-14 15:20:00 CST  更新内容: 月度半环区域恢复“本月回款结构”标题，不恢复单位文字且不增加主卡高度。 */
 /* 更新时间: 2026-07-14 15:14:00 CST  更新内容: 半环接入 ECharts 空白画布事件，空白区显式打开月度/年度明细，渠道扇区保留人员下钻。 */
 /* 更新时间: 2026-07-14 15:09:00 CST  更新内容: 半环空白区域恢复整卡下钻，仅在点击实际渠道扇区时阻止冒泡并打开人员明细。 */
@@ -65,6 +69,7 @@ import {
   META,
   KPI,
   KPI_DERIVED,
+  REVENUE_STRUCTURE,
   getChannelCompletionRows,
 } from '../data/mock';
 import { matchesSearchTerm } from '../lib/searchMatch';
@@ -126,13 +131,18 @@ const CHANNEL_STRUCTURE_STYLES = {
     color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#C9A96B' }, { offset: 1, color: '#E3D2A4' }] },
     swatch: '#C9A96B',
   },
+  special: {
+    color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: '#8797A8' }, { offset: 1, color: '#D8DDE5' }] },
+    swatch: '#AEB8C4',
+  },
 };
 const INCOMPLETE_STRUCTURE_STYLE = {
   color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: 'rgba(255,255,255,.075)' }, { offset: 1, color: 'rgba(255,255,255,.035)' }] },
   swatch: 'rgba(255,255,255,.28)',
 };
-const MAJOR_LABEL_EDGE_DISTANCE = '16%';
-const INCOMPLETE_LABEL_EDGE_DISTANCE = '22%';
+const CHANNEL_LABEL_EDGE_DISTANCE = '20%';
+const MINOR_LABEL_EDGE_DISTANCE = '18%';
+const INCOMPLETE_LABEL_EDGE_DISTANCE = '24%';
 function formatWan(value) {
   return Number(value).toLocaleString('zh-CN');
 }
@@ -149,8 +159,12 @@ function channelStyle(key) {
   return CHANNEL_STRUCTURE_STYLES[key] ?? CHANNEL_STRUCTURE_STYLES.online;
 }
 
-function buildChannelStructure(rows) {
+function buildChannelStructure(rows, structureRows = []) {
   const totalRecovered = rows.reduce((sum, row) => sum + (Number(row.recovered) || 0), 0);
+  const rawStructureRecovered = structureRows.reduce((sum, row) => sum + Math.max(0, Number(row.recovered) || 0), 0);
+  const structureRecovered = Math.min(rawStructureRecovered, Math.max(0, totalRecovered));
+  const channelDisplayScale = totalRecovered > 0 ? (totalRecovered - structureRecovered) / totalRecovered : 0;
+  const structureDisplayScale = rawStructureRecovered > 0 ? structureRecovered / rawStructureRecovered : 0;
   const totalTarget = rows.reduce((sum, row) => sum + (Number(row.target) || 0), 0);
   const completion = totalTarget ? +((totalRecovered / totalTarget) * 100).toFixed(1) : 0;
   const riskBaseline = Math.min(100, completion);
@@ -159,19 +173,37 @@ function buildChannelStructure(rows) {
   const channelItems = rows.map((row) => {
     const style = channelStyle(row.key);
     const recovered = Number(row.recovered) || 0;
+    const pieRecovered = Math.max(0, recovered * channelDisplayScale);
     const rowCompletion = Number(row.completion) || 0;
     const target = Number(row.target) || 0;
 
     return {
       ...row,
       recovered,
+      pieRecovered,
       target,
       completion: rowCompletion,
       risk: row.warn || rowCompletion < riskBaseline,
       gap: Math.max(0, target - recovered),
-      share: safeRatioPercent(recovered, Math.max(structureTotal, 1)),
+      share: safeRatioPercent(pieRecovered, Math.max(structureTotal, 1)),
       swatch: style.swatch,
       itemStyle: { color: style.color },
+    };
+  });
+  const structureItems = structureRows.map((row) => {
+    const style = channelStyle(row.key);
+    const recovered = Number(row.recovered) || 0;
+    const pieRecovered = Math.max(0, recovered * structureDisplayScale);
+    return {
+      ...row,
+      recovered,
+      pieRecovered,
+      target: 0,
+      completion: 0,
+      share: safeRatioPercent(pieRecovered, Math.max(structureTotal, 1)),
+      swatch: style.swatch,
+      itemStyle: { color: style.color },
+      isStructureOnly: true,
     };
   });
   const incompleteSlice = incompleteGap > 0
@@ -197,7 +229,7 @@ function buildChannelStructure(rows) {
     ? [
       ...channelItems.map((row) => ({
         key: row.key,
-        value: row.recovered,
+        value: row.pieRecovered,
         rawValue: row.recovered,
         targetValue: row.target,
         completion: row.completion,
@@ -205,6 +237,18 @@ function buildChannelStructure(rows) {
         name: row.name,
         swatch: row.swatch,
         itemStyle: row.itemStyle,
+      })),
+      ...structureItems.map((row) => ({
+        key: row.key,
+        value: row.pieRecovered,
+        rawValue: row.recovered,
+        targetValue: 0,
+        completion: 0,
+        share: row.share,
+        name: row.name,
+        swatch: row.swatch,
+        itemStyle: row.itemStyle,
+        isStructureOnly: true,
       })),
       ...(incompleteSlice ? [incompleteSlice] : []),
     ]
@@ -283,6 +327,7 @@ function channelStructureOption(structure, periodMeta, tokens) {
         const target = Number(params.data?.targetValue ?? 0) || 0;
         const completion = Number(params.data?.completion ?? 0) || 0;
         const isIncomplete = Boolean(params.data?.isIncomplete);
+        const isStructureOnly = Boolean(params.data?.isStructureOnly);
         const valueLabel = isIncomplete ? '目标缺口' : periodMeta.recoveredLabel;
         const swatch = params.data?.swatch ?? INCOMPLETE_STRUCTURE_STYLE.swatch;
 
@@ -293,7 +338,7 @@ function channelStructureOption(structure, periodMeta, tokens) {
               <div class="op-channel-tooltip__name">${periodMeta.seriesName} · ${params.name}</div>
             </div>
             <div class="op-channel-tooltip__value">${valueLabel} <strong>${formatWan(value)}</strong> 万</div>
-            <div class="op-channel-tooltip__meta">图上占比 <strong>${share}%</strong> · 目标 ${formatWan(target)} 万 · 完成率 ${formatPct(completion)}</div>
+            <div class="op-channel-tooltip__meta">${isStructureOnly ? `图上占比 <strong>${share}%</strong>` : `图上占比 <strong>${share}%</strong> · 目标 ${formatWan(target)} 万 · 完成率 ${formatPct(completion)}`}</div>
           </div>
         `;
       },
@@ -359,7 +404,7 @@ function channelStructureOption(structure, periodMeta, tokens) {
           },
           smooth: 0.18,
           length: 10,
-          length2: 16,
+          length2: 8,
         },
         labelLayout: (params) => {
           if (params.labelRect?.x < 8) {
@@ -369,17 +414,18 @@ function channelStructureOption(structure, periodMeta, tokens) {
           return {};
         },
         data: structure.pieData.map((item, index) => {
-          const isMajorLabel = index < 2 && !item.isEmpty && Number(item.value) > 0;
+          const isChannelLabel = !item.isIncomplete && !item.isEmpty && Number(item.value) > 0;
+          const isMinorLabel = isChannelLabel && index >= 2;
           const isIncompleteLabel = item.isIncomplete && Number(item.value) > 0;
           return {
             ...item,
             label: {
-              show: isMajorLabel || isIncompleteLabel,
-              ...(isMajorLabel ? { edgeDistance: MAJOR_LABEL_EDGE_DISTANCE } : {}),
+              show: isChannelLabel || isIncompleteLabel,
+              ...(isChannelLabel ? { edgeDistance: isMinorLabel ? MINOR_LABEL_EDGE_DISTANCE : CHANNEL_LABEL_EDGE_DISTANCE } : {}),
               ...(isIncompleteLabel ? { edgeDistance: INCOMPLETE_LABEL_EDGE_DISTANCE } : {}),
             },
             labelLine: {
-              show: isMajorLabel || isIncompleteLabel,
+              show: isChannelLabel || isIncompleteLabel,
             },
           };
         }),
@@ -486,13 +532,13 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
   const progressKeywords = [progressTitle, ...PROGRESS_KEYWORDS_BASE];
   const monthChannelRows = getChannelCompletionRows('month');
   const annualChannelRows = getChannelCompletionRows('year');
-  const monthlyStructure = useMemo(() => buildChannelStructure(monthChannelRows), [monthChannelRows]);
-  const annualStructure = useMemo(() => buildChannelStructure(annualChannelRows), [annualChannelRows]);
+  const monthlyStructure = useMemo(() => buildChannelStructure(monthChannelRows, REVENUE_STRUCTURE.month), [monthChannelRows]);
+  const annualStructure = useMemo(() => buildChannelStructure(annualChannelRows, REVENUE_STRUCTURE.year), [annualChannelRows]);
   const monthlyStructureOption = useMemo(() => channelStructureOption(monthlyStructure, MONTH_STRUCTURE_META, tokens), [monthlyStructure, tokens]);
   const annualStructureOption = useMemo(() => channelStructureOption(annualStructure, ANNUAL_STRUCTURE_META, tokens), [annualStructure, tokens]);
   const monthlyChartEvents = useMemo(() => ({
     click: (params) => {
-      if (params?.data?.key && !params.data.isIncomplete && !params.data.isEmpty) {
+      if (params?.data?.key && !params.data.isIncomplete && !params.data.isEmpty && !params.data.isStructureOnly) {
         params.event?.event?.stopPropagation?.();
         setPersonDrilldown({ channelKey: params.data.key, period: 'month' });
       }
@@ -500,7 +546,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
   }), []);
   const annualChartEvents = useMemo(() => ({
     click: (params) => {
-      if (params?.data?.key && !params.data.isIncomplete && !params.data.isEmpty) {
+      if (params?.data?.key && !params.data.isIncomplete && !params.data.isEmpty && !params.data.isStructureOnly) {
         params.event?.event?.stopPropagation?.();
         setPersonDrilldown({ channelKey: params.data.key, period: 'year' });
       }

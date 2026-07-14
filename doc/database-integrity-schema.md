@@ -1,5 +1,8 @@
 # 数据库完整性与统一回款聚合
 
+更新时间: 2026-07-14 19:02:00 CST
+更新内容: 公司月度事实新增每月一个 `structure` 展示项；它只展示已包含在 total 中的特殊渠道金额，不参与主 KPI、统一回款选源、退款分摊或渠道成本。
+
 更新时间: 2026-07-14 18:32:40 CST
 更新内容: 新增父组织优先的有效目标视图；按自然年统一三类回款来源，建立金额守恒分摊与“成本维护优先、导入退款兜底”的统一退款视图；显式零值 total 同样会锁定该年公司月度来源。
 
@@ -18,7 +21,7 @@
 ## 统一业务口径
 
 1. `biz_target_monthly.target_amount_yuan` 是部门月度目标。
-2. `fact_revenue_channel_monthly` 是公司月度导入事实：`total` 行是月度毛回款和退款权威总额，`channel` 行只提供四渠道原始占比。
+2. `fact_revenue_channel_monthly` 是公司月度导入事实：`total` 行是月度毛回款和退款权威总额，`channel` 行只提供四渠道原始占比，`structure` 行只记录已包含在 total 中的特殊渠道展示金额。
 3. `fact_revenue_order.sales_amount_yuan` 是真实订单毛回款，`refund_amount_yuan` 是订单导入退款。
 4. `fact_revenue_daily.recovered_amount_yuan` 是日级毛回款明细。
 5. `fact_revenue_monthly_override.recovered_amount_yuan` 是目标维护录入的部门月度毛回款覆盖值。
@@ -26,7 +29,7 @@
 7. 净实际回款 = 统一毛回款 - 统一退款。
 8. 运营成本和人力成本不从实际回款中扣减，只参与总成本、费比和 ROI。
 
-`fact_revenue_channel_monthly` 只允许两种层级/渠道组合：`total + channel_id IS NULL` 或 `channel + channel_id IS NOT NULL`。虚拟列 `scope_channel_id` 将 total 固定映射为 `0`、channel 映射为真实渠道 ID，唯一键 `year_month + record_level + scope_channel_id` 保证每月只有一个 total、每月每渠道只有一行。渠道外键使用 `ON DELETE RESTRICT`，避免渠道删除后产生不合法的空渠道明细。
+`fact_revenue_channel_monthly` 只允许三种层级/渠道组合：`total + channel_id IS NULL`、`channel + channel_id IS NOT NULL` 或 `structure + channel_id IS NULL`。虚拟列 `scope_channel_id` 将 total/structure 固定映射为 `0`、channel 映射为真实渠道 ID，唯一键 `year_month + record_level + scope_channel_id` 保证每月只有一个 total、每月每渠道只有一行且每月最多一个 structure。渠道外键使用 `ON DELETE RESTRICT`，避免渠道删除后产生不合法的空渠道明细。
 
 ## 部门月度覆盖表
 
@@ -44,7 +47,7 @@
 - `v_department_closure`：组织后代到祖先的闭包关系，包含组织自身。
 - `v_target_monthly_effective`：只保留部门级月度目标；同月父、子组织都有目标时，父组织目标覆盖其所有后代目标。目标维护汇总和经营总览目标只读该视图，避免父子目标重复累加。
 - `v_revenue_monthly_effective_override`：过滤掉已被上级覆盖的子组织月度覆盖值。
-- `v_revenue_company_monthly_allocated`：先汇总每月 `total` 权威毛回款和退款，再按 `channel` 原始占比分配到渠道；各渠道保留两位小数，按 `channel_id` 排序的最后一个渠道承接尾差，因此渠道合计与 total 精确相等。某指标的渠道权重合计为 0 时优先借用另一指标的渠道占比，两项权重都为 0 时由最后一渠道承接该指标总额。total 没有渠道行时一律生成 `channel_id/department_id = NULL` 的“未归属”记录；即使毛回款和退款都是 0，也作为显式事实保留并参与年度选源。
+- `v_revenue_company_monthly_allocated`：先汇总每月 `total` 权威毛回款和退款，再按 `channel` 原始占比分配到渠道；`structure` 明确排除在权威总额与分摊权重之外。各渠道保留两位小数，按 `channel_id` 排序的最后一个渠道承接尾差，因此渠道合计与 total 精确相等。某指标的渠道权重合计为 0 时优先借用另一指标的渠道占比，两项权重都为 0 时由最后一渠道承接该指标总额。total 没有渠道行时一律生成 `channel_id/department_id = NULL` 的“未归属”记录；即使毛回款和退款都是 0，也作为显式事实保留并参与年度选源。
 - `v_revenue_gross_canonical`：按自然年选择唯一毛回款源。该年存在有效公司月度分摊时，整年只使用公司月度源；否则该年存在 `stat_date` 非空的真实订单时，整年只使用订单 `sales_amount_yuan`；否则使用日报与有效部门月度覆盖。
 - `v_revenue_refund_canonical`：按“月 + 渠道”优先读取成本维护退款；没有对应成本维护行时，回退当前自然年已选收入源自带的退款。公司月度源使用分摊退款，订单源按月渠道聚合退款，日报源没有导入退款兜底。
 
@@ -78,7 +81,7 @@
 1. 补齐日报组织与实际开户字段。
 2. 将历史 `manual_department` 行按“同部门同月最新 ID”迁入覆盖表，再从日报事实表删除旧汇总行。
 3. 建立组织覆盖视图、自然唯一键和自增主键。
-4. 校验公司月度事实的层级/渠道组合和业务重复，发现问题即终止，不静默删除；校验通过后增加作用域唯一键与 CHECK 约束。
+4. 校验公司月度事实的层级/渠道组合和业务重复，发现问题即终止，不静默删除；校验通过后更新作用域唯一键与 CHECK 约束，使存量库合法支持每月一个 structure。
 5. 建立公司月度金额守恒分摊、自然年毛回款选源和退款优先级视图。
 6. 将退款精度统一为 `DECIMAL(18,2)`。
 7. 写入 `schema_migrations` 版本 `20260714_database_integrity`。

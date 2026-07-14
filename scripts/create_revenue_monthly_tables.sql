@@ -1,16 +1,14 @@
--- 更新时间: 2026-07-14 18:25:00 CST
--- 更新内容: 公司月度回款补充层级/渠道校验与“月份 + 层级 + 渠道作用域”唯一键，防止换文件名后同月重复 total 或渠道事实。
--- 更新时间: 2026-07-14 16:20:00 CST
--- 更新内容: 新增公司级月度回款事实表，仅承接 4-6 月明细表总额及现有四渠道，线下按华南/华东细分。
+-- 更新时间: 2026-07-14 19:02:00 CST
+-- 更新内容: 月度事实保留自然唯一键与层级约束，并允许每月一个无渠道 structure 项承接特殊渠道展示。
 
 CREATE TABLE IF NOT EXISTS fact_revenue_channel_monthly (
   monthly_revenue_id BIGINT NOT NULL AUTO_INCREMENT COMMENT '月度回款事实ID',
   `year_month` CHAR(7) NOT NULL COMMENT '统计月份；YYYY-MM',
-  record_level VARCHAR(20) NOT NULL COMMENT '记录层级；total/channel',
-  channel_id BIGINT NULL COMMENT '渠道ID；total 可为空',
+  record_level VARCHAR(20) NOT NULL COMMENT '记录层级；total/channel/structure',
+  channel_id BIGINT NULL COMMENT '渠道ID；total/structure 为空',
   scope_channel_id BIGINT GENERATED ALWAYS AS (
-    CASE WHEN record_level = 'total' THEN 0 ELSE channel_id END
-  ) VIRTUAL COMMENT '月度层级唯一键作用域；total 固定为 0，channel 使用渠道ID',
+    CASE WHEN record_level = 'channel' THEN channel_id ELSE 0 END
+  ) VIRTUAL COMMENT '月度层级唯一键作用域；total/structure 固定为 0，channel 使用渠道ID',
   source_name_raw VARCHAR(100) NULL COMMENT '工作簿原始主渠道名称',
   gross_amount_yuan DECIMAL(18,2) NOT NULL DEFAULT 0 COMMENT '含税签约或原始GMV',
   refund_amount_yuan DECIMAL(18,2) NOT NULL DEFAULT 0 COMMENT '退款金额；正数保存',
@@ -32,6 +30,7 @@ CREATE TABLE IF NOT EXISTS fact_revenue_channel_monthly (
   CONSTRAINT chk_revenue_monthly_level_channel CHECK (
     (record_level = 'total' AND channel_id IS NULL)
     OR (record_level = 'channel' AND channel_id IS NOT NULL)
+    OR (record_level = 'structure' AND channel_id IS NULL)
   )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
-COMMENT='公司级月度回款事实；total 为 KPI 权威值，channel 用于主渠道结构展示';
+COMMENT='公司级月度回款事实；total 为 KPI 权威值，channel 为分摊权重，structure 仅用于特殊渠道结构展示';
