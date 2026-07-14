@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 10:02:17 CST  更新内容: 回归锁定月度经营进度卡只下裁玻璃表面顶部，不移动标题与三栏内容。 */
 /* 更新时间: 2026-07-14 09:52:18 CST  更新内容: 回归锁定月度经营进度标题下移到目标区，并仅收紧卡片顶部留白。 */
 /* 更新时间: 2026-07-14 10:00:00 CST  更新内容: 版本情况移回经营总览页，AI 洞察导航 targetMenu 简化回
    compute/overview 两态；同步更新版本/交付相关断言。 */
@@ -1636,11 +1637,20 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
 
 test('polishes the operating progress hierarchy with whitespace-first grouping', () => {
   const progressPanelBlock = cssRuleBody(operatingOverviewCss, '.op-panel--progress');
+  const progressPanelSurfaceBlock = cssRuleBody(operatingOverviewCss, '.op-panel--progress::before');
   const monthGridBlock = cssRuleBody(operatingOverviewCss, '.op-month-grid');
   const progressTitleBlock = cssRuleBody(operatingOverviewCss, '.op-progress-head h1');
   const primaryValueBlock = cssRuleBody(operatingOverviewCss, '.op-month-primary b');
 
   assert.match(progressPanelBlock, /padding-block:\s*clamp\(8px, \.6vw, 10px\) clamp\(3px, \.35vw, 6px\);/);
+  assert.match(progressPanelBlock, /background:\s*transparent;/);
+  assert.match(progressPanelBlock, /border-color:\s*transparent;/);
+  assert.match(progressPanelSurfaceBlock, /inset:\s*14px 0 0;/);
+  assert.match(progressPanelSurfaceBlock, /background:\s*var\(--dashboard-card-bg\);/);
+  assert.match(progressPanelSurfaceBlock, /border:\s*1px solid var\(--dashboard-card-border\);/);
+  assert.match(progressPanelSurfaceBlock, /backdrop-filter:\s*var\(--dashboard-card-blur\);/);
+  assert.match(progressPanelSurfaceBlock, /box-shadow:\s*var\(--dashboard-card-shadow\);/);
+  assert.match(operatingOverviewCss, /\.op-panel--progress > \*\s*\{[\s\S]*?position:\s*relative;[\s\S]*?z-index:\s*1;/);
   assert.match(progressTitleBlock, /font-size:\s*clamp\(19px, 1\.65vw, 23px\);/);
   assert.match(progressTitleBlock, /font-weight:\s*700;/);
   assert.match(progressTitleBlock, /transform:\s*translateY\(18px\);/);
