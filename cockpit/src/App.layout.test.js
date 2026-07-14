@@ -1,3 +1,7 @@
+/* 更新时间: 2026-07-14 11:25:00 CST  更新内容: 行高下限断言从 146px 同步为 140px，匹配 dashboard.css 修复
+   四张小卡边缘裁切时的调整；并修正上条改动误伤自身注释文本的 getDashboardMenuLabel 断言。 */
+/* 更新时间: 2026-07-14 11:20:00 CST  更新内容: 侧栏品牌区第二行改为登录用户名，同步移除 activeContextLabel/
+   activeMenuLabel/getDashboardMenuLabel 相关断言。 */
 /* 更新时间: 2026-07-14 10:00:00 CST  更新内容: 版本情况移回经营总览页，AI 洞察导航 targetMenu 简化回
    compute/overview 两态；同步更新版本/交付相关断言。 */
 /* 更新时间: 2026-07-13 20:30:00 CST  更新内容: 同步 AI 洞察导航泛化为 targetMenu 三态分支（compute/
@@ -742,7 +746,7 @@ test('places the FuKe brand month left and context right on separate lines', () 
 
   assert.match(mockSource, /monthLabel: currentMonthLabel\(\)/);
   assert.doesNotMatch(mockSource, /monthLabel: '2026年6月'/);
-  assert.match(appSource, /const sidebarBrandMeta = `\$\{META\.monthLabel\}\\n\$\{activeContextLabel\}`;/);
+  assert.match(appSource, /const sidebarBrandMeta = `\$\{META\.monthLabel\}\\n\$\{authState\.user\?\.displayName \|\| authState\.user\?\.username \|\| ''\}`;/);
   assert.doesNotMatch(appSource, /const sidebarBrandMeta = `\$\{META\.monthLabel\} · \$\{activeContextLabel\}`;/);
   assert.match(appSource, /brandTitle="福客经营驾驶舱"/);
   assert.match(appSource, /brandMeta=\{sidebarBrandMeta\}/);
@@ -778,7 +782,7 @@ test('places the FuKe brand month left and context right on separate lines', () 
   assert.doesNotMatch(dashboardCss, /\.dash-title-block/);
   assert.doesNotMatch(appSource, /className="dash-page-context"/);
   assert.doesNotMatch(dashboardCss, /\.dash-page-context/);
-  assert.match(appSource, /const activeContextLabel = maintenanceMode\s*\?\s*'数据维护'\s*:\s*activeMenu === 'overview' \? 'CEO视角' : activeMenuLabel;/);
+  assert.doesNotMatch(appSource, /const activeContextLabel/);
   assert.doesNotMatch(appSource, /<small>\{META\.monthLabel\}｜\{activeContextLabel\}<\/small>/);
   assert.doesNotMatch(appSource, /<small>\{META\.monthLabel\} \| \{activeContextLabel\}<\/small>/);
   assert.doesNotMatch(appSource, /福客 · CEO 经营驾驶舱/);
@@ -786,7 +790,8 @@ test('places the FuKe brand month left and context right on separate lines', () 
 });
 
 test('adds a dashboard maintenance entry and a compact sidebar return item that swaps the navigation', () => {
-  assert.match(appSource, /import \{[\s\S]*?META,[\s\S]*?MENU,[\s\S]*?MAINTENANCE_MENU,[\s\S]*?getDashboardChannelKey,[\s\S]*?getDashboardMenuLabel,[\s\S]*?\} from '\.\/data\/mock';/);
+  assert.match(appSource, /import \{[\s\S]*?META,[\s\S]*?MENU,[\s\S]*?MAINTENANCE_MENU,[\s\S]*?getDashboardChannelKey,[\s\S]*?\} from '\.\/data\/mock';/);
+  assert.doesNotMatch(appSource, /getDashboardMenuLabel\(activeMenu\)/);
   assert.match(appSource, /const DEFAULT_MAINTENANCE_MENU = MAINTENANCE_MENU\[0\]\?\.key \?\? 'target-maintenance';/);
   assert.match(appSource, /const MAINTENANCE_HOME_ITEM = \{ key: 'dashboard-home', name: '经营总览', icon: 'return', section: '导航' \};/);
   assert.match(appSource, /const MAINTENANCE_SIDEBAR_ITEMS = \[\s*MAINTENANCE_HOME_ITEM,\s*\.\.\.MAINTENANCE_MENU\.map\(\(item\) => \(\{ \.\.\.item, section: '数据维护' \}\)\),\s*\];/);
@@ -795,7 +800,6 @@ test('adds a dashboard maintenance entry and a compact sidebar return item that 
   assert.match(appSource, /const sidebarItems = maintenanceMode \? MAINTENANCE_SIDEBAR_ITEMS : DASHBOARD_SIDEBAR_ITEMS;/);
   assert.match(appSource, /const sidebarActive = maintenanceMode \? activeMaintenanceMenu : activeMenu;/);
   assert.match(appSource, /const sidebarTransitionKey = maintenanceMode \? 'maintenance' : 'dashboard';/);
-  assert.match(appSource, /const activeContextLabel = maintenanceMode\s*\?\s*'数据维护'\s*:/);
   assert.doesNotMatch(appSource, /`数据维护 · \$\{activeMaintenanceLabel\}`/);
   assert.match(appSource, /function handleSidebarChange\(nextMenu\) \{[\s\S]*?if \(nextMenu === 'data-maintenance'\) \{[\s\S]*?setMaintenanceMode\(true\);[\s\S]*?setActiveMaintenanceMenu\(DEFAULT_MAINTENANCE_MENU\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?if \(nextMenu === 'dashboard-home'\) \{[\s\S]*?handleMaintenanceBack\(\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?if \(maintenanceMode\) \{[\s\S]*?setActiveMaintenanceMenu\(nextMenu\);[\s\S]*?return;[\s\S]*?\}[\s\S]*?handleMenuChange\(nextMenu\);[\s\S]*?\}/);
   assert.doesNotMatch(appSource, /function handleMaintenanceModeToggle\(\)/);
@@ -1994,7 +1998,7 @@ test('keeps month year trend and finance metrics balanced across 1K and 2K scree
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?gap:10px;/);
   assert.match(dashboardCss, /\.dash-content\{[\s\S]*?scroll-margin-top:18px;/);
   assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?--dash-secondary-content-height:clamp\(336px,34\.5vh,372px\);[\s\S]*?grid-template-rows:calc\(var\(--dash-secondary-content-height\) - 14px\);/);
-  assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?--dash-secondary-content-height:clamp\(306px,32\.5vh,336px\);[\s\S]*?grid-template-rows:calc\(var\(--dash-secondary-content-height\) - 14px\);[\s\S]*?grid-template-rows:repeat\(2,minmax\(146px,1fr\)\);/);
+  assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?--dash-secondary-content-height:clamp\(306px,32\.5vh,336px\);[\s\S]*?grid-template-rows:calc\(var\(--dash-secondary-content-height\) - 14px\);[\s\S]*?grid-template-rows:repeat\(2,minmax\(140px,1fr\)\);/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-overview \{[\s\S]*?gap: 8px;/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?grid-template-rows:\s*auto 190px;[\s\S]*?height:\s*190px;/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-channel-list \{[\s\S]*?gap: 13px;/);

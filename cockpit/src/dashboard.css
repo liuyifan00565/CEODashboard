@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-14 11:20:00 CST
+ 更新内容: .dash-sidebar-account 从搜索框下方移到 Sidebar 正下方（更靠上），不再展示用户名
+          （用户名已并入品牌区第二行），只保留退出登录按钮，简化为单元素容器。
+*/
+/*
  更新时间: 2026-07-14 11:07:04 CST
  更新内容: 修复本月/今日开户数、总投入·费比、广告ROI 四张小卡在 1181-1240px 宽/≤1071px 高笔记本档下边缘被裁切——
           .dash-finance-kpis 高度此前被 var(--dash-secondary-content-height) 覆盖为 306px，比其父级
@@ -288,15 +293,11 @@
 .search-wrap--sidebar .search-count{min-width:40px;height:26px;padding:0 7px}
 
 .dash-sidebar-account{
-  flex:none;width:100%;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  flex:none;width:100%;min-width:0;
   padding:0 4px;
 }
-.dash-sidebar-account__name{
-  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  color:var(--faint);font-size:13px;font-weight:600;
-}
 .dash-sidebar-account__logout{
-  flex:none;border:none;background:none;padding:0;
+  border:none;background:none;padding:0;
   color:var(--muted);font-size:12px;font-weight:650;cursor:pointer;
   transition:color .2s ease;
 }

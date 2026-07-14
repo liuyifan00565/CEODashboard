@@ -1,4 +1,10 @@
 /*
+ 更新时间: 2026-07-14 11:20:00 CST
+ 更新内容: 侧栏品牌区第二行由当前页面名(activeContextLabel)改为登录用户名，不再展示"我们在哪个页面"；
+          移除随之无用的 activeContextLabel/activeMenuLabel/getDashboardMenuLabel；退出登录按钮从
+          搜索框下方上移到 Sidebar 导航卡片正下方（原先紧跟搜索框，现在更靠上）。
+*/
+/*
  更新时间: 2026-07-14 11:00:00 CST
  更新内容: 新增登录门禁：挂载时查 /api/auth/me，未登录展示 LoginPage，登录后才拉取经营数据；
           侧边导航底部加登录用户名与退出登录入口。仅做前端门禁 + 登录接口，暂未把既有
@@ -234,7 +240,6 @@ import {
   MAINTENANCE_MENU,
   getComputeOverview,
   getDashboardChannelKey,
-  getDashboardMenuLabel,
 } from './data/mock';
 import { loadComputeCustomerPage, loadComputeData, loadDashboardData } from './data/liveData';
 import { fetchCurrentUser, logout } from './lib/auth';
@@ -292,11 +297,7 @@ export default function App() {
   const isComputePage = activeMenu === 'compute';
   const isDeliveryPage = activeMenu === 'delivery';
   const activeChannelKey = getDashboardChannelKey(activeMenu);
-  const activeMenuLabel = getDashboardMenuLabel(activeMenu);
-  const activeContextLabel = maintenanceMode
-    ? '数据维护'
-    : activeMenu === 'overview' ? 'CEO视角' : activeMenuLabel;
-  const sidebarBrandMeta = `${META.monthLabel}\n${activeContextLabel}`;
+  const sidebarBrandMeta = `${META.monthLabel}\n${authState.user?.displayName || authState.user?.username || ''}`;
   const sidebarItems = maintenanceMode ? MAINTENANCE_SIDEBAR_ITEMS : DASHBOARD_SIDEBAR_ITEMS;
   const sidebarActive = maintenanceMode ? activeMaintenanceMenu : activeMenu;
   const sidebarTransitionKey = maintenanceMode ? 'maintenance' : 'dashboard';
@@ -633,6 +634,9 @@ export default function App() {
             brandTitle="福客经营驾驶舱"
             brandMeta={sidebarBrandMeta}
           />
+          <div className="dash-sidebar-account">
+            <button type="button" className="dash-sidebar-account__logout" onClick={handleLogout}>退出登录</button>
+          </div>
           <div className="dash-sidebar-search">
             <ExpandableSearch
               placement="sidebar"
@@ -641,10 +645,6 @@ export default function App() {
               totalResults={searchStats.total}
               onNext={jumpToNextSearchResult}
             />
-          </div>
-          <div className="dash-sidebar-account">
-            <span className="dash-sidebar-account__name">{authState.user?.displayName || authState.user?.username}</span>
-            <button type="button" className="dash-sidebar-account__logout" onClick={handleLogout}>退出登录</button>
           </div>
           <AIAnalysisWidget
             activeMenu={activeMenu}

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 11:20:00 CST
+ 更新内容: 行高下限断言从 146px 同步为 140px，匹配 dashboard.css 修复四张小卡边缘裁切时的调整。
+*/
+/*
  更新时间: 2026-07-13 23:00:00 CST
  更新内容: 低有效高度桌面档开户数行/投入行栏高回归断言从 .82fr/1.08fr 改为等分 minmax(146px,1fr) x2，
           延续开户数小卡不再被系统性挤扁的修复（与此前独立提交互不冲突，只是没同步这份新增测试文件）。
@@ -25,10 +29,11 @@ test('removes the annotated bottom strip without scaling content or changing col
 
   assert.match(dashboardCss, /\.dash-secondary-grid\{[\s\S]*?--dash-secondary-content-height:clamp\(336px,34\.5vh,372px\);[\s\S]*?grid-template-columns:minmax\(0,1\.6fr\) minmax\(0,1fr\);[\s\S]*?grid-template-rows:calc\(var\(--dash-secondary-content-height\) - 14px\);/);
   assert.match(dashboardCss, /@media \(min-width:1181px\) and \(max-height:1071px\)\{[\s\S]*?--dash-secondary-content-height:clamp\(306px,32\.5vh,336px\);[\s\S]*?grid-template-rows:calc\(var\(--dash-secondary-content-height\) - 14px\);/);
-  assert.match(dashboardCss, /grid-template-rows:repeat\(2,minmax\(146px,1fr\)\);/);
+  assert.match(dashboardCss, /grid-template-rows:repeat\(2,minmax\(140px,1fr\)\);/);
   assert.match(dashboardCss, /@media \(min-width:1181px\)\{[\s\S]*?\.dash-secondary-cell\{[\s\S]*?overflow:hidden;[\s\S]*?border-radius:0 0 16px 16px;/);
   assert.match(dashboardCss, /\.dash-secondary-cell::after\{[\s\S]*?border:1px solid var\(--dashboard-card-border\);[\s\S]*?border-radius:0 0 16px 16px;/);
-  assert.match(dashboardCss, /\.dash-secondary-cell--trend \.mt-panel,[\s\S]*?\.dash-secondary-cell--finance \.dash-finance-kpis\{[\s\S]*?height:var\(--dash-secondary-content-height\);/);
+  assert.match(dashboardCss, /\.dash-secondary-cell--trend \.mt-panel\{[\s\S]*?height:var\(--dash-secondary-content-height\);/);
+  assert.match(dashboardCss, /\.dash-secondary-cell--finance \.dash-finance-kpis\{[\s\S]*?height:100%;/);
   assert.match(dashboardCss, /@media \(min-width:2200px\) and \(min-height:1300px\)\{[\s\S]*?--dash-secondary-content-height:396px;[\s\S]*?grid-template-rows:382px;/);
 });
 
