@@ -3,6 +3,11 @@
  更新内容: 新增售前试用交付看板集中演示数据、月份加载器、环比计算、渠道筛选与人员负载口径。
 */
 
+/*
+ 更新时间: 2026-07-14 18:10:00 CST
+ 更新内容: 本月与上月交付对比行补充原始数值，支持前端按指标内部比例渲染迷你横向条。
+*/
+
 /** @typedef {'good' | 'risk' | 'neutral'} ComparisonTone */
 /** @typedef {'good' | 'warn' | 'risk'} BusinessStatusTone */
 /** @typedef {'neutral' | 'info' | 'primary' | 'warn' | 'risk'} StageTone */
@@ -301,6 +306,8 @@ export function buildComparisonRows(currentMetrics, previousMetrics) {
     return {
       key,
       label: definition.label,
+      currentRaw: currentValue,
+      previousRaw: previousValue,
       currentLabel: formatMetricValue(currentValue, definition),
       previousLabel: formatMetricValue(previousValue, definition),
       ...formatComparisonChange(key, currentValue, previousValue),

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 18:10:00 CST
+ 更新内容: 本月与上月交付对比由表格改为环比变化对比卡，使用同指标内本月/上月迷你横向条表达变化。
+*/
+/*
  更新时间: 2026-07-14 12:10:00 CST
  更新内容: 将交付页重构为售前试用转化与配置负载长看板，新增月份联动、环图筛选、阶段风险、月度对比和三张紧凑经营表。
 */
@@ -47,6 +51,13 @@ function formatPct(value) {
 
 function ratio(value, total) {
   return total > 0 ? (Number(value || 0) / total) * 100 : 0;
+}
+
+function comparisonBarWidth(value, compareValue) {
+  const current = Math.max(0, Number(value) || 0);
+  const previous = Math.max(0, Number(compareValue) || 0);
+  const max = Math.max(current, previous);
+  return max > 0 ? `${Math.max(4, Math.round((current / max) * 100))}%` : '0%';
 }
 
 function buildDistributionOption({ snapshot, metric, selectedChannel, tokens }) {
@@ -404,22 +415,40 @@ export default function DeliveryPanel({ dataLoader = loadPresaleTrialDashboard }
             actions={<span className="dlv-period-note">{snapshot.monthLabel} / {snapshot.previousMonthLabel}</span>}
           >
             {snapshot.comparisonRows.length ? (
-              <div className="dlv-table-wrap">
-                <table className="dlv-table dlv-table--comparison">
-                  <colgroup><col /><col /><col /><col /><col /></colgroup>
-                  <thead><tr><th scope="col">指标</th><th scope="col">本月</th><th scope="col">上月</th><th scope="col">变化</th><th scope="col">状态</th></tr></thead>
-                  <tbody>
-                    {snapshot.comparisonRows.map((row) => (
-                      <tr key={row.key}>
-                        <td>{row.label}</td>
-                        <td>{row.currentLabel}</td>
-                        <td>{row.previousLabel}</td>
-                        <td className={`dlv-change dlv-change--${safeTone(row.statusTone)}`}>{row.changeLabel}</td>
-                        <td><span className={`dlv-status dlv-status--${safeTone(row.statusTone)}`}>{row.status}</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="dlv-compare-grid">
+                {snapshot.comparisonRows.map((row) => (
+                  <article className="dlv-compare-card" key={row.key}>
+                    <div className="dlv-compare-head">
+                      <span>{row.label}</span>
+                      <span className={`dlv-status dlv-status--${safeTone(row.statusTone)}`}>{row.status}</span>
+                    </div>
+                    <div className="dlv-compare-bars" aria-label={`${row.label}本月${row.currentLabel}，上月${row.previousLabel}`}>
+                      <div className="dlv-compare-bar-row">
+                        <span>本月</span>
+                        <div className="dlv-compare-track">
+                          <i
+                            className={`dlv-compare-bar dlv-compare-bar--current dlv-compare-bar--${safeTone(row.statusTone)}`}
+                            style={{ width: comparisonBarWidth(row.currentRaw, row.previousRaw) }}
+                          />
+                        </div>
+                        <b>{row.currentLabel}</b>
+                      </div>
+                      <div className="dlv-compare-bar-row">
+                        <span>上月</span>
+                        <div className="dlv-compare-track">
+                          <i
+                            className="dlv-compare-bar dlv-compare-bar--previous"
+                            style={{ width: comparisonBarWidth(row.previousRaw, row.currentRaw) }}
+                          />
+                        </div>
+                        <b>{row.previousLabel}</b>
+                      </div>
+                    </div>
+                    <div className={`dlv-compare-change dlv-compare-change--${safeTone(row.statusTone)}`}>
+                      {row.changeLabel}
+                    </div>
+                  </article>
+                ))}
               </div>
             ) : <EmptyBlock text="该月暂无可比较数据" />}
           </Panel>

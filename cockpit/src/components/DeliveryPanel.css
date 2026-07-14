@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 18:10:00 CST
+ 更新内容: 本月与上月交付对比新增环比变化对比卡和迷你横向条样式，替代纯表格展示。
+*/
+/*
  更新时间: 2026-07-14 12:10:00 CST
  更新内容: 交付页改为自然滚动的售前试用驾驶舱布局，统一 KPI、环图、阶段风险与三张紧凑表格的深蓝灰玻璃视觉。
 */
@@ -478,8 +482,122 @@
   font-weight: 640;
 }
 
-.dlv-table--comparison col:nth-child(1) { width: 28%; }
-.dlv-table--comparison col:nth-child(n+2) { width: 18%; }
+.dlv-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dlv-compare-card {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 16px;
+  padding: 13px 14px;
+  border-radius: 13px;
+  background: rgba(0,0,0,.12);
+  border: 1px solid rgba(255,255,255,.06);
+}
+
+.dlv-compare-head {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.dlv-compare-head > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--txt);
+  font-size: 13px;
+  font-weight: 680;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dlv-compare-bars {
+  grid-column: 1;
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.dlv-compare-bar-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 32px minmax(86px, 1fr) minmax(58px, auto);
+  align-items: center;
+  gap: 8px;
+}
+
+.dlv-compare-bar-row span {
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.dlv-compare-track {
+  position: relative;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bar-track);
+  border: 1px solid var(--bar-track-border);
+}
+
+.dlv-compare-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  min-width: 4px;
+}
+
+.dlv-compare-bar--current {
+  background: var(--semantic-success-muted);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--semantic-success-muted) 32%, transparent);
+}
+
+.dlv-compare-bar--current.dlv-compare-bar--risk {
+  background: var(--semantic-risk);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--semantic-risk) 26%, transparent);
+}
+
+.dlv-compare-bar--current.dlv-compare-bar--warn {
+  background: var(--accent-gold-soft);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent-gold-soft) 28%, transparent);
+}
+
+.dlv-compare-bar--current.dlv-compare-bar--neutral {
+  background: var(--muted);
+  box-shadow: none;
+}
+
+.dlv-compare-bar--previous {
+  background: rgba(185,194,212,.28);
+}
+
+.dlv-compare-bar-row b {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.dlv-compare-change {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 760;
+  font-variant-numeric: tabular-nums;
+}
+
+.dlv-compare-change--good { color: var(--semantic-success-muted); }
+.dlv-compare-change--risk { color: var(--semantic-risk); }
+.dlv-compare-change--warn { color: var(--accent-gold-soft); }
 
 .dlv-table--conversion col:nth-child(1) { width: 19%; }
 .dlv-table--conversion col:nth-child(2) { width: 13%; }
@@ -715,7 +833,7 @@
   .dlv-distribution-body { grid-template-columns: 1fr; }
   .dlv-distribution-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dlv-stage-labels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .dlv-table--comparison { min-width: 640px; }
+  .dlv-compare-grid { grid-template-columns: 1fr; }
   .dlv-data-state { grid-template-columns: auto minmax(0, 1fr); }
   .dlv-data-state button { grid-column: 2; justify-self: start; }
 }

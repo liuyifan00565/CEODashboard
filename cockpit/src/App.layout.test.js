@@ -565,6 +565,7 @@
  Update time: 2026-07-09 14:42:00 CST
  Update content: Cover target maintenance import dialog downloading the bundled two-sheet template.
 */
+/* 更新时间: 2026-07-14 18:10:00 CST  更新内容: 回归锁定本月与上月交付对比由表格改为环比变化对比卡和迷你横向条。 */
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -1839,6 +1840,22 @@ test('renders the presale trial delivery dashboard in the required long-page ord
   assert.match(deliveryPanelCss, /\.dlv-overview-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 42fr\) minmax\(0, 58fr\);/);
   assert.match(deliveryPanelCss, /\.dlv-panel\s*\{[\s\S]*?overflow:\s*visible;/);
   assert.doesNotMatch(deliveryPanelSource, /客户均价|目标未配置|交付流程可视化|工单与责任分配/);
+});
+
+test('renders month-over-month delivery comparison as visual cards instead of a table', () => {
+  assert.doesNotMatch(deliveryPanelSource, /dlv-table--comparison/);
+  assert.match(deliveryPanelSource, /className="dlv-compare-grid"/);
+  assert.match(deliveryPanelSource, /className="dlv-compare-card"/);
+  assert.match(deliveryPanelSource, /className="dlv-compare-bars"/);
+  assert.match(deliveryPanelSource, /dlv-compare-bar--current/);
+  assert.match(deliveryPanelSource, /dlv-compare-bar--previous/);
+  assert.match(deliveryPanelSource, /comparisonBarWidth\(row\.currentRaw, row\.previousRaw\)/);
+  assert.match(deliveryPanelSource, /comparisonBarWidth\(row\.previousRaw, row\.currentRaw\)/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-grid/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-card/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-bars/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-bar--current/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-bar--previous/);
 });
 
 test('gives the version panel the same hover halo as the monthly trend panel without styling the delivery page root', () => {

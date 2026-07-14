@@ -205,13 +205,16 @@ test('keeps channel progress bars on the established completion risk rule', () =
 
 test('uses restrained semantic colors for presale trial improvements, risk, amount, and capacity', () => {
   assert.match(deliverySource, /label="风险及超期"[\s\S]*?tone="risk"/);
-  assert.match(deliverySource, /className=\{`dlv-change dlv-change--\$\{safeTone\(row\.statusTone\)\}`\}/);
+  assert.match(deliverySource, /className=\{`dlv-compare-change dlv-compare-change--\$\{safeTone\(row\.statusTone\)\}`\}/);
+  assert.match(deliverySource, /className=\{`dlv-compare-bar dlv-compare-bar--current dlv-compare-bar--\$\{safeTone\(row\.statusTone\)\}`\}/);
   assert.match(deliverySource, /className=\{`dlv-status dlv-status--\$\{safeTone\(row\.statusTone\)\}`\}/);
   assert.match(deliverySource, /className=\{`dlv-status dlv-status--\$\{safeTone\(row\.loadTone\)\}`\}/);
   assert.match(deliveryCss, /\.dlv-kpi--risk \.dlv-kpi__value strong\s*\{\s*color:\s*var\(--semantic-risk\);\s*\}/);
   assert.match(deliveryCss, /\.dlv-money\s*\{\s*color:\s*var\(--accent-gold-soft\) !important;\s*\}/);
   assert.match(deliveryCss, /\.dlv-overdue\s*\{\s*color:\s*var\(--semantic-risk\) !important;\s*\}/);
-  assert.match(deliveryCss, /\.dlv-change--good\s*\{\s*color:\s*var\(--semantic-success-muted\) !important;\s*\}/);
+  assert.match(deliveryCss, /\.dlv-compare-change--good\s*\{\s*color:\s*var\(--semantic-success-muted\);\s*\}/);
+  assert.match(deliveryCss, /\.dlv-compare-bar--current\s*\{[\s\S]*?background:\s*var\(--semantic-success-muted\);/);
+  assert.match(deliveryCss, /\.dlv-compare-bar--current\.dlv-compare-bar--risk\s*\{[\s\S]*?background:\s*var\(--semantic-risk\);/);
   assert.match(deliveryCss, /\.dlv-status--good\s*\{[\s\S]*?color:\s*var\(--semantic-success-muted\);[\s\S]*?9%, transparent[\s\S]*?24%, transparent/);
   assert.match(deliveryCss, /\.dlv-status--risk\s*\{[\s\S]*?color:\s*var\(--semantic-risk\);[\s\S]*?9%, transparent[\s\S]*?24%, transparent/);
   assert.match(deliveryCss, /\.dlv-load-bar\s*\{[\s\S]*?var\(--semantic-capacity\) 12%, transparent[\s\S]*?var\(--semantic-capacity\) 16%, transparent/);
