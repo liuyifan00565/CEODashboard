@@ -7,8 +7,10 @@
 /* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 交付看板完成率 80% 以下时进度条、百分比和预警态统一使用风险色。 */
 /* 更新时间: 2026-07-03 13:05:00  更新内容: 交付看板进度条 fill 改用 progressGradient 返回的低饱和冷色线性渐变。 */
 /* 更新时间: 2026-06-29 10:45:53  更新内容: 新增交付看板，展示实施工程师交付人效、单价、金额价值和目标完成情况。 */
+/* 更新时间: 2026-07-14 11:33:00 CST  更新内容: 问题处理中二级弹层改用 Portal 挂载到 body，避免被首页交付卡片外层样式覆盖。 */
 /* 更新时间: 2026-07-14 11:12:00 CST  更新内容: 交付页新增问题处理中二级明细弹层，展示问题客户、金额影响、责任归属、处理时长和闭环动作。 */
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { getDeliveryRows, getDeliverySummary, getDeliveryCollaborationSummary } from '../data/mock';
 import { progressGradient } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
@@ -188,7 +190,7 @@ export default function DeliveryPanel() {
         </aside>
       </div>
 
-      {openIssueDetail && (
+      {openIssueDetail && createPortal((
         <div className="dlv-issue-detail" role="dialog" aria-modal="true" aria-label="问题处理中客户明细">
           <button
             aria-label="关闭问题客户明细"
@@ -275,7 +277,7 @@ export default function DeliveryPanel() {
             </section>
           </div>
         </div>
-      )}
+      ), document.body)}
     </section>
   );
 }

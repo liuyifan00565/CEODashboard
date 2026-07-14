@@ -1,4 +1,5 @@
 /* 更新时间: 2026-07-14 10:02:17 CST  更新内容: 回归锁定月度经营进度卡只下裁玻璃表面顶部，不移动标题与三栏内容。 */
+/* 更新时间: 2026-07-14 11:33:00 CST  更新内容: 回归锁定交付问题二级弹层使用 Portal，避免被首页交付卡片外层样式覆盖。 */
 /* 更新时间: 2026-07-14 11:05:00 CST  更新内容: 增加交付问题处理中二级界面回归，覆盖问题客户、金额影响、责任归属和闭环动作。 */
 /* 更新时间: 2026-07-14 10:35:00 CST  更新内容: 增加交付与运营协同看板结构回归，覆盖流程、工单责任和权限成本控制区块。 */
 /* 更新时间: 2026-07-14 09:52:18 CST  更新内容: 回归锁定月度经营进度标题下移到目标区，并仅收紧卡片顶部留白。 */
@@ -1768,6 +1769,12 @@ test('opens a CEO-focused issue detail view from delivery problem stage', () => 
   assert.match(deliveryPanelCss, /\.dlv-issue-detail/);
   assert.match(deliveryPanelCss, /\.dlv-issue-table/);
   assert.match(deliveryPanelCss, /\.dlv-issue-risk/);
+});
+
+test('renders delivery issue detail through a portal so dashboard card styles cannot hide it', () => {
+  assert.match(deliveryPanelSource, /createPortal/);
+  assert.match(deliveryPanelSource, /from 'react-dom'/);
+  assert.match(deliveryPanelSource, /document\.body/);
 });
 
 test('gives the version panel the same hover halo as the monthly trend panel', () => {
