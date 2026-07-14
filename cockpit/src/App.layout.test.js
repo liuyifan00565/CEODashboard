@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 12:11:48 CST  更新内容: 增加数据更新状态汇总卡复选框右置布局回归，避免通用 span 样式覆盖标题行 flex。 */
 /* 更新时间: 2026-07-14 15:25:00 CST  更新内容: 回归锁定登录门禁临时关闭：App 使用 LOGIN_DISABLED_USER 初始化为已认证，
    不再导入 LoginPage/fetchCurrentUser/logout，保留侧边栏账号展示结构。 */
 /* 更新时间: 2026-07-14 11:35:00 CST  更新内容: 品牌区第二行（登录用户名）改为左对齐，移除原为"当前视角"
@@ -959,6 +960,7 @@ test('adds a readonly data update monitor page to maintenance mode', () => {
   assert.match(maintenancePageCss, /\.mnt-update-summary-card--increase strong/);
   assert.match(maintenancePageCss, /\.mnt-update-summary-card--selected/);
   assert.match(maintenancePageCss, /justify-content: space-between/);
+  assert.match(maintenancePageCss, /\.mnt-update-summary-card \.mnt-update-summary-card-head\s*\{[\s\S]*?display: flex;[\s\S]*?justify-content: space-between;[\s\S]*?width: 100%;/);
   assert.match(maintenancePageCss, /\.mnt-update-summary-check\s*\{/);
   assert.doesNotMatch(maintenancePageCss, /\.mnt-update-filterbar\s*\{/);
   assert.match(maintenancePageCss, /width: 150px/);

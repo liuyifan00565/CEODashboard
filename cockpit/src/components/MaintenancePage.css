@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 12:11:48 CST
+ 更新内容: 数据更新状态汇总卡标题行使用更高权重 flex 规则，让筛选复选框固定显示在卡片右侧。
+*/
+/*
  更新时间: 2026-07-14 11:40:00 CST
  更新内容: 新增数据更新看板同排可选汇总卡、统一警示状态、小时级刷新提示和只读表格样式。
 */
@@ -1673,7 +1677,7 @@
   line-height: 1;
 }
 
-.mnt-update-summary-card-head {
+.mnt-update-summary-card .mnt-update-summary-card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1682,9 +1686,11 @@
 }
 
 .mnt-update-summary-check {
+  flex: 0 0 auto;
   width: 14px;
   height: 14px;
   margin: 0;
+  margin-left: auto;
   accent-color: rgba(73, 232, 155, .98);
 }
 
