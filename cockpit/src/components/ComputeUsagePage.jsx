@@ -1,4 +1,14 @@
 /*
+ 更新时间: 2026-07-14 17:50:00 CST
+ 更新内容: 算力页两张饼图从静态图片恢复为交互式 EChart，启用 tooltip 悬浮卡片和轻微 emphasis 放大，
+           保留 animation:false 防止圆环晃动。
+*/
+/*
+ 更新时间: 2026-07-14 17:45:00 CST
+ 更新内容: 算力用量分布圆环图为全部 6 个切片定义 labelSlot，去掉 side 约束，
+           避免 >10000 和 0-100 等小扇区标签走 shiftY 自由浮动导致与引导线脱节。
+*/
+/*
  更新时间: 2026-07-14 17:29:42 CST
  更新内容: 算力用量分布圆环图修正顶部小扇区引导线对齐，并让右侧长标签自动换行显示百分比。
 */
@@ -150,8 +160,13 @@ const COMPUTE_PIE_LABEL_SLOTS = {
   '旗舰版': { side: 'right', y: -2, align: 'left' },
   '免费版': { side: 'right', y: 38, align: 'left' },
   '卓越版': { side: 'right', y: 86, align: 'left' },
-  '算力用量>10000': { side: 'left', y: -72, align: 'right' },
-  '0<算力用量<=100': { side: 'right', y: -64, align: 'left' },
+  /* 算力用量分布 — 6 个切片全部定义 slot，避免小扇区引导线与标签脱节 */
+  '算力用量=0':           { y: -88, align: 'left' },
+  '算力用量>10000':       { y: -96, align: 'left' },
+  '0<算力用量<=100':      { y: -60, align: 'left' },
+  '100<算力用量<=1000':   { y: -24, align: 'left' },
+  '1000<算力用量<=5000':  { y: 12,  align: 'left' },
+  '5000<算力用量<=10000': { y: 48,  align: 'left' },
 };
 const COMPUTE_STACKED_PIE_LABELS = new Set(['卓越版', '100<算力用量<=1000']);
 const LOW_REPLY_RATE = 60;
@@ -957,12 +972,12 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
         avoidLabelOverlap: true,
         minShowLabelAngle: 1,
         padAngle: 1,
-        silent: true,
+        silent: false,
         selectedMode: false,
         selectedOffset: 0,
         legendHoverLink: false,
         hoverAnimation: false,
-        cursor: 'default',
+        cursor: 'pointer',
         itemStyle: {
           borderRadius: 8,
           borderColor: 'rgba(255, 255, 255, .12)',
@@ -1002,12 +1017,12 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
         },
         ...(naturalLabelLayout ? {} : { labelLayout: computePieLabelLayout }),
         emphasis: {
-          disabled: true,
+          disabled: false,
           scale: false,
           scaleSize: 0,
           itemStyle: {
-            shadowBlur: 18,
-            shadowColor: 'rgba(255,255,255,.18)',
+            shadowBlur: 28,
+            shadowColor: 'rgba(255,255,255,.22)',
           },
         },
         select: {
@@ -1533,7 +1548,7 @@ export default function ComputeUsagePage({
           active={matchesTerm(SEARCH_KEYWORDS.version, searchTerm)}
         >
           <div className="cpu-pie-wrap">
-            <StaticEChartImage option={versionPieOption} label="各版本算力消耗静态圆环图" />
+            <EChart option={versionPieOption} style={{ height: '100%' }} />
           </div>
           <div className="cpu-panel-insight">{versionInsight}</div>
         </Panel>
@@ -1545,7 +1560,7 @@ export default function ComputeUsagePage({
           active={matchesTerm(SEARCH_KEYWORDS.distribution, searchTerm)}
         >
           <div className="cpu-pie-wrap">
-            <StaticEChartImage option={distributionPieOption} label="算力用量分布静态圆环图" />
+            <EChart option={distributionPieOption} style={{ height: '100%' }} />
           </div>
           <div className="cpu-panel-insight">{distributionInsight}</div>
         </Panel>
