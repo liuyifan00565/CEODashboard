@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 20:45:00 CST
- 更新内容: 本月与上月交付对比改为可读差值半环变化卡，半环中心展示变化值并补充本月/上月差额文案。
+ 更新时间: 2026-07-14 21:10:00 CST
+ 更新内容: 优化交付环比半环卡，改善状态改为明确绿色，半环与文字分区展示，并为超过 100% 的变化增加标记。
 */
 /*
  更新时间: 2026-07-14 12:10:00 CST
@@ -81,6 +81,12 @@ function comparisonGaugePercent(row) {
   const label = String(row.changeLabel || '');
   const maxMeaningfulChange = label.includes('pp') ? 10 : label.includes('天') ? 5 : 50;
   return Math.min(100, Math.max(8, Math.round((changeValue / maxMeaningfulChange) * 100)));
+}
+
+function comparisonOverflowLabel(row) {
+  const label = String(row.changeLabel || '');
+  const changeValue = Math.abs(Number(label.match(/[-+]?\d+(?:\.\d+)?/)?.[0]) || 0);
+  return label.includes('%') && changeValue > 100 ? '超100%' : '';
 }
 
 function buildDistributionOption({ snapshot, metric, selectedChannel, tokens }) {
@@ -439,29 +445,37 @@ export default function DeliveryPanel({ dataLoader = loadPresaleTrialDashboard }
           >
             {snapshot.comparisonRows.length ? (
               <div className="dlv-compare-grid">
-                {snapshot.comparisonRows.map((row) => (
-                  <article className="dlv-compare-card" key={row.key}>
-                    <div className="dlv-compare-head">
-                      <span>{row.label}</span>
-                      <span className={`dlv-status dlv-status--${safeTone(row.statusTone)}`}>{row.status}</span>
-                    </div>
-                    <div
-                      className="dlv-compare-gauge"
-                      style={{ '--gauge-angle': `${comparisonGaugePercent(row) * 1.8}deg` }}
-                      aria-label={`${row.label}${row.changeLabel}，${comparisonDetailLabel(row)}`}
-                    >
-                      <i className={`dlv-compare-gauge__arc dlv-compare-gauge__arc--${safeTone(row.statusTone)}`} aria-hidden="true" />
-                      <div className="dlv-compare-gauge__center">
-                        <strong className={`dlv-compare-delta dlv-compare-delta--${safeTone(row.statusTone)}`}>{row.changeLabel}</strong>
-                        <span className="dlv-compare-detail">{comparisonDetailLabel(row)}</span>
+                {snapshot.comparisonRows.map((row) => {
+                  const overflowLabel = comparisonOverflowLabel(row);
+                  return (
+                    <article className="dlv-compare-card" key={row.key}>
+                      <div className="dlv-compare-head">
+                        <span>{row.label}</span>
+                        <span className={`dlv-status dlv-status--${safeTone(row.statusTone)}`}>{row.status}</span>
                       </div>
-                    </div>
-                    <div className="dlv-compare-values" aria-label={`${row.label}本月${row.currentLabel}，上月${row.previousLabel}`}>
-                      <span>本月 <b>{row.currentLabel}</b></span>
-                      <span>上月 <b>{row.previousLabel}</b></span>
-                    </div>
-                  </article>
-                ))}
+                      <div
+                        className="dlv-compare-gauge"
+                        style={{ '--gauge-angle': `${comparisonGaugePercent(row) * 1.8}deg` }}
+                        aria-label={`${row.label}${row.changeLabel}，${comparisonDetailLabel(row)}`}
+                      >
+                        <div className="dlv-compare-gauge__visual" aria-hidden="true">
+                          <i className={`dlv-compare-gauge__arc dlv-compare-gauge__arc--${safeTone(row.statusTone)}`} />
+                        </div>
+                        <div className="dlv-compare-gauge__copy">
+                          <strong className={`dlv-compare-delta dlv-compare-delta--${safeTone(row.statusTone)}`}>{row.changeLabel}</strong>
+                          <span className="dlv-compare-detail">{comparisonDetailLabel(row)}</span>
+                          {overflowLabel && (
+                            <span className={`dlv-compare-overflow dlv-compare-overflow--${safeTone(row.statusTone)}`}>{overflowLabel}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="dlv-compare-values" aria-label={`${row.label}本月${row.currentLabel}，上月${row.previousLabel}`}>
+                        <span>本月 <b>{row.currentLabel}</b></span>
+                        <span>上月 <b>{row.previousLabel}</b></span>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             ) : <EmptyBlock text="该月暂无可比较数据" />}
           </Panel>

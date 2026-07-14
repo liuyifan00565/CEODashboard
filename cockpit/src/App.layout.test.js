@@ -565,7 +565,7 @@
  Update time: 2026-07-09 14:42:00 CST
  Update content: Cover target maintenance import dialog downloading the bundled two-sheet template.
 */
-/* 更新时间: 2026-07-14 20:45:00 CST  更新内容: 回归锁定本月与上月交付对比改为可读差值的半环变化卡。 */
+/* 更新时间: 2026-07-14 21:10:00 CST  更新内容: 回归锁定交付环比半环卡的绿色语义、文字避让和超 100% 标记。 */
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -1848,10 +1848,14 @@ test('renders month-over-month delivery comparison as readable semi-ring delta c
   assert.match(deliveryPanelSource, /className="dlv-compare-card"/);
   assert.match(deliveryPanelSource, /comparisonGaugePercent\(row\)/);
   assert.match(deliveryPanelSource, /comparisonDetailLabel\(row\)/);
+  assert.match(deliveryPanelSource, /comparisonOverflowLabel\(row\)/);
   assert.match(deliveryPanelSource, /className="dlv-compare-gauge"/);
+  assert.match(deliveryPanelSource, /className="dlv-compare-gauge__visual"/);
   assert.match(deliveryPanelSource, /className=\{`dlv-compare-gauge__arc dlv-compare-gauge__arc--\$\{safeTone\(row\.statusTone\)\}`\}/);
+  assert.match(deliveryPanelSource, /className="dlv-compare-gauge__copy"/);
   assert.match(deliveryPanelSource, /className=\{`dlv-compare-delta dlv-compare-delta--\$\{safeTone\(row\.statusTone\)\}`\}/);
   assert.match(deliveryPanelSource, /className="dlv-compare-detail"/);
+  assert.match(deliveryPanelSource, /className=\{`dlv-compare-overflow dlv-compare-overflow--\$\{safeTone\(row\.statusTone\)\}`\}/);
   assert.match(deliveryPanelSource, /className="dlv-compare-values"/);
   assert.match(deliveryPanelSource, /<b>\{row\.currentLabel\}<\/b>/);
   assert.match(deliveryPanelSource, /<b>\{row\.previousLabel\}<\/b>/);
@@ -1859,10 +1863,15 @@ test('renders month-over-month delivery comparison as readable semi-ring delta c
   assert.match(deliveryPanelCss, /\.dlv-compare-grid/);
   assert.match(deliveryPanelCss, /\.dlv-compare-card/);
   assert.match(deliveryPanelCss, /\.dlv-compare-gauge/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-gauge__visual/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-gauge__copy/);
+  assert.doesNotMatch(deliveryPanelCss, /\.dlv-compare-gauge__copy\s*\{[^}]*position:\s*absolute;/);
   assert.match(deliveryPanelCss, /\.dlv-compare-gauge__arc--good/);
+  assert.match(deliveryPanelCss, /--compare-good:\s*#7EDC8A;/);
   assert.match(deliveryPanelCss, /\.dlv-compare-delta/);
   assert.match(deliveryPanelCss, /\.dlv-compare-delta--risk/);
   assert.match(deliveryPanelCss, /\.dlv-compare-detail/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-overflow/);
   assert.match(deliveryPanelCss, /\.dlv-compare-values/);
   assert.doesNotMatch(deliveryPanelCss, /\.dlv-compare-ring|\.dlv-compare-signal|\.dlv-compare-bars|\.dlv-compare-bar-row|\.dlv-compare-track/);
 });

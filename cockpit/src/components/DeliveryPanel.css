@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 20:45:00 CST
- 更新内容: 本月与上月交付对比改为可读差值半环变化卡样式，半环中心展示变化值和差额文案。
+ 更新时间: 2026-07-14 21:10:00 CST
+ 更新内容: 优化交付环比半环卡样式，改善状态改为明确绿色，半环与文字分区展示，并为超过 100% 的变化增加标记。
 */
 /*
  更新时间: 2026-07-14 12:10:00 CST
@@ -489,9 +489,10 @@
 }
 
 .dlv-compare-card {
+  --compare-good: #7EDC8A;
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 176px;
+  grid-template-columns: minmax(0, 1fr) 184px;
   gap: 12px 16px;
   padding: 15px 16px;
   border-radius: 13px;
@@ -542,11 +543,18 @@
   --gauge-angle: 0deg;
   grid-column: 2;
   grid-row: 1 / span 2;
-  position: relative;
-  align-self: end;
+  align-self: center;
   justify-self: end;
-  width: 168px;
-  height: 96px;
+  width: 184px;
+  display: grid;
+  grid-template-rows: 58px auto;
+  gap: 6px;
+}
+
+.dlv-compare-gauge__visual {
+  position: relative;
+  width: 184px;
+  height: 58px;
   overflow: hidden;
 }
 
@@ -554,9 +562,9 @@
   --gauge-color: var(--muted);
   position: absolute;
   left: 50%;
-  bottom: -82px;
-  width: 164px;
-  height: 164px;
+  bottom: -92px;
+  width: 184px;
+  height: 184px;
   border-radius: 50%;
   transform: translateX(-50%);
   background:
@@ -573,30 +581,28 @@
   background: rgba(9,14,32,.96);
 }
 
-.dlv-compare-gauge__arc--good { --gauge-color: var(--semantic-success-muted); }
+.dlv-compare-gauge__arc--good { --gauge-color: var(--compare-good); }
 .dlv-compare-gauge__arc--risk { --gauge-color: var(--semantic-risk); }
 .dlv-compare-gauge__arc--warn { --gauge-color: var(--accent-gold-soft); }
 .dlv-compare-gauge__arc--neutral { --gauge-color: var(--muted); }
 
-.dlv-compare-gauge__center {
-  position: absolute;
-  inset: 25px 8px auto;
+.dlv-compare-gauge__copy {
   display: grid;
   justify-items: center;
-  gap: 4px;
+  gap: 3px;
   text-align: center;
 }
 
 .dlv-compare-delta {
   color: var(--muted);
-  font-size: clamp(22px, 2vw, 28px);
+  font-size: clamp(20px, 1.8vw, 26px);
   font-weight: 820;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.dlv-compare-delta--good { color: var(--semantic-success-muted); }
+.dlv-compare-delta--good { color: var(--compare-good); }
 .dlv-compare-delta--risk { color: var(--semantic-risk); }
 .dlv-compare-delta--warn { color: var(--accent-gold-soft); }
 
@@ -609,6 +615,38 @@
   line-height: 1.18;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.dlv-compare-overflow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 760;
+  line-height: 1;
+  border: 1px solid rgba(185,194,212,.16);
+  background: rgba(185,194,212,.07);
+}
+
+.dlv-compare-overflow--good {
+  color: var(--compare-good);
+  background: color-mix(in srgb, var(--compare-good) 10%, transparent);
+  border-color: color-mix(in srgb, var(--compare-good) 28%, transparent);
+}
+
+.dlv-compare-overflow--risk {
+  color: var(--semantic-risk);
+  background: color-mix(in srgb, var(--semantic-risk) 9%, transparent);
+  border-color: color-mix(in srgb, var(--semantic-risk) 24%, transparent);
+}
+
+.dlv-compare-overflow--warn {
+  color: var(--accent-gold-soft);
+  background: color-mix(in srgb, var(--semantic-goal) 9%, transparent);
+  border-color: color-mix(in srgb, var(--semantic-goal) 24%, transparent);
 }
 
 .dlv-table--conversion col:nth-child(1) { width: 19%; }
@@ -652,9 +690,9 @@
 }
 
 .dlv-status--good {
-  color: var(--semantic-success-muted);
-  background: color-mix(in srgb, var(--semantic-success-muted) 9%, transparent);
-  border-color: color-mix(in srgb, var(--semantic-success-muted) 24%, transparent);
+  color: var(--compare-good);
+  background: color-mix(in srgb, var(--compare-good) 9%, transparent);
+  border-color: color-mix(in srgb, var(--compare-good) 24%, transparent);
 }
 
 .dlv-status--warn {
