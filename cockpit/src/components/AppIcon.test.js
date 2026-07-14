@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 10:30:00 CST
+ 更新内容: 回归锁定数据更新看板 monitor 图标进入统一 AppIcon 映射。
+*/
+/*
  更新时间: 2026-07-08 13:28:16 CST
  更新内容: 增加渠道图标语义回归测试，要求使用来源节点汇入中心节点的图形。
 */
@@ -39,6 +43,7 @@ test('defines a single AppIcon entry point with business icon aliases', () => {
     'cost',
     'organization',
     'channel',
+    'monitor',
     'calendar',
     'sun',
     'moon',
