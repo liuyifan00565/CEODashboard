@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-14 10:13:00 CST
+ Update content: Make cost schema migration idempotent under concurrent startup requests by tolerating already-created columns and indexes.
+*/
+/*
  Update time: 2026-07-13 16:48:56 CST
  Update content: Store operations and labor costs together per channel-month, preserving legacy operations values and enforcing atomic business keys.
 */
@@ -22,6 +26,38 @@ async function hasIndex(connection, tableName, indexName) {
   return rows.length > 0;
 }
 
+function isDuplicateColumnError(err) {
+  return err?.code === 'ER_DUP_FIELDNAME'
+    || err?.errno === 1060
+    || /Duplicate column name/i.test(String(err?.message || ''));
+}
+
+function isDuplicateIndexError(err) {
+  return err?.code === 'ER_DUP_KEYNAME'
+    || err?.errno === 1061
+    || /Duplicate key name/i.test(String(err?.message || ''));
+}
+
+async function addColumnIfStillMissing(connection, sql) {
+  try {
+    await connection.execute(sql);
+    return true;
+  } catch (err) {
+    if (isDuplicateColumnError(err)) return false;
+    throw err;
+  }
+}
+
+async function addIndexIfStillMissing(connection, sql) {
+  try {
+    await connection.execute(sql);
+    return true;
+  } catch (err) {
+    if (isDuplicateIndexError(err)) return false;
+    throw err;
+  }
+}
+
 /**
  * 成本表兼容迁移：
  * - 旧 investment_amount_yuan 只用于首次回填 operations_amount_yuan；旧无渠道人力成本不自动均摊；
@@ -31,18 +67,20 @@ async function hasIndex(connection, tableName, indexName) {
 export async function ensureCostSchema(connection) {
   const operationsColumn = await readColumn(connection, 'biz_channel_cost_monthly', 'operations_amount_yuan');
   if (!operationsColumn) {
-    await connection.execute(
+    const addedOperationsColumn = await addColumnIfStillMissing(
+      connection,
       "ALTER TABLE biz_channel_cost_monthly ADD COLUMN operations_amount_yuan DECIMAL(18,2) NOT NULL DEFAULT 0 COMMENT '运营成本；按月按渠道维护' AFTER channel_id",
     );
     const legacyInvestmentColumn = await readColumn(connection, 'biz_channel_cost_monthly', 'investment_amount_yuan');
-    if (legacyInvestmentColumn) {
+    if (addedOperationsColumn && legacyInvestmentColumn) {
       await connection.execute('UPDATE biz_channel_cost_monthly SET operations_amount_yuan = investment_amount_yuan');
     }
   }
 
   const laborColumn = await readColumn(connection, 'biz_channel_cost_monthly', 'labor_amount_yuan');
   if (!laborColumn) {
-    await connection.execute(
+    await addColumnIfStillMissing(
+      connection,
       "ALTER TABLE biz_channel_cost_monthly ADD COLUMN labor_amount_yuan DECIMAL(18,2) NULL DEFAULT NULL COMMENT '人力成本；按月按渠道维护，NULL 表示尚未迁移' AFTER operations_amount_yuan",
     );
   } else if (laborColumn.IS_NULLABLE !== 'YES') {
@@ -54,7 +92,8 @@ export async function ensureCostSchema(connection) {
 
   const refundColumn = await readColumn(connection, 'biz_channel_cost_monthly', 'refund_amount_yuan');
   if (!refundColumn) {
-    await connection.execute(
+    await addColumnIfStillMissing(
+      connection,
       "ALTER TABLE biz_channel_cost_monthly ADD COLUMN refund_amount_yuan DECIMAL(18,2) NOT NULL DEFAULT 0 COMMENT '退款金额；用于净回款' AFTER labor_amount_yuan",
     );
   }
@@ -68,7 +107,7 @@ export async function ensureCostSchema(connection) {
        AND newer.channel_id = older.channel_id
        AND older.cost_id < newer.cost_id
     `);
-    await connection.execute('ALTER TABLE biz_channel_cost_monthly ADD UNIQUE KEY uq_channel_cost_month (`year_month`, channel_id)');
+    await addIndexIfStillMissing(connection, 'ALTER TABLE biz_channel_cost_monthly ADD UNIQUE KEY uq_channel_cost_month (`year_month`, channel_id)');
   }
 
   if (!await hasIndex(connection, 'biz_labor_cost_monthly', 'uq_labor_cost_month_type')) {
@@ -80,7 +119,7 @@ export async function ensureCostSchema(connection) {
        AND newer.cost_type = older.cost_type
        AND older.labor_cost_id < newer.labor_cost_id
     `);
-    await connection.execute('ALTER TABLE biz_labor_cost_monthly ADD UNIQUE KEY uq_labor_cost_month_type (`year_month`, cost_type)');
+    await addIndexIfStillMissing(connection, 'ALTER TABLE biz_labor_cost_monthly ADD UNIQUE KEY uq_labor_cost_month_type (`year_month`, cost_type)');
   }
 
   const channelIdColumn = await readColumn(connection, 'biz_channel_cost_monthly', 'cost_id');
