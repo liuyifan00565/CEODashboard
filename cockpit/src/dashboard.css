@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 11:00:00 CST
+ 更新内容: 新增 .dash-sidebar-account，侧边栏搜索框下方显示登录用户名与退出登录入口。
+*/
+/*
  更新时间: 2026-07-14 10:00:00 CST
  更新内容: 版本情况(VersionFinancePanel)移回经营总览页，“交付”页只剩交付面板；移除仅供合并展示使用的
           .dash-section-eyebrow，.dash-version-row/.dash-secondary-delivery 简化回单子元素容器。
@@ -272,6 +276,21 @@
 }
 .search-wrap--sidebar .search-input{font-size:13px}
 .search-wrap--sidebar .search-count{min-width:40px;height:26px;padding:0 7px}
+
+.dash-sidebar-account{
+  flex:none;width:100%;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:0 4px;
+}
+.dash-sidebar-account__name{
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--faint);font-size:13px;font-weight:600;
+}
+.dash-sidebar-account__logout{
+  flex:none;border:none;background:none;padding:0;
+  color:var(--muted);font-size:12px;font-weight:650;cursor:pointer;
+  transition:color .2s ease;
+}
+.dash-sidebar-account__logout:hover{color:var(--txt)}
 
 .dash-main{
   flex:1;min-width:0;display:flex;flex-direction:column;

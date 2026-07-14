@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "start": "node server.js",
-    "serve": "npm run build && node server.js"
+    "serve": "npm run build && node server.js",
+    "seed:user": "node server/seedAuthUser.js"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

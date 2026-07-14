@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 11:00:00 CST
+ 更新内容: 生产服务新增登录接口 /api/auth/login、/api/auth/logout、/api/auth/me。
+*/
+/*
  更新时间: 2026-07-10 17:20:59 CST
  更新内容: 新增 /api/health 轻量健康检查端点，供阿里云 Docker 部署脚本等待服务就绪并确认运行时密钥状态。
 */
@@ -42,6 +46,7 @@ import { handleDashboardDataRequest } from './server/dashboardData.js';
 import { handleMaintenanceImportRequest } from './server/maintenanceImport.js';
 import { handleMaintenanceDataRequest } from './server/maintenanceData.js';
 import { handleMaintenanceSaveRequest } from './server/maintenanceSave.js';
+import { handleAuthLoginRequest, handleAuthLogoutRequest, handleAuthMeRequest } from './server/auth.js';
 import { loadLocalEnv } from './server/env.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -182,6 +187,36 @@ const server = http.createServer((req, res) => {
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
       }
       res.end(JSON.stringify({ error: `AI 悬浮气泡接口异常：${err.message}` }));
+    });
+    return;
+  }
+
+  if (url.pathname === '/api/auth/login' && req.method === 'POST') {
+    handleAuthLoginRequest(req, res).catch((err) => {
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      }
+      res.end(JSON.stringify({ error: `登录接口异常：${err.message}` }));
+    });
+    return;
+  }
+
+  if (url.pathname === '/api/auth/logout' && req.method === 'POST') {
+    handleAuthLogoutRequest(req, res).catch((err) => {
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      }
+      res.end(JSON.stringify({ error: `登出接口异常：${err.message}` }));
+    });
+    return;
+  }
+
+  if (url.pathname === '/api/auth/me' && req.method === 'GET') {
+    handleAuthMeRequest(req, res).catch((err) => {
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      }
+      res.end(JSON.stringify({ error: `登录状态查询接口异常：${err.message}` }));
     });
     return;
   }

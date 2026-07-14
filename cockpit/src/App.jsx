@@ -1,4 +1,11 @@
 /*
+ 更新时间: 2026-07-14 11:00:00 CST
+ 更新内容: 新增登录门禁：挂载时查 /api/auth/me，未登录展示 LoginPage，登录后才拉取经营数据；
+          侧边导航底部加登录用户名与退出登录入口。仅做前端门禁 + 登录接口，暂未把既有
+          dashboard-data/maintenance 等业务接口挂 requireAuth（避免影响正在并行开发的交付看板/
+          数据健康检查），后续接入按岗位权限时直接复用 server/auth.js 的 requireAuth。
+*/
+/*
  更新时间: 2026-07-14 10:00:00 CST
  更新内容: 版本情况(VersionFinancePanel)移回经营总览页（恢复到月度趋势/开户投入区块下方），
           侧边导航“版本与交付”入口改为纯“交付”页，只保留交付面板(DeliveryPanel)；
@@ -218,6 +225,7 @@ import OpeningMetricCards from './components/OpeningMetricCards';
 import AdRoiCard from './components/AdRoiCard';
 import MaintenancePage from './components/MaintenancePage';
 import OperatingOverview from './components/OperatingOverview';
+import LoginPage from './components/LoginPage';
 
 import {
   appendComputeCustomerRows,
@@ -229,6 +237,7 @@ import {
   getDashboardMenuLabel,
 } from './data/mock';
 import { loadComputeCustomerPage, loadComputeData, loadDashboardData } from './data/liveData';
+import { fetchCurrentUser, logout } from './lib/auth';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards } from './lib/filterKpiCards';
 import { buildCardCompanionCue } from './lib/mascotCompanion';
 import { matchesSearchTerm } from './lib/searchMatch';
@@ -272,6 +281,7 @@ export default function App() {
   const [dashboardDataState, setDashboardDataState] = useState({ status: 'loading', error: '' });
   const [computeDataState, setComputeDataState] = useState({ status: 'idle', error: '' });
   const [computeCustomerSyncState, setComputeCustomerSyncState] = useState({ status: 'idle', total: 0 });
+  const [authState, setAuthState] = useState({ status: 'loading', user: null });
 
   const gridRef = useRef(null);
   const pendingMenuScrollRef = useRef(false);
@@ -304,6 +314,25 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
 
+    fetchCurrentUser()
+      .then((user) => {
+        if (cancelled) return;
+        setAuthState({ status: user ? 'authenticated' : 'unauthenticated', user });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setAuthState({ status: 'unauthenticated', user: null });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (authState.status !== 'authenticated') return undefined;
+    let cancelled = false;
+
     loadDashboardData()
       .then(() => {
         if (cancelled) return;
@@ -317,7 +346,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authState.status]);
 
   useEffect(() => {
     if (dashboardDataState.status !== 'ready' || computeDataState.status !== 'idle') return undefined;
@@ -550,6 +579,30 @@ export default function App() {
     clearTimeout(aiInsightFocusTimerRef.current);
   }, []);
 
+  function handleLoggedIn(user) {
+    setAuthState({ status: 'authenticated', user });
+  }
+
+  async function handleLogout() {
+    await logout();
+    setAuthState({ status: 'unauthenticated', user: null });
+  }
+
+  if (authState.status === 'loading') {
+    return (
+      <div className="app">
+        <div className="bg" aria-hidden="true" />
+        <main className="dash-data-state" role="status">
+          <b>正在确认登录状态</b>
+        </main>
+      </div>
+    );
+  }
+
+  if (authState.status === 'unauthenticated') {
+    return <LoginPage onLoggedIn={handleLoggedIn} />;
+  }
+
   if (!isDashboardDataReady) {
     return (
       <div className="app">
@@ -588,6 +641,10 @@ export default function App() {
               totalResults={searchStats.total}
               onNext={jumpToNextSearchResult}
             />
+          </div>
+          <div className="dash-sidebar-account">
+            <span className="dash-sidebar-account__name">{authState.user?.displayName || authState.user?.username}</span>
+            <button type="button" className="dash-sidebar-account__logout" onClick={handleLogout}>退出登录</button>
           </div>
           <AIAnalysisWidget
             activeMenu={activeMenu}

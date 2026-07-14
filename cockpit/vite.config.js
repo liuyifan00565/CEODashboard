@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 11:00:00 CST
+ 更新内容: Vite 开发服务新增登录接口 /api/auth/login、/api/auth/logout、/api/auth/me，与生产 server.js 保持一致。
+*/
+/*
  更新时间: 2026-07-10 17:20:59 CST
  更新内容: Vite 开发服务新增 /api/health，与生产 server.js 健康检查保持一致，便于 Docker 联调验证。
 */
@@ -46,6 +50,7 @@ import { handleDashboardDataRequest } from './server/dashboardData.js'
 import { handleMaintenanceImportRequest } from './server/maintenanceImport.js'
 import { handleMaintenanceDataRequest } from './server/maintenanceData.js'
 import { handleMaintenanceSaveRequest } from './server/maintenanceSave.js'
+import { handleAuthLoginRequest, handleAuthLogoutRequest, handleAuthMeRequest } from './server/auth.js'
 import { loadLocalEnv } from './server/env.js'
 
 const projectRoot = fileURLToPath(new URL('.', import.meta.url))
@@ -129,6 +134,30 @@ export default defineConfig({
               res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' })
             }
             res.end(JSON.stringify({ error: `数据维护保存接口异常：${err.message}` }))
+          })
+        })
+        server.middlewares.use('/api/auth/login', (req, res) => {
+          handleAuthLoginRequest(req, res).catch((err) => {
+            if (!res.headersSent) {
+              res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' })
+            }
+            res.end(JSON.stringify({ error: `登录接口异常：${err.message}` }))
+          })
+        })
+        server.middlewares.use('/api/auth/logout', (req, res) => {
+          handleAuthLogoutRequest(req, res).catch((err) => {
+            if (!res.headersSent) {
+              res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' })
+            }
+            res.end(JSON.stringify({ error: `登出接口异常：${err.message}` }))
+          })
+        })
+        server.middlewares.use('/api/auth/me', (req, res) => {
+          handleAuthMeRequest(req, res).catch((err) => {
+            if (!res.headersSent) {
+              res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' })
+            }
+            res.end(JSON.stringify({ error: `登录状态查询接口异常：${err.message}` }))
           })
         })
       },
