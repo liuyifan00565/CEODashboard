@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 13:40:09 CST  更新内容: 抽取可复用渠道人员明细弹窗，供经营总览渠道行和半环扇区直接下钻。 */
 /* 更新时间: 2026-07-13 16:40:31 CST  更新内容: 选择性合并数据维护代码，恢复拉取前的主界面渠道面板实现。 */
 /* 更新时间: 2026-07-08 18:22:00 CST  更新内容: 渠道人员明细弹窗标题补齐本月/年度口径，副标题明确当前渠道、单位和完成率排序规则。 */
 /* 更新时间: 2026-07-08 17:28:57 CST  更新内容: 渠道完成进度条接入 120% 超额阈值，100%-119.9% 不再显示金色。 */
@@ -53,6 +54,62 @@ const CHANNEL_TABLE_COLUMNS = {
   ],
 };
 
+export function ChannelMemberModal({ channelKey, period = 'month', onClose }) {
+  const tokens = useThemeTokens();
+  const openRow = getChannelCompletionRows(period).find((row) => row.key === channelKey);
+  const members = channelKey ? getSalesMemberRows(channelKey, period) : [];
+  const periodLabel = period === 'year' ? '年度' : '本月';
+  const modalTitle = openRow ? `${openRow.name}${periodLabel}人员完成明细` : '';
+
+  if (!openRow) return null;
+
+  return createPortal(
+    <div className="ch-modal" role="dialog" aria-modal="true" aria-label={modalTitle}>
+      <button type="button" className="ch-modal-mask" aria-label="关闭" onClick={onClose} />
+      <div className="ch-modal-card">
+        <div className="ch-modal-head">
+          <div>
+            <h3>{modalTitle}</h3>
+            <span>当前口径：{openRow.name} · {periodLabel} · 单位：万元 · 按完成率降序排列</span>
+          </div>
+          <button type="button" className="ch-modal-close" aria-label="关闭" onClick={onClose}>
+            <AppIcon name="close" size={17} />
+          </button>
+        </div>
+
+        <div className="ch-member-list">
+          {members.length ? members.map((member) => {
+            const pct = member.completion;
+            const progressBackground = channelCompletionBarBackground(member, tokens.progressMid);
+            return (
+              <div className={`ch-member-row${pct < 80 ? ' ch-member-row--warn' : ''}`} key={member.key}>
+                <div className="ch-member-main">
+                  <span className="ch-member-name">{member.name}</span>
+                  <span className="ch-member-money">
+                    {fmtWan(member.recovered)} / 目标 {fmtWan(member.target)}
+                  </span>
+                </div>
+                <div className="ch-member-progress">
+                  <div className="ch-member-bar">
+                    <span
+                      style={{
+                        width: `${Math.min(pct, 100)}%`,
+                        background: progressBackground,
+                      }}
+                    />
+                  </div>
+                  <b>{fmtPct(pct)}</b>
+                </div>
+              </div>
+            );
+          }) : <div className="ch-member-empty">当前渠道暂无人员回款数据</div>}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 export default function ChannelPanel({ channelKey = 'all', title = '渠道完成情况', showPeriodSwitch = false }) {
   const tokens = useThemeTokens();
   const [period, setPeriod] = useState('month');
@@ -62,10 +119,6 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
   const panelTitle = showPeriodSwitch
     ? (period === 'year' ? '年度渠道完成情况' : `本月${title}`)
     : title;
-  const openRow = rows.find((row) => row.key === openKey);
-  const members = openKey ? getSalesMemberRows(openKey, period) : [];
-  const periodLabel = period === 'year' ? '年度' : '本月';
-  const modalTitle = openRow ? `${openRow.name}${periodLabel}人员完成明细` : '';
 
   return (
     <section className="ch-panel">
@@ -127,51 +180,7 @@ export default function ChannelPanel({ channelKey = 'all', title = '渠道完成
         })}
       </div>
 
-      {openRow && createPortal(
-        <div className="ch-modal" role="dialog" aria-modal="true" aria-label={modalTitle}>
-          <button type="button" className="ch-modal-mask" aria-label="关闭" onClick={() => setOpenKey(null)} />
-          <div className="ch-modal-card">
-            <div className="ch-modal-head">
-              <div>
-                <h3>{modalTitle}</h3>
-                <span>当前口径：{openRow.name} · {periodLabel} · 单位：万元 · 按完成率降序排列</span>
-              </div>
-              <button type="button" className="ch-modal-close" aria-label="关闭" onClick={() => setOpenKey(null)}>
-                <AppIcon name="close" size={17} />
-              </button>
-            </div>
-
-            <div className="ch-member-list">
-              {members.map((member) => {
-                const pct = member.completion;
-                const progressBackground = channelCompletionBarBackground(member, tokens.progressMid);
-                return (
-                  <div className={`ch-member-row${pct < 80 ? ' ch-member-row--warn' : ''}`} key={member.key}>
-                    <div className="ch-member-main">
-                      <span className="ch-member-name">{member.name}</span>
-                      <span className="ch-member-money">
-                        {fmtWan(member.recovered)} / 目标 {fmtWan(member.target)}
-                      </span>
-                    </div>
-                    <div className="ch-member-progress">
-                      <div className="ch-member-bar">
-                        <span
-                          style={{
-                            width: `${Math.min(pct, 100)}%`,
-                            background: progressBackground,
-                          }}
-                        />
-                      </div>
-                      <b>{fmtPct(pct)}</b>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      {openKey && <ChannelMemberModal channelKey={openKey} period={period} onClose={() => setOpenKey(null)} />}
     </section>
   );
 }

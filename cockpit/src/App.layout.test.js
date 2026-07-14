@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 13:40:09 CST  更新内容: 回归锁定经营总览渠道行与半环扇区点击打开人员级回款明细。 */
 /* 更新时间: 2026-07-14 13:35:39 CST  更新内容: 回归锁定交付页稳定默认加载器，避免 effect 因函数身份变化无限重载。 */
 /* 更新时间: 2026-07-14 12:11:48 CST  更新内容: 增加数据更新状态汇总卡复选框右置布局回归，避免通用 span 样式覆盖标题行 flex。 */
 /* 更新时间: 2026-07-14 15:25:00 CST  更新内容: 回归锁定登录门禁临时关闭：App 使用 LOGIN_DISABLED_USER 初始化为已认证，
@@ -1597,8 +1598,8 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /点击查看近期明细/);
   assert.match(operatingOverviewSource, /className="op-detail-link"/);
   assert.match(operatingOverviewSource, /className="op-detail-link-arrow"/);
-  assert.match(operatingOverviewSource, /function RecoveryStructure\(\{ structure, option, periodMeta, action = null \}\)[\s\S]*?className="op-structure-head"[\s\S]*?className=\{action \? 'op-channel-chart-wrap op-channel-chart-wrap--with-detail' : 'op-channel-chart-wrap'\}[\s\S]*?<EChart className="op-channel-chart" option=\{option\} style=\{\{ height: '100%' \}\} \/>[\s\S]*?\{action\}/);
-  assert.match(operatingOverviewSource, /function MonthlyRecoveryStructure\(\{ structure, option, detailDisabled, onDetailClick \}\)[\s\S]*?action=\{\([\s\S]*?<DetailLink disabled=\{detailDisabled\} onClick=\{onDetailClick\}>[\s\S]*?点击查看近期明细/);
+  assert.match(operatingOverviewSource, /function RecoveryStructure\(\{ structure, option, periodMeta, chartEvents, action = null \}\)[\s\S]*?className="op-structure-head"[\s\S]*?className=\{action \? 'op-channel-chart-wrap op-channel-chart-wrap--with-detail' : 'op-channel-chart-wrap'\}[\s\S]*?<EChart className="op-channel-chart" option=\{option\} onEvents=\{chartEvents\} style=\{\{ height: '100%' \}\} \/>[\s\S]*?\{action\}/);
+  assert.match(operatingOverviewSource, /function MonthlyRecoveryStructure\(\{ structure, option, chartEvents, detailDisabled, onDetailClick \}\)[\s\S]*?chartEvents=\{chartEvents\}[\s\S]*?action=\{\([\s\S]*?<DetailLink disabled=\{detailDisabled\} onClick=\{onDetailClick\}>[\s\S]*?点击查看近期明细/);
   assert.match(operatingOverviewSource, /<MonthlyRecoveryStructure[\s\S]*?detailDisabled=\{!monthKpiCard \|\| !onOpenKpi\}[\s\S]*?onDetailClick=\{\(\) => onOpenKpi\(monthKpiCard\)\}/);
   assert.match(operatingOverviewCss, /\.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?right:\s*clamp\(0px, \.65vw, 10px\);[\s\S]*?bottom:\s*-8px;[\s\S]*?min-width:\s*156px;[\s\S]*?min-height:\s*28px;[\s\S]*?padding:\s*8px 6px 6px 28px;[\s\S]*?font-size:\s*12px;/);
   assert.match(operatingOverviewCss, /\.op-channel-chart-wrap \.op-detail-link:focus-visible:not\(:disabled\)\s*\{[\s\S]*?box-shadow:\s*inset 0 0 0 1px rgba\(255,255,255,\.14\);/);
@@ -1607,6 +1608,13 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewCss, /@media \(min-width: 1241px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-month-grid \.op-channel-chart-wrap \.op-detail-link\s*\{[\s\S]*?bottom:\s*19px;/);
   assert.doesNotMatch(operatingOverviewCss, /\.op-structure-head \.op-detail-link/);
   assert.match(operatingOverviewSource, /onOpenKpi\(monthKpiCard\)/);
+  assert.match(channelPanelSource, /export function ChannelMemberModal\(\{ channelKey, period = 'month', onClose \}\)/);
+  assert.match(channelPanelSource, /const members = channelKey \? getSalesMemberRows\(channelKey, period\) : \[\];/);
+  assert.match(operatingOverviewSource, /onClick=\{\(\) => onChannelClick\(row\.key\)\}/);
+  assert.match(operatingOverviewSource, /setPersonDrilldown\(\{ channelKey: params\.data\.key, period: 'month' \}\)/);
+  assert.match(operatingOverviewSource, /setPersonDrilldown\(\{ channelKey: params\.data\.key, period: 'year' \}\)/);
+  assert.match(operatingOverviewSource, /<ChannelMemberModal[\s\S]*?channelKey=\{personDrilldown\.channelKey\}[\s\S]*?period=\{personDrilldown\.period\}/);
+  assert.match(operatingOverviewCss, /\.op-channel-item\s*\{[\s\S]*?width:\s*100%;[\s\S]*?cursor:\s*pointer;/);
   assert.match(operatingOverviewSource, /<h2>年度回款总览<\/h2>/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">年度经营进度<\/span>/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">年度节奏<\/span>/);
@@ -1638,7 +1646,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.doesNotMatch(operatingOverviewSource, /<EChart option=\{annualOption\}/);
   assert.doesNotMatch(operatingOverviewSource, /当前年度完成率略高于时间进度/);
   assert.match(operatingOverviewSource, /点击查看年度拆解/);
-  assert.match(operatingOverviewSource, /function AnnualRecoveryStructure\(\{ structure, option, detailDisabled, onDetailClick \}\)[\s\S]*?action=\{\([\s\S]*?<DetailLink disabled=\{detailDisabled\} onClick=\{onDetailClick\}>[\s\S]*?点击查看年度拆解/);
+  assert.match(operatingOverviewSource, /function AnnualRecoveryStructure\(\{ structure, option, chartEvents, detailDisabled, onDetailClick \}\)[\s\S]*?chartEvents=\{chartEvents\}[\s\S]*?action=\{\([\s\S]*?<DetailLink disabled=\{detailDisabled\} onClick=\{onDetailClick\}>[\s\S]*?点击查看年度拆解/);
   assert.match(operatingOverviewSource, /<AnnualRecoveryStructure[\s\S]*?detailDisabled=\{!yearKpiCard \|\| !onOpenKpi\}[\s\S]*?onDetailClick=\{\(\) => onOpenKpi\(yearKpiCard\)\}/);
   assert.doesNotMatch(operatingOverviewSource, /<header className="op-section-head">[\s\S]*?点击查看年度拆解[\s\S]*?<\/header>/);
   assert.doesNotMatch(operatingOverviewSource, /明细 &gt;/);
@@ -1648,8 +1656,9 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.doesNotMatch(operatingOverviewSource, /<h2>渠道目标完成结构<\/h2>/);
   assert.doesNotMatch(operatingOverviewSource, /CHANNEL_PERIOD_OPTIONS/);
   assert.doesNotMatch(operatingOverviewSource, /<Segmented/);
-  assert.match(operatingOverviewSource, /<EChart className="op-channel-chart" option=\{option\} style=\{\{ height: '100%' \}\} \/>/);
+  assert.match(operatingOverviewSource, /<EChart className="op-channel-chart" option=\{option\} onEvents=\{chartEvents\} style=\{\{ height: '100%' \}\} \/>/);
   assert.match(operatingOverviewSource, /buildChannelStructure\(monthChannelRows\)/);
+  assert.match(operatingOverviewSource, /\.\.\.channelItems\.map\(\(row\) => \(\{[\s\S]*?key:\s*row\.key,/);
   assert.match(operatingOverviewSource, /const incompleteGap = Math\.max\(0, totalTarget - totalRecovered\);/);
   assert.match(operatingOverviewSource, /name: '未完成'/);
   assert.match(operatingOverviewSource, /isIncomplete:\s*true/);

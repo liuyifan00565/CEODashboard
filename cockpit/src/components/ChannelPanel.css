@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 13:40:09 CST  更新内容: 渠道人员下钻补充真实数据为空状态，避免未映射渠道显示空白弹窗。 */
 /* 更新时间: 2026-07-07 15:40:00 CST  更新内容: 风险行加左侧极细标记线、缺口单元格改风险色+警示圆点，进度条收细并加顶部高光，更克制好扫读。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: 渠道分段控件选中态改为银紫玫瑰光，风险行语义保持不变。 */
 /* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 渠道分段控件改局部紫蓝低饱和选中态，并将进度条收进完成率单元格。 */
@@ -327,6 +328,16 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.ch-member-empty {
+  padding: 28px 16px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--glass-cell);
 }
 
 .ch-member-row {

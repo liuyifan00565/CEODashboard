@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 13:40:09 CST  更新内容: 月度与年度渠道行及半环扇区支持点击打开真实人员级回款明细。 */
 /* 更新时间: 2026-07-13 19:26:40 CST  更新内容: 年度折叠条保持原宽度，加粗常驻进度条并在右侧显示年度完成百分比。 */
 /* 更新时间: 2026-07-13 19:23:27 CST  更新内容: 年度回款总览与月度经营进度互换位置，年度总览默认收起为标题、进度条和展开箭头。 */
 /* 更新时间: 2026-07-13 16:40:31 CST  更新内容: 选择性合并数据维护代码，恢复拉取前的经营总览界面实现。 */
@@ -55,6 +56,7 @@
 import { useMemo, useState } from 'react';
 import SearchResultBorder from './SearchResultBorder';
 import EChart from './EChart';
+import { ChannelMemberModal } from './ChannelPanel';
 import {
   META,
   KPI,
@@ -192,6 +194,7 @@ function buildChannelStructure(rows) {
   const pieData = structureTotal
     ? [
       ...channelItems.map((row) => ({
+        key: row.key,
         value: row.recovered,
         rawValue: row.recovered,
         targetValue: row.target,
@@ -383,7 +386,7 @@ function channelStructureOption(structure, periodMeta, tokens) {
   };
 }
 
-function RecoveryStructure({ structure, option, periodMeta, action = null }) {
+function RecoveryStructure({ structure, option, periodMeta, chartEvents, action = null }) {
   return (
     <div className="op-recovery-structure">
       <div className="op-structure-head">
@@ -397,19 +400,20 @@ function RecoveryStructure({ structure, option, periodMeta, action = null }) {
         className={action ? 'op-channel-chart-wrap op-channel-chart-wrap--with-detail' : 'op-channel-chart-wrap'}
         aria-label={`${periodMeta.centerLabel} ${formatPct(structure.completion)}，${periodMeta.recoveredLabel} ${formatWan(structure.totalRecovered)} 万`}
       >
-        <EChart className="op-channel-chart" option={option} style={{ height: '100%' }} />
+        <EChart className="op-channel-chart" option={option} onEvents={chartEvents} style={{ height: '100%' }} />
         {action}
       </div>
     </div>
   );
 }
 
-function MonthlyRecoveryStructure({ structure, option, detailDisabled, onDetailClick }) {
+function MonthlyRecoveryStructure({ structure, option, chartEvents, detailDisabled, onDetailClick }) {
   return (
     <RecoveryStructure
       structure={structure}
       option={option}
       periodMeta={MONTH_STRUCTURE_META}
+      chartEvents={chartEvents}
       action={(
         <DetailLink disabled={detailDisabled} onClick={onDetailClick}>
           点击查看近期明细
@@ -419,12 +423,13 @@ function MonthlyRecoveryStructure({ structure, option, detailDisabled, onDetailC
   );
 }
 
-function AnnualRecoveryStructure({ structure, option, detailDisabled, onDetailClick }) {
+function AnnualRecoveryStructure({ structure, option, chartEvents, detailDisabled, onDetailClick }) {
   return (
     <RecoveryStructure
       structure={structure}
       option={option}
       periodMeta={ANNUAL_STRUCTURE_META}
+      chartEvents={chartEvents}
       action={(
         <DetailLink disabled={detailDisabled} onClick={onDetailClick}>
           点击查看年度拆解
@@ -434,7 +439,7 @@ function AnnualRecoveryStructure({ structure, option, detailDisabled, onDetailCl
   );
 }
 
-function OperatingSituation({ structure, subLabel = '实际回款 / 目标回款', insightTarget }) {
+function OperatingSituation({ structure, subLabel = '实际回款 / 目标回款', insightTarget, onChannelClick }) {
   return (
     <aside className="op-operating-side" data-ai-insight-target={insightTarget}>
       <div className="op-operating-head">
@@ -446,7 +451,13 @@ function OperatingSituation({ structure, subLabel = '实际回款 / 目标回款
 
       <div className="op-channel-list">
         {structure.rows.map((row) => (
-          <div className={`op-channel-item${row.risk ? ' op-channel-item--warn' : ''}`} key={row.key}>
+          <button
+            type="button"
+            className={`op-channel-item${row.risk ? ' op-channel-item--warn' : ''}`}
+            key={row.key}
+            onClick={() => onChannelClick(row.key)}
+            title={`查看${row.name}人员明细`}
+          >
             <span
               className="op-channel-swatch"
               style={{ background: row.swatch, boxShadow: `0 0 12px ${row.swatch}55` }}
@@ -463,7 +474,7 @@ function OperatingSituation({ structure, subLabel = '实际回款 / 目标回款
               {row.gap > 0 && <span>缺口 {formatWan(row.gap)}万</span>}
             </div>
             {row.risk && <span className="op-channel-risk">风险</span>}
-          </div>
+          </button>
         ))}
       </div>
     </aside>
@@ -487,6 +498,7 @@ function DetailLink({ disabled, onClick, children }) {
 export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearKpiCard, onOpenKpi }) {
   const tokens = useThemeTokens();
   const [annualExpanded, setAnnualExpanded] = useState(false);
+  const [personDrilldown, setPersonDrilldown] = useState(null);
   const progressTitle = `${META.monthLabel}经营进度`;
   const progressKeywords = [progressTitle, ...PROGRESS_KEYWORDS_BASE];
   const monthChannelRows = getChannelCompletionRows('month');
@@ -495,6 +507,20 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
   const annualStructure = useMemo(() => buildChannelStructure(annualChannelRows), [annualChannelRows]);
   const monthlyStructureOption = useMemo(() => channelStructureOption(monthlyStructure, MONTH_STRUCTURE_META, tokens), [monthlyStructure, tokens]);
   const annualStructureOption = useMemo(() => channelStructureOption(annualStructure, ANNUAL_STRUCTURE_META, tokens), [annualStructure, tokens]);
+  const monthlyChartEvents = useMemo(() => ({
+    click: (params) => {
+      if (params?.data?.key && !params.data.isIncomplete && !params.data.isEmpty) {
+        setPersonDrilldown({ channelKey: params.data.key, period: 'month' });
+      }
+    },
+  }), []);
+  const annualChartEvents = useMemo(() => ({
+    click: (params) => {
+      if (params?.data?.key && !params.data.isIncomplete && !params.data.isEmpty) {
+        setPersonDrilldown({ channelKey: params.data.key, period: 'year' });
+      }
+    },
+  }), []);
   const annualCapsuleWidth = `${Math.min(KPI_DERIVED.yearCompletion, 100)}%`;
   const annualRemainingTarget = Math.max(0, KPI.yearTarget - KPI.yearRecovered);
   const annualTargetOver = Math.max(0, KPI.yearRecovered - KPI.yearTarget);
@@ -564,6 +590,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
                 <AnnualRecoveryStructure
                   structure={annualStructure}
                   option={annualStructureOption}
+                  chartEvents={annualChartEvents}
                   detailDisabled={!yearKpiCard || !onOpenKpi}
                   onDetailClick={() => onOpenKpi(yearKpiCard)}
                 />
@@ -571,6 +598,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
                 <OperatingSituation
                   structure={annualStructure}
                   subLabel="年度回款 / 年度目标"
+                  onChannelClick={(channelKey) => setPersonDrilldown({ channelKey, period: 'year' })}
                 />
               </div>
             </div>
@@ -604,6 +632,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             <MonthlyRecoveryStructure
               structure={monthlyStructure}
               option={monthlyStructureOption}
+              chartEvents={monthlyChartEvents}
               detailDisabled={!monthKpiCard || !onOpenKpi}
               onDetailClick={() => onOpenKpi(monthKpiCard)}
             />
@@ -611,10 +640,18 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             <OperatingSituation
               structure={monthlyStructure}
               insightTarget="channels"
+              onChannelClick={(channelKey) => setPersonDrilldown({ channelKey, period: 'month' })}
             />
           </div>
         </section>
       </SearchResultBorder>
+      {personDrilldown && (
+        <ChannelMemberModal
+          channelKey={personDrilldown.channelKey}
+          period={personDrilldown.period}
+          onClose={() => setPersonDrilldown(null)}
+        />
+      )}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 13:40:09 CST  更新内容: 渠道经营行改为可聚焦按钮，保持原玻璃样式并明确人员下钻交互。 */
 /* 更新时间: 2026-07-14 10:02:17 CST  更新内容: 月度经营进度卡的玻璃表面顶部下裁 14px，明显收紧标题上方留白，同时保持标题与三栏内容位置不变。 */
 /* 更新时间: 2026-07-14 09:52:18 CST  更新内容: 月度经营进度标题下移到原标注目标区，并收紧卡片顶部留白；其它三栏位置、尺寸和玻璃样式保持不变。 */
 /* 更新时间: 2026-07-13 19:37:49 CST  更新内容: 按截图红线保持卡片横向宽度不变，将回款结构图区桌面高度收紧到 200px、低有效高度档收紧到 190px。 */
@@ -578,12 +579,19 @@
   border: 1px solid transparent;
   border-radius: 12px;
   background: transparent;
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   transition: background .22s ease, border-color .22s ease;
 }
 
-.op-channel-item:hover {
+.op-channel-item:hover,
+.op-channel-item:focus-visible {
   background: var(--glass-cell-hover);
   border-color: rgba(255,255,255,.08);
+  outline: none;
 }
 
 .op-channel-item--warn {
