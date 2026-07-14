@@ -10,8 +10,10 @@
 - 线索来源通过 `channel_source_id -> dim_channel_source` 保存，组织销售渠道继续使用 `channel_id`；回款下钻展示客户、企微群、负责人、销售业绩、价格、退款、净回款、来源、其他说明、备注和 Excel 来源行。
 - `--replace-demo-data` 清空演示事实、目标和成本数据；售前试用演示快照默认不再进入 live 页面。
 
-更新时间: 2026-07-14 11:40:00 CST
+更新时间: 2026-07-14 16:17:20 CST
 更新内容:
+- 首页“本月开户数”和“今日开户数”在 `/api/compute-data` 同步成功后改用算力用量分析的
+  `computeOverview.newCustomers` 覆盖展示；dashboard 旧开户表结果仅作为算力同步前的兜底。
 - 数据维护模块新增 `数据更新看板`，通过 `/api/maintenance/data?page=update-monitor-maintenance&year=YYYY`
   返回各业务数据组到数状态。日级表按最新业务日期是否达到或超过北京时间今日判断“今日已更新/增加”；
   月度表按最新 `year_month` 是否达到或超过当前年月判断“本月有数据/增加”；单表异常只标记该组为“异常”，
@@ -119,7 +121,10 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 - 人力成本：`biz_labor_cost_monthly.amount_yuan`。
 - 成本趋势：`costTrend` 按当前业务年份从 `biz_channel_cost_monthly` 聚合各渠道投放成本，并从 `biz_labor_cost_monthly` 聚合人力成本，返回 `{ yearMonth, label, adCost, laborCost, totalCost, channels }`；其中 `channels` 是渠道投放成本拆分，`totalCost = adCost + laborCost`。
 - 总投入费比二级下钻：全渠道视角展示 `totalCost`；选择单个或多个渠道时，主指标只展示所选渠道投放成本合计，底部同时标明全渠道总投入和广告/人力构成。人力成本不强行分摊到单渠道。副标题额外附加“广告ROI” = 当前筛选范围回款 / 广告投入（`adCost` 为 0 时记为 0）。
-- 开户数：`fact_opening_account_daily.opening_count`。本月开户环比 `previous` 取上一月同表汇总，今日开户 `previous` 取上一个有数据日期的汇总；当无历史日期时回退 0。
+- 开户数：首页“本月开户数”和“今日开户数”首屏先使用 `/api/dashboard-data.openingAccountMetrics`
+  的 `fact_opening_account_daily.opening_count` 兜底；`/api/compute-data` 同步成功后，前端用算力用量分析
+  `computeOverview.newCustomers` 覆盖两张首页开户卡，保持首页开户数字与当前算力客户看板一致。
+  旧开户表中的本月/今日 `previous` 仍仅用于算力数据未就绪时的兜底环比。
 - 开户二级趋势：`/api/dashboard-data.detailRows.openings` 来自 `fact_opening_account_daily`，前端只按真实日级行聚合年/月/日，不再使用固定前端开户趋势数组或写死开户目标。
 - 算力趋势、客户排行、资源健康：默认来自 `fact_compute_usage_daily`、`fact_compute_customer_daily`、`fact_compute_resource_health_daily` 等算力事实表；外部 token/算力接口对应的建表脚本为 `scripts/create_compute_token_usage_tables.sql`。配置 `COMPUTE_API_BASE_URL` 和 `COMPUTE_API_TOKEN` 后，`/api/compute-data` 会通过服务端读取外部算力看板并覆盖运行时算力模块；客户全量明细由 `/api/compute-customers` 分页返回。
 - 算力年/月/日序列：前端只对已加载的 `computeUsageTrend` 日级真实行做聚合；外部接口或数据库缺少的日期不再由前端生成补点。

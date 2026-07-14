@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 16:46:00 CST
+ 更新内容: 固定算力页两张饼图面板的 hover/focus 尺寸，避免鼠标经过时卡片上浮导致图表看起来在动。
+*/
+/*
  更新时间: 2026-07-13 16:40:00 CST
  更新内容: KPI 条从 4 卡改为 5 卡（新增在用账户数），栅格改为 repeat(5, minmax(0, 1fr)) 让新卡片等宽填满整行。
 */
@@ -1075,6 +1079,11 @@
     transform: translateY(-3px);
     border-color: rgba(255,255,255,.34);
     box-shadow: var(--glass-shadow);
+  }
+
+  .cpu-panel--pie:hover,
+  .cpu-panel--pie:focus-within {
+    transform: none;
   }
 
 }
