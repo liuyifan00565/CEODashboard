@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# 更新时间: 2026-07-14 16:00:00 CST
+# 更新内容: 阿里云交付包新增公司级月度回款与年度目标迁移。
 # 更新时间: 2026-07-14 13:05:00 CST
 # 更新内容: 阿里云交付包新增自营收入订单级事实表迁移，用于承接真实 Excel 收入明细。
 
@@ -484,6 +486,7 @@ require_file "$ROOT_DIR/docker/db-init/ceo_dashboard_full.sql"
 require_file "$ROOT_DIR/scripts/create_compute_token_usage_tables.sql"
 require_file "$ROOT_DIR/scripts/migrate_cost_components.sql"
 require_file "$ROOT_DIR/scripts/create_self_operated_revenue_tables.sql"
+require_file "$ROOT_DIR/scripts/create_revenue_monthly_tables.sql"
 
 rm -rf "$WORK_DIR"
 mkdir -p "$WORK_DIR/images" "$WORK_DIR/docker/db-init" "$WORK_DIR/docker/migrations"
@@ -523,6 +526,7 @@ cp "$ROOT_DIR/docker/db-init/ceo_dashboard_full.sql" "$WORK_DIR/docker/db-init/c
 cp "$ROOT_DIR/scripts/create_compute_token_usage_tables.sql" "$WORK_DIR/docker/migrations/20260709_compute_token_usage_tables.sql"
 cp "$ROOT_DIR/scripts/migrate_cost_components.sql" "$WORK_DIR/docker/migrations/20260713_cost_components.sql"
 cp "$ROOT_DIR/scripts/create_self_operated_revenue_tables.sql" "$WORK_DIR/docker/migrations/20260714_self_operated_revenue_tables.sql"
+cp "$ROOT_DIR/scripts/create_revenue_monthly_tables.sql" "$WORK_DIR/docker/migrations/20260714_revenue_monthly_tables.sql"
 write_env_example "$WORK_DIR/.env.example"
 write_env_key_status "$WORK_DIR/ENV_KEY_STATUS.txt" "$WORK_DIR/.env"
 write_version_file "$WORK_DIR/VERSION.txt"

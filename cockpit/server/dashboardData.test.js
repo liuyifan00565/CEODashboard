@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 15:55:00 CST
+ 更新内容: 回归覆盖公司级月度事实优先、年度目标直读与退款不重复扣减。
+*/
+/*
  更新时间: 2026-07-14 14:29:30 CST
  更新内容: 回归锁定成交来源查询只读取最新业务月，不再返回年内累计来源结构。
 */
@@ -417,6 +421,43 @@ test('keeps person-level revenue tracking when sales monthly rows contain real s
   assert.equal(snapshot.detailRows.revenueOrders[0].otherNote, '赠送插件');
   assert.equal(snapshot.channelSourceBreakdown[0].sourceName, '小红书');
   assert.equal(snapshot.channelSourceBreakdown[0].dealCount, 6);
+});
+
+test('uses authoritative monthly company facts without double-counting order rows or refunds', () => {
+  const snapshot = mapDashboardRowsToSnapshot({
+    latestMonth: '2026-06',
+    useRevenueOrders: true,
+    useRevenueMonthly: true,
+    channels: [
+      { channel_id: 3001, channel_key: 'online', channel_name: '线上' },
+      { channel_id: 3004, channel_key: 'agent', channel_name: '代理' },
+    ],
+    salesMemberMonthly: [
+      { year_month: '2026-04', staff_id: 8101, staff_name: '黄李莉', channel_key: 'online', recovered_wan: 109.88, target_wan: 0 },
+    ],
+    revenueDaily: [
+      { year_month: '2026-05', channel_key: 'online', recovered_wan: 185.63 },
+      { year_month: '2026-05', channel_key: 'agent', recovered_wan: 106.8 },
+      { year_month: '2026-06', channel_key: 'online', recovered_wan: 119.24 },
+      { year_month: '2026-06', channel_key: 'agent', recovered_wan: 101.25 },
+    ],
+    monthlyTargets: [
+      { year_month: '2026-05', target_wan: 300 },
+      { year_month: '2026-06', target_wan: 500 },
+    ],
+    yearlyTargets: [{ year: '2026', target_wan: 6000 }],
+    refundRows: [
+      { year_month: '2026-05', channel_key: 'online', refund_wan: 3.98 },
+      { year_month: '2026-06', channel_key: 'online', refund_wan: 8.66 },
+    ],
+  });
+
+  assert.equal(snapshot.kpi.monthRecovered, 220);
+  assert.equal(snapshot.kpi.yearRecovered, 513);
+  assert.equal(snapshot.kpi.monthRefund, 9);
+  assert.equal(snapshot.kpi.yearRefund, 13);
+  assert.equal(snapshot.kpi.yearTarget, 6000);
+  assert.equal(snapshot.meta.annualTarget, 6000);
 });
 
 test('pre-aggregates renewal facts before joining version sales', () => {

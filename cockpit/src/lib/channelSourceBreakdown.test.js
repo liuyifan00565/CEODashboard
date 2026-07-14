@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 15:55:00 CST
+ 更新内容: 回归覆盖月度渠道来源 GMV 口径标识透传。
+*/
+/*
  更新时间: 2026-07-14 14:04:11 CST
  更新内容: 覆盖成交来源按渠道筛选、同名合并、贡献占比排序与数据期标签。
 */
@@ -25,4 +29,11 @@ test('builds ranked source performance for all channels', () => {
 test('filters source performance by dashboard channel', () => {
   const result = buildChannelSourceBreakdown(rows, 'east');
   assert.deepEqual(result.map((row) => [row.name, row.recovered, row.share]), [['小红书', 8, 100]]);
+});
+
+test('preserves aggregate GMV metric for monthly channel sources', () => {
+  const result = buildChannelSourceBreakdown([
+    { sourceKey: 'rhino', sourceName: '代理：犀牛', channelKey: 'agent', recovered: 15.74, metric: 'gmv' },
+  ]);
+  assert.equal(result[0].metric, 'gmv');
 });
