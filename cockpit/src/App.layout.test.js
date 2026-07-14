@@ -579,6 +579,8 @@
  Update time: 2026-07-09 14:42:00 CST
  Update content: Cover target maintenance import dialog downloading the bundled two-sheet template.
 */
+/* 更新时间: 2026-07-14 21:35:00 CST  更新内容: 回款下钻回归改为锁定月度/年度整卡、键盘和半环空白区入口，移除旧 detailDisabled 断言。 */
+/* 更新时间: 2026-07-14 21:25:00 CST  更新内容: 回归锁定交付环比半环卡的绿色语义、文字避让、超 100% 标记和半环完整显示。 */
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -1897,6 +1899,42 @@ test('renders the presale trial delivery dashboard in the required long-page ord
   assert.doesNotMatch(deliveryPanelSource, /客户均价|目标未配置|交付流程可视化|工单与责任分配/);
 });
 
+test('renders month-over-month delivery comparison as readable semi-ring delta cards', () => {
+  assert.doesNotMatch(deliveryPanelSource, /dlv-table--comparison/);
+  assert.match(deliveryPanelSource, /className="dlv-compare-grid"/);
+  assert.match(deliveryPanelSource, /className="dlv-compare-card"/);
+  assert.match(deliveryPanelSource, /comparisonGaugePercent\(row\)/);
+  assert.match(deliveryPanelSource, /comparisonDetailLabel\(row\)/);
+  assert.match(deliveryPanelSource, /comparisonOverflowLabel\(row\)/);
+  assert.match(deliveryPanelSource, /className="dlv-compare-gauge"/);
+  assert.match(deliveryPanelSource, /className="dlv-compare-gauge__visual"/);
+  assert.match(deliveryPanelSource, /className=\{`dlv-compare-gauge__arc dlv-compare-gauge__arc--\$\{safeTone\(row\.statusTone\)\}`\}/);
+  assert.match(deliveryPanelSource, /className="dlv-compare-gauge__copy"/);
+  assert.match(deliveryPanelSource, /className=\{`dlv-compare-delta dlv-compare-delta--\$\{safeTone\(row\.statusTone\)\}`\}/);
+  assert.match(deliveryPanelSource, /className="dlv-compare-detail"/);
+  assert.match(deliveryPanelSource, /className=\{`dlv-compare-overflow dlv-compare-overflow--\$\{safeTone\(row\.statusTone\)\}`\}/);
+  assert.match(deliveryPanelSource, /className="dlv-compare-values"/);
+  assert.match(deliveryPanelSource, /<b>\{row\.currentLabel\}<\/b>/);
+  assert.match(deliveryPanelSource, /<b>\{row\.previousLabel\}<\/b>/);
+  assert.doesNotMatch(deliveryPanelSource, /comparisonArcPercent|dlv-compare-ring|dlv-compare-signal|dlv-compare-bars|dlv-compare-bar-row|dlv-compare-track/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-grid/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-card/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-gauge/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-gauge\s*\{[\s\S]*?grid-template-rows:\s*96px auto;/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-gauge__visual/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-gauge__visual\s*\{[\s\S]*?height:\s*96px;/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-gauge__copy/);
+  assert.doesNotMatch(deliveryPanelCss, /\.dlv-compare-gauge__copy\s*\{[^}]*position:\s*absolute;/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-gauge__arc--good/);
+  assert.match(deliveryPanelCss, /--compare-good:\s*#7EDC8A;/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-delta/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-delta--risk/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-detail/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-overflow/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-values/);
+  assert.doesNotMatch(deliveryPanelCss, /\.dlv-compare-ring|\.dlv-compare-signal|\.dlv-compare-bars|\.dlv-compare-bar-row|\.dlv-compare-track/);
+});
+
 test('gives the version panel the same hover halo as the monthly trend panel without styling the delivery page root', () => {
   assert.match(dashboardCss, /\.dash-secondary-cell \.mt-panel,\s*[\s\S]*?\.dash-version-row \.vf-panel\s*\{[\s\S]*?isolation:isolate;[\s\S]*?transition:border-color \.22s ease, box-shadow \.22s ease;/);
   assert.match(dashboardCss, /\.dash-secondary-cell \.mt-panel:hover,\s*[\s\S]*?\.dash-version-row \.vf-panel:hover,\s*[\s\S]*?\.dash-version-row \.vf-panel:focus-within\s*\{[\s\S]*?border-color:rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:var\(--glass-shadow\);/);
@@ -2067,8 +2105,11 @@ test('uses one channel completion panel with month and year switching', () => {
 
 test('opens monthly and annual drilldowns from the operating overview with contextual modal labels', () => {
   assert.match(operatingOverviewSource, /function OperatingOverview\(\{ searchTerm = '', monthKpiCard, yearKpiCard, onOpenKpi \}\)/);
-  assert.match(operatingOverviewSource, /detailDisabled=\{!monthKpiCard \|\| !onOpenKpi\}/);
-  assert.match(operatingOverviewSource, /detailDisabled=\{!yearKpiCard \|\| !onOpenKpi\}/);
+  assert.match(operatingOverviewSource, /aria-label="打开本月回款明细"[\s\S]*?if \(monthKpiCard\) onOpenKpi\?\.\(monthKpiCard\);/);
+  assert.match(operatingOverviewSource, /aria-label="打开年度回款明细"[\s\S]*?if \(yearKpiCard\) onOpenKpi\?\.\(yearKpiCard\);/);
+  assert.match(operatingOverviewSource, /<MonthlyRecoveryStructure[\s\S]*?onBlankClick=\{\(\) => \{[\s\S]*?onOpenKpi\?\.\(monthKpiCard\);/);
+  assert.match(operatingOverviewSource, /<AnnualRecoveryStructure[\s\S]*?onBlankClick=\{\(\) => \{[\s\S]*?onOpenKpi\?\.\(yearKpiCard\);/);
+  assert.match(operatingOverviewSource, /event\.key === 'Enter' \|\| event\.key === ' '/);
   assert.match(kpiModalSource, /const initialDim = isCost \? 'month' : card\.key === 'year' \? 'year' : 'month';/);
   assert.match(kpiModalSource, /const modalTitle = isCost \? '投入趋势与环比' : card\.key === 'year' \? '年度回款明细' : card\.key === 'month' \? '月度回款明细' : card\.title;/);
   assert.match(kpiModalSource, /<h3 className="km-title">\{modalTitle\}<\/h3>/);

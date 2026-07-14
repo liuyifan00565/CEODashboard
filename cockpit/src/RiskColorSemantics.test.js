@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 21:10:00 CST
+ 更新内容: 交付环比半环卡回归锁定明确绿色改善语义，避免改善状态偏黄。
+*/
+/*
  更新时间: 2026-07-14 12:35:00 CST
  更新内容: 交付页风险语义回归切换为售前试用状态标签、改善绿、金额金、风险玫红与负载冷蓝，不再断言旧交付排行进度条。
 */
@@ -205,14 +209,17 @@ test('keeps channel progress bars on the established completion risk rule', () =
 
 test('uses restrained semantic colors for presale trial improvements, risk, amount, and capacity', () => {
   assert.match(deliverySource, /label="风险及超期"[\s\S]*?tone="risk"/);
-  assert.match(deliverySource, /className=\{`dlv-change dlv-change--\$\{safeTone\(row\.statusTone\)\}`\}/);
+  assert.match(deliverySource, /className=\{`dlv-compare-delta dlv-compare-delta--\$\{safeTone\(row\.statusTone\)\}`\}/);
+  assert.match(deliverySource, /className=\{`dlv-compare-gauge__arc dlv-compare-gauge__arc--\$\{safeTone\(row\.statusTone\)\}`\}/);
   assert.match(deliverySource, /className=\{`dlv-status dlv-status--\$\{safeTone\(row\.statusTone\)\}`\}/);
   assert.match(deliverySource, /className=\{`dlv-status dlv-status--\$\{safeTone\(row\.loadTone\)\}`\}/);
   assert.match(deliveryCss, /\.dlv-kpi--risk \.dlv-kpi__value strong\s*\{\s*color:\s*var\(--semantic-risk\);\s*\}/);
   assert.match(deliveryCss, /\.dlv-money\s*\{\s*color:\s*var\(--accent-gold-soft\) !important;\s*\}/);
   assert.match(deliveryCss, /\.dlv-overdue\s*\{\s*color:\s*var\(--semantic-risk\) !important;\s*\}/);
-  assert.match(deliveryCss, /\.dlv-change--good\s*\{\s*color:\s*var\(--semantic-success-muted\) !important;\s*\}/);
-  assert.match(deliveryCss, /\.dlv-status--good\s*\{[\s\S]*?color:\s*var\(--semantic-success-muted\);[\s\S]*?9%, transparent[\s\S]*?24%, transparent/);
+  assert.match(deliveryCss, /\.dlv-compare-delta--good\s*\{\s*color:\s*var\(--compare-good\);\s*\}/);
+  assert.match(deliveryCss, /\.dlv-compare-gauge__arc--good\s*\{[\s\S]*?--gauge-color:\s*var\(--compare-good\);/);
+  assert.match(deliveryCss, /\.dlv-compare-gauge__arc--risk\s*\{[\s\S]*?--gauge-color:\s*var\(--semantic-risk\);/);
+  assert.match(deliveryCss, /\.dlv-status--good\s*\{[\s\S]*?color:\s*var\(--compare-good\);[\s\S]*?9%, transparent[\s\S]*?24%, transparent/);
   assert.match(deliveryCss, /\.dlv-status--risk\s*\{[\s\S]*?color:\s*var\(--semantic-risk\);[\s\S]*?9%, transparent[\s\S]*?24%, transparent/);
   assert.match(deliveryCss, /\.dlv-load-bar\s*\{[\s\S]*?var\(--semantic-capacity\) 12%, transparent[\s\S]*?var\(--semantic-capacity\) 16%, transparent/);
   assert.match(deliveryCss, /\.dlv-load-bar > span\s*\{[\s\S]*?linear-gradient\(90deg,[\s\S]*?var\(--semantic-capacity\)/);
