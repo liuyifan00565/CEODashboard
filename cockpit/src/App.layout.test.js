@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-14 11:35:00 CST  更新内容: 品牌区第二行（登录用户名）改为左对齐，移除原为"当前视角"
+   设计的右对齐规则，同步更新测试名称与断言。 */
 /* 更新时间: 2026-07-14 11:25:00 CST  更新内容: 行高下限断言从 146px 同步为 140px，匹配 dashboard.css 修复
    四张小卡边缘裁切时的调整；并修正上条改动误伤自身注释文本的 getDashboardMenuLabel 断言。 */
 /* 更新时间: 2026-07-14 11:20:00 CST  更新内容: 侧栏品牌区第二行改为登录用户名，同步移除 activeContextLabel/
@@ -734,14 +736,13 @@ test('keeps overview card placement stable when search result wrappers appear', 
   assert.doesNotMatch(operatingOverviewCss, /\.op-search-result--channel/);
 });
 
-test('places the FuKe brand month left and context right on separate lines', () => {
+test('places the FuKe brand month and account name on separate left-aligned lines', () => {
   const sidebarBrandBlock = cssRuleBody(sidebarCss, '.sb-brand');
   const sidebarLogoBlock = cssRuleBody(sidebarCss, '.sb-brand-logo');
   const sidebarCopyBlock = cssRuleBody(sidebarCss, '.sb-brand-copy');
   const sidebarTitleBlock = cssRuleBody(sidebarCss, '.sb-brand-copy b');
   const sidebarMetaBlock = cssRuleBody(sidebarCss, '.sb-brand-copy small');
   const sidebarMetaLineBlock = cssRuleBody(sidebarCss, '.sb-brand-copy small span');
-  const sidebarContextLineBlock = cssRuleBody(sidebarCss, '.sb-brand-copy small span + span');
   const mainBlock = cssRuleBody(dashboardCss, '.dash-main');
 
   assert.match(mockSource, /monthLabel: currentMonthLabel\(\)/);
@@ -770,7 +771,7 @@ test('places the FuKe brand month left and context right on separate lines', () 
   assert.match(sidebarMetaBlock, /text-align:\s*left;/);
   assert.doesNotMatch(sidebarMetaBlock, /white-space:\s*pre-line;/);
   assert.match(sidebarMetaLineBlock, /white-space:\s*nowrap;/);
-  assert.match(sidebarContextLineBlock, /text-align:\s*right;/);
+  assert.doesNotMatch(sidebarCss, /\.sb-brand-copy small span \+ span\s*\{[\s\S]*?text-align:\s*right;/);
   assert.match(mainBlock, /padding:\s*18px clamp\(12px,2vw,28px\) 24px;/);
   assert.doesNotMatch(dashboardCss, /\.dash-topbar/);
   assert.doesNotMatch(appSource, /import MetallicPaint from '\.\/components\/MetallicPaint\/MetallicPaint';/);
