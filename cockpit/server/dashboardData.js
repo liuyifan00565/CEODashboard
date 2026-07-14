@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 17:25:00 CST
- 更新内容: 公司 KPI 与月度趋势仅展示具备完整渠道月总额的月份；1-3 月线上订单只保留用于人员和订单下钻。
+ 更新时间: 2026-07-14 17:50:49 CST
+ 更新内容: 看板仅使用公司月度大数，并向回款半环返回不作为独立经营渠道的特殊渠道结构金额。
 */
 /*
  更新时间: 2026-07-14 17:10:00 CST
@@ -351,7 +351,7 @@ function makeChannelRows({
     const recovered = round0(recoveredByChannel.get(channel.channel_key));
     const target = round0(targetByChannel.get(channel.channel_key));
     const yearRecovered = yearRecoveredRows.length
-      ? round0(yearRecoveredByChannel.get(channel.channel_key))
+      ? round2(yearRecoveredByChannel.get(channel.channel_key))
       : monthRecoveredTotal ? round0(yearlyRecovered * (recovered / monthRecoveredTotal)) : recovered;
     const yearTarget = yearTargetRows.length
       ? round0(yearTargetByChannel.get(channel.channel_key))
@@ -410,6 +410,27 @@ function makeMonthlyTrend({ monthlyTargets, recoveredRows, latestMonth, currentM
         completion: pct(recovered, target),
       };
     });
+}
+
+function makeRevenueStructureRows(rows = [], latestMonth, latestYear) {
+  const normalized = rows.map((row) => ({
+    key: row.structure_key || 'special',
+    name: row.structure_name || '特殊渠道',
+    yearMonth: row.year_month,
+    recovered: round0(row.recovered_wan),
+  }));
+  const yearly = new Map();
+  normalized
+    .filter((row) => String(row.yearMonth).startsWith(latestYear))
+    .forEach((row) => {
+      const current = yearly.get(row.key) ?? { key: row.key, name: row.name, recovered: 0 };
+      current.recovered += row.recovered;
+      yearly.set(row.key, current);
+    });
+  return {
+    month: normalized.filter((row) => row.yearMonth === latestMonth),
+    year: [...yearly.values()],
+  };
 }
 
 // 本月每日回款，供经营总览趋势图的日视图使用；biz_target_monthly 无日粒度目标，只返回实际回款。
@@ -837,6 +858,7 @@ export function mapDashboardRowsToSnapshot(rows) {
     kpiDerived,
     operatingOverviewMetrics,
     channels,
+    revenueStructure: makeRevenueStructureRows(rows.revenueStructureRows ?? [], latestMonth, latestYear),
     channelRoi: makeChannelRoi({ channelRows: channels, channelCosts: rows.channelCosts ?? [] }),
     channelSourceBreakdown: rows.channelSourceBreakdown ?? [],
     monthlyTrend: makeMonthlyTrend({ monthlyTargets: rows.monthlyTargets ?? [], recoveredRows, latestMonth, currentMonthTarget }),
@@ -975,6 +997,7 @@ export async function buildDashboardSnapshot(connection) {
     salesMemberMonthly,
     revenueDaily,
     monthlyRevenueTotals,
+    revenueStructureRows,
     dailyRevenue,
     yearlyRevenue,
     yearlyTargets,
@@ -1082,6 +1105,15 @@ export async function buildDashboardSnapshot(connection) {
       WHERE \`year_month\` LIKE CONCAT(?, '%') AND record_level = 'total'
       GROUP BY \`year_month\`
       ORDER BY \`year_month\`
+    `, [latestYear]) : Promise.resolve([]),
+    useRevenueMonthly ? queryRows(connection, `
+      SELECT \`year_month\`, 'special' AS structure_key,
+             COALESCE(source_name_raw, '特殊渠道') AS structure_name,
+             ROUND(SUM(net_amount_yuan) / 10000, 2) AS recovered_wan
+      FROM fact_revenue_channel_monthly
+      WHERE \`year_month\` LIKE CONCAT(?, '%') AND record_level = 'structure'
+      GROUP BY \`year_month\`, COALESCE(source_name_raw, '特殊渠道')
+      ORDER BY \`year_month\`, structure_name
     `, [latestYear]) : Promise.resolve([]),
     useRevenueMonthly ? queryRows(connection, `
       SELECT CONCAT(\`year_month\`, '-01') AS day_key,
@@ -1691,6 +1723,7 @@ export async function buildDashboardSnapshot(connection) {
     salesMemberMonthly,
     revenueDaily,
     monthlyRevenueTotals,
+    revenueStructureRows,
     dailyRevenue,
     yearlyRevenue,
     yearlyTargets,

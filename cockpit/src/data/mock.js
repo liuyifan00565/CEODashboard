@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 16:17:20 CST
- 更新内容: 算力用量分析同步后用客户记录数和在用账户数覆盖首页本月/今日开户数，保持首页开户口径和算力页一致。
+ 更新时间: 2026-07-14 17:50:49 CST
+ 更新内容: 运行时快照接收特殊渠道结构，年度半环优先使用 API 的各渠道实际年度回款，避免特殊金额重复分摊。
 */
 /*
  更新时间: 2026-07-14 15:42:37 CST
@@ -319,6 +319,7 @@ export const CHANNEL_ROI = CHANNELS.map((channel) => {
 }).sort((a, b) => b.roi - a.roi);
 
 export const CHANNEL_SOURCE_BREAKDOWN = [];
+export const REVENUE_STRUCTURE = { month: [], year: [] };
 
 export const SALES_GROUPS = [
   { key: 'online', name: '线上', salesKeys: ['online'] },
@@ -391,8 +392,14 @@ export function getChannelCompletionRows(period = 'month', channelKey = 'all') {
     const monthRecovered = group.salesKeys.reduce((sum, key) => sum + (findChannel(key)?.recovered ?? 0), 0);
     const monthTarget = group.salesKeys.reduce((sum, key) => sum + (findChannel(key)?.target ?? 0), 0);
     const monthCompletion = monthTarget ? +((monthRecovered / monthTarget) * 100).toFixed(1) : 0;
-    const yearRecovered = Math.round(KPI.yearRecovered * (monthRecovered / monthRecoveredTotal));
-    const yearTarget = Math.round(KPI.yearTarget * (monthTarget / monthTargetTotal));
+    const hasYearRecovered = group.salesKeys.some((key) => findChannel(key)?.yearRecovered != null);
+    const hasYearTarget = group.salesKeys.some((key) => findChannel(key)?.yearTarget != null);
+    const yearRecovered = hasYearRecovered
+      ? group.salesKeys.reduce((sum, key) => sum + (Number(findChannel(key)?.yearRecovered) || 0), 0)
+      : Math.round(KPI.yearRecovered * (monthRecovered / monthRecoveredTotal));
+    const yearTarget = hasYearTarget
+      ? group.salesKeys.reduce((sum, key) => sum + (Number(findChannel(key)?.yearTarget) || 0), 0)
+      : Math.round(KPI.yearTarget * (monthTarget / monthTargetTotal));
     const yearCompletion = yearTarget ? +((yearRecovered / yearTarget) * 100).toFixed(1) : 0;
     const monthGap = Math.max(0, monthTarget - monthRecovered);
     const yearGap = Math.max(0, yearTarget - yearRecovered);
@@ -1607,6 +1614,11 @@ export function applyDashboardDataSnapshot(snapshot) {
 
   if (Array.isArray(snapshot.channels)) {
     replaceArray(CHANNELS, snapshot.channels.map(withRuntimeCompletion));
+  }
+
+  if (snapshot.revenueStructure) {
+    replaceArray(REVENUE_STRUCTURE.month, snapshot.revenueStructure.month ?? []);
+    replaceArray(REVENUE_STRUCTURE.year, snapshot.revenueStructure.year ?? []);
   }
 
   if (Array.isArray(snapshot.channelRoi)) {

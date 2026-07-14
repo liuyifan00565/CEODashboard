@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 16:20:00 CST
- 更新内容: 仅导入“福客2026年4-6月业绩”工作表的总额及现有四渠道，线下按华南/华东细分，忽略其它列。
+ 更新时间: 2026-07-14 17:50:49 CST
+ 更新内容: 月度大数将南棠并入代理、特殊渠道用于半环；按权威工作表替换旧事实并清理订单明细。
 */
 import { createHash } from 'node:crypto';
 import * as XLSX from 'xlsx';
@@ -89,9 +89,23 @@ function detailedMonthFacts(row, rowIndex, fileName) {
   })];
   const common = { month, fileName, sheet: DETAIL_SHEET, row: rowIndex + 1 };
   addChannelFact(rows, { ...common, channelKey: 'online', sourceName: '直营', gross: row[2], refund: row[12] });
-  addChannelFact(rows, { ...common, channelKey: 'agent', sourceName: '代理', gross: row[3], refund: row[13] });
+  addChannelFact(rows, {
+    ...common,
+    channelKey: 'agent',
+    sourceName: '代理（含南棠）',
+    gross: numberValue(row[3]) + numberValue(row[10]),
+    refund: row[13],
+  });
   addChannelFact(rows, { ...common, channelKey: 'south', sourceName: '其中线下：华南', gross: row[8] });
   addChannelFact(rows, { ...common, channelKey: 'east', sourceName: '其中线下：华东', gross: row[9] });
+  if (numberValue(row[11])) {
+    rows.push(fact({
+      ...common,
+      level: 'structure',
+      sourceName: '特殊渠道',
+      gross: row[11],
+    }));
+  }
   return rows;
 }
 
@@ -120,7 +134,12 @@ async function ensureChannel(connection, key, name) {
   return channelId;
 }
 
-export async function persistCompanyRevenue(connection, parsed, { replaceWorkbook = true } = {}) {
+async function tableExists(connection, tableName) {
+  const rows = await queryRows(connection, 'SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? LIMIT 1', [tableName]);
+  return rows.length > 0;
+}
+
+export async function persistCompanyRevenue(connection, parsed, { replaceWorkbook = true, clearOrderDetails = true } = {}) {
   const channelMap = new Map();
   await connection.beginTransaction();
   try {
@@ -130,7 +149,11 @@ export async function persistCompanyRevenue(connection, parsed, { replaceWorkboo
     const batchId = await nextId(connection, 'import_batch', 'batch_id');
     const workbookName = parsed.facts[0]?.source_workbook ?? 'unknown.xlsx';
     if (replaceWorkbook) {
-      await connection.execute('DELETE FROM fact_revenue_channel_monthly WHERE source_workbook = ?', [workbookName]);
+      await connection.execute('DELETE FROM fact_revenue_channel_monthly WHERE source_sheet = ?', [DETAIL_SHEET]);
+    }
+    if (clearOrderDetails && await tableExists(connection, 'fact_revenue_order')) {
+      await connection.execute('DELETE FROM fact_revenue_order');
+      await connection.execute("DELETE FROM import_batch WHERE module = 'self-operated-revenue'");
     }
     await connection.execute("DELETE FROM biz_target_monthly WHERE target_amount_yuan = 0 AND target_opening_count = 0 AND target_order_count = 0");
     await connection.execute('INSERT INTO import_batch (batch_id, module, file_name, total_rows, success_rows, failed_rows, created_at) VALUES (?, ?, ?, ?, ?, 0, NOW())', [batchId, 'company-revenue-monthly', workbookName, parsed.facts.length, parsed.facts.length]);

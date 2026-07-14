@@ -1,7 +1,7 @@
 /* 更新时间: 2026-07-14 16:35:43 CST  更新内容: 回归锁定交付渠道行选择联动右侧渠道人员完成情况及初始选择提示。 */
 /* 更新时间: 2026-07-14 15:30:13 CST  更新内容: 回归锁定交付演示快照仅由显式环境开关启用，并在页面显示非生产数据标识。 */
 /* 更新时间: 2026-07-14 15:11:44 CST  更新内容: 交付页回归锁定 KPI 后六项月度对比带、58/42 同屏执行明细及双断点响应式布局。 */
-/* 更新时间: 2026-07-14 15:20:00 CST  更新内容: 回归锁定月度半环标题恢复且不增高主卡，并移除 KPI 隐藏提示遗留的底部空白。 */
+/* 更新时间: 2026-07-14 17:50:49 CST  更新内容: 回归锁定特殊渠道仅进入月度/年度半环，不触发普通渠道人员下钻。 */
 /* 更新时间: 2026-07-14 15:14:00 CST  更新内容: 回归锁定 ECharts 空白画布事件显式打开月度/年度明细，渠道扇区仍打开人员明细。 */
 /* 更新时间: 2026-07-14 15:09:00 CST  更新内容: 回归锁定半环空白区触发整卡下钻，渠道扇区点击单独阻止冒泡并打开人员明细。 */
 /* 更新时间: 2026-07-14 15:03:00 CST  更新内容: 回归锁定半环按标题行占位进一步下移，同时保持卡片高度和首屏 KPI 位置不变。 */
@@ -1645,7 +1645,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">年度经营进度<\/span>/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">年度节奏<\/span>/);
   assert.match(operatingOverviewSource, /const annualChannelRows = getChannelCompletionRows\('year'\);/);
-  assert.match(operatingOverviewSource, /const annualStructure = useMemo\(\(\) => buildChannelStructure\(annualChannelRows\), \[annualChannelRows\]\);/);
+  assert.match(operatingOverviewSource, /const annualStructure = useMemo\(\(\) => buildChannelStructure\(annualChannelRows, REVENUE_STRUCTURE\.year\), \[annualChannelRows\]\);/);
   assert.match(operatingOverviewSource, /const ANNUAL_STRUCTURE_META = \{[\s\S]*?seriesName: '回款结构'/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-summary-label">年度累计回款<\/span>/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-summary-label">本月回款<\/span>/);
@@ -1679,7 +1679,9 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.doesNotMatch(operatingOverviewSource, /CHANNEL_PERIOD_OPTIONS/);
   assert.doesNotMatch(operatingOverviewSource, /<Segmented/);
   assert.match(operatingOverviewSource, /<EChart[\s\S]*?className="op-channel-chart"[\s\S]*?option=\{option\}[\s\S]*?onEvents=\{chartEvents\}[\s\S]*?onBlankClick=\{onBlankClick\}[\s\S]*?style=\{\{ height: '100%' \}\}/);
-  assert.match(operatingOverviewSource, /buildChannelStructure\(monthChannelRows\)/);
+  assert.match(operatingOverviewSource, /buildChannelStructure\(monthChannelRows, REVENUE_STRUCTURE\.month\)/);
+  assert.match(operatingOverviewSource, /isStructureOnly:\s*true/);
+  assert.match(operatingOverviewSource, /!params\.data\.isStructureOnly/);
   assert.match(operatingOverviewSource, /\.\.\.channelItems\.map\(\(row\) => \(\{[\s\S]*?key:\s*row\.key,/);
   assert.match(operatingOverviewSource, /const incompleteGap = Math\.max\(0, totalTarget - totalRecovered\);/);
   assert.match(operatingOverviewSource, /name: '未完成'/);

@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 17:25:00 CST
- 更新内容: 回归锁定公司趋势只展示完整渠道月总额，线上订单不补入公司月度总额。
+ 更新时间: 2026-07-14 17:50:49 CST
+ 更新内容: 回归锁定特殊渠道仅进入半环结构数据，不进入普通经营渠道。
 */
 /*
  更新时间: 2026-07-14 17:10:00 CST
@@ -454,6 +454,9 @@ test('uses authoritative monthly company facts without double-counting order row
       { year_month: '2026-05', recovered_wan: 432.79 },
       { year_month: '2026-06', recovered_wan: 294.98 },
     ],
+    revenueStructureRows: [
+      { year_month: '2026-05', structure_key: 'special', structure_name: '特殊渠道', recovered_wan: 100 },
+    ],
     monthlyTargets: [
       { year_month: '2026-05', target_wan: 300 },
       { year_month: '2026-06', target_wan: 500 },
@@ -472,6 +475,8 @@ test('uses authoritative monthly company facts without double-counting order row
   assert.equal(snapshot.meta.annualTarget, 800);
   assert.equal(snapshot.channels.find((row) => row.key === 'online').recovered, 119);
   assert.equal(snapshot.channels.find((row) => row.key === 'agent').recovered, 101);
+  assert.deepEqual(snapshot.revenueStructure.month, []);
+  assert.deepEqual(snapshot.revenueStructure.year, [{ key: 'special', name: '特殊渠道', recovered: 100 }]);
   assert.deepEqual(snapshot.monthlyTrend.map((row) => [row.month, row.recovered]), [
     ['4月', 226],
     ['5月', 433],

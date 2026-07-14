@@ -1,10 +1,10 @@
--- 更新时间: 2026-07-14 16:20:00 CST
--- 更新内容: 新增公司级月度回款事实表，仅承接 4-6 月明细表总额及现有四渠道，线下按华南/华东细分。
+-- 更新时间: 2026-07-14 17:50:49 CST
+-- 更新内容: 月度事实支持 structure 展示层级；南棠并入代理，特殊渠道不创建独立经营渠道。
 
 CREATE TABLE IF NOT EXISTS fact_revenue_channel_monthly (
   monthly_revenue_id BIGINT NOT NULL AUTO_INCREMENT COMMENT '月度回款事实ID',
   `year_month` CHAR(7) NOT NULL COMMENT '统计月份；YYYY-MM',
-  record_level VARCHAR(20) NOT NULL COMMENT '记录层级；total/channel',
+  record_level VARCHAR(20) NOT NULL COMMENT '记录层级；total/channel/structure',
   channel_id BIGINT NULL COMMENT '渠道ID；total 可为空',
   source_name_raw VARCHAR(100) NULL COMMENT '工作簿原始主渠道名称',
   gross_amount_yuan DECIMAL(18,2) NOT NULL DEFAULT 0 COMMENT '含税签约或原始GMV',
