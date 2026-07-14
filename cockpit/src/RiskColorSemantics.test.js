@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 19:05:00 CST
- 更新内容: 交付环比对比颜色语义断言由横向条切换为半环图弧线。
+ 更新时间: 2026-07-14 20:05:00 CST
+ 更新内容: 交付环比对比颜色语义断言由半环图弧线切换为环比变化信号卡。
 */
 /*
  更新时间: 2026-07-14 12:35:00 CST
@@ -209,16 +209,16 @@ test('keeps channel progress bars on the established completion risk rule', () =
 
 test('uses restrained semantic colors for presale trial improvements, risk, amount, and capacity', () => {
   assert.match(deliverySource, /label="风险及超期"[\s\S]*?tone="risk"/);
-  assert.match(deliverySource, /className=\{`dlv-compare-change dlv-compare-change--\$\{safeTone\(row\.statusTone\)\}`\}/);
-  assert.match(deliverySource, /className=\{`dlv-compare-ring__arc dlv-compare-ring__arc--current dlv-compare-ring__arc--\$\{safeTone\(row\.statusTone\)\}`\}/);
+  assert.match(deliverySource, /className=\{`dlv-compare-delta dlv-compare-delta--\$\{safeTone\(row\.statusTone\)\}`\}/);
+  assert.match(deliverySource, /className=\{`dlv-compare-signal dlv-compare-signal--\$\{safeTone\(row\.statusTone\)\}`\}/);
   assert.match(deliverySource, /className=\{`dlv-status dlv-status--\$\{safeTone\(row\.statusTone\)\}`\}/);
   assert.match(deliverySource, /className=\{`dlv-status dlv-status--\$\{safeTone\(row\.loadTone\)\}`\}/);
   assert.match(deliveryCss, /\.dlv-kpi--risk \.dlv-kpi__value strong\s*\{\s*color:\s*var\(--semantic-risk\);\s*\}/);
   assert.match(deliveryCss, /\.dlv-money\s*\{\s*color:\s*var\(--accent-gold-soft\) !important;\s*\}/);
   assert.match(deliveryCss, /\.dlv-overdue\s*\{\s*color:\s*var\(--semantic-risk\) !important;\s*\}/);
-  assert.match(deliveryCss, /\.dlv-compare-change--good\s*\{\s*color:\s*var\(--semantic-success-muted\);\s*\}/);
-  assert.match(deliveryCss, /\.dlv-compare-ring__arc--current\s*\{[\s\S]*?--arc-color:\s*var\(--semantic-success-muted\);/);
-  assert.match(deliveryCss, /\.dlv-compare-ring__arc--current\.dlv-compare-ring__arc--risk\s*\{[\s\S]*?--arc-color:\s*var\(--semantic-risk\);/);
+  assert.match(deliveryCss, /\.dlv-compare-delta--good\s*\{\s*color:\s*var\(--semantic-success-muted\);\s*\}/);
+  assert.match(deliveryCss, /\.dlv-compare-signal--good \.dlv-compare-signal__bar\s*\{[\s\S]*?background:\s*linear-gradient\(90deg, var\(--semantic-success-muted\),/);
+  assert.match(deliveryCss, /\.dlv-compare-signal--risk \.dlv-compare-signal__bar\s*\{[\s\S]*?background:\s*linear-gradient\(90deg, var\(--semantic-risk\),/);
   assert.match(deliveryCss, /\.dlv-status--good\s*\{[\s\S]*?color:\s*var\(--semantic-success-muted\);[\s\S]*?9%, transparent[\s\S]*?24%, transparent/);
   assert.match(deliveryCss, /\.dlv-status--risk\s*\{[\s\S]*?color:\s*var\(--semantic-risk\);[\s\S]*?9%, transparent[\s\S]*?24%, transparent/);
   assert.match(deliveryCss, /\.dlv-load-bar\s*\{[\s\S]*?var\(--semantic-capacity\) 12%, transparent[\s\S]*?var\(--semantic-capacity\) 16%, transparent/);

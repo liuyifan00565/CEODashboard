@@ -565,7 +565,7 @@
  Update time: 2026-07-09 14:42:00 CST
  Update content: Cover target maintenance import dialog downloading the bundled two-sheet template.
 */
-/* 更新时间: 2026-07-14 19:05:00 CST  更新内容: 回归锁定本月与上月交付对比由迷你横向条改为半环对比图。 */
+/* 更新时间: 2026-07-14 20:05:00 CST  更新内容: 回归锁定本月与上月交付对比由半环图改为环比变化信号卡。 */
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -1842,24 +1842,24 @@ test('renders the presale trial delivery dashboard in the required long-page ord
   assert.doesNotMatch(deliveryPanelSource, /客户均价|目标未配置|交付流程可视化|工单与责任分配/);
 });
 
-test('renders month-over-month delivery comparison as semi-ring cards instead of a table or bar list', () => {
+test('renders month-over-month delivery comparison as signal cards instead of a chart', () => {
   assert.doesNotMatch(deliveryPanelSource, /dlv-table--comparison/);
   assert.match(deliveryPanelSource, /className="dlv-compare-grid"/);
   assert.match(deliveryPanelSource, /className="dlv-compare-card"/);
-  assert.match(deliveryPanelSource, /className="dlv-compare-ring-wrap"/);
-  assert.match(deliveryPanelSource, /className="dlv-compare-ring"/);
-  assert.match(deliveryPanelSource, /dlv-compare-ring__arc--current/);
-  assert.match(deliveryPanelSource, /dlv-compare-ring__arc--previous/);
-  assert.match(deliveryPanelSource, /comparisonArcPercent\(row\.currentRaw, row\.previousRaw\)/);
-  assert.match(deliveryPanelSource, /comparisonArcPercent\(row\.previousRaw, row\.currentRaw\)/);
-  assert.doesNotMatch(deliveryPanelSource, /dlv-compare-bars|dlv-compare-bar-row|dlv-compare-track/);
+  assert.match(deliveryPanelSource, /className=\{`dlv-compare-signal dlv-compare-signal--\$\{safeTone\(row\.statusTone\)\}`\}/);
+  assert.match(deliveryPanelSource, /className=\{`dlv-compare-delta dlv-compare-delta--\$\{safeTone\(row\.statusTone\)\}`\}/);
+  assert.match(deliveryPanelSource, /className="dlv-compare-values"/);
+  assert.match(deliveryPanelSource, /<b>\{row\.currentLabel\}<\/b>/);
+  assert.match(deliveryPanelSource, /<b>\{row\.previousLabel\}<\/b>/);
+  assert.doesNotMatch(deliveryPanelSource, /comparisonArcPercent|dlv-compare-ring|dlv-compare-bars|dlv-compare-bar-row|dlv-compare-track/);
   assert.match(deliveryPanelCss, /\.dlv-compare-grid/);
   assert.match(deliveryPanelCss, /\.dlv-compare-card/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-ring-wrap/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-ring/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-ring__arc--current/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-ring__arc--previous/);
-  assert.doesNotMatch(deliveryPanelCss, /\.dlv-compare-bars|\.dlv-compare-bar-row|\.dlv-compare-track/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-signal/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-signal--good/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-delta/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-delta--risk/);
+  assert.match(deliveryPanelCss, /\.dlv-compare-values/);
+  assert.doesNotMatch(deliveryPanelCss, /\.dlv-compare-ring|\.dlv-compare-bars|\.dlv-compare-bar-row|\.dlv-compare-track/);
 });
 
 test('gives the version panel the same hover halo as the monthly trend panel without styling the delivery page root', () => {
