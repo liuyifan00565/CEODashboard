@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 15:11:44 CST
+ 更新内容: 将月度对比压缩为六项决策带，并把转化与人员负载合并为同屏双栏交付执行明细。
+*/
+/*
  更新时间: 2026-07-14 21:10:00 CST
  更新内容: 优化交付环比半环卡，改善状态改为明确绿色，半环与文字分区展示，并为超过 100% 的变化增加标记。
 */
@@ -59,42 +63,6 @@ function formatPct(value) {
 
 function ratio(value, total) {
   return total > 0 ? (Number(value || 0) / total) * 100 : 0;
-}
-
-function formatDifferenceNumber(value) {
-  const number = Math.abs(Number(value) || 0);
-  return Number.isInteger(number)
-    ? formatInt(number)
-    : number.toLocaleString('zh-CN', { maximumFractionDigits: 1 });
-}
-
-function comparisonValueSuffix(row) {
-  if (String(row.changeLabel || '').includes('pp')) return 'pp';
-  return String(row.currentLabel || '').match(/[^\d.+-]+$/)?.[0] ?? '';
-}
-
-function comparisonDetailLabel(row) {
-  const difference = Number(row.currentRaw || 0) - Number(row.previousRaw || 0);
-  if (Math.abs(difference) < Number.EPSILON) return '本月与上月持平';
-
-  const value = `${formatDifferenceNumber(difference)}${comparisonValueSuffix(row)}`;
-  if (/风险|超期/.test(row.label)) return difference < 0 ? `风险下降 ${value}` : `风险增加 ${value}`;
-  if (/周期/.test(row.label)) return difference < 0 ? `周期缩短 ${value}` : `周期拉长 ${value}`;
-  return difference > 0 ? `本月高 ${value}` : `本月低 ${value}`;
-}
-
-function comparisonGaugePercent(row) {
-  const changeValue = Math.abs(Number(String(row.changeLabel || '').match(/[-+]?\d+(?:\.\d+)?/)?.[0]) || 0);
-  if (changeValue <= 0) return 0;
-  const label = String(row.changeLabel || '');
-  const maxMeaningfulChange = label.includes('pp') ? 10 : label.includes('天') ? 5 : 50;
-  return Math.min(100, Math.max(8, Math.round((changeValue / maxMeaningfulChange) * 100)));
-}
-
-function comparisonOverflowLabel(row) {
-  const label = String(row.changeLabel || '');
-  const changeValue = Math.abs(Number(label.match(/[-+]?\d+(?:\.\d+)?/)?.[0]) || 0);
-  return label.includes('%') && changeValue > 100 ? '超100%' : '';
 }
 
 function buildDistributionOption({ snapshot, metric, selectedChannel, tokens }) {
@@ -217,6 +185,37 @@ function Panel({ title, subtitle, actions, className = '', children }) {
   );
 }
 
+function ComparisonBand({ rows, monthLabel, previousMonthLabel }) {
+  return (
+    <section className="dlv-comparison-band" aria-labelledby="delivery-comparison-title">
+      <header className="dlv-comparison-head">
+        <div>
+          <h3 id="delivery-comparison-title">本月与上月交付对比</h3>
+          <p>变化按指标业务含义判断，风险和周期下降为改善</p>
+        </div>
+        <span className="dlv-period-note">{monthLabel} / {previousMonthLabel}</span>
+      </header>
+      {rows.length ? (
+        <div className="dlv-comparison-grid">
+          {rows.map((row) => (
+            <article className={`dlv-comparison-item dlv-comparison-item--${safeTone(row.statusTone)}`} key={row.key}>
+              <div className="dlv-comparison-item__label">
+                <span>{row.label}</span>
+                <em>{row.status}</em>
+              </div>
+              <strong>{row.currentLabel}</strong>
+              <div className="dlv-comparison-item__meta">
+                <span>上月 {row.previousLabel}</span>
+                <b className={`dlv-change dlv-change--${safeTone(row.statusTone)}`}>{row.changeLabel}</b>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : <EmptyBlock text="该月暂无可比较数据" />}
+    </section>
+  );
+}
+
 function EmptyBlock({ text }) {
   return (
     <div className="dlv-empty" role="status">
@@ -232,10 +231,12 @@ function LoadingView() {
       <div className="dlv-kpi-grid">
         {Array.from({ length: 4 }, (_, index) => <span className="dlv-skeleton dlv-skeleton--kpi" key={index} />)}
       </div>
+      <span className="dlv-skeleton dlv-skeleton--comparison" />
       <div className="dlv-overview-grid">
         <span className="dlv-skeleton dlv-skeleton--panel" />
         <span className="dlv-skeleton dlv-skeleton--panel" />
       </div>
+      <span className="dlv-skeleton dlv-skeleton--operations" />
     </div>
   );
 }
@@ -361,6 +362,12 @@ export default function DeliveryPanel({ dataLoader = EMPTY_DELIVERY_LOADER }) {
             />
           </div>
 
+          <ComparisonBand
+            rows={snapshot.comparisonRows}
+            monthLabel={snapshot.monthLabel}
+            previousMonthLabel={snapshot.previousMonthLabel}
+          />
+
           <div className="dlv-overview-grid">
             <Panel
               className="dlv-card--distribution"
@@ -389,12 +396,18 @@ export default function DeliveryPanel({ dataLoader = EMPTY_DELIVERY_LOADER }) {
                       const activeValue = distributionMetric === 'amount' ? item.expectedAmountWan : item.count;
                       const activeTotal = distributionMetric === 'amount' ? distributionAmountTotal : distributionTotal;
                       return (
-                        <div className={`dlv-legend-row${item.key === selectedChannel ? ' is-selected' : ''}`} key={item.key}>
+                        <button
+                          className={`dlv-legend-row${item.key === selectedChannel ? ' is-selected' : ''}`}
+                          type="button"
+                          aria-pressed={item.key === selectedChannel}
+                          onClick={() => setSelectedChannel((current) => current === item.key ? null : item.key)}
+                          key={item.key}
+                        >
                           <span className="dlv-legend-swatch" style={{ background: color }} aria-hidden="true" />
                           <span className="dlv-legend-name">{item.name}</span>
                           <b>{distributionMetric === 'amount' ? formatWan(activeValue) : `${formatInt(activeValue)}个`}</b>
                           <em>{formatPct(ratio(activeValue, activeTotal))}</em>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -445,146 +458,108 @@ export default function DeliveryPanel({ dataLoader = EMPTY_DELIVERY_LOADER }) {
             </Panel>
           </div>
 
-          <Panel
-            className="dlv-card--table"
-            title="本月与上月交付对比"
-            subtitle="变化按指标业务含义判断，风险和周期下降为改善"
-            actions={<span className="dlv-period-note">{snapshot.monthLabel} / {snapshot.previousMonthLabel}</span>}
-          >
-            {snapshot.comparisonRows.length ? (
-              <div className="dlv-compare-grid">
-                {snapshot.comparisonRows.map((row) => {
-                  const overflowLabel = comparisonOverflowLabel(row);
-                  return (
-                    <article className="dlv-compare-card" key={row.key}>
-                      <div className="dlv-compare-head">
-                        <span>{row.label}</span>
-                        <span className={`dlv-status dlv-status--${safeTone(row.statusTone)}`}>{row.status}</span>
-                      </div>
-                      <div
-                        className="dlv-compare-gauge"
-                        style={{ '--gauge-angle': `${comparisonGaugePercent(row) * 1.8}deg` }}
-                        aria-label={`${row.label}${row.changeLabel}，${comparisonDetailLabel(row)}`}
+          <section className="dlv-operations" aria-labelledby="delivery-operations-title">
+            <header className="dlv-operations-head">
+              <div>
+                <h3 id="delivery-operations-title">交付执行明细</h3>
+                <p>同屏核对转化效率与配置承载，快速定位渠道和人员风险</p>
+              </div>
+            </header>
+
+            <div className="dlv-operations-grid">
+              <section className="dlv-operation-pane dlv-operation-pane--conversion" aria-labelledby="delivery-conversion-title">
+                <header className="dlv-operation-pane-head">
+                  <div>
+                    <h4 id="delivery-conversion-title">渠道 / 团队转化</h4>
+                    <p>成熟队列完成成交 {formatInt(conversionClosedTotal)} / {formatInt(conversionCohortTotal)}个</p>
+                  </div>
+                  <div className="dlv-conversion-actions">
+                    {selectedChannelName && (
+                      <button
+                        className="dlv-filter-chip"
+                        type="button"
+                        aria-label={`清除${selectedChannelName}渠道筛选`}
+                        onClick={() => setSelectedChannel(null)}
                       >
-                        <div className="dlv-compare-gauge__visual" aria-hidden="true">
-                          <i className={`dlv-compare-gauge__arc dlv-compare-gauge__arc--${safeTone(row.statusTone)}`} />
-                        </div>
-                        <div className="dlv-compare-gauge__copy">
-                          <strong className={`dlv-compare-delta dlv-compare-delta--${safeTone(row.statusTone)}`}>{row.changeLabel}</strong>
-                          <span className="dlv-compare-detail">{comparisonDetailLabel(row)}</span>
-                          {overflowLabel && (
-                            <span className={`dlv-compare-overflow dlv-compare-overflow--${safeTone(row.statusTone)}`}>{overflowLabel}</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="dlv-compare-values" aria-label={`${row.label}本月${row.currentLabel}，上月${row.previousLabel}`}>
-                        <span>本月 <b>{row.currentLabel}</b></span>
-                        <span>上月 <b>{row.previousLabel}</b></span>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            ) : <EmptyBlock text="该月暂无可比较数据" />}
-          </Panel>
+                        {selectedChannelName}<span aria-hidden="true">×</span>
+                      </button>
+                    )}
+                    <Segmented
+                      options={CONVERSION_DIMENSION_OPTIONS}
+                      value={conversionDimension}
+                      onChange={setConversionDimension}
+                    />
+                  </div>
+                </header>
 
-          <Panel
-            className="dlv-card--table"
-            title="渠道 / 团队转化情况"
-            subtitle={`成熟队列：上期启动且完成观察窗 · ${formatInt(conversionClosedTotal)} / ${formatInt(conversionCohortTotal)}个完成成交`}
-            actions={(
-              <div className="dlv-conversion-actions">
-                {selectedChannelName && (
-                  <button className="dlv-filter-chip" type="button" onClick={() => setSelectedChannel(null)}>
-                    {selectedChannelName}<span aria-hidden="true">×</span>
-                  </button>
-                )}
-                <Segmented
-                  options={CONVERSION_DIMENSION_OPTIONS}
-                  value={conversionDimension}
-                  onChange={setConversionDimension}
-                />
-              </div>
-            )}
-          >
-            {conversionRows.length ? (
-              <div className="dlv-table-wrap">
-                <table className="dlv-table dlv-table--conversion">
-                  <colgroup><col /><col /><col /><col /><col /><col /><col /></colgroup>
-                  <thead>
-                    <tr>
-                      <th scope="col">{conversionDimension === 'team' ? '团队' : '渠道'}</th>
-                      <th scope="col">当前试用</th>
-                      <th scope="col">上期启动</th>
-                      <th scope="col">已成交</th>
-                      <th scope="col">转化率</th>
-                      <th scope="col">预计金额</th>
-                      <th scope="col">状态</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                {conversionRows.length ? (
+                  <div className="dlv-conversion-list" role="list" aria-label="渠道或团队成熟队列转化明细">
                     {conversionRows.map((row) => (
-                      <tr key={row.key}>
-                        <td>{row.name}</td>
-                        <td>{formatInt(row.currentTrials)}</td>
-                        <td>{formatInt(row.cohortStarted)}</td>
-                        <td>{formatInt(row.closedDeals)}</td>
-                        <td>{formatPct(row.conversionRate)}</td>
-                        <td className="dlv-money">{formatWan(row.expectedAmountWan)}</td>
-                        <td><span className={`dlv-status dlv-status--${safeTone(row.statusTone)}`}>{row.status}</span></td>
-                      </tr>
+                      <article className="dlv-conversion-row" role="listitem" key={row.key}>
+                        <div className="dlv-detail-row__top">
+                          <div className="dlv-detail-row__identity">
+                            <b>{row.name}</b>
+                            <span className={`dlv-status dlv-status--${safeTone(row.statusTone)}`}>{row.status}</span>
+                          </div>
+                          <strong className="dlv-money">{formatWan(row.expectedAmountWan)}</strong>
+                        </div>
+                        <dl className="dlv-detail-metrics dlv-detail-metrics--conversion">
+                          <div><dt>当前试用</dt><dd>{formatInt(row.currentTrials)}个</dd></div>
+                          <div><dt>成熟成交 / 上期启动</dt><dd>{formatInt(row.closedDeals)} / {formatInt(row.cohortStarted)}个</dd></div>
+                          <div><dt>转化率</dt><dd>{formatPct(row.conversionRate)}</dd></div>
+                        </dl>
+                      </article>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : <EmptyBlock text="当前筛选下暂无转化数据" />}
-          </Panel>
+                  </div>
+                ) : <EmptyBlock text="当前筛选下暂无转化数据" />}
+              </section>
 
-          <Panel
-            className="dlv-card--table dlv-card--load"
-            title="配置人员负载"
-            subtitle={`当前已分配 ${formatInt(snapshot.kpis.currentTrials - snapshot.unassignedOwners)}个 · 未配置负责人 ${formatInt(snapshot.unassignedOwners)}个`}
-          >
-            {snapshot.staffLoads.length ? (
-              <>
-                <div className="dlv-table-wrap">
-                  <table className="dlv-table dlv-table--load">
-                    <colgroup><col /><col /><col /><col /><col /><col /><col /></colgroup>
-                    <thead><tr><th scope="col">配置人员</th><th scope="col">当前负责</th><th scope="col">本月累计</th><th scope="col">已转化</th><th scope="col">超期</th><th scope="col">预计金额</th><th scope="col">负载状态</th></tr></thead>
-                    <tbody>
+              <section className="dlv-operation-pane dlv-operation-pane--staff" aria-labelledby="delivery-staff-title">
+                <header className="dlv-operation-pane-head">
+                  <div>
+                    <h4 id="delivery-staff-title">配置人员负载</h4>
+                    <p>已分配 {formatInt(snapshot.kpis.currentTrials - snapshot.unassignedOwners)}个 · 未配置 {formatInt(snapshot.unassignedOwners)}个</p>
+                  </div>
+                </header>
+
+                {snapshot.staffLoads.length ? (
+                  <>
+                    <div className="dlv-staff-list" role="list" aria-label="配置人员负载明细">
                       {snapshot.staffLoads.map((row) => (
-                        <tr key={row.key}>
-                          <td>{row.name}</td>
-                          <td>
-                            <div className="dlv-load-cell">
-                              <span>{formatInt(row.currentAssigned)} / {formatInt(capacityLimit)}</span>
-                              <div
-                                className="dlv-load-bar"
-                                role="progressbar"
-                                aria-label={`${row.name}当前负责客户数`}
-                                aria-valuemin="0"
-                                aria-valuemax={capacityLimit}
-                                aria-valuenow={row.currentAssigned}
-                                aria-valuetext={`${row.currentAssigned}个，建议上限${capacityLimit}个`}
-                              >
-                                <span style={{ width: `${Math.min(100, Math.max(0, Number(row.loadRatio) || 0))}%` }} />
-                              </div>
+                        <article className="dlv-staff-row" role="listitem" key={row.key}>
+                          <div className="dlv-detail-row__top">
+                            <div className="dlv-detail-row__identity">
+                              <b>{row.name}</b>
+                              <span className={`dlv-status dlv-status--${safeTone(row.loadTone)}`}>{row.loadStatus}</span>
                             </div>
-                          </td>
-                          <td>{formatInt(row.monthlyTotal)}</td>
-                          <td>{formatInt(row.converted)}</td>
-                          <td className={row.overdue > 0 ? 'dlv-overdue' : ''}>{formatInt(row.overdue)}</td>
-                          <td className="dlv-money">{formatWan(row.expectedAmountWan)}</td>
-                          <td><span className={`dlv-status dlv-status--${safeTone(row.loadTone)}`}>{row.loadStatus}</span></td>
-                        </tr>
+                            <strong>{formatInt(row.currentAssigned)} / {formatInt(capacityLimit)}</strong>
+                          </div>
+                          <div
+                            className="dlv-load-bar"
+                            role="progressbar"
+                            aria-label={`${row.name}当前负责客户数`}
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                            aria-valuenow={Math.min(100, Math.max(0, Number(row.loadRatio) || 0))}
+                            aria-valuetext={`${row.currentAssigned}个，建议上限${capacityLimit}个，负载${formatPct(row.loadRatio)}`}
+                          >
+                            <span style={{ width: `${Math.min(100, Math.max(0, Number(row.loadRatio) || 0))}%` }} />
+                          </div>
+                          <dl className="dlv-detail-metrics dlv-detail-metrics--staff">
+                            <div><dt>本月累计</dt><dd>{formatInt(row.monthlyTotal)}个</dd></div>
+                            <div><dt>已转化</dt><dd>{formatInt(row.converted)}个</dd></div>
+                            <div><dt>超期</dt><dd className={row.overdue > 0 ? 'dlv-overdue' : ''}>{formatInt(row.overdue)}个</dd></div>
+                            <div><dt>预计金额</dt><dd className="dlv-money">{formatWan(row.expectedAmountWan)}</dd></div>
+                          </dl>
+                        </article>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="dlv-load-note">负载状态基于当前负责客户数占个人建议上限（14单）的比例计算</p>
-              </>
-            ) : <EmptyBlock text="该月暂无配置人员负载数据" />}
-          </Panel>
+                    </div>
+                    <p className="dlv-load-note">负载状态基于当前负责客户数占个人建议上限（14单）的比例计算</p>
+                  </>
+                ) : <EmptyBlock text="该月暂无配置人员负载数据" />}
+              </section>
+            </div>
+          </section>
         </>
       )}
     </section>
