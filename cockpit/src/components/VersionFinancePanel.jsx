@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 17:35:00 CST  更新内容: 版本半环图改为全部版本显示标签和引导线，去除 index<2 限制。 */
 /* 更新时间: 2026-07-10 15:25:00 CST  更新内容: 版本二级趋势改为读取数据库版本明细聚合结果，不再按月度趋势或固定日权重推算。 */
 /* 更新时间: 2026-07-08 18:22:00 CST  更新内容: 版本二级明细补齐当前筛选与主结论，底部改为纯文字对比摘要，避免重要口径脚注化。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: 版本情况色板改为银紫玫瑰与香槟/柔和辅助色，移除青蓝主视觉。 */
@@ -266,17 +267,16 @@ function versionHalfRingOption(versions, mode, tokens) {
         },
         data: versions.map((version, index) => {
           const value = Math.max(Number(version[modeMeta.field]) || 0, 0.01);
-          const isMajorLabel = index < 2;
           return {
             value,
             rawValue: Number(version[modeMeta.field]) || 0,
             name: version.name,
             itemStyle: { color: VERSION_RING_COLORS[index] },
             label: {
-              show: isMajorLabel,
+              show: true,
             },
             labelLine: {
-              show: isMajorLabel,
+              show: true,
             },
           };
         }),

@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-14 17:55:00 CST
+ 更新内容: cpu-pie-wrap 改为固定高度，防止 EChart ResizeObserver 与 flex:1 形成循环导致圆环持续放大。
+*/
+/*
+ 更新时间: 2026-07-14 17:14:00 CST
+ 更新内容: 算力页两张圆环图恢复原 ECharts 视觉尺寸，并以静态图片展示，禁用动画、过渡和鼠标事件。
+*/
+/*
  更新时间: 2026-07-14 16:46:00 CST
  更新内容: 固定算力页两张饼图面板的 hover/focus 尺寸，避免鼠标经过时卡片上浮导致图表看起来在动。
 */
@@ -453,8 +461,41 @@
 }
 
 .cpu-pie-wrap {
-  flex: 1;
+  flex: none;
+  height: 280px;
+}
+
+.cpu-static-echart {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
   min-height: 218px;
+  overflow: hidden;
+  animation: none;
+  transition: none;
+  pointer-events: none;
+}
+
+.cpu-static-echart * {
+  animation: none;
+  transition: none;
+}
+
+.cpu-static-echart__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+
+.cpu-static-echart__renderer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .cpu-panel--pie {
@@ -463,7 +504,7 @@
 }
 
 .cpu-panel--pie .cpu-pie-wrap {
-  min-height: 218px;
+  height: 280px;
 }
 
 .cpu-panel-insight {
@@ -1145,9 +1186,12 @@
     border-radius: 16px;
   }
 
-  .cpu-trend-chart,
-  .cpu-pie-wrap {
+  .cpu-trend-chart {
     min-height: 286px;
+  }
+
+  .cpu-pie-wrap {
+    height: 260px;
   }
 
   .cpu-panel--trend {

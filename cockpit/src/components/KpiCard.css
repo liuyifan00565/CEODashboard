@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 17:30:00 CST  更新内容: 回款半环卡取消 overflow:hidden，防止 labelLine 引导线被裁切只显示两条。 */
 /* 更新时间: 2026-07-14 11:07:04 CST  更新内容: 无涨跌/缺口数据时 kpi-card__meta 是空 div 但仍占位 min-height+margin，
    在窄卡（如首页总投入·费比）里会把底部"点击展开二级"挤出卡片被裁切；空时折叠为 0 高度。 */
 /* 更新时间: 2026-07-06 00:20:59 CST  更新内容: 回款 KPI 卡片 hover 统一复用月度趋势悬浮亮边玻璃反馈。 */
@@ -51,6 +52,7 @@
   min-height: 158px;
   padding: 16px 22px 16px 18px;
   background: var(--dashboard-card-bg);
+  overflow: visible;
 }
 
 .kpi-card--with-side {

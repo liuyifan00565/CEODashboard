@@ -1,4 +1,7 @@
 /* 更新时间: 2026-07-14 17:50:49 CST  更新内容: 回款半环纳入特殊渠道展示扇区，但不将其列入经营渠道和人员下钻。 */
+/* 更新时间: 2026-07-14 16:52:12 CST  更新内容: 收短回款结构半环外部标签引导折线，保留所有有值渠道标签但避免线条拉得过长。 */
+/* 更新时间: 2026-07-14 16:49:06 CST  更新内容: 回款结构半环所有有值真实渠道均显示外部标签，小渠道使用更近的边距避免“其他”等标签被漏显。 */
+/* 更新时间: 2026-07-14 15:20:00 CST  更新内容: 月度半环区域恢复“本月回款结构”标题，不恢复单位文字且不增加主卡高度。 */
 /* 更新时间: 2026-07-14 15:14:00 CST  更新内容: 半环接入 ECharts 空白画布事件，空白区显式打开月度/年度明细，渠道扇区保留人员下钻。 */
 /* 更新时间: 2026-07-14 15:09:00 CST  更新内容: 半环空白区域恢复整卡下钻，仅在点击实际渠道扇区时阻止冒泡并打开人员明细。 */
 /* 更新时间: 2026-07-14 14:36:00 CST  更新内容: 删除回款结构标题、单位和点击提示；月度/年度整卡可点击下钻，渠道行与半环扇区保留独立人员下钻。 */
@@ -136,8 +139,9 @@ const INCOMPLETE_STRUCTURE_STYLE = {
   color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: 'rgba(255,255,255,.075)' }, { offset: 1, color: 'rgba(255,255,255,.035)' }] },
   swatch: 'rgba(255,255,255,.28)',
 };
-const MAJOR_LABEL_EDGE_DISTANCE = '16%';
-const INCOMPLETE_LABEL_EDGE_DISTANCE = '22%';
+const CHANNEL_LABEL_EDGE_DISTANCE = '20%';
+const MINOR_LABEL_EDGE_DISTANCE = '18%';
+const INCOMPLETE_LABEL_EDGE_DISTANCE = '24%';
 function formatWan(value) {
   return Number(value).toLocaleString('zh-CN');
 }
@@ -391,7 +395,7 @@ function channelStructureOption(structure, periodMeta, tokens) {
           },
           smooth: 0.18,
           length: 10,
-          length2: 16,
+          length2: 8,
         },
         labelLayout: (params) => {
           if (params.labelRect?.x < 8) {
@@ -401,18 +405,18 @@ function channelStructureOption(structure, periodMeta, tokens) {
           return {};
         },
         data: structure.pieData.map((item, index) => {
-          const isMajorLabel = index < 2 && !item.isEmpty && Number(item.value) > 0;
+          const isChannelLabel = !item.isIncomplete && !item.isEmpty && Number(item.value) > 0;
+          const isMinorLabel = isChannelLabel && index >= 2;
           const isIncompleteLabel = item.isIncomplete && Number(item.value) > 0;
-          const isStructureLabel = item.isStructureOnly && Number(item.value) > 0;
           return {
             ...item,
             label: {
-              show: isMajorLabel || isIncompleteLabel || isStructureLabel,
-              ...(isMajorLabel ? { edgeDistance: MAJOR_LABEL_EDGE_DISTANCE } : {}),
+              show: isChannelLabel || isIncompleteLabel,
+              ...(isChannelLabel ? { edgeDistance: isMinorLabel ? MINOR_LABEL_EDGE_DISTANCE : CHANNEL_LABEL_EDGE_DISTANCE } : {}),
               ...(isIncompleteLabel ? { edgeDistance: INCOMPLETE_LABEL_EDGE_DISTANCE } : {}),
             },
             labelLine: {
-              show: isMajorLabel || isIncompleteLabel || isStructureLabel,
+              show: isChannelLabel || isIncompleteLabel,
             },
           };
         }),
