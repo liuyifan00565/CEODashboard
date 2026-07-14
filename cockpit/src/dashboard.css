@@ -1,7 +1,10 @@
 /*
- 更新时间: 2026-07-14 11:20:00 CST
- 更新内容: .dash-sidebar-account 从搜索框下方移到 Sidebar 正下方（更靠上），不再展示用户名
-          （用户名已并入品牌区第二行），只保留退出登录按钮，简化为单元素容器。
+ 更新时间: 2026-07-14 11:23:51 CST
+ 更新内容: 修复财务四小卡两个新问题——1) 总投入·费比卡的 padding(12px 16px)与另外三张卡(10px 14px)不一致，
+          导致"点击展开二级"文字左边距和上下留白对不齐，统一改为 10px 14px；2) 四张卡贴着
+          .dash-secondary-cell 的 overflow:hidden 边界铺满(无留白)，hover 时 translateY(-2px) 上移
+          动效会把上排卡片顶边顶出裁切、下排卡片底边和固定不动的 ::after 装饰边框错位露出一条线，
+          hover/focus 时改为只保留描边+阴影反馈，去掉位移。
 */
 /*
  更新时间: 2026-07-14 11:07:04 CST
@@ -478,6 +481,15 @@
   .dash-secondary-cell:focus-within::after{
     border-color:rgba(255,255,255,.34);
   }
+  /* 财务四小卡贴着 .dash-secondary-cell 的 overflow:hidden 边界铺满，hover 的 translateY(-2px)
+     上移动效会把上排卡片顶边顶出裁切、下排卡片底边和固定不动的 ::after 装饰边框错位露线，
+     这里禁用位移只保留描边+阴影反馈。 */
+  .dash-finance-kpi-item .opening-metric-card:hover,
+  .dash-finance-kpi-item .opening-metric-card:focus-visible,
+  .dash-finance-kpi-item .kpi-card:hover,
+  .dash-finance-kpi-item .kpi-card:focus-visible{
+    transform:none;
+  }
   .dash-secondary-cell--trend > .search-result-border,
   .dash-secondary-cell--trend > .search-result-border > .search-result-border__content,
   .dash-secondary-cell--trend .mt-panel{
@@ -580,7 +592,7 @@
   }
   .dash-secondary-cell .mt-panel{padding:14px}
   .dash-secondary-cell .mt-head{margin-bottom:8px}
-  .dash-finance-kpi-item .kpi-card{gap:3px;padding:12px 16px}
+  .dash-finance-kpi-item .kpi-card{gap:3px;padding:10px 14px}
   .dash-finance-kpi-item .kpi-card__title{font-size:13px}
   .dash-finance-kpi-item .kpi-card__value{font-size:34px}
   .dash-finance-kpi-item .kpi-card__sub{
