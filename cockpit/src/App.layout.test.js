@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 15:47:08 CST  更新内容: 回归锁定交付月度微型方向坡度图、精确月份端点、低干扰动效及无障碍说明。 */
 /* 更新时间: 2026-07-14 15:30:13 CST  更新内容: 回归锁定交付演示快照仅由显式环境开关启用，并在页面显示非生产数据标识。 */
 /* 更新时间: 2026-07-14 15:11:44 CST  更新内容: 交付页回归锁定 KPI 后六项月度对比带、58/42 同屏执行明细及双断点响应式布局。 */
 /* 更新时间: 2026-07-14 15:20:00 CST  更新内容: 回归锁定月度半环标题恢复且不增高主卡，并移除 KPI 隐藏提示遗留的底部空白。 */
@@ -1875,7 +1876,12 @@ test('renders the presale trial delivery dashboard as a compact decision workspa
   assert.match(deliveryPanelSource, /截至 \{updatedAt \|\| '2026-07-14 10:30'\}/);
 
   assert.match(deliveryPanelSource, /<div className="dlv-kpi-grid"[\s\S]*?<ComparisonBand[\s\S]*?<div className="dlv-overview-grid">[\s\S]*?<section className="dlv-operations"/);
-  assert.match(deliveryPanelSource, /function ComparisonBand[\s\S]*?rows\.map[\s\S]*?row\.label[\s\S]*?row\.status[\s\S]*?row\.currentLabel[\s\S]*?row\.previousLabel[\s\S]*?row\.changeLabel/);
+  assert.match(deliveryPanelSource, /function ComparisonSlope[\s\S]*?row\.label[\s\S]*?row\.status[\s\S]*?row\.changeLabel[\s\S]*?row\.previousLabel[\s\S]*?row\.currentLabel/);
+  assert.match(deliveryPanelSource, /function getComparisonDirection[\s\S]*?return 'up'[\s\S]*?return 'down'[\s\S]*?return 'flat'/);
+  assert.match(deliveryPanelSource, /function ComparisonSlope[\s\S]*?row\.currentRaw[\s\S]*?row\.previousRaw[\s\S]*?currentPointY[\s\S]*?ariaLabel/);
+  assert.match(deliveryPanelSource, /className=\{`dlv-slope dlv-slope--\$\{tone\} dlv-slope--\$\{direction\}`\}[\s\S]*?<line className="dlv-slope__line" x1="4%" y1="50%" x2="96%" y2=\{currentPointY\}[\s\S]*?dlv-slope__point--previous[\s\S]*?dlv-slope__point--current/);
+  assert.match(deliveryPanelSource, /compactMonthLabel\(previousMonthLabel\)[\s\S]*?row\.previousLabel[\s\S]*?compactMonthLabel\(monthLabel\)[\s\S]*?row\.currentLabel/);
+  assert.match(deliveryPanelSource, /连线只看方向，环比看幅度；风险和周期下降为改善/);
   assert.match(deliveryPanelSource, /<h3 id="delivery-operations-title">交付执行明细<\/h3>/);
   assert.match(deliveryPanelSource, /className="dlv-operation-pane dlv-operation-pane--conversion"[\s\S]*?row\.currentTrials[\s\S]*?row\.closedDeals[\s\S]*?row\.cohortStarted[\s\S]*?row\.conversionRate[\s\S]*?row\.expectedAmountWan/);
   assert.match(deliveryPanelSource, /className="dlv-operation-pane dlv-operation-pane--staff"[\s\S]*?row\.currentAssigned[\s\S]*?capacityLimit[\s\S]*?role="progressbar"[\s\S]*?row\.monthlyTotal[\s\S]*?row\.converted[\s\S]*?row\.overdue[\s\S]*?row\.expectedAmountWan/);
@@ -1893,6 +1899,9 @@ test('renders the presale trial delivery dashboard as a compact decision workspa
   assert.match(deliveryPanelSource, /options=\{CONVERSION_DIMENSION_OPTIONS\}[\s\S]*?value=\{conversionDimension\}[\s\S]*?onChange=\{setConversionDimension\}/);
   assert.match(deliveryPanelCss, /\.dlv-overview-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 42fr\) minmax\(0, 58fr\);/);
   assert.match(deliveryPanelCss, /\.dlv-comparison-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\);/);
+  assert.match(deliveryPanelCss, /\.dlv-slope\s*\{[\s\S]*?grid-template-rows: auto 28px 15px;/);
+  assert.match(deliveryPanelCss, /\.dlv-slope__line\s*\{[\s\S]*?animation: dlv-slope-draw \.22s ease-out forwards;/);
+  assert.match(deliveryPanelCss, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.dlv-slope__line,[\s\S]*?animation: none;[\s\S]*?stroke-dashoffset: 0;/);
   assert.match(deliveryPanelCss, /\.dlv-operations-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 58fr\) minmax\(360px, 42fr\);/);
   assert.match(deliveryPanelCss, /@media \(max-width: 1200px\)[\s\S]*?\.dlv-comparison-grid \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}[\s\S]*?\.dlv-operations-grid \{ grid-template-columns: 1fr; \}/);
   assert.match(deliveryPanelCss, /@media \(max-width: 760px\)[\s\S]*?\.dlv-comparison-grid \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}[\s\S]*?\.dlv-detail-metrics--conversion,\s*[\s\S]*?\.dlv-detail-metrics--staff \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);

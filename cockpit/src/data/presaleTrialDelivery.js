@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 15:47:08 CST
+ 更新内容: 补充月度比较行本月与上月原始值类型声明，供微型方向坡度图判断数值方向。
+*/
+/*
  更新时间: 2026-07-14 14:30:00 CST
  更新内容: 新增售前试用交付看板集中演示数据、月份加载器、环比计算、渠道筛选与人员负载口径。
 */
@@ -72,6 +76,8 @@
  * @typedef {Object} PresaleTrialComparisonRow
  * @property {ComparisonMetricKey} key 指标唯一键。
  * @property {string} label 指标名称。
+ * @property {number} currentRaw 当前月份原始值。
+ * @property {number} previousRaw 上一月份原始值。
  * @property {string} currentLabel 当前月份格式化值。
  * @property {string} previousLabel 上一月份格式化值。
  * @property {string} changeLabel 格式化变化值，转化率使用 pp。

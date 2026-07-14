@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 15:47:08 CST
+ 更新内容: 回归锁定月度坡度图所需本月/上月原始值，并覆盖上月为零和持平状态。
+*/
+/*
  更新时间: 2026-07-14 14:30:00 CST
  更新内容: 新增售前试用交付演示数据的合计、转化口径、环比、负载、未分配与渠道筛选回归测试。
 */
@@ -79,6 +83,17 @@ test('July comparison changes are calculated with percentage, percentage-point a
   );
   assert.equal(byKey(comparisonRows, 'conversionRate').currentLabel, '46.2%');
   assert.equal(byKey(comparisonRows, 'conversionRate').previousLabel, '39.1%');
+  assert.deepEqual(
+    comparisonRows.map(({ key, currentRaw, previousRaw }) => ({ key, currentRaw, previousRaw })),
+    [
+      { key: 'newTrials', currentRaw: 18, previousRaw: 15 },
+      { key: 'convertedCustomers', currentRaw: 12, previousRaw: 9 },
+      { key: 'conversionRate', currentRaw: 46.2, previousRaw: 39.1 },
+      { key: 'expectedAmountWan', currentRaw: 82.4, previousRaw: 68.6 },
+      { key: 'urgentRisk', currentRaw: 5, previousRaw: 8 },
+      { key: 'averageTrialDays', currentRaw: 12.6, previousRaw: 14.2 },
+    ],
+  );
 });
 
 test('June comparison is generated dynamically from the May-only baseline', async () => {
@@ -108,12 +123,18 @@ test('comparison helpers judge direction by metric meaning rather than numeric s
     status: '恶化',
     statusTone: 'risk',
   });
+  assert.deepEqual(formatComparisonChange('newTrials', 5, 0), {
+    changeLabel: '—',
+    status: '增长',
+    statusTone: 'good',
+  });
 
   const rows = buildComparisonRows(
     { newTrials: 10, convertedCustomers: 5, conversionRate: 40, expectedAmountWan: 20, urgentRisk: 3, averageTrialDays: 10 },
     { newTrials: 10, convertedCustomers: 5, conversionRate: 40, expectedAmountWan: 20, urgentRisk: 3, averageTrialDays: 10 },
   );
   assert.ok(rows.every((row) => row.status === '持平' && row.statusTone === 'neutral'));
+  assert.ok(rows.every((row) => row.currentRaw === row.previousRaw));
 });
 
 test('staff load states are derived from the 14-customer capacity threshold', async () => {

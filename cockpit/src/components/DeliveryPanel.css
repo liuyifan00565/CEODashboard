@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 15:47:08 CST
+ 更新内容: 月度对比带改为六项微型方向坡度图，复用既有语义色与玻璃体系并增加低干扰入场动效。
+*/
+/*
  更新时间: 2026-07-14 15:30:13 CST
  更新内容: 为受控启用的售前试用演示快照增加复用玻璃边框体系的低干扰来源标识。
 */
@@ -234,10 +238,7 @@
 
 .dlv-comparison-item {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  padding: 12px 13px 1px;
+  padding: 10px 13px 1px;
   border-left: 1px solid var(--line);
 }
 
@@ -245,57 +246,142 @@
   border-left: 0;
 }
 
-.dlv-comparison-item__label,
-.dlv-comparison-item__meta {
+.dlv-slope {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto 28px 15px;
+  gap: 2px;
+  margin: 0;
+  color: var(--muted);
+}
+
+.dlv-slope--good { color: var(--semantic-success-muted); }
+.dlv-slope--warn { color: var(--semantic-goal); }
+.dlv-slope--risk { color: var(--semantic-risk); }
+
+.dlv-slope__head,
+.dlv-slope__result,
+.dlv-slope__values,
+.dlv-slope__values span {
   min-width: 0;
   display: flex;
   align-items: center;
+}
+
+.dlv-slope__head,
+.dlv-slope__values {
   justify-content: space-between;
   gap: 8px;
 }
 
-.dlv-comparison-item__label span {
+.dlv-slope__head > span:first-child {
   min-width: 0;
   overflow: hidden;
   color: var(--muted);
   font-size: 11px;
+  font-weight: 620;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.dlv-comparison-item__label em {
+.dlv-slope__result {
   flex: none;
-  color: var(--faint);
-  font-size: 10px;
-  font-style: normal;
+  justify-content: flex-end;
+  gap: 4px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.dlv-comparison-item--good .dlv-comparison-item__label em { color: var(--semantic-success-muted); }
-.dlv-comparison-item--warn .dlv-comparison-item__label em { color: var(--semantic-goal); }
-.dlv-comparison-item--risk .dlv-comparison-item__label em { color: var(--semantic-risk); }
+.dlv-slope__result em,
+.dlv-slope__result b {
+  font-size: 10px;
+  line-height: 1;
+}
 
-.dlv-comparison-item > strong {
+.dlv-slope__result em {
+  font-style: normal;
+  font-weight: 560;
+}
+
+.dlv-slope__result b { font-weight: 760; }
+.dlv-slope__result--good { color: var(--semantic-success-muted); }
+.dlv-slope__result--warn { color: var(--semantic-goal); }
+.dlv-slope__result--risk { color: var(--semantic-risk); }
+
+.dlv-slope__plot {
+  display: block;
+  overflow: visible;
+}
+
+.dlv-slope__line {
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: .72;
+  animation: dlv-slope-draw .22s ease-out forwards;
+}
+
+.dlv-slope__point { vector-effect: non-scaling-stroke; }
+
+.dlv-slope__point--previous {
+  fill: var(--muted);
+  opacity: .52;
+}
+
+.dlv-slope__point--current {
+  fill: var(--txt);
+  stroke: currentColor;
+  stroke-width: 2;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: dlv-slope-point-in .18s ease-out .08s both;
+}
+
+.dlv-slope__values {
+  animation: dlv-slope-values-in .18s ease-out .06s both;
+}
+
+.dlv-slope__values span { gap: 4px; }
+
+.dlv-slope__values em,
+.dlv-slope__values b {
   overflow: hidden;
-  color: var(--txt);
-  font-size: 22px;
-  font-weight: 730;
+  font-size: 10px;
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 
-.dlv-comparison-item__meta span,
-.dlv-comparison-item__meta b {
-  overflow: hidden;
-  font-size: 10px;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+.dlv-slope__values em {
+  color: var(--faint);
+  font-style: normal;
 }
 
-.dlv-comparison-item__meta span { color: var(--faint); }
+.dlv-slope__values b {
+  color: var(--txt);
+  font-weight: 720;
+}
+
+.dlv-slope__values span:first-child b {
+  color: var(--muted);
+  font-weight: 620;
+}
+
+@keyframes dlv-slope-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes dlv-slope-point-in {
+  from { opacity: 0; transform: scale(.72); }
+}
+
+@keyframes dlv-slope-values-in {
+  from { opacity: 0; transform: translateY(2px); }
+}
 
 .dlv-comparison-band .dlv-empty {
   min-height: 92px;
@@ -577,11 +663,6 @@
 
 .dlv-money { color: var(--accent-gold-soft) !important; }
 .dlv-overdue { color: var(--semantic-risk) !important; }
-
-.dlv-change { font-weight: 700; }
-.dlv-change--good { color: var(--semantic-success-muted) !important; }
-.dlv-change--risk { color: var(--semantic-risk) !important; }
-.dlv-change--warn { color: var(--semantic-goal) !important; }
 
 .dlv-status {
   display: inline-flex;
@@ -960,4 +1041,14 @@
   .dlv-detail-metrics dt { white-space: normal; }
   .dlv-data-state { grid-template-columns: auto minmax(0, 1fr); }
   .dlv-data-state button { grid-column: 2; justify-self: start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dlv-slope__line,
+  .dlv-slope__point--current,
+  .dlv-slope__values {
+    animation: none;
+  }
+
+  .dlv-slope__line { stroke-dashoffset: 0; }
 }

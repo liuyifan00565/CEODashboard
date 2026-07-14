@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 15:47:08 CST
+ 更新内容: 将六项月度文字对比升级为微型方向坡度图，保留精确环比、业务语义、月份端点与无障碍说明。
+*/
+/*
  更新时间: 2026-07-14 15:30:13 CST
  更新内容: 本地显式开关开启时重新加载 2026-06、2026-07 售前试用演示快照，并在页头明确标注演示属性。
 */
@@ -72,6 +76,17 @@ function formatPct(value) {
 
 function ratio(value, total) {
   return total > 0 ? (Number(value || 0) / total) * 100 : 0;
+}
+
+function compactMonthLabel(label) {
+  const month = String(label || '').match(/(\d{1,2})月/);
+  return month ? `${Number(month[1])}月` : String(label || '');
+}
+
+function getComparisonDirection(currentValue, previousValue) {
+  if (currentValue > previousValue) return 'up';
+  if (currentValue < previousValue) return 'down';
+  return 'flat';
 }
 
 function buildDistributionOption({ snapshot, metric, selectedChannel, tokens }) {
@@ -197,30 +212,58 @@ function Panel({ title, subtitle, actions, className = '', children }) {
   );
 }
 
+function ComparisonSlope({ row, monthLabel, previousMonthLabel }) {
+  const direction = getComparisonDirection(row.currentRaw, row.previousRaw);
+  const tone = safeTone(row.statusTone);
+  const currentPointY = direction === 'up' ? '18%' : direction === 'down' ? '82%' : '50%';
+  const ariaLabel = `${row.label}：${previousMonthLabel}${row.previousLabel}到${monthLabel}${row.currentLabel}，${row.status}，环比${row.changeLabel}`;
+
+  return (
+    <article className="dlv-comparison-item">
+      <figure
+        className={`dlv-slope dlv-slope--${tone} dlv-slope--${direction}`}
+        aria-label={ariaLabel}
+      >
+        <figcaption className="dlv-slope__head">
+          <span>{row.label}</span>
+          <span className={`dlv-slope__result dlv-slope__result--${tone}`}>
+            <em>{row.status}</em>
+            <b>{row.changeLabel}</b>
+          </span>
+        </figcaption>
+        <svg className="dlv-slope__plot" width="100%" height="28" aria-hidden="true" focusable="false">
+          <line className="dlv-slope__line" x1="4%" y1="50%" x2="96%" y2={currentPointY} pathLength="1" />
+          <circle className="dlv-slope__point dlv-slope__point--previous" cx="4%" cy="50%" r="3" />
+          <circle className="dlv-slope__point dlv-slope__point--current" cx="96%" cy={currentPointY} r="4" />
+        </svg>
+        <div className="dlv-slope__values">
+          <span><em>{compactMonthLabel(previousMonthLabel)}</em><b>{row.previousLabel}</b></span>
+          <span><em>{compactMonthLabel(monthLabel)}</em><b>{row.currentLabel}</b></span>
+        </div>
+      </figure>
+    </article>
+  );
+}
+
 function ComparisonBand({ rows, monthLabel, previousMonthLabel }) {
   return (
     <section className="dlv-comparison-band" aria-labelledby="delivery-comparison-title">
       <header className="dlv-comparison-head">
         <div>
           <h3 id="delivery-comparison-title">本月与上月交付对比</h3>
-          <p>变化按指标业务含义判断，风险和周期下降为改善</p>
+          <p>连线只看方向，环比看幅度；风险和周期下降为改善</p>
         </div>
         <span className="dlv-period-note">{monthLabel} / {previousMonthLabel}</span>
       </header>
       {rows.length ? (
         <div className="dlv-comparison-grid">
           {rows.map((row) => (
-            <article className={`dlv-comparison-item dlv-comparison-item--${safeTone(row.statusTone)}`} key={row.key}>
-              <div className="dlv-comparison-item__label">
-                <span>{row.label}</span>
-                <em>{row.status}</em>
-              </div>
-              <strong>{row.currentLabel}</strong>
-              <div className="dlv-comparison-item__meta">
-                <span>上月 {row.previousLabel}</span>
-                <b className={`dlv-change dlv-change--${safeTone(row.statusTone)}`}>{row.changeLabel}</b>
-              </div>
-            </article>
+            <ComparisonSlope
+              row={row}
+              monthLabel={monthLabel}
+              previousMonthLabel={previousMonthLabel}
+              key={row.key}
+            />
           ))}
         </div>
       ) : <EmptyBlock text="该月暂无可比较数据" />}
