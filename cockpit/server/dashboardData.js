@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 17:25:00 CST
+ 更新内容: 公司 KPI 与月度趋势仅展示具备完整渠道月总额的月份；1-3 月线上订单只保留用于人员和订单下钻。
+*/
+/*
  更新时间: 2026-07-14 17:10:00 CST
  更新内容: 公司月度总额按月份覆盖订单汇总；无月度总额的月份回退订单数据，恢复 1-3 月趋势且避免 4 月重复累计。
 */
@@ -756,19 +760,8 @@ export function mapDashboardRowsToSnapshot(rows) {
   const currentSalesRows = salesRows.filter((row) => row.year_month === latestMonth);
   const yearSalesRows = salesRows.filter((row) => String(row.year_month).startsWith(latestYear));
   const monthlyTotalRows = rows.useRevenueMonthly ? (rows.monthlyRevenueTotals ?? []) : [];
-  const authoritativeMonths = new Set(monthlyTotalRows.map((row) => row.year_month));
-  const fallbackOrderRows = rows.useRevenueMonthly
-    ? (rows.orderRevenueMonthly ?? []).filter((row) => !authoritativeMonths.has(row.year_month))
-    : [];
-  const revenueRows = applyRefundsToRecoveredRows([
-    ...(rows.revenueDaily ?? []),
-    ...fallbackOrderRows,
-  ], recoveredRefundRows);
-  const fallbackTotals = [...fallbackOrderRows.reduce((totals, row) => {
-    totals.set(row.year_month, num(totals.get(row.year_month)) + num(row.recovered_wan));
-    return totals;
-  }, new Map())].map(([year_month, recovered_wan]) => ({ year_month, recovered_wan }));
-  const kpiRevenueRows = monthlyTotalRows.length ? [...monthlyTotalRows, ...fallbackTotals] : revenueRows;
+  const revenueRows = applyRefundsToRecoveredRows(rows.revenueDaily ?? [], recoveredRefundRows);
+  const kpiRevenueRows = monthlyTotalRows.length ? monthlyTotalRows : revenueRows;
   const useRevenueDaily = kpiRevenueRows.length > 0;
   const currentRevenueRows = revenueRows.filter((row) => row.year_month === latestMonth);
   const previousRevenueRows = kpiRevenueRows.filter((row) => row.year_month === previousMonth);
@@ -833,14 +826,6 @@ export function mapDashboardRowsToSnapshot(rows) {
     laborCosts: rows.laborCostTrend ?? rows.laborCosts ?? [],
     latestMonth,
   });
-  const mergedYearlyRevenue = rows.useRevenueMonthly
-    ? [...kpiRevenueRows.reduce((totals, row) => {
-      const year = String(row.year_month).slice(0, 4);
-      totals.set(year, num(totals.get(year)) + num(row.recovered_wan));
-      return totals;
-    }, new Map())].map(([year, recovered_wan]) => ({ year, recovered_wan }))
-    : (rows.yearlyRevenue ?? []);
-
   return {
     source: 'mysql',
     generatedAt: new Date().toISOString(),
@@ -856,7 +841,7 @@ export function mapDashboardRowsToSnapshot(rows) {
     channelSourceBreakdown: rows.channelSourceBreakdown ?? [],
     monthlyTrend: makeMonthlyTrend({ monthlyTargets: rows.monthlyTargets ?? [], recoveredRows, latestMonth, currentMonthTarget }),
     dailyRevenueTrend: makeDailyRevenueTrend(rows.dailyRevenue),
-    yearlyTrend: makeYearlyTrend({ yearlyRecovered: mergedYearlyRevenue, yearlyTargets: rows.yearlyTargets ?? [] }),
+    yearlyTrend: makeYearlyTrend({ yearlyRecovered: rows.yearlyRevenue ?? [], yearlyTargets: rows.yearlyTargets ?? [] }),
     costTrend,
     salesMemberRows: makeSalesMemberRows({
       salesRows: yearSalesRows,
@@ -990,7 +975,6 @@ export async function buildDashboardSnapshot(connection) {
     salesMemberMonthly,
     revenueDaily,
     monthlyRevenueTotals,
-    orderRevenueMonthly,
     dailyRevenue,
     yearlyRevenue,
     yearlyTargets,
@@ -1099,18 +1083,6 @@ export async function buildDashboardSnapshot(connection) {
       GROUP BY \`year_month\`
       ORDER BY \`year_month\`
     `, [latestYear]) : Promise.resolve([]),
-    useRevenueMonthly && useRevenueOrders ? queryRows(connection, `
-      SELECT DATE_FORMAT(o.stat_date, '%Y-%m') AS \`year_month\`, ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
-             ROUND(SUM(o.net_amount_yuan) / 10000, 2) AS recovered_wan
-      FROM fact_revenue_order o
-      LEFT JOIN dim_staff s ON s.staff_id = o.staff_id
-      LEFT JOIN dim_department d ON d.department_id = s.department_id
-      LEFT JOIN dim_channel c ON c.channel_id = o.channel_id
-      WHERE o.stat_date >= ? AND o.stat_date < ?
-      GROUP BY DATE_FORMAT(o.stat_date, '%Y-%m'), ${STAFF_OR_FACT_CHANNEL_KEY_SQL}
-      HAVING channel_key IS NOT NULL
-      ORDER BY \`year_month\`, channel_key
-    `, [`${latestYear}-01-01`, `${nextYear}-01-01`]) : Promise.resolve([]),
     useRevenueMonthly ? queryRows(connection, `
       SELECT CONCAT(\`year_month\`, '-01') AS day_key,
              ROUND(SUM(net_amount_yuan) / 10000, 2) AS recovered_wan
@@ -1719,7 +1691,6 @@ export async function buildDashboardSnapshot(connection) {
     salesMemberMonthly,
     revenueDaily,
     monthlyRevenueTotals,
-    orderRevenueMonthly,
     dailyRevenue,
     yearlyRevenue,
     yearlyTargets,

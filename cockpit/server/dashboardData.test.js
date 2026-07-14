@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 17:25:00 CST
+ 更新内容: 回归锁定公司趋势只展示完整渠道月总额，线上订单不补入公司月度总额。
+*/
+/*
  更新时间: 2026-07-14 17:10:00 CST
  更新内容: 回归覆盖月度总额按月覆盖订单汇总，并由订单补齐没有月度总额的月份。
 */
@@ -450,11 +454,6 @@ test('uses authoritative monthly company facts without double-counting order row
       { year_month: '2026-05', recovered_wan: 432.79 },
       { year_month: '2026-06', recovered_wan: 294.98 },
     ],
-    orderRevenueMonthly: [
-      { year_month: '2026-01', channel_key: 'online', recovered_wan: 50 },
-      { year_month: '2026-01', channel_key: 'agent', recovered_wan: 10 },
-      { year_month: '2026-04', channel_key: 'online', recovered_wan: 109.88 },
-    ],
     monthlyTargets: [
       { year_month: '2026-05', target_wan: 300 },
       { year_month: '2026-06', target_wan: 500 },
@@ -466,7 +465,7 @@ test('uses authoritative monthly company facts without double-counting order row
   });
 
   assert.equal(snapshot.kpi.monthRecovered, 295);
-  assert.equal(snapshot.kpi.yearRecovered, 1014);
+  assert.equal(snapshot.kpi.yearRecovered, 954);
   assert.equal(snapshot.kpi.monthRefund, 9);
   assert.equal(snapshot.kpi.yearRefund, 13);
   assert.equal(snapshot.kpi.yearTarget, 800);
@@ -474,7 +473,6 @@ test('uses authoritative monthly company facts without double-counting order row
   assert.equal(snapshot.channels.find((row) => row.key === 'online').recovered, 119);
   assert.equal(snapshot.channels.find((row) => row.key === 'agent').recovered, 101);
   assert.deepEqual(snapshot.monthlyTrend.map((row) => [row.month, row.recovered]), [
-    ['1月', 60],
     ['4月', 226],
     ['5月', 433],
     ['6月', 295],
