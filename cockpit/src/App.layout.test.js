@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 15:30:13 CST  更新内容: 回归锁定交付演示快照仅由显式环境开关启用，并在页面显示非生产数据标识。 */
 /* 更新时间: 2026-07-14 15:11:44 CST  更新内容: 交付页回归锁定 KPI 后六项月度对比带、58/42 同屏执行明细及双断点响应式布局。 */
 /* 更新时间: 2026-07-14 15:20:00 CST  更新内容: 回归锁定月度半环标题恢复且不增高主卡，并移除 KPI 隐藏提示遗留的底部空白。 */
 /* 更新时间: 2026-07-14 15:14:00 CST  更新内容: 回归锁定 ECharts 空白画布事件显式打开月度/年度明细，渠道扇区仍打开人员明细。 */
@@ -1863,10 +1864,13 @@ test('places trend and source donut above four KPI cards', () => {
 
 test('renders the presale trial delivery dashboard as a compact decision workspace', () => {
   assert.match(deliveryPanelSource, /const EMPTY_DELIVERY_LOADER = \(\) => Promise\.resolve\(null\);/);
-  assert.match(deliveryPanelSource, /function DeliveryPanel\(\{ dataLoader = EMPTY_DELIVERY_LOADER \}\)/);
+  assert.match(deliveryPanelSource, /import\.meta\.env\.VITE_ENABLE_PRESALE_TRIAL_DEMO === 'true'/);
+  assert.match(deliveryPanelSource, /const DEFAULT_DELIVERY_LOADER = PRESALE_TRIAL_DEMO_ENABLED[\s\S]*?loadPresaleTrialDashboard[\s\S]*?: EMPTY_DELIVERY_LOADER;/);
+  assert.match(deliveryPanelSource, /function DeliveryPanel\(\{ dataLoader = DEFAULT_DELIVERY_LOADER \}\)/);
   assert.doesNotMatch(deliveryPanelSource, /function DeliveryPanel\(\{ dataLoader = (?:async )?\(\) =>/);
   assert.match(deliveryPanelSource, /<h2 id="delivery-dashboard-title">交付看板<\/h2>/);
   assert.match(deliveryPanelSource, /售前试用转化与配置负载/);
+  assert.match(deliveryPanelSource, /演示快照 · 非生产数据/);
   assert.match(deliveryPanelSource, /选择交付看板月份/);
   assert.match(deliveryPanelSource, /截至 \{updatedAt \|\| '2026-07-14 10:30'\}/);
 

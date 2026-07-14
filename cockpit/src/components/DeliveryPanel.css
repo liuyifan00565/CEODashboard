@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 15:30:13 CST
+ 更新内容: 为受控启用的售前试用演示快照增加复用玻璃边框体系的低干扰来源标识。
+*/
+/*
  更新时间: 2026-07-14 15:11:44 CST
  更新内容: 交付页新增六项月度决策带和同屏双栏执行明细，移除下半页重复宽表卡片并补齐响应式布局。
 */
@@ -46,6 +50,24 @@
   margin: 6px 0 0;
   color: var(--faint);
   font-size: 13px;
+}
+
+.dlv-demo-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  margin-left: 9px;
+  padding: 1px 8px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+  vertical-align: middle;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
 }
 
 .dlv-page-head__actions,

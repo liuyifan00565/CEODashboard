@@ -1,3 +1,6 @@
+# 更新时间: 2026-07-14 15:30:13 CST
+# 更新内容: 本地联调显式开启 2026-06、2026-07 售前试用演示快照；生产环境不继承该开关。
+
 # 更新时间: 2026-07-07 14:40:00 CST
 # 更新内容: 新增本地前端+后端联调 Docker 编排：db(mysql:8.4 自动导入 ceo_dashboard 完整数据) + cockpit(Vite dev 同时提供前端 HMR 与 /api 后端接口)，DB_HOST 重定向到 db 服务覆盖 .env.local 的 127.0.0.1。
 #
@@ -51,6 +54,7 @@ services:
       DB_PASSWORD: ceodashboard
       DB_NAME: ceo_dashboard
       PORT: 5174
+      VITE_ENABLE_PRESALE_TRIAL_DEMO: "true"
     ports:
       - "5174:5174"
     volumes:

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 15:30:13 CST
+ 更新内容: 本地显式开关开启时重新加载 2026-06、2026-07 售前试用演示快照，并在页头明确标注演示属性。
+*/
+/*
  更新时间: 2026-07-14 15:11:44 CST
  更新内容: 将月度对比压缩为六项决策带，并把转化与人员负载合并为同屏双栏交付执行明细。
 */
@@ -25,6 +29,7 @@ import {
   DELIVERY_CAPACITY_LIMIT,
   PRESALE_TRIAL_MONTH_OPTIONS,
   filterConversionRows,
+  loadPresaleTrialDashboard,
 } from '../data/presaleTrialDelivery';
 import { useThemeTokens } from '../lib/theme';
 import EChart from './EChart';
@@ -44,6 +49,10 @@ const CONVERSION_DIMENSION_OPTIONS = [
 
 const TONE_NAMES = new Set(['good', 'warn', 'risk', 'neutral', 'info', 'primary']);
 const EMPTY_DELIVERY_LOADER = () => Promise.resolve(null);
+const PRESALE_TRIAL_DEMO_ENABLED = import.meta.env.VITE_ENABLE_PRESALE_TRIAL_DEMO === 'true';
+const DEFAULT_DELIVERY_LOADER = PRESALE_TRIAL_DEMO_ENABLED
+  ? loadPresaleTrialDashboard
+  : EMPTY_DELIVERY_LOADER;
 
 function safeTone(tone) {
   return TONE_NAMES.has(tone) ? tone : 'neutral';
@@ -131,12 +140,15 @@ function buildDistributionOption({ snapshot, metric, selectedChannel, tokens }) 
   };
 }
 
-function PageHeader({ monthKey, onMonthChange, loading, updatedAt }) {
+function PageHeader({ monthKey, onMonthChange, loading, updatedAt, demo }) {
   return (
     <header className="dlv-page-head">
       <div>
         <h2 id="delivery-dashboard-title">交付看板</h2>
-        <p>售前试用转化与配置负载</p>
+        <p>
+          售前试用转化与配置负载
+          {demo && <span className="dlv-demo-badge">演示快照 · 非生产数据</span>}
+        </p>
       </div>
       <div className="dlv-page-head__actions">
         <label className="dlv-month-control">
@@ -254,7 +266,7 @@ function DataState({ status, error, onRetry }) {
   );
 }
 
-export default function DeliveryPanel({ dataLoader = EMPTY_DELIVERY_LOADER }) {
+export default function DeliveryPanel({ dataLoader = DEFAULT_DELIVERY_LOADER }) {
   const tokens = useThemeTokens();
   const [monthKey, setMonthKey] = useState(DEFAULT_PRESALE_TRIAL_MONTH);
   const [distributionMetric, setDistributionMetric] = useState('count');
@@ -321,6 +333,7 @@ export default function DeliveryPanel({ dataLoader = EMPTY_DELIVERY_LOADER }) {
         onMonthChange={handleMonthChange}
         loading={dataState.status === 'loading'}
         updatedAt={snapshot?.updatedAt}
+        demo={dataLoader === loadPresaleTrialDashboard}
       />
 
       {dataState.status === 'loading' && <LoadingView />}
