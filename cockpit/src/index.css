@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 12:10:00 CST
+ 更新内容: 新增低饱和青色图表 token，供售前试用客户分布环图与现有银紫、冷蓝、香槟金统一使用。
+*/
+/*
  更新时间: 2026-07-13 11:25:44 CST
  更新内容: 深色主题月度完成率趋势线 token 改为 #B9B6E8 银紫色，增强核心指标辨识度。
 */
@@ -129,6 +133,7 @@
   --semantic-goal:#C9A96B;
   --semantic-capacity:#7EA7FF;
   --semantic-success-muted:#A6C878;
+  --chart-cyan:#62C3CD;
   --chart-actual-bar-top:#B89CFF;
   --chart-actual-bar-bottom:#8E86FF;
   --chart-target-bar:rgba(255,255,255,0.13);
@@ -244,6 +249,7 @@
   --semantic-goal:#C9A96B;
   --semantic-capacity:#7EA7FF;
   --semantic-success-muted:#A6C878;
+  --chart-cyan:#3D98A3;
   --chart-actual-bar-top:#B89CFF;
   --chart-actual-bar-bottom:#8E86FF;
   --chart-target-bar:rgba(31,42,68,.13);

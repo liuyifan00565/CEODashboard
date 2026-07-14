@@ -1,8 +1,5 @@
-/* 更新时间: 2026-07-14 17:20:00 CST  更新内容: 回归锁定交付工单区改为待办与风险管理，避免复用客户阶段的风险与闭环户数。 */
+/* 更新时间: 2026-07-14 12:35:00 CST  更新内容: 交付页回归切换为售前试用长看板，覆盖模块顺序、状态处理、环图筛选与透明页面容器。 */
 /* 更新时间: 2026-07-14 10:02:17 CST  更新内容: 回归锁定月度经营进度卡只下裁玻璃表面顶部，不移动标题与三栏内容。 */
-/* 更新时间: 2026-07-14 11:45:00 CST  更新内容: 回归锁定交付页顶部只保留主标题，移除低价值副标题说明。 */
-/* 更新时间: 2026-07-14 11:33:00 CST  更新内容: 回归锁定交付问题二级弹层使用 Portal，避免被首页交付卡片外层样式覆盖。 */
-/* 更新时间: 2026-07-14 11:05:00 CST  更新内容: 增加交付问题处理中二级界面回归，覆盖问题客户、金额影响、责任归属和闭环动作。 */
 /* 更新时间: 2026-07-14 10:35:00 CST  更新内容: 增加交付与运营协同看板结构回归，覆盖流程、工单责任和权限成本控制区块。 */
 /* 更新时间: 2026-07-14 09:52:18 CST  更新内容: 回归锁定月度经营进度标题下移到目标区，并仅收紧卡片顶部留白。 */
 /* 更新时间: 2026-07-14 10:00:00 CST  更新内容: 版本情况移回经营总览页，AI 洞察导航 targetMenu 简化回
@@ -1737,62 +1734,47 @@ test('restores secondary dashboard panels below the operating overview story', (
   assert.doesNotMatch(dashboardCss, /\.dash-kpis/);
 });
 
-test('extends delivery page into an operations collaboration dashboard', () => {
-  assert.match(deliveryPanelSource, /getDeliveryCollaborationSummary/);
-  assert.match(deliveryPanelSource, /交付与运营协同/);
-  assert.match(deliveryPanelSource, /交付流程可视化/);
-  assert.match(deliveryPanelSource, /待办与风险管理/);
-  assert.match(deliveryPanelSource, /问题登记/);
-  assert.match(deliveryPanelSource, /权限与成本控制/);
-  assert.match(mockSource, /售前试用/);
-  assert.match(mockSource, /正式交付/);
-  assert.match(mockSource, /已完成交付/);
-  assert.match(mockSource, /产研排障/);
-  assert.match(mockSource, /highCostAccountPrice:\s*804/);
-  assert.match(mockSource, /TPD或多维表格/);
-  assert.match(deliveryPanelCss, /\.dlv-flow-grid/);
-  assert.match(deliveryPanelCss, /\.dlv-workorder-grid/);
-  assert.match(deliveryPanelCss, /\.dlv-control-panel/);
-  assert.match(mockSource, /超时未处理/);
-  assert.match(mockSource, /高风险待推进/);
-  assert.match(mockSource, /待产研协同/);
-  assert.doesNotMatch(mockSource, /label: '风险工单'/);
-  assert.doesNotMatch(mockSource, /label: '已闭环工单'/);
+test('renders the presale trial delivery dashboard in the required long-page order', () => {
+  assert.match(deliveryPanelSource, /loadPresaleTrialDashboard/);
+  assert.match(deliveryPanelSource, /<h2 id="delivery-dashboard-title">交付看板<\/h2>/);
+  assert.match(deliveryPanelSource, /售前试用转化与配置负载/);
+  assert.match(deliveryPanelSource, /选择交付看板月份/);
+  assert.match(deliveryPanelSource, /截至 \{updatedAt \|\| '2026-07-14 10:30'\}/);
+
+  const orderedLabels = [
+    '当前试用客户',
+    '试用转化率',
+    '预计成交金额',
+    '风险及超期',
+    '当前试用客户分布',
+    '试用阶段与风险',
+    '本月与上月交付对比',
+    '渠道 / 团队转化情况',
+    '配置人员负载',
+  ];
+  let cursor = -1;
+  orderedLabels.forEach((label) => {
+    const nextIndex = deliveryPanelSource.indexOf(label, cursor + 1);
+    assert.ok(nextIndex > cursor, `${label} should follow the previous delivery dashboard module`);
+    cursor = nextIndex;
+  });
+
+  assert.match(deliveryPanelSource, /dataState\.status === 'loading' && <LoadingView \/>/);
+  assert.match(deliveryPanelSource, /<DataState status="error"[\s\S]*?setReloadKey/);
+  assert.match(deliveryPanelSource, /dataState\.status === 'empty'[\s\S]*?<DataState status="empty" \/>/);
+  assert.match(deliveryPanelSource, /activeDistributionTotal > 0[\s\S]*?buildDistributionOption[\s\S]*?: null/);
+  assert.match(deliveryPanelSource, /\{distributionOption \? \([\s\S]*?<EChart option=\{distributionOption\} onEvents=\{chartEvents\}[\s\S]*?: <EmptyBlock text="该月暂无可用的渠道分布数据" \/>\}/);
+  assert.match(deliveryPanelSource, /setSelectedChannel\(\(current\) => current === params\.data\.key \? null : params\.data\.key\)/);
+  assert.match(deliveryPanelSource, /filterConversionRows\(allConversionRows, selectedChannel\)/);
+  assert.match(deliveryPanelCss, /\.dlv-overview-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 42fr\) minmax\(0, 58fr\);/);
+  assert.match(deliveryPanelCss, /\.dlv-panel\s*\{[\s\S]*?overflow:\s*visible;/);
+  assert.doesNotMatch(deliveryPanelSource, /客户均价|目标未配置|交付流程可视化|工单与责任分配/);
 });
 
-test('keeps delivery header focused without the low-value subtitle copy', () => {
-  assert.doesNotMatch(deliveryPanelSource, /className="dlv-sub"/);
-  assert.doesNotMatch(deliveryPanelSource, /deliveryTargetCopy/);
-});
-
-test('opens a CEO-focused issue detail view from delivery problem stage', () => {
-  assert.match(deliveryPanelSource, /useState/);
-  assert.match(deliveryPanelSource, /openIssueDetail/);
-  assert.match(deliveryPanelSource, /问题客户清单/);
-  assert.match(deliveryPanelSource, /金额影响/);
-  assert.match(deliveryPanelSource, /问题类型分布/);
-  assert.match(deliveryPanelSource, /责任归属/);
-  assert.match(deliveryPanelSource, /处理时长/);
-  assert.match(deliveryPanelSource, /闭环动作/);
-  assert.match(deliveryPanelSource, /卡住天数/);
-  assert.match(deliveryPanelSource, /预计解决/);
-  assert.match(mockSource, /problemCustomers/);
-  assert.match(mockSource, /issueTypeDistribution/);
-  assert.match(mockSource, /amountAtRisk/);
-  assert.match(deliveryPanelCss, /\.dlv-issue-detail/);
-  assert.match(deliveryPanelCss, /\.dlv-issue-table/);
-  assert.match(deliveryPanelCss, /\.dlv-issue-risk/);
-});
-
-test('renders delivery issue detail through a portal so dashboard card styles cannot hide it', () => {
-  assert.match(deliveryPanelSource, /createPortal/);
-  assert.match(deliveryPanelSource, /from 'react-dom'/);
-  assert.match(deliveryPanelSource, /document\.body/);
-});
-
-test('gives the version panel the same hover halo as the monthly trend panel', () => {
+test('gives the version panel the same hover halo as the monthly trend panel without styling the delivery page root', () => {
   assert.match(dashboardCss, /\.dash-secondary-cell \.mt-panel,\s*[\s\S]*?\.dash-version-row \.vf-panel\s*\{[\s\S]*?isolation:isolate;[\s\S]*?transition:border-color \.22s ease, box-shadow \.22s ease;/);
-  assert.match(dashboardCss, /\.dash-secondary-cell \.mt-panel:hover,\s*[\s\S]*?\.dash-version-row \.vf-panel:hover,\s*[\s\S]*?\.dash-version-row \.vf-panel:focus-within,[\s\S]*?\.dash-secondary-delivery \.dlv-panel:hover,[\s\S]*?\.dash-secondary-delivery \.dlv-panel:focus-within\s*\{[\s\S]*?border-color:rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:var\(--glass-shadow\);/);
+  assert.match(dashboardCss, /\.dash-secondary-cell \.mt-panel:hover,\s*[\s\S]*?\.dash-version-row \.vf-panel:hover,\s*[\s\S]*?\.dash-version-row \.vf-panel:focus-within\s*\{[\s\S]*?border-color:rgba\(255,255,255,\.34\);[\s\S]*?box-shadow:var\(--glass-shadow\);/);
+  assert.doesNotMatch(dashboardCss, /\.dash-secondary-delivery \.dlv-panel:(?:hover|focus-within)/);
 });
 
 test('gives every dashboard card the shared hover halo', () => {
@@ -1984,7 +1966,7 @@ test('removes the yearly risk forecast block so recovery cards stay on channel c
 test('matches overview cards to the neutral dark glass recipe', () => {
   const kpiCardBlock = cssRuleBody(kpiCardCss, '.kpi-card');
   const operatingPanelBlock = cssRuleBody(operatingOverviewCss, '.op-panel');
-  const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-panel');
+  const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-card');
   const channelPanelBlock = cssRuleBody(channelPanelCss, '.ch-panel');
   const versionPanelBlock = cssRuleBody(versionFinancePanelCss, '.vf-panel');
   const openingCardBlock = cssRuleBody(openingMetricCardsCss, '.opening-metric-card');
@@ -2019,7 +2001,8 @@ test('keeps channel secondary detail modal on the unified focused glass backgrou
 
 test('keeps operating overview panels free of hover flow borders', () => {
   const operatingPanelBlock = cssRuleBody(operatingOverviewCss, '.op-panel');
-  const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-panel');
+  const deliveryPanelBlock = cssRuleBody(deliveryPanelCss, '.dlv-card');
+  const deliveryRootBlock = cssRuleBody(deliveryPanelCss, '.dlv-panel');
 
   assert.doesNotMatch(dashboardCss, /@property --dash-flow-angle/);
   assert.doesNotMatch(dashboardCss, /\.dash-secondary-cell \.mt-panel::before/);
@@ -2030,9 +2013,12 @@ test('keeps operating overview panels free of hover flow borders', () => {
   assert.doesNotMatch(dashboardCss, /conic-gradient\(\s*from var\(--dash-flow-angle\)/);
   assert.doesNotMatch(dashboardCss, /rgba\(244,114,182/);
   assert.doesNotMatch(dashboardCss, /rgba\(192,132,252/);
-  assert.match(dashboardCss, /\.dash-secondary-delivery \.dlv-panel\{[\s\S]*?transition:border-color \.22s ease, box-shadow \.22s ease;/);
   assert.match(operatingPanelBlock, /background:\s*var\(--dashboard-card-bg\);/);
   assert.match(deliveryPanelBlock, /background:\s*var\(--dashboard-card-bg\);/);
+  assert.match(deliveryRootBlock, /background:\s*transparent;/);
+  assert.match(deliveryRootBlock, /border:\s*0;/);
+  assert.match(deliveryRootBlock, /box-shadow:\s*none;/);
+  assert.doesNotMatch(deliveryRootBlock, /height:\s*100%/);
 });
 
 test('uses static trend legend and overlapping target versus recovered bars', () => {

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 12:10:00 CST
+ 更新内容: 暴露 chartCyan 主题 token，供售前试用客户分布环图在深浅主题下同步取色。
+*/
+/*
  更新时间: 2026-07-13 11:25:44 CST
  更新内容: 月度完成率趋势线 token 调整为偏亮银紫色 #B9B6E8，保持深色玻璃背景上的清晰对比。
 */
@@ -70,6 +74,7 @@ const FALLBACK_TOKENS = {
   semanticGoal: '#C9A96B',
   semanticCapacity: '#7EA7FF',
   semanticSuccessMuted: '#A6C878',
+  chartCyan: '#62C3CD',
   chartActualBarTop: '#B89CFF',
   chartActualBarBottom: '#8E86FF',
   chartTargetBar: 'rgba(255,255,255,0.13)',
@@ -118,6 +123,7 @@ export function readThemeTokens() {
     semanticGoal: cssVar(styles, '--semantic-goal', FALLBACK_TOKENS.semanticGoal),
     semanticCapacity: cssVar(styles, '--semantic-capacity', FALLBACK_TOKENS.semanticCapacity),
     semanticSuccessMuted: cssVar(styles, '--semantic-success-muted', FALLBACK_TOKENS.semanticSuccessMuted),
+    chartCyan: cssVar(styles, '--chart-cyan', FALLBACK_TOKENS.chartCyan),
     chartActualBarTop: cssVar(styles, '--chart-actual-bar-top', FALLBACK_TOKENS.chartActualBarTop),
     chartActualBarBottom: cssVar(styles, '--chart-actual-bar-bottom', FALLBACK_TOKENS.chartActualBarBottom),
     chartTargetBar: cssVar(styles, '--chart-target-bar', FALLBACK_TOKENS.chartTargetBar),

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 12:35:00 CST
+ 更新内容: 交付页风险语义回归切换为售前试用状态标签、改善绿、金额金、风险玫红与负载冷蓝，不再断言旧交付排行进度条。
+*/
+/*
  更新时间: 2026-07-13 23:10:00 CST
  更新内容: 合并远端分支后 symbolSize 改回 ECharts 真实回调签名（直接接收 value，不解构），风险/常规点位半径
           同步为 9/7；断言随之更新为 `value => (isRiskCompletion(value) ? 9 : 7)`。
@@ -175,7 +179,7 @@ test('layers target behind recovered and avoids current-month highlight in the m
   assert.match(monthlyTrendSource, /fontWeight:\s*\(\{ value \} = \{\}\) => \(isRiskCompletion\(value\) \? 850 : 650\)/);
 });
 
-test('keeps channel and delivery progress bars on the same risk rule', () => {
+test('keeps channel progress bars on the established completion risk rule', () => {
   assert.equal(
     channelCompletionBarBackground({ key: 'east', completion: 70 }, '#E4B8D7'),
     format.COLOR.warnGradient
@@ -197,28 +201,22 @@ test('keeps channel and delivery progress bars on the same risk rule', () => {
     format.COLOR.goldGradient
   );
   assert.equal(shouldUseChannelCompletionWarnFill({ key: 'east', completion: 70, warn: true }), true);
-  assert.match(deliverySource, /const isUnderDelivery = row\.warn;/);
-  assert.match(deliverySource, /const isRiskDelivery = isUnderDelivery;/);
-  assert.match(deliverySource, /const deliveryProgressPctClassName = `dlv-progress-pct\$\{isRiskDelivery \? ' dlv-progress-pct--warn' : ''\}\$\{isOverDelivery \? ' dlv-progress-pct--over' : ''\}`;/);
-  assert.match(deliveryCss, /\.dlv-progress-pct--warn\s*\{[\s\S]*?color:\s*var\(--warn\);/);
 });
 
-test('keeps only 120-percent delivery rows gold and labels them as excess delivery', () => {
-  assert.match(deliverySource, /import \{ progressGradient \} from '\.\.\/lib\/format';/);
-  assert.match(deliverySource, /const deliveryProgressPct = Number\(pct\) \|\| 0;/);
-  assert.match(deliverySource, /const isOverDelivery = deliveryProgressPct >= 120;/);
-  assert.match(deliverySource, /const deliveryTag = isOverDelivery \? '超额交付' : isUnderDelivery \? '交付预警' : null;/);
-  assert.match(deliverySource, /const deliveryRowClassName = `dlv-row\$\{isRiskDelivery \? ' dlv-row--warn' : ''\}\$\{isOverDelivery \? ' dlv-row--over' : ''\}`;/);
-  assert.match(deliverySource, /const deliveryTagClassName = `dlv-tag\$\{isOverDelivery \? ' dlv-tag--over' : ''\}`;/);
-  assert.match(deliverySource, /const deliveryProgressPctClassName = `dlv-progress-pct\$\{isRiskDelivery \? ' dlv-progress-pct--warn' : ''\}\$\{isOverDelivery \? ' dlv-progress-pct--over' : ''\}`;/);
-  assert.match(deliverySource, /const deliveryVisualPct = isOverDelivery \? deliveryProgressPct : Math\.min\(deliveryProgressPct, 99\.9\);/);
-  assert.match(deliverySource, /const deliveryProgressBackground = progressGradient\(deliveryVisualPct, tokens\.progressMid\);/);
-  assert.doesNotMatch(deliverySource, />= 100/);
-  assert.match(deliverySource, /\{deliveryTag && <span className=\{deliveryTagClassName\}>\{deliveryTag\}<\/span>\}/);
-  assert.doesNotMatch(deliverySource, /COLOR\.warnGradient/);
-  assert.match(deliveryCss, /\.dlv-row--over\s*\{[\s\S]*?color-mix\(in srgb, var\(--accent-gold\) 7%, transparent\)[\s\S]*?color-mix\(in srgb, var\(--accent-gold\) 3%, var\(--glass-cell\)\)[\s\S]*?border-color:\s*color-mix\(in srgb, var\(--accent-gold\) 18%, var\(--line\)\);[\s\S]*?box-shadow:\s*inset 0 1px 0 color-mix\(in srgb, var\(--accent-gold-soft\) 8%, transparent\);/);
-  assert.match(deliveryCss, /\.dlv-tag--over\s*\{[\s\S]*?color:\s*var\(--accent-gold-soft\);[\s\S]*?\}/);
-  assert.match(deliveryCss, /\.dlv-progress-pct--over\s*\{[\s\S]*?color:\s*var\(--accent-gold-soft\);[\s\S]*?\}/);
+test('uses restrained semantic colors for presale trial improvements, risk, amount, and capacity', () => {
+  assert.match(deliverySource, /label="风险及超期"[\s\S]*?tone="risk"/);
+  assert.match(deliverySource, /className=\{`dlv-change dlv-change--\$\{safeTone\(row\.statusTone\)\}`\}/);
+  assert.match(deliverySource, /className=\{`dlv-status dlv-status--\$\{safeTone\(row\.statusTone\)\}`\}/);
+  assert.match(deliverySource, /className=\{`dlv-status dlv-status--\$\{safeTone\(row\.loadTone\)\}`\}/);
+  assert.match(deliveryCss, /\.dlv-kpi--risk \.dlv-kpi__value strong\s*\{\s*color:\s*var\(--semantic-risk\);\s*\}/);
+  assert.match(deliveryCss, /\.dlv-money\s*\{\s*color:\s*var\(--accent-gold-soft\) !important;\s*\}/);
+  assert.match(deliveryCss, /\.dlv-overdue\s*\{\s*color:\s*var\(--semantic-risk\) !important;\s*\}/);
+  assert.match(deliveryCss, /\.dlv-change--good\s*\{\s*color:\s*var\(--semantic-success-muted\) !important;\s*\}/);
+  assert.match(deliveryCss, /\.dlv-status--good\s*\{[\s\S]*?color:\s*var\(--semantic-success-muted\);[\s\S]*?9%, transparent[\s\S]*?24%, transparent/);
+  assert.match(deliveryCss, /\.dlv-status--risk\s*\{[\s\S]*?color:\s*var\(--semantic-risk\);[\s\S]*?9%, transparent[\s\S]*?24%, transparent/);
+  assert.match(deliveryCss, /\.dlv-load-bar\s*\{[\s\S]*?var\(--semantic-capacity\) 12%, transparent[\s\S]*?var\(--semantic-capacity\) 16%, transparent/);
+  assert.match(deliveryCss, /\.dlv-load-bar > span\s*\{[\s\S]*?linear-gradient\(90deg,[\s\S]*?var\(--semantic-capacity\)/);
+  assert.doesNotMatch(deliverySource, /超额交付|交付预警|客户均价|目标未配置/);
 });
 
 test('uses shared delta formatting in opening-account cards instead of a hardcoded up arrow', () => {

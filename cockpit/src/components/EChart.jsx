@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 12:10:00 CST
+ 更新内容: 新增可选 onEvents 图表事件映射，用于售前试用环图联动筛选，并在变更和卸载时解绑监听。
+*/
+/*
  更新时间: 2026-07-13 20:00:00 CST
  更新内容: ResizeObserver 回调加 rAF 合帧 +「测量尺寸未变化就跳过 resize()」守卫，防止容器存在循环依赖
  （例如某个父级用 flex:1/auto 高度包裹图表，图表渲染尺寸又反过来影响父级测量出的高度）时触发
@@ -14,7 +18,7 @@
 import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 
-export default function EChart({ option, style, className }) {
+export default function EChart({ option, style, className, onEvents = null }) {
   const ref = useRef(null);
   const chartRef = useRef(null);
 
@@ -63,6 +67,18 @@ export default function EChart({ option, style, className }) {
   useEffect(() => {
     chartRef.current?.setOption(option, true);
   }, [option]);
+
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart || !onEvents) return undefined;
+
+    const entries = Object.entries(onEvents).filter(([, handler]) => typeof handler === 'function');
+    entries.forEach(([eventName, handler]) => chart.on(eventName, handler));
+
+    return () => {
+      entries.forEach(([eventName, handler]) => chart.off(eventName, handler));
+    };
+  }, [onEvents]);
 
   return <div ref={ref} className={className} style={{ width: '100%', height: 260, ...style }} />;
 }

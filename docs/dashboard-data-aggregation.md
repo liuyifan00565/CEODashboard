@@ -1,8 +1,9 @@
 # Dashboard Data Aggregation
 
-更新时间: 2026-07-14 17:20:00 CST
+更新时间: 2026-07-14 11:12:37 CST
 更新内容:
-- 交付协同模块拆分客户阶段和待办工单口径：交付流程可视化按客户户数展示售前试用、正式交付、问题处理中、已完成交付；待办与风险管理按工单/事项数量展示待指派、超时未处理、高风险待推进和待产研协同，不再复用问题客户数或已完成客户数。
+- 交付看板重构为售前试用转化与配置负载页面，当前统一读取集中演示月快照，不使用旧订单交付聚合推算试用指标。
+- 明确核心同批试用 cohort、渠道 / 团队成熟 cohort、风险分层、14 单人员负载阈值，以及真实后端接入所需字段。
 
 更新时间: 2026-07-13 17:20:00 CST
 更新内容:
@@ -65,6 +66,8 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 
 `/api/dashboard-data` 读取本地 MySQL 兼容库 `ceo_dashboard`，返回前端运行时快照。前端通过 `src/data/liveData.js` 拉取接口，再由 `src/data/mock.js` 的 `applyDashboardDataSnapshot` 覆盖页面数据。
 
+`/api/dashboard-data.deliveryRows` 继续返回 `fact_delivery_order` 与 `biz_delivery_target_monthly` 的旧交付订单 / 人员目标聚合，以保持接口兼容。新的售前试用交付看板当前通过 `src/data/presaleTrialDelivery.js` 的异步加载器读取集中演示月快照，不读取、混合或回退到 `deliveryRows`；已交付订单不能替代当前试用客户。
+
 `/api/dashboard-data` 不实时调用外部算力接口，避免首页等待 token 服务。dashboard 快照就绪后，`App` 会在后台调用 `/api/compute-data` 覆盖 `computeOverview`、`computeUsageTrend`、`computeVersionConsumption`、`computeUsageDistribution`、`computeCustomerRows` 和 `computeResourceHealth`；随后按 `/api/compute-customers?page=&pageSize=200` 分页拉取客户明细并按手机号增量合并。算力页只接收 token 同步状态和客户同步状态，用骨架屏/进度文案展示后台加载进度。
 
 业务月份 `latestMonth` 默认跟随北京时间当前自然月；如需排查历史月份，可通过 `DASHBOARD_MONTH_OVERRIDE=YYYY-MM` 显式覆盖。当前自然月无法解析时，自动月份回退路径会优先取 `fact_revenue_daily.stat_date` 最新年月，再与 `fact_sales_member_monthly.year_month` 比较兜底。
@@ -104,7 +107,17 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 - 算力页前端派生指标：算力利用率 = `consumedCapacity / totalCapacity`；供需关系图把趋势中的用量、按当前总容量缩放后的容量和二者利用率同屏展示；风险客户按客户明细中的低余额（余额不高于 100 万点或余额/用量不高于 3）、高消耗（用量不低于 40 万点）、低回复（平均回复率低于 60%）和零用量标签派生；建议动作由风险标签映射为销售提醒充值、客成激活、客成排查配置、余额预警或高价值场景复盘；版本效率洞察按版本消耗占比计算头部版本和前两版本集中度。在用账户数 = 总客户数 - 用量分布中“算力用量=0”档，复用现有 `computeUsageDistribution` 数据，不新增查询。
 - 续费：`fact_renewal_daily` 按渠道×版本先聚合当月到期/已续/续费金额，再 LEFT JOIN 上一月同口径聚合得到 `prev_due_count`/`prev_renewed_count`；当上一月无数据时回退 0。
 - 经营节奏：月时间进度按真实日历推导（已过完整月=100%、未到月=0%、当月=已过天数/30），不再使用固定 30 的占位分支；年度时间进度仍按 `latestMonth` 月序 / 12。
-- 交付看板：`fact_delivery_order` 聚合交付单数和金额，`biz_delivery_target_monthly` 提供实施工程师月目标。目标表未配置时不计算完成率、不触发交付预警，前端显示“目标未配置”。交付协同区中，流程阶段按客户户数统计，待办与风险管理按工单/事项数量统计，避免“问题处理中/已完成交付”和“风险/闭环工单”重复表达同一组数字。
+- 旧交付聚合：`fact_delivery_order` 聚合交付单数和金额，`biz_delivery_target_monthly` 提供实施工程师月目标；结果继续保留在 `deliveryRows` 供兼容消费者使用，但售前试用交付看板不再展示客户均价、目标完成率或“目标未配置”。
+
+## 售前试用交付看板
+
+- 同一月份快照同时驱动核心指标、渠道环图、阶段风险、月度比较、渠道 / 团队转化与人员负载；月切换不得出现不同模块使用不同时间范围。
+- 核心试用转化率使用同一批进入试用并到达观察点的客户，2026-07 为 `12 / 26 = 46.2%`。渠道 / 团队表使用上期启动且已完成观察窗的成熟队列，2026-07 合计为 `15 / 36 = 41.7%`；表内当前试用数和环图总数不是该转化率分母。
+- 风险分层展示：阶段“已超期”记录全部超期客户；核心卡记录临近到期加重点超期；未配置负责人、预计金额未填写属于可能重叠的数据治理提醒，不与核心卡简单相加。
+- 月度比较由原始值计算。一般指标使用环比百分比，转化率使用百分点 `pp`，平均试用周期使用天数差；风险数与周期下降均判定为改善。
+- 配置人员建议容量默认为 14 单；负载比例低于 80% 为正常，80% 至 100% 为偏高，超过 100% 为超负荷。真实接口提供人员级容量后优先使用后端值。
+- 真实数据接入仍缺少试用唯一 ID、客户与负责人、开始 / 计划结束 / 实际结束时间、阶段与超期标识、渠道 / 团队、cohort 与观察窗、成熟队列标识、成交状态 / 时间 / 订单、预计与成交金额、风险类型 / 级别 / 去重关联、人员本月累计 / 转化 / 超期 / 容量，以及所选月和自然上月的完整指标。阶段枚举、时区、成交去重、跨渠道归属、币种 / 含税和权限过滤规则也需由后端明确。
+- 完整口径和字段清单见 [`../doc/presale-trial-delivery-dashboard.md`](../doc/presale-trial-delivery-dashboard.md)。
 
 ## Cost Maintenance Refund Amount
 
