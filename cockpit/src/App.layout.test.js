@@ -1,4 +1,6 @@
 /* 更新时间: 2026-07-14 16:35:43 CST  更新内容: 回归锁定交付渠道行选择联动右侧渠道人员完成情况及初始选择提示。 */
+/* 更新时间: 2026-07-14 16:52:12 CST  更新内容: 回归锁定回款结构半环有值渠道标签完整显示且引导折线保持短线段。 */
+/* 更新时间: 2026-07-14 16:49:06 CST  更新内容: 回归锁定回款结构半环所有有值真实渠道均显示外部标签，避免“其他”等小扇区漏显。 */
 /* 更新时间: 2026-07-14 16:47:26 CST  更新内容: 回归锁定侧栏 AI 小人入口移除旁侧文案，并在空白区域居中显示。 */
 /* 更新时间: 2026-07-14 15:30:13 CST  更新内容: 回归锁定交付演示快照仅由显式环境开关启用，并在页面显示非生产数据标识。 */
 /* 更新时间: 2026-07-14 15:11:44 CST  更新内容: 交付页回归锁定 KPI 后六项月度对比带、58/42 同屏执行明细及双断点响应式布局。 */
@@ -1693,7 +1695,14 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /style="--op-channel-tooltip-accent: \$\{swatch\};"/);
   assert.match(operatingOverviewSource, /class="op-channel-tooltip__marker"/);
   assert.match(operatingOverviewSource, /const isIncompleteLabel = item\.isIncomplete && Number\(item\.value\) > 0;/);
-  assert.match(operatingOverviewSource, /const INCOMPLETE_LABEL_EDGE_DISTANCE = '22%';/);
+  assert.match(operatingOverviewSource, /const CHANNEL_LABEL_EDGE_DISTANCE = '20%';/);
+  assert.match(operatingOverviewSource, /const MINOR_LABEL_EDGE_DISTANCE = '18%';/);
+  assert.match(operatingOverviewSource, /const INCOMPLETE_LABEL_EDGE_DISTANCE = '24%';/);
+  assert.match(operatingOverviewSource, /length2:\s*8,/);
+  assert.match(operatingOverviewSource, /const isChannelLabel = !item\.isIncomplete && !item\.isEmpty && Number\(item\.value\) > 0;/);
+  assert.match(operatingOverviewSource, /const isMinorLabel = isChannelLabel && index >= 2;/);
+  assert.match(operatingOverviewSource, /show: isChannelLabel \|\| isIncompleteLabel,/);
+  assert.match(operatingOverviewSource, /\.\.\.\(isChannelLabel \? \{ edgeDistance: isMinorLabel \? MINOR_LABEL_EDGE_DISTANCE : CHANNEL_LABEL_EDGE_DISTANCE \} : \{\}\),/);
   assert.match(operatingOverviewSource, /\.\.\.\(isIncompleteLabel \? \{ edgeDistance: INCOMPLETE_LABEL_EDGE_DISTANCE \} : \{\}\),/);
   assert.match(operatingOverviewSource, /图上占比 <strong>\$\{share\}%<\/strong> · 目标 \$\{formatWan\(target\)\} 万 · 完成率 \$\{formatPct\(completion\)\}/);
   assert.match(operatingOverviewSource, /const riskBaseline = Math\.min\(100, completion\);/);
@@ -1712,7 +1721,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /borderRadius:\s*8,/);
   assert.match(operatingOverviewSource, /borderColor:\s*'rgba\(255, 255, 255, \.11\)'/);
   assert.match(operatingOverviewSource, /shadowColor:\s*'rgba\(184, 156, 255, \.08\)'/);
-  assert.match(operatingOverviewSource, /const isMajorLabel = index < 2 && !item\.isEmpty && Number\(item\.value\) > 0;/);
+  assert.doesNotMatch(operatingOverviewSource, /const isMajorLabel = index < 2 && !item\.isEmpty && Number\(item\.value\) > 0;/);
   assert.match(operatingOverviewCss, /\.op-channel-chart-wrap::before\s*\{[\s\S]*?content:\s*none;/);
   assert.match(operatingOverviewCss, /\.op-channel-tooltip\s*\{[\s\S]*?background:\s*[\s\S]*?rgba\(18, 19, 28, \.62\);/);
   assert.match(operatingOverviewCss, /\.op-channel-tooltip::before\s*\{[\s\S]*?background:\s*var\(--op-channel-tooltip-accent\);/);
