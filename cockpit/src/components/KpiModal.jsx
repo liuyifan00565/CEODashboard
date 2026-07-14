@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 13:32:06 CST  更新内容: 自营收入下钻表改为 40 条分页渲染，保留全部真实明细并降低弹窗卡顿。 */
 /* 更新时间: 2026-07-14 13:18:00 CST  更新内容: 自营收入下钻表展示 Excel 全字段，并区分销售业绩、退款与净回款。 */
 /* 更新时间: 2026-07-13 16:48:56 CST  更新内容: 总投入构成文案改为运营成本 / 人力成本。 */
 /* 更新时间: 2026-07-08 18:22:00 CST  更新内容: 总投入费比二级弹窗改为投入趋势与环比，补齐当前筛选、主结论和全渠道广告/人力构成口径。 */
@@ -32,6 +33,7 @@ const COST_DIM_OPTS = [
 ];
 const MOM_LABEL = { year: '年度环比', month: '月度环比', day: '日度环比' };
 const DIM_COPY = { year: '年度', month: '月度', day: '日度' };
+const ORDER_PAGE_SIZE = 40;
 
 function versionOptions() {
   return [
@@ -257,6 +259,7 @@ export default function KpiModal({ card, onClose }) {
   const maskRef = useRef(null);
   const chartElRef = useRef(null);
   const chartRef = useRef(null);
+  const orderScrollRef = useRef(null);
   const closingRef = useRef(false);
 
   // 筛选变化时默认选中最后一根；续费率柱状图为销售维度对比，普通 KPI 为时间序列。
@@ -394,6 +397,21 @@ export default function KpiModal({ card, onClose }) {
       ? getRevenueOrderRows({ salesKeys, dim: dimForSeries, selectedLabel: sel.label })
       : []
   ), [card.metric, dimForSeries, salesKeys, sel.label]);
+  const [orderPage, setOrderPage] = useState(0);
+  const orderPageCount = Math.max(1, Math.ceil(orderRows.length / ORDER_PAGE_SIZE));
+  const visibleOrderRows = useMemo(() => {
+    const start = orderPage * ORDER_PAGE_SIZE;
+    return orderRows.slice(start, start + ORDER_PAGE_SIZE);
+  }, [orderPage, orderRows]);
+  const orderRangeStart = orderRows.length ? orderPage * ORDER_PAGE_SIZE + 1 : 0;
+  const orderRangeEnd = Math.min((orderPage + 1) * ORDER_PAGE_SIZE, orderRows.length);
+
+  useEffect(() => { setOrderPage(0); }, [dimForSeries, salesKeys, sel.label]);
+
+  const changeOrderPage = (nextPage) => {
+    setOrderPage(Math.max(0, Math.min(nextPage, orderPageCount - 1)));
+    orderScrollRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+  };
 
   return (
     <div className="km-overlay" role="dialog" aria-modal="true">
@@ -534,9 +552,9 @@ export default function KpiModal({ card, onClose }) {
           <div className="km-order-detail" aria-label="自营收入订单明细">
             <div className="km-order-detail__head">
               <span>自营收入明细</span>
-              <b>{orderRows.length} 条</b>
+              <b>第 {orderRangeStart}-{orderRangeEnd} 条，共 {orderRows.length} 条</b>
             </div>
-            <div className="km-order-detail__scroll">
+            <div className="km-order-detail__scroll" ref={orderScrollRef}>
               <table className="km-order-detail__table">
                 <thead>
                   <tr>
@@ -558,7 +576,7 @@ export default function KpiModal({ card, onClose }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {orderRows.map((row, index) => (
+                  {visibleOrderRows.map((row, index) => (
                     <tr key={`${row.orderNo || 'order'}-${row.date || row.yearMonth}-${index}`}>
                       <td>{compactText(row.date)}</td>
                       <td>{compactText(row.salesName)}</td>
@@ -580,6 +598,29 @@ export default function KpiModal({ card, onClose }) {
                 </tbody>
               </table>
             </div>
+            {orderPageCount > 1 && (
+              <div className="km-order-detail__pagination" aria-label="自营收入明细分页">
+                <button
+                  type="button"
+                  aria-label="上一页"
+                  title="上一页"
+                  disabled={orderPage === 0}
+                  onClick={() => changeOrderPage(orderPage - 1)}
+                >
+                  <AppIcon name="chevronLeft" size={16} />
+                </button>
+                <span>{orderPage + 1} / {orderPageCount}</span>
+                <button
+                  type="button"
+                  aria-label="下一页"
+                  title="下一页"
+                  disabled={orderPage >= orderPageCount - 1}
+                  onClick={() => changeOrderPage(orderPage + 1)}
+                >
+                  <AppIcon name="chevronRight" size={16} />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

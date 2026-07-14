@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 13:32:06 CST
+ 更新内容: 增加自营收入明细 40 条分页渲染的性能回归断言。
+*/
+/*
  更新时间: 2026-07-13 22:00:00 CST
  更新内容: 同步年度回款半环图“未完成”标注位从 y:156 改为 y:238（避免与线下华南 y:158 重叠）的回归断言。
 */
@@ -400,4 +404,13 @@ test('renders KPI drilldowns with the premium glass detail-page structure', () =
   assert.match(modalCssSource, /\.km-chart-tooltip\s*\{[\s\S]*?background:\s*rgba\(22,\s*22,\s*34,\s*0\.82\);[\s\S]*?backdrop-filter:\s*blur\(18px\);[\s\S]*?box-shadow:\s*0 12px 36px rgba\(0,\s*0,\s*0,\s*0\.35\);/);
   assert.match(modalCssSource, /\.km-summary\s*\{[\s\S]*?grid-template-columns:\s*1\.1fr 2fr 1fr;[\s\S]*?border-radius:\s*18px;[\s\S]*?background:\s*rgba\(255,\s*255,\s*255,\s*0\.045\);/);
   assert.match(modalCssSource, /\.km-summary--plain\s*\{[\s\S]*?grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\);/);
+});
+
+test('paginates real revenue detail rows instead of rendering the full workbook at once', () => {
+  assert.match(modalSource, /const ORDER_PAGE_SIZE = 40;/);
+  assert.match(modalSource, /const visibleOrderRows = useMemo\(\(\) => \{[\s\S]*?orderRows\.slice\(start, start \+ ORDER_PAGE_SIZE\)/);
+  assert.match(modalSource, /\{visibleOrderRows\.map\(\(row, index\) => \(/);
+  assert.match(modalSource, /aria-label="自营收入明细分页"/);
+  assert.match(modalSource, /第 \{orderRangeStart\}-\{orderRangeEnd\} 条，共 \{orderRows\.length\} 条/);
+  assert.match(modalCssSource, /\.km-order-detail__pagination\s*\{[\s\S]*?justify-content:\s*flex-end;/);
 });
