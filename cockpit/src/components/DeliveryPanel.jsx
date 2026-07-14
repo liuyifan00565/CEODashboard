@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 13:35:39 CST
+ 更新内容: 将默认空数据加载器提升为稳定模块常量，避免交付页因 effect 依赖变化无限重载。
+*/
+/*
  更新时间: 2026-07-14 13:18:00 CST
  更新内容: 默认停用售前试用演示快照，真实接口接入前仅展示无数据状态。
 */
@@ -27,6 +31,7 @@ const CONVERSION_DIMENSION_OPTIONS = [
 ];
 
 const TONE_NAMES = new Set(['good', 'warn', 'risk', 'neutral', 'info', 'primary']);
+const EMPTY_DELIVERY_LOADER = () => Promise.resolve(null);
 
 function safeTone(tone) {
   return TONE_NAMES.has(tone) ? tone : 'neutral';
@@ -204,7 +209,7 @@ function DataState({ status, error, onRetry }) {
   );
 }
 
-export default function DeliveryPanel({ dataLoader = async () => null }) {
+export default function DeliveryPanel({ dataLoader = EMPTY_DELIVERY_LOADER }) {
   const tokens = useThemeTokens();
   const [monthKey, setMonthKey] = useState(DEFAULT_PRESALE_TRIAL_MONTH);
   const [distributionMetric, setDistributionMetric] = useState('count');

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 13:35:39 CST  更新内容: 回归锁定交付页稳定默认加载器，避免 effect 因函数身份变化无限重载。 */
 /* 更新时间: 2026-07-14 12:11:48 CST  更新内容: 增加数据更新状态汇总卡复选框右置布局回归，避免通用 span 样式覆盖标题行 flex。 */
 /* 更新时间: 2026-07-14 15:25:00 CST  更新内容: 回归锁定登录门禁临时关闭：App 使用 LOGIN_DISABLED_USER 初始化为已认证，
    不再导入 LoginPage/fetchCurrentUser/logout，保留侧边栏账号展示结构。 */
@@ -1805,7 +1806,9 @@ test('restores secondary dashboard panels below the operating overview story', (
 });
 
 test('renders the presale trial delivery dashboard in the required long-page order', () => {
-  assert.match(deliveryPanelSource, /loadPresaleTrialDashboard/);
+  assert.match(deliveryPanelSource, /const EMPTY_DELIVERY_LOADER = \(\) => Promise\.resolve\(null\);/);
+  assert.match(deliveryPanelSource, /function DeliveryPanel\(\{ dataLoader = EMPTY_DELIVERY_LOADER \}\)/);
+  assert.doesNotMatch(deliveryPanelSource, /function DeliveryPanel\(\{ dataLoader = (?:async )?\(\) =>/);
   assert.match(deliveryPanelSource, /<h2 id="delivery-dashboard-title">交付看板<\/h2>/);
   assert.match(deliveryPanelSource, /售前试用转化与配置负载/);
   assert.match(deliveryPanelSource, /选择交付看板月份/);
