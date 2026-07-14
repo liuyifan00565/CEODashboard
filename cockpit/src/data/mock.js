@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 11:12:00 CST
+ 更新内容: 交付协同数据新增问题处理中二级明细，覆盖问题客户、金额影响、责任归属和闭环动作。
+*/
+/*
  更新时间: 2026-07-14 10:35:00 CST
  更新内容: 新增交付与运营协同汇总数据，支持交付流程、工单责任、风险闭环和权限成本控制区块。
 */
@@ -1114,6 +1118,84 @@ export function getDeliveryCollaborationSummary() {
       { key: 'owner', label: '负责人指派', text: '合同回款后生成交付工单，由交付负责人承接并同步管理人员。' },
       { key: 'issue', label: '问题登记', text: '交付过程中的配置、数据、客户响应问题统一记录风险等级。' },
       { key: 'rd', label: '产研排障', text: '涉及产品缺陷或数据异常时进入产研排障队列，闭环后回写状态。' },
+    ],
+    issueDetailSummary: {
+      amountAtRisk: 286.4,
+      highRiskAmount: 128.6,
+      avgStuckDays: 4.8,
+      over7Days: 2,
+    },
+    issueTypeDistribution: [
+      { key: 'data', label: '数据问题', count: 3, share: 33 },
+      { key: 'product', label: '产品功能', count: 2, share: 22 },
+      { key: 'permission', label: '权限账号', count: 2, share: 22 },
+      { key: 'response', label: '客户配合', count: 2, share: 23 },
+    ],
+    problemCustomers: [
+      {
+        key: 'issue-001',
+        customerName: '成都福客人工智能',
+        source: '直营',
+        contractAmount: 126.09,
+        amountAtRisk: 86.2,
+        stage: '正式交付',
+        issueType: '数据问题',
+        riskLevel: '高',
+        owner: '李明',
+        salesOwner: '线上销售部',
+        successOwner: '王工',
+        stuckDays: 9,
+        nextAction: '补齐历史回款明细，产研确认同步脚本后回归验证。',
+        expectedResolve: '7月17日',
+      },
+      {
+        key: 'issue-002',
+        customerName: '华南区域重点客户',
+        source: '渠道',
+        contractAmount: 72.4,
+        amountAtRisk: 42.4,
+        stage: '售前试用',
+        issueType: '产品功能',
+        riskLevel: '高',
+        owner: '周敏',
+        salesOwner: '线下华南',
+        successOwner: '陈工',
+        stuckDays: 7,
+        nextAction: '梳理试用反馈，确认版本能力边界并安排专项答疑。',
+        expectedResolve: '7月18日',
+      },
+      {
+        key: 'issue-003',
+        customerName: '线下华东集团客户',
+        source: '渠道',
+        contractAmount: 58.7,
+        amountAtRisk: 31.8,
+        stage: '正式交付',
+        issueType: '权限账号',
+        riskLevel: '中',
+        owner: '赵强',
+        salesOwner: '线下华东',
+        successOwner: '刘工',
+        stuckDays: 4,
+        nextAction: '收敛804元/年高成本账号范围，只保留必要录入权限。',
+        expectedResolve: '7月16日',
+      },
+      {
+        key: 'issue-004',
+        customerName: '代理渠道试点客户',
+        source: '代理',
+        contractAmount: 44.3,
+        amountAtRisk: 24.6,
+        stage: '问题处理中',
+        issueType: '客户配合',
+        riskLevel: '中',
+        owner: '孙倩',
+        salesOwner: '代理渠道部',
+        successOwner: '钱工',
+        stuckDays: 3,
+        nextAction: '推动客户确认负责人，补充上线时间表和验收口径。',
+        expectedResolve: '7月15日',
+      },
     ],
     controls: {
       highCostAccountPrice: 804,

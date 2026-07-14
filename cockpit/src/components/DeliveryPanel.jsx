@@ -7,6 +7,8 @@
 /* 更新时间: 2026-07-03 18:19:59 CST  更新内容: 交付看板完成率 80% 以下时进度条、百分比和预警态统一使用风险色。 */
 /* 更新时间: 2026-07-03 13:05:00  更新内容: 交付看板进度条 fill 改用 progressGradient 返回的低饱和冷色线性渐变。 */
 /* 更新时间: 2026-06-29 10:45:53  更新内容: 新增交付看板，展示实施工程师交付人效、单价、金额价值和目标完成情况。 */
+/* 更新时间: 2026-07-14 11:12:00 CST  更新内容: 交付页新增问题处理中二级明细弹层，展示问题客户、金额影响、责任归属、处理时长和闭环动作。 */
+import { useState } from 'react';
 import { getDeliveryRows, getDeliverySummary, getDeliveryCollaborationSummary } from '../data/mock';
 import { progressGradient } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
@@ -27,7 +29,9 @@ export default function DeliveryPanel() {
   const rows = getDeliveryRows();
   const summary = getDeliverySummary();
   const collaboration = getDeliveryCollaborationSummary();
+  const [openIssueDetail, setOpenIssueDetail] = useState(false);
   const riskWorkOrderCount = collaboration.workOrders.find((item) => item.key === 'risk')?.value ?? 0;
+  const issueSummary = collaboration.issueDetailSummary;
 
   return (
     <section className="dlv-panel">
@@ -64,7 +68,13 @@ export default function DeliveryPanel() {
         </div>
         <div className="dlv-flow-grid">
           {collaboration.flowStages.map((stage) => (
-            <article className={`dlv-flow-card dlv-flow-card--${stage.key}`} key={stage.key}>
+            <button
+              className={`dlv-flow-card dlv-flow-card--${stage.key}`}
+              disabled={stage.key !== 'risk'}
+              key={stage.key}
+              onClick={() => setOpenIssueDetail(true)}
+              type="button"
+            >
               <div className="dlv-flow-top">
                 <span>{stage.name}</span>
                 <b>{stage.count}<i>户</i></b>
@@ -75,7 +85,8 @@ export default function DeliveryPanel() {
                 <span>代理 {stage.agent}</span>
               </div>
               <em>{stage.note}</em>
-            </article>
+              {stage.key === 'risk' && <strong>查看问题客户</strong>}
+            </button>
           ))}
         </div>
       </section>
@@ -176,6 +187,95 @@ export default function DeliveryPanel() {
           </section>
         </aside>
       </div>
+
+      {openIssueDetail && (
+        <div className="dlv-issue-detail" role="dialog" aria-modal="true" aria-label="问题处理中客户明细">
+          <button
+            aria-label="关闭问题客户明细"
+            className="dlv-issue-mask"
+            onClick={() => setOpenIssueDetail(false)}
+            type="button"
+          />
+          <div className="dlv-issue-card">
+            <header className="dlv-issue-head">
+              <div>
+                <span>问题处理中</span>
+                <h4>问题客户清单</h4>
+              </div>
+              <button className="dlv-issue-close" onClick={() => setOpenIssueDetail(false)} type="button">
+                关闭
+              </button>
+            </header>
+
+            <div className="dlv-issue-summary">
+              <span>金额影响 <b>{issueSummary.amountAtRisk} 万</b></span>
+              <span>高风险金额 <b>{issueSummary.highRiskAmount} 万</b></span>
+              <span>平均处理时长 <b>{issueSummary.avgStuckDays} 天</b></span>
+              <span>超7天未闭环 <b>{issueSummary.over7Days} 户</b></span>
+            </div>
+
+            <section className="dlv-issue-block">
+              <div className="dlv-issue-block-head">
+                <h5>问题类型分布</h5>
+                <span>帮助判断是客户配合、权限账号，还是需要产研排障。</span>
+              </div>
+              <div className="dlv-issue-types">
+                {collaboration.issueTypeDistribution.map((item) => (
+                  <div className="dlv-issue-type" key={item.key}>
+                    <span>{item.label}</span>
+                    <b>{item.count} 户</b>
+                    <i>{item.share}%</i>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="dlv-issue-block">
+              <div className="dlv-issue-block-head">
+                <h5>客户明细</h5>
+                <span>重点看金额影响、责任归属、卡住天数和闭环动作。</span>
+              </div>
+              <div className="dlv-issue-table">
+                <div className="dlv-issue-row dlv-issue-row--head">
+                  <span>客户 / 来源</span>
+                  <span>问题类型</span>
+                  <span>责任归属</span>
+                  <span>金额影响</span>
+                  <span>处理时长</span>
+                  <span>闭环动作</span>
+                </div>
+                {collaboration.problemCustomers.map((customer) => (
+                  <div className="dlv-issue-row" key={customer.key}>
+                    <span>
+                      <b>{customer.customerName}</b>
+                      <i>{customer.source} · {customer.stage}</i>
+                    </span>
+                    <span>
+                      <b>{customer.issueType}</b>
+                      <i className={`dlv-issue-risk dlv-issue-risk--${customer.riskLevel === '高' ? 'high' : 'mid'}`}>
+                        {customer.riskLevel}风险
+                      </i>
+                    </span>
+                    <span>
+                      <b>{customer.owner}</b>
+                      <i>{customer.salesOwner} / {customer.successOwner}</i>
+                    </span>
+                    <span>
+                      <b>{customer.amountAtRisk} 万</b>
+                      <i>合同 {customer.contractAmount} 万</i>
+                    </span>
+                    <span>
+                      <b>卡住天数 {customer.stuckDays} 天</b>
+                      <i>预计解决 {customer.expectedResolve}</i>
+                    </span>
+                    <span>{customer.nextAction}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
