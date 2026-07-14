@@ -1,3 +1,7 @@
+/* 更新时间: 2026-07-14 15:20:00 CST  更新内容: 月度半环区域恢复“本月回款结构”标题，不恢复单位文字且不增加主卡高度。 */
+/* 更新时间: 2026-07-14 15:14:00 CST  更新内容: 半环接入 ECharts 空白画布事件，空白区显式打开月度/年度明细，渠道扇区保留人员下钻。 */
+/* 更新时间: 2026-07-14 15:09:00 CST  更新内容: 半环空白区域恢复整卡下钻，仅在点击实际渠道扇区时阻止冒泡并打开人员明细。 */
+/* 更新时间: 2026-07-14 14:36:00 CST  更新内容: 删除回款结构标题、单位和点击提示；月度/年度整卡可点击下钻，渠道行与半环扇区保留独立人员下钻。 */
 /* 更新时间: 2026-07-14 13:40:09 CST  更新内容: 月度与年度渠道行及半环扇区支持点击打开真实人员级回款明细。 */
 /* 更新时间: 2026-07-13 19:26:40 CST  更新内容: 年度折叠条保持原宽度，加粗常驻进度条并在右侧显示年度完成百分比。 */
 /* 更新时间: 2026-07-13 19:23:27 CST  更新内容: 年度回款总览与月度经营进度互换位置，年度总览默认收起为标题、进度条和展开箭头。 */
@@ -94,16 +98,16 @@ const ANNUAL_KEYWORDS = [
   '风险',
 ];
 const MONTH_STRUCTURE_META = {
+  seriesName: '回款结构',
   recoveredLabel: '实际回款',
   targetLabel: '目标回款',
   centerLabel: '月目标完成率',
-  chartName: '本月回款结构',
 };
 const ANNUAL_STRUCTURE_META = {
+  seriesName: '回款结构',
   recoveredLabel: '年度回款',
   targetLabel: '年度目标',
   centerLabel: '年目标完成率',
-  chartName: '年度回款结构',
 };
 const CHANNEL_STRUCTURE_STYLES = {
   online: {
@@ -129,8 +133,6 @@ const INCOMPLETE_STRUCTURE_STYLE = {
 };
 const MAJOR_LABEL_EDGE_DISTANCE = '16%';
 const INCOMPLETE_LABEL_EDGE_DISTANCE = '22%';
-const DETAIL_ARROW = '›';
-
 function formatWan(value) {
   return Number(value).toLocaleString('zh-CN');
 }
@@ -288,7 +290,7 @@ function channelStructureOption(structure, periodMeta, tokens) {
           <div class="op-channel-tooltip" style="--op-channel-tooltip-accent: ${swatch};" aria-label="${params.name}${periodMeta.recoveredLabel}${value}万">
             <div class="op-channel-tooltip__head">
               <span class="op-channel-tooltip__marker"></span>
-              <div class="op-channel-tooltip__name">${periodMeta.chartName} · ${params.name}</div>
+              <div class="op-channel-tooltip__name">${periodMeta.seriesName} · ${params.name}</div>
             </div>
             <div class="op-channel-tooltip__value">${valueLabel} <strong>${formatWan(value)}</strong> 万</div>
             <div class="op-channel-tooltip__meta">图上占比 <strong>${share}%</strong> · 目标 ${formatWan(target)} 万 · 完成率 ${formatPct(completion)}</div>
@@ -302,7 +304,7 @@ function channelStructureOption(structure, periodMeta, tokens) {
     series: [
       {
         type: 'pie',
-        name: periodMeta.chartName,
+        name: periodMeta.seriesName,
         radius: ['45%', '76%'],
         center: ['49.5%', '68%'],
         startAngle: 180,
@@ -386,55 +388,47 @@ function channelStructureOption(structure, periodMeta, tokens) {
   };
 }
 
-function RecoveryStructure({ structure, option, periodMeta, chartEvents, action = null }) {
+function RecoveryStructure({ structure, option, periodMeta, chartEvents, onBlankClick, title = '' }) {
   return (
     <div className="op-recovery-structure">
-      <div className="op-structure-head">
-        <div>
-          <h2>{periodMeta.chartName}</h2>
-          <span>单位：万元</span>
-        </div>
-      </div>
-
+      {title && <h2 className="op-structure-title">{title}</h2>}
       <div
-        className={action ? 'op-channel-chart-wrap op-channel-chart-wrap--with-detail' : 'op-channel-chart-wrap'}
+        className="op-channel-chart-wrap"
         aria-label={`${periodMeta.centerLabel} ${formatPct(structure.completion)}，${periodMeta.recoveredLabel} ${formatWan(structure.totalRecovered)} 万`}
       >
-        <EChart className="op-channel-chart" option={option} onEvents={chartEvents} style={{ height: '100%' }} />
-        {action}
+        <EChart
+          className="op-channel-chart"
+          option={option}
+          onEvents={chartEvents}
+          onBlankClick={onBlankClick}
+          style={{ height: '100%' }}
+        />
       </div>
     </div>
   );
 }
 
-function MonthlyRecoveryStructure({ structure, option, chartEvents, detailDisabled, onDetailClick }) {
+function MonthlyRecoveryStructure({ structure, option, chartEvents, onBlankClick }) {
   return (
     <RecoveryStructure
       structure={structure}
       option={option}
       periodMeta={MONTH_STRUCTURE_META}
       chartEvents={chartEvents}
-      action={(
-        <DetailLink disabled={detailDisabled} onClick={onDetailClick}>
-          点击查看近期明细
-        </DetailLink>
-      )}
+      onBlankClick={onBlankClick}
+      title="本月回款结构"
     />
   );
 }
 
-function AnnualRecoveryStructure({ structure, option, chartEvents, detailDisabled, onDetailClick }) {
+function AnnualRecoveryStructure({ structure, option, chartEvents, onBlankClick }) {
   return (
     <RecoveryStructure
       structure={structure}
       option={option}
       periodMeta={ANNUAL_STRUCTURE_META}
       chartEvents={chartEvents}
-      action={(
-        <DetailLink disabled={detailDisabled} onClick={onDetailClick}>
-          点击查看年度拆解
-        </DetailLink>
-      )}
+      onBlankClick={onBlankClick}
     />
   );
 }
@@ -455,7 +449,10 @@ function OperatingSituation({ structure, subLabel = '实际回款 / 目标回款
             type="button"
             className={`op-channel-item${row.risk ? ' op-channel-item--warn' : ''}`}
             key={row.key}
-            onClick={() => onChannelClick(row.key)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onChannelClick(row.key);
+            }}
             title={`查看${row.name}人员明细`}
           >
             <span
@@ -481,20 +478,6 @@ function OperatingSituation({ structure, subLabel = '实际回款 / 目标回款
   );
 }
 
-function DetailLink({ disabled, onClick, children }) {
-  return (
-    <button
-      type="button"
-      className="op-detail-link"
-      disabled={disabled}
-      onClick={onClick}
-    >
-      <span>{children}</span>
-      <span className="op-detail-link-arrow" aria-hidden="true">{DETAIL_ARROW}</span>
-    </button>
-  );
-}
-
 export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearKpiCard, onOpenKpi }) {
   const tokens = useThemeTokens();
   const [annualExpanded, setAnnualExpanded] = useState(false);
@@ -510,6 +493,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
   const monthlyChartEvents = useMemo(() => ({
     click: (params) => {
       if (params?.data?.key && !params.data.isIncomplete && !params.data.isEmpty) {
+        params.event?.event?.stopPropagation?.();
         setPersonDrilldown({ channelKey: params.data.key, period: 'month' });
       }
     },
@@ -517,6 +501,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
   const annualChartEvents = useMemo(() => ({
     click: (params) => {
       if (params?.data?.key && !params.data.isIncomplete && !params.data.isEmpty) {
+        params.event?.event?.stopPropagation?.();
         setPersonDrilldown({ channelKey: params.data.key, period: 'year' });
       }
     },
@@ -536,7 +521,22 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
   return (
     <div className="op-overview">
       <SearchResultBorder active={matchesSearchTerm(ANNUAL_KEYWORDS, searchTerm)} className="op-search-result op-search-result--annual">
-        <section className={`op-panel op-panel--annual${annualExpanded ? ' is-expanded' : ''}`} data-anim>
+        <section
+          className={`op-panel op-panel--annual op-panel--clickable${annualExpanded ? ' is-expanded' : ''}`}
+          data-anim
+          role="button"
+          tabIndex={0}
+          aria-label="打开年度回款明细"
+          onClick={() => {
+            if (yearKpiCard) onOpenKpi?.(yearKpiCard);
+          }}
+          onKeyDown={(event) => {
+            if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+              event.preventDefault();
+              if (yearKpiCard) onOpenKpi?.(yearKpiCard);
+            }
+          }}
+        >
           <header className="op-annual-summary">
             <h2>年度回款总览</h2>
             <div
@@ -559,7 +559,10 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
               aria-expanded={annualExpanded}
               aria-controls="annual-overview-details"
               aria-label={annualExpanded ? '收起年度回款总览' : '展开年度回款总览'}
-              onClick={() => setAnnualExpanded((expanded) => !expanded)}
+              onClick={(event) => {
+                event.stopPropagation();
+                setAnnualExpanded((expanded) => !expanded);
+              }}
             >
               <span className="op-annual-toggle-icon" aria-hidden="true" />
             </button>
@@ -591,8 +594,9 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
                   structure={annualStructure}
                   option={annualStructureOption}
                   chartEvents={annualChartEvents}
-                  detailDisabled={!yearKpiCard || !onOpenKpi}
-                  onDetailClick={() => onOpenKpi(yearKpiCard)}
+                  onBlankClick={() => {
+                    if (yearKpiCard) onOpenKpi?.(yearKpiCard);
+                  }}
                 />
 
                 <OperatingSituation
@@ -607,7 +611,23 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
       </SearchResultBorder>
 
       <SearchResultBorder active={matchesSearchTerm(progressKeywords, searchTerm)} className="op-search-result op-search-result--progress">
-        <section className="op-panel op-panel--progress" data-ai-insight-target="performance" data-anim>
+        <section
+          className="op-panel op-panel--progress op-panel--clickable"
+          data-ai-insight-target="performance"
+          data-anim
+          role="button"
+          tabIndex={0}
+          aria-label="打开本月回款明细"
+          onClick={() => {
+            if (monthKpiCard) onOpenKpi?.(monthKpiCard);
+          }}
+          onKeyDown={(event) => {
+            if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+              event.preventDefault();
+              if (monthKpiCard) onOpenKpi?.(monthKpiCard);
+            }
+          }}
+        >
           <header className="op-progress-head">
             <div>
               <h1>{progressTitle}</h1>
@@ -633,8 +653,9 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
               structure={monthlyStructure}
               option={monthlyStructureOption}
               chartEvents={monthlyChartEvents}
-              detailDisabled={!monthKpiCard || !onOpenKpi}
-              onDetailClick={() => onOpenKpi(monthKpiCard)}
+              onBlankClick={() => {
+                if (monthKpiCard) onOpenKpi?.(monthKpiCard);
+              }}
             />
 
             <OperatingSituation

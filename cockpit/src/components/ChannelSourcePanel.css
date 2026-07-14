@@ -1,6 +1,14 @@
 /*
- 更新时间: 2026-07-14 14:04:11 CST
- 更新内容: 新增成交来源排行与首页四指标横排样式，复用现有驾驶舱透明玻璃体系并适配窄屏。
+ 更新时间: 2026-07-14 15:20:00 CST
+ 更新内容: 四张 KPI 移除隐藏提示遗留的底部空白，收紧卡片最低高度和底部内边距。
+*/
+/*
+ 更新时间: 2026-07-14 14:36:00 CST
+ 更新内容: 来源整卡改为轻抬式点击入口，并隐藏四张 KPI 的点击提示文字。
+*/
+/*
+ 更新时间: 2026-07-14 14:17:05 CST
+ 更新内容: 成交来源首页改为趋势图同级环形图，排行移入玻璃弹窗；四张经营 KPI 调整到图表行下方。
 */
 .dash-overview-kpis {
   display: grid;
@@ -24,7 +32,8 @@
 
 .dash-overview-kpis .opening-metric-card,
 .dash-overview-kpis .kpi-card {
-  min-height: 142px;
+  min-height: 112px;
+  padding-bottom: 8px;
 }
 
 .dash-overview-kpis .kpi-card {
@@ -37,7 +46,11 @@
 }
 
 .dash-overview-kpis .kpi-card__hint {
-  margin-top: auto;
+  display: none;
+}
+
+.dash-overview-kpis .opening-metric-card__hint {
+  display: none;
 }
 
 .dash-source-cell {
@@ -50,7 +63,9 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 16px 18px;
+  padding: 16px 18px 12px;
+  color: inherit;
+  text-align: left;
   overflow: hidden;
   border: 1px solid var(--dashboard-card-border);
   border-radius: 16px;
@@ -58,13 +73,19 @@
   -webkit-backdrop-filter: var(--dashboard-card-blur);
   backdrop-filter: var(--dashboard-card-blur);
   box-shadow: var(--dashboard-card-shadow);
-  transition: border-color .22s ease, box-shadow .22s ease;
+  cursor: pointer;
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
 }
 
 .channel-source-panel:hover,
 .channel-source-panel:focus-within {
+  transform: translateY(-2px);
   border-color: rgba(255,255,255,.34);
   box-shadow: var(--glass-shadow);
+}
+
+.channel-source-panel:focus-visible {
+  outline: none;
 }
 
 .channel-source-panel__head {
@@ -72,7 +93,6 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
-  margin-bottom: 12px;
 }
 
 .channel-source-panel__head h2 {
@@ -83,8 +103,7 @@
 }
 
 .channel-source-panel__head p,
-.channel-source-panel__summary span,
-.channel-source-panel__summary small {
+.channel-source-panel__head > span {
   margin: 4px 0 0;
   color: var(--faint);
   font-size: 12px;
@@ -92,21 +111,170 @@
   white-space: nowrap;
 }
 
-.channel-source-panel__summary {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+.channel-source-panel__chart-button {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: block;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: inherit;
 }
 
-.channel-source-panel__summary small {
+.channel-source-panel__chart {
+  width: 100%;
+  height: 100% !important;
+  min-height: 238px;
+}
+
+.source-ring-tooltip {
+  position: relative;
+  min-width: 176px;
+  display: grid;
+  gap: 5px;
+  overflow: hidden;
+  padding: 12px 14px 11px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: rgba(0,0,0,.68);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: 0 24px 80px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.18);
+  text-align: left;
+}
+
+.source-ring-tooltip__name {
+  color: rgba(239,251,255,.78);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.source-ring-tooltip__value {
+  color: rgba(239,251,255,.96);
+  font-size: 14px;
+  font-weight: 780;
+}
+
+.source-ring-tooltip__value strong {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+  text-shadow: 0 0 14px rgba(255,255,255,.22);
+}
+
+.source-ring-tooltip__meta {
+  color: rgba(239,251,255,.64);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.source-ring-tooltip__meta strong {
+  color: rgba(255,255,255,.98);
+  font-weight: 900;
+}
+
+.channel-source-panel__empty {
+  flex: 1;
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  color: var(--faint);
+  font-size: 13px;
+}
+
+.source-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.source-detail-mask {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: rgba(0,0,0,.78);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  backdrop-filter: blur(14px) saturate(120%);
+  cursor: default;
+}
+
+.source-detail-card {
+  position: relative;
+  width: min(720px, calc(100vw - 48px));
+  max-height: min(760px, calc(100vh - 48px));
+  display: flex;
+  flex-direction: column;
+  padding: 22px 24px;
+  overflow: hidden;
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  background: rgba(10,14,26,.88);
+  -webkit-backdrop-filter: blur(30px) saturate(145%);
+  backdrop-filter: blur(30px) saturate(145%);
+  box-shadow: var(--glass-shadow);
+}
+
+.source-detail-head {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.source-detail-head h2 {
+  margin: 0;
+  color: var(--txt);
+  font-size: 18px;
+  font-weight: 720;
+}
+
+.source-detail-head p {
+  margin: 5px 0 0;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.source-detail-close {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: transparent;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.source-detail-close:hover,
+.source-detail-close:focus-visible {
+  border-color: rgba(255,255,255,.28);
+  background: var(--glass-cell-hover);
+  color: var(--txt);
+  outline: none;
 }
 
 .channel-source-panel__list {
   min-height: 0;
   display: grid;
-  gap: 8px;
+  gap: 12px;
+  padding: 18px 8px 4px 0;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--line-2) transparent;
@@ -115,13 +283,13 @@
 .channel-source-row {
   min-width: 0;
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
   align-items: start;
 }
 
 .channel-source-row__rank {
-  padding-top: 1px;
+  padding-top: 2px;
   color: var(--faint);
   font-size: 11px;
   font-weight: 800;
@@ -131,7 +299,7 @@
 .channel-source-row__body {
   min-width: 0;
   display: grid;
-  gap: 4px;
+  gap: 5px;
 }
 
 .channel-source-row__topline,
@@ -139,7 +307,7 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
 }
 
 .channel-source-row__topline strong {
@@ -189,21 +357,15 @@
   font-variant-numeric: tabular-nums;
 }
 
-.channel-source-panel__empty {
-  flex: 1;
-  display: grid;
-  place-items: center;
-  color: var(--faint);
-  font-size: 13px;
-}
-
 @media (min-width: 1181px) {
-  .dash-secondary-grid {
+  .dash-content .dash-secondary-grid {
     grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr);
+    grid-template-rows: var(--dash-secondary-content-height);
     grid-template-areas: "trend source";
+    align-items: stretch;
   }
 
-  .dash-source-cell {
+  .dash-content .dash-source-cell {
     grid-area: source;
     height: var(--dash-secondary-content-height);
   }
@@ -214,7 +376,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .dash-secondary-grid {
+  .dash-content .dash-secondary-grid {
     grid-template-areas: "trend" "source";
   }
 
@@ -226,5 +388,19 @@
 @media (max-width: 760px) {
   .dash-overview-kpis {
     grid-template-columns: 1fr;
+  }
+
+  .source-detail-overlay {
+    padding: 12px;
+  }
+
+  .source-detail-card {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+    padding: 18px 16px;
+  }
+
+  .channel-source-row__meta {
+    flex-wrap: wrap;
   }
 }

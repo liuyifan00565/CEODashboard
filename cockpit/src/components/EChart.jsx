@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 15:14:00 CST
+ 更新内容: 新增可选 onBlankClick，使用 ZRender 空白命中事件支持画布空白区点击，并在变更和卸载时解绑。
+*/
+/*
  更新时间: 2026-07-14 12:10:00 CST
  更新内容: 新增可选 onEvents 图表事件映射，用于售前试用环图联动筛选，并在变更和卸载时解绑监听。
 */
@@ -18,7 +22,7 @@
 import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 
-export default function EChart({ option, style, className, onEvents = null }) {
+export default function EChart({ option, style, className, onEvents = null, onBlankClick = null }) {
   const ref = useRef(null);
   const chartRef = useRef(null);
 
@@ -79,6 +83,20 @@ export default function EChart({ option, style, className, onEvents = null }) {
       entries.forEach(([eventName, handler]) => chart.off(eventName, handler));
     };
   }, [onEvents]);
+
+  useEffect(() => {
+    const zr = chartRef.current?.getZr();
+    if (!zr || typeof onBlankClick !== 'function') return undefined;
+
+    const handleBlankClick = (event) => {
+      if (event.target) return;
+      event.event?.stopPropagation?.();
+      onBlankClick(event);
+    };
+
+    zr.on('click', handleBlankClick);
+    return () => zr.off('click', handleBlankClick);
+  }, [onBlankClick]);
 
   return <div ref={ref} className={className} style={{ width: '100%', height: 260, ...style }} />;
 }

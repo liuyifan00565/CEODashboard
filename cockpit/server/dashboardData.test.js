@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 14:29:30 CST
+ 更新内容: 回归锁定成交来源查询只读取最新业务月，不再返回年内累计来源结构。
+*/
+/*
  更新时间: 2026-07-14 14:04:11 CST
  更新内容: 回归覆盖真实成交来源快照字段与 fact_revenue_order 来源聚合 SQL。
 */
@@ -453,6 +457,7 @@ test('selects dashboard business month from explicit override or the latest real
   assert.match(source, /SELECT MAX\(\\`year_month\\`\) AS actual_month[\s\S]*FROM fact_sales_member_monthly/);
   assert.match(source, /FROM fact_revenue_order/);
   assert.match(source, /LEFT JOIN dim_channel_source cs ON cs\.source_id = o\.channel_source_id/);
+  assert.match(source, /GROUP BY sourceKey, sourceName, channelKey[\s\S]*?\[`\$\{latestMonth\}-01`, nextMonthBoundary\]\) : Promise\.resolve\(\[\]\)/);
   assert.match(source, /const latestMonth = await selectDashboardBusinessMonth\(connection\);/);
   assert.doesNotMatch(source, /SELECT MAX\(`year_month`\) AS latestMonth FROM fact_sales_member_monthly/);
 });

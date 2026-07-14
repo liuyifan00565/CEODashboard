@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 14:17:05 CST
+ 更新内容: 四张经营 KPI 移到趋势与成交来源图表下方，恢复先看图表、再看辅助指标的页面顺序。
+*/
+/*
  更新时间: 2026-07-14 14:04:11 CST
  更新内容: 开户数、总投入与广告ROI四张卡上移为横向 KPI 区；趋势图右侧改为真实成交来源排行。
 */
@@ -680,18 +684,6 @@ export default function App() {
                   onOpenKpi={handleOpenCard}
                 />
 
-                <div className="dash-overview-kpis" data-anim>
-                  <OpeningMetricCards searchTerm={searchTerm} onOpenSecondary={handleOpenCard} />
-                  {financeKpiCards.map((card) => (
-                    <SearchResultBorder active={matchesSearchTerm(card.keywords, searchTerm)} key={card.key}>
-                      <KpiCard card={card} onOpen={handleOpenCard} />
-                    </SearchResultBorder>
-                  ))}
-                  {financeKpiCards.map((card) => (
-                    <AdRoiCard searchTerm={searchTerm} onOpen={handleOpenCard} costCard={card} key={`${card.key}-roi`} />
-                  ))}
-                </div>
-
                 <div className="dash-secondary-grid">
                   <div className="dash-secondary-cell dash-secondary-cell--trend" data-ai-insight-target="trend" data-anim>
                     <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.trend, searchTerm)}>
@@ -702,6 +694,18 @@ export default function App() {
                   <div className="dash-source-cell" data-anim>
                     <ChannelSourcePanel channelKey={activeChannelKey} />
                   </div>
+                </div>
+
+                <div className="dash-overview-kpis" data-anim>
+                  <OpeningMetricCards searchTerm={searchTerm} onOpenSecondary={handleOpenCard} />
+                  {financeKpiCards.map((card) => (
+                    <SearchResultBorder active={matchesSearchTerm(card.keywords, searchTerm)} key={card.key}>
+                      <KpiCard card={card} onOpen={handleOpenCard} />
+                    </SearchResultBorder>
+                  ))}
+                  {financeKpiCards.map((card) => (
+                    <AdRoiCard searchTerm={searchTerm} onOpen={handleOpenCard} costCard={card} key={`${card.key}-roi`} />
+                  ))}
                 </div>
 
                 <div className="dash-version-row" data-ai-insight-target="versions" data-anim>

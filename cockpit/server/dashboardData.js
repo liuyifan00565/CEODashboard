@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 14:29:30 CST
+ 更新内容: 成交来源聚合由年内累计改为最新业务月，确保来源环图与首页当前月份口径一致。
+*/
+/*
  更新时间: 2026-07-14 14:04:11 CST
  更新内容: 看板快照新增成交来源聚合，按来源与经营渠道返回年内净回款、成交数、客户数和数据日期范围。
 */
@@ -1489,7 +1493,7 @@ export async function buildDashboardSnapshot(connection) {
       ) source_orders
       GROUP BY sourceKey, sourceName, channelKey
       ORDER BY recovered DESC, dealCount DESC
-    `, [`${latestYear}-01-01`, nextMonthBoundary]) : Promise.resolve([]),
+    `, [`${latestMonth}-01`, nextMonthBoundary]) : Promise.resolve([]),
     useRevenueOrders ? queryRows(connection, `
       SELECT
         DATE_FORMAT(o.stat_date, '%Y-%m-%d') AS \`date\`,
