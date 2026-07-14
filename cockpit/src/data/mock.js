@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 10:35:00 CST
+ 更新内容: 新增交付与运营协同汇总数据，支持交付流程、工单责任、风险闭环和权限成本控制区块。
+*/
+/*
  更新时间: 2026-07-14 10:00:00 CST
  更新内容: 版本情况(VersionFinancePanel)移回经营总览页，侧边导航“版本与交付”入口改为纯“交付”，
           只承载交付面板(DeliveryPanel)。
@@ -1060,8 +1064,65 @@ export function getDeliverySummary() {
     configuredTargetPeople: configuredTargetRows.length,
     allTargetsConfigured: people > 0 && configuredTargetRows.length === people,
     totalCount,
+    totalValue: roundMoney(totalValue),
     averageCountPerPerson: people ? roundMoney(totalCount / people) : 0,
     averageValuePerPerson: people ? roundMoney(totalValue / people) : 0,
+  };
+}
+
+function splitStageSource(total, directRatio = 0.48, channelRatio = 0.34) {
+  const safeTotal = Math.max(0, Math.round(Number(total) || 0));
+  const direct = Math.round(safeTotal * directRatio);
+  const channel = Math.round(safeTotal * channelRatio);
+  return {
+    direct,
+    channel,
+    agent: Math.max(0, safeTotal - direct - channel),
+  };
+}
+
+export function getDeliveryCollaborationSummary() {
+  const rows = getDeliveryRows();
+  const summary = getDeliverySummary();
+  const totalCount = Math.max(1, Number(summary.totalCount) || 0);
+  const totalValue = Math.max(1, Number(summary.totalValue) || 0);
+  const formalCount = summary.totalCount || rows.reduce((sum, row) => sum + Number(row.deliveredCount || 0), 0);
+  const trialCount = Math.max(6, Math.round(formalCount * 0.32));
+  const riskCount = rows.filter((row) => row.warn).length + 2;
+  const closedCount = Math.max(0, formalCount - riskCount);
+
+  return {
+    flowStages: [
+      { key: 'trial', name: '售前试用', count: trialCount, ...splitStageSource(trialCount, 0.5, 0.32), note: '试用客户池' },
+      { key: 'formal', name: '正式交付', count: formalCount, ...splitStageSource(formalCount), note: '合同回款后进入' },
+      { key: 'risk', name: '问题处理中', count: riskCount, ...splitStageSource(riskCount, 0.35, 0.4), note: '问题登记与预警' },
+      { key: 'closed', name: '已闭环', count: closedCount, ...splitStageSource(closedCount, 0.5, 0.3), note: '交付完成归档' },
+    ],
+    engineerStats: rows.map((row) => ({
+      key: row.key,
+      name: row.name,
+      deliveredCount: row.deliveredCount,
+      contractShare: roundMoney((Number(row.valuePerPerson || 0) / totalValue) * 100),
+    })),
+    workOrders: [
+      { key: 'pending', label: '待指派工单', value: Math.max(1, Math.round(totalCount * 0.08)), tone: 'warn' },
+      { key: 'active', label: '进行中工单', value: Math.max(1, Math.round(totalCount * 0.28)), tone: 'neutral' },
+      { key: 'risk', label: '风险工单', value: riskCount, tone: 'risk' },
+      { key: 'closed', label: '已闭环工单', value: closedCount, tone: 'good' },
+    ],
+    responsibility: [
+      { key: 'owner', label: '负责人指派', text: '合同回款后生成交付工单，由交付负责人承接并同步管理人员。' },
+      { key: 'issue', label: '问题登记', text: '交付过程中的配置、数据、客户响应问题统一记录风险等级。' },
+      { key: 'rd', label: '产研排障', text: '涉及产品缺陷或数据异常时进入产研排障队列，闭环后回写状态。' },
+    ],
+    controls: {
+      highCostAccountPrice: 804,
+      highCostAccounts: 7,
+      authorizedPeople: Math.max(3, rows.length + 2),
+      unnecessaryPeople: 2,
+      migrationItems: 4,
+      suggestion: '非核心交付过程沉淀到 TPD或多维表格，驾驶舱只保留指标和风险结果。',
+    },
   };
 }
 

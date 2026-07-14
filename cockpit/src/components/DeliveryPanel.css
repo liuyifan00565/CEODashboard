@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 10:35:00 CST  更新内容: 增加交付协同流程、工单责任和权限成本控制区块样式，保持玻璃卡片体系。 */
 /* 更新时间: 2026-07-06 00:06:58 CST  更新内容: 超额交付行的哑金背景和边框再降一档，减少获奖卡片感。 */
 /* 更新时间: 2026-07-05 23:42:14 CST  更新内容: 交付看板辅助文字和完成态背景降噪，保持目标达成金色语义但降低铺色。 */
 /* 更新时间: 2026-07-03 23:33:15 CST  更新内容: 交付看板超额完成行背景、标签和百分比改为金色完成态。 */
@@ -19,7 +20,7 @@
   backdrop-filter: var(--dashboard-card-blur);
   -webkit-backdrop-filter: var(--dashboard-card-blur);
   box-shadow: var(--dashboard-card-shadow);
-  overflow: hidden;
+  overflow: auto;
 }
 
 .dlv-head {
@@ -45,7 +46,7 @@
 
 .dlv-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -78,6 +79,135 @@
   font-size: 13px;
   font-style: normal;
   font-weight: 500;
+}
+
+.dlv-section {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--glass-cell) 72%, transparent);
+  border: 1px solid var(--line);
+}
+
+.dlv-section-head {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dlv-section-head h4 {
+  margin: 0;
+  color: var(--txt);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dlv-section-head span {
+  color: var(--faint);
+  font-size: 12px;
+  text-align: right;
+}
+
+.dlv-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dlv-flow-card {
+  min-width: 0;
+  display: grid;
+  gap: 9px;
+  padding: 11px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.dlv-flow-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dlv-flow-top span,
+.dlv-workorder span,
+.dlv-control-grid span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.dlv-flow-top b,
+.dlv-workorder b {
+  color: var(--txt);
+  font-size: 20px;
+  font-weight: 760;
+  font-variant-numeric: tabular-nums;
+}
+
+.dlv-flow-top i,
+.dlv-workorder i {
+  margin-left: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.dlv-source-split {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.dlv-source-split span {
+  min-width: 0;
+  padding: 4px 5px;
+  border-radius: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+  background: rgba(0,0,0,.16);
+  border: 1px solid rgba(255,255,255,.055);
+}
+
+.dlv-flow-card em {
+  color: var(--faint);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.dlv-flow-card--risk {
+  border-color: rgba(var(--warn-rgb), .22);
+  background: rgba(var(--warn-rgb), .06);
+}
+
+.dlv-flow-card--closed {
+  border-color: color-mix(in srgb, var(--accent-gold) 16%, var(--line));
+}
+
+.dlv-main-grid {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr);
+  gap: 12px;
+}
+
+.dlv-section--engineers,
+.dlv-side-stack {
+  min-height: 0;
+}
+
+.dlv-side-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .dlv-list {
@@ -163,6 +293,7 @@
   margin-top: 8px;
   color: var(--muted);
   font-size: 14px;
+  flex-wrap: wrap;
 }
 
 .dlv-metrics b {
@@ -208,15 +339,104 @@
   color: var(--accent-gold-soft);
 }
 
+.dlv-workorder-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dlv-workorder {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.075);
+}
+
+.dlv-workorder--risk {
+  border-color: rgba(var(--warn-rgb), .26);
+}
+
+.dlv-workorder--good {
+  border-color: color-mix(in srgb, var(--accent-gold) 18%, var(--line));
+}
+
+.dlv-responsibility-list {
+  display: grid;
+  gap: 8px;
+}
+
+.dlv-responsibility {
+  display: grid;
+  gap: 4px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: rgba(0,0,0,.12);
+  border: 1px solid rgba(255,255,255,.055);
+}
+
+.dlv-responsibility b {
+  color: var(--txt);
+  font-size: 13px;
+}
+
+.dlv-responsibility span,
+.dlv-control-panel p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.dlv-control-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dlv-control-grid span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 9px;
+  border-radius: 9px;
+  background: rgba(0,0,0,.14);
+  border: 1px solid rgba(255,255,255,.055);
+}
+
+.dlv-control-grid b {
+  color: var(--txt);
+  font-size: 17px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 760px) {
   .dlv-summary {
     grid-template-columns: 1fr;
   }
 
+  .dlv-flow-grid,
+  .dlv-main-grid,
+  .dlv-workorder-grid,
+  .dlv-control-grid {
+    grid-template-columns: 1fr;
+  }
+
   .dlv-row-main,
-  .dlv-metrics {
+  .dlv-metrics,
+  .dlv-section-head {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .dlv-section-head span {
+    text-align: left;
   }
 
   .dlv-count {

@@ -1,4 +1,5 @@
 /* 更新时间: 2026-07-14 10:02:17 CST  更新内容: 回归锁定月度经营进度卡只下裁玻璃表面顶部，不移动标题与三栏内容。 */
+/* 更新时间: 2026-07-14 10:35:00 CST  更新内容: 增加交付与运营协同看板结构回归，覆盖流程、工单责任和权限成本控制区块。 */
 /* 更新时间: 2026-07-14 09:52:18 CST  更新内容: 回归锁定月度经营进度标题下移到目标区，并仅收紧卡片顶部留白。 */
 /* 更新时间: 2026-07-14 10:00:00 CST  更新内容: 版本情况移回经营总览页，AI 洞察导航 targetMenu 简化回
    compute/overview 两态；同步更新版本/交付相关断言。 */
@@ -569,6 +570,7 @@ const monthlyTrendSource = readFileSync(new URL('./components/MonthlyTrend.jsx',
 const aiAnalysisWidgetCss = readFileSync(new URL('./components/AIAnalysisWidget.css', import.meta.url), 'utf8');
 const aiAnalysisWidgetSource = readFileSync(new URL('./components/AIAnalysisWidget.jsx', import.meta.url), 'utf8');
 const mascotSpriteStageCss = readFileSync(new URL('./components/MascotSpriteStage.css', import.meta.url), 'utf8');
+const deliveryPanelSource = readFileSync(new URL('./components/DeliveryPanel.jsx', import.meta.url), 'utf8');
 const deliveryPanelCss = readFileSync(new URL('./components/DeliveryPanel.css', import.meta.url), 'utf8');
 const channelPanelSource = readFileSync(new URL('./components/ChannelPanel.jsx', import.meta.url), 'utf8');
 const channelPanelCss = readFileSync(new URL('./components/ChannelPanel.css', import.meta.url), 'utf8');
@@ -1729,6 +1731,23 @@ test('restores secondary dashboard panels below the operating overview story', (
   assert.match(dashboardCss, /\.dash-secondary-delivery/);
   assert.doesNotMatch(appSource, /recoveryKpiCards/);
   assert.doesNotMatch(dashboardCss, /\.dash-kpis/);
+});
+
+test('extends delivery page into an operations collaboration dashboard', () => {
+  assert.match(deliveryPanelSource, /getDeliveryCollaborationSummary/);
+  assert.match(deliveryPanelSource, /交付与运营协同/);
+  assert.match(deliveryPanelSource, /交付流程可视化/);
+  assert.match(deliveryPanelSource, /工单与责任分配/);
+  assert.match(deliveryPanelSource, /问题登记/);
+  assert.match(deliveryPanelSource, /权限与成本控制/);
+  assert.match(mockSource, /售前试用/);
+  assert.match(mockSource, /正式交付/);
+  assert.match(mockSource, /产研排障/);
+  assert.match(mockSource, /highCostAccountPrice:\s*804/);
+  assert.match(mockSource, /TPD或多维表格/);
+  assert.match(deliveryPanelCss, /\.dlv-flow-grid/);
+  assert.match(deliveryPanelCss, /\.dlv-workorder-grid/);
+  assert.match(deliveryPanelCss, /\.dlv-control-panel/);
 });
 
 test('gives the version panel the same hover halo as the monthly trend panel', () => {
