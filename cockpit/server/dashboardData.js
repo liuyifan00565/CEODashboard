@@ -1,4 +1,11 @@
 /*
+ 更新时间: 2026-07-14 17:55:47 CST
+ 更新内容: 新增 makeChannelExpenseRatio，按渠道分别计算费比——线上渠道成本 = 投流(operations)+人力(labor)，
+          线下三个渠道（华南/华东/代理）成本只算人力，不计入投流，因为线下不做付费投流；
+          快照新增 channelExpenseRatio 字段供首页新的渠道费比小卡使用，与已有 channelRoi（线上线下口径一致的
+          泛用投入产出比，供 AI 分析和总投入卡下钻复用）区分开，避免改动 channelRoi 影响其现有消费方。
+*/
+/*
  更新时间: 2026-07-14 17:50:49 CST
  更新内容: 看板仅使用公司月度大数，并向回款半环返回不作为独立经营渠道的特殊渠道结构金额。
 */
@@ -388,6 +395,31 @@ function makeChannelRoi({ channelRows, channelCosts }) {
       strong: roi >= 4,
     };
   }).sort((a, b) => b.roi - a.roi);
+}
+
+function makeChannelExpenseRatio({ channelRows, channelCosts }) {
+  const costByChannel = byKey(channelCosts, 'channel_key');
+  return channelRows.map((channel) => {
+    const costRow = costByChannel.get(channel.key);
+    const isOnline = channel.key === 'online';
+    const adCost = isOnline ? round0(num(costRow?.operations_wan ?? costRow?.investment_wan)) : 0;
+    const laborCost = round0(num(costRow?.labor_wan));
+    const cost = adCost + laborCost;
+    const roi = cost ? round2(channel.recovered / cost) : 0;
+    return {
+      key: channel.key,
+      name: channel.name,
+      recovered: channel.recovered,
+      adCost,
+      laborCost,
+      cost,
+      costRatio: pct(cost, channel.recovered),
+      roi,
+      basis: isOnline ? 'adLabor' : 'laborOnly',
+      warn: roi > 0 && roi < 2.5,
+      strong: roi >= 4,
+    };
+  });
 }
 
 function makeMonthlyTrend({ monthlyTargets, recoveredRows, latestMonth, currentMonthTarget }) {
@@ -860,6 +892,7 @@ export function mapDashboardRowsToSnapshot(rows) {
     channels,
     revenueStructure: makeRevenueStructureRows(rows.revenueStructureRows ?? [], latestMonth, latestYear),
     channelRoi: makeChannelRoi({ channelRows: channels, channelCosts: rows.channelCosts ?? [] }),
+    channelExpenseRatio: makeChannelExpenseRatio({ channelRows: channels, channelCosts: rows.channelCosts ?? [] }),
     channelSourceBreakdown: rows.channelSourceBreakdown ?? [],
     monthlyTrend: makeMonthlyTrend({ monthlyTargets: rows.monthlyTargets ?? [], recoveredRows, latestMonth, currentMonthTarget }),
     dailyRevenueTrend: makeDailyRevenueTrend(rows.dailyRevenue),

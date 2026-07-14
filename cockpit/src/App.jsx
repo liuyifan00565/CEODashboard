@@ -251,6 +251,7 @@ import DeliveryPanel from './components/DeliveryPanel';
 import ComputeUsagePage from './components/ComputeUsagePage';
 import OpeningMetricCards from './components/OpeningMetricCards';
 import AdRoiCard from './components/AdRoiCard';
+import ChannelExpenseRatioCards from './components/ChannelExpenseRatioCards';
 import ChannelSourcePanel from './components/ChannelSourcePanel';
 import MaintenancePage from './components/MaintenancePage';
 import OperatingOverview from './components/OperatingOverview';
@@ -709,6 +710,10 @@ export default function App() {
                   {financeKpiCards.map((card) => (
                     <AdRoiCard searchTerm={searchTerm} onOpen={handleOpenCard} costCard={card} key={`${card.key}-roi`} />
                   ))}
+                </div>
+
+                <div className="dash-channel-cost-row" data-anim>
+                  <ChannelExpenseRatioCards searchTerm={searchTerm} />
                 </div>
 
                 <div className="dash-version-row" data-ai-insight-target="versions" data-anim>

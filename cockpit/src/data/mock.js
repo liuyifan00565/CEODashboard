@@ -1,4 +1,11 @@
 /*
+ 更新时间: 2026-07-14 17:57:29 CST
+ 更新内容: 新增 CHANNEL_EXPENSE_RATIO（渠道费比）——线上渠道成本 = 投流费用 + 工资支出，对比回款算整体盘子
+          投入产出比；线下三个渠道（华南/华东/代理）不做付费投流，成本只算人力，直接对比业绩回款，逻辑更简单。
+          运行时通过 applyDashboardDataSnapshot 接收 snapshot.channelExpenseRatio 覆盖为真实数据，
+          供首页新增的渠道费比小卡（ChannelExpenseRatioCards）使用。
+*/
+/*
  更新时间: 2026-07-14 17:50:49 CST
  更新内容: 运行时快照接收特殊渠道结构，年度半环优先使用 API 的各渠道实际年度回款，避免特殊金额重复分摊。
 */
@@ -317,6 +324,37 @@ export const CHANNEL_ROI = CHANNELS.map((channel) => {
     strong: roi >= 4,
   };
 }).sort((a, b) => b.roi - a.roi);
+
+// 各渠道人力成本（万元）：线上 2 名坐席、线下三个渠道各 1 名，合计等于 KPI.laborCost。
+const CHANNEL_LABOR_BY_KEY = {
+  online: 24,
+  south: 13,
+  east: 13,
+  agent: 10,
+};
+
+// 渠道费比：线上要统计整体盘子的投入产出比，成本 = 投流费用(CHANNEL_INVESTMENT_BY_KEY) + 工资支出(CHANNEL_LABOR_BY_KEY)；
+// 线下三个渠道不做付费投流，成本仅算人力，逻辑更简单直接（人力成本 vs 业绩回款）。
+export const CHANNEL_EXPENSE_RATIO = CHANNELS.map((channel) => {
+  const isOnline = channel.key === 'online';
+  const adCost = isOnline ? (CHANNEL_INVESTMENT_BY_KEY[channel.key] ?? 0) : 0;
+  const laborCost = CHANNEL_LABOR_BY_KEY[channel.key] ?? 0;
+  const cost = adCost + laborCost;
+  const roi = cost ? +(channel.recovered / cost).toFixed(2) : 0;
+  return {
+    key: channel.key,
+    name: channel.name,
+    recovered: channel.recovered,
+    adCost,
+    laborCost,
+    cost,
+    costRatio: channel.recovered ? +(cost / channel.recovered * 100).toFixed(1) : 0,
+    roi,
+    basis: isOnline ? 'adLabor' : 'laborOnly',
+    warn: roi > 0 && roi < 2.5,
+    strong: roi >= 4,
+  };
+});
 
 export const CHANNEL_SOURCE_BREAKDOWN = [];
 export const REVENUE_STRUCTURE = { month: [], year: [] };
@@ -1623,6 +1661,10 @@ export function applyDashboardDataSnapshot(snapshot) {
 
   if (Array.isArray(snapshot.channelRoi)) {
     replaceArray(CHANNEL_ROI, snapshot.channelRoi);
+  }
+
+  if (Array.isArray(snapshot.channelExpenseRatio)) {
+    replaceArray(CHANNEL_EXPENSE_RATIO, snapshot.channelExpenseRatio);
   }
 
   if (Array.isArray(snapshot.channelSourceBreakdown)) {
