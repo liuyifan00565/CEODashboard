@@ -1,4 +1,5 @@
 /* 更新时间: 2026-07-14 10:35:00 CST  更新内容: 交付页升级为交付与运营协同看板，新增流程、工单责任和权限成本控制区块。 */
+/* 更新时间: 2026-07-14 17:20:00 CST  更新内容: 交付工单区改为待办与风险管理展示，和客户流程阶段拆开口径。 */
 /* 更新时间: 2026-07-10 17:20:00 CST  更新内容: 交付看板目标改为运行时真实目标展示，目标未配置时不再显示写死 15 单或 0% 完成率。 */
 /* 更新时间: 2026-07-08 17:06:01 CST  更新内容: 交付看板超额交付恢复为 120% 及以上才显示金色和标签，100%-119.9% 保持普通完成态。 */
 /* 更新时间: 2026-07-03 23:33:15 CST  更新内容: 交付看板超额完成行新增金色背景、标签与百分比状态类。 */
@@ -32,7 +33,7 @@ export default function DeliveryPanel() {
   const summary = getDeliverySummary();
   const collaboration = getDeliveryCollaborationSummary();
   const [openIssueDetail, setOpenIssueDetail] = useState(false);
-  const riskWorkOrderCount = collaboration.workOrders.find((item) => item.key === 'risk')?.value ?? 0;
+  const highRiskTodoCount = collaboration.workOrders.find((item) => item.key === 'highRisk')?.value ?? 0;
   const issueSummary = collaboration.issueDetailSummary;
 
   return (
@@ -58,8 +59,8 @@ export default function DeliveryPanel() {
           <b>{summary.averageValuePerPerson}<i>万</i></b>
         </div>
         <div className="dlv-summary-cell">
-          <span>风险工单</span>
-          <b>{riskWorkOrderCount}<i>单</i></b>
+          <span>高风险待办</span>
+          <b>{highRiskTodoCount}<i>单</i></b>
         </div>
       </div>
 
@@ -153,8 +154,8 @@ export default function DeliveryPanel() {
         <aside className="dlv-side-stack">
           <section className="dlv-section">
             <div className="dlv-section-head">
-              <h4>工单与责任分配</h4>
-              <span>回款后派单、问题登记、风险预警与闭环管理</span>
+              <h4>待办与风险管理</h4>
+              <span>回款后派单、超时待办、问题登记与产研协同</span>
             </div>
             <div className="dlv-workorder-grid">
               {collaboration.workOrders.map((item) => (

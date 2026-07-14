@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 17:20:00 CST
+ 更新内容: 交付协同工单区改为待办与风险管理口径，避免复用客户阶段的风险和闭环户数。
+*/
+/*
  更新时间: 2026-07-14 11:12:00 CST
  更新内容: 交付协同数据新增问题处理中二级明细，覆盖问题客户、金额影响、责任归属和闭环动作。
 */
@@ -1094,13 +1098,18 @@ export function getDeliveryCollaborationSummary() {
   const trialCount = Math.max(6, Math.round(formalCount * 0.32));
   const riskCount = rows.filter((row) => row.warn).length + 2;
   const closedCount = Math.max(0, formalCount - riskCount);
+  const pendingOrderCount = Math.max(1, Math.round(totalCount * 0.08));
+  const activeOrderCount = Math.max(1, Math.round(totalCount * 0.28));
+  const overdueOrderCount = Math.max(1, Math.round(activeOrderCount * 0.18));
+  const highRiskOrderCount = Math.max(1, Math.round(riskCount * 0.65));
+  const rdOrderCount = Math.max(1, Math.round(riskCount * 0.35));
 
   return {
     flowStages: [
       { key: 'trial', name: '售前试用', count: trialCount, ...splitStageSource(trialCount, 0.5, 0.32), note: '试用客户池' },
       { key: 'formal', name: '正式交付', count: formalCount, ...splitStageSource(formalCount), note: '合同回款后进入' },
       { key: 'risk', name: '问题处理中', count: riskCount, ...splitStageSource(riskCount, 0.35, 0.4), note: '问题登记与预警' },
-      { key: 'closed', name: '已闭环', count: closedCount, ...splitStageSource(closedCount, 0.5, 0.3), note: '交付完成归档' },
+      { key: 'closed', name: '已完成交付', count: closedCount, ...splitStageSource(closedCount, 0.5, 0.3), note: '交付完成归档' },
     ],
     engineerStats: rows.map((row) => ({
       key: row.key,
@@ -1109,10 +1118,10 @@ export function getDeliveryCollaborationSummary() {
       contractShare: roundMoney((Number(row.valuePerPerson || 0) / totalValue) * 100),
     })),
     workOrders: [
-      { key: 'pending', label: '待指派工单', value: Math.max(1, Math.round(totalCount * 0.08)), tone: 'warn' },
-      { key: 'active', label: '进行中工单', value: Math.max(1, Math.round(totalCount * 0.28)), tone: 'neutral' },
-      { key: 'risk', label: '风险工单', value: riskCount, tone: 'risk' },
-      { key: 'closed', label: '已闭环工单', value: closedCount, tone: 'good' },
+      { key: 'pending', label: '待指派', value: pendingOrderCount, tone: 'warn' },
+      { key: 'overdue', label: '超时未处理', value: overdueOrderCount, tone: 'risk' },
+      { key: 'highRisk', label: '高风险待推进', value: highRiskOrderCount, tone: 'risk' },
+      { key: 'rd', label: '待产研协同', value: rdOrderCount, tone: 'neutral' },
     ],
     responsibility: [
       { key: 'owner', label: '负责人指派', text: '合同回款后生成交付工单，由交付负责人承接并同步管理人员。' },

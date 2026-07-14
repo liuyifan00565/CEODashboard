@@ -1,4 +1,6 @@
+/* 更新时间: 2026-07-14 17:20:00 CST  更新内容: 回归锁定交付工单区改为待办与风险管理，避免复用客户阶段的风险与闭环户数。 */
 /* 更新时间: 2026-07-14 10:02:17 CST  更新内容: 回归锁定月度经营进度卡只下裁玻璃表面顶部，不移动标题与三栏内容。 */
+/* 更新时间: 2026-07-14 11:45:00 CST  更新内容: 回归锁定交付页顶部只保留主标题，移除低价值副标题说明。 */
 /* 更新时间: 2026-07-14 11:33:00 CST  更新内容: 回归锁定交付问题二级弹层使用 Portal，避免被首页交付卡片外层样式覆盖。 */
 /* 更新时间: 2026-07-14 11:05:00 CST  更新内容: 增加交付问题处理中二级界面回归，覆盖问题客户、金额影响、责任归属和闭环动作。 */
 /* 更新时间: 2026-07-14 10:35:00 CST  更新内容: 增加交付与运营协同看板结构回归，覆盖流程、工单责任和权限成本控制区块。 */
@@ -1739,17 +1741,23 @@ test('extends delivery page into an operations collaboration dashboard', () => {
   assert.match(deliveryPanelSource, /getDeliveryCollaborationSummary/);
   assert.match(deliveryPanelSource, /交付与运营协同/);
   assert.match(deliveryPanelSource, /交付流程可视化/);
-  assert.match(deliveryPanelSource, /工单与责任分配/);
+  assert.match(deliveryPanelSource, /待办与风险管理/);
   assert.match(deliveryPanelSource, /问题登记/);
   assert.match(deliveryPanelSource, /权限与成本控制/);
   assert.match(mockSource, /售前试用/);
   assert.match(mockSource, /正式交付/);
+  assert.match(mockSource, /已完成交付/);
   assert.match(mockSource, /产研排障/);
   assert.match(mockSource, /highCostAccountPrice:\s*804/);
   assert.match(mockSource, /TPD或多维表格/);
   assert.match(deliveryPanelCss, /\.dlv-flow-grid/);
   assert.match(deliveryPanelCss, /\.dlv-workorder-grid/);
   assert.match(deliveryPanelCss, /\.dlv-control-panel/);
+  assert.match(mockSource, /超时未处理/);
+  assert.match(mockSource, /高风险待推进/);
+  assert.match(mockSource, /待产研协同/);
+  assert.doesNotMatch(mockSource, /label: '风险工单'/);
+  assert.doesNotMatch(mockSource, /label: '已闭环工单'/);
 });
 
 test('opens a CEO-focused issue detail view from delivery problem stage', () => {
