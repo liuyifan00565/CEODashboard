@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 18:10:00 CST
- 更新内容: 本月与上月交付对比由表格改为环比变化对比卡，使用同指标内本月/上月迷你横向条表达变化。
+ 更新时间: 2026-07-14 19:05:00 CST
+ 更新内容: 本月与上月交付对比由迷你横向条改为双层半环图，突出本月和上月的环比变化。
 */
 /*
  更新时间: 2026-07-14 12:10:00 CST
@@ -53,11 +53,11 @@ function ratio(value, total) {
   return total > 0 ? (Number(value || 0) / total) * 100 : 0;
 }
 
-function comparisonBarWidth(value, compareValue) {
+function comparisonArcPercent(value, compareValue) {
   const current = Math.max(0, Number(value) || 0);
   const previous = Math.max(0, Number(compareValue) || 0);
   const max = Math.max(current, previous);
-  return max > 0 ? `${Math.max(4, Math.round((current / max) * 100))}%` : '0%';
+  return max > 0 ? Math.max(4, Math.round((current / max) * 100)) : 0;
 }
 
 function buildDistributionOption({ snapshot, metric, selectedChannel, tokens }) {
@@ -422,26 +422,20 @@ export default function DeliveryPanel({ dataLoader = loadPresaleTrialDashboard }
                       <span>{row.label}</span>
                       <span className={`dlv-status dlv-status--${safeTone(row.statusTone)}`}>{row.status}</span>
                     </div>
-                    <div className="dlv-compare-bars" aria-label={`${row.label}本月${row.currentLabel}，上月${row.previousLabel}`}>
-                      <div className="dlv-compare-bar-row">
-                        <span>本月</span>
-                        <div className="dlv-compare-track">
-                          <i
-                            className={`dlv-compare-bar dlv-compare-bar--current dlv-compare-bar--${safeTone(row.statusTone)}`}
-                            style={{ width: comparisonBarWidth(row.currentRaw, row.previousRaw) }}
-                          />
-                        </div>
-                        <b>{row.currentLabel}</b>
+                    <div className="dlv-compare-ring-wrap" aria-label={`${row.label}本月${row.currentLabel}，上月${row.previousLabel}`}>
+                      <div className="dlv-compare-ring" aria-hidden="true">
+                        <i
+                          className={`dlv-compare-ring__arc dlv-compare-ring__arc--current dlv-compare-ring__arc--${safeTone(row.statusTone)}`}
+                          style={{ '--arc-pct': comparisonArcPercent(row.currentRaw, row.previousRaw) }}
+                        />
+                        <i
+                          className="dlv-compare-ring__arc dlv-compare-ring__arc--previous"
+                          style={{ '--arc-pct': comparisonArcPercent(row.previousRaw, row.currentRaw) }}
+                        />
                       </div>
-                      <div className="dlv-compare-bar-row">
-                        <span>上月</span>
-                        <div className="dlv-compare-track">
-                          <i
-                            className="dlv-compare-bar dlv-compare-bar--previous"
-                            style={{ width: comparisonBarWidth(row.previousRaw, row.currentRaw) }}
-                          />
-                        </div>
-                        <b>{row.previousLabel}</b>
+                      <div className="dlv-compare-values">
+                        <span>本月 <b>{row.currentLabel}</b></span>
+                        <span>上月 <b>{row.previousLabel}</b></span>
                       </div>
                     </div>
                     <div className={`dlv-compare-change dlv-compare-change--${safeTone(row.statusTone)}`}>

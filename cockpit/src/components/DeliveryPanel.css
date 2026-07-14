@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 18:10:00 CST
- 更新内容: 本月与上月交付对比新增环比变化对比卡和迷你横向条样式，替代纯表格展示。
+ 更新时间: 2026-07-14 19:05:00 CST
+ 更新内容: 本月与上月交付对比由迷你横向条改为双层半环图样式，替代纯表格展示。
 */
 /*
  更新时间: 2026-07-14 12:10:00 CST
@@ -516,72 +516,94 @@
   white-space: nowrap;
 }
 
-.dlv-compare-bars {
+.dlv-compare-ring-wrap {
   grid-column: 1;
   min-width: 0;
-  display: grid;
-  gap: 7px;
+  display: flex;
+  align-items: end;
+  gap: 13px;
 }
 
-.dlv-compare-bar-row {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 32px minmax(86px, 1fr) minmax(58px, auto);
-  align-items: center;
-  gap: 8px;
-}
-
-.dlv-compare-bar-row span {
-  color: var(--faint);
-  font-size: 11px;
-}
-
-.dlv-compare-track {
+.dlv-compare-ring {
   position: relative;
-  height: 7px;
+  flex: 0 0 104px;
+  width: 104px;
+  height: 56px;
   overflow: hidden;
-  border-radius: 999px;
-  background: var(--bar-track);
-  border: 1px solid var(--bar-track-border);
+  filter: drop-shadow(0 8px 14px rgba(0,0,0,.22));
 }
 
-.dlv-compare-bar {
+.dlv-compare-ring__arc {
+  --arc-color: var(--muted);
+  --arc-pct: 0;
   position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: inherit;
-  min-width: 4px;
+  left: 50%;
+  bottom: -52px;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(circle at 50% 50%, transparent 55%, rgba(255,255,255,.05) 56%, transparent 59%),
+    conic-gradient(from 270deg, var(--arc-color) calc(var(--arc-pct) * 1.8deg), rgba(185,194,212,.16) 0 180deg, transparent 0);
 }
 
-.dlv-compare-bar--current {
-  background: var(--semantic-success-muted);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--semantic-success-muted) 32%, transparent);
+.dlv-compare-ring__arc::after {
+  content: "";
+  position: absolute;
+  inset: 13px;
+  border-radius: 50%;
+  background: rgba(9,14,32,.96);
 }
 
-.dlv-compare-bar--current.dlv-compare-bar--risk {
-  background: var(--semantic-risk);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--semantic-risk) 26%, transparent);
+.dlv-compare-ring__arc--current {
+  --arc-color: var(--semantic-success-muted);
+  width: 104px;
+  height: 104px;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--semantic-success-muted) 28%, transparent);
 }
 
-.dlv-compare-bar--current.dlv-compare-bar--warn {
-  background: var(--accent-gold-soft);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--accent-gold-soft) 28%, transparent);
+.dlv-compare-ring__arc--current.dlv-compare-ring__arc--risk {
+  --arc-color: var(--semantic-risk);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--semantic-risk) 24%, transparent);
 }
 
-.dlv-compare-bar--current.dlv-compare-bar--neutral {
-  background: var(--muted);
+.dlv-compare-ring__arc--current.dlv-compare-ring__arc--warn {
+  --arc-color: var(--accent-gold-soft);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent-gold-soft) 26%, transparent);
+}
+
+.dlv-compare-ring__arc--current.dlv-compare-ring__arc--neutral {
+  --arc-color: var(--muted);
   box-shadow: none;
 }
 
-.dlv-compare-bar--previous {
-  background: rgba(185,194,212,.28);
+.dlv-compare-ring__arc--previous {
+  --arc-color: rgba(185,194,212,.42);
+  width: 76px;
+  height: 76px;
+  bottom: -38px;
 }
 
-.dlv-compare-bar-row b {
+.dlv-compare-ring__arc--previous::after {
+  inset: 10px;
+}
+
+.dlv-compare-values {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  padding-bottom: 2px;
+}
+
+.dlv-compare-values span {
   color: var(--muted);
   font-size: 12px;
   font-weight: 650;
-  text-align: right;
   white-space: nowrap;
+}
+
+.dlv-compare-values b {
+  color: var(--txt);
+  font-weight: 740;
   font-variant-numeric: tabular-nums;
 }
 
