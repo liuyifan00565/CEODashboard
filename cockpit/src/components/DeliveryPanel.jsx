@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 20:05:00 CST
- 更新内容: 本月与上月交付对比由双层半环图改为环比变化信号卡，突出变化好坏和幅度。
+ 更新时间: 2026-07-14 20:45:00 CST
+ 更新内容: 本月与上月交付对比改为可读差值半环变化卡，半环中心展示变化值并补充本月/上月差额文案。
 */
 /*
  更新时间: 2026-07-14 12:10:00 CST
@@ -51,6 +51,36 @@ function formatPct(value) {
 
 function ratio(value, total) {
   return total > 0 ? (Number(value || 0) / total) * 100 : 0;
+}
+
+function formatDifferenceNumber(value) {
+  const number = Math.abs(Number(value) || 0);
+  return Number.isInteger(number)
+    ? formatInt(number)
+    : number.toLocaleString('zh-CN', { maximumFractionDigits: 1 });
+}
+
+function comparisonValueSuffix(row) {
+  if (String(row.changeLabel || '').includes('pp')) return 'pp';
+  return String(row.currentLabel || '').match(/[^\d.+-]+$/)?.[0] ?? '';
+}
+
+function comparisonDetailLabel(row) {
+  const difference = Number(row.currentRaw || 0) - Number(row.previousRaw || 0);
+  if (Math.abs(difference) < Number.EPSILON) return '本月与上月持平';
+
+  const value = `${formatDifferenceNumber(difference)}${comparisonValueSuffix(row)}`;
+  if (/风险|超期/.test(row.label)) return difference < 0 ? `风险下降 ${value}` : `风险增加 ${value}`;
+  if (/周期/.test(row.label)) return difference < 0 ? `周期缩短 ${value}` : `周期拉长 ${value}`;
+  return difference > 0 ? `本月高 ${value}` : `本月低 ${value}`;
+}
+
+function comparisonGaugePercent(row) {
+  const changeValue = Math.abs(Number(String(row.changeLabel || '').match(/[-+]?\d+(?:\.\d+)?/)?.[0]) || 0);
+  if (changeValue <= 0) return 0;
+  const label = String(row.changeLabel || '');
+  const maxMeaningfulChange = label.includes('pp') ? 10 : label.includes('天') ? 5 : 50;
+  return Math.min(100, Math.max(8, Math.round((changeValue / maxMeaningfulChange) * 100)));
 }
 
 function buildDistributionOption({ snapshot, metric, selectedChannel, tokens }) {
@@ -415,16 +445,20 @@ export default function DeliveryPanel({ dataLoader = loadPresaleTrialDashboard }
                       <span>{row.label}</span>
                       <span className={`dlv-status dlv-status--${safeTone(row.statusTone)}`}>{row.status}</span>
                     </div>
-                    <div className={`dlv-compare-delta dlv-compare-delta--${safeTone(row.statusTone)}`}>
-                      {row.changeLabel}
+                    <div
+                      className="dlv-compare-gauge"
+                      style={{ '--gauge-angle': `${comparisonGaugePercent(row) * 1.8}deg` }}
+                      aria-label={`${row.label}${row.changeLabel}，${comparisonDetailLabel(row)}`}
+                    >
+                      <i className={`dlv-compare-gauge__arc dlv-compare-gauge__arc--${safeTone(row.statusTone)}`} aria-hidden="true" />
+                      <div className="dlv-compare-gauge__center">
+                        <strong className={`dlv-compare-delta dlv-compare-delta--${safeTone(row.statusTone)}`}>{row.changeLabel}</strong>
+                        <span className="dlv-compare-detail">{comparisonDetailLabel(row)}</span>
+                      </div>
                     </div>
                     <div className="dlv-compare-values" aria-label={`${row.label}本月${row.currentLabel}，上月${row.previousLabel}`}>
                       <span>本月 <b>{row.currentLabel}</b></span>
                       <span>上月 <b>{row.previousLabel}</b></span>
-                    </div>
-                    <div className={`dlv-compare-signal dlv-compare-signal--${safeTone(row.statusTone)}`} aria-hidden="true">
-                      <span className="dlv-compare-signal__dot" />
-                      <span className="dlv-compare-signal__bar" />
                     </div>
                   </article>
                 ))}

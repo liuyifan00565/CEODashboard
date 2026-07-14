@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 20:05:00 CST
- 更新内容: 本月与上月交付对比由双层半环图改为环比变化信号卡样式，突出变化好坏和幅度。
+ 更新时间: 2026-07-14 20:45:00 CST
+ 更新内容: 本月与上月交付对比改为可读差值半环变化卡样式，半环中心展示变化值和差额文案。
 */
 /*
  更新时间: 2026-07-14 12:10:00 CST
@@ -491,9 +491,9 @@
 .dlv-compare-card {
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 176px;
   gap: 12px 16px;
-  padding: 13px 14px;
+  padding: 15px 16px;
   border-radius: 13px;
   background: rgba(0,0,0,.12);
   border: 1px solid rgba(255,255,255,.06);
@@ -518,10 +518,11 @@
 
 .dlv-compare-values {
   grid-column: 1;
+  align-self: end;
   min-width: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 14px;
+  gap: 8px 16px;
 }
 
 .dlv-compare-values span {
@@ -537,51 +538,78 @@
   font-variant-numeric: tabular-nums;
 }
 
-.dlv-compare-delta {
+.dlv-compare-gauge {
+  --gauge-angle: 0deg;
   grid-column: 2;
   grid-row: 1 / span 2;
-  align-self: center;
+  position: relative;
+  align-self: end;
+  justify-self: end;
+  width: 168px;
+  height: 96px;
+  overflow: hidden;
+}
+
+.dlv-compare-gauge__arc {
+  --gauge-color: var(--muted);
+  position: absolute;
+  left: 50%;
+  bottom: -82px;
+  width: 164px;
+  height: 164px;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(circle at 50% 50%, transparent 58%, rgba(255,255,255,.055) 59%, transparent 61%),
+    conic-gradient(from 270deg, var(--gauge-color) var(--gauge-angle), rgba(185,194,212,.15) 0 180deg, transparent 0);
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,.24));
+}
+
+.dlv-compare-gauge__arc::after {
+  content: "";
+  position: absolute;
+  inset: 21px;
+  border-radius: 50%;
+  background: rgba(9,14,32,.96);
+}
+
+.dlv-compare-gauge__arc--good { --gauge-color: var(--semantic-success-muted); }
+.dlv-compare-gauge__arc--risk { --gauge-color: var(--semantic-risk); }
+.dlv-compare-gauge__arc--warn { --gauge-color: var(--accent-gold-soft); }
+.dlv-compare-gauge__arc--neutral { --gauge-color: var(--muted); }
+
+.dlv-compare-gauge__center {
+  position: absolute;
+  inset: 25px 8px auto;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.dlv-compare-delta {
   color: var(--muted);
-  font-size: clamp(22px, 2.3vw, 30px);
+  font-size: clamp(22px, 2vw, 28px);
   font-weight: 820;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .dlv-compare-delta--good { color: var(--semantic-success-muted); }
 .dlv-compare-delta--risk { color: var(--semantic-risk); }
 .dlv-compare-delta--warn { color: var(--accent-gold-soft); }
 
-.dlv-compare-signal {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 8px minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.dlv-compare-signal__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--muted);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--muted) 12%, transparent);
-}
-
-.dlv-compare-signal__bar {
-  height: 6px;
+.dlv-compare-detail {
+  max-width: 146px;
   overflow: hidden;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--muted), rgba(185,194,212,.12));
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 680;
+  line-height: 1.18;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-
-.dlv-compare-signal--good .dlv-compare-signal__dot { background: var(--semantic-success-muted); box-shadow: 0 0 0 4px color-mix(in srgb, var(--semantic-success-muted) 12%, transparent); }
-.dlv-compare-signal--good .dlv-compare-signal__bar { background: linear-gradient(90deg, var(--semantic-success-muted), rgba(160,214,111,.08)); }
-.dlv-compare-signal--risk .dlv-compare-signal__dot { background: var(--semantic-risk); box-shadow: 0 0 0 4px color-mix(in srgb, var(--semantic-risk) 12%, transparent); }
-.dlv-compare-signal--risk .dlv-compare-signal__bar { background: linear-gradient(90deg, var(--semantic-risk), rgba(255,105,139,.08)); }
-.dlv-compare-signal--warn .dlv-compare-signal__dot { background: var(--accent-gold-soft); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-gold-soft) 12%, transparent); }
-.dlv-compare-signal--warn .dlv-compare-signal__bar { background: linear-gradient(90deg, var(--accent-gold-soft), rgba(229,198,122,.08)); }
 
 .dlv-table--conversion col:nth-child(1) { width: 19%; }
 .dlv-table--conversion col:nth-child(2) { width: 13%; }
