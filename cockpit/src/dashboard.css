@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-14 21:45:00 CST
+ 更新内容: 退出登录搬进 Sidebar 组件的品牌头区（见 Sidebar.css 的 .sb-brand-logout），
+          App.jsx 不再渲染 .dash-sidebar-account 容器，这里删除对应的死样式。
+*/
+/*
  更新时间: 2026-07-14 21:30:00 CST
  更新内容: 退出登录改为小按钮样式（描边+玻璃底+hover 上浮），而不是纯文字链接；顺带清理合并时
           残留的 .dash-sidebar-account__name 死代码（该行用户名已并入品牌区第二行，这里早已不再渲染）。
@@ -312,28 +317,6 @@
 .search-wrap--sidebar .search-input{font-size:13px}
 .search-wrap--sidebar .search-count{min-width:40px;height:26px;padding:0 7px}
 
-.dash-sidebar-account{
-  flex:none;width:100%;min-width:0;
-  padding:0 4px;
-}
-.dash-sidebar-account__logout{
-  min-height:26px;
-  display:inline-flex;align-items:center;justify-content:center;
-  padding:0 10px;
-  border:1px solid var(--line);
-  border-radius:10px;
-  background:var(--glass-cell);
-  color:var(--muted);
-  font-size:12px;font-weight:650;
-  cursor:pointer;
-  transition:transform .2s ease, border-color .2s ease, background .2s ease, color .2s ease;
-}
-.dash-sidebar-account__logout:hover{
-  transform:translateY(-1px);
-  border-color:var(--line-2);
-  background:var(--glass-cell-hover);
-  color:var(--txt);
-}
 
 .dash-main{
   flex:1;min-width:0;display:flex;flex-direction:column;

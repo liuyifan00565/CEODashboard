@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-14 21:45:00 CST  更新内容: 新增可选 onLogout prop，在品牌头区（标题+月份+用户名下方）
+   加一个小的退出登录按钮，不再由 App.jsx 在 Sidebar 外部单独渲染一行。 */
 /* 更新时间: 2026-07-13 14:25:00 CST  更新内容: 侧栏品牌副标题拆分为独立行，支持月份左对齐、当前视角右对齐。 */
 /* 更新时间: 2026-07-09 18:26:40 CST  更新内容: 侧边导航顶部新增福客驾驶舱品牌 logo 区，承接主内容顶部移出的品牌识别信息。 */
 /* 更新时间: 2026-07-09 13:13:45 CST  更新内容: 侧边导航新增模式换组过渡，经营总览与数据维护切换时先柔和淡出再进入。 */
@@ -33,6 +35,7 @@ export default function Sidebar({
   transitionKey = 'default',
   brandTitle = '福客经营驾驶舱',
   brandMeta = '',
+  onLogout,
 }) {
   const [transitionState, setTransitionState] = useState(() => ({
     items,
@@ -131,6 +134,9 @@ export default function Sidebar({
                   <span key={`${line}-${index}`}>{line}</span>
                 ))}
               </small>
+            )}
+            {onLogout && (
+              <button type="button" className="sb-brand-logout" onClick={onLogout}>退出登录</button>
             )}
           </span>
         </div>

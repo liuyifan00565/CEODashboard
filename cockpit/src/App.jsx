@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-14 21:45:00 CST
+ 更新内容: 退出登录从 Sidebar 外部单独一行移进 Sidebar 组件的品牌头区（改为 onLogout prop），
+          不再需要 App.jsx 里的 .dash-sidebar-account 容器。
+*/
+/*
  更新时间: 2026-07-14 14:17:05 CST
  更新内容: 四张经营 KPI 移到趋势与成交来源图表下方，恢复先看图表、再看辅助指标的页面顺序。
 */
@@ -629,10 +634,8 @@ export default function App() {
             transitionKey={sidebarTransitionKey}
             brandTitle="福客经营驾驶舱"
             brandMeta={sidebarBrandMeta}
+            onLogout={handleLogout}
           />
-          <div className="dash-sidebar-account">
-            <button type="button" className="dash-sidebar-account__logout" onClick={handleLogout}>退出登录</button>
-          </div>
           <div className="dash-sidebar-search">
             <ExpandableSearch
               placement="sidebar"
