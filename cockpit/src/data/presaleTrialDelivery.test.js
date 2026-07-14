@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 16:35:43 CST
+ 更新内容: 回归锁定配置人员按渠道分组、渠道人数闭合、负载状态和嵌套快照隔离。
+*/
+/*
  更新时间: 2026-07-14 14:30:00 CST
  更新内容: 新增售前试用交付演示数据的合计、转化口径、环比、负载、未分配与渠道筛选回归测试。
 */
@@ -11,7 +15,6 @@ import {
   PRESALE_TRIAL_MONTH_OPTIONS,
   buildComparisonRows,
   calculateConversionRate,
-  filterConversionRows,
   formatComparisonChange,
   getStaffLoadState,
   loadPresaleTrialDashboard,
@@ -23,6 +26,10 @@ function sum(rows, field) {
 
 function byKey(rows, key) {
   return rows.find((row) => row.key === key);
+}
+
+function flattenStaffLoads(staffLoadsByChannel) {
+  return Object.values(staffLoadsByChannel).flat();
 }
 
 test('exposes July as the default and only offers complete July and June snapshots', () => {
@@ -118,15 +125,16 @@ test('comparison helpers judge direction by metric meaning rather than numeric s
 
 test('staff load states are derived from the 14-customer capacity threshold', async () => {
   const snapshot = await loadPresaleTrialDashboard('2026-07');
+  const staffLoads = flattenStaffLoads(snapshot.staffLoadsByChannel);
 
   assert.deepEqual(
-    snapshot.staffLoads.map(({ name, loadRatio, loadStatus, loadTone }) => ({ name, loadRatio, loadStatus, loadTone })),
+    staffLoads.map(({ name, loadRatio, loadStatus, loadTone }) => ({ name, loadRatio, loadStatus, loadTone })),
     [
-      { name: '陈晨', loadRatio: 78.6, loadStatus: '正常', loadTone: 'good' },
-      { name: '赵晴', loadRatio: 92.9, loadStatus: '偏高', loadTone: 'warn' },
-      { name: '韩宇', loadRatio: 107.1, loadStatus: '超负荷', loadTone: 'risk' },
+      { name: '陈晨', loadRatio: 71.4, loadStatus: '正常', loadTone: 'good' },
+      { name: '秦佳', loadRatio: 50, loadStatus: '正常', loadTone: 'good' },
+      { name: '赵晴', loadRatio: 100, loadStatus: '偏高', loadTone: 'warn' },
+      { name: '韩宇', loadRatio: 121.4, loadStatus: '超负荷', loadTone: 'risk' },
       { name: '周宁', loadRatio: 71.4, loadStatus: '正常', loadTone: 'good' },
-      { name: '秦佳', loadRatio: 64.3, loadStatus: '正常', loadTone: 'good' },
     ],
   );
   assert.deepEqual(getStaffLoadState(14), { loadRatio: 100, loadStatus: '偏高', loadTone: 'warn' });
@@ -135,34 +143,72 @@ test('staff load states are derived from the 14-customer capacity threshold', as
 
 test('assigned staff plus unassigned owners reconcile to all current July trials', async () => {
   const snapshot = await loadPresaleTrialDashboard('2026-07');
+  const staffLoads = flattenStaffLoads(snapshot.staffLoadsByChannel);
 
-  assert.equal(sum(snapshot.staffLoads, 'currentAssigned'), 58);
+  assert.equal(sum(staffLoads, 'currentAssigned'), 58);
   assert.equal(snapshot.unassignedOwners, 2);
-  assert.equal(sum(snapshot.staffLoads, 'currentAssigned') + snapshot.unassignedOwners, snapshot.kpis.currentTrials);
-  assert.equal(sum(snapshot.staffLoads, 'converted'), 12);
-  assert.equal(sum(snapshot.staffLoads, 'overdue'), 5);
+  assert.equal(sum(staffLoads, 'currentAssigned') + snapshot.unassignedOwners, snapshot.kpis.currentTrials);
+  assert.equal(sum(staffLoads, 'converted'), 12);
+  assert.equal(sum(staffLoads, 'overdue'), 5);
 });
 
-test('channel filter applies to channel and team views without mutating source rows', async () => {
-  const { conversion } = await loadPresaleTrialDashboard('2026-07');
-  const allRows = filterConversionRows(conversion.channel, 'all');
-  const eastChannel = filterConversionRows(conversion.channel, 'east');
-  const eastTeam = filterConversionRows(conversion.team, 'east');
+test('staff loads use the exact fixed channel snapshots and reconcile each channel', async () => {
+  const expectedByMonth = {
+    '2026-07': {
+      east: [['陈晨', 10, 18, 3, 1, 16.2], ['秦佳', 7, 15, 2, 1, 9.9]],
+      south: [['赵晴', 14, 21, 3, 1, 18.9]],
+      direct: [['韩宇', 17, 22, 2, 2, 19.6]],
+      agency: [['周宁', 10, 17, 2, 0, 14.6]],
+    },
+    '2026-06': {
+      east: [['陈晨', 9, 16, 2, 1, 13.8], ['秦佳', 6, 12, 1, 1, 7.7]],
+      south: [['赵晴', 12, 18, 2, 1, 15.6]],
+      direct: [['韩宇', 14, 19, 2, 2, 16.4]],
+      agency: [['周宁', 9, 14, 2, 0, 12.2]],
+    },
+  };
 
-  assert.notEqual(allRows, conversion.channel);
-  assert.deepEqual(allRows, conversion.channel);
-  assert.deepEqual(eastChannel.map((row) => row.name), ['华东']);
-  assert.deepEqual(eastTeam.map((row) => row.name), ['华东战区']);
-  assert.deepEqual(filterConversionRows(conversion.channel, 'missing'), []);
+  for (const [monthKey, expectedGroups] of Object.entries(expectedByMonth)) {
+    const snapshot = await loadPresaleTrialDashboard(monthKey);
+    assert.deepEqual(Object.keys(snapshot.staffLoadsByChannel), ['east', 'south', 'direct', 'agency']);
+    assert.deepEqual(
+      Object.fromEntries(
+        Object.entries(snapshot.staffLoadsByChannel).map(([channelKey, rows]) => [
+          channelKey,
+          rows.map((row) => [
+            row.name,
+            row.currentAssigned,
+            row.monthlyTotal,
+            row.converted,
+            row.overdue,
+            row.expectedAmountWan,
+          ]),
+        ]),
+      ),
+      expectedGroups,
+    );
+
+    snapshot.distribution.forEach((channel) => {
+      const assigned = sum(snapshot.staffLoadsByChannel[channel.key], 'currentAssigned');
+      assert.equal(assigned + channel.unassignedOwners, channel.count, `${monthKey} ${channel.name}人数未闭合`);
+    });
+    assert.equal(sum(snapshot.distribution, 'unassignedOwners'), snapshot.unassignedOwners);
+    assert.equal(
+      sum(flattenStaffLoads(snapshot.staffLoadsByChannel), 'currentAssigned') + snapshot.unassignedOwners,
+      snapshot.kpis.currentTrials,
+    );
+  }
 });
 
 test('loader returns isolated snapshots and exposes missing months as an empty state', async () => {
   const first = await loadPresaleTrialDashboard('2026-07');
   first.kpis.currentTrials = 999;
   first.distribution[0].count = 999;
+  first.staffLoadsByChannel.east[0].currentAssigned = 999;
 
   const second = await loadPresaleTrialDashboard('2026-07');
   assert.equal(second.kpis.currentTrials, 60);
   assert.equal(second.distribution[0].count, 18);
+  assert.equal(second.staffLoadsByChannel.east[0].currentAssigned, 10);
   assert.equal(await loadPresaleTrialDashboard('2026-05'), null);
 });

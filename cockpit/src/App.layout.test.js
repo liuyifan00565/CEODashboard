@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 16:35:43 CST  更新内容: 回归锁定交付渠道行选择联动右侧渠道人员完成情况及初始选择提示。 */
 /* 更新时间: 2026-07-14 15:30:13 CST  更新内容: 回归锁定交付演示快照仅由显式环境开关启用，并在页面显示非生产数据标识。 */
 /* 更新时间: 2026-07-14 15:11:44 CST  更新内容: 交付页回归锁定 KPI 后六项月度对比带、58/42 同屏执行明细及双断点响应式布局。 */
 /* 更新时间: 2026-07-14 15:20:00 CST  更新内容: 回归锁定月度半环标题恢复且不增高主卡，并移除 KPI 隐藏提示遗留的底部空白。 */
@@ -1878,7 +1879,7 @@ test('renders the presale trial delivery dashboard as a compact decision workspa
   assert.match(deliveryPanelSource, /function ComparisonBand[\s\S]*?rows\.map[\s\S]*?row\.label[\s\S]*?row\.status[\s\S]*?row\.currentLabel[\s\S]*?row\.previousLabel[\s\S]*?row\.changeLabel/);
   assert.match(deliveryPanelSource, /<h3 id="delivery-operations-title">交付执行明细<\/h3>/);
   assert.match(deliveryPanelSource, /className="dlv-operation-pane dlv-operation-pane--conversion"[\s\S]*?row\.currentTrials[\s\S]*?row\.closedDeals[\s\S]*?row\.cohortStarted[\s\S]*?row\.conversionRate[\s\S]*?row\.expectedAmountWan/);
-  assert.match(deliveryPanelSource, /className="dlv-operation-pane dlv-operation-pane--staff"[\s\S]*?row\.currentAssigned[\s\S]*?capacityLimit[\s\S]*?role="progressbar"[\s\S]*?row\.monthlyTotal[\s\S]*?row\.converted[\s\S]*?row\.overdue[\s\S]*?row\.expectedAmountWan/);
+  assert.match(deliveryPanelSource, /className="dlv-operation-pane dlv-operation-pane--staff"[\s\S]*?配置人员完成情况[\s\S]*?row\.currentAssigned[\s\S]*?capacityLimit[\s\S]*?role="progressbar"[\s\S]*?row\.monthlyTotal[\s\S]*?row\.converted[\s\S]*?row\.overdue[\s\S]*?row\.expectedAmountWan/);
 
   assert.match(deliveryPanelSource, /dataState\.status === 'loading' && <LoadingView \/>/);
   assert.match(deliveryPanelSource, /<DataState status="error"[\s\S]*?setReloadKey/);
@@ -1887,7 +1888,15 @@ test('renders the presale trial delivery dashboard as a compact decision workspa
   assert.match(deliveryPanelSource, /\{distributionOption \? \([\s\S]*?<EChart option=\{distributionOption\} onEvents=\{chartEvents\}[\s\S]*?: <EmptyBlock text="该月暂无可用的渠道分布数据" \/>\}/);
   assert.match(deliveryPanelSource, /setSelectedChannel\(\(current\) => current === params\.data\.key \? null : params\.data\.key\)/);
   assert.match(deliveryPanelSource, /<button[\s\S]*?className=\{`dlv-legend-row[\s\S]*?aria-pressed=\{item\.key === selectedChannel\}[\s\S]*?setSelectedChannel\(\(current\) => current === item\.key \? null : item\.key\)/);
-  assert.match(deliveryPanelSource, /filterConversionRows\(allConversionRows, selectedChannel\)/);
+  assert.match(deliveryPanelSource, /const conversionRows = allConversionRows;/);
+  assert.match(deliveryPanelSource, /const selectedStaffLoads = selectedChannel[\s\S]*?snapshot\?\.staffLoadsByChannel\?\.\[selectedChannel\][\s\S]*?: \[\];/);
+  assert.match(deliveryPanelSource, /className=\{`dlv-conversion-row\$\{row\.channelKey === selectedChannel \? ' is-selected' : ''\}`\}[\s\S]*?role="button"[\s\S]*?tabIndex=\{0\}[\s\S]*?aria-pressed=\{row\.channelKey === selectedChannel\}[\s\S]*?onClick=\{\(\) => toggleSelectedChannel\(row\.channelKey\)\}[\s\S]*?onKeyDown=\{\(event\) => handleConversionRowKeyDown\(event, row\.channelKey\)\}/);
+  assert.match(deliveryPanelSource, /function handleConversionRowKeyDown\(event, channelKey\)[\s\S]*?event\.key === 'Enter'[\s\S]*?event\.key === ' '[\s\S]*?toggleSelectedChannel\(channelKey\)/);
+  assert.match(deliveryPanelSource, /<h4 id="delivery-staff-title">配置人员完成情况<\/h4>/);
+  assert.match(deliveryPanelSource, /selectedChannelName[\s\S]*?`\$\{selectedChannelName\} · 已分配 \$\{formatInt\(selectedAssignedCount\)\}个 · 未配置 \$\{formatInt\(selectedUnassignedOwners\)\}个`/);
+  assert.match(deliveryPanelSource, /aria-label="配置人员完成情况明细"/);
+  assert.match(deliveryPanelSource, /点击左侧渠道查看对应人员完成情况/);
+  assert.doesNotMatch(deliveryPanelSource, /snapshot\.staffLoads\.map/);
   assert.match(deliveryPanelSource, /handleMonthChange[\s\S]*?setSelectedChannel\(null\)/);
   assert.match(deliveryPanelSource, /className="dlv-filter-chip"[\s\S]*?onClick=\{\(\) => setSelectedChannel\(null\)\}/);
   assert.match(deliveryPanelSource, /options=\{CONVERSION_DIMENSION_OPTIONS\}[\s\S]*?value=\{conversionDimension\}[\s\S]*?onChange=\{setConversionDimension\}/);
@@ -1898,6 +1907,9 @@ test('renders the presale trial delivery dashboard as a compact decision workspa
   assert.match(deliveryPanelCss, /@media \(max-width: 760px\)[\s\S]*?\.dlv-comparison-grid \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}[\s\S]*?\.dlv-detail-metrics--conversion,\s*[\s\S]*?\.dlv-detail-metrics--staff \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
   assert.match(deliveryPanelCss, /\.dlv-kpi,\s*[\s\S]*?\.dlv-card,\s*[\s\S]*?\.dlv-comparison-band,\s*[\s\S]*?\.dlv-operations\s*\{[\s\S]*?background:\s*var\(--dashboard-card-bg\);[\s\S]*?border:\s*1px solid var\(--dashboard-card-border\);/);
   assert.match(deliveryPanelCss, /\.dlv-legend-row:focus-visible[\s\S]*?outline:\s*2px solid var\(--focus-outline\);/);
+  assert.match(deliveryPanelCss, /\.dlv-conversion-row\[role="button"\][\s\S]*?cursor:\s*pointer;/);
+  assert.match(deliveryPanelCss, /\.dlv-conversion-row\.is-selected[\s\S]*?background:\s*var\(--glass-cell-hover\);[\s\S]*?box-shadow:\s*inset 3px 0 0 var\(--accent-mid\);/);
+  assert.match(deliveryPanelCss, /\.dlv-conversion-row:focus-visible[\s\S]*?outline:\s*2px solid var\(--focus-outline\);/);
   assert.match(deliveryPanelCss, /\.dlv-panel\s*\{[\s\S]*?overflow:\s*visible;/);
   assert.doesNotMatch(deliveryPanelSource, /<table|dlv-table--comparison|dlv-table--conversion|dlv-table--load/);
   assert.doesNotMatch(deliveryPanelCss, /dlv-table--comparison|dlv-table--conversion|dlv-table--load|overflow-x:\s*auto/);

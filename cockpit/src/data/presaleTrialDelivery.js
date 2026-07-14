@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 16:35:43 CST
+ 更新内容: 配置人员改为按渠道分组，渠道记录未配置人数并由分组数据派生负载与全局未配置合计。
+*/
+/*
  更新时间: 2026-07-14 14:30:00 CST
  更新内容: 新增售前试用交付看板集中演示数据、月份加载器、环比计算、渠道筛选与人员负载口径。
 */
@@ -41,6 +45,7 @@
  * @property {string} name 渠道名称。
  * @property {number} count 当前试用客户数。
  * @property {number} expectedAmountWan 预计成交金额，单位为万元。
+ * @property {number} unassignedOwners 该渠道尚未配置负责人的客户数。
  */
 
 /**
@@ -108,11 +113,27 @@
  */
 
 /**
+ * @typedef {Object} PresaleTrialStaffLoadsByChannel
+ * @property {PresaleTrialStaffLoad[]} east 华东配置人员。
+ * @property {PresaleTrialStaffLoad[]} south 华南配置人员。
+ * @property {PresaleTrialStaffLoad[]} direct 线上直营配置人员。
+ * @property {PresaleTrialStaffLoad[]} agency 代理渠道配置人员。
+ */
+
+/**
  * @typedef {Omit<PresaleTrialConversionRow, 'conversionRate'>} PresaleTrialConversionSourceRow
  */
 
 /**
  * @typedef {Omit<PresaleTrialStaffLoad, 'loadRatio' | 'loadStatus' | 'loadTone'>} PresaleTrialStaffLoadSource
+ */
+
+/**
+ * @typedef {Object} PresaleTrialStaffLoadSourcesByChannel
+ * @property {PresaleTrialStaffLoadSource[]} east 华东配置人员源数据。
+ * @property {PresaleTrialStaffLoadSource[]} south 华南配置人员源数据。
+ * @property {PresaleTrialStaffLoadSource[]} direct 线上直营配置人员源数据。
+ * @property {PresaleTrialStaffLoadSource[]} agency 代理渠道配置人员源数据。
  */
 
 /**
@@ -126,8 +147,7 @@
  * @property {PresaleTrialStageRow[]} stages 阶段分布。
  * @property {PresaleTrialRiskAlert[]} riskAlerts 风险提醒。
  * @property {{channel: PresaleTrialConversionSourceRow[], team: PresaleTrialConversionSourceRow[]}} conversion 未派生成熟队列转化率的渠道与团队数据。
- * @property {PresaleTrialStaffLoadSource[]} staffLoads 未派生负载状态的人员数据。
- * @property {number} unassignedOwners 未配置负责人的客户数。
+ * @property {PresaleTrialStaffLoadSourcesByChannel} staffLoadsByChannel 按渠道分组且未派生负载状态的人员数据。
  */
 
 /**
@@ -142,7 +162,7 @@
  * @property {PresaleTrialRiskAlert[]} riskAlerts 风险提醒。
  * @property {PresaleTrialComparisonRow[]} comparisonRows 本月与上月比较行。
  * @property {{channel: PresaleTrialConversionRow[], team: PresaleTrialConversionRow[]}} conversion 渠道及团队成熟队列转化数据。
- * @property {PresaleTrialStaffLoad[]} staffLoads 配置人员负载数据。
+ * @property {PresaleTrialStaffLoadsByChannel} staffLoadsByChannel 按渠道分组的配置人员负载数据。
  * @property {number} unassignedOwners 尚未配置负责人的客户数。
  * @property {number} capacityLimit 单人建议容量上限。
  */
@@ -336,18 +356,6 @@ export function getStaffLoadState(currentAssigned, capacityLimit = DELIVERY_CAPA
 }
 
 /**
- * 按环图渠道键筛选渠道或团队转化行；all 或空值返回全部行副本。
- * @param {PresaleTrialConversionRow[]} rows 待筛选转化行。
- * @param {string | null | undefined} channelKey 渠道筛选键。
- * @returns {PresaleTrialConversionRow[]}
- */
-export function filterConversionRows(rows, channelKey) {
-  if (!Array.isArray(rows)) return [];
-  if (!channelKey || channelKey === 'all') return rows.slice();
-  return rows.filter((row) => row.channelKey === channelKey);
-}
-
-/**
  * @param {PresaleTrialKpis} kpis 核心指标。
  * @returns {PresaleTrialComparisonMetrics}
  */
@@ -378,11 +386,16 @@ function buildConversionRows(rows) {
  * @param {number} capacityLimit 建议容量上限。
  * @returns {PresaleTrialStaffLoad[]}
  */
-function buildStaffLoads(rows, capacityLimit) {
-  return rows.map((row) => ({
-    ...row,
-    ...getStaffLoadState(row.currentAssigned, capacityLimit),
-  }));
+function buildStaffLoadsByChannel(groups, capacityLimit) {
+  return Object.fromEntries(
+    Object.entries(groups).map(([channelKey, rows]) => [
+      channelKey,
+      rows.map((row) => ({
+        ...row,
+        ...getStaffLoadState(row.currentAssigned, capacityLimit),
+      })),
+    ]),
+  );
 }
 
 const MAY_COMPARISON_BASELINE = Object.freeze({
@@ -413,10 +426,10 @@ const JULY_SOURCE = {
     averageTrialDays: 12.6,
   },
   distribution: [
-    { key: 'east', name: '华东', count: 18, expectedAmountWan: 26.4 },
-    { key: 'south', name: '华南', count: 15, expectedAmountWan: 21.8 },
-    { key: 'direct', name: '线上直营', count: 17, expectedAmountWan: 19.6 },
-    { key: 'agency', name: '代理渠道', count: 10, expectedAmountWan: 14.6 },
+    { key: 'east', name: '华东', count: 18, expectedAmountWan: 26.4, unassignedOwners: 1 },
+    { key: 'south', name: '华南', count: 15, expectedAmountWan: 21.8, unassignedOwners: 1 },
+    { key: 'direct', name: '线上直营', count: 17, expectedAmountWan: 19.6, unassignedOwners: 0 },
+    { key: 'agency', name: '代理渠道', count: 10, expectedAmountWan: 14.6, unassignedOwners: 0 },
   ],
   stages: [
     { key: 'pending', name: '待配置', count: 6, tone: 'neutral' },
@@ -444,14 +457,21 @@ const JULY_SOURCE = {
       { key: 'agency-team', channelKey: 'agency', name: '代理渠道部', currentTrials: 10, cohortStarted: 6, closedDeals: 1, expectedAmountWan: 13.7, status: '风险', statusTone: 'risk' },
     ],
   },
-  staffLoads: [
-    { key: 'chen-chen', name: '陈晨', currentAssigned: 11, monthlyTotal: 18, converted: 3, overdue: 1, expectedAmountWan: 16.2 },
-    { key: 'zhao-qing', name: '赵晴', currentAssigned: 13, monthlyTotal: 21, converted: 3, overdue: 1, expectedAmountWan: 18.9 },
-    { key: 'han-yu', name: '韩宇', currentAssigned: 15, monthlyTotal: 22, converted: 2, overdue: 2, expectedAmountWan: 20.6 },
-    { key: 'zhou-ning', name: '周宁', currentAssigned: 10, monthlyTotal: 17, converted: 2, overdue: 0, expectedAmountWan: 13.4 },
-    { key: 'qin-jia', name: '秦佳', currentAssigned: 9, monthlyTotal: 15, converted: 2, overdue: 1, expectedAmountWan: 10.3 },
-  ],
-  unassignedOwners: 2,
+  staffLoadsByChannel: {
+    east: [
+      { key: 'chen-chen', name: '陈晨', currentAssigned: 10, monthlyTotal: 18, converted: 3, overdue: 1, expectedAmountWan: 16.2 },
+      { key: 'qin-jia', name: '秦佳', currentAssigned: 7, monthlyTotal: 15, converted: 2, overdue: 1, expectedAmountWan: 9.9 },
+    ],
+    south: [
+      { key: 'zhao-qing', name: '赵晴', currentAssigned: 14, monthlyTotal: 21, converted: 3, overdue: 1, expectedAmountWan: 18.9 },
+    ],
+    direct: [
+      { key: 'han-yu', name: '韩宇', currentAssigned: 17, monthlyTotal: 22, converted: 2, overdue: 2, expectedAmountWan: 19.6 },
+    ],
+    agency: [
+      { key: 'zhou-ning', name: '周宁', currentAssigned: 10, monthlyTotal: 17, converted: 2, overdue: 0, expectedAmountWan: 14.6 },
+    ],
+  },
 };
 
 /** @type {PresaleTrialSnapshotSource} */
@@ -473,10 +493,10 @@ const JUNE_SOURCE = {
     averageTrialDays: 14.2,
   },
   distribution: [
-    { key: 'east', name: '华东', count: 16, expectedAmountWan: 21.8 },
-    { key: 'south', name: '华南', count: 13, expectedAmountWan: 18.2 },
-    { key: 'direct', name: '线上直营', count: 14, expectedAmountWan: 16.4 },
-    { key: 'agency', name: '代理渠道', count: 9, expectedAmountWan: 12.2 },
+    { key: 'east', name: '华东', count: 16, expectedAmountWan: 21.8, unassignedOwners: 1 },
+    { key: 'south', name: '华南', count: 13, expectedAmountWan: 18.2, unassignedOwners: 1 },
+    { key: 'direct', name: '线上直营', count: 14, expectedAmountWan: 16.4, unassignedOwners: 0 },
+    { key: 'agency', name: '代理渠道', count: 9, expectedAmountWan: 12.2, unassignedOwners: 0 },
   ],
   stages: [
     { key: 'pending', name: '待配置', count: 6, tone: 'neutral' },
@@ -504,14 +524,21 @@ const JUNE_SOURCE = {
       { key: 'agency-team', channelKey: 'agency', name: '代理渠道部', currentTrials: 9, cohortStarted: 5, closedDeals: 1, expectedAmountWan: 11.6, status: '风险', statusTone: 'risk' },
     ],
   },
-  staffLoads: [
-    { key: 'chen-chen', name: '陈晨', currentAssigned: 10, monthlyTotal: 16, converted: 2, overdue: 1, expectedAmountWan: 13.8 },
-    { key: 'zhao-qing', name: '赵晴', currentAssigned: 12, monthlyTotal: 18, converted: 2, overdue: 1, expectedAmountWan: 15.6 },
-    { key: 'han-yu', name: '韩宇', currentAssigned: 13, monthlyTotal: 19, converted: 2, overdue: 2, expectedAmountWan: 16.9 },
-    { key: 'zhou-ning', name: '周宁', currentAssigned: 8, monthlyTotal: 14, converted: 2, overdue: 0, expectedAmountWan: 10.8 },
-    { key: 'qin-jia', name: '秦佳', currentAssigned: 7, monthlyTotal: 12, converted: 1, overdue: 1, expectedAmountWan: 8.7 },
-  ],
-  unassignedOwners: 2,
+  staffLoadsByChannel: {
+    east: [
+      { key: 'chen-chen', name: '陈晨', currentAssigned: 9, monthlyTotal: 16, converted: 2, overdue: 1, expectedAmountWan: 13.8 },
+      { key: 'qin-jia', name: '秦佳', currentAssigned: 6, monthlyTotal: 12, converted: 1, overdue: 1, expectedAmountWan: 7.7 },
+    ],
+    south: [
+      { key: 'zhao-qing', name: '赵晴', currentAssigned: 12, monthlyTotal: 18, converted: 2, overdue: 1, expectedAmountWan: 15.6 },
+    ],
+    direct: [
+      { key: 'han-yu', name: '韩宇', currentAssigned: 14, monthlyTotal: 19, converted: 2, overdue: 2, expectedAmountWan: 16.4 },
+    ],
+    agency: [
+      { key: 'zhou-ning', name: '周宁', currentAssigned: 9, monthlyTotal: 14, converted: 2, overdue: 0, expectedAmountWan: 12.2 },
+    ],
+  },
 };
 
 /**
@@ -527,6 +554,8 @@ function buildSnapshot(source, previousMetrics) {
       source.kpis.conversionCohort,
     ),
   };
+  const unassignedOwners = source.distribution
+    .reduce((sum, channel) => sum + Number(channel.unassignedOwners || 0), 0);
   return {
     monthKey: source.monthKey,
     monthLabel: source.monthLabel,
@@ -541,8 +570,8 @@ function buildSnapshot(source, previousMetrics) {
       channel: buildConversionRows(source.conversion.channel),
       team: buildConversionRows(source.conversion.team),
     },
-    staffLoads: buildStaffLoads(source.staffLoads, DELIVERY_CAPACITY_LIMIT),
-    unassignedOwners: source.unassignedOwners,
+    staffLoadsByChannel: buildStaffLoadsByChannel(source.staffLoadsByChannel, DELIVERY_CAPACITY_LIMIT),
+    unassignedOwners,
     capacityLimit: DELIVERY_CAPACITY_LIMIT,
   };
 }

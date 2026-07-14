@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 16:35:43 CST
+ 更新内容: 为可选择的渠道与团队行增加复用玻璃悬浮色的低饱和选中态和键盘焦点反馈。
+*/
+/*
  更新时间: 2026-07-14 15:30:13 CST
  更新内容: 为受控启用的售前试用演示快照增加复用玻璃边框体系的低干扰来源标识。
 */
@@ -704,12 +708,26 @@
   min-width: 0;
   padding: 11px 8px;
   border-bottom: 1px solid var(--line);
-  transition: background .16s ease;
+  transition: background .16s ease, box-shadow .16s ease;
+}
+
+.dlv-conversion-row[role="button"] {
+  cursor: pointer;
 }
 
 .dlv-conversion-row:hover,
 .dlv-staff-row:hover {
   background: var(--glass-cell-hover);
+}
+
+.dlv-conversion-row.is-selected {
+  background: var(--glass-cell-hover);
+  box-shadow: inset 3px 0 0 var(--accent-mid);
+}
+
+.dlv-conversion-row:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: -2px;
 }
 
 .dlv-detail-row__top,
