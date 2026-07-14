@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 10:27:00 CST
+ 更新内容: 数据维护读接口新增 update-monitor-maintenance，只读返回各业务数据组每日更新状态。
+*/
+/*
  Update time: 2026-07-13 18:53:01 CST
  Update content: Cost maintenance also reads independent marketing labor while sales labor remains derived from channel rows.
 */
@@ -43,6 +47,7 @@
 */
 import { createDbConnection, queryRows } from './db.js';
 import { ensureCostSchema } from './costSchema.js';
+import { buildUpdateMonitorSnapshot } from './maintenanceUpdateMonitor.js';
 import {
   buildTargetSnapshot,
   buildCostSnapshot,
@@ -135,6 +140,7 @@ async function readChannel(connection) {
 }
 
 const READERS = {
+  'update-monitor-maintenance': (conn, year) => buildUpdateMonitorSnapshot(conn, { year }),
   'target-maintenance': (conn, year) => readTarget(conn, year),
   'cost-maintenance': (conn, year) => readCost(conn, year),
   'org-maintenance': (conn) => readOrg(conn),

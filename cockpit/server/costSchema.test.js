@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-14 10:13:00 CST
+ Update content: Cover duplicate-column races during concurrent cost schema migration.
+*/
+/*
  Update time: 2026-07-13 16:48:56 CST
  Update content: Cover the cost schema migration from legacy investment cost to operations cost, including natural unique keys and auto-increment primary keys.
 */
@@ -66,4 +70,24 @@ test('ensureCostSchema normalizes an earlier non-null labor column for legacy fa
 
   assert.ok(execs.some((entry) => /MODIFY labor_amount_yuan DECIMAL\(18,2\) NULL DEFAULT NULL/.test(entry.sql)));
   assert.ok(execs.some((entry) => /SET labor_amount_yuan = NULL WHERE labor_amount_yuan = 0/.test(entry.sql)));
+});
+
+test('ensureCostSchema keeps going when a concurrent migration already added a column', async () => {
+  const { connection, execs } = makeLegacyConnection();
+  const originalExecute = connection.execute;
+  connection.execute = async (sql, params = []) => {
+    const normalized = String(sql).trim();
+    if (/ADD COLUMN operations_amount_yuan/i.test(normalized)) {
+      const err = new Error("Duplicate column name 'operations_amount_yuan'");
+      err.code = 'ER_DUP_FIELDNAME';
+      err.errno = 1060;
+      throw err;
+    }
+    return originalExecute.call(connection, sql, params);
+  };
+
+  await ensureCostSchema(connection);
+
+  assert.ok(execs.some((entry) => /ADD COLUMN labor_amount_yuan DECIMAL\(18,2\) NULL DEFAULT NULL/.test(entry.sql)));
+  assert.ok(execs.some((entry) => /ADD UNIQUE KEY uq_channel_cost_month \(`year_month`, channel_id\)/.test(entry.sql)));
 });

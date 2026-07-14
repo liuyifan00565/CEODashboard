@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 12:11:48 CST  更新内容: 增加数据更新状态汇总卡复选框右置布局回归，避免通用 span 样式覆盖标题行 flex。 */
 /* 更新时间: 2026-07-14 15:25:00 CST  更新内容: 回归锁定登录门禁临时关闭：App 使用 LOGIN_DISABLED_USER 初始化为已认证，
    不再导入 LoginPage/fetchCurrentUser/logout，保留侧边栏账号展示结构。 */
 /* 更新时间: 2026-07-14 11:35:00 CST  更新内容: 品牌区第二行（登录用户名）改为左对齐，移除原为"当前视角"
@@ -7,6 +8,7 @@
 /* 更新时间: 2026-07-14 11:20:00 CST  更新内容: 侧栏品牌区第二行改为登录用户名，同步移除 activeContextLabel/
    activeMenuLabel/getDashboardMenuLabel 相关断言。 */
 /* 更新时间: 2026-07-14 12:35:00 CST  更新内容: 交付页回归切换为售前试用长看板，覆盖模块顺序、状态处理、环图筛选与透明页面容器。 */
+/* 更新时间: 2026-07-14 10:28:00 CST  更新内容: 回归锁定数据维护新增只读数据更新看板入口和状态样式。 */
 /* 更新时间: 2026-07-14 10:02:17 CST  更新内容: 回归锁定月度经营进度卡只下裁玻璃表面顶部，不移动标题与三栏内容。 */
 /* 更新时间: 2026-07-14 10:35:00 CST  更新内容: 增加交付与运营协同看板结构回归，覆盖流程、工单责任和权限成本控制区块。 */
 /* 更新时间: 2026-07-14 09:52:18 CST  更新内容: 回归锁定月度经营进度标题下移到目标区，并仅收紧卡片顶部留白。 */
@@ -912,6 +914,62 @@ test('renders data maintenance as four independent pages instead of the dashboar
   assert.match(maintenancePageSource, /'cost-maintenance': CostMaintenancePage/);
   assert.match(maintenancePageSource, /'org-maintenance': OrgMaintenancePage/);
   assert.match(maintenancePageSource, /'channel-maintenance': ChannelMaintenancePage/);
+});
+
+test('adds a readonly data update monitor page to maintenance mode', () => {
+  assert.match(mockSource, /\{ key: 'update-monitor-maintenance', name: '数据更新看板', icon: 'monitor' \}/);
+  assert.match(maintenancePageSource, /const READONLY_MAINTENANCE_PAGES = new Set\(\['update-monitor-maintenance'\]\);/);
+  assert.match(maintenancePageSource, /const UpdateMonitorMaintenancePage = forwardRef\(function UpdateMonitorMaintenancePage/);
+  assert.match(maintenancePageSource, /'update-monitor-maintenance': UpdateMonitorMaintenancePage/);
+  assert.match(maintenancePageSource, /case 'update-monitor-maintenance': return \{ monitor: d, lastLoadedAt \};/);
+  assert.match(maintenancePageSource, /const isReadonlyPage = READONLY_MAINTENANCE_PAGES\.has\(activePage\);/);
+  assert.match(maintenancePageSource, /showWriteActions=\{!isReadonlyPage\}/);
+  assert.match(maintenancePageSource, /数据组更新状态/);
+  assert.match(maintenancePageSource, /\{ key: 'increase', label: '增加' \},\s*\n\s*\{ key: 'stale', label: '延迟' \}/);
+  assert.match(maintenancePageSource, /return Number\(summary\.updated \|\| 0\) \+ Number\(summary\.currentMonth \|\| 0\);/);
+  assert.match(maintenancePageSource, /const UPDATE_MONITOR_REFRESH_MS = 60 \* 60 \* 1000;/);
+  assert.match(maintenancePageSource, /function formatUpdateMonitorAge\(value, nowMs = Date\.now\(\)\)/);
+  assert.match(maintenancePageSource, /function isUpdateMonitorGroupInFilter\(group, key\)/);
+  assert.match(maintenancePageSource, /key === 'increase'\) return group\.status === 'updated' \|\| group\.status === 'current_month';/);
+  assert.match(maintenancePageSource, /const \[selectedFilters, setSelectedFilters\] = useState\(\[\]\);/);
+  assert.match(maintenancePageSource, /selectedFilters\.some\(\(key\) => isUpdateMonitorGroupInFilter\(group, key\)\)/);
+  assert.match(maintenancePageSource, /function toggleStatusFilter\(key\)/);
+  assert.match(maintenancePageSource, /className="mnt-update-summary-card-head"/);
+  assert.match(maintenancePageSource, /className="mnt-update-summary-check"/);
+  assert.match(maintenancePageSource, /type="checkbox"/);
+  assert.doesNotMatch(maintenancePageSource, /aria-pressed=\{selected\}/);
+  assert.match(maintenancePageSource, /数据拉取 \$\{formatUpdateMonitorAge\(lastLoadedAt \|\| monitor\?\.checkedAt, relativeNow\)\}/);
+  assert.match(maintenancePageSource, /window\.setInterval\(\(\) => \{\s*\n\s*setDataVersion\(\(v\) => v \+ 1\);\s*\n\s*\}, UPDATE_MONITOR_REFRESH_MS\)/);
+  assert.match(maintenancePageSource, /setLastLoadedAt\(new Date\(\)\.toISOString\(\)\);/);
+  assert.match(maintenancePageSource, /const pageRenderKey = activePage === 'update-monitor-maintenance'\s*\n\s*\? `\$\{activePage\}-\$\{year\}`\s*\n\s*: `\$\{activePage\}-\$\{year\}-\$\{dataVersion\}`;/);
+  assert.match(maintenancePageSource, /key=\{pageRenderKey\}/);
+  assert.match(maintenancePageSource, /visibleGroups\.map/);
+  assert.doesNotMatch(maintenancePageSource, /UPDATE_MONITOR_FILTER_OPTIONS/);
+  assert.doesNotMatch(maintenancePageSource, /statusFilter/);
+  assert.doesNotMatch(maintenancePageSource, /className="mnt-update-filterbar"/);
+  assert.doesNotMatch(maintenancePageSource, /\{ key: 'updated', label: '今日已更新' \}/);
+  assert.doesNotMatch(maintenancePageSource, /\{ key: 'currentMonth', label: '本月有数据' \}/);
+  assert.match(maintenancePageSource, /mnt-update-status--updated/);
+  assert.doesNotMatch(maintenancePageSource, /function getUpdateSignal\(status\)/);
+  assert.doesNotMatch(maintenancePageSource, /UpdateMonitorBeacon/);
+  assert.doesNotMatch(maintenancePageSource, /mnt-update-beacon/);
+  assert.doesNotMatch(maintenancePageSource, /mnt-update-signal/);
+  assert.match(maintenancePageCss, /\.mnt-update-summary\s*\{/);
+  assert.match(maintenancePageCss, /grid-template-columns: repeat\(4, minmax\(88px, 1fr\)\)/);
+  assert.doesNotMatch(maintenancePageCss, /grid-template-columns: repeat\(2, minmax\(120px, 1fr\)\)/);
+  assert.match(maintenancePageCss, /\.mnt-update-summary-card--increase strong/);
+  assert.match(maintenancePageCss, /\.mnt-update-summary-card--selected/);
+  assert.match(maintenancePageCss, /justify-content: space-between/);
+  assert.match(maintenancePageCss, /\.mnt-update-summary-card \.mnt-update-summary-card-head\s*\{[\s\S]*?display: flex;[\s\S]*?justify-content: space-between;[\s\S]*?width: 100%;/);
+  assert.match(maintenancePageCss, /\.mnt-update-summary-check\s*\{/);
+  assert.doesNotMatch(maintenancePageCss, /\.mnt-update-filterbar\s*\{/);
+  assert.match(maintenancePageCss, /width: 150px/);
+  assert.match(maintenancePageCss, /padding-left: 0/);
+  assert.match(maintenancePageCss, /color: rgba\(73, 232, 155, \.98\)/);
+  assert.doesNotMatch(maintenancePageCss, /mnt-update-beacon/);
+  assert.doesNotMatch(maintenancePageCss, /mnt-update-signal/);
+  assert.match(maintenancePageCss, /\.mnt-update-status--stale,\s*\n\.mnt-update-status--error/);
+  assert.doesNotMatch(maintenancePageCss, /@keyframes mntUpdateBeaconPulse/);
 });
 
 test('builds the target and cost maintenance pages from reference matrix content', () => {

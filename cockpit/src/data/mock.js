@@ -19,6 +19,10 @@
  更新内容: 新增交付与运营协同汇总数据，支持交付流程、工单责任、风险闭环和权限成本控制区块。
 */
 /*
+ 更新时间: 2026-07-14 10:30:00 CST
+ 更新内容: 数据维护侧边栏新增“数据更新看板”只读入口，用于查看各组业务数据每日到数状态。
+*/
+/*
  更新时间: 2026-07-14 10:00:00 CST
  更新内容: 版本情况(VersionFinancePanel)移回经营总览页，侧边导航“版本与交付”入口改为纯“交付”，
           只承载交付面板(DeliveryPanel)。
@@ -1258,6 +1262,7 @@ export const MENU = [
 ];
 
 export const MAINTENANCE_MENU = [
+  { key: 'update-monitor-maintenance', name: '数据更新看板', icon: 'monitor' },
   { key: 'target-maintenance', name: '目标维护', icon: 'target' },
   { key: 'cost-maintenance', name: '成本维护', icon: 'cost' },
 ];
@@ -1465,6 +1470,7 @@ export const CHANNEL_MAINTENANCE_SOURCES = [
 
 export function getMaintenancePageMeta(pageKey = 'target-maintenance') {
   const meta = {
+    'update-monitor-maintenance': { title: '数据更新看板', scope: '每日到数状态', saveText: '只读' },
     'target-maintenance': { title: '目标维护', scope: '所有部门', saveText: '保存目标' },
     'cost-maintenance': { title: '成本维护', scope: '全部渠道', saveText: '保存成本' },
     'org-maintenance': { title: '组织维护', scope: 'BI销售 21 人 / 卫瓴人员 28 人', saveText: '保存组织' },

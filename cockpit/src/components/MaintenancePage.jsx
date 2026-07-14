@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 11:40:00 CST
+ 更新内容: 数据维护新增只读数据更新看板，支持小时级自动刷新、顶部多选状态筛选和数据拉取时效展示。
+*/
+/*
  Update time: 2026-07-13 18:53:01 CST
  Update content: Cost maintenance restores a readonly sales-labor rollup and an independently editable marketing-labor matrix.
 */
@@ -203,11 +207,14 @@ function makeSelectOptions(items, emptyLabel = '') {
 }
 
 const MAINTENANCE_TITLE_TEXT = {
+  'update-monitor-maintenance': '数据更新看板',
   'target-maintenance': '目标维护',
   'cost-maintenance': '成本维护',
   'org-maintenance': '组织维护',
   'channel-maintenance': '渠道维护',
 };
+const READONLY_MAINTENANCE_PAGES = new Set(['update-monitor-maintenance']);
+const UPDATE_MONITOR_REFRESH_MS = 60 * 60 * 1000;
 
 // PAGE_RENDERERS 在文件底部（四个 forwardRef 子页定义之后）声明，避免 const 的 TDZ。
 
@@ -370,7 +377,7 @@ function SaveBadge({ status }) {
   return <span className={`mnt-save-badge${dirty ? ' mnt-save-badge--dirty' : ''}`}>{status}</span>;
 }
 
-function MaintenanceToolbar({ activePage, status, year, saving, canSave, onYearChange, onSave, onImport, onDownloadTemplate, onPageAction, onOpenTemplateDialog }) {
+function MaintenanceToolbar({ activePage, status, year, saving, canSave, showWriteActions = true, onYearChange, onSave, onImport, onDownloadTemplate, onPageAction, onOpenTemplateDialog }) {
   const meta = getMaintenancePageMeta(activePage);
   const title = MAINTENANCE_TITLE_TEXT[activePage] ?? meta.title;
 
@@ -414,6 +421,12 @@ function MaintenanceToolbar({ activePage, status, year, saving, canSave, onYearC
       </>
     ),
   };
+  const readonlyActions = (
+    <>
+      <GlassSelect className="mnt-control mnt-year-control" value={year} onChange={handleYearChange} aria-label="看板年份" disabled={saving} options={YEAR_OPTIONS} />
+      <span className="mnt-readonly-note">按业务日期自动检查</span>
+    </>
+  );
 
   return (
     <MaintenanceToolbarSurface className="mnt-toolbar-glass">
@@ -422,11 +435,13 @@ function MaintenanceToolbar({ activePage, status, year, saving, canSave, onYearC
           <h2>{title}<span className="mnt-title-scope"> · {meta.scope}</span></h2>
         </div>
         <div className="mnt-actions">
-          {actions[activePage] ?? actions['target-maintenance']}
-          <SaveBadge status={status} />
-          {saving
-            ? <span className="mnt-saving-hint">正在写入数据库…</span>
-            : <span className="mnt-save-hint" title="页内编辑保存后写入数据库；新增组织/大类仅本会话有效">页内可保存</span>}
+          {showWriteActions ? (actions[activePage] ?? actions['target-maintenance']) : readonlyActions}
+          {showWriteActions ? <SaveBadge status={status} /> : <span className="mnt-save-badge">只读</span>}
+          {showWriteActions
+            ? (saving
+                ? <span className="mnt-saving-hint">正在写入数据库…</span>
+                : <span className="mnt-save-hint" title="页内编辑保存后写入数据库；新增组织/大类仅本会话有效">页内可保存</span>)
+            : <span className="mnt-save-hint">不写入数据库</span>}
         </div>
       </section>
     </MaintenanceToolbarSurface>
@@ -487,6 +502,159 @@ function Panel({ title, meta, className = '', children }) {
 function MatrixShell({ className = '', children }) {
   return <div className={`mnt-matrix-wrap ${className}`.trim()}>{children}</div>;
 }
+
+function formatMonitorCheckedAt(value) {
+  if (!value) return '未检查';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString('zh-CN', {
+    hour12: false,
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatLagDays(value) {
+  if (value == null) return '—';
+  const days = Number(value);
+  if (!Number.isFinite(days)) return '—';
+  if (days <= 0) return '0 天';
+  return `${days} 天`;
+}
+
+const UPDATE_MONITOR_SUMMARY = [
+  { key: 'increase', label: '增加' },
+  { key: 'stale', label: '延迟' },
+  { key: 'empty', label: '无数据' },
+  { key: 'error', label: '异常' },
+];
+const UPDATE_MONITOR_STATUS_CLASS = {
+  updated: 'mnt-update-status--updated',
+  current_month: 'mnt-update-status--current_month',
+  stale: 'mnt-update-status--stale',
+  empty: 'mnt-update-status--empty',
+  error: 'mnt-update-status--error',
+};
+
+function getUpdateMonitorSummaryValue(summary, key) {
+  if (key === 'increase') {
+    return Number(summary.updated || 0) + Number(summary.currentMonth || 0);
+  }
+  return Number(summary[key] || 0);
+}
+
+function isUpdateMonitorGroupInFilter(group, key) {
+  if (key === 'increase') return group.status === 'updated' || group.status === 'current_month';
+  return group.status === key;
+}
+
+function formatUpdateMonitorAge(value, nowMs = Date.now()) {
+  if (!value) return '未拉取';
+  const time = new Date(value).getTime();
+  if (!Number.isFinite(time)) return '未知';
+  const diffMs = Math.max(0, nowMs - time);
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return '刚刚';
+  if (minutes < 60) return `${minutes} 分钟前`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} 小时前`;
+  return `${Math.floor(hours / 24)} 天前`;
+}
+
+const UpdateMonitorMaintenancePage = forwardRef(function UpdateMonitorMaintenancePage({ monitor, lastLoadedAt }, ref) {
+  const groups = monitor?.groups ?? EMPTY_ARRAY;
+  const summary = monitor?.summary ?? {};
+  const [selectedFilters, setSelectedFilters] = useState([]);
+  const [relativeNow, setRelativeNow] = useState(() => Date.now());
+  const visibleGroups = useMemo(() => groups.filter((group) => {
+    if (!selectedFilters.length) return true;
+    return selectedFilters.some((key) => isUpdateMonitorGroupInFilter(group, key));
+  }), [groups, selectedFilters]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setRelativeNow(Date.now()), 60000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    collect: () => ({ rows: [], laborRows: [], departments: [], groups: [], deletions: [] }),
+  }), []);
+
+  function toggleStatusFilter(key) {
+    setSelectedFilters((current) => (
+      current.includes(key) ? current.filter((item) => item !== key) : [...current, key]
+    ));
+  }
+
+  return (
+    <section className="mnt-update-monitor">
+      <Panel
+        title="数据组更新状态"
+        meta={`检查时间 ${formatMonitorCheckedAt(monitor?.checkedAt)} · 当前日期 ${monitor?.today ?? '—'} · 数据拉取 ${formatUpdateMonitorAge(lastLoadedAt || monitor?.checkedAt, relativeNow)}`}
+        className="mnt-main-panel"
+      >
+        <div className="mnt-update-summary" aria-label="数据更新汇总">
+          {UPDATE_MONITOR_SUMMARY.map((item) => {
+            const selected = selectedFilters.includes(item.key);
+            return (
+              <label
+                className={`mnt-update-summary-card mnt-update-summary-card--${item.key}${selected ? ' mnt-update-summary-card--selected' : ''}`}
+                key={item.key}
+              >
+                <span className="mnt-update-summary-card-head">
+                  <span>{item.label}</span>
+                  <input
+                    className="mnt-update-summary-check"
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => toggleStatusFilter(item.key)}
+                    aria-label={`筛选${item.label}`}
+                  />
+                </span>
+                <strong>{getUpdateMonitorSummaryValue(summary, item.key)}</strong>
+              </label>
+            );
+          })}
+        </div>
+        <MatrixShell className="mnt-update-table-wrap">
+          <table className="mnt-user-table mnt-update-table">
+            <thead>
+              <tr>
+                <th>数据组</th>
+                <th>状态</th>
+                <th>最新日期/月</th>
+                <th>记录数</th>
+                <th>落后</th>
+                <th>数据表</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleGroups.map((group) => (
+                <tr key={group.key} className={group.status === 'error' ? 'mnt-row--muted' : ''}>
+                  <td className="mnt-name-cell mnt-update-name-cell">
+                    <strong>{group.name}</strong>
+                    <span className="mnt-update-name-meta">{group.type === 'monthly' ? '月度数据' : '日级数据'}</span>
+                  </td>
+                  <td>
+                    <span className={`mnt-update-status ${UPDATE_MONITOR_STATUS_CLASS[group.status] ?? UPDATE_MONITOR_STATUS_CLASS.empty}`}>
+                      {group.statusLabel}
+                    </span>
+                  </td>
+                  <td>{group.latestValue || '—'}</td>
+                  <td>{Number(group.rowCount || 0).toLocaleString('zh-CN')}</td>
+                  <td>{formatLagDays(group.lagDays)}</td>
+                  <td><code>{group.table}</code></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </MatrixShell>
+      </Panel>
+    </section>
+  );
+});
 
 function MaintenanceSideNav({ nodes, activeId, onSelect, renderAction }) {
   return (
@@ -1408,6 +1576,7 @@ const ChannelMaintenancePage = forwardRef(function ChannelMaintenancePage({ mark
 });
 
 const PAGE_RENDERERS = {
+  'update-monitor-maintenance': UpdateMonitorMaintenancePage,
   'target-maintenance': TargetMaintenancePage,
   'cost-maintenance': CostMaintenancePage,
   'org-maintenance': OrgMaintenancePage,
@@ -1421,12 +1590,14 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
   const [year, setYear] = useState('2026');
   const [data, setData] = useState(null);
   const [dataVersion, setDataVersion] = useState(0);
+  const [lastLoadedAt, setLastLoadedAt] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const pageRef = useRef(null);
   const Page = PAGE_RENDERERS[activePage] ?? TargetMaintenancePage;
+  const isReadonlyPage = READONLY_MAINTENANCE_PAGES.has(activePage);
   const status = statusByPage[activePage] ?? '未修改';
   const dirty = status === '有未保存修改';
   const importConfig = getImportConfig(activePage);
@@ -1448,6 +1619,7 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
       .then((d) => {
         if (!cancelled) {
           setData(d);
+          setLastLoadedAt(new Date().toISOString());
           setLoading(false);
         }
       })
@@ -1460,6 +1632,14 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
       });
     return () => { cancelled = true; };
   }, [activePage, year, dataVersion]);
+
+  useEffect(() => {
+    if (activePage !== 'update-monitor-maintenance') return undefined;
+    const intervalId = window.setInterval(() => {
+      setDataVersion((v) => v + 1);
+    }, UPDATE_MONITOR_REFRESH_MS);
+    return () => window.clearInterval(intervalId);
+  }, [activePage]);
 
   function markDirty() {
     setStatusByPage((current) => ({ ...current, [activePage]: '有未保存修改' }));
@@ -1539,6 +1719,7 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
   const pageProps = (() => {
     const d = data || {};
     switch (activePage) {
+      case 'update-monitor-maintenance': return { monitor: d, lastLoadedAt };
       case 'target-maintenance': return { rows: d.rows, orgTree: d.orgTree };
       case 'cost-maintenance': return { costChannels: d.channels, costRows: d.rows, laborRows: d.laborRows };
       case 'org-maintenance': return { departments: d.departments, users: d.users };
@@ -1546,6 +1727,9 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
       default: return {};
     }
   })();
+  const pageRenderKey = activePage === 'update-monitor-maintenance'
+    ? `${activePage}-${year}`
+    : `${activePage}-${year}-${dataVersion}`;
 
   return (
     <div className={`mnt-page${saving ? ' mnt-page--saving' : ''}`}>
@@ -1555,6 +1739,7 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
         year={year}
         saving={saving}
         canSave={dirty}
+        showWriteActions={!isReadonlyPage}
         onYearChange={setYear}
         onSave={handleSave}
         onImport={() => setImportOpen(true)}
@@ -1576,7 +1761,7 @@ export default function MaintenancePage({ activePage = 'target-maintenance' }) {
         <>
           <Page
             ref={pageRef}
-            key={`${activePage}-${year}-${dataVersion}`}
+            key={pageRenderKey}
             markDirty={markDirty}
             status={status}
             year={year}

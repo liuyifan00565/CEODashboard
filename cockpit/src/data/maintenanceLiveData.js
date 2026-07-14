@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 10:30:00 CST
+ 更新内容: 维护页真实数据加载器支持 update-monitor-maintenance 数据更新看板快照。
+*/
+/*
  更新时间: 2026-07-13 18:53:01 CST
  更新内容: 成本维护快照恢复部门人力行：销售部自动汇总，市场部独立维护。
 */
@@ -9,7 +13,7 @@
 
 /**
  * 拉取某维护页的真实数据库快照。
- * @param {string} page pageKey（target-maintenance / cost-maintenance / org-maintenance / channel-maintenance）
+ * @param {string} page pageKey（update-monitor-maintenance / target-maintenance / cost-maintenance / org-maintenance / channel-maintenance）
  * @param {number} year 年份
  * @returns {Promise<object>} 形如 { orgTree, rows } / { channels, rows, laborRows } / { departments, users } / { groups, sources }
  */
