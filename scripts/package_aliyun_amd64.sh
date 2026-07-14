@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# 更新时间: 2026-07-14 17:57:00 CST
+# 更新内容: 安装与升级在数据库迁移前停止旧 cockpit，避免迁移期间继续写库，迁移成功后再启动应用。
+# 更新时间: 2026-07-14 17:09:11 CST
+# 更新内容: 交付包加入数据库完整性迁移，并调整为数据库就绪、执行迁移后再启动新版应用。
 # 更新时间: 2026-07-14 13:05:00 CST
 # 更新内容: 阿里云交付包新增自营收入订单级事实表迁移，用于承接真实 Excel 收入明细。
 
@@ -297,8 +301,8 @@ write_server_script() {
   local mode="$2"
   cat > "$target" <<SCRIPT
 #!/usr/bin/env bash
-# 更新时间: 2026-07-10 17:20:59 CST
-# 更新内容: 阿里云 AMD64 ${mode}脚本，加载离线镜像、校验 .env、执行迁移并等待 /api/health 就绪。
+# 更新时间: 2026-07-14 17:57:00 CST
+# 更新内容: 阿里云 AMD64 ${mode}脚本，迁移前停止旧 cockpit，迁移成功后重新启动并等待 /api/health 就绪。
 SCRIPT
   cat >> "$target" <<'SCRIPT'
 
@@ -437,6 +441,21 @@ run_migrations() {
   done
 }
 
+wait_database() {
+  echo "Waiting for MySQL ..."
+  for _ in $(seq 1 120); do
+    if compose -f docker-compose.yml exec -T db sh -c 'mysqladmin ping -h 127.0.0.1 -uroot -p"$MYSQL_ROOT_PASSWORD" --silent' >/dev/null 2>&1; then
+      echo "MySQL is ready."
+      return
+    fi
+    sleep 1
+  done
+
+  echo "MySQL readiness check timed out after 120s. Recent logs:" >&2
+  compose -f docker-compose.yml logs --tail 120 db >&2 || true
+  exit 1
+}
+
 wait_health() {
   if ! command -v curl >/dev/null 2>&1; then
     echo "curl is required for the deployment health check." >&2
@@ -470,8 +489,11 @@ load_images
 copy_runtime_files
 cd "$DEPLOY_DIR"
 validate_runtime_env
-compose -f docker-compose.yml up -d
+compose -f docker-compose.yml up -d db
+wait_database
+compose -f docker-compose.yml stop cockpit
 run_migrations
+compose -f docker-compose.yml up -d cockpit
 wait_health
 compose -f docker-compose.yml ps
 SCRIPT
@@ -484,6 +506,7 @@ require_file "$ROOT_DIR/docker/db-init/ceo_dashboard_full.sql"
 require_file "$ROOT_DIR/scripts/create_compute_token_usage_tables.sql"
 require_file "$ROOT_DIR/scripts/migrate_cost_components.sql"
 require_file "$ROOT_DIR/scripts/create_self_operated_revenue_tables.sql"
+require_file "$ROOT_DIR/scripts/migrate_database_integrity.sql"
 
 rm -rf "$WORK_DIR"
 mkdir -p "$WORK_DIR/images" "$WORK_DIR/docker/db-init" "$WORK_DIR/docker/migrations"
@@ -523,6 +546,7 @@ cp "$ROOT_DIR/docker/db-init/ceo_dashboard_full.sql" "$WORK_DIR/docker/db-init/c
 cp "$ROOT_DIR/scripts/create_compute_token_usage_tables.sql" "$WORK_DIR/docker/migrations/20260709_compute_token_usage_tables.sql"
 cp "$ROOT_DIR/scripts/migrate_cost_components.sql" "$WORK_DIR/docker/migrations/20260713_cost_components.sql"
 cp "$ROOT_DIR/scripts/create_self_operated_revenue_tables.sql" "$WORK_DIR/docker/migrations/20260714_self_operated_revenue_tables.sql"
+cp "$ROOT_DIR/scripts/migrate_database_integrity.sql" "$WORK_DIR/docker/migrations/20260714_database_integrity.sql"
 write_env_example "$WORK_DIR/.env.example"
 write_env_key_status "$WORK_DIR/ENV_KEY_STATUS.txt" "$WORK_DIR/.env"
 write_version_file "$WORK_DIR/VERSION.txt"

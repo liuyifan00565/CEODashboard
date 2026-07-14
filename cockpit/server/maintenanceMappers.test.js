@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-14 17:09:11 CST
+ Update content: Cover gross recovered minus refund as cost snapshot net recovered and ROI numerator.
+*/
+/*
  Update time: 2026-07-13 18:53:01 CST
  Update content: Cover derived sales-department labor and independently maintained marketing-department labor in cost snapshots.
 */
@@ -130,9 +134,10 @@ test('buildCostSnapshot builds channel costs plus derived sales and independent 
   assert.equal(ch.periods.m01.laborConfigured, true);
   assert.equal(ch.periods.m01.totalCost, 70);
   assert.equal(ch.periods.m01.actual, 105);
+  assert.equal(ch.periods.m01.netRecovered, 93);
   assert.equal(ch.periods.m01.deals, 5);
   assert.equal(ch.periods.m01.refund, 12);
-  assert.equal(ch.periods.m01.roi, 0.5);
+  assert.equal(ch.periods.m01.roi, 0.33);
 
   const all = rows.find((r) => r.id === 'summary-all');
   assert.equal(all.type, 'group');

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 17:09:11 CST
+ 更新内容: 目标维护和成本维护统一读取 v_revenue_gross_canonical，移除销售月表覆盖和原始日报重复汇总。
+*/
+/*
  更新时间: 2026-07-14 10:27:00 CST
  更新内容: 数据维护读接口新增 update-monitor-maintenance，只读返回各业务数据组每日更新状态。
 */
@@ -66,49 +70,23 @@ function parseYear(yearStr) {
   return 2026;
 }
 
-async function tableHasColumn(connection, tableName, columnName) {
-  const rows = await queryRows(
-    connection,
-    'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1',
-    [tableName, columnName],
-  );
-  return rows.length > 0;
-}
-
 async function readTarget(connection, year) {
-  const [revenueHasDepartmentId, revenueHasActualOpeningCount] = await Promise.all([
-    tableHasColumn(connection, 'fact_revenue_daily', 'department_id'),
-    tableHasColumn(connection, 'fact_revenue_daily', 'actual_opening_count'),
-  ]);
-  const revenueDepartmentIdSql = revenueHasDepartmentId
-    ? 'COALESCE(r.department_id, s.department_id)'
-    : 's.department_id';
-  const openingCountSql = revenueHasActualOpeningCount
-    ? 'SUM(COALESCE(r.actual_opening_count, 0))'
-    : '0';
-  const [departments, staff, targets, dailyRevenue, monthlyRevenue] = await Promise.all([
+  const [departments, staff, targets, revenue] = await Promise.all([
     queryRows(connection, 'SELECT department_id, department_name, parent_id, is_enabled FROM dim_department'),
     queryRows(connection, 'SELECT staff_id, staff_name, department_id, is_sales, is_delivery, is_success, is_enabled, external_bi_user_id FROM dim_staff WHERE is_sales = 1 AND department_id IS NOT NULL AND is_enabled = 1'),
     queryRows(connection, "SELECT `year_month`, department_id, staff_id, target_amount_yuan, target_opening_count, target_order_count FROM biz_target_monthly WHERE `year_month` LIKE ? AND staff_id IS NULL", [`${year}-%`]),
     queryRows(connection, `
       SELECT DATE_FORMAT(r.stat_date, '%Y-%m') AS ym,
-             ${revenueDepartmentIdSql} AS department_id,
+             r.department_id,
              r.staff_id,
              SUM(r.recovered_amount_yuan) AS amt,
              SUM(r.order_count) AS deals,
-             ${openingCountSql} AS openings
-      FROM fact_revenue_daily r
-      LEFT JOIN dim_staff s ON s.staff_id = r.staff_id
+             SUM(COALESCE(r.actual_opening_count, 0)) AS openings
+      FROM v_revenue_gross_canonical r
       WHERE r.stat_date BETWEEN ? AND ?
-      GROUP BY ${revenueDepartmentIdSql}, r.staff_id, ym
+      GROUP BY r.department_id, r.staff_id, ym
     `, [`${year}-01-01`, `${year}-12-31`]),
-    queryRows(connection, "SELECT `year_month` AS ym, NULL AS department_id, staff_id, recovered_amount_yuan AS amt, 0 AS deals, 0 AS openings FROM fact_sales_member_monthly WHERE `year_month` LIKE ?", [`${year}-%`]),
   ]);
-  const manualKeys = new Set(monthlyRevenue.map((row) => `${row.staff_id}|${row.ym}`));
-  const revenue = [
-    ...dailyRevenue.filter((row) => row.staff_id == null || !manualKeys.has(`${row.staff_id}|${row.ym}`)),
-    ...monthlyRevenue,
-  ];
   return buildTargetSnapshot({ departments, staff, targets, revenue });
 }
 
@@ -117,7 +95,7 @@ async function readCost(connection, year) {
   const [channels, costs, revenue, labor] = await Promise.all([
     queryRows(connection, 'SELECT channel_id, channel_name, parent_id, is_enabled FROM dim_channel WHERE is_enabled = 1'),
     queryRows(connection, 'SELECT `year_month`, channel_id, operations_amount_yuan, labor_amount_yuan, refund_amount_yuan FROM biz_channel_cost_monthly WHERE `year_month` LIKE ?', [`${year}-%`]),
-    queryRows(connection, "SELECT DATE_FORMAT(stat_date, '%Y-%m') AS ym, channel_id, SUM(recovered_amount_yuan) AS amt, SUM(order_count) AS deals FROM fact_revenue_daily WHERE stat_date BETWEEN ? AND ? GROUP BY channel_id, ym", [`${year}-01-01`, `${year}-12-31`]),
+    queryRows(connection, "SELECT DATE_FORMAT(stat_date, '%Y-%m') AS ym, channel_id, SUM(recovered_amount_yuan) AS amt, SUM(order_count) AS deals FROM v_revenue_gross_canonical WHERE stat_date BETWEEN ? AND ? GROUP BY channel_id, ym", [`${year}-01-01`, `${year}-12-31`]),
     queryRows(connection, "SELECT `year_month`, cost_type, amount_yuan FROM biz_labor_cost_monthly WHERE `year_month` LIKE ? AND cost_type = 'marketing'", [`${year}-%`]),
   ]);
   return buildCostSnapshot({ channels, costs, revenue, labor });

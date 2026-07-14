@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 17:09:11 CST
+ 更新内容: 删除并发不安全的 MAX(id)+1 主键生成，新增记录统一依赖 MySQL AUTO_INCREMENT。
+*/
+/*
  更新时间: 2026-07-07 11:00:00 CST
  更新内容: 新增共享 DB 工具模块（dbConfigFromEnv/createDbConnection/queryRows），
           供 maintenanceData 读接口与 maintenanceImport 写接口复用；不改动 dashboardData.js。
@@ -29,10 +33,4 @@ export function createDbConnection() {
 export async function queryRows(connection, sql, params = []) {
   const [rows] = await connection.execute(sql, params);
   return rows;
-}
-
-/** 取某表主键最大值+1，用于无自增的 bigint 主键新行。 */
-export async function nextId(connection, table, idColumn) {
-  const rows = await queryRows(connection, `SELECT COALESCE(MAX(\`${idColumn}\`), 0) + 1 AS nextId FROM \`${table}\``);
-  return Number(rows[0]?.nextId ?? 1);
 }

@@ -1,3 +1,11 @@
+/*
+ Update time: 2026-07-14 17:57:02 CST
+ Update content: Cover skipping actual revenue imports for organizations without one enabled channel.
+*/
+/*
+ Update time: 2026-07-14 17:09:11 CST
+ Update content: Cover auto-increment target inserts and department monthly revenue override imports without request-time DDL.
+*/
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
@@ -37,8 +45,7 @@ test('persistTarget inserts organization target into biz_target_monthly', async 
       ];
     }
     if (sql.includes('FROM dim_channel')) return [{ id: 3001 }];
-    if (sql.includes('FROM biz_target_monthly') && !sql.includes('COALESCE')) return [];
-    if (sql.includes('COALESCE(MAX') && sql.includes('FROM `biz_target_monthly`')) return [{ nextId: 9001 }];
+    if (sql.includes('FROM biz_target_monthly')) return [];
     return [];
   });
 
@@ -51,7 +58,9 @@ test('persistTarget inserts organization target into biz_target_monthly', async 
 
   const insert = execs.find((e) => e.sql.startsWith('INSERT INTO biz_target_monthly'));
   assert.ok(insert);
-  assert.deepEqual(insert.params, [9001, '2026-07', 1002, 3001, 1000000, 10, 20]);
+  assert.match(insert.sql, /ON DUPLICATE KEY UPDATE[\s\S]*target_opening_count = VALUES\(target_opening_count\)/);
+  assert.doesNotMatch(insert.sql, /target_id/);
+  assert.deepEqual(insert.params, ['2026-07', 1002, 3001, 1000000, 10, 20]);
 });
 
 test('persistTarget rejects unknown organization', async () => {
@@ -66,11 +75,8 @@ test('persistTarget rejects unknown organization', async () => {
   assert.equal(execs.length, 0);
 });
 
-test('persistActual inserts organization actual completion into fact_revenue_daily', async () => {
+test('persistActual atomically upserts organization actual completion into monthly override', async () => {
   const { conn, execs } = makeConn((sql) => {
-    if (sql.includes('INFORMATION_SCHEMA.COLUMNS')) {
-      return [{ COLUMN_NAME: 'department_id' }, { COLUMN_NAME: 'actual_opening_count' }];
-    }
     if (sql.includes('FROM dim_department WHERE department_name')) return [{ id: 1002, name: '线上销售部', department_code: 'online-sales', parent_id: 1001 }];
     if (sql.includes('SELECT department_id, department_code, parent_id FROM dim_department')) {
       return [
@@ -79,8 +85,6 @@ test('persistActual inserts organization actual completion into fact_revenue_dai
       ];
     }
     if (sql.includes('FROM dim_channel')) return [{ id: 3001 }];
-    if (sql.includes('FROM fact_revenue_daily') && !sql.includes('COALESCE')) return [];
-    if (sql.includes('COALESCE(MAX') && sql.includes('FROM `fact_revenue_daily`')) return [{ nextId: 8001 }];
     return [];
   });
 
@@ -96,18 +100,22 @@ test('persistActual inserts organization actual completion into fact_revenue_dai
   assert.equal(result.skipped, 0);
   assert.deepEqual(result.errors, []);
 
-  const insert = execs.find((e) => e.sql.startsWith('INSERT INTO fact_revenue_daily'));
+  const insert = execs.find((e) => e.sql.startsWith('INSERT INTO fact_revenue_monthly_override'));
   assert.ok(insert);
-  assert.deepEqual(insert.params, [8001, '2026-07-01', 1002, 3001, 885000, 7, 12]);
+  assert.match(insert.sql, /ON DUPLICATE KEY UPDATE/);
+  assert.deepEqual(insert.params, ['2026-07', 1002, 3001, 885000, 7, 12]);
 });
 
-test('persistActual adds missing organization actual columns before writing', async () => {
+test('persistActual never alters schema during a business request', async () => {
   const { conn, execs } = makeConn((sql) => {
-    if (sql.includes('INFORMATION_SCHEMA.COLUMNS')) return [];
     if (sql.includes('FROM dim_department WHERE department_name')) return [{ id: 1002, name: '线上销售部', department_code: 'online-sales', parent_id: 1001 }];
-    if (sql.includes('SELECT department_id, department_code, parent_id FROM dim_department')) return [];
-    if (sql.includes('FROM fact_revenue_daily') && !sql.includes('COALESCE')) return [];
-    if (sql.includes('COALESCE(MAX') && sql.includes('FROM `fact_revenue_daily`')) return [{ nextId: 8001 }];
+    if (sql.includes('SELECT department_id, department_code, parent_id FROM dim_department')) {
+      return [
+        { department_id: 1001, department_code: 'headquarters', parent_id: null },
+        { department_id: 1002, department_code: 'online-sales', parent_id: 1001 },
+      ];
+    }
+    if (sql.includes('FROM dim_channel')) return [{ id: 3001 }];
     return [];
   });
 
@@ -118,6 +126,29 @@ test('persistActual adds missing organization actual columns before writing', as
   }]);
 
   assert.equal(result.written, 1);
-  assert.ok(execs.some((e) => e.sql.includes('ADD COLUMN department_id')));
-  assert.ok(execs.some((e) => e.sql.includes('ADD COLUMN actual_opening_count')));
+  assert.equal(execs.some((e) => /ALTER TABLE/i.test(e.sql)), false);
+});
+
+test('persistActual skips parent organization without one enabled channel', async () => {
+  const { conn, execs } = makeConn((sql) => {
+    if (sql.includes('FROM dim_department WHERE department_name')) {
+      return [{ id: 1001, name: '总部', department_code: 'headquarters', parent_id: null }];
+    }
+    if (sql.includes('SELECT department_id, department_code, parent_id FROM dim_department')) {
+      return [{ department_id: 1001, department_code: 'headquarters', parent_id: null }];
+    }
+    return [];
+  });
+
+  const result = await persistActual(conn, [{
+    department_name: '总部',
+    actual_month: '2026-07',
+    recovered_amount_yuan: 88.5,
+  }]);
+
+  assert.equal(result.written, 0);
+  assert.equal(result.skipped, 1);
+  assert.equal(result.errors[0].field, 'department_name');
+  assert.match(result.errors[0].message, /无法唯一映射到启用经营渠道/);
+  assert.equal(execs.length, 0);
 });

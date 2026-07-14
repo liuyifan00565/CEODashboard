@@ -1,5 +1,13 @@
 # Dashboard Data Aggregation
 
+更新时间: 2026-07-14 17:57:02 CST
+更新内容:
+- 新增 `fact_revenue_monthly_override` 与 `v_revenue_gross_canonical`，目标维护、成本维护、经营总览统一读取同一套毛回款；部门月度覆盖值会覆盖本部门及下级组织同月日报明细，父级覆盖优先，避免汇总行与明细重复累计。
+- 目标维护完成金额不再写入 `fact_revenue_daily`，业务请求也不再执行 `ALTER TABLE`；旧 `manual_department` 行由正式迁移搬入覆盖表。
+- 目标实际回款覆盖仅允许写入能唯一映射到启用经营渠道的组织；总部等无单一渠道的父级组织会明确拒绝实际回款保存或导入，但其目标金额仍可保存。
+- 净实际回款统一为“毛回款 - 退款”。退款超过毛回款时允许出现负数；退款按月和渠道分摊时补齐舍入尾差，无毛回款渠道也生成负向调整，保证总额严格守恒。
+- 旧日报模式的月、日、年趋势统一读取毛回款视图并扣减退款；`fact_sales_member_monthly` 不再覆盖日报或决定业务月份。真实订单模式继续直接使用订单净回款，避免重复扣退款。
+
 更新时间: 2026-07-14 13:18:00 CST
 更新内容:
 - 新增 `server/importSelfOperatedRevenue.js`，按 1-4 月月表导入 565 行，并用汇总表补齐线索来源；人员、版本、来源维表和导入批次在同一事务中维护。
@@ -84,22 +92,23 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 
 `/api/dashboard-data` 不实时调用外部算力接口，避免首页等待 token 服务。dashboard 快照就绪后，`App` 会在后台调用 `/api/compute-data` 覆盖 `computeOverview`、`computeUsageTrend`、`computeVersionConsumption`、`computeUsageDistribution`、`computeCustomerRows` 和 `computeResourceHealth`；随后按 `/api/compute-customers?page=&pageSize=200` 分页拉取客户明细并按手机号增量合并。算力页只接收 token 同步状态和客户同步状态，用骨架屏/进度文案展示后台加载进度。
 
-业务月份 `latestMonth` 默认取 `fact_revenue_order`、`fact_revenue_daily` 和 `fact_sales_member_monthly` 中最新的真实事实月份；可通过 `DASHBOARD_MONTH_OVERRIDE=YYYY-MM` 显式覆盖。
+业务月份 `latestMonth` 默认取 `fact_revenue_order` 与 `v_revenue_gross_canonical` 中最新的真实事实月份；`fact_sales_member_monthly` 不再参与实际回款来源选择。可通过 `DASHBOARD_MONTH_OVERRIDE=YYYY-MM` 显式覆盖。
 
 前端 KPI 默认日期范围跟随浏览器运行时当前自然月的第一天到最后一天；完整自然月范围按 100% 口径计算，手动查看历史完整月份时不会因月份天数差异缩放 KPI。
 
 ## 经营目标与回款
 
 - 自营收入真实明细：`scripts/create_self_operated_revenue_tables.sql` 创建 `fact_revenue_order`。`server/importSelfOperatedRevenue.js` 读取月表中的日期、销售、客户、企微群、福客系统负责人、版本、订单号、销售实际业绩、价格、退款、备注和其他说明，并以 `1-4月` 汇总表的同序行补齐线索来源。图片备注公式无法转成可搜索文本，保留来源工作表和行号供回查。
-- 本月回款、年度累计回款、月趋势实际值：订单级真实表使用 `net_amount_yuan` 聚合；旧日级表仅在没有订单数据时兜底并按原有退款表扣减。
+- 本月回款、年度累计回款、月趋势实际值：订单级真实表使用 `net_amount_yuan` 聚合；旧日级模式统一从 `v_revenue_gross_canonical` 读取毛回款，再扣减 `biz_channel_cost_monthly.refund_amount_yuan`。
 - `/api/dashboard-data` 同时返回 `kpi.monthRefund` 和 `kpi.yearRefund`，月度和年度主卡在回款大数字右侧分别显示本月退款金额、年度累计退款金额。
-- 当 `fact_revenue_daily` 没有数据时，回退使用 `fact_sales_member_monthly.recovered_amount_yuan`。当订单级真实表启用时，渠道二级明细恢复人员级收入跟踪：`salesMemberRows` 按 `staff_id` 汇总本月/年度目标和实际回款，不再只展示部门级行。
+- `fact_sales_member_monthly.recovered_amount_yuan` 不再作为实际回款覆盖源；旧日报模式的人员/部门明细同样从统一视图聚合。当订单级真实表启用时，渠道二级明细按订单 `staff_id` 汇总本月/年度实际回款。
 - 本月目标、年度目标、月趋势目标：使用 `biz_target_monthly.target_amount_yuan`，仅取 `staff_id IS NULL` 的部门级目标（目标维护改为按部门录入，历史人员级目标保留在库但不再进入统计）。
+- 目标维护完成金额：写入 `fact_revenue_monthly_override`。只有能唯一映射到启用经营渠道的组织才能写入覆盖值；总部等无单一渠道的父级组织只能维护目标金额，实际回款保存或导入会被拒绝。同一月份存在父、子组织覆盖值时只采用最上层覆盖值；没有覆盖值的组织继续使用 `fact_revenue_daily` 明细。统一视图输出的是毛回款，不包含运营成本或人力成本。
 - 渠道目标：`biz_target_monthly.channel_id` 直接关联 `dim_channel` 按渠道汇总，仅取 `staff_id IS NULL` 的部门级目标。
-- 渠道二级明细：本月/年度目标来自 `biz_target_monthly`（按部门），实际回款优先来自 `fact_revenue_daily.department_id` 聚合；旧库没有该列时通过 `fact_revenue_daily.staff_id -> dim_staff.department_id` 解析组织。明细粒度由原来的“销售人员”改为“部门”，按部门目标完成率降序排列。
+- 渠道二级明细：本月/年度目标来自 `biz_target_monthly`（按部门），毛回款来自 `v_revenue_gross_canonical`；日报没有 `department_id` 时由视图通过 `staff_id -> dim_staff.department_id` 解析组织。明细粒度为部门，按部门目标完成率降序排列。
 - 回款二级弹窗订单表：`/api/dashboard-data.detailRows.revenueOrders` 返回订单级行，包含销售、客户、企微群、福客系统负责人、版本、订单号、销售实际业绩、价格、退款、净回款、线索来源、其他说明、备注和来源行；前端按渠道和年/月/日筛选展示最近 80 条。
-- 经营总览趋势图日视图：`dailyRevenueTrend` 只在当前业务月范围内按天聚合 `fact_revenue_daily.recovered_amount_yuan`，不做退款扣减，不展示目标/完成率。
-- 经营总览趋势图年视图：`yearlyTrend` 按自然年聚合 `fact_revenue_daily` 全部历史回款，与 `biz_target_monthly`（`staff_id IS NULL`，按年份前 4 位分组）目标配对；数据库只有当年数据时只返回一条记录。
+- 经营总览趋势图日视图：旧日报模式按日、渠道聚合 `v_revenue_gross_canonical`，再按月渠道比例分摊退款；订单模式直接按日聚合 `net_amount_yuan`。无日粒度目标，只展示净实际回款。
+- 经营总览趋势图年视图：旧日报模式按自然年聚合统一毛回款并扣减各年退款，订单模式直接聚合订单净回款；目标来自 `biz_target_monthly` 的部门级目标。
 
 ## 版本与续费
 

@@ -1,4 +1,8 @@
 /*
+ Update time: 2026-07-14 17:09:11 CST
+ Update content: Cost ROI uses net recovered amount (gross recovered minus refund); operations and labor remain ROI costs only.
+*/
+/*
  Update time: 2026-07-13 18:53:01 CST
  Update content: Cost snapshots derive sales-department labor from channel labor and expose marketing-department labor as an independent row.
 */
@@ -49,8 +53,9 @@ function costPeriod(operations, labor, actual, deals, refund, laborConfigured = 
   const a = Math.round(Number(actual || 0) * 100) / 100;
   const d = Math.round(Number(deals || 0));
   const r = Math.round(Number(refund || 0) * 100) / 100;
-  const roi = totalCost ? Math.round(((a - totalCost) / totalCost) * 100) / 100 : 0;
-  return { operations: o, labor: l, laborConfigured: Boolean(laborConfigured), totalCost, actual: a, deals: d, refund: r, roi };
+  const netRecovered = Math.round((a - r) * 100) / 100;
+  const roi = totalCost ? Math.round(((netRecovered - totalCost) / totalCost) * 100) / 100 : 0;
+  return { operations: o, labor: l, laborConfigured: Boolean(laborConfigured), totalCost, actual: a, netRecovered, deals: d, refund: r, roi };
 }
 
 function buildTargetPeriods(monthTarget, monthActual) {

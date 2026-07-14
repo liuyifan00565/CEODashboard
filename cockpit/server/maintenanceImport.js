@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-14 17:57:02 CST
+ Update content: Skip actual revenue imports when the organization cannot map to one enabled channel, preventing NULL-channel monthly overrides.
+*/
+/*
+ Update time: 2026-07-14 17:09:11 CST
+ Update content: Maintenance imports rely on database auto-increment keys and persist department monthly actuals to the dedicated override table.
+*/
+/*
  Update time: 2026-07-13 16:48:56 CST
  Update content: Cost import writes per-channel operations and labor costs through one atomic monthly-channel upsert.
 */
@@ -17,7 +25,7 @@
 */
 import { getImportConfig } from '../src/lib/maintenanceImportConfig.js';
 import { mapAndValidate } from '../src/lib/excelImport.js';
-import { createDbConnection, queryRows, nextId } from './db.js';
+import { createDbConnection, queryRows } from './db.js';
 import { ensureCostSchema } from './costSchema.js';
 import { resolveDepartmentChannelKey } from './departmentChannel.js';
 
@@ -85,20 +93,6 @@ export async function resolveDepartmentChannelId(connection, departmentId) {
   return rows[0]?.id ?? null;
 }
 
-export async function ensureRevenueDailyColumns(connection) {
-  const columns = await queryRows(
-    connection,
-    "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'fact_revenue_daily' AND COLUMN_NAME IN ('department_id', 'actual_opening_count')",
-  );
-  const existing = new Set(columns.map((row) => row.COLUMN_NAME || row.column_name));
-  if (!existing.has('department_id')) {
-    await connection.execute('ALTER TABLE fact_revenue_daily ADD COLUMN department_id BIGINT NULL AFTER staff_id');
-  }
-  if (!existing.has('actual_opening_count')) {
-    await connection.execute('ALTER TABLE fact_revenue_daily ADD COLUMN actual_opening_count INT NOT NULL DEFAULT 0 AFTER recovered_amount_yuan');
-  }
-}
-
 export async function persistTarget(connection, rows) {
   let written = 0;
   let skipped = 0;
@@ -116,24 +110,17 @@ export async function persistTarget(connection, rows) {
     const amountYuan = WAN_TO_YUAN(row.target_amount_yuan);
     const opening = Number(row.target_opening_count || 0);
     const order = Number(row.target_order_count || 0);
-    const existing = await queryRows(
-      connection,
-      'SELECT target_id FROM biz_target_monthly WHERE `year_month` = ? AND department_id = ? AND staff_id IS NULL LIMIT 1',
-      [row.target_month, department.id],
+    await connection.execute(
+      `INSERT INTO biz_target_monthly
+         (\`year_month\`, department_id, staff_id, channel_id, target_amount_yuan, target_opening_count, target_order_count)
+       VALUES (?, ?, NULL, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         channel_id = VALUES(channel_id),
+         target_amount_yuan = VALUES(target_amount_yuan),
+         target_opening_count = VALUES(target_opening_count),
+         target_order_count = VALUES(target_order_count)`,
+      [row.target_month, department.id, channelId, amountYuan, opening, order],
     );
-
-    if (existing[0]?.target_id) {
-      await connection.execute(
-        'UPDATE biz_target_monthly SET channel_id = ?, target_amount_yuan = ?, target_opening_count = ?, target_order_count = ? WHERE target_id = ?',
-        [channelId, amountYuan, opening, order, existing[0].target_id],
-      );
-    } else {
-      const id = await nextId(connection, 'biz_target_monthly', 'target_id');
-      await connection.execute(
-        'INSERT INTO biz_target_monthly (target_id, `year_month`, department_id, staff_id, channel_id, target_amount_yuan, target_opening_count, target_order_count) VALUES (?, ?, ?, NULL, ?, ?, ?, ?)',
-        [id, row.target_month, department.id, channelId, amountYuan, opening, order],
-      );
-    }
     written += 1;
   }
 
@@ -144,8 +131,6 @@ export async function persistActual(connection, rows) {
   let written = 0;
   let skipped = 0;
   const errors = [];
-  await ensureRevenueDailyColumns(connection);
-
   for (const row of rows) {
     const department = await resolveDepartmentByName(connection, String(row.department_name || '').trim());
     if (!department) {
@@ -161,29 +146,30 @@ export async function persistActual(connection, rows) {
       continue;
     }
 
-    const statDate = `${yearMonth}-01`;
     const channelId = await resolveDepartmentChannelId(connection, department.id);
+    if (channelId == null) {
+      skipped += 1;
+      errors.push({
+        row: null,
+        field: 'department_name',
+        message: `组织无法唯一映射到启用经营渠道，实际回款未导入：${department.name || row.department_name}`,
+      });
+      continue;
+    }
     const recoveredYuan = WAN_TO_YUAN(row.recovered_amount_yuan);
     const opening = Number(row.actual_opening_count || 0);
     const order = Number(row.order_count || 0);
-    const existing = await queryRows(
-      connection,
-      "SELECT id FROM fact_revenue_daily WHERE stat_date = ? AND department_id = ? AND staff_id IS NULL AND order_type = 'manual_department' LIMIT 1",
-      [statDate, department.id],
+    await connection.execute(
+      `INSERT INTO fact_revenue_monthly_override
+         (\`year_month\`, department_id, channel_id, recovered_amount_yuan, actual_opening_count, order_count)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         channel_id = VALUES(channel_id),
+         recovered_amount_yuan = VALUES(recovered_amount_yuan),
+         actual_opening_count = VALUES(actual_opening_count),
+         order_count = VALUES(order_count)`,
+      [yearMonth, department.id, channelId, recoveredYuan, opening, order],
     );
-
-    if (existing[0]?.id) {
-      await connection.execute(
-        'UPDATE fact_revenue_daily SET channel_id = ?, recovered_amount_yuan = ?, actual_opening_count = ?, order_count = ? WHERE id = ?',
-        [channelId, recoveredYuan, opening, order, existing[0].id],
-      );
-    } else {
-      const id = await nextId(connection, 'fact_revenue_daily', 'id');
-      await connection.execute(
-        "INSERT INTO fact_revenue_daily (id, stat_date, department_id, channel_id, staff_id, version_id, order_type, recovered_amount_yuan, actual_opening_count, order_count) VALUES (?, ?, ?, ?, NULL, NULL, 'manual_department', ?, ?, ?)",
-        [id, statDate, department.id, channelId, recoveredYuan, opening, order],
-      );
-    }
     written += 1;
   }
 
@@ -237,11 +223,9 @@ async function persistOrg(connection, rows) {
         [deptId, channelKey, isSales, isEnabled, row.external_bi_user_id || null, existing[0].staff_id],
       );
     } else {
-      const id = await nextId(connection, 'dim_staff', 'staff_id');
-      const code = row.external_bi_user_id || `staff_${id}`;
       await connection.execute(
-        'INSERT INTO dim_staff (staff_id, staff_code, staff_name, department_id, channel_key, external_bi_user_id, is_sales, is_delivery, is_success, is_enabled) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, ?)',
-        [id, code, row.staff_name, deptId, channelKey, row.external_bi_user_id || null, isSales, isEnabled],
+        "INSERT INTO dim_staff (staff_code, staff_name, department_id, channel_key, external_bi_user_id, is_sales, is_delivery, is_success, is_enabled) VALUES (COALESCE(NULLIF(?, ''), CONCAT('staff_', REPLACE(UUID(), '-', ''))), ?, ?, ?, ?, ?, 0, 0, ?)",
+        [row.external_bi_user_id || null, row.staff_name, deptId, channelKey, row.external_bi_user_id || null, isSales, isEnabled],
       );
     }
     written += 1;
@@ -261,19 +245,15 @@ async function persistChannel(connection, rows) {
       continue;
     }
     const excluded = row.is_excluded ? 1 : 0;
-    const existing = await queryRows(connection, 'SELECT source_id FROM dim_channel_source WHERE source_code = ?', [row.source_code]);
-    if (existing[0]?.source_id) {
-      await connection.execute(
-        'UPDATE dim_channel_source SET source_name = ?, channel_id = ?, is_excluded = ? WHERE source_id = ?',
-        [row.source_name, channelId, excluded, existing[0].source_id],
-      );
-    } else {
-      const id = await nextId(connection, 'dim_channel_source', 'source_id');
-      await connection.execute(
-        'INSERT INTO dim_channel_source (source_id, source_code, source_name, channel_id, is_excluded) VALUES (?, ?, ?, ?, ?)',
-        [id, row.source_code, row.source_name, channelId, excluded],
-      );
-    }
+    await connection.execute(
+      `INSERT INTO dim_channel_source (source_code, source_name, channel_id, is_excluded)
+       VALUES (?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         source_name = VALUES(source_name),
+         channel_id = VALUES(channel_id),
+         is_excluded = VALUES(is_excluded)`,
+      [row.source_code, row.source_name, channelId, excluded],
+    );
     written += 1;
   }
   return { written, skipped, errors };

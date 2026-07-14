@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-14 17:57:02 CST
+ Update content: Cover rejecting NULL-channel actual overrides while preserving target amount saves for parent organizations.
+*/
+/*
+ Update time: 2026-07-14 17:09:11 CST
+ Update content: Cover auto-increment insertId mappings and atomic department monthly revenue override upserts.
+*/
+/*
  Update time: 2026-07-13 18:53:01 CST
  Update content: Restrict department labor writes to independently maintained marketing cost; sales labor is derived from channels.
 */
@@ -42,7 +50,7 @@
  更新时间: 2026-07-07 14:30:00 CST
  更新内容: 新增 maintenanceSave saver 单测：用假 connection 驱动真实 saver，断言"部分列 upsert"
           语义——target UPDATE 不含 opening/order；org UPDATE 不含 external_bi_user_id；
-          labor upsert 键为 (year_month, cost_type)；channel 新增用 nextId 取 source_id 插入；
+          labor upsert 键为 (year_month, cost_type)；channel 新增来源依赖数据库自增主键；
           org 跳过合成部门、channel 跳过合成大类、删除走 DELETE。
 */
 import assert from 'node:assert/strict';
@@ -58,7 +66,7 @@ import {
 
 /**
  * 假 connection：SELECT 由 selectFn 返回行；写（UPDATE/INSERT/DELETE）记入 execs。
- * queryRows/nextId 内部都走 connection.execute，因此对真实 saver 透明。
+ * queryRows 与写入都走 connection.execute；新增渠道/组织返回固定 insertId 模拟 MySQL 自增。
  */
 function makeConn(selectFn) {
   const execs = [];
@@ -73,13 +81,15 @@ function makeConn(selectFn) {
       if (/^UPDATE dim_channel_source SET channel_id = NULL/i.test(normalized)) return [{ affectedRows: 2 }];
       if (/^UPDATE dim_channel SET is_enabled/i.test(normalized)) return [{ affectedRows: 1 }];
       if (/^DELETE/i.test(normalized)) return [{ affectedRows: 1 }];
+      if (/^INSERT INTO dim_channel\b/i.test(normalized)) return [{ insertId: 3100 }];
+      if (/^INSERT INTO dim_department\b/i.test(normalized)) return [{ insertId: 1100 }];
       return [{}];
     },
   };
   return { conn, execs };
 }
 
-test('saveTarget: UPDATE 部门级目标，只写 channel_id/target_amount_yuan，不碰 opening/order', async () => {
+test('saveTarget: 原子 upsert 部门级目标，冲突更新不覆盖 opening/order', async () => {
   const { conn, execs } = makeConn((sql) => {
     if (sql.includes('FROM dim_department WHERE department_id')) return [{ department_id: 1002, is_enabled: 1 }];
     if (sql === 'SELECT department_id, department_code, parent_id FROM dim_department') {
@@ -89,16 +99,15 @@ test('saveTarget: UPDATE 部门级目标，只写 channel_id/target_amount_yuan�
       ];
     }
     if (sql.includes('FROM dim_channel')) return [{ id: 3001 }];
-    if (sql.includes('FROM biz_target_monthly')) return [{ target_id: 999 }];
     return [];
   });
   const r = await saveTarget(conn, [{ department_id: 1002, year_month: '2026-03', target_amount_wan: 150 }]);
   assert.equal(r.written, 1);
-  const update = execs.find((e) => e.sql.startsWith('UPDATE'));
-  assert.ok(update, '应有 UPDATE');
-  assert.match(update.sql, /SET channel_id = \?, target_amount_yuan = \?/);
-  assert.doesNotMatch(update.sql, /target_opening_count|target_order_count/);
-  assert.deepEqual(update.params, [3001, 1500000, 999]); // 150万 -> 1500000元
+  const upsert = execs.find((e) => e.sql.startsWith('INSERT INTO biz_target_monthly'));
+  assert.ok(upsert, '应有 INSERT ... ON DUPLICATE KEY UPDATE');
+  assert.match(upsert.sql, /ON DUPLICATE KEY UPDATE[\s\S]*channel_id = VALUES\(channel_id\)[\s\S]*target_amount_yuan = VALUES\(target_amount_yuan\)/);
+  assert.doesNotMatch(upsert.sql.split('ON DUPLICATE KEY UPDATE')[1], /target_opening_count|target_order_count/);
+  assert.deepEqual(upsert.params, ['2026-03', 1002, 3001, 1500000]); // 150万 -> 1500000元
 });
 
 test('saveTarget: 不存在则 INSERT，opening/order 默认 0', async () => {
@@ -111,14 +120,15 @@ test('saveTarget: 不存在则 INSERT，opening/order 默认 0', async () => {
       ];
     }
     if (sql.includes('FROM dim_channel')) return [{ id: 3001 }];
-    if (sql.includes('COALESCE(MAX')) return [{ nextId: 10001 }];
     return [];
   });
   await saveTarget(conn, [{ department_id: 1002, year_month: '2026-03', target_amount_wan: 12 }]);
   const ins = execs.find((e) => e.sql.startsWith('INSERT'));
   assert.ok(ins);
-  assert.match(ins.sql, /staff_id, channel_id, target_amount_yuan, target_opening_count, target_order_count\) VALUES \(\?, \?, \?, NULL, \?, \?, 0, 0\)/);
-  assert.deepEqual(ins.params, [10001, '2026-03', 1002, 3001, 120000]);
+  assert.match(ins.sql, /ON DUPLICATE KEY UPDATE/);
+  assert.match(ins.sql, /staff_id, channel_id, target_amount_yuan, target_opening_count, target_order_count\)[\s\S]*VALUES \(\?, \?, NULL, \?, \?, 0, 0\)/);
+  assert.doesNotMatch(ins.sql, /target_id/);
+  assert.deepEqual(ins.params, ['2026-03', 1002, 3001, 120000]);
 });
 
 test('saveTarget: 非法 department_id/年份被跳过', async () => {
@@ -143,11 +153,8 @@ test('saveTarget: 停用组织被跳过', async () => {
   assert.equal(execs.length, 0);
 });
 
-test('saveTarget: actual amount saves to fact_revenue_daily without touching target table', async () => {
+test('saveTarget: actual amount atomically upserts monthly override without touching target table', async () => {
   const { conn, execs } = makeConn((sql) => {
-    if (sql.includes('INFORMATION_SCHEMA.COLUMNS')) {
-      return [{ COLUMN_NAME: 'department_id' }, { COLUMN_NAME: 'actual_opening_count' }];
-    }
     if (sql.includes('FROM dim_department WHERE department_id')) return [{ department_id: 1002, is_enabled: 1 }];
     if (sql === 'SELECT department_id, department_code, parent_id FROM dim_department') {
       return [
@@ -156,17 +163,42 @@ test('saveTarget: actual amount saves to fact_revenue_daily without touching tar
       ];
     }
     if (sql.includes('FROM dim_channel')) return [{ id: 3001 }];
-    if (sql.includes('FROM fact_revenue_daily')) return [];
-    if (sql.includes('COALESCE(MAX') && sql.includes('fact_revenue_daily')) return [{ nextId: 8001 }];
     return [];
   });
   const r = await saveTarget(conn, [{ department_id: 1002, year_month: '2026-03', actual_amount_wan: 88.5 }]);
   assert.equal(r.written, 1);
   const targetWrite = execs.find((e) => e.sql.includes('biz_target_monthly'));
   assert.equal(targetWrite, undefined);
-  const insert = execs.find((e) => e.sql.startsWith('INSERT INTO fact_revenue_daily'));
+  const insert = execs.find((e) => e.sql.startsWith('INSERT INTO fact_revenue_monthly_override'));
   assert.ok(insert);
-  assert.deepEqual(insert.params, [8001, '2026-03-01', 1002, 3001, 885000, 0, 0]);
+  assert.match(insert.sql, /ON DUPLICATE KEY UPDATE[\s\S]*recovered_amount_yuan = VALUES\(recovered_amount_yuan\)/);
+  assert.deepEqual(insert.params, ['2026-03', 1002, 3001, 885000]);
+});
+
+test('saveTarget: parent organization without one channel rejects actual override but still saves target', async () => {
+  const { conn, execs } = makeConn((sql) => {
+    if (sql.includes('FROM dim_department WHERE department_id')) return [{ department_id: 1001, is_enabled: 1 }];
+    if (sql === 'SELECT department_id, department_code, parent_id FROM dim_department') {
+      return [{ department_id: 1001, department_code: 'headquarters', parent_id: null }];
+    }
+    return [];
+  });
+
+  const result = await saveTarget(conn, [{
+    department_id: 1001,
+    year_month: '2026-03',
+    target_amount_wan: 150,
+    actual_amount_wan: 88.5,
+  }]);
+
+  assert.equal(result.written, 1);
+  assert.equal(result.skipped, 1);
+  assert.equal(result.errors[0].field, 'actual_amount_wan');
+  assert.match(result.errors[0].message, /无法唯一映射到启用经营渠道/);
+  const targetInsert = execs.find((entry) => entry.sql.startsWith('INSERT INTO biz_target_monthly'));
+  assert.ok(targetInsert);
+  assert.deepEqual(targetInsert.params, ['2026-03', 1001, null, 1500000]);
+  assert.equal(execs.some((entry) => entry.sql.startsWith('INSERT INTO fact_revenue_monthly_override')), false);
 });
 
 test('saveCost: 按 (year_month, channel_id) 原子 upsert 运营和人力成本', async () => {
@@ -189,8 +221,6 @@ test('saveCost: 仅编辑运营成本时保留尚未配置的人力成本 NULL',
 test('saveCost: 新增渠道后映射临时 channel_id 再写成本', async () => {
   const { conn, execs } = makeConn((sql) => {
     if (sql === 'SELECT channel_id FROM dim_channel') return [{ channel_id: 3001 }];
-    if (sql.includes('COALESCE(MAX') && sql.includes('dim_channel')) return [{ nextId: 3100 }];
-    if (sql.includes('COALESCE(MAX') && sql.includes('biz_channel_cost_monthly')) return [{ nextId: 5100 }];
     return [];
   });
   const r = await saveCost(
@@ -201,7 +231,7 @@ test('saveCost: 新增渠道后映射临时 channel_id 再写成本', async () =
   assert.equal(r.written, 2);
   const channelInsert = execs.find((e) => e.sql.startsWith('INSERT INTO dim_channel '));
   assert.ok(channelInsert);
-  assert.equal(channelInsert.params[0], 3100);
+  assert.deepEqual(channelInsert.params, ['新增渠道 5', null, 1]);
   const costInsert = execs.find((e) => e.sql.startsWith('INSERT INTO biz_channel_cost_monthly'));
   assert.ok(costInsert);
   assert.deepEqual(costInsert.params, ['2026-03', 3100, 120000, 40000, 20000]);
@@ -266,7 +296,6 @@ test('saveOrg: 新增组织后映射临时 department_id 给人员', async () =>
     if (sql === 'SELECT department_id, department_code, parent_id FROM dim_department') {
       return [{ department_id: 1001, department_code: 'online-sales', parent_id: null }];
     }
-    if (sql.includes('COALESCE(MAX')) return [{ nextId: 1100 }];
     return [];
   });
   const r = await saveOrg(
@@ -277,7 +306,7 @@ test('saveOrg: 新增组织后映射临时 department_id 给人员', async () =>
   assert.equal(r.written, 2);
   const deptInsert = execs.find((e) => e.sql.startsWith('INSERT INTO dim_department'));
   assert.ok(deptInsert);
-  assert.equal(deptInsert.params[0], 1100);
+  assert.deepEqual(deptInsert.params, ['新销售组', '1001', 1]);
   const staffUpdate = execs.find((e) => e.sql.startsWith('UPDATE dim_staff'));
   assert.equal(staffUpdate.params[0], '1100');
   assert.equal(staffUpdate.params[1], 'online');
@@ -296,32 +325,30 @@ test('saveOrg: 转非销售或清空组织时清空 channel_key', async () => {
   assert.deepEqual(update.params, ['1002', null, 0, 1, 2001]);
 });
 
-test('saveChannel: 已存在来源 UPDATE source_name/channel_id/is_excluded', async () => {
+test('saveChannel: 来源按 source_code 原子 upsert', async () => {
   const { conn, execs } = makeConn((sql) => {
     if (sql.includes('SELECT channel_id FROM dim_channel')) return [{ channel_id: 3001 }];
-    if (sql.includes('SELECT source_id FROM dim_channel_source')) return [{ source_id: 7001 }];
     return [];
   });
   const r = await saveChannel(conn, [{ source_code: '1001', source_name: '百度搜索改', channel_id: '3001', is_excluded: 1 }], []);
   assert.equal(r.written, 1);
-  const update = execs.find((e) => e.sql.startsWith('UPDATE'));
-  assert.ok(update);
-  assert.match(update.sql, /SET source_name = \?, channel_id = \?, is_excluded = \?/);
-  assert.equal(update.params[2], 1);
+  const upsert = execs.find((e) => e.sql.startsWith('INSERT INTO dim_channel_source'));
+  assert.ok(upsert);
+  assert.match(upsert.sql, /ON DUPLICATE KEY UPDATE[\s\S]*source_name = VALUES\(source_name\)/);
+  assert.deepEqual(upsert.params, ['1001', '百度搜索改', '3001', 1]);
 });
 
-test('saveChannel: 新来源用 nextId 取 source_id 后 INSERT', async () => {
+test('saveChannel: 新来源 INSERT 依赖数据库自增 source_id', async () => {
   const { conn, execs } = makeConn((sql) => {
     if (sql.includes('SELECT channel_id FROM dim_channel')) return [{ channel_id: 3001 }];
-    if (sql.includes('COALESCE(MAX')) return [{ nextId: 7099 }];
     return [];
   });
   const r = await saveChannel(conn, [{ source_code: '9001', source_name: '新增来源 1', channel_id: '3001', is_excluded: 0 }], []);
   assert.equal(r.written, 1);
   const ins = execs.find((e) => e.sql.startsWith('INSERT INTO dim_channel_source'));
   assert.ok(ins);
-  assert.equal(ins.params[0], 7099); // source_id 来自 nextId
-  assert.equal(ins.params[1], '9001');
+  assert.doesNotMatch(ins.sql, /source_id/);
+  assert.deepEqual(ins.params, ['9001', '新增来源 1', '3001', 0]);
 });
 
 test('saveChannel: 删除走 DELETE WHERE source_code = ?，空/null 跳过', async () => {
@@ -346,8 +373,6 @@ test('saveChannel: 合成大类 channel_id 被跳过', async () => {
 test('saveChannel: 新增渠道大类后映射临时 channel_id 给来源', async () => {
   const { conn, execs } = makeConn((sql) => {
     if (sql === 'SELECT channel_id FROM dim_channel') return [{ channel_id: 3001 }];
-    if (sql.includes('COALESCE(MAX') && sql.includes('dim_channel')) return [{ nextId: 3100 }];
-    if (sql.includes('COALESCE(MAX') && sql.includes('dim_channel_source')) return [{ nextId: 7100 }];
     return [];
   });
   const r = await saveChannel(
@@ -359,9 +384,9 @@ test('saveChannel: 新增渠道大类后映射临时 channel_id 给来源', asyn
   assert.equal(r.written, 2);
   const groupInsert = execs.find((e) => e.sql.startsWith('INSERT INTO dim_channel '));
   assert.ok(groupInsert);
-  assert.equal(groupInsert.params[0], 3100);
+  assert.deepEqual(groupInsert.params, ['新渠道', null, 1]);
   const sourceInsert = execs.find((e) => e.sql.startsWith('INSERT INTO dim_channel_source'));
-  assert.equal(sourceInsert.params[3], '3100');
+  assert.equal(sourceInsert.params[2], '3100');
 });
 
 test('saveChannel: 删除渠道大类会停用渠道并排除解绑来源', async () => {

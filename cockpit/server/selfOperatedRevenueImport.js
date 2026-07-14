@@ -1,11 +1,15 @@
 /*
+ 更新时间: 2026-07-14 17:09:11 CST
+ 更新内容: 自营收入导入改由 MySQL 自增生成维表和批次主键，彻底移除 MAX(id)+1 抢号。
+*/
+/*
  更新时间: 2026-07-14 13:18:00 CST
  更新内容: 新增自营收入 Excel 解析与事务导入，保留四个月原始字段并映射人员、版本、线索来源及导入审计。
 */
 import { createHash } from 'node:crypto';
 import * as XLSX from 'xlsx';
 
-import { nextId, queryRows } from './db.js';
+import { queryRows } from './db.js';
 
 const MONTH_SHEETS = ['1月', '2月', '3月', '4月'];
 const COMBINED_SHEET = '1-4月';
@@ -13,6 +17,7 @@ const ONLINE_DEPARTMENT_CODE = 'online-sales';
 const ONLINE_CHANNEL_KEY = 'online';
 
 const DEMO_DATA_TABLES = [
+  'fact_revenue_monthly_override',
   'fact_revenue_daily',
   'fact_sales_member_monthly',
   'fact_version_sales_daily',
@@ -41,6 +46,12 @@ const VERSION_RULES = [
   { test: /充值|算力/, name: '增购包', key: 'addon', price: 0, type: '增购包', trial: 0 },
   { test: /定制/, name: '定制版', key: 'custom', price: 0, type: '主版本', trial: 0 },
 ];
+
+function requiredInsertId(result, tableName) {
+  const id = String(result?.insertId ?? '');
+  if (!/^[1-9]\d*$/.test(id)) throw new Error(`${tableName} 未返回有效自增主键`);
+  return id;
+}
 
 function normalizeText(value) {
   const text = String(value ?? '').replace(/\r?\n/g, ' ').trim();
@@ -207,9 +218,12 @@ async function ensureStaff(connection, names) {
       mapping.set(name, existing[0].staff_id);
       continue;
     }
-    const staffId = await nextId(connection, 'dim_staff', 'staff_id');
     const staffCode = `self-${createHash('sha1').update(name).digest('hex').slice(0, 12)}`;
-    await connection.execute('INSERT INTO dim_staff (staff_id, staff_code, staff_name, department_id, channel_key, is_sales, is_enabled) VALUES (?, ?, ?, ?, ?, 1, 1)', [staffId, staffCode, name, departmentId, ONLINE_CHANNEL_KEY]);
+    const [insertResult] = await connection.execute(
+      'INSERT INTO dim_staff (staff_code, staff_name, department_id, channel_key, is_sales, is_enabled) VALUES (?, ?, ?, ?, 1, 1)',
+      [staffCode, name, departmentId, ONLINE_CHANNEL_KEY],
+    );
+    const staffId = requiredInsertId(insertResult, 'dim_staff');
     mapping.set(name, staffId);
   }
   return mapping;
@@ -224,9 +238,12 @@ async function ensureSources(connection, names, channelId) {
       mapping.set(name, existing[0].source_id);
       continue;
     }
-    const sourceId = await nextId(connection, 'dim_channel_source', 'source_id');
     const sourceCode = `self-${createHash('sha1').update(name).digest('hex').slice(0, 12)}`;
-    await connection.execute('INSERT INTO dim_channel_source (source_id, source_code, source_name, channel_id, is_excluded) VALUES (?, ?, ?, ?, 0)', [sourceId, sourceCode, name, channelId]);
+    const [insertResult] = await connection.execute(
+      'INSERT INTO dim_channel_source (source_code, source_name, channel_id, is_excluded) VALUES (?, ?, ?, 0)',
+      [sourceCode, name, channelId],
+    );
+    const sourceId = requiredInsertId(insertResult, 'dim_channel_source');
     mapping.set(name, sourceId);
   }
   return mapping;
@@ -243,8 +260,11 @@ async function ensureVersions(connection, rawNames) {
     if (!canonical) continue;
     let existing = await queryRows(connection, 'SELECT version_id FROM dim_product_version WHERE version_key = ? OR version_name = ? LIMIT 1', [canonical.key, canonical.name]);
     if (!existing[0]) {
-      const versionId = await nextId(connection, 'dim_product_version', 'version_id');
-      await connection.execute('INSERT INTO dim_product_version (version_id, version_key, version_name, standard_price_yuan, version_type, sort_order, is_trial, is_enabled) VALUES (?, ?, ?, ?, ?, 99, ?, 1)', [versionId, canonical.key, canonical.name, canonical.price, canonical.type, canonical.trial]);
+      const [insertResult] = await connection.execute(
+        'INSERT INTO dim_product_version (version_key, version_name, standard_price_yuan, version_type, sort_order, is_trial, is_enabled) VALUES (?, ?, ?, ?, 99, ?, 1)',
+        [canonical.key, canonical.name, canonical.price, canonical.type, canonical.trial],
+      );
+      const versionId = requiredInsertId(insertResult, 'dim_product_version');
       existing = [{ version_id: versionId }];
     }
     mapping.set(rawName, existing[0].version_id);
@@ -265,9 +285,11 @@ export async function persistSelfOperatedRevenue(connection, parsed, { replaceEx
     const staffMap = await ensureStaff(connection, parsed.summary.staffNames);
     const sourceMap = await ensureSources(connection, parsed.summary.sourceNames, channelId);
     const versionMap = await ensureVersions(connection, [...new Set(parsed.rows.map((row) => row.version_name_raw).filter(Boolean))]);
-    const batchId = await nextId(connection, 'import_batch', 'batch_id');
-
-    await connection.execute('INSERT INTO import_batch (batch_id, module, file_name, total_rows, success_rows, failed_rows, created_at) VALUES (?, ?, ?, ?, ?, 0, NOW())', [batchId, 'self-operated-revenue', parsed.rows[0]?.source_workbook ?? 'unknown.xlsx', parsed.rows.length, parsed.rows.length]);
+    const [batchResult] = await connection.execute(
+      'INSERT INTO import_batch (module, file_name, total_rows, success_rows, failed_rows, created_at) VALUES (?, ?, ?, ?, 0, NOW())',
+      ['self-operated-revenue', parsed.rows[0]?.source_workbook ?? 'unknown.xlsx', parsed.rows.length, parsed.rows.length],
+    );
+    const batchId = requiredInsertId(batchResult, 'import_batch');
 
     for (const row of parsed.rows) {
       await connection.execute(`

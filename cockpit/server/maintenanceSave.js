@@ -1,4 +1,12 @@
 /*
+ Update time: 2026-07-14 17:57:02 CST
+ Update content: Reject actual revenue overrides for departments that cannot map to one enabled channel while still allowing target amounts to save.
+*/
+/*
+ Update time: 2026-07-14 17:09:11 CST
+ Update content: Maintenance saves use auto-increment insertId mappings and atomically upsert department monthly revenue overrides.
+*/
+/*
  Update time: 2026-07-13 18:53:01 CST
  Update content: Cost maintenance saves marketing labor independently and rejects direct sales-labor writes because sales is channel-derived.
 */
@@ -53,9 +61,9 @@
           金额页内用"万"、写库 ×10000 转元，与导入写库口径一致。channel 支持新增来源 INSERT 与删除来源 DELETE。
           复用 maintenanceImport.js 的 WAN_TO_YUAN / readJsonBody / sendJson，避免口径漂移。
 */
-import { createDbConnection, queryRows, nextId } from './db.js';
+import { createDbConnection, queryRows } from './db.js';
 import { ensureCostSchema } from './costSchema.js';
-import { WAN_TO_YUAN, readJsonBody, sendJson, resolveDepartmentChannelId, ensureRevenueDailyColumns } from './maintenanceImport.js';
+import { WAN_TO_YUAN, readJsonBody, sendJson, resolveDepartmentChannelId } from './maintenanceImport.js';
 import { buildDepartmentChannelKeyMap } from './departmentChannel.js';
 
 function isTempId(value, prefix) {
@@ -64,6 +72,22 @@ function isTempId(value, prefix) {
 
 function normalizeNullableId(value) {
   return value == null || value === '' ? null : String(value);
+}
+
+function requiredInsertId(result, tableName) {
+  const id = String(result?.insertId ?? '');
+  if (!/^[1-9]\d*$/.test(id)) throw new Error(`${tableName} 未返回有效自增主键`);
+  return id;
+}
+
+async function insertChannelGroup(connection, { name, parentId, isEnabled }) {
+  const [result] = await connection.execute(
+    "INSERT INTO dim_channel (channel_key, channel_name, parent_id, is_enabled) VALUES (CONCAT('pending_', REPLACE(UUID(), '-', '')), ?, ?, ?)",
+    [name, parentId, isEnabled],
+  );
+  const id = requiredInsertId(result, 'dim_channel');
+  await connection.execute('UPDATE dim_channel SET channel_key = ? WHERE channel_id = ?', [`channel_${id}`, id]);
+  return id;
 }
 
 async function saveNewChannelGroups(connection, groups = [], errors = []) {
@@ -91,11 +115,11 @@ async function saveNewChannelGroups(connection, groups = [], errors = []) {
       errors.push({ field: 'parent_id', message: `上级渠道尚未落库（${parentId}），跳过新增渠道：${name}` });
       continue;
     }
-    const id = await nextId(connection, 'dim_channel', 'channel_id');
-    await connection.execute(
-      'INSERT INTO dim_channel (channel_id, channel_key, channel_name, parent_id, is_enabled) VALUES (?, ?, ?, ?, ?)',
-      [id, `channel_${id}`, name, parentId, group.is_enabled == null ? 1 : (group.is_enabled ? 1 : 0)],
-    );
+    const id = await insertChannelGroup(connection, {
+      name,
+      parentId,
+      isEnabled: group.is_enabled == null ? 1 : (group.is_enabled ? 1 : 0),
+    });
     validChannelIds.add(String(id));
     tempChannelIdMap.set(tempId, String(id));
     written += 1;
@@ -112,50 +136,34 @@ function hasOwnValue(row, field) {
 
 async function saveDepartmentTargetAmount(connection, { departmentId, yearMonth, channelId, amountWan }) {
   const amountYuan = WAN_TO_YUAN(amountWan);
-  const existing = await queryRows(connection, 'SELECT target_id FROM biz_target_monthly WHERE `year_month` = ? AND department_id = ? AND staff_id IS NULL LIMIT 1', [yearMonth, departmentId]);
-  if (existing[0]?.target_id) {
-    await connection.execute(
-      'UPDATE biz_target_monthly SET channel_id = ?, target_amount_yuan = ? WHERE target_id = ?',
-      [channelId, amountYuan, existing[0].target_id],
-    );
-  } else {
-    const id = await nextId(connection, 'biz_target_monthly', 'target_id');
-    await connection.execute(
-      'INSERT INTO biz_target_monthly (target_id, `year_month`, department_id, staff_id, channel_id, target_amount_yuan, target_opening_count, target_order_count) VALUES (?, ?, ?, NULL, ?, ?, 0, 0)',
-      [id, yearMonth, departmentId, channelId, amountYuan],
-    );
-  }
+  await connection.execute(
+    `INSERT INTO biz_target_monthly
+       (\`year_month\`, department_id, staff_id, channel_id, target_amount_yuan, target_opening_count, target_order_count)
+     VALUES (?, ?, NULL, ?, ?, 0, 0)
+     ON DUPLICATE KEY UPDATE
+       channel_id = VALUES(channel_id),
+       target_amount_yuan = VALUES(target_amount_yuan)`,
+    [yearMonth, departmentId, channelId, amountYuan],
+  );
 }
 
 async function saveDepartmentActualAmount(connection, { departmentId, yearMonth, channelId, amountWan }) {
-  const statDate = `${yearMonth}-01`;
   const amountYuan = WAN_TO_YUAN(amountWan);
-  const existing = await queryRows(
-    connection,
-    "SELECT id FROM fact_revenue_daily WHERE stat_date = ? AND department_id = ? AND staff_id IS NULL AND order_type = 'manual_department' LIMIT 1",
-    [statDate, departmentId],
+  await connection.execute(
+    `INSERT INTO fact_revenue_monthly_override
+       (\`year_month\`, department_id, channel_id, recovered_amount_yuan, actual_opening_count, order_count)
+     VALUES (?, ?, ?, ?, 0, 0)
+     ON DUPLICATE KEY UPDATE
+       channel_id = VALUES(channel_id),
+       recovered_amount_yuan = VALUES(recovered_amount_yuan)`,
+    [yearMonth, departmentId, channelId, amountYuan],
   );
-  if (existing[0]?.id) {
-    await connection.execute(
-      'UPDATE fact_revenue_daily SET channel_id = ?, recovered_amount_yuan = ? WHERE id = ?',
-      [channelId, amountYuan, existing[0].id],
-    );
-  } else {
-    const id = await nextId(connection, 'fact_revenue_daily', 'id');
-    await connection.execute(
-      "INSERT INTO fact_revenue_daily (id, stat_date, department_id, channel_id, staff_id, version_id, order_type, recovered_amount_yuan, actual_opening_count, order_count) VALUES (?, ?, ?, ?, NULL, NULL, 'manual_department', ?, ?, ?)",
-      [id, statDate, departmentId, channelId, amountYuan, 0, 0],
-    );
-  }
 }
 
 export async function saveTarget(connection, rows) {
   let written = 0;
   let skipped = 0;
   const errors = [];
-  if ((Array.isArray(rows) ? rows : []).some((row) => hasOwnValue(row, 'actual_amount_wan'))) {
-    await ensureRevenueDailyColumns(connection);
-  }
   for (const row of rows) {
     const departmentId = Number(row.department_id);
     const yearMonth = String(row.year_month || '');
@@ -189,13 +197,21 @@ export async function saveTarget(connection, rows) {
       rowWritten = true;
     }
     if (hasOwnValue(row, 'actual_amount_wan')) {
-      await saveDepartmentActualAmount(connection, {
-        departmentId,
-        yearMonth,
-        channelId,
-        amountWan: row.actual_amount_wan,
-      });
-      rowWritten = true;
+      if (channelId == null) {
+        skipped += 1;
+        errors.push({
+          field: 'actual_amount_wan',
+          message: `department_id=${departmentId} 无法唯一映射到启用经营渠道，实际回款未保存`,
+        });
+      } else {
+        await saveDepartmentActualAmount(connection, {
+          departmentId,
+          yearMonth,
+          channelId,
+          amountWan: row.actual_amount_wan,
+        });
+        rowWritten = true;
+      }
     }
     if (rowWritten) written += 1;
   }
@@ -309,11 +325,12 @@ export async function saveOrg(connection, rows, departments = []) {
       errors.push({ field: 'parent_id', message: `上级组织尚未落库（${parentId}），跳过新增组织：${name}` });
       continue;
     }
-    const id = await nextId(connection, 'dim_department', 'department_id');
-    await connection.execute(
-      'INSERT INTO dim_department (department_id, department_code, department_name, parent_id, sort_order, is_enabled) VALUES (?, ?, ?, ?, 0, ?)',
-      [id, `dept_${id}`, name, parentId, dept.is_enabled == null ? 1 : (dept.is_enabled ? 1 : 0)],
+    const [insertResult] = await connection.execute(
+      "INSERT INTO dim_department (department_code, department_name, parent_id, sort_order, is_enabled) VALUES (CONCAT('pending_', REPLACE(UUID(), '-', '')), ?, ?, 0, ?)",
+      [name, parentId, dept.is_enabled == null ? 1 : (dept.is_enabled ? 1 : 0)],
     );
+    const id = requiredInsertId(insertResult, 'dim_department');
+    await connection.execute('UPDATE dim_department SET department_code = ? WHERE department_id = ?', [`dept_${id}`, id]);
     departmentRecords.push({ department_id: id, department_code: `dept_${id}`, parent_id: parentId });
     validDeptIds.add(String(id));
     tempDeptIdMap.set(tempId, String(id));
@@ -392,11 +409,11 @@ export async function saveChannel(connection, rows, deletions = [], groups = [],
       errors.push({ field: 'parent_id', message: `上级渠道大类尚未落库（${parentId}），跳过新增大类：${name}` });
       continue;
     }
-    const id = await nextId(connection, 'dim_channel', 'channel_id');
-    await connection.execute(
-      'INSERT INTO dim_channel (channel_id, channel_key, channel_name, parent_id, is_enabled) VALUES (?, ?, ?, ?, ?)',
-      [id, `channel_${id}`, name, parentId, group.is_enabled == null ? 1 : (group.is_enabled ? 1 : 0)],
-    );
+    const id = await insertChannelGroup(connection, {
+      name,
+      parentId,
+      isEnabled: group.is_enabled == null ? 1 : (group.is_enabled ? 1 : 0),
+    });
     validChannelIds.add(String(id));
     tempChannelIdMap.set(tempId, String(id));
     written += 1;
@@ -417,19 +434,15 @@ export async function saveChannel(connection, rows, deletions = [], groups = [],
       continue;
     }
     const excluded = row.is_excluded ? 1 : 0;
-    const existing = await queryRows(connection, 'SELECT source_id FROM dim_channel_source WHERE source_code = ?', [sourceCode]);
-    if (existing[0]?.source_id) {
-      await connection.execute(
-        'UPDATE dim_channel_source SET source_name = ?, channel_id = ?, is_excluded = ? WHERE source_id = ?',
-        [row.source_name, channelId, excluded, existing[0].source_id],
-      );
-    } else {
-      const id = await nextId(connection, 'dim_channel_source', 'source_id');
-      await connection.execute(
-        'INSERT INTO dim_channel_source (source_id, source_code, source_name, channel_id, is_excluded) VALUES (?, ?, ?, ?, ?)',
-        [id, sourceCode, row.source_name, channelId, excluded],
-      );
-    }
+    await connection.execute(
+      `INSERT INTO dim_channel_source (source_code, source_name, channel_id, is_excluded)
+       VALUES (?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         source_name = VALUES(source_name),
+         channel_id = VALUES(channel_id),
+         is_excluded = VALUES(is_excluded)`,
+      [sourceCode, row.source_name, channelId, excluded],
+    );
     written += 1;
   }
 
