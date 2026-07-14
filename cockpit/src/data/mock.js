@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-14 15:42:37 CST
+ 更新内容: 数据维护侧边栏顺序调整为目标维护、组织维护、成本维护、数据更新看板。
+*/
+/*
+ 更新时间: 2026-07-14 15:32:22 CST
+ 更新内容: 数据维护侧边栏恢复“组织维护”入口，沿用现有组织维护页面、接口和玻璃样式。
+*/
+/*
  更新时间: 2026-07-14 14:04:11 CST
  更新内容: 运行时快照新增真实成交来源汇总，供首页来源排行按经营渠道筛选展示。
 */
@@ -1268,9 +1276,10 @@ export const MENU = [
 ];
 
 export const MAINTENANCE_MENU = [
-  { key: 'update-monitor-maintenance', name: '数据更新看板', icon: 'monitor' },
   { key: 'target-maintenance', name: '目标维护', icon: 'target' },
+  { key: 'org-maintenance', name: '组织维护', icon: 'organization' },
   { key: 'cost-maintenance', name: '成本维护', icon: 'cost' },
+  { key: 'update-monitor-maintenance', name: '数据更新看板', icon: 'monitor' },
 ];
 
 const MAINTENANCE_MONTH_KEYS = ['m01', 'm02', 'm03', 'm04', 'm05', 'm06', 'm07', 'm08', 'm09', 'm10', 'm11', 'm12'];

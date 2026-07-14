@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-14 15:42:37 CST
+ 更新内容: 回归测试锁定数据维护侧边栏顺序为目标维护、组织维护、成本维护、数据更新看板。
+*/
+/*
+ 更新时间: 2026-07-14 15:32:22 CST
+ 更新内容: 回归测试恢复数据维护侧边栏组织维护入口，并保留数据更新看板、目标维护、成本维护顺序。
+*/
+/*
  更新时间: 2026-07-14 10:00:00 CST
  更新内容: 侧边导航“版本与交付”入口改回纯“交付”，同步更新回归断言。
 */
@@ -149,18 +157,18 @@ test('defines overview, compute usage, and delivery menu entries in the sidebar'
   );
 });
 
-test('defines only target and cost entries in the data maintenance sidebar', () => {
+test('defines target, organization, cost and update monitor entries in the data maintenance sidebar', () => {
   assert.deepEqual(
     MAINTENANCE_MENU.map((item) => item.name),
-    ['目标维护', '成本维护']
+    ['目标维护', '组织维护', '成本维护', '数据更新看板']
   );
   assert.deepEqual(
     MAINTENANCE_MENU.map((item) => item.key),
-    ['target-maintenance', 'cost-maintenance']
+    ['target-maintenance', 'org-maintenance', 'cost-maintenance', 'update-monitor-maintenance']
   );
   assert.deepEqual(
     MAINTENANCE_MENU.map((item) => item.icon),
-    ['target', 'cost']
+    ['target', 'organization', 'cost', 'monitor']
   );
   assert.deepEqual(
     MENU.map((item) => item.name),

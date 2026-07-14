@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-14 15:30:13 CST  更新内容: 回归锁定交付演示快照仅由显式环境开关启用，并在页面显示非生产数据标识。 */
+/* 更新时间: 2026-07-14 15:11:44 CST  更新内容: 交付页回归锁定 KPI 后六项月度对比带、58/42 同屏执行明细及双断点响应式布局。 */
 /* 更新时间: 2026-07-14 15:20:00 CST  更新内容: 回归锁定月度半环标题恢复且不增高主卡，并移除 KPI 隐藏提示遗留的底部空白。 */
 /* 更新时间: 2026-07-14 15:14:00 CST  更新内容: 回归锁定 ECharts 空白画布事件显式打开月度/年度明细，渠道扇区仍打开人员明细。 */
 /* 更新时间: 2026-07-14 15:09:00 CST  更新内容: 回归锁定半环空白区触发整卡下钻，渠道扇区点击单独阻止冒泡并打开人员明细。 */
@@ -1860,32 +1862,23 @@ test('places trend and source donut above four KPI cards', () => {
   assert.doesNotMatch(dashboardCss, /\.dash-kpis/);
 });
 
-test('renders the presale trial delivery dashboard in the required long-page order', () => {
+test('renders the presale trial delivery dashboard as a compact decision workspace', () => {
   assert.match(deliveryPanelSource, /const EMPTY_DELIVERY_LOADER = \(\) => Promise\.resolve\(null\);/);
-  assert.match(deliveryPanelSource, /function DeliveryPanel\(\{ dataLoader = EMPTY_DELIVERY_LOADER \}\)/);
+  assert.match(deliveryPanelSource, /import\.meta\.env\.VITE_ENABLE_PRESALE_TRIAL_DEMO === 'true'/);
+  assert.match(deliveryPanelSource, /const DEFAULT_DELIVERY_LOADER = PRESALE_TRIAL_DEMO_ENABLED[\s\S]*?loadPresaleTrialDashboard[\s\S]*?: EMPTY_DELIVERY_LOADER;/);
+  assert.match(deliveryPanelSource, /function DeliveryPanel\(\{ dataLoader = DEFAULT_DELIVERY_LOADER \}\)/);
   assert.doesNotMatch(deliveryPanelSource, /function DeliveryPanel\(\{ dataLoader = (?:async )?\(\) =>/);
   assert.match(deliveryPanelSource, /<h2 id="delivery-dashboard-title">交付看板<\/h2>/);
   assert.match(deliveryPanelSource, /售前试用转化与配置负载/);
+  assert.match(deliveryPanelSource, /演示快照 · 非生产数据/);
   assert.match(deliveryPanelSource, /选择交付看板月份/);
   assert.match(deliveryPanelSource, /截至 \{updatedAt \|\| '2026-07-14 10:30'\}/);
 
-  const orderedLabels = [
-    '当前试用客户',
-    '试用转化率',
-    '预计成交金额',
-    '风险及超期',
-    '当前试用客户分布',
-    '试用阶段与风险',
-    '本月与上月交付对比',
-    '渠道 / 团队转化情况',
-    '配置人员负载',
-  ];
-  let cursor = -1;
-  orderedLabels.forEach((label) => {
-    const nextIndex = deliveryPanelSource.indexOf(label, cursor + 1);
-    assert.ok(nextIndex > cursor, `${label} should follow the previous delivery dashboard module`);
-    cursor = nextIndex;
-  });
+  assert.match(deliveryPanelSource, /<div className="dlv-kpi-grid"[\s\S]*?<ComparisonBand[\s\S]*?<div className="dlv-overview-grid">[\s\S]*?<section className="dlv-operations"/);
+  assert.match(deliveryPanelSource, /function ComparisonBand[\s\S]*?rows\.map[\s\S]*?row\.label[\s\S]*?row\.status[\s\S]*?row\.currentLabel[\s\S]*?row\.previousLabel[\s\S]*?row\.changeLabel/);
+  assert.match(deliveryPanelSource, /<h3 id="delivery-operations-title">交付执行明细<\/h3>/);
+  assert.match(deliveryPanelSource, /className="dlv-operation-pane dlv-operation-pane--conversion"[\s\S]*?row\.currentTrials[\s\S]*?row\.closedDeals[\s\S]*?row\.cohortStarted[\s\S]*?row\.conversionRate[\s\S]*?row\.expectedAmountWan/);
+  assert.match(deliveryPanelSource, /className="dlv-operation-pane dlv-operation-pane--staff"[\s\S]*?row\.currentAssigned[\s\S]*?capacityLimit[\s\S]*?role="progressbar"[\s\S]*?row\.monthlyTotal[\s\S]*?row\.converted[\s\S]*?row\.overdue[\s\S]*?row\.expectedAmountWan/);
 
   assert.match(deliveryPanelSource, /dataState\.status === 'loading' && <LoadingView \/>/);
   assert.match(deliveryPanelSource, /<DataState status="error"[\s\S]*?setReloadKey/);
@@ -1893,46 +1886,22 @@ test('renders the presale trial delivery dashboard in the required long-page ord
   assert.match(deliveryPanelSource, /activeDistributionTotal > 0[\s\S]*?buildDistributionOption[\s\S]*?: null/);
   assert.match(deliveryPanelSource, /\{distributionOption \? \([\s\S]*?<EChart option=\{distributionOption\} onEvents=\{chartEvents\}[\s\S]*?: <EmptyBlock text="该月暂无可用的渠道分布数据" \/>\}/);
   assert.match(deliveryPanelSource, /setSelectedChannel\(\(current\) => current === params\.data\.key \? null : params\.data\.key\)/);
+  assert.match(deliveryPanelSource, /<button[\s\S]*?className=\{`dlv-legend-row[\s\S]*?aria-pressed=\{item\.key === selectedChannel\}[\s\S]*?setSelectedChannel\(\(current\) => current === item\.key \? null : item\.key\)/);
   assert.match(deliveryPanelSource, /filterConversionRows\(allConversionRows, selectedChannel\)/);
+  assert.match(deliveryPanelSource, /handleMonthChange[\s\S]*?setSelectedChannel\(null\)/);
+  assert.match(deliveryPanelSource, /className="dlv-filter-chip"[\s\S]*?onClick=\{\(\) => setSelectedChannel\(null\)\}/);
+  assert.match(deliveryPanelSource, /options=\{CONVERSION_DIMENSION_OPTIONS\}[\s\S]*?value=\{conversionDimension\}[\s\S]*?onChange=\{setConversionDimension\}/);
   assert.match(deliveryPanelCss, /\.dlv-overview-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 42fr\) minmax\(0, 58fr\);/);
+  assert.match(deliveryPanelCss, /\.dlv-comparison-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\);/);
+  assert.match(deliveryPanelCss, /\.dlv-operations-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 58fr\) minmax\(360px, 42fr\);/);
+  assert.match(deliveryPanelCss, /@media \(max-width: 1200px\)[\s\S]*?\.dlv-comparison-grid \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}[\s\S]*?\.dlv-operations-grid \{ grid-template-columns: 1fr; \}/);
+  assert.match(deliveryPanelCss, /@media \(max-width: 760px\)[\s\S]*?\.dlv-comparison-grid \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}[\s\S]*?\.dlv-detail-metrics--conversion,\s*[\s\S]*?\.dlv-detail-metrics--staff \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
+  assert.match(deliveryPanelCss, /\.dlv-kpi,\s*[\s\S]*?\.dlv-card,\s*[\s\S]*?\.dlv-comparison-band,\s*[\s\S]*?\.dlv-operations\s*\{[\s\S]*?background:\s*var\(--dashboard-card-bg\);[\s\S]*?border:\s*1px solid var\(--dashboard-card-border\);/);
+  assert.match(deliveryPanelCss, /\.dlv-legend-row:focus-visible[\s\S]*?outline:\s*2px solid var\(--focus-outline\);/);
   assert.match(deliveryPanelCss, /\.dlv-panel\s*\{[\s\S]*?overflow:\s*visible;/);
+  assert.doesNotMatch(deliveryPanelSource, /<table|dlv-table--comparison|dlv-table--conversion|dlv-table--load/);
+  assert.doesNotMatch(deliveryPanelCss, /dlv-table--comparison|dlv-table--conversion|dlv-table--load|overflow-x:\s*auto/);
   assert.doesNotMatch(deliveryPanelSource, /客户均价|目标未配置|交付流程可视化|工单与责任分配/);
-});
-
-test('renders month-over-month delivery comparison as readable semi-ring delta cards', () => {
-  assert.doesNotMatch(deliveryPanelSource, /dlv-table--comparison/);
-  assert.match(deliveryPanelSource, /className="dlv-compare-grid"/);
-  assert.match(deliveryPanelSource, /className="dlv-compare-card"/);
-  assert.match(deliveryPanelSource, /comparisonGaugePercent\(row\)/);
-  assert.match(deliveryPanelSource, /comparisonDetailLabel\(row\)/);
-  assert.match(deliveryPanelSource, /comparisonOverflowLabel\(row\)/);
-  assert.match(deliveryPanelSource, /className="dlv-compare-gauge"/);
-  assert.match(deliveryPanelSource, /className="dlv-compare-gauge__visual"/);
-  assert.match(deliveryPanelSource, /className=\{`dlv-compare-gauge__arc dlv-compare-gauge__arc--\$\{safeTone\(row\.statusTone\)\}`\}/);
-  assert.match(deliveryPanelSource, /className="dlv-compare-gauge__copy"/);
-  assert.match(deliveryPanelSource, /className=\{`dlv-compare-delta dlv-compare-delta--\$\{safeTone\(row\.statusTone\)\}`\}/);
-  assert.match(deliveryPanelSource, /className="dlv-compare-detail"/);
-  assert.match(deliveryPanelSource, /className=\{`dlv-compare-overflow dlv-compare-overflow--\$\{safeTone\(row\.statusTone\)\}`\}/);
-  assert.match(deliveryPanelSource, /className="dlv-compare-values"/);
-  assert.match(deliveryPanelSource, /<b>\{row\.currentLabel\}<\/b>/);
-  assert.match(deliveryPanelSource, /<b>\{row\.previousLabel\}<\/b>/);
-  assert.doesNotMatch(deliveryPanelSource, /comparisonArcPercent|dlv-compare-ring|dlv-compare-signal|dlv-compare-bars|dlv-compare-bar-row|dlv-compare-track/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-grid/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-card/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-gauge/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-gauge\s*\{[\s\S]*?grid-template-rows:\s*96px auto;/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-gauge__visual/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-gauge__visual\s*\{[\s\S]*?height:\s*96px;/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-gauge__copy/);
-  assert.doesNotMatch(deliveryPanelCss, /\.dlv-compare-gauge__copy\s*\{[^}]*position:\s*absolute;/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-gauge__arc--good/);
-  assert.match(deliveryPanelCss, /--compare-good:\s*#7EDC8A;/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-delta/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-delta--risk/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-detail/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-overflow/);
-  assert.match(deliveryPanelCss, /\.dlv-compare-values/);
-  assert.doesNotMatch(deliveryPanelCss, /\.dlv-compare-ring|\.dlv-compare-signal|\.dlv-compare-bars|\.dlv-compare-bar-row|\.dlv-compare-track/);
 });
 
 test('gives the version panel the same hover halo as the monthly trend panel without styling the delivery page root', () => {
