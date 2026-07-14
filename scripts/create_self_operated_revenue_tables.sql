@@ -1,0 +1,41 @@
+-- 更新时间: 2026-07-14 16:15:00 CST
+-- 更新内容: 新增自营收入订单级事实表 fact_revenue_order，用于承接 2026 年 1-4 月真实自营收入 Excel 明细。
+
+CREATE TABLE IF NOT EXISTS fact_revenue_order (
+  order_id BIGINT NOT NULL AUTO_INCREMENT COMMENT '订单收入明细ID',
+  stat_date DATE NOT NULL COMMENT '收入/退款发生日期；来自 Excel 日期',
+  `year_month` CHAR(7) GENERATED ALWAYS AS (DATE_FORMAT(stat_date, '%Y-%m')) STORED COMMENT '统计月份',
+  staff_id BIGINT NULL COMMENT '销售人员ID；可由销售姓名映射 dim_staff',
+  sales_name_raw VARCHAR(100) NULL COMMENT 'Excel 原始销售姓名',
+  channel_id BIGINT NULL COMMENT '渠道ID；可由渠道原始值映射 dim_channel',
+  channel_name_raw VARCHAR(100) NULL COMMENT 'Excel 原始渠道/来源',
+  version_id BIGINT NULL COMMENT '版本ID；可由版本原始值映射 dim_product_version',
+  version_name_raw VARCHAR(100) NULL COMMENT 'Excel 原始版本',
+  order_no VARCHAR(100) NULL COMMENT '订单号；Excel 订单号',
+  customer_name VARCHAR(255) NULL COMMENT '客户名称；Excel 客户名称',
+  wechat_group_name VARCHAR(255) NULL COMMENT '企微客户群群名',
+  system_owner_name VARCHAR(255) NULL COMMENT '福客系统负责人',
+  sales_amount_yuan DECIMAL(18,2) NOT NULL DEFAULT 0 COMMENT '销售实际业绩；作为回款/收入聚合金额',
+  price_amount_yuan DECIMAL(18,2) NOT NULL DEFAULT 0 COMMENT '价格；订单价格',
+  refund_amount_yuan DECIMAL(18,2) NOT NULL DEFAULT 0 COMMENT '退款金额；按原始 Excel 记录保留',
+  order_type VARCHAR(30) NOT NULL DEFAULT 'self_operated' COMMENT '订单类型；self_operated/new/renewal/refund 等',
+  remark TEXT NULL COMMENT '备注【客户潜力/要求/跟进】',
+  source_workbook VARCHAR(255) NULL COMMENT '来源工作簿名',
+  source_sheet VARCHAR(100) NULL COMMENT '来源工作表',
+  source_row_no INT NULL COMMENT '来源 Excel 行号',
+  import_batch_id VARCHAR(64) NULL COMMENT '导入批次ID',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (order_id),
+  KEY idx_revenue_order_no (order_no),
+  KEY idx_revenue_order_date (stat_date),
+  KEY idx_revenue_order_month (`year_month`),
+  KEY idx_revenue_order_staff (staff_id),
+  KEY idx_revenue_order_channel (channel_id),
+  KEY idx_revenue_order_version (version_id),
+  KEY idx_revenue_order_batch (import_batch_id),
+  CONSTRAINT fk_fact_revenue_order_staff_id FOREIGN KEY (staff_id) REFERENCES dim_staff (staff_id) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_fact_revenue_order_channel_id FOREIGN KEY (channel_id) REFERENCES dim_channel (channel_id) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_fact_revenue_order_version_id FOREIGN KEY (version_id) REFERENCES dim_product_version (version_id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+COMMENT='自营收入订单级事实表；承接真实 Excel 明细，保留销售、客户、企微群、负责人、版本、订单号、价格、退款、备注和渠道原始值';

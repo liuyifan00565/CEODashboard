@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 13:05:00 CST
+ 更新内容: 增加自营收入订单级 detailRows 覆盖回归，确保回款弹窗可读取销售、客户、版本、订单和价格明细。
+*/
+/*
  更新时间: 2026-07-10 15:25:00 CST
  更新内容: 增加真实 detailRows 聚合回归，并把算力缺失日期回归改为不再前端补点。
 */
@@ -61,6 +65,7 @@ import {
   getComputeResourceHealth,
   getComputeUsageTrend,
   getKpiSeries,
+  getRevenueOrderRows,
   getSalesMemberRows,
   getVersionDetailSeries,
 } from './mock.js';
@@ -129,6 +134,40 @@ test('applies mysql dashboard snapshot to mutable dashboard data exports', () =>
         { date: '2026-06-10', yearMonth: '2026-06', year: '2026', channelKey: 'online', orderType: 'new', value: 244 },
         { date: '2026-06-11', yearMonth: '2026-06', year: '2026', channelKey: 'east', orderType: 'renewal', value: 86 },
       ],
+      revenueOrders: [
+        {
+          date: '2026-06-10',
+          yearMonth: '2026-06',
+          year: '2026',
+          channelKey: 'online',
+          orderType: 'new',
+          value: 3.98,
+          salesName: '黄李莉',
+          customerName: '杭州某客户',
+          groupName: '企微A群',
+          systemOwnerName: '李骥川',
+          versionName: '卓越版',
+          orderNo: 'SO-20260610-001',
+          price: 3.98,
+          refund: 0,
+          channelName: '线上',
+        },
+        {
+          date: '2026-06-11',
+          yearMonth: '2026-06',
+          year: '2026',
+          channelKey: 'east',
+          orderType: 'renewal',
+          value: 1.68,
+          salesName: '张栩鸿',
+          customerName: '宁波某客户',
+          versionName: '启航版',
+          orderNo: 'SO-20260611-001',
+          price: 1.68,
+          refund: 0,
+          channelName: '华东线下',
+        },
+      ],
       openings: [
         { date: '2026-06-10', yearMonth: '2026-06', year: '2026', channelKey: 'online', value: 11 },
         { date: '2026-06-11', yearMonth: '2026-06', year: '2026', channelKey: 'east', value: 9 },
@@ -149,6 +188,8 @@ test('applies mysql dashboard snapshot to mutable dashboard data exports', () =>
   assert.equal(getKpiSeries('cost', { salesKeys: ['online', 'east'] }).at(-1).value, 159);
   assert.equal(getKpiSeries('cost', { salesKeys: ['online'] }).at(-1).value, 31);
   assert.equal(getKpiSeries('recovered', { salesKeys: ['online'], orderType: 'new', dim: 'month' }).at(-1).value, 244);
+  assert.equal(getRevenueOrderRows({ salesKeys: ['online'], dim: 'month', selectedLabel: '6月' })[0].orderNo, 'SO-20260610-001');
+  assert.equal(getRevenueOrderRows({ salesKeys: ['east'], dim: 'day', selectedLabel: '2026-06-11' })[0].salesName, '张栩鸿');
   assert.equal(getKpiSeries('monthOpenings', { salesKeys: ['online', 'east'], dim: 'day' }).at(-1).value, 9);
   assert.equal(getVersionDetailSeries({ salesKeys: ['online'], mode: 'amount', dim: 'month', versionKey: 'qihang' }).at(-1).value, 34);
   assert.equal(KPI_CARDS.find((card) => card.key === 'month').value, 520);

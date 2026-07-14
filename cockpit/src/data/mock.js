@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 18:05:00 CST
+ 更新内容: 运行时快照接收 detailRows.revenueOrders，并新增 getRevenueOrderRows 供回款二级弹窗展示订单级真实明细。
+*/
+/*
  更新时间: 2026-07-14 17:20:00 CST
  更新内容: 交付协同工单区改为待办与风险管理口径，避免复用客户阶段的风险和闭环户数。
 */
@@ -580,6 +584,7 @@ export const COST_TREND = [
 });
 
 let LIVE_REVENUE_DETAIL_ROWS = [];
+let LIVE_REVENUE_ORDER_ROWS = [];
 let LIVE_OPENING_DETAIL_ROWS = [];
 let LIVE_VERSION_DETAIL_ROWS = [];
 
@@ -871,6 +876,25 @@ function aggregateDetailSeries(rows, { salesKeys, dim = 'month', valueField = 'v
       label: seriesLabel(key, dim),
       value: round1(value),
     })));
+}
+
+export function getRevenueOrderRows({ salesKeys, dim = 'month', selectedLabel = '', limit = 80 } = {}) {
+  const safeKeys = normalizeSalesKeys(salesKeys);
+  const selectedKey = (() => {
+    if (!selectedLabel) return '';
+    if (dim === 'year') return String(selectedLabel).match(/^\d{4}/)?.[0] ?? String(selectedLabel);
+    if (dim === 'day') return String(selectedLabel).replace(/[年月]/g, '-').replace(/日$/, '');
+    const year = String(META.monthLabel || '').match(/^\d{4}/)?.[0] ?? String(new Date().getFullYear());
+    const month = String(selectedLabel).match(/^(\d+)月$/)?.[1];
+    return month ? `${year}-${String(Number(month)).padStart(2, '0')}` : String(selectedLabel);
+  })();
+
+  return (LIVE_REVENUE_ORDER_ROWS ?? [])
+    .filter((row) => rowMatchesSales(row, safeKeys))
+    .filter((row) => !selectedKey || seriesKey(row, dim) === selectedKey)
+    .slice()
+    .sort((a, b) => seriesSortValue(b.date || b.yearMonth || b.year, 'day') - seriesSortValue(a.date || a.yearMonth || a.year, 'day'))
+    .slice(0, limit);
 }
 
 function costTrendValue(row, salesKeys) {
@@ -1586,6 +1610,11 @@ export function applyDashboardDataSnapshot(snapshot) {
   const detailRows = snapshot.detailRows ?? {};
   if (Array.isArray(detailRows.revenue)) {
     LIVE_REVENUE_DETAIL_ROWS = detailRows.revenue;
+  }
+  if (Array.isArray(detailRows.revenueOrders)) {
+    LIVE_REVENUE_ORDER_ROWS = detailRows.revenueOrders;
+  } else {
+    LIVE_REVENUE_ORDER_ROWS = [];
   }
   if (Array.isArray(detailRows.openings)) {
     LIVE_OPENING_DETAIL_ROWS = detailRows.openings;

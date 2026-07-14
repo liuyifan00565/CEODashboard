@@ -1,3 +1,7 @@
+/*
+ 更新时间: 2026-07-14 13:05:00 CST
+ 更新内容: 增加自营收入订单级事实表和销售人员级回款下钻回归，确保真实 Excel 明细接入后可按人员展示。
+*/
 /* 更新时间: 2026-07-13 18:53:01 CST  更新内容: 成本快照将四个渠道人力汇总为销售部人力，并额外计入独立市场部人力。 */
 /* 更新时间: 2026-07-13 16:48:56 CST  更新内容: 成本快照回归改为运营成本 + 人力成本，并保留 adCost 兼容别名。 */
 /*
@@ -338,6 +342,62 @@ test('includes maintained target departments in channel member details without s
   assert.equal(zhaoyang.yearRecovered, 12);
 });
 
+test('keeps person-level revenue tracking when sales monthly rows contain real staff revenue', () => {
+  const snapshot = mapDashboardRowsToSnapshot({
+    latestMonth: '2026-04',
+    channels: [
+      { channel_id: 3001, channel_key: 'online', channel_name: '线上' },
+      { channel_id: 3002, channel_key: 'south', channel_name: '华南线下' },
+    ],
+    salesMemberMonthly: [
+      { year_month: '2026-01', staff_id: 8101, staff_name: '黄李莉', channel_key: 'online', channel_name: '线上', recovered_wan: 18.5, target_wan: 0 },
+      { year_month: '2026-04', staff_id: 8101, staff_name: '黄李莉', channel_key: 'online', channel_name: '线上', recovered_wan: 32.2, target_wan: 40 },
+      { year_month: '2026-04', staff_id: 8102, staff_name: '张栩鸿', channel_key: 'south', channel_name: '华南线下', recovered_wan: 12.8, target_wan: 30 },
+    ],
+    monthlyTargets: [
+      { year_month: '2026-01', target_wan: 18.5 },
+      { year_month: '2026-04', target_wan: 70 },
+    ],
+    channelTargets: [
+      { channel_key: 'online', target_wan: 40 },
+      { channel_key: 'south', target_wan: 30 },
+    ],
+    yearChannelTargets: [
+      { channel_key: 'online', target_wan: 40 },
+      { channel_key: 'south', target_wan: 30 },
+    ],
+    revenueDetailRows: [
+      {
+        date: '2026-04-08',
+        yearMonth: '2026-04',
+        year: '2026',
+        channelKey: 'online',
+        value: 3.98,
+        salesName: '黄李莉',
+        customerName: '杭州某客户',
+        groupName: '企微A群',
+        systemOwnerName: '李骥川',
+        versionName: '卓越版',
+        orderNo: 'SO-20260408-001',
+        price: 3.98,
+        refund: 0,
+        channelName: '线上',
+        remark: '客户潜力高',
+      },
+    ],
+  });
+
+  const huang = snapshot.salesMemberRows.find((row) => row.key === 'staff-8101');
+  assert.ok(huang);
+  assert.equal(huang.name, '黄李莉');
+  assert.equal(huang.group, 'online');
+  assert.equal(huang.monthTarget, 40);
+  assert.equal(huang.monthRecovered, 32);
+  assert.equal(huang.yearRecovered, 51);
+  assert.equal(snapshot.detailRows.revenueOrders[0].customerName, '杭州某客户');
+  assert.equal(snapshot.detailRows.revenueOrders[0].versionName, '卓越版');
+});
+
 test('pre-aggregates renewal facts before joining version sales', () => {
   const source = readFileSync(new URL('./dashboardData.js', import.meta.url), 'utf8');
 
@@ -376,4 +436,19 @@ test('selects dashboard business month from explicit override or the current Bei
   assert.match(source, /SELECT MAX\(\\`year_month\\`\) AS actual_month[\s\S]*FROM fact_sales_member_monthly/);
   assert.match(source, /const latestMonth = await selectDashboardBusinessMonth\(connection\);/);
   assert.doesNotMatch(source, /SELECT MAX\(`year_month`\) AS latestMonth FROM fact_sales_member_monthly/);
+});
+
+test('queries self-operated order revenue when the real Excel detail table is available', () => {
+  const source = readFileSync(new URL('./dashboardData.js', import.meta.url), 'utf8');
+
+  assert.match(source, /async function revenueOrderRowsExist/);
+  assert.match(source, /tableExists\(connection, 'fact_revenue_order'\)/);
+  assert.match(source, /const useRevenueOrders = await revenueOrderRowsExist\(connection, latestYear\);/);
+  assert.match(source, /FROM fact_revenue_order o[\s\S]*COALESCE\(s\.staff_name, o\.sales_name_raw/);
+  assert.match(source, /revenueOrders: rows\.revenueDetailRows \?\? \[\]/);
+  assert.match(source, /salesName/);
+  assert.match(source, /customerName/);
+  assert.match(source, /systemOwnerName/);
+  assert.match(source, /versionName/);
+  assert.match(source, /orderNo/);
 });

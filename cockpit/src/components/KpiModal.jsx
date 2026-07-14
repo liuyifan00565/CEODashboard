@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 16:15:00 CST  更新内容: 回款二级弹窗在订单级真实数据存在时展示自营收入明细表，覆盖销售、客户、版本、订单、价格、退款和渠道。 */
 /* 更新时间: 2026-07-13 16:48:56 CST  更新内容: 总投入构成文案改为运营成本 / 人力成本。 */
 /* 更新时间: 2026-07-08 18:22:00 CST  更新内容: 总投入费比二级弹窗改为投入趋势与环比，补齐当前筛选、主结论和全渠道广告/人力构成口径。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: KPI 二级弹窗柱形高亮改为银紫玫瑰，未选中柱回退为低透明银紫。 */
@@ -10,7 +11,7 @@ import gsap from 'gsap';
 import AppIcon from './AppIcon';
 import MultiSegmented from './MultiSegmented';
 import Segmented from './Segmented';
-import { KPI, META, getKpiSeries, getRenewalModalData, VERSIONS } from '../data/mock';
+import { KPI, META, getKpiSeries, getRenewalModalData, getRevenueOrderRows, VERSIONS } from '../data/mock';
 import { deltaColor, fmtDelta, progressGradient } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './KpiModal.css';
@@ -109,6 +110,16 @@ function formatMetricNumber(value, unit, decimals = 0) {
 
 function formatMetricWithUnit(value, unit, decimals = 0) {
   return `${formatMetricNumber(value, unit, decimals)} ${unit}`;
+}
+
+function compactText(value, fallback = '-') {
+  const text = String(value ?? '').trim();
+  return text || fallback;
+}
+
+function formatWanCell(value) {
+  const number = Number(value) || 0;
+  return number.toLocaleString('zh-CN', { maximumFractionDigits: 2 });
 }
 
 function trendDescription(series, selIndex, sel, cardUnit) {
@@ -378,6 +389,11 @@ export default function KpiModal({ card, onClose }) {
       : [],
   });
   const insight = trendInsight(trendText, mom, isRenewal);
+  const orderRows = useMemo(() => (
+    card.metric === 'recovered'
+      ? getRevenueOrderRows({ salesKeys, dim: dimForSeries, selectedLabel: sel.label })
+      : []
+  ), [card.metric, dimForSeries, salesKeys, sel.label]);
 
   return (
     <div className="km-overlay" role="dialog" aria-modal="true">
@@ -512,6 +528,49 @@ export default function KpiModal({ card, onClose }) {
               </div>
             </div>
           </>
+        )}
+
+        {card.metric === 'recovered' && orderRows.length > 0 && (
+          <div className="km-order-detail" aria-label="自营收入订单明细">
+            <div className="km-order-detail__head">
+              <span>自营收入明细</span>
+              <b>{orderRows.length} 条</b>
+            </div>
+            <div className="km-order-detail__scroll">
+              <table className="km-order-detail__table">
+                <thead>
+                  <tr>
+                    <th>日期</th>
+                    <th>销售</th>
+                    <th>客户 / 群</th>
+                    <th>版本</th>
+                    <th>订单号</th>
+                    <th>业绩(万)</th>
+                    <th>价格(万)</th>
+                    <th>退款(万)</th>
+                    <th>渠道</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orderRows.map((row, index) => (
+                    <tr key={`${row.orderNo || 'order'}-${row.date || row.yearMonth}-${index}`}>
+                      <td>{compactText(row.date)}</td>
+                      <td>{compactText(row.salesName)}</td>
+                      <td title={compactText(row.groupName || row.customerName)}>
+                        {compactText(row.customerName || row.groupName)}
+                      </td>
+                      <td>{compactText(row.versionName)}</td>
+                      <td title={compactText(row.orderNo)}>{compactText(row.orderNo)}</td>
+                      <td>{formatWanCell(row.value)}</td>
+                      <td>{formatWanCell(row.price)}</td>
+                      <td>{formatWanCell(row.refund)}</td>
+                      <td>{compactText(row.channelName)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </div>
     </div>
