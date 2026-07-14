@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 13:05:00 CST
- 更新内容: 增加自营收入订单级事实表和销售人员级回款下钻回归，确保真实 Excel 明细接入后可按人员展示。
+ 更新时间: 2026-07-14 13:18:00 CST
+ 更新内容: 增加最新真实月份、订单净回款和完整 Excel 下钻字段回归。
 */
 /* 更新时间: 2026-07-13 18:53:01 CST  更新内容: 成本快照将四个渠道人力汇总为销售部人力，并额外计入独立市场部人力。 */
 /* 更新时间: 2026-07-13 16:48:56 CST  更新内容: 成本快照回归改为运营成本 + 人力成本，并保留 adCost 兼容别名。 */
@@ -345,6 +345,7 @@ test('includes maintained target departments in channel member details without s
 test('keeps person-level revenue tracking when sales monthly rows contain real staff revenue', () => {
   const snapshot = mapDashboardRowsToSnapshot({
     latestMonth: '2026-04',
+    useRevenueOrders: true,
     channels: [
       { channel_id: 3001, channel_key: 'online', channel_name: '线上' },
       { channel_id: 3002, channel_key: 'south', channel_name: '华南线下' },
@@ -373,6 +374,7 @@ test('keeps person-level revenue tracking when sales monthly rows contain real s
         year: '2026',
         channelKey: 'online',
         value: 3.98,
+        salesAmount: 4.28,
         salesName: '黄李莉',
         customerName: '杭州某客户',
         groupName: '企微A群',
@@ -380,11 +382,15 @@ test('keeps person-level revenue tracking when sales monthly rows contain real s
         versionName: '卓越版',
         orderNo: 'SO-20260408-001',
         price: 3.98,
-        refund: 0,
+        refund: 0.3,
         channelName: '线上',
         remark: '客户潜力高',
+        otherNote: '赠送插件',
+        sourceSheet: '4月',
+        sourceRowNo: 8,
       },
     ],
+    refundRows: [{ year_month: '2026-04', channel_key: 'online', refund_wan: 0.3 }],
   });
 
   const huang = snapshot.salesMemberRows.find((row) => row.key === 'staff-8101');
@@ -396,6 +402,8 @@ test('keeps person-level revenue tracking when sales monthly rows contain real s
   assert.equal(huang.yearRecovered, 51);
   assert.equal(snapshot.detailRows.revenueOrders[0].customerName, '杭州某客户');
   assert.equal(snapshot.detailRows.revenueOrders[0].versionName, '卓越版');
+  assert.equal(snapshot.kpi.monthRecovered, 45);
+  assert.equal(snapshot.detailRows.revenueOrders[0].otherNote, '赠送插件');
 });
 
 test('pre-aggregates renewal facts before joining version sales', () => {
@@ -425,15 +433,16 @@ test('resolves department recovered detail from old or new fact_revenue_daily sc
   assert.match(source, /JOIN dim_department d ON d\.department_id = \$\{revenueDepartmentIdSql\}/);
 });
 
-test('selects dashboard business month from explicit override or the current Beijing month', () => {
+test('selects dashboard business month from explicit override or the latest real fact month', () => {
   const source = readFileSync(new URL('./dashboardData.js', import.meta.url), 'utf8');
 
   assert.match(source, /const TEMP_DASHBOARD_MONTH_OVERRIDE = '';/);
   assert.match(source, /async function selectDashboardBusinessMonth/);
-  assert.match(source, /process\.env\.DASHBOARD_MONTH_OVERRIDE \|\| TEMP_DASHBOARD_MONTH_OVERRIDE \|\| chinaTodayYMD\(\)\.yearMonth \|\| await loadLatestActualMonth\(connection\)/);
+  assert.match(source, /process\.env\.DASHBOARD_MONTH_OVERRIDE \|\| TEMP_DASHBOARD_MONTH_OVERRIDE \|\| await loadLatestActualMonth\(connection\)/);
   assert.match(source, /async function loadLatestActualMonth/);
   assert.match(source, /DATE_FORMAT\(MAX\(stat_date\), '%Y-%m'\) AS actual_month[\s\S]*FROM fact_revenue_daily/);
   assert.match(source, /SELECT MAX\(\\`year_month\\`\) AS actual_month[\s\S]*FROM fact_sales_member_monthly/);
+  assert.match(source, /FROM fact_revenue_order/);
   assert.match(source, /const latestMonth = await selectDashboardBusinessMonth\(connection\);/);
   assert.doesNotMatch(source, /SELECT MAX\(`year_month`\) AS latestMonth FROM fact_sales_member_monthly/);
 });
@@ -451,4 +460,8 @@ test('queries self-operated order revenue when the real Excel detail table is av
   assert.match(source, /systemOwnerName/);
   assert.match(source, /versionName/);
   assert.match(source, /orderNo/);
+  assert.match(source, /SUM\(o\.net_amount_yuan\)/);
+  assert.match(source, /salesAmount/);
+  assert.match(source, /otherNote/);
+  assert.match(source, /sourceRowNo/);
 });

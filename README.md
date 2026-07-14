@@ -1,7 +1,7 @@
 # CEO Dashboard
 
-更新时间: 2026-07-14 13:05:00 CST
-更新内容: 阿里云 AMD64 交付包新增自营收入订单级事实表迁移，用于承接真实 Excel 明细。
+更新时间: 2026-07-14 13:18:00 CST
+更新内容: 新增自营收入 Excel 服务器导入命令，支持替换演示数据并按真实最新月份展示完整订单下钻。
 
 CEO Dashboard 是经营驾驶舱项目。前端位于 `cockpit/`，生产运行时由 Node 服务同时提供 React 静态页面、真实 MySQL 数据接口、外部算力接口代理和 AI 小人分析接口。
 
@@ -20,6 +20,18 @@ http://127.0.0.1:5174
 ```
 
 更多前端和业务口径说明见 `cockpit/README.md`。
+
+## 导入真实自营收入
+
+本地或服务器容器运行后，将 Excel 复制到应用容器并执行事务导入：
+
+```bash
+docker cp "2026年1-4月自营收入明细(1).xlsx" ceodashboard-cockpit:/tmp/self-operated-revenue.xlsx
+docker exec ceodashboard-cockpit node server/importSelfOperatedRevenue.js /tmp/self-operated-revenue.xlsx --replace-demo-data
+docker restart ceodashboard-cockpit
+```
+
+`--replace-demo-data` 会清空现有演示事实、目标和成本数据，再导入真实收入明细；不带该参数时只替换 `fact_revenue_order`。导入会保留来源工作表和行号，缺少日期的原始行也会入库，但不进入按日期统计的 KPI。
 
 ## 阿里云镜像交付
 

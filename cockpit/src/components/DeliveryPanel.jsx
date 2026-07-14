@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 12:10:00 CST
- 更新内容: 将交付页重构为售前试用转化与配置负载长看板，新增月份联动、环图筛选、阶段风险、月度对比和三张紧凑经营表。
+ 更新时间: 2026-07-14 13:18:00 CST
+ 更新内容: 默认停用售前试用演示快照，真实接口接入前仅展示无数据状态。
 */
 import { useEffect, useMemo, useState } from 'react';
 
@@ -9,7 +9,6 @@ import {
   DELIVERY_CAPACITY_LIMIT,
   PRESALE_TRIAL_MONTH_OPTIONS,
   filterConversionRows,
-  loadPresaleTrialDashboard,
 } from '../data/presaleTrialDelivery';
 import { useThemeTokens } from '../lib/theme';
 import EChart from './EChart';
@@ -205,7 +204,7 @@ function DataState({ status, error, onRetry }) {
   );
 }
 
-export default function DeliveryPanel({ dataLoader = loadPresaleTrialDashboard }) {
+export default function DeliveryPanel({ dataLoader = async () => null }) {
   const tokens = useThemeTokens();
   const [monthKey, setMonthKey] = useState(DEFAULT_PRESALE_TRIAL_MONTH);
   const [distributionMetric, setDistributionMetric] = useState('count');

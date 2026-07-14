@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-14 13:05:00 CST  更新内容: 回款二级弹窗新增自营收入订单明细表样式，沿用现有深色玻璃弹窗体系并支持横向滚动。 */
+/* 更新时间: 2026-07-14 13:18:00 CST  更新内容: 自营收入订单明细扩展为 Excel 全字段横向表格，并保持现有玻璃表格体系。 */
 /* 更新时间: 2026-07-08 18:22:00 CST  更新内容: KPI 与版本二级弹窗补充当前筛选和主结论文案，成本/版本摘要改为纯文字对比结构并弱化图表网格。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: KPI 与版本二级弹窗筛选控件选中态改为银紫玫瑰光，避免继续混用硬蓝。 */
 /* 更新时间: 2026-07-06 10:00:00 CST  更新内容: KPI 与版本二级弹窗统一升级为高级果味玻璃明细页母版。 */
@@ -526,7 +526,7 @@
 
 .km-order-detail__table {
   width: 100%;
-  min-width: 920px;
+  min-width: 1780px;
   border-collapse: separate;
   border-spacing: 0;
   color: rgba(255, 255, 255, 0.74);
@@ -556,9 +556,10 @@
   backdrop-filter: blur(14px);
 }
 
-.km-order-detail__table td:nth-child(6),
-.km-order-detail__table td:nth-child(7),
-.km-order-detail__table td:nth-child(8) {
+.km-order-detail__table td:nth-child(8),
+.km-order-detail__table td:nth-child(9),
+.km-order-detail__table td:nth-child(10),
+.km-order-detail__table td:nth-child(11) {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }

@@ -1,4 +1,4 @@
-/* 更新时间: 2026-07-14 16:15:00 CST  更新内容: 回款二级弹窗在订单级真实数据存在时展示自营收入明细表，覆盖销售、客户、版本、订单、价格、退款和渠道。 */
+/* 更新时间: 2026-07-14 13:18:00 CST  更新内容: 自营收入下钻表展示 Excel 全字段，并区分销售业绩、退款与净回款。 */
 /* 更新时间: 2026-07-13 16:48:56 CST  更新内容: 总投入构成文案改为运营成本 / 人力成本。 */
 /* 更新时间: 2026-07-08 18:22:00 CST  更新内容: 总投入费比二级弹窗改为投入趋势与环比，补齐当前筛选、主结论和全渠道广告/人力构成口径。 */
 /* 更新时间: 2026-07-06 10:48:16 CST  更新内容: KPI 二级弹窗柱形高亮改为银紫玫瑰，未选中柱回退为低透明银紫。 */
@@ -542,13 +542,19 @@ export default function KpiModal({ card, onClose }) {
                   <tr>
                     <th>日期</th>
                     <th>销售</th>
-                    <th>客户 / 群</th>
+                    <th>客户</th>
+                    <th>企微群</th>
+                    <th>福客负责人</th>
                     <th>版本</th>
                     <th>订单号</th>
-                    <th>业绩(万)</th>
+                    <th>销售业绩(万)</th>
                     <th>价格(万)</th>
                     <th>退款(万)</th>
-                    <th>渠道</th>
+                    <th>净回款(万)</th>
+                    <th>线索来源</th>
+                    <th>其他说明</th>
+                    <th>备注</th>
+                    <th>来源行</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -556,15 +562,19 @@ export default function KpiModal({ card, onClose }) {
                     <tr key={`${row.orderNo || 'order'}-${row.date || row.yearMonth}-${index}`}>
                       <td>{compactText(row.date)}</td>
                       <td>{compactText(row.salesName)}</td>
-                      <td title={compactText(row.groupName || row.customerName)}>
-                        {compactText(row.customerName || row.groupName)}
-                      </td>
+                      <td title={compactText(row.customerName)}>{compactText(row.customerName)}</td>
+                      <td title={compactText(row.groupName)}>{compactText(row.groupName)}</td>
+                      <td title={compactText(row.systemOwnerName)}>{compactText(row.systemOwnerName)}</td>
                       <td>{compactText(row.versionName)}</td>
                       <td title={compactText(row.orderNo)}>{compactText(row.orderNo)}</td>
-                      <td>{formatWanCell(row.value)}</td>
+                      <td>{formatWanCell(row.salesAmount)}</td>
                       <td>{formatWanCell(row.price)}</td>
                       <td>{formatWanCell(row.refund)}</td>
+                      <td>{formatWanCell(row.value)}</td>
                       <td>{compactText(row.channelName)}</td>
+                      <td title={compactText(row.otherNote)}>{compactText(row.otherNote)}</td>
+                      <td title={compactText(row.remark)}>{compactText(row.remark)}</td>
+                      <td>{row.sourceSheet && row.sourceRowNo ? `${row.sourceSheet}!${row.sourceRowNo}` : '-'}</td>
                     </tr>
                   ))}
                 </tbody>

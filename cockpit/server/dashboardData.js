@@ -1,7 +1,6 @@
 /*
- 更新时间: 2026-07-14 16:15:00 CST
- 更新内容: 增加自营收入订单级事实表 fact_revenue_order 的读取口径；当该表存在且当前年份有数据时，
-          dashboard 回款、销售人员明细、回款二级明细和版本销售优先从订单级真实数据聚合，旧表继续兜底。
+ 更新时间: 2026-07-14 13:18:00 CST
+ 更新内容: 业务月份改取最新真实事实月份；自营收入按销售业绩减退款计算净回款，并向下钻返回全部 Excel 字段。
 */
 /*
  更新时间: 2026-07-13 21:00:00 CST
@@ -730,12 +729,13 @@ export function mapDashboardRowsToSnapshot(rows) {
   const latestYear = String(latestMonth).slice(0, 4);
   const previousMonth = rows.previousMonth || previousYearMonthValue(latestMonth);
   const refundRows = rows.refundRows ?? [];
-  const salesRows = applyRefundsToRecoveredRows(rows.salesMemberMonthly ?? [], refundRows);
-  const previousSalesRows = applyRefundsToRecoveredRows(rows.previousMonthSales ?? [], refundRows);
-  const lastYearSalesRows = applyRefundsToRecoveredRows(rows.lastYearSales ?? [], refundRows);
+  const recoveredRefundRows = rows.useRevenueOrders ? [] : refundRows;
+  const salesRows = applyRefundsToRecoveredRows(rows.salesMemberMonthly ?? [], recoveredRefundRows);
+  const previousSalesRows = applyRefundsToRecoveredRows(rows.previousMonthSales ?? [], recoveredRefundRows);
+  const lastYearSalesRows = applyRefundsToRecoveredRows(rows.lastYearSales ?? [], recoveredRefundRows);
   const currentSalesRows = salesRows.filter((row) => row.year_month === latestMonth);
   const yearSalesRows = salesRows.filter((row) => String(row.year_month).startsWith(latestYear));
-  const revenueRows = applyRefundsToRecoveredRows(rows.revenueDaily ?? [], refundRows);
+  const revenueRows = applyRefundsToRecoveredRows(rows.revenueDaily ?? [], recoveredRefundRows);
   const useRevenueDaily = revenueRows.length > 0;
   const currentRevenueRows = revenueRows.filter((row) => row.year_month === latestMonth);
   const previousRevenueRows = revenueRows.filter((row) => row.year_month === previousMonth);
@@ -818,7 +818,7 @@ export function mapDashboardRowsToSnapshot(rows) {
     salesMemberRows: makeSalesMemberRows({
       salesRows: yearSalesRows,
       targetRows: rows.memberTargets ?? [],
-      recoveredRows: applyRefundsToRecoveredRows(rows.memberRecovered ?? [], refundRows),
+      recoveredRows: applyRefundsToRecoveredRows(rows.memberRecovered ?? [], recoveredRefundRows),
       latestMonth,
       latestYear,
       useRevenueDaily,
@@ -888,6 +888,9 @@ async function revenueOrderRowsExist(connection, latestYear) {
 }
 
 async function loadLatestActualMonth(connection) {
+  const revenueOrderSelect = await tableExists(connection, 'fact_revenue_order')
+    ? "UNION ALL SELECT DATE_FORMAT(MAX(stat_date), '%Y-%m') AS actual_month FROM fact_revenue_order"
+    : '';
   const latestRows = await queryRows(connection, `
     SELECT MAX(actual_month) AS latestMonth
     FROM (
@@ -896,13 +899,14 @@ async function loadLatestActualMonth(connection) {
       UNION ALL
       SELECT MAX(\`year_month\`) AS actual_month
       FROM fact_sales_member_monthly
+      ${revenueOrderSelect}
     ) actual_months
   `);
   return latestRows[0]?.latestMonth || chinaTodayYMD().yearMonth;
 }
 
 async function selectDashboardBusinessMonth(connection) {
-  return process.env.DASHBOARD_MONTH_OVERRIDE || TEMP_DASHBOARD_MONTH_OVERRIDE || chinaTodayYMD().yearMonth || await loadLatestActualMonth(connection);
+  return process.env.DASHBOARD_MONTH_OVERRIDE || TEMP_DASHBOARD_MONTH_OVERRIDE || await loadLatestActualMonth(connection);
 }
 
 export async function buildDashboardSnapshot(connection) {
@@ -965,7 +969,7 @@ export async function buildDashboardSnapshot(connection) {
                COALESCE(s.staff_name, o.sales_name_raw, CONCAT('销售', o.staff_id)) AS staff_name,
                ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
                COALESCE(c.channel_name, o.channel_name_raw, ${CHANNEL_NAME_BY_KEY_SQL(STAFF_OR_FACT_CHANNEL_KEY_SQL)}) AS channel_name,
-               ROUND(SUM(o.sales_amount_yuan) / 10000, 2) AS recovered_wan,
+               ROUND(SUM(o.net_amount_yuan) / 10000, 2) AS recovered_wan,
                ROUND(COALESCE(MAX(t.target_amount_yuan), 0) / 10000, 2) AS target_wan
         FROM fact_revenue_order o
         LEFT JOIN dim_staff s ON s.staff_id = o.staff_id
@@ -975,7 +979,9 @@ export async function buildDashboardSnapshot(connection) {
           ON t.staff_id = o.staff_id
          AND t.\`year_month\` = DATE_FORMAT(o.stat_date, '%Y-%m')
         WHERE o.stat_date >= ? AND o.stat_date < ?
-        GROUP BY DATE_FORMAT(o.stat_date, '%Y-%m'), o.staff_id, staff_name, channel_key, channel_name
+        GROUP BY DATE_FORMAT(o.stat_date, '%Y-%m'), o.staff_id, s.staff_name, o.sales_name_raw,
+                 ${STAFF_OR_FACT_CHANNEL_KEY_SQL},
+                 COALESCE(c.channel_name, o.channel_name_raw, ${CHANNEL_NAME_BY_KEY_SQL(STAFF_OR_FACT_CHANNEL_KEY_SQL)})
       ) order_member_monthly
       WHERE staff_id IS NOT NULL AND channel_key IS NOT NULL
       ORDER BY \`year_month\`, staff_id
@@ -998,13 +1004,13 @@ export async function buildDashboardSnapshot(connection) {
     `, [latestYear]),
     useRevenueOrders ? queryRows(connection, `
       SELECT DATE_FORMAT(o.stat_date, '%Y-%m') AS \`year_month\`, ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
-             ROUND(SUM(o.sales_amount_yuan) / 10000, 2) AS recovered_wan
+             ROUND(SUM(o.net_amount_yuan) / 10000, 2) AS recovered_wan
       FROM fact_revenue_order o
       LEFT JOIN dim_staff s ON s.staff_id = o.staff_id
       LEFT JOIN dim_department d ON d.department_id = s.department_id
       LEFT JOIN dim_channel c ON c.channel_id = o.channel_id
       WHERE o.stat_date >= ? AND o.stat_date < ?
-      GROUP BY DATE_FORMAT(o.stat_date, '%Y-%m'), channel_key
+      GROUP BY DATE_FORMAT(o.stat_date, '%Y-%m'), ${STAFF_OR_FACT_CHANNEL_KEY_SQL}
       HAVING channel_key IS NOT NULL
       ORDER BY \`year_month\`, channel_key
     `, [`${latestYear}-01-01`, `${nextYear}-01-01`]) : queryRows(connection, `
@@ -1018,7 +1024,7 @@ export async function buildDashboardSnapshot(connection) {
     `, [`${latestYear}-01-01`, `${nextYear}-01-01`]),
     useRevenueOrders ? queryRows(connection, `
       SELECT DATE_FORMAT(o.stat_date, '%Y-%m-%d') AS day_key,
-             ROUND(SUM(o.sales_amount_yuan) / 10000, 2) AS recovered_wan
+             ROUND(SUM(o.net_amount_yuan) / 10000, 2) AS recovered_wan
       FROM fact_revenue_order o
       WHERE o.stat_date >= ? AND o.stat_date < ?
       GROUP BY DATE_FORMAT(o.stat_date, '%Y-%m-%d')
@@ -1033,8 +1039,9 @@ export async function buildDashboardSnapshot(connection) {
     `, [`${latestMonth}-01`, nextMonthBoundary]),
     useRevenueOrders ? queryRows(connection, `
       SELECT YEAR(o.stat_date) AS \`year\`,
-             ROUND(SUM(o.sales_amount_yuan) / 10000, 2) AS recovered_wan
+             ROUND(SUM(o.net_amount_yuan) / 10000, 2) AS recovered_wan
       FROM fact_revenue_order o
+      WHERE o.stat_date IS NOT NULL
       GROUP BY YEAR(o.stat_date)
       ORDER BY \`year\`
     `) : queryRows(connection, `
@@ -1054,13 +1061,13 @@ export async function buildDashboardSnapshot(connection) {
     `),
     useRevenueOrders ? queryRows(connection, `
       SELECT DATE_FORMAT(o.stat_date, '%Y-%m') AS \`year_month\`, ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
-             ROUND(SUM(o.sales_amount_yuan) / 10000, 2) AS recovered_wan
+             ROUND(SUM(o.net_amount_yuan) / 10000, 2) AS recovered_wan
       FROM fact_revenue_order o
       LEFT JOIN dim_staff s ON s.staff_id = o.staff_id
       LEFT JOIN dim_department d ON d.department_id = s.department_id
       LEFT JOIN dim_channel c ON c.channel_id = o.channel_id
       WHERE DATE_FORMAT(o.stat_date, '%Y-%m') = ?
-      GROUP BY DATE_FORMAT(o.stat_date, '%Y-%m'), channel_key
+      GROUP BY DATE_FORMAT(o.stat_date, '%Y-%m'), ${STAFF_OR_FACT_CHANNEL_KEY_SQL}
       HAVING channel_key IS NOT NULL
     `, [previousMonth]) : queryRows(connection, `
       SELECT f.\`year_month\`, ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
@@ -1075,13 +1082,13 @@ export async function buildDashboardSnapshot(connection) {
     `, [previousMonth]),
     useRevenueOrders ? queryRows(connection, `
       SELECT DATE_FORMAT(o.stat_date, '%Y-%m') AS \`year_month\`, ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
-             ROUND(SUM(o.sales_amount_yuan) / 10000, 2) AS recovered_wan
+             ROUND(SUM(o.net_amount_yuan) / 10000, 2) AS recovered_wan
       FROM fact_revenue_order o
       LEFT JOIN dim_staff s ON s.staff_id = o.staff_id
       LEFT JOIN dim_department d ON d.department_id = s.department_id
       LEFT JOIN dim_channel c ON c.channel_id = o.channel_id
       WHERE DATE_FORMAT(o.stat_date, '%Y-%m') <= ? AND YEAR(o.stat_date) = ?
-      GROUP BY DATE_FORMAT(o.stat_date, '%Y-%m'), channel_key
+      GROUP BY DATE_FORMAT(o.stat_date, '%Y-%m'), ${STAFF_OR_FACT_CHANNEL_KEY_SQL}
       HAVING channel_key IS NOT NULL
     `, [lastYearMonth, Number(latestYear) - 1]) : queryRows(connection, `
       SELECT f.\`year_month\`, ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
@@ -1139,14 +1146,14 @@ export async function buildDashboardSnapshot(connection) {
     useRevenueOrders ? queryRows(connection, `
       SELECT DATE_FORMAT(o.stat_date, '%Y-%m') AS \`year_month\`, d.department_id, d.department_name,
              ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
-             ROUND(SUM(o.sales_amount_yuan) / 10000, 2) AS recovered_wan
+             ROUND(SUM(o.net_amount_yuan) / 10000, 2) AS recovered_wan
       FROM fact_revenue_order o
       LEFT JOIN dim_staff s ON s.staff_id = o.staff_id
       JOIN dim_department d ON d.department_id = s.department_id
       LEFT JOIN dim_channel c ON c.channel_id = o.channel_id
       WHERE o.stat_date >= ? AND o.stat_date < ?
         AND d.is_enabled = 1
-      GROUP BY DATE_FORMAT(o.stat_date, '%Y-%m'), d.department_id, d.department_name, channel_key
+      GROUP BY DATE_FORMAT(o.stat_date, '%Y-%m'), d.department_id, d.department_name, ${STAFF_OR_FACT_CHANNEL_KEY_SQL}
       HAVING channel_key IS NOT NULL
       ORDER BY \`year_month\`, channel_key, d.department_id
     `, [`${latestYear}-01-01`, `${nextYear}-01-01`]) : queryRows(connection, `
@@ -1195,7 +1202,18 @@ export async function buildDashboardSnapshot(connection) {
       GROUP BY \`year_month\`, cost_type
       ORDER BY \`year_month\`, cost_type
     `, [latestYear, latestMonth]),
-    queryRows(connection, `
+    useRevenueOrders ? queryRows(connection, `
+      SELECT DATE_FORMAT(o.stat_date, '%Y-%m') AS \`year_month\`,
+             ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
+             ROUND(SUM(o.refund_amount_yuan) / 10000, 2) AS refund_wan
+      FROM fact_revenue_order o
+      LEFT JOIN dim_staff s ON s.staff_id = o.staff_id
+      LEFT JOIN dim_department d ON d.department_id = s.department_id
+      LEFT JOIN dim_channel c ON c.channel_id = o.channel_id
+      WHERE o.stat_date >= ? AND o.stat_date < ?
+      GROUP BY DATE_FORMAT(o.stat_date, '%Y-%m'), ${STAFF_OR_FACT_CHANNEL_KEY_SQL}
+      ORDER BY \`year_month\`, channel_key
+    `, [`${latestYear}-01-01`, `${nextYear}-01-01`]) : queryRows(connection, `
       SELECT cost.\`year_month\`, c.channel_key, ROUND(SUM(cost.refund_amount_yuan) / 10000, 2) AS refund_wan
       FROM biz_channel_cost_monthly cost
       JOIN dim_channel c ON c.channel_id = cost.channel_id
@@ -1210,7 +1228,7 @@ export async function buildDashboardSnapshot(connection) {
              COALESCE(v.standard_price_yuan, AVG(NULLIF(o.price_amount_yuan, 0)), 0) AS standard_price_yuan,
              ${STAFF_OR_FACT_CHANNEL_KEY_SQL} AS channel_key,
              COUNT(*) AS units,
-             ROUND(SUM(o.sales_amount_yuan) / 10000, 2) AS recovered_wan,
+             ROUND(SUM(o.net_amount_yuan) / 10000, 2) AS recovered_wan,
              NULL AS mom_rate,
              0 AS current_renewal_due,
              0 AS current_renewal_paid
@@ -1220,7 +1238,8 @@ export async function buildDashboardSnapshot(connection) {
       LEFT JOIN dim_department d ON d.department_id = s.department_id
       LEFT JOIN dim_channel c ON c.channel_id = o.channel_id
       WHERE DATE_FORMAT(o.stat_date, '%Y-%m') = ?
-      GROUP BY v.version_key, version_name, channel_key
+      GROUP BY v.version_key, COALESCE(v.version_name, o.version_name_raw, '未标记版本'),
+               v.standard_price_yuan, ${STAFF_OR_FACT_CHANNEL_KEY_SQL}
       ORDER BY recovered_wan DESC
     `, [latestMonth]) : queryRows(connection, `
       SELECT v.version_key, v.version_name, v.standard_price_yuan, c.channel_key,
@@ -1447,7 +1466,8 @@ export async function buildDashboardSnapshot(connection) {
         CAST(YEAR(o.stat_date) AS CHAR) AS \`year\`,
         COALESCE(${STAFF_OR_FACT_CHANNEL_KEY_SQL}, '') AS channelKey,
         COALESCE(o.order_type, 'self_operated') AS orderType,
-        ROUND(o.sales_amount_yuan / 10000, 2) AS \`value\`,
+        ROUND(o.net_amount_yuan / 10000, 2) AS \`value\`,
+        ROUND(o.sales_amount_yuan / 10000, 2) AS salesAmount,
         o.order_no AS orderNo,
         COALESCE(s.staff_name, o.sales_name_raw, '') AS salesName,
         COALESCE(o.customer_name, '') AS customerName,
@@ -1457,7 +1477,10 @@ export async function buildDashboardSnapshot(connection) {
         ROUND(COALESCE(o.price_amount_yuan, 0) / 10000, 2) AS price,
         ROUND(COALESCE(o.refund_amount_yuan, 0) / 10000, 2) AS refund,
         COALESCE(o.channel_name_raw, c.channel_name, ${CHANNEL_NAME_BY_KEY_SQL(STAFF_OR_FACT_CHANNEL_KEY_SQL)}, '') AS channelName,
-        COALESCE(o.remark, '') AS remark
+        COALESCE(o.remark, '') AS remark,
+        COALESCE(o.other_note, '') AS otherNote,
+        COALESCE(o.source_sheet, '') AS sourceSheet,
+        o.source_row_no AS sourceRowNo
       FROM fact_revenue_order o
       LEFT JOIN dim_staff s ON s.staff_id = o.staff_id
       LEFT JOIN dim_department d ON d.department_id = s.department_id
@@ -1515,6 +1538,7 @@ export async function buildDashboardSnapshot(connection) {
   return mapDashboardRowsToSnapshot({
     latestMonth,
     previousMonth,
+    useRevenueOrders,
     channels,
     salesMemberMonthly,
     revenueDaily,

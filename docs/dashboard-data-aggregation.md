@@ -1,9 +1,11 @@
 # Dashboard Data Aggregation
 
-更新时间: 2026-07-14 13:05:00 CST
+更新时间: 2026-07-14 13:18:00 CST
 更新内容:
-- 新增自营收入订单级事实表 `fact_revenue_order`，用于承接 2026 年 1-4 月真实 Excel 明细中的日期、销售、客户、企微群、福客系统负责人、版本、订单号、销售实际业绩、价格、退款、备注和渠道。
-- 当 `fact_revenue_order` 在当前业务年份有数据时，回款、渠道回款、人员级回款下钻、版本销售和回款弹窗订单明细优先由订单级真实表聚合；旧 `fact_revenue_daily` / `fact_sales_member_monthly` 继续作为无订单表或无当年订单数据时的兜底。
+- 新增 `server/importSelfOperatedRevenue.js`，按 1-4 月月表导入 565 行，并用汇总表补齐线索来源；人员、版本、来源维表和导入批次在同一事务中维护。
+- 自营收入统一按 `net_amount_yuan = sales_amount_yuan - refund_amount_yuan` 统计。业务月份默认取最新真实事实月份，不再因当前月份晚于 Excel 数据月份而显示空下钻。
+- 线索来源通过 `channel_source_id -> dim_channel_source` 保存，组织销售渠道继续使用 `channel_id`；回款下钻展示客户、企微群、负责人、销售业绩、价格、退款、净回款、来源、其他说明、备注和 Excel 来源行。
+- `--replace-demo-data` 清空演示事实、目标和成本数据；售前试用演示快照默认不再进入 live 页面。
 
 更新时间: 2026-07-14 11:40:00 CST
 更新内容:
@@ -82,20 +84,20 @@ Update content: Cost maintenance adds `biz_channel_cost_monthly.refund_amount_yu
 
 `/api/dashboard-data` 不实时调用外部算力接口，避免首页等待 token 服务。dashboard 快照就绪后，`App` 会在后台调用 `/api/compute-data` 覆盖 `computeOverview`、`computeUsageTrend`、`computeVersionConsumption`、`computeUsageDistribution`、`computeCustomerRows` 和 `computeResourceHealth`；随后按 `/api/compute-customers?page=&pageSize=200` 分页拉取客户明细并按手机号增量合并。算力页只接收 token 同步状态和客户同步状态，用骨架屏/进度文案展示后台加载进度。
 
-业务月份 `latestMonth` 默认跟随北京时间当前自然月；如需排查历史月份，可通过 `DASHBOARD_MONTH_OVERRIDE=YYYY-MM` 显式覆盖。当前自然月无法解析时，自动月份回退路径会优先取 `fact_revenue_daily.stat_date` 最新年月，再与 `fact_sales_member_monthly.year_month` 比较兜底。
+业务月份 `latestMonth` 默认取 `fact_revenue_order`、`fact_revenue_daily` 和 `fact_sales_member_monthly` 中最新的真实事实月份；可通过 `DASHBOARD_MONTH_OVERRIDE=YYYY-MM` 显式覆盖。
 
 前端 KPI 默认日期范围跟随浏览器运行时当前自然月的第一天到最后一天；完整自然月范围按 100% 口径计算，手动查看历史完整月份时不会因月份天数差异缩放 KPI。
 
 ## 经营目标与回款
 
-- 自营收入真实明细：`scripts/create_self_operated_revenue_tables.sql` 创建 `fact_revenue_order`。Excel 导入时需要把原始列映射为：`stat_date`（日期）、`sales_name_raw` / `staff_id`（销售）、`customer_name`（客户名称）、`wechat_group_name`（企微客户群群名）、`system_owner_name`（福客系统负责人）、`version_name_raw` / `version_id`（版本）、`order_no`（订单号）、`sales_amount_yuan`（销售实际业绩）、`price_amount_yuan`（价格）、`refund_amount_yuan`（退款）、`remark`（备注【客户潜力/要求/跟进】）、`channel_name_raw` / `channel_id`（渠道）。可先保留 raw 字段，再按姓名、版本名和渠道名映射到维表 ID。
-- 本月回款、年度累计回款、月趋势实际值：前端文案仍显示“回款”；当 `fact_revenue_order` 当前年份有数据时，优先使用 `fact_revenue_order.sales_amount_yuan` 聚合，并按 `staff_id -> dim_staff.department_id -> dim_department.channel_id` 补齐缺失渠道；否则使用 `fact_revenue_daily.recovered_amount_yuan`，再按年月+渠道扣减 `biz_channel_cost_monthly.refund_amount_yuan` 后聚合。
+- 自营收入真实明细：`scripts/create_self_operated_revenue_tables.sql` 创建 `fact_revenue_order`。`server/importSelfOperatedRevenue.js` 读取月表中的日期、销售、客户、企微群、福客系统负责人、版本、订单号、销售实际业绩、价格、退款、备注和其他说明，并以 `1-4月` 汇总表的同序行补齐线索来源。图片备注公式无法转成可搜索文本，保留来源工作表和行号供回查。
+- 本月回款、年度累计回款、月趋势实际值：订单级真实表使用 `net_amount_yuan` 聚合；旧日级表仅在没有订单数据时兜底并按原有退款表扣减。
 - `/api/dashboard-data` 同时返回 `kpi.monthRefund` 和 `kpi.yearRefund`，月度和年度主卡在回款大数字右侧分别显示本月退款金额、年度累计退款金额。
 - 当 `fact_revenue_daily` 没有数据时，回退使用 `fact_sales_member_monthly.recovered_amount_yuan`。当订单级真实表启用时，渠道二级明细恢复人员级收入跟踪：`salesMemberRows` 按 `staff_id` 汇总本月/年度目标和实际回款，不再只展示部门级行。
 - 本月目标、年度目标、月趋势目标：使用 `biz_target_monthly.target_amount_yuan`，仅取 `staff_id IS NULL` 的部门级目标（目标维护改为按部门录入，历史人员级目标保留在库但不再进入统计）。
 - 渠道目标：`biz_target_monthly.channel_id` 直接关联 `dim_channel` 按渠道汇总，仅取 `staff_id IS NULL` 的部门级目标。
 - 渠道二级明细：本月/年度目标来自 `biz_target_monthly`（按部门），实际回款优先来自 `fact_revenue_daily.department_id` 聚合；旧库没有该列时通过 `fact_revenue_daily.staff_id -> dim_staff.department_id` 解析组织。明细粒度由原来的“销售人员”改为“部门”，按部门目标完成率降序排列。
-- 回款二级弹窗订单表：`/api/dashboard-data.detailRows.revenueOrders` 返回订单级行，包含销售、客户 / 企微群、福客系统负责人、版本、订单号、销售实际业绩、价格、退款、渠道和备注；前端在回款弹窗中按当前渠道和年/月/日筛选展示，最多显示最近 80 条。
+- 回款二级弹窗订单表：`/api/dashboard-data.detailRows.revenueOrders` 返回订单级行，包含销售、客户、企微群、福客系统负责人、版本、订单号、销售实际业绩、价格、退款、净回款、线索来源、其他说明、备注和来源行；前端按渠道和年/月/日筛选展示最近 80 条。
 - 经营总览趋势图日视图：`dailyRevenueTrend` 只在当前业务月范围内按天聚合 `fact_revenue_daily.recovered_amount_yuan`，不做退款扣减，不展示目标/完成率。
 - 经营总览趋势图年视图：`yearlyTrend` 按自然年聚合 `fact_revenue_daily` 全部历史回款，与 `biz_target_monthly`（`staff_id IS NULL`，按年份前 4 位分组）目标配对；数据库只有当年数据时只返回一条记录。
 

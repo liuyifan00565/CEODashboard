@@ -1,7 +1,7 @@
 # 阿里云 AMD64 Docker 离线部署说明
 
-更新时间: 2026-07-14 13:05:00 CST
-更新内容: 交付包新增自营收入订单级事实表迁移，安装和升级时自动补齐真实 Excel 明细承接表。
+更新时间: 2026-07-14 13:18:00 CST
+更新内容: 补充服务器自营收入 Excel 导入、演示数据清理、重启和接口验收流程。
 
 ## 1) 打包
 
@@ -48,6 +48,19 @@ deploy_artifacts/ceodashboard-aliyun-amd64-deploy-YYYYMMDD-HHMMSS.tar.gz
 - `docker/migrations/20260709_compute_token_usage_tables.sql`：升级时补齐算力表结构
 - `docker/migrations/20260713_cost_components.sql`：升级时拆分渠道月运营成本与人力成本，并修复渠道月份唯一键
 - `docker/migrations/20260714_self_operated_revenue_tables.sql`：升级时补齐自营收入订单级事实表，用于导入真实 Excel 明细
+
+## 2.1) 导入真实自营收入 Excel
+
+完成 `install.sh` 或 `update.sh` 后，在部署目录执行：
+
+```bash
+docker cp "/path/to/2026年1-4月自营收入明细.xlsx" ceodashboard-cockpit:/tmp/self-operated-revenue.xlsx
+docker exec ceodashboard-cockpit node server/importSelfOperatedRevenue.js /tmp/self-operated-revenue.xlsx --replace-demo-data
+docker restart ceodashboard-cockpit
+curl -fsS http://127.0.0.1:5174/api/dashboard-data
+```
+
+首次切换真实数据使用 `--replace-demo-data`，它会在同一事务中清理演示事实、目标和成本表。后续更新同类工作簿时可不带该参数；默认替换旧的自营收入订单，避免重复累计。导入结果会输出总行数、缺失日期行数、销售额、退款额、净回款、人员和线索来源。
 
 ## 3) 必填环境变量
 

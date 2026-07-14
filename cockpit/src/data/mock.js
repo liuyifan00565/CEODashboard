@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 18:05:00 CST
- 更新内容: 运行时快照接收 detailRows.revenueOrders，并新增 getRevenueOrderRows 供回款二级弹窗展示订单级真实明细。
+ 更新时间: 2026-07-14 13:18:00 CST
+ 更新内容: 回款二级弹窗订单上限提高到 500 条，完整展示真实月份内的自营收入明细。
 */
 /*
  更新时间: 2026-07-14 17:20:00 CST
@@ -882,7 +882,7 @@ function aggregateDetailSeries(rows, { salesKeys, dim = 'month', valueField = 'v
     })));
 }
 
-export function getRevenueOrderRows({ salesKeys, dim = 'month', selectedLabel = '', limit = 80 } = {}) {
+export function getRevenueOrderRows({ salesKeys, dim = 'month', selectedLabel = '', limit = 500 } = {}) {
   const safeKeys = normalizeSalesKeys(salesKeys);
   const selectedKey = (() => {
     if (!selectedLabel) return '';
