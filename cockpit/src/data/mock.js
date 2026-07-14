@@ -3,6 +3,10 @@
  更新内容: 交付协同工单区改为待办与风险管理口径，避免复用客户阶段的风险和闭环户数。
 */
 /*
+ 更新时间: 2026-07-14 11:45:00 CST
+ 更新内容: 交付协同汇总补充顶部指标 summary，支持交付页移除低价值副标题后继续展示关键指标。
+*/
+/*
  更新时间: 2026-07-14 11:12:00 CST
  更新内容: 交付协同数据新增问题处理中二级明细，覆盖问题客户、金额影响、责任归属和闭环动作。
 */
@@ -1105,6 +1109,11 @@ export function getDeliveryCollaborationSummary() {
   const rdOrderCount = Math.max(1, Math.round(riskCount * 0.35));
 
   return {
+    deliverySummary: {
+      people: summary.people,
+      averageCountPerPerson: summary.averageCountPerPerson,
+      averageValuePerPerson: summary.averageValuePerPerson,
+    },
     flowStages: [
       { key: 'trial', name: '售前试用', count: trialCount, ...splitStageSource(trialCount, 0.5, 0.32), note: '试用客户池' },
       { key: 'formal', name: '正式交付', count: formalCount, ...splitStageSource(formalCount), note: '合同回款后进入' },

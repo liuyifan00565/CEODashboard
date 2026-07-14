@@ -1760,6 +1760,11 @@ test('extends delivery page into an operations collaboration dashboard', () => {
   assert.doesNotMatch(mockSource, /label: '已闭环工单'/);
 });
 
+test('keeps delivery header focused without the low-value subtitle copy', () => {
+  assert.doesNotMatch(deliveryPanelSource, /className="dlv-sub"/);
+  assert.doesNotMatch(deliveryPanelSource, /deliveryTargetCopy/);
+});
+
 test('opens a CEO-focused issue detail view from delivery problem stage', () => {
   assert.match(deliveryPanelSource, /useState/);
   assert.match(deliveryPanelSource, /openIssueDetail/);

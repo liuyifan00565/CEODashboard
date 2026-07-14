@@ -9,28 +9,18 @@
 /* 更新时间: 2026-07-03 13:05:00  更新内容: 交付看板进度条 fill 改用 progressGradient 返回的低饱和冷色线性渐变。 */
 /* 更新时间: 2026-06-29 10:45:53  更新内容: 新增交付看板，展示实施工程师交付人效、单价、金额价值和目标完成情况。 */
 /* 更新时间: 2026-07-14 11:33:00 CST  更新内容: 问题处理中二级弹层改用 Portal 挂载到 body，避免被首页交付卡片外层样式覆盖。 */
+/* 更新时间: 2026-07-14 11:45:00 CST  更新内容: 移除交付页顶部低价值副标题，只保留主标题和下方指标卡。 */
 /* 更新时间: 2026-07-14 11:12:00 CST  更新内容: 交付页新增问题处理中二级明细弹层，展示问题客户、金额影响、责任归属、处理时长和闭环动作。 */
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { getDeliveryRows, getDeliverySummary, getDeliveryCollaborationSummary } from '../data/mock';
+import { getDeliveryRows, getDeliveryCollaborationSummary } from '../data/mock';
 import { progressGradient } from '../lib/format';
 import { useThemeTokens } from '../lib/theme';
 import './DeliveryPanel.css';
 
-function deliveryTargetCopy(summary) {
-  if (!summary.people) return '暂无交付人员';
-  if (!summary.configuredTargetPeople) return '目标未配置';
-  const target = Number(summary.targetCount) || 0;
-  const targetText = Number.isInteger(target) ? target : target.toFixed(1);
-  return summary.allTargetsConfigured
-    ? `${targetText} 单/月目标`
-    : `部分目标未配置 · ${targetText} 单/月均目标`;
-}
-
 export default function DeliveryPanel() {
   const tokens = useThemeTokens();
   const rows = getDeliveryRows();
-  const summary = getDeliverySummary();
   const collaboration = getDeliveryCollaborationSummary();
   const [openIssueDetail, setOpenIssueDetail] = useState(false);
   const highRiskTodoCount = collaboration.workOrders.find((item) => item.key === 'highRisk')?.value ?? 0;
@@ -41,22 +31,21 @@ export default function DeliveryPanel() {
       <header className="dlv-head">
         <div>
           <h3 className="dlv-title">交付与运营协同</h3>
-          <span className="dlv-sub">交付流程 · 工单责任 · 权限成本 · {deliveryTargetCopy(summary)}</span>
         </div>
       </header>
 
       <div className="dlv-summary">
         <div className="dlv-summary-cell">
           <span>交付人员</span>
-          <b>{summary.people}<i>人</i></b>
+          <b>{collaboration.deliverySummary.people}<i>人</i></b>
         </div>
         <div className="dlv-summary-cell">
           <span>人均交付单数</span>
-          <b>{summary.averageCountPerPerson}<i>单</i></b>
+          <b>{collaboration.deliverySummary.averageCountPerPerson}<i>单</i></b>
         </div>
         <div className="dlv-summary-cell">
           <span>人均金额价值</span>
-          <b>{summary.averageValuePerPerson}<i>万</i></b>
+          <b>{collaboration.deliverySummary.averageValuePerPerson}<i>万</i></b>
         </div>
         <div className="dlv-summary-cell">
           <span>高风险待办</span>
