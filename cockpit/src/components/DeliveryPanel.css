@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 15:47:08 CST
- 更新内容: 月度对比带改为六项微型方向坡度图，复用既有语义色与玻璃体系并增加低干扰入场动效。
+ 更新时间: 2026-07-14 18:03:05 CST
+ 更新内容: 合并六项月度微型方向坡度图，以及渠道与团队行的低饱和选中态和键盘焦点反馈。
 */
 /*
  更新时间: 2026-07-14 15:30:13 CST
@@ -785,12 +785,26 @@
   min-width: 0;
   padding: 11px 8px;
   border-bottom: 1px solid var(--line);
-  transition: background .16s ease;
+  transition: background .16s ease, box-shadow .16s ease;
+}
+
+.dlv-conversion-row[role="button"] {
+  cursor: pointer;
 }
 
 .dlv-conversion-row:hover,
 .dlv-staff-row:hover {
   background: var(--glass-cell-hover);
+}
+
+.dlv-conversion-row.is-selected {
+  background: var(--glass-cell-hover);
+  box-shadow: inset 3px 0 0 var(--accent-mid);
+}
+
+.dlv-conversion-row:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: -2px;
 }
 
 .dlv-detail-row__top,

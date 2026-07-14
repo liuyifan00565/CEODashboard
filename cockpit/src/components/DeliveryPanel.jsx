@@ -1,6 +1,6 @@
 /*
- 更新时间: 2026-07-14 15:47:08 CST
- 更新内容: 将六项月度文字对比升级为微型方向坡度图，保留精确环比、业务语义、月份端点与无障碍说明。
+ 更新时间: 2026-07-14 18:03:05 CST
+ 更新内容: 合并六项月度微型方向坡度图，以及渠道与团队行选择联动右侧配置人员完成情况。
 */
 /*
  更新时间: 2026-07-14 15:30:13 CST
@@ -32,7 +32,6 @@ import {
   DEFAULT_PRESALE_TRIAL_MONTH,
   DELIVERY_CAPACITY_LIMIT,
   PRESALE_TRIAL_MONTH_OPTIONS,
-  filterConversionRows,
   loadPresaleTrialDashboard,
 } from '../data/presaleTrialDelivery';
 import { useThemeTokens } from '../lib/theme';
@@ -362,9 +361,27 @@ export default function DeliveryPanel({ dataLoader = DEFAULT_DELIVERY_LOADER }) 
     setMonthKey(nextMonthKey);
   }
 
-  const selectedChannelName = snapshot?.distribution?.find((item) => item.key === selectedChannel)?.name ?? '';
+  function toggleSelectedChannel(channelKey) {
+    setSelectedChannel((current) => current === channelKey ? null : channelKey);
+  }
+
+  function handleConversionRowKeyDown(event, channelKey) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleSelectedChannel(channelKey);
+    }
+  }
+
+  const selectedChannelRow = snapshot?.distribution?.find((item) => item.key === selectedChannel);
+  const selectedChannelName = selectedChannelRow?.name ?? '';
   const allConversionRows = snapshot?.conversion?.[conversionDimension] ?? [];
-  const conversionRows = filterConversionRows(allConversionRows, selectedChannel);
+  const conversionRows = allConversionRows;
+  const selectedStaffLoads = selectedChannel
+    ? snapshot?.staffLoadsByChannel?.[selectedChannel] ?? []
+    : [];
+  const selectedAssignedCount = selectedStaffLoads
+    .reduce((sum, row) => sum + Number(row.currentAssigned || 0), 0);
+  const selectedUnassignedOwners = selectedChannelRow?.unassignedOwners ?? 0;
   const conversionCohortTotal = allConversionRows.reduce((sum, row) => sum + Number(row.cohortStarted || 0), 0);
   const conversionClosedTotal = allConversionRows.reduce((sum, row) => sum + Number(row.closedDeals || 0), 0);
   const capacityLimit = snapshot?.capacityLimit || DELIVERY_CAPACITY_LIMIT;
@@ -549,9 +566,17 @@ export default function DeliveryPanel({ dataLoader = DEFAULT_DELIVERY_LOADER }) 
                 </header>
 
                 {conversionRows.length ? (
-                  <div className="dlv-conversion-list" role="list" aria-label="渠道或团队成熟队列转化明细">
+                  <div className="dlv-conversion-list" aria-label="渠道或团队成熟队列转化明细">
                     {conversionRows.map((row) => (
-                      <article className="dlv-conversion-row" role="listitem" key={row.key}>
+                      <article
+                        className={`dlv-conversion-row${row.channelKey === selectedChannel ? ' is-selected' : ''}`}
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={row.channelKey === selectedChannel}
+                        onClick={() => toggleSelectedChannel(row.channelKey)}
+                        onKeyDown={(event) => handleConversionRowKeyDown(event, row.channelKey)}
+                        key={row.key}
+                      >
                         <div className="dlv-detail-row__top">
                           <div className="dlv-detail-row__identity">
                             <b>{row.name}</b>
@@ -573,15 +598,21 @@ export default function DeliveryPanel({ dataLoader = DEFAULT_DELIVERY_LOADER }) 
               <section className="dlv-operation-pane dlv-operation-pane--staff" aria-labelledby="delivery-staff-title">
                 <header className="dlv-operation-pane-head">
                   <div>
-                    <h4 id="delivery-staff-title">配置人员负载</h4>
-                    <p>已分配 {formatInt(snapshot.kpis.currentTrials - snapshot.unassignedOwners)}个 · 未配置 {formatInt(snapshot.unassignedOwners)}个</p>
+                    <h4 id="delivery-staff-title">配置人员完成情况</h4>
+                    <p>
+                      {selectedChannelName
+                        ? `${selectedChannelName} · 已分配 ${formatInt(selectedAssignedCount)}个 · 未配置 ${formatInt(selectedUnassignedOwners)}个`
+                        : '请先从左侧选择渠道'}
+                    </p>
                   </div>
                 </header>
 
-                {snapshot.staffLoads.length ? (
+                {!selectedChannel ? (
+                  <EmptyBlock text="点击左侧渠道查看对应人员完成情况" />
+                ) : selectedStaffLoads.length ? (
                   <>
-                    <div className="dlv-staff-list" role="list" aria-label="配置人员负载明细">
-                      {snapshot.staffLoads.map((row) => (
+                    <div className="dlv-staff-list" role="list" aria-label="配置人员完成情况明细">
+                      {selectedStaffLoads.map((row) => (
                         <article className="dlv-staff-row" role="listitem" key={row.key}>
                           <div className="dlv-detail-row__top">
                             <div className="dlv-detail-row__identity">
@@ -612,7 +643,7 @@ export default function DeliveryPanel({ dataLoader = DEFAULT_DELIVERY_LOADER }) 
                     </div>
                     <p className="dlv-load-note">负载状态基于当前负责客户数占个人建议上限（14单）的比例计算</p>
                   </>
-                ) : <EmptyBlock text="该月暂无配置人员负载数据" />}
+                ) : <EmptyBlock text="该渠道暂无配置人员完成情况" />}
               </section>
             </div>
           </section>

@@ -1,10 +1,16 @@
 # 阿里云 AMD64 Docker 离线部署说明
 
+更新时间: 2026-07-14 18:55:42 CST
+更新内容: 完整性迁移同步建立年度回款选源、公司月度分摊、统一退款和有效目标视图；保持 MySQL 就绪、停止旧 cockpit、迁移、再启动应用的顺序。
+
 更新时间: 2026-07-14 17:57:00 CST
 更新内容: 安装与升级在数据库迁移前停止旧 cockpit，防止迁移期间继续写库，迁移成功后再启动应用。
 
 更新时间: 2026-07-14 17:09:11 CST
 更新内容: 交付包新增数据库完整性迁移，并调整升级顺序为 MySQL 就绪、执行迁移、再启动新版应用。
+
+更新时间: 2026-07-14 16:30:00 CST
+更新内容: 公司月度业绩导入限定为 4-6 月明细表和现有四渠道，不读取 Sheet1、其它渠道或目标。
 
 更新时间: 2026-07-14 13:18:00 CST
 更新内容: 补充服务器自营收入 Excel 导入、演示数据清理、重启和接口验收流程。
@@ -53,8 +59,9 @@ deploy_artifacts/ceodashboard-aliyun-amd64-deploy-YYYYMMDD-HHMMSS.tar.gz
 - `docker/db-init/ceo_dashboard_full.sql`：MySQL 空卷首次初始化数据
 - `docker/migrations/20260709_compute_token_usage_tables.sql`：升级时补齐算力表结构
 - `docker/migrations/20260713_cost_components.sql`：升级时拆分渠道月运营成本与人力成本，并修复渠道月份唯一键
-- `docker/migrations/20260714_database_integrity.sql`：升级时建立统一毛回款聚合、部门月度覆盖、迁移台账、自然唯一键和应用写入表自增主键
 - `docker/migrations/20260714_self_operated_revenue_tables.sql`：升级时补齐自营收入订单级事实表，用于导入真实 Excel 明细
+- `docker/migrations/20260714_revenue_monthly_tables.sql`：升级时补齐公司级月度回款事实表
+- `docker/migrations/20260714_database_integrity.sql`：在其它建表迁移后执行，建立年度回款选源、公司月度金额守恒分摊、统一退款、父组织优先的有效目标、部门月度覆盖、迁移台账、自然唯一键和应用写入表自增主键
 
 ## 2.1) 导入真实自营收入 Excel
 
@@ -68,6 +75,17 @@ curl -fsS http://127.0.0.1:5174/api/dashboard-data
 ```
 
 首次切换真实数据使用 `--replace-demo-data`，它会在同一事务中清理演示事实、目标和成本表。后续更新同类工作簿时可不带该参数；默认替换旧的自营收入订单，避免重复累计。导入结果会输出总行数、缺失日期行数、销售额、退款额、净回款、人员和线索来源。
+
+公司级月度汇总在订单明细之后导入：
+
+```bash
+docker cp "/path/to/福客2026业绩(2026.04-06).xlsx" ceodashboard-cockpit:/tmp/company-revenue.xlsx
+docker exec ceodashboard-cockpit node server/importCompanyRevenue.js /tmp/company-revenue.xlsx
+docker restart ceodashboard-cockpit
+curl -fsS http://127.0.0.1:5174/api/dashboard-data
+```
+
+该导入幂等替换同名工作簿事实，只读取 `福客2026年4-6月业绩` 工作表。`直营`、`代理`、`其中线下：华南`、`其中线下：华东` 分别映射到线上、代理、华南线下、华东线下；忽略 `Sheet1`、线下父级合计、代理细分、南棠渠道、特殊渠道和目标。KPI、月/年趋势和渠道结构优先使用公司级月度数据；订单明细保留用于人员下钻。
 
 ## 3) 必填环境变量
 
@@ -126,7 +144,7 @@ bash update.sh /opt/ceodashboard
 - 校验 `.env` 必填项，禁止示例密码上线。
 - 只启动 MySQL，并等待 `mysqladmin ping` 就绪。
 - 停止旧 `cockpit` 容器，确保迁移期间没有本项目应用继续写库。
-- 按文件名顺序执行 `docker/migrations/*.sql`，不删除 MySQL 数据卷；数据库完整性迁移可重复执行并记录到 `schema_migrations`。
+- 先按文件名顺序执行其它 `docker/migrations/*.sql`，最后执行 `20260714_database_integrity.sql`，不删除 MySQL 数据卷；数据库完整性迁移可重复执行并记录到 `schema_migrations`。
 - 数据库迁移成功后再启动或切换到新版 `cockpit` 容器。
 - 等待 `http://127.0.0.1:${COCKPIT_PORT}/api/health` 最多 120 秒。
 

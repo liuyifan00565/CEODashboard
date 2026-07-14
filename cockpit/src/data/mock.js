@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 16:17:20 CST
+ 更新内容: 算力用量分析同步后用客户记录数和在用账户数覆盖首页本月/今日开户数，保持首页开户口径和算力页一致。
+*/
+/*
  更新时间: 2026-07-14 15:42:37 CST
  更新内容: 数据维护侧边栏顺序调整为目标维护、组织维护、成本维护、数据更新看板。
 */
@@ -266,6 +270,22 @@ export const OPENING_ACCOUNT_METRICS = [
   { key: 'month-openings', title: '本月开户数', metric: 'monthOpenings', value: 126, unit: '户', delta: 8.2, compareLabel: '较上月', keywords: ['开户', '本月开户数'] },
   { key: 'today-openings', title: '今日开户数', metric: 'todayOpenings', value: 9, unit: '户', delta: 12.5, compareLabel: '较昨日', keywords: ['开户', '今日开户数'] },
 ];
+
+function getComputeZeroUsageCount(distribution = []) {
+  const zeroUsageBucket = distribution.find((item) => String(item.name || '').includes('=0'));
+  return round0(zeroUsageBucket?.value);
+}
+
+function syncOpeningMetricsFromComputeSnapshot(overview, distribution = []) {
+  const monthValue = overview?.customerCount ?? overview?.totalCustomers;
+  if (monthValue == null) return;
+  const customerCount = round0(monthValue);
+  const activeAccountCount = Math.max(customerCount - getComputeZeroUsageCount(distribution), 0);
+  OPENING_ACCOUNT_METRICS.forEach((metric) => {
+    if (metric.key === 'month-openings') metric.value = customerCount;
+    if (metric.key === 'today-openings') metric.value = activeAccountCount;
+  });
+}
 
 // ===== 销售明细（4 个，单位：万元）=====
 // 线下分华南/华东战区；城市仅作背景。
@@ -1674,6 +1694,10 @@ export function applyDashboardDataSnapshot(snapshot) {
 
   if (Array.isArray(snapshot.computeUsageDistribution)) {
     replaceArray(COMPUTE_USAGE_DISTRIBUTION, mergeColors(snapshot.computeUsageDistribution, COMPUTE_USAGE_DISTRIBUTION));
+  }
+
+  if (snapshot.computeOverview) {
+    syncOpeningMetricsFromComputeSnapshot(COMPUTE_OVERVIEW, COMPUTE_USAGE_DISTRIBUTION);
   }
 
   if (Array.isArray(snapshot.computeCustomerRows)) {

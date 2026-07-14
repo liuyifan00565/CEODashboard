@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 18:21:07 CST
+ 更新内容: 自营订单导入后在同一事务内按库内有日期订单重算线上渠道月退款，且不覆盖运营/人力成本。
+*/
+/*
  更新时间: 2026-07-14 17:09:11 CST
  更新内容: 自营收入导入改由 MySQL 自增生成维表和批次主键，彻底移除 MAX(id)+1 抢号。
 */
@@ -253,6 +257,42 @@ function canonicalVersion(rawName) {
   return VERSION_RULES.find((rule) => rule.test.test(rawName ?? '')) ?? null;
 }
 
+function datedYears(rows) {
+  return [...new Set(rows
+    .map((row) => /^\d{4}-\d{2}-\d{2}$/.test(String(row.stat_date ?? '')) ? row.stat_date.slice(0, 4) : null)
+    .filter(Boolean))].sort();
+}
+
+async function syncOnlineRefunds(connection, channelId, years) {
+  if (!years.length) return;
+  const placeholders = years.map(() => '?').join(', ');
+  await connection.execute(
+    `UPDATE biz_channel_cost_monthly
+     SET refund_amount_yuan = 0
+     WHERE channel_id = ? AND LEFT(\`year_month\`, 4) IN (${placeholders})`,
+    [channelId, ...years],
+  );
+  const refundRows = await queryRows(connection, `
+    SELECT DATE_FORMAT(stat_date, '%Y-%m') AS \`year_month\`, channel_id,
+           ROUND(SUM(COALESCE(refund_amount_yuan, 0)), 2) AS refund_amount_yuan
+    FROM fact_revenue_order
+    WHERE stat_date IS NOT NULL
+      AND channel_id = ?
+      AND YEAR(stat_date) IN (${placeholders})
+    GROUP BY DATE_FORMAT(stat_date, '%Y-%m'), channel_id
+    ORDER BY \`year_month\`
+  `, [channelId, ...years]);
+  for (const row of refundRows) {
+    await connection.execute(
+      `INSERT INTO biz_channel_cost_monthly (
+         \`year_month\`, channel_id, operations_amount_yuan, labor_amount_yuan, refund_amount_yuan
+       ) VALUES (?, ?, 0, NULL, ?)
+       ON DUPLICATE KEY UPDATE refund_amount_yuan = VALUES(refund_amount_yuan)`,
+      [row.year_month, row.channel_id, row.refund_amount_yuan],
+    );
+  }
+}
+
 async function ensureVersions(connection, rawNames) {
   const mapping = new Map();
   for (const rawName of rawNames) {
@@ -276,11 +316,13 @@ export async function persistSelfOperatedRevenue(connection, parsed, { replaceEx
   await ensureImportColumns(connection);
   await connection.beginTransaction();
   try {
+    const affectedYears = datedYears(parsed.rows);
     const clearedDemoTables = replaceDemoData ? await clearDemoData(connection) : [];
     if (replaceExisting) await connection.execute('DELETE FROM fact_revenue_order');
 
     const channelRows = await queryRows(connection, 'SELECT channel_id FROM dim_channel WHERE channel_key = ? AND is_enabled = 1 LIMIT 1', [ONLINE_CHANNEL_KEY]);
     const channelId = channelRows[0]?.channel_id ?? null;
+    if (affectedYears.length && channelId == null) throw new Error('缺少已启用的线上渠道，无法同步自营订单退款');
     await connection.execute("DELETE FROM dim_channel_source WHERE source_name IN ('0', '#N/A') AND source_code LIKE 'self-%'");
     const staffMap = await ensureStaff(connection, parsed.summary.staffNames);
     const sourceMap = await ensureSources(connection, parsed.summary.sourceNames, channelId);
@@ -317,6 +359,8 @@ export async function persistSelfOperatedRevenue(connection, parsed, { replaceEx
         String(batchId), row.source_row_hash,
       ]);
     }
+
+    await syncOnlineRefunds(connection, channelId, affectedYears);
 
     await connection.commit();
     return { batchId, importedRows: parsed.rows.length, clearedDemoTables, ...parsed.summary };

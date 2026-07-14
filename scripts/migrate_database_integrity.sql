@@ -1,3 +1,9 @@
+-- 更新时间: 2026-07-14 18:32:40 CST
+-- 更新内容: 新增父组织优先的有效目标视图；公司月度 total 为显式零值且无渠道时仍生成未归属行。
+-- 更新时间: 2026-07-14 18:25:00 CST
+-- 更新内容: 公司月度事实补充层级/渠道校验与月度作用域唯一键；按自然年统一三类回款来源，并建立金额守恒分摊及统一退款视图。
+-- 更新时间: 2026-07-14 18:13:24 CST
+-- 更新内容: 按自然年统一公司月度、真实订单与日报覆盖三类回款来源，并建立金额守恒的公司月度渠道分摊及统一退款视图。
 -- 更新时间: 2026-07-14 17:09:11 CST
 -- 更新内容: 建立统一毛回款聚合层、部门月度覆盖表、数据库迁移台账，并将应用写入表主键改为 BIGINT AUTO_INCREMENT。
 
@@ -209,6 +215,92 @@ BEGIN
       ADD UNIQUE KEY uq_target_month_department (`year_month`, department_target_scope_id);
   END IF;
 
+  IF EXISTS (
+    SELECT 1
+    FROM fact_revenue_channel_monthly
+    WHERE NOT (
+      (record_level = 'total' AND channel_id IS NULL)
+      OR (record_level = 'channel' AND channel_id IS NOT NULL)
+    )
+    LIMIT 1
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'fact_revenue_channel_monthly 存在非法 record_level/channel_id 组合，请先修复后再迁移';
+  END IF;
+
+  IF EXISTS (
+    SELECT `year_month`, record_level,
+           CASE WHEN record_level = 'total' THEN 0 ELSE channel_id END AS scope_channel_id
+    FROM fact_revenue_channel_monthly
+    GROUP BY `year_month`, record_level,
+             CASE WHEN record_level = 'total' THEN 0 ELSE channel_id END
+    HAVING COUNT(*) > 1
+    LIMIT 1
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'fact_revenue_channel_monthly 存在重复月份层级渠道事实，请先修复后再迁移';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'fact_revenue_channel_monthly'
+      AND COLUMN_NAME = 'scope_channel_id'
+  ) THEN
+    ALTER TABLE fact_revenue_channel_monthly
+      ADD COLUMN scope_channel_id BIGINT
+      GENERATED ALWAYS AS (CASE WHEN record_level = 'total' THEN 0 ELSE channel_id END) VIRTUAL
+      COMMENT '月度层级唯一键作用域；total 固定为 0，channel 使用渠道ID'
+      AFTER channel_id;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'fact_revenue_channel_monthly'
+      AND INDEX_NAME = 'uq_revenue_monthly_month_level_scope'
+  ) THEN
+    ALTER TABLE fact_revenue_channel_monthly
+      ADD UNIQUE KEY uq_revenue_monthly_month_level_scope (`year_month`, record_level, scope_channel_id);
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
+    WHERE CONSTRAINT_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'fact_revenue_channel_monthly'
+      AND CONSTRAINT_NAME = 'fk_revenue_monthly_channel_id'
+      AND (DELETE_RULE <> 'RESTRICT' OR UPDATE_RULE <> 'RESTRICT')
+  ) THEN
+    ALTER TABLE fact_revenue_channel_monthly
+      DROP FOREIGN KEY fk_revenue_monthly_channel_id;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+    WHERE CONSTRAINT_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'fact_revenue_channel_monthly'
+      AND CONSTRAINT_NAME = 'chk_revenue_monthly_level_channel'
+      AND CONSTRAINT_TYPE = 'CHECK'
+  ) THEN
+    ALTER TABLE fact_revenue_channel_monthly
+      ADD CONSTRAINT chk_revenue_monthly_level_channel CHECK (
+        (record_level = 'total' AND channel_id IS NULL)
+        OR (record_level = 'channel' AND channel_id IS NOT NULL)
+      );
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+    WHERE CONSTRAINT_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'fact_revenue_channel_monthly'
+      AND CONSTRAINT_NAME = 'fk_revenue_monthly_channel_id'
+      AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+  ) THEN
+    ALTER TABLE fact_revenue_channel_monthly
+      ADD CONSTRAINT fk_revenue_monthly_channel_id FOREIGN KEY (channel_id)
+      REFERENCES dim_channel (channel_id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+  END IF;
+
   IF NOT EXISTS (
     SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'biz_channel_cost_monthly' AND COLUMN_NAME = 'refund_amount_yuan'
@@ -295,6 +387,29 @@ WITH RECURSIVE department_tree (descendant_id, ancestor_id, depth) AS (
 SELECT descendant_id, ancestor_id, depth
 FROM department_tree;
 
+CREATE OR REPLACE SQL SECURITY INVOKER VIEW v_target_monthly_effective AS
+SELECT target_row.target_id,
+       target_row.`year_month`,
+       target_row.department_id,
+       target_row.staff_id,
+       target_row.channel_id,
+       target_row.target_amount_yuan,
+       target_row.target_opening_count,
+       target_row.target_order_count
+FROM biz_target_monthly target_row
+WHERE target_row.staff_id IS NULL
+  AND target_row.department_id IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1
+    FROM biz_target_monthly ancestor_target
+    JOIN v_department_closure closure
+      ON closure.descendant_id = target_row.department_id
+     AND closure.ancestor_id = ancestor_target.department_id
+     AND closure.depth > 0
+    WHERE ancestor_target.`year_month` = target_row.`year_month`
+      AND ancestor_target.staff_id IS NULL
+  );
+
 CREATE OR REPLACE SQL SECURITY INVOKER VIEW v_revenue_monthly_effective_override AS
 SELECT override_row.override_id, override_row.`year_month`, override_row.department_id,
        override_row.channel_id, override_row.recovered_amount_yuan,
@@ -311,28 +426,261 @@ WHERE NOT EXISTS (
   WHERE ancestor_override.`year_month` = override_row.`year_month`
 );
 
+CREATE OR REPLACE SQL SECURITY INVOKER VIEW v_revenue_company_monthly_allocated AS
+WITH monthly_totals AS (
+  SELECT MIN(monthly_revenue_id) AS source_id,
+         `year_month`,
+         SUM(gross_amount_yuan) AS total_gross_amount_yuan,
+         SUM(refund_amount_yuan) AS total_refund_amount_yuan,
+         MAX(source_workbook) AS source_workbook,
+         MAX(source_sheet) AS source_sheet,
+         MIN(source_row_no) AS source_row_no
+  FROM fact_revenue_channel_monthly
+  WHERE record_level = 'total'
+  GROUP BY `year_month`
+),
+monthly_channels AS (
+  SELECT MIN(monthly_revenue_id) AS source_id,
+         `year_month`,
+         channel_id,
+         MAX(source_name_raw) AS source_name_raw,
+         MAX(source_workbook) AS source_workbook,
+         MAX(source_sheet) AS source_sheet,
+         MIN(source_row_no) AS source_row_no,
+         SUM(gross_amount_yuan) AS original_gross_amount_yuan,
+         SUM(refund_amount_yuan) AS original_refund_amount_yuan
+  FROM fact_revenue_channel_monthly
+  WHERE record_level = 'channel'
+    AND channel_id IS NOT NULL
+  GROUP BY `year_month`, channel_id
+),
+effective_monthly_channels AS (
+  SELECT channel_row.source_id,
+         channel_row.`year_month`,
+         channel_row.channel_id,
+         channel_row.source_name_raw,
+         channel_row.source_workbook,
+         channel_row.source_sheet,
+         channel_row.source_row_no,
+         channel_row.original_gross_amount_yuan,
+         channel_row.original_refund_amount_yuan
+  FROM monthly_channels channel_row
+
+  UNION ALL
+
+  SELECT total_row.source_id,
+         total_row.`year_month`,
+         NULL AS channel_id,
+         '未归属' AS source_name_raw,
+         total_row.source_workbook,
+         total_row.source_sheet,
+         total_row.source_row_no,
+         total_row.total_gross_amount_yuan AS original_gross_amount_yuan,
+         total_row.total_refund_amount_yuan AS original_refund_amount_yuan
+  FROM monthly_totals total_row
+  WHERE NOT EXISTS (
+      SELECT 1
+      FROM monthly_channels channel_row
+      WHERE channel_row.`year_month` = total_row.`year_month`
+    )
+),
+weighted_channels AS (
+  SELECT channel_row.*,
+         total_row.total_gross_amount_yuan,
+         total_row.total_refund_amount_yuan,
+         SUM(channel_row.original_gross_amount_yuan) OVER (
+           PARTITION BY channel_row.`year_month`
+         ) AS channel_gross_amount_yuan,
+         SUM(channel_row.original_refund_amount_yuan) OVER (
+           PARTITION BY channel_row.`year_month`
+         ) AS channel_refund_amount_yuan,
+         ROW_NUMBER() OVER (
+           PARTITION BY channel_row.`year_month`
+           ORDER BY channel_row.channel_id, channel_row.source_id
+         ) AS channel_rank,
+         COUNT(*) OVER (
+           PARTITION BY channel_row.`year_month`
+         ) AS channel_count
+  FROM effective_monthly_channels channel_row
+  JOIN monthly_totals total_row ON total_row.`year_month` = channel_row.`year_month`
+),
+rounded_channels AS (
+  SELECT weighted.*,
+         CAST(ROUND(
+           CASE
+             WHEN weighted.channel_gross_amount_yuan <> 0
+               THEN weighted.total_gross_amount_yuan
+                    * weighted.original_gross_amount_yuan
+                    / weighted.channel_gross_amount_yuan
+             WHEN weighted.channel_refund_amount_yuan <> 0
+               THEN weighted.total_gross_amount_yuan
+                    * weighted.original_refund_amount_yuan
+                    / weighted.channel_refund_amount_yuan
+             ELSE 0
+           END,
+           2
+         ) AS DECIMAL(18,2)) AS rounded_gross_amount_yuan,
+         CAST(ROUND(
+           CASE
+             WHEN weighted.channel_refund_amount_yuan <> 0
+               THEN weighted.total_refund_amount_yuan
+                    * weighted.original_refund_amount_yuan
+                    / weighted.channel_refund_amount_yuan
+             WHEN weighted.channel_gross_amount_yuan <> 0
+               THEN weighted.total_refund_amount_yuan
+                    * weighted.original_gross_amount_yuan
+                    / weighted.channel_gross_amount_yuan
+             ELSE 0
+           END,
+           2
+         ) AS DECIMAL(18,2)) AS rounded_refund_amount_yuan
+  FROM weighted_channels weighted
+),
+allocated_channels AS (
+  SELECT rounded.*,
+         CAST(CASE
+           WHEN rounded.channel_rank = rounded.channel_count THEN
+             rounded.total_gross_amount_yuan
+             - SUM(CASE
+                 WHEN rounded.channel_rank < rounded.channel_count
+                   THEN rounded.rounded_gross_amount_yuan
+                 ELSE 0
+               END) OVER (PARTITION BY rounded.`year_month`)
+           ELSE rounded.rounded_gross_amount_yuan
+         END AS DECIMAL(18,2)) AS allocated_gross_amount_yuan,
+         CAST(CASE
+           WHEN rounded.channel_rank = rounded.channel_count THEN
+             rounded.total_refund_amount_yuan
+             - SUM(CASE
+                 WHEN rounded.channel_rank < rounded.channel_count
+                   THEN rounded.rounded_refund_amount_yuan
+                 ELSE 0
+               END) OVER (PARTITION BY rounded.`year_month`)
+           ELSE rounded.rounded_refund_amount_yuan
+         END AS DECIMAL(18,2)) AS allocated_refund_amount_yuan
+  FROM rounded_channels rounded
+)
+SELECT allocated.source_id,
+       allocated.`year_month`,
+       STR_TO_DATE(CONCAT(allocated.`year_month`, '-01'), '%Y-%m-%d') AS stat_date,
+       allocated.channel_id,
+       COALESCE(channel_department.department_id, channel_department_alias.department_id) AS department_id,
+       allocated.allocated_gross_amount_yuan AS gross_amount_yuan,
+       allocated.allocated_refund_amount_yuan AS refund_amount_yuan,
+       CAST(
+         allocated.allocated_gross_amount_yuan - allocated.allocated_refund_amount_yuan
+         AS DECIMAL(18,2)
+       ) AS net_amount_yuan,
+       allocated.source_name_raw,
+       allocated.source_workbook,
+       allocated.source_sheet,
+       allocated.source_row_no
+FROM allocated_channels allocated
+LEFT JOIN dim_channel channel_row ON channel_row.channel_id = allocated.channel_id
+LEFT JOIN dim_department channel_department
+  ON channel_department.department_code = CASE channel_row.channel_key
+    WHEN 'online' THEN 'online-sales'
+    WHEN 'south' THEN 'south-sales'
+    WHEN 'east' THEN 'east-sales'
+    WHEN 'agent' THEN 'agent-sales'
+    ELSE NULL
+  END
+LEFT JOIN dim_department channel_department_alias
+  ON channel_department_alias.department_code = CASE channel_row.channel_key
+    WHEN 'south' THEN 'south-region'
+    WHEN 'east' THEN 'east-region'
+    ELSE NULL
+  END;
+
 CREATE OR REPLACE SQL SECURITY INVOKER VIEW v_revenue_gross_canonical AS
-SELECT r.id AS source_id,
+WITH monthly_source_years AS (
+  SELECT DISTINCT CAST(LEFT(`year_month`, 4) AS UNSIGNED) AS source_year
+  FROM v_revenue_company_monthly_allocated
+),
+order_source_years AS (
+  SELECT DISTINCT YEAR(stat_date) AS source_year
+  FROM fact_revenue_order
+  WHERE stat_date IS NOT NULL
+)
+SELECT monthly_row.source_id,
+       'company_monthly' AS source_kind,
+       monthly_row.stat_date,
+       monthly_row.department_id,
+       monthly_row.channel_id,
+       NULL AS staff_id,
+       NULL AS version_id,
+       'company_monthly' AS order_type,
+       monthly_row.gross_amount_yuan AS recovered_amount_yuan,
+       0 AS actual_opening_count,
+       0 AS order_count
+FROM v_revenue_company_monthly_allocated monthly_row
+
+UNION ALL
+
+SELECT order_row.order_id AS source_id,
+       'order' AS source_kind,
+       order_row.stat_date,
+       COALESCE(
+         staff.department_id,
+         channel_department.department_id,
+         channel_department_alias.department_id
+       ) AS department_id,
+       COALESCE(order_row.channel_id, staff_channel.channel_id) AS channel_id,
+       order_row.staff_id,
+       order_row.version_id,
+       order_row.order_type,
+       order_row.sales_amount_yuan AS recovered_amount_yuan,
+       0 AS actual_opening_count,
+       1 AS order_count
+FROM fact_revenue_order order_row
+LEFT JOIN dim_staff staff ON staff.staff_id = order_row.staff_id
+LEFT JOIN dim_channel staff_channel ON staff_channel.channel_key = staff.channel_key
+LEFT JOIN dim_channel channel_row ON channel_row.channel_id = order_row.channel_id
+LEFT JOIN dim_department channel_department
+  ON channel_department.department_code = CASE COALESCE(channel_row.channel_key, staff_channel.channel_key)
+    WHEN 'online' THEN 'online-sales'
+    WHEN 'south' THEN 'south-sales'
+    WHEN 'east' THEN 'east-sales'
+    WHEN 'agent' THEN 'agent-sales'
+    ELSE NULL
+  END
+LEFT JOIN dim_department channel_department_alias
+  ON channel_department_alias.department_code = CASE COALESCE(channel_row.channel_key, staff_channel.channel_key)
+    WHEN 'south' THEN 'south-region'
+    WHEN 'east' THEN 'east-region'
+    ELSE NULL
+  END
+LEFT JOIN monthly_source_years monthly_year ON monthly_year.source_year = YEAR(order_row.stat_date)
+WHERE order_row.stat_date IS NOT NULL
+  AND monthly_year.source_year IS NULL
+
+UNION ALL
+
+SELECT daily_row.id AS source_id,
        'daily' AS source_kind,
-       r.stat_date,
-       COALESCE(r.department_id, staff.department_id) AS department_id,
-       r.channel_id,
-       r.staff_id,
-       r.version_id,
-       r.order_type,
-       r.recovered_amount_yuan,
-       r.actual_opening_count,
-       r.order_count
-FROM fact_revenue_daily r
-LEFT JOIN dim_staff staff ON staff.staff_id = r.staff_id
-WHERE r.order_type <> 'manual_department'
+       daily_row.stat_date,
+       COALESCE(daily_row.department_id, staff.department_id) AS department_id,
+       daily_row.channel_id,
+       daily_row.staff_id,
+       daily_row.version_id,
+       daily_row.order_type,
+       daily_row.recovered_amount_yuan,
+       daily_row.actual_opening_count,
+       daily_row.order_count
+FROM fact_revenue_daily daily_row
+LEFT JOIN dim_staff staff ON staff.staff_id = daily_row.staff_id
+LEFT JOIN monthly_source_years monthly_year ON monthly_year.source_year = YEAR(daily_row.stat_date)
+LEFT JOIN order_source_years order_year ON order_year.source_year = YEAR(daily_row.stat_date)
+WHERE daily_row.order_type <> 'manual_department'
+  AND monthly_year.source_year IS NULL
+  AND order_year.source_year IS NULL
   AND NOT EXISTS (
     SELECT 1
     FROM v_revenue_monthly_effective_override override_row
     JOIN v_department_closure closure
-      ON closure.descendant_id = COALESCE(r.department_id, staff.department_id)
+      ON closure.descendant_id = COALESCE(daily_row.department_id, staff.department_id)
      AND closure.ancestor_id = override_row.department_id
-    WHERE override_row.`year_month` = DATE_FORMAT(r.stat_date, '%Y-%m')
+    WHERE override_row.`year_month` = DATE_FORMAT(daily_row.stat_date, '%Y-%m')
   )
 
 UNION ALL
@@ -348,8 +696,60 @@ SELECT override_row.override_id AS source_id,
        override_row.recovered_amount_yuan,
        override_row.actual_opening_count,
        override_row.order_count
-FROM v_revenue_monthly_effective_override override_row;
+FROM v_revenue_monthly_effective_override override_row
+LEFT JOIN monthly_source_years monthly_year
+  ON monthly_year.source_year = CAST(LEFT(override_row.`year_month`, 4) AS UNSIGNED)
+LEFT JOIN order_source_years order_year
+  ON order_year.source_year = CAST(LEFT(override_row.`year_month`, 4) AS UNSIGNED)
+WHERE monthly_year.source_year IS NULL
+  AND order_year.source_year IS NULL;
+
+CREATE OR REPLACE SQL SECURITY INVOKER VIEW v_revenue_refund_canonical AS
+WITH monthly_source_years AS (
+  SELECT DISTINCT CAST(LEFT(`year_month`, 4) AS UNSIGNED) AS source_year
+  FROM v_revenue_company_monthly_allocated
+),
+selected_source_refunds AS (
+  SELECT monthly_row.`year_month`,
+         monthly_row.channel_id,
+         monthly_row.refund_amount_yuan,
+         'monthly' AS source_kind
+  FROM v_revenue_company_monthly_allocated monthly_row
+
+  UNION ALL
+
+  SELECT DATE_FORMAT(order_row.stat_date, '%Y-%m') AS `year_month`,
+         COALESCE(order_row.channel_id, staff_channel.channel_id) AS channel_id,
+         SUM(order_row.refund_amount_yuan) AS refund_amount_yuan,
+         'order' AS source_kind
+  FROM fact_revenue_order order_row
+  LEFT JOIN dim_staff staff ON staff.staff_id = order_row.staff_id
+  LEFT JOIN dim_channel staff_channel ON staff_channel.channel_key = staff.channel_key
+  LEFT JOIN monthly_source_years monthly_year ON monthly_year.source_year = YEAR(order_row.stat_date)
+  WHERE order_row.stat_date IS NOT NULL
+    AND monthly_year.source_year IS NULL
+  GROUP BY DATE_FORMAT(order_row.stat_date, '%Y-%m'), COALESCE(order_row.channel_id, staff_channel.channel_id)
+)
+SELECT cost_row.`year_month`,
+       cost_row.channel_id,
+       cost_row.refund_amount_yuan,
+       'cost' AS source_kind
+FROM biz_channel_cost_monthly cost_row
+
+UNION ALL
+
+SELECT source_row.`year_month`,
+       source_row.channel_id,
+       source_row.refund_amount_yuan,
+       source_row.source_kind
+FROM selected_source_refunds source_row
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM biz_channel_cost_monthly cost_row
+  WHERE cost_row.`year_month` = source_row.`year_month`
+    AND cost_row.channel_id <=> source_row.channel_id
+);
 
 INSERT INTO schema_migrations (version, description)
-VALUES ('20260714_database_integrity', '统一毛回款聚合、部门月度覆盖、自然唯一键及自增主键')
+VALUES ('20260714_database_integrity', '统一有效目标、年度回款来源、月度事实完整性、渠道分摊、退款聚合、部门覆盖、自然唯一键及自增主键')
 ON DUPLICATE KEY UPDATE description = VALUES(description);

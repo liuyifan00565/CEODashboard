@@ -1,10 +1,34 @@
 /*
+ 更新时间: 2026-07-14 18:32:40 CST
+ 更新内容: 回归锁定跨年选源、退款期间隔离和退款独立月的负净回款口径。
+*/
+/*
+ 更新时间: 2026-07-14 18:15:00 CST
+ 更新内容: 回归锁定公司月度和订单模式也以毛回款减统一退款视图计算经营指标。
+*/
+/*
+ 更新时间: 2026-07-14 18:04:01 CST
+ 更新内容: 合并公司月度事实、统一毛回款视图、退款守恒及真实订单人员下钻回归。
+*/
+/*
  更新时间: 2026-07-14 17:57:56 CST
  更新内容: 回归锁定统一视图模式使用部门目标明细，真实订单模式即使有日聚合仍保留人员明细。
 */
 /*
  更新时间: 2026-07-14 17:09:11 CST
  更新内容: 回归锁定统一回款视图及退款守恒，覆盖退款超过毛回款、无毛回款退款和分摊尾差。
+*/
+/*
+ 更新时间: 2026-07-14 17:25:00 CST
+ 更新内容: 回归锁定公司趋势只展示完整渠道月总额，线上订单不补入公司月度总额。
+*/
+/*
+ 更新时间: 2026-07-14 17:10:00 CST
+ 更新内容: 回归覆盖月度总额按月覆盖订单汇总，并由订单补齐没有月度总额的月份。
+*/
+/*
+ 更新时间: 2026-07-14 16:40:00 CST
+ 更新内容: 回归覆盖公司 total 独立驱动 KPI、四渠道驱动结构、月目标汇总与退款不重复扣减。
 */
 /*
  更新时间: 2026-07-14 14:29:30 CST
@@ -325,10 +349,12 @@ test('keeps gross minus refund exactly conserved even when refund exceeds or has
     { year_month: '2026-01', channel_key: 'online', recovered_wan: 1 },
     { year_month: '2026-01', channel_key: 'online', recovered_wan: 1 },
     { year_month: '2026-02', channel_key: 'online', recovered_wan: 80 },
+    { year_month: '2026-03', channel_key: null, recovered_wan: 1 },
   ], [
     { year_month: '2026-01', channel_key: 'online', refund_wan: 0.01 },
     { year_month: '2026-02', channel_key: 'online', refund_wan: 100 },
     { year_month: '2026-02', channel_key: 'south', refund_wan: 5 },
+    { year_month: '2026-03', channel_key: null, refund_wan: 2 },
   ]);
 
   const januaryNet = rows.filter((row) => row.year_month === '2026-01').reduce((sum, row) => sum + row.recovered_wan, 0);
@@ -344,7 +370,8 @@ test('keeps gross minus refund exactly conserved even when refund exceeds or has
       recovered_wan: -5,
     },
   );
-  assert.equal(Number(rows.reduce((sum, row) => sum + row.recovered_wan, 0).toFixed(2)), -22.01);
+  assert.equal(rows.find((row) => row.year_month === '2026-03')?.recovered_wan, -1);
+  assert.equal(Number(rows.reduce((sum, row) => sum + row.recovered_wan, 0).toFixed(2)), -23.01);
 });
 
 test('uses maintained department targets when unified-view staff aggregates also exist', () => {
@@ -399,12 +426,12 @@ test('keeps person-level revenue tracking when sales monthly rows contain real s
     ],
     salesMemberMonthly: [
       { year_month: '2026-01', staff_id: 8101, staff_name: '黄李莉', channel_key: 'online', channel_name: '线上', recovered_wan: 18.5, target_wan: 0 },
-      { year_month: '2026-04', staff_id: 8101, staff_name: '黄李莉', channel_key: 'online', channel_name: '线上', recovered_wan: 32.2, target_wan: 40 },
+      { year_month: '2026-04', staff_id: 8101, staff_name: '黄李莉', channel_key: 'online', channel_name: '线上', recovered_wan: 32.5, target_wan: 40 },
       { year_month: '2026-04', staff_id: 8102, staff_name: '张栩鸿', channel_key: 'south', channel_name: '华南线下', recovered_wan: 12.8, target_wan: 30 },
     ],
     revenueDaily: [
       { year_month: '2026-01', channel_key: 'online', recovered_wan: 18.5 },
-      { year_month: '2026-04', channel_key: 'online', recovered_wan: 32.2 },
+      { year_month: '2026-04', channel_key: 'online', recovered_wan: 32.5 },
       { year_month: '2026-04', channel_key: 'south', recovered_wan: 12.8 },
     ],
     monthlyTargets: [
@@ -463,6 +490,55 @@ test('keeps person-level revenue tracking when sales monthly rows contain real s
   assert.equal(snapshot.channelSourceBreakdown[0].dealCount, 6);
 });
 
+test('uses authoritative monthly company facts without double-counting order rows or refunds', () => {
+  const snapshot = mapDashboardRowsToSnapshot({
+    latestMonth: '2026-06',
+    useRevenueOrders: true,
+    useRevenueMonthly: true,
+    channels: [
+      { channel_id: 3001, channel_key: 'online', channel_name: '线上' },
+      { channel_id: 3004, channel_key: 'agent', channel_name: '代理' },
+    ],
+    salesMemberMonthly: [
+      { year_month: '2026-04', staff_id: 8101, staff_name: '黄李莉', channel_key: 'online', recovered_wan: 109.88, target_wan: 0 },
+    ],
+    revenueDaily: [
+      { year_month: '2026-05', channel_key: 'online', recovered_wan: 189.61 },
+      { year_month: '2026-05', channel_key: 'agent', recovered_wan: 106.8 },
+      { year_month: '2026-06', channel_key: 'online', recovered_wan: 127.9 },
+      { year_month: '2026-06', channel_key: 'agent', recovered_wan: 101.25 },
+    ],
+    monthlyRevenueTotals: [
+      { year_month: '2026-04', recovered_wan: 226.37 },
+      { year_month: '2026-05', recovered_wan: 436.77 },
+      { year_month: '2026-06', recovered_wan: 303.64 },
+    ],
+    monthlyTargets: [
+      { year_month: '2026-05', target_wan: 300 },
+      { year_month: '2026-06', target_wan: 500 },
+    ],
+    refundRows: [
+      { year_month: '2026-05', channel_key: 'online', refund_wan: 3.98 },
+      { year_month: '2026-06', channel_key: 'online', refund_wan: 8.66 },
+    ],
+  });
+
+  assert.equal(snapshot.kpi.monthRecovered, 295);
+  assert.equal(snapshot.kpi.yearRecovered, 954);
+  assert.equal(snapshot.kpi.monthRefund, 9);
+  assert.equal(snapshot.kpi.yearRefund, 13);
+  assert.equal(snapshot.kpi.yearTarget, 800);
+  assert.equal(snapshot.meta.annualTarget, 800);
+  assert.equal(snapshot.channels.find((row) => row.key === 'online').recovered, 119);
+  assert.equal(snapshot.channels.find((row) => row.key === 'agent').recovered, 101);
+  assert.equal(snapshot.salesMemberRows.find((row) => row.key === 'staff-8101')?.yearRecovered, 110);
+  assert.deepEqual(snapshot.monthlyTrend.map((row) => [row.month, row.recovered]), [
+    ['4月', 226],
+    ['5月', 433],
+    ['6月', 295],
+  ]);
+});
+
 test('pre-aggregates renewal facts before joining version sales', () => {
   const source = readFileSync(new URL('./dashboardData.js', import.meta.url), 'utf8');
 
@@ -473,7 +549,7 @@ test('pre-aggregates renewal facts before joining version sales', () => {
 test('filters maintained targets to department-level dashboard rows', () => {
   const source = readFileSync(new URL('./dashboardData.js', import.meta.url), 'utf8');
 
-  assert.match(source, /FROM biz_target_monthly t[\s\S]*AND t\.staff_id IS NULL/);
+  assert.match(source, /FROM v_target_monthly_effective t[\s\S]*AND t\.staff_id IS NULL/);
   assert.match(source, /JOIN dim_department d ON d\.department_id = t\.department_id/);
   assert.match(source, /LEFT JOIN dim_channel c ON c\.channel_id = t\.channel_id/);
   assert.ok(source.includes('GROUP BY t.\\`year_month\\`, d.department_id, d.department_name, c.channel_key'));
@@ -485,6 +561,30 @@ test('reads every legacy dashboard recovered aggregation from the canonical gros
   assert.match(source, /FROM v_revenue_gross_canonical/);
   assert.doesNotMatch(source, /FROM fact_revenue_daily/);
   assert.match(source, /JOIN dim_department d ON d\.department_id = r\.department_id/);
+  assert.match(source, /FROM v_revenue_company_monthly_allocated/);
+  assert.match(source, /FROM v_revenue_refund_canonical/);
+  assert.doesNotMatch(source, /SUM\(m\.net_amount_yuan\)/);
+});
+
+test('keeps current-year monthly trend isolated while retaining refund-only current months', () => {
+  const isolated = mapDashboardRowsToSnapshot({
+    latestMonth: '2026-06',
+    channels: [{ channel_id: 3001, channel_key: 'online', channel_name: '线上' }],
+    revenueDaily: [{ year_month: '2026-06', channel_key: 'online', recovered_wan: 100 }],
+    refundRows: [{ year_month: '2025-01', channel_key: 'online', refund_wan: 10 }],
+  });
+
+  assert.equal(isolated.kpi.monthRecovered, 100);
+  assert.deepEqual(isolated.monthlyTrend.map((row) => [row.month, row.recovered]), [['6月', 100]]);
+
+  const refundOnly = mapDashboardRowsToSnapshot({
+    latestMonth: '2026-07',
+    channels: [{ channel_id: 3001, channel_key: 'online', channel_name: '线上' }],
+    refundRows: [{ year_month: '2026-07', channel_key: 'online', refund_wan: 5 }],
+  });
+
+  assert.equal(refundOnly.kpi.monthRecovered, -5);
+  assert.deepEqual(refundOnly.monthlyTrend.map((row) => [row.month, row.recovered]), [['7月', -5]]);
 });
 
 test('selects dashboard business month from explicit override or the latest real fact month', () => {
@@ -495,6 +595,8 @@ test('selects dashboard business month from explicit override or the latest real
   assert.match(source, /process\.env\.DASHBOARD_MONTH_OVERRIDE \|\| TEMP_DASHBOARD_MONTH_OVERRIDE \|\| await loadLatestActualMonth\(connection\)/);
   assert.match(source, /async function loadLatestActualMonth/);
   assert.match(source, /DATE_FORMAT\(MAX\(stat_date\), '%Y-%m'\) AS actual_month[\s\S]*FROM v_revenue_gross_canonical/);
+  assert.ok(source.includes('MAX(\\`year_month\\`) AS actual_month'));
+  assert.match(source, /FROM v_revenue_refund_canonical[\s\S]*refund_amount_yuan <> 0/);
   assert.doesNotMatch(source, /SELECT MAX\(\\`year_month\\`\) AS actual_month[\s\S]*FROM fact_sales_member_monthly/);
   assert.match(source, /FROM fact_revenue_order/);
   assert.match(source, /LEFT JOIN dim_channel_source cs ON cs\.source_id = o\.channel_source_id/);
@@ -516,7 +618,8 @@ test('queries self-operated order revenue when the real Excel detail table is av
   assert.match(source, /systemOwnerName/);
   assert.match(source, /versionName/);
   assert.match(source, /orderNo/);
-  assert.match(source, /SUM\(o\.net_amount_yuan\)/);
+  assert.match(source, /SUM\(o\.sales_amount_yuan\)/);
+  assert.match(source, /FROM v_revenue_refund_canonical/);
   assert.match(source, /salesAmount/);
   assert.match(source, /otherNote/);
   assert.match(source, /sourceRowNo/);

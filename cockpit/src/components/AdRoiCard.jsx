@@ -1,4 +1,9 @@
 /*
+ 更新时间: 2026-07-14 12:10:07 CST
+ 更新内容: 广告ROI 小卡底部提示文案从"点击查看投入明细"改为"点击展开二级"，与开户数、总投入·费比三张卡
+          统一措辞，避免财务四小卡区读起来像三套不同的交互提示。
+*/
+/*
  更新时间: 2026-07-13 18:10:00 CST
  更新内容: 新增广告ROI小卡，视觉复用开户数小卡（同一套 .opening-metric-card 样式），放在首页总投入旁；
           点击复用总投入卡的成本二级弹窗，因为广告ROI 没有独立的日粒度趋势数据源。
@@ -22,7 +27,7 @@ export default function AdRoiCard({ searchTerm = '', onOpen, costCard }) {
         className="opening-metric-card opening-metric-card--roi"
         type="button"
         onClick={() => onOpen?.(costCard)}
-        aria-label={`${metric.title}，点击查看投入明细`}
+        aria-label={`${metric.title}，点击展开二级`}
       >
         <div className="opening-metric-card__title">{metric.title}</div>
         <div className="opening-metric-card__main">
@@ -34,7 +39,7 @@ export default function AdRoiCard({ searchTerm = '', onOpen, costCard }) {
             {fmtDelta(metric.delta)}
           </span>
         </div>
-        <div className="opening-metric-card__hint">点击查看投入明细 ▸</div>
+        <div className="opening-metric-card__hint">点击展开二级 ▸</div>
       </button>
     </SearchResultBorder>
   );

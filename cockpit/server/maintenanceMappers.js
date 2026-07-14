@@ -1,4 +1,16 @@
 /*
+ Update time: 2026-07-14 18:32:40 CST
+ Update content: Keep disabled or unmapped staff/channel facts in maintenance grand totals while preserving the visible enabled-only detail rows.
+*/
+/*
+ Update time: 2026-07-14 18:20:00 CST
+ Update content: Include unassigned gross revenue and refunds in the all-channel cost summary without creating a fake channel row.
+*/
+/*
+ Update time: 2026-07-14 18:12:08 CST
+ Update content: Include completely unassigned recovered revenue in the all-organization target summary without attributing it to a department.
+*/
+/*
  Update time: 2026-07-14 17:09:11 CST
  Update content: Cost ROI uses net recovered amount (gross recovered minus refund); operations and labor remain ROI costs only.
 */
@@ -157,6 +169,7 @@ export function buildTargetSnapshot({ departments = [], staff = [], targets = []
     && s.department_id != null
     && Number(s.is_enabled) === 1
   ));
+  const activeSalesIds = new Set(sales.map((row) => row.staff_id));
 
   const departmentsById = new Map(departments.map((d) => [d.department_id, d]));
   const childDeptIds = new Map();
@@ -184,21 +197,24 @@ export function buildTargetSnapshot({ departments = [], staff = [], targets = []
   });
 
   const actualByStaff = new Map();
-  const actualByDept = new Map();
+  const actualDetailByDept = new Map();
+  const unassignedActual = {};
   revenue.forEach((r) => {
     const mk = monthKeyFromYM(r.ym);
     if (!ALL_MONTH_KEYS.includes(mk)) return;
-    if (r.department_id != null && r.staff_id == null) {
-      if (!actualByDept.has(r.department_id)) actualByDept.set(r.department_id, {});
-      const bucket = actualByDept.get(r.department_id);
-      bucket[mk] = (bucket[mk] || 0) + roundWan(r.amt);
-      return;
-    }
-    if (r.staff_id != null) {
+    if (r.staff_id != null && activeSalesIds.has(r.staff_id)) {
       if (!actualByStaff.has(r.staff_id)) actualByStaff.set(r.staff_id, {});
       const bucket = actualByStaff.get(r.staff_id);
       bucket[mk] = (bucket[mk] || 0) + roundWan(r.amt);
+      return;
     }
+    if (r.department_id != null) {
+      if (!actualDetailByDept.has(r.department_id)) actualDetailByDept.set(r.department_id, {});
+      const bucket = actualDetailByDept.get(r.department_id);
+      bucket[mk] = (bucket[mk] || 0) + roundWan(r.amt);
+      return;
+    }
+    unassignedActual[mk] = (unassignedActual[mk] || 0) + roundWan(r.amt);
   });
 
   const salesByDept = new Map();
@@ -211,7 +227,7 @@ export function buildTargetSnapshot({ departments = [], staff = [], targets = []
   function departmentRollup(deptId) {
     if (deptRollupCache.has(deptId)) return deptRollupCache.get(deptId);
     const directTarget = targetByDept.get(deptId) || {};
-    const directActual = actualByDept.get(deptId) || {};
+    const detailActual = actualDetailByDept.get(deptId) || {};
     const members = salesByDept.get(deptId) || [];
     const childRollups = (childDeptIds.get(deptId) || []).map((id) => departmentRollup(id));
 
@@ -222,10 +238,9 @@ export function buildTargetSnapshot({ departments = [], staff = [], targets = []
       return childSum;
     });
     const actual = ALL_MONTH_KEYS.map((mk, idx) => {
-      if (directActual[mk] != null) return directActual[mk];
       const staffSum = members.reduce((sum, st) => sum + (actualByStaff.get(st.staff_id)?.[mk] || 0), 0);
       const childSum = childRollups.reduce((sum, child) => sum + child.actual[idx], 0);
-      return staffSum + childSum;
+      return (detailActual[mk] || 0) + staffSum + childSum;
     });
     const value = { target, actual };
     deptRollupCache.set(deptId, value);
@@ -235,7 +250,10 @@ export function buildTargetSnapshot({ departments = [], staff = [], targets = []
   const rows = [];
   const rootDepartments = departments.filter((d) => d.parent_id == null || !departmentsById.has(d.parent_id));
   const allTarget = ALL_MONTH_KEYS.map((_, idx) => rootDepartments.reduce((sum, d) => sum + departmentRollup(d.department_id).target[idx], 0));
-  const allActual = ALL_MONTH_KEYS.map((_, idx) => rootDepartments.reduce((sum, d) => sum + departmentRollup(d.department_id).actual[idx], 0));
+  const allActual = ALL_MONTH_KEYS.map((mk, idx) => (
+    rootDepartments.reduce((sum, d) => sum + departmentRollup(d.department_id).actual[idx], 0)
+    + (unassignedActual[mk] || 0)
+  ));
   rows.push({ id: 'summary-all', type: 'department', name: '所有组织', role: '组织合计', periods: buildTargetPeriods(allTarget, allActual) });
 
   departments.forEach((d) => {
@@ -284,12 +302,15 @@ export function buildCostSnapshot({ channels = [], costs = [], revenue = [], lab
   });
 
   const rows = [];
-  const allCost = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (costByChannel.get(c.channel_id)?.[mk] || 0), 0));
-  const allLabor = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (laborByChannel.get(c.channel_id)?.[mk] || 0), 0));
-  const allLaborConfigured = ALL_MONTH_KEYS.map((mk) => channels.some((c) => laborConfiguredByChannel.get(c.channel_id)?.[mk]));
-  const allRefund = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (refundByChannel.get(c.channel_id)?.[mk] || 0), 0));
-  const allActual = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (actualByChannel.get(c.channel_id)?.[mk] || 0), 0));
-  const allDeals = ALL_MONTH_KEYS.map((mk) => channels.reduce((s, c) => s + (dealsByChannel.get(c.channel_id)?.[mk] || 0), 0));
+  const sumAllChannels = (valueMap, mk) => [...valueMap.values()]
+    .reduce((sum, values) => sum + (values?.[mk] || 0), 0);
+  const allCost = ALL_MONTH_KEYS.map((mk) => sumAllChannels(costByChannel, mk));
+  const allLabor = ALL_MONTH_KEYS.map((mk) => sumAllChannels(laborByChannel, mk));
+  const allLaborConfigured = ALL_MONTH_KEYS.map((mk) => [...laborConfiguredByChannel.values()]
+    .some((values) => Boolean(values?.[mk])));
+  const allRefund = ALL_MONTH_KEYS.map((mk) => sumAllChannels(refundByChannel, mk));
+  const allActual = ALL_MONTH_KEYS.map((mk) => sumAllChannels(actualByChannel, mk));
+  const allDeals = ALL_MONTH_KEYS.map((mk) => sumAllChannels(dealsByChannel, mk));
   rows.push({ id: 'summary-all', type: 'group', name: '全部渠道', periods: buildCostPeriods(allCost, allLabor, allActual, allDeals, allRefund, allLaborConfigured) });
 
   channels.forEach((c) => {

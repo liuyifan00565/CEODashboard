@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
+# 更新时间: 2026-07-14 18:03:34 CST
+# 更新内容: 阿里云交付包同时纳入数据库完整性与公司级月度回款迁移；建表迁移先执行、完整性迁移最后执行，并保持迁移前停止旧 cockpit。
 # 更新时间: 2026-07-14 17:57:00 CST
 # 更新内容: 安装与升级在数据库迁移前停止旧 cockpit，避免迁移期间继续写库，迁移成功后再启动应用。
 # 更新时间: 2026-07-14 17:09:11 CST
 # 更新内容: 交付包加入数据库完整性迁移，并调整为数据库就绪、执行迁移后再启动新版应用。
+# 更新时间: 2026-07-14 16:30:00 CST
+# 更新内容: 阿里云交付包新增仅承接公司级月度回款事实的迁移脚本。
 # 更新时间: 2026-07-14 13:05:00 CST
 # 更新内容: 阿里云交付包新增自营收入订单级事实表迁移，用于承接真实 Excel 收入明细。
 
@@ -301,8 +305,8 @@ write_server_script() {
   local mode="$2"
   cat > "$target" <<SCRIPT
 #!/usr/bin/env bash
-# 更新时间: 2026-07-14 17:57:00 CST
-# 更新内容: 阿里云 AMD64 ${mode}脚本，迁移前停止旧 cockpit，迁移成功后重新启动并等待 /api/health 就绪。
+# 更新时间: 2026-07-14 18:03:34 CST
+# 更新内容: 阿里云 AMD64 ${mode}脚本先执行建表迁移、最后执行数据库完整性迁移；迁移前停止旧 cockpit，成功后重新启动并等待 /api/health 就绪。
 SCRIPT
   cat >> "$target" <<'SCRIPT'
 
@@ -434,11 +438,20 @@ run_migrations() {
     return
   fi
 
+  local integrity_migration="$DEPLOY_DIR/docker/migrations/20260714_database_integrity.sql"
   local migration
   for migration in "$DEPLOY_DIR"/docker/migrations/*.sql; do
+    if [[ "$migration" == "$integrity_migration" ]]; then
+      continue
+    fi
     echo "Running migration: $(basename "$migration")"
     compose -f docker-compose.yml exec -T db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"' < "$migration"
   done
+
+  if [[ -f "$integrity_migration" ]]; then
+    echo "Running migration: $(basename "$integrity_migration")"
+    compose -f docker-compose.yml exec -T db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"' < "$integrity_migration"
+  fi
 }
 
 wait_database() {
@@ -506,6 +519,7 @@ require_file "$ROOT_DIR/docker/db-init/ceo_dashboard_full.sql"
 require_file "$ROOT_DIR/scripts/create_compute_token_usage_tables.sql"
 require_file "$ROOT_DIR/scripts/migrate_cost_components.sql"
 require_file "$ROOT_DIR/scripts/create_self_operated_revenue_tables.sql"
+require_file "$ROOT_DIR/scripts/create_revenue_monthly_tables.sql"
 require_file "$ROOT_DIR/scripts/migrate_database_integrity.sql"
 
 rm -rf "$WORK_DIR"
@@ -546,6 +560,7 @@ cp "$ROOT_DIR/docker/db-init/ceo_dashboard_full.sql" "$WORK_DIR/docker/db-init/c
 cp "$ROOT_DIR/scripts/create_compute_token_usage_tables.sql" "$WORK_DIR/docker/migrations/20260709_compute_token_usage_tables.sql"
 cp "$ROOT_DIR/scripts/migrate_cost_components.sql" "$WORK_DIR/docker/migrations/20260713_cost_components.sql"
 cp "$ROOT_DIR/scripts/create_self_operated_revenue_tables.sql" "$WORK_DIR/docker/migrations/20260714_self_operated_revenue_tables.sql"
+cp "$ROOT_DIR/scripts/create_revenue_monthly_tables.sql" "$WORK_DIR/docker/migrations/20260714_revenue_monthly_tables.sql"
 cp "$ROOT_DIR/scripts/migrate_database_integrity.sql" "$WORK_DIR/docker/migrations/20260714_database_integrity.sql"
 write_env_example "$WORK_DIR/.env.example"
 write_env_key_status "$WORK_DIR/ENV_KEY_STATUS.txt" "$WORK_DIR/.env"

@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 16:35:00 CST
+ 更新内容: 关闭各版本算力消耗和算力用量分布饼图的入场动画、状态过渡与悬浮放大，保持初始尺寸不动。
+*/
+/*
  更新时间: 2026-07-13 16:40:00 CST
  更新内容: KPI 条新增“在用账户数”卡片（总客户数减零用量分布档），复用现有客户分布数据，不新增面板；
           栅格从 4 卡改为 5 卡等宽填满。
@@ -900,6 +904,10 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
 
   return {
     backgroundColor: 'transparent',
+    animation: false,
+    animationDuration: 0,
+    animationDurationUpdate: 0,
+    stateAnimation: { duration: 0 },
     color: colors,
     tooltip: {
       trigger: 'item',
@@ -963,8 +971,9 @@ function buildPieOption({ data, tokens, unitLabel, naturalLabelLayout = false })
         },
         ...(naturalLabelLayout ? {} : { labelLayout: computePieLabelLayout }),
         emphasis: {
-          scale: true,
-          scaleSize: 3,
+          disabled: true,
+          scale: false,
+          scaleSize: 0,
           itemStyle: {
             shadowBlur: 18,
             shadowColor: 'rgba(255,255,255,.18)',

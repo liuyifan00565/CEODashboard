@@ -1,4 +1,16 @@
 /*
+ Update time: 2026-07-14 18:32:40 CST
+ Update content: Cover historical facts owned by disabled staff or channels in maintenance grand totals without exposing hidden detail rows.
+*/
+/*
+ Update time: 2026-07-14 18:20:00 CST
+ Update content: Cover unassigned gross revenue and refunds in the all-channel summary without a synthetic channel row.
+*/
+/*
+ Update time: 2026-07-14 18:12:08 CST
+ Update content: Cover unassigned recovered revenue in the all-organization summary and refund-only channel months with unconfigured labor.
+*/
+/*
  Update time: 2026-07-14 17:09:11 CST
  Update content: Cover gross recovered minus refund as cost snapshot net recovered and ROI numerator.
 */
@@ -66,16 +78,14 @@ test('buildTargetSnapshot keeps department rows and rolls up staff actuals', () 
   assert.ok(orgTree.userCount >= 1);
 });
 
-test('buildTargetSnapshot uses organization-level imports without double counting staff', () => {
+test('buildTargetSnapshot trusts canonical organization-level override rows', () => {
   const targets = [
     { year_month: '2026-01', department_id: 1002, staff_id: null, target_amount_yuan: 3000000 },
     { year_month: '2026-01', staff_id: 2001, target_amount_yuan: 1000000 },
     { year_month: '2026-01', staff_id: 2002, target_amount_yuan: 2000000 },
   ];
   const revenue = [
-    { ym: '2026-01', department_id: 1002, staff_id: null, amt: 2500000 },
-    { ym: '2026-01', staff_id: 2001, amt: 800000 },
-    { ym: '2026-01', staff_id: 2002, amt: 900000 },
+    { ym: '2026-01', source_kind: 'monthly_override', department_id: 1002, staff_id: null, amt: 2500000 },
   ];
   const { rows } = buildTargetSnapshot({ departments: DEPARTMENTS, staff: STAFF, targets, revenue });
 
@@ -86,6 +96,34 @@ test('buildTargetSnapshot uses organization-level imports without double countin
   const all = rows.find((r) => r.id === 'summary-all');
   assert.equal(all.periods.m01.target, 300);
   assert.equal(all.periods.m01.actual, 250);
+});
+
+test('buildTargetSnapshot includes unassigned recovery only in the all-organization summary', () => {
+  const revenue = [
+    { ym: '2026-01', staff_id: 2001, amt: 800000 },
+    { ym: '2026-01', department_id: null, staff_id: null, amt: 500000 },
+  ];
+  const { rows } = buildTargetSnapshot({ departments: DEPARTMENTS, staff: STAFF, revenue });
+
+  const online = rows.find((r) => r.id === 'summary-1002');
+  const all = rows.find((r) => r.id === 'summary-all');
+  assert.equal(online.periods.m01.actual, 80);
+  assert.equal(all.periods.m01.actual, 130);
+  assert.ok(!rows.some((r) => r.name === '未分配'));
+});
+
+test('buildTargetSnapshot keeps disabled staff revenue in its historical department total', () => {
+  const revenue = [{
+    ym: '2026-01',
+    source_kind: 'order',
+    department_id: 1002,
+    staff_id: 2098,
+    amt: 1000000,
+  }];
+  const { rows } = buildTargetSnapshot({ departments: DEPARTMENTS, staff: STAFF, revenue });
+
+  assert.equal(rows.find((row) => row.id === 'summary-1002').periods.m01.actual, 100);
+  assert.equal(rows.find((row) => row.id === 'summary-all').periods.m01.actual, 100);
 });
 
 test('buildTargetSnapshot: target 0 means unset', () => {
@@ -166,6 +204,63 @@ test('buildCostSnapshot gives every channel an editable zero labor cost for an e
   assert.equal(east.periods.m01.operations, 0);
   assert.equal(east.periods.m01.labor, 0);
   assert.equal(east.periods.m01.laborConfigured, false);
+});
+
+test('buildCostSnapshot preserves refund-only months and unconfigured labor', () => {
+  const { rows } = buildCostSnapshot({
+    channels: [{ channel_id: 3003, channel_name: '华东线下', parent_id: null, is_enabled: 1 }],
+    costs: [{
+      year_month: '2026-01',
+      channel_id: 3003,
+      operations_amount_yuan: null,
+      labor_amount_yuan: null,
+      refund_amount_yuan: 120000,
+    }, {
+      year_month: '2026-01',
+      channel_id: null,
+      operations_amount_yuan: null,
+      labor_amount_yuan: null,
+      refund_amount_yuan: 50000,
+    }],
+    revenue: [
+      { ym: '2026-01', channel_id: 3003, amt: 100000, deals: 1 },
+      { ym: '2026-01', channel_id: null, amt: 20000, deals: 0 },
+    ],
+  });
+
+  const east = rows.find((row) => row.id === '3003');
+  const all = rows.find((row) => row.id === 'summary-all');
+  assert.equal(east.periods.m01.operations, 0);
+  assert.equal(east.periods.m01.labor, 0);
+  assert.equal(east.periods.m01.laborConfigured, false);
+  assert.equal(east.periods.m01.refund, 12);
+  assert.equal(east.periods.m01.netRecovered, -2);
+  assert.equal(all.periods.m01.actual, 12);
+  assert.equal(all.periods.m01.refund, 17);
+  assert.equal(all.periods.m01.netRecovered, -5);
+  assert.equal(rows.some((row) => row.name === '未归属'), false);
+});
+
+test('buildCostSnapshot keeps disabled channel facts in the all-channel total only', () => {
+  const { rows } = buildCostSnapshot({
+    channels: [],
+    costs: [{
+      year_month: '2026-01',
+      channel_id: 3999,
+      operations_amount_yuan: 100000,
+      labor_amount_yuan: 300000,
+      refund_amount_yuan: 200000,
+    }],
+    revenue: [{ ym: '2026-01', channel_id: 3999, amt: 1000000, deals: 2 }],
+  });
+
+  const all = rows.find((row) => row.id === 'summary-all');
+  assert.equal(all.periods.m01.operations, 10);
+  assert.equal(all.periods.m01.labor, 30);
+  assert.equal(all.periods.m01.actual, 100);
+  assert.equal(all.periods.m01.refund, 20);
+  assert.equal(all.periods.m01.netRecovered, 80);
+  assert.equal(rows.some((row) => row.id === '3999'), false);
 });
 
 test('buildOrgSnapshot maps departments and staff source names', () => {

@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-14 21:45:00 CST  更新内容: 品牌头区新增 .sb-brand-logout 小按钮样式，退出登录从 Sidebar
+   外部搬进品牌区；用 margin-top 在文字行和按钮之间加出比行间距更大的留白，避免贴在一起。 */
 /* 更新时间: 2026-07-14 11:35:00 CST  更新内容: 品牌区第二行内容改为登录用户名后，去掉右对齐，和月份一样左对齐。 */
 /* 更新时间: 2026-07-13 14:25:00 CST  更新内容: 侧栏品牌月份保持左对齐，第二行当前视角与标题“舱”字右边缘对齐。 */
 /* 更新时间: 2026-07-13 14:31:00 CST  更新内容: 侧栏品牌副标题按换行符展示月份与当前视角，确保两项信息各占一行。 */
@@ -91,6 +93,31 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sb-brand-logout {
+  justify-self: start;
+  margin-top: 7px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--glass-cell);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease, color .2s ease;
+}
+
+.sb-brand-logout:hover {
+  transform: translateY(-1px);
+  border-color: var(--line-2);
+  background: var(--glass-cell-hover);
+  color: var(--txt);
 }
 
 .sb-section + .sb-section {
