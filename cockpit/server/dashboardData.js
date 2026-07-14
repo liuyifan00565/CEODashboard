@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 14:04:11 CST
+ 更新内容: 看板快照新增成交来源聚合，按来源与经营渠道返回年内净回款、成交数、客户数和数据日期范围。
+*/
+/*
  更新时间: 2026-07-14 13:18:00 CST
  更新内容: 业务月份改取最新真实事实月份；自营收入按销售业绩减退款计算净回款，并向下钻返回全部 Excel 字段。
 */
@@ -811,6 +815,7 @@ export function mapDashboardRowsToSnapshot(rows) {
     operatingOverviewMetrics,
     channels,
     channelRoi: makeChannelRoi({ channelRows: channels, channelCosts: rows.channelCosts ?? [] }),
+    channelSourceBreakdown: rows.channelSourceBreakdown ?? [],
     monthlyTrend: makeMonthlyTrend({ monthlyTargets: rows.monthlyTargets ?? [], recoveredRows, latestMonth, currentMonthTarget }),
     dailyRevenueTrend: makeDailyRevenueTrend(rows.dailyRevenue),
     yearlyTrend: makeYearlyTrend({ yearlyRecovered: rows.yearlyRevenue ?? [], yearlyTargets: rows.yearlyTargets ?? [] }),
@@ -956,6 +961,7 @@ export async function buildDashboardSnapshot(connection) {
     computeCustomerRows,
     computeResourceHealth,
     deliveryRows,
+    channelSourceBreakdown,
     revenueDetailRows,
     openingDetailRows,
     versionDetailRows,
@@ -1460,6 +1466,31 @@ export async function buildDashboardSnapshot(connection) {
       GROUP BY d.engineer_id, s.staff_name
     `, [latestMonth]),
     useRevenueOrders ? queryRows(connection, `
+      SELECT sourceKey, sourceName, channelKey,
+        ROUND(SUM(net_amount_yuan) / 10000, 2) AS recovered,
+        COUNT(*) AS dealCount,
+        COUNT(DISTINCT customerKey) AS customerCount,
+        DATE_FORMAT(MIN(stat_date), '%Y-%m-%d') AS periodStart,
+        DATE_FORMAT(MAX(stat_date), '%Y-%m-%d') AS periodEnd
+      FROM (
+        SELECT
+          COALESCE(CAST(cs.source_id AS CHAR), CONCAT('source-', COALESCE(NULLIF(TRIM(o.channel_name_raw), ''), 'unmarked'))) AS sourceKey,
+          COALESCE(cs.source_name, NULLIF(TRIM(o.channel_name_raw), ''), '未标注') AS sourceName,
+          COALESCE(${STAFF_OR_FACT_CHANNEL_KEY_SQL}, '') AS channelKey,
+          o.net_amount_yuan,
+          COALESCE(NULLIF(TRIM(o.customer_name), ''), NULLIF(TRIM(o.wechat_group_name), ''), o.order_no) AS customerKey,
+          o.stat_date
+        FROM fact_revenue_order o
+        LEFT JOIN dim_channel_source cs ON cs.source_id = o.channel_source_id
+        LEFT JOIN dim_staff s ON s.staff_id = o.staff_id
+        LEFT JOIN dim_department d ON d.department_id = s.department_id
+        LEFT JOIN dim_channel c ON c.channel_id = o.channel_id
+        WHERE o.stat_date >= ? AND o.stat_date < ?
+      ) source_orders
+      GROUP BY sourceKey, sourceName, channelKey
+      ORDER BY recovered DESC, dealCount DESC
+    `, [`${latestYear}-01-01`, nextMonthBoundary]) : Promise.resolve([]),
+    useRevenueOrders ? queryRows(connection, `
       SELECT
         DATE_FORMAT(o.stat_date, '%Y-%m-%d') AS \`date\`,
         DATE_FORMAT(o.stat_date, '%Y-%m') AS yearMonth,
@@ -1567,6 +1598,7 @@ export async function buildDashboardSnapshot(connection) {
     computeCustomerRows,
     computeResourceHealth,
     deliveryRows,
+    channelSourceBreakdown,
     revenueDetailRows,
     openingDetailRows,
     versionDetailRows,

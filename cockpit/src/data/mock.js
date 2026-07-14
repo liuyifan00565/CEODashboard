@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 14:04:11 CST
+ 更新内容: 运行时快照新增真实成交来源汇总，供首页来源排行按经营渠道筛选展示。
+*/
+/*
  更新时间: 2026-07-14 13:18:00 CST
  更新内容: 回款二级弹窗订单上限提高到 500 条，完整展示真实月份内的自营收入明细。
 */
@@ -285,6 +289,8 @@ export const CHANNEL_ROI = CHANNELS.map((channel) => {
     strong: roi >= 4,
   };
 }).sort((a, b) => b.roi - a.roi);
+
+export const CHANNEL_SOURCE_BREAKDOWN = [];
 
 export const SALES_GROUPS = [
   { key: 'online', name: '线上', salesKeys: ['online'] },
@@ -1576,6 +1582,10 @@ export function applyDashboardDataSnapshot(snapshot) {
 
   if (Array.isArray(snapshot.channelRoi)) {
     replaceArray(CHANNEL_ROI, snapshot.channelRoi);
+  }
+
+  if (Array.isArray(snapshot.channelSourceBreakdown)) {
+    replaceArray(CHANNEL_SOURCE_BREAKDOWN, snapshot.channelSourceBreakdown);
   }
 
   if (Array.isArray(snapshot.salesMemberRows)) {

@@ -1,0 +1,230 @@
+/*
+ 更新时间: 2026-07-14 14:04:11 CST
+ 更新内容: 新增成交来源排行与首页四指标横排样式，复用现有驾驶舱透明玻璃体系并适配窄屏。
+*/
+.dash-overview-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+}
+
+.dash-overview-kpis > .opening-metric-cards {
+  display: contents;
+}
+
+.dash-overview-kpis > *,
+.dash-overview-kpis .search-result-border,
+.dash-overview-kpis .search-result-border__content,
+.dash-overview-kpis .kpi-card,
+.dash-overview-kpis .opening-metric-card {
+  min-width: 0;
+  height: 100%;
+}
+
+.dash-overview-kpis .opening-metric-card,
+.dash-overview-kpis .kpi-card {
+  min-height: 142px;
+}
+
+.dash-overview-kpis .kpi-card {
+  gap: 4px;
+  padding: 12px 18px;
+}
+
+.dash-overview-kpis .kpi-card__value {
+  font-size: clamp(28px, 2.4vw, 36px);
+}
+
+.dash-overview-kpis .kpi-card__hint {
+  margin-top: auto;
+}
+
+.dash-source-cell {
+  min-width: 0;
+  min-height: 0;
+}
+
+.channel-source-panel {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px;
+  overflow: hidden;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 16px;
+  background: var(--dashboard-card-bg);
+  -webkit-backdrop-filter: var(--dashboard-card-blur);
+  backdrop-filter: var(--dashboard-card-blur);
+  box-shadow: var(--dashboard-card-shadow);
+  transition: border-color .22s ease, box-shadow .22s ease;
+}
+
+.channel-source-panel:hover,
+.channel-source-panel:focus-within {
+  border-color: rgba(255,255,255,.34);
+  box-shadow: var(--glass-shadow);
+}
+
+.channel-source-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.channel-source-panel__head h2 {
+  margin: 0;
+  color: var(--txt);
+  font-size: 16px;
+  font-weight: 720;
+}
+
+.channel-source-panel__head p,
+.channel-source-panel__summary span,
+.channel-source-panel__summary small {
+  margin: 4px 0 0;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.channel-source-panel__summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.channel-source-panel__summary small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.channel-source-panel__list {
+  min-height: 0;
+  display: grid;
+  gap: 8px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+}
+
+.channel-source-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+.channel-source-row__rank {
+  padding-top: 1px;
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.channel-source-row__body {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.channel-source-row__topline,
+.channel-source-row__meta {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.channel-source-row__topline strong {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  color: var(--txt);
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channel-source-row__topline > span {
+  color: var(--txt);
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.channel-source-row__track {
+  width: 100%;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(255,255,255,.07);
+}
+
+.channel-source-row__track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(185,182,232,.8), rgba(201,169,107,.72));
+}
+
+.channel-source-row__meta {
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.channel-source-row__meta b {
+  margin-left: auto;
+  color: var(--muted);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.channel-source-panel__empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  color: var(--faint);
+  font-size: 13px;
+}
+
+@media (min-width: 1181px) {
+  .dash-secondary-grid {
+    grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr);
+    grid-template-areas: "trend source";
+  }
+
+  .dash-source-cell {
+    grid-area: source;
+    height: var(--dash-secondary-content-height);
+  }
+}
+
+@media (max-width: 1180px) {
+  .dash-overview-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dash-secondary-grid {
+    grid-template-areas: "trend" "source";
+  }
+
+  .channel-source-panel {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 760px) {
+  .dash-overview-kpis {
+    grid-template-columns: 1fr;
+  }
+}

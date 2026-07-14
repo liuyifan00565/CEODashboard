@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 14:04:11 CST
+ 更新内容: 回归覆盖 dashboard 快照将真实成交来源汇总写入前端运行时数据。
+*/
+/*
  更新时间: 2026-07-14 13:05:00 CST
  更新内容: 增加自营收入订单级 detailRows 覆盖回归，确保回款弹窗可读取销售、客户、版本、订单和价格明细。
 */
@@ -51,6 +55,7 @@ import assert from 'node:assert/strict';
 
 import {
   CHANNELS,
+  CHANNEL_SOURCE_BREAKDOWN,
   COST_TREND,
   COMPUTE_OVERVIEW,
   KPI,
@@ -117,6 +122,9 @@ test('applies mysql dashboard snapshot to mutable dashboard data exports', () =>
     channelRoi: [
       { key: 'online', name: '线上', recovered: 244, investment: 31, roi: 7.87, costRatio: 12.7, warn: false, strong: true },
       { key: 'east', name: '华东线下', recovered: 86, investment: 18, roi: 4.78, costRatio: 20.9, warn: false, strong: true },
+    ],
+    channelSourceBreakdown: [
+      { sourceKey: '7101', sourceName: '小红书', channelKey: 'online', recovered: 68.4, dealCount: 18, customerCount: 14, periodStart: '2026-01-03', periodEnd: '2026-06-18' },
     ],
     monthlyTrend: [
       { month: '5月', target: 362, recovered: 0, completion: 0 },
@@ -185,6 +193,8 @@ test('applies mysql dashboard snapshot to mutable dashboard data exports', () =>
   assert.equal(MONTHLY_TREND.at(-1).recovered, 520);
   assert.equal(COST_TREND.at(-1).totalCost, 159);
   assert.equal(COST_TREND.at(-1).channels.online, 31);
+  assert.equal(CHANNEL_SOURCE_BREAKDOWN[0].sourceName, '小红书');
+  assert.equal(CHANNEL_SOURCE_BREAKDOWN[0].recovered, 68.4);
   assert.equal(getKpiSeries('cost', { salesKeys: ['online', 'east'] }).at(-1).value, 159);
   assert.equal(getKpiSeries('cost', { salesKeys: ['online'] }).at(-1).value, 31);
   assert.equal(getKpiSeries('recovered', { salesKeys: ['online'], orderType: 'new', dim: 'month' }).at(-1).value, 244);

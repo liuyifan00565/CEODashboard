@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 14:04:11 CST
+ 更新内容: 回归覆盖真实成交来源快照字段与 fact_revenue_order 来源聚合 SQL。
+*/
+/*
  更新时间: 2026-07-14 13:18:00 CST
  更新内容: 增加最新真实月份、订单净回款和完整 Excel 下钻字段回归。
 */
@@ -367,6 +371,9 @@ test('keeps person-level revenue tracking when sales monthly rows contain real s
       { channel_key: 'online', target_wan: 40 },
       { channel_key: 'south', target_wan: 30 },
     ],
+    channelSourceBreakdown: [
+      { sourceKey: '7101', sourceName: '小红书', channelKey: 'online', recovered: 19.8, dealCount: 6, customerCount: 5, periodStart: '2026-01-03', periodEnd: '2026-04-08' },
+    ],
     revenueDetailRows: [
       {
         date: '2026-04-08',
@@ -404,6 +411,8 @@ test('keeps person-level revenue tracking when sales monthly rows contain real s
   assert.equal(snapshot.detailRows.revenueOrders[0].versionName, '卓越版');
   assert.equal(snapshot.kpi.monthRecovered, 45);
   assert.equal(snapshot.detailRows.revenueOrders[0].otherNote, '赠送插件');
+  assert.equal(snapshot.channelSourceBreakdown[0].sourceName, '小红书');
+  assert.equal(snapshot.channelSourceBreakdown[0].dealCount, 6);
 });
 
 test('pre-aggregates renewal facts before joining version sales', () => {
@@ -443,6 +452,7 @@ test('selects dashboard business month from explicit override or the latest real
   assert.match(source, /DATE_FORMAT\(MAX\(stat_date\), '%Y-%m'\) AS actual_month[\s\S]*FROM fact_revenue_daily/);
   assert.match(source, /SELECT MAX\(\\`year_month\\`\) AS actual_month[\s\S]*FROM fact_sales_member_monthly/);
   assert.match(source, /FROM fact_revenue_order/);
+  assert.match(source, /LEFT JOIN dim_channel_source cs ON cs\.source_id = o\.channel_source_id/);
   assert.match(source, /const latestMonth = await selectDashboardBusinessMonth\(connection\);/);
   assert.doesNotMatch(source, /SELECT MAX\(`year_month`\) AS latestMonth FROM fact_sales_member_monthly/);
 });

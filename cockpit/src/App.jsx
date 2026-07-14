@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-14 14:04:11 CST
+ 更新内容: 开户数、总投入与广告ROI四张卡上移为横向 KPI 区；趋势图右侧改为真实成交来源排行。
+*/
+/*
  更新时间: 2026-07-14 13:49:44 CST
  更新内容: 数据维护保存或导入后重新加载经营快照，使线上月度目标无需刷新浏览器即可更新。
 */
@@ -238,6 +242,7 @@ import DeliveryPanel from './components/DeliveryPanel';
 import ComputeUsagePage from './components/ComputeUsagePage';
 import OpeningMetricCards from './components/OpeningMetricCards';
 import AdRoiCard from './components/AdRoiCard';
+import ChannelSourcePanel from './components/ChannelSourcePanel';
 import MaintenancePage from './components/MaintenancePage';
 import OperatingOverview from './components/OperatingOverview';
 
@@ -675,6 +680,18 @@ export default function App() {
                   onOpenKpi={handleOpenCard}
                 />
 
+                <div className="dash-overview-kpis" data-anim>
+                  <OpeningMetricCards searchTerm={searchTerm} onOpenSecondary={handleOpenCard} />
+                  {financeKpiCards.map((card) => (
+                    <SearchResultBorder active={matchesSearchTerm(card.keywords, searchTerm)} key={card.key}>
+                      <KpiCard card={card} onOpen={handleOpenCard} />
+                    </SearchResultBorder>
+                  ))}
+                  {financeKpiCards.map((card) => (
+                    <AdRoiCard searchTerm={searchTerm} onOpen={handleOpenCard} costCard={card} key={`${card.key}-roi`} />
+                  ))}
+                </div>
+
                 <div className="dash-secondary-grid">
                   <div className="dash-secondary-cell dash-secondary-cell--trend" data-ai-insight-target="trend" data-anim>
                     <SearchResultBorder active={matchesSearchTerm(PANEL_KEYWORDS.trend, searchTerm)}>
@@ -682,20 +699,8 @@ export default function App() {
                     </SearchResultBorder>
                   </div>
 
-                  <div className="dash-secondary-cell dash-secondary-cell--finance" data-anim>
-                    <div className="dash-finance-kpis">
-                      <div className="dash-finance-kpi-item dash-finance-kpi-item--openings" data-kpi-key="openings">
-                        <OpeningMetricCards searchTerm={searchTerm} onOpenSecondary={handleOpenCard} />
-                      </div>
-                      {financeKpiCards.map((card) => (
-                        <div className="dash-finance-kpi-item dash-finance-kpi-item--cost" data-kpi-key={card.key} key={card.key}>
-                          <SearchResultBorder active={matchesSearchTerm(card.keywords, searchTerm)}>
-                            <KpiCard card={card} onOpen={handleOpenCard} />
-                          </SearchResultBorder>
-                          <AdRoiCard searchTerm={searchTerm} onOpen={handleOpenCard} costCard={card} />
-                        </div>
-                      ))}
-                    </div>
+                  <div className="dash-source-cell" data-anim>
+                    <ChannelSourcePanel channelKey={activeChannelKey} />
                   </div>
                 </div>
 

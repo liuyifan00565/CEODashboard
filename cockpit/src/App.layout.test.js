@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-14 14:04:11 CST  更新内容: 回归锁定四张经营指标卡上移横排，成交来源面板位于趋势图右侧。 */
 /* 更新时间: 2026-07-14 13:49:44 CST  更新内容: 回归锁定目标维护保存或导入后自动刷新经营总览快照。 */
 /* 更新时间: 2026-07-14 13:40:09 CST  更新内容: 回归锁定经营总览渠道行与半环扇区点击打开人员级回款明细。 */
 /* 更新时间: 2026-07-14 13:35:39 CST  更新内容: 回归锁定交付页稳定默认加载器，避免 effect 因函数身份变化无限重载。 */
@@ -595,6 +596,8 @@ const operatingOverviewCss = existsSync(operatingOverviewCssUrl) ? readFileSync(
 const sidebarCss = readFileSync(new URL('./components/Sidebar.css', import.meta.url), 'utf8');
 const versionFinancePanelCss = readFileSync(new URL('./components/VersionFinancePanel.css', import.meta.url), 'utf8');
 const openingMetricCardsCss = readFileSync(new URL('./components/OpeningMetricCards.css', import.meta.url), 'utf8');
+const channelSourcePanelSource = readFileSync(new URL('./components/ChannelSourcePanel.jsx', import.meta.url), 'utf8');
+const channelSourcePanelCss = readFileSync(new URL('./components/ChannelSourcePanel.css', import.meta.url), 'utf8');
 const computePageSource = readFileSync(new URL('./components/ComputeUsagePage.jsx', import.meta.url), 'utf8');
 const computePageCss = readFileSync(new URL('./components/ComputeUsagePage.css', import.meta.url), 'utf8');
 const maintenancePageSource = readFileSync(new URL('./components/MaintenancePage.jsx', import.meta.url), 'utf8');
@@ -1802,13 +1805,20 @@ test('uses low-saturation dashboard controls in focused secondary interfaces', (
   assert.match(indexCss, /--control-solid:#8E86FF;/);
 });
 
-test('restores secondary dashboard panels below the operating overview story', () => {
+test('places four KPI cards above trend and source performance panels', () => {
   assert.match(appSource, /<OperatingOverview[\s\S]*?searchTerm=\{searchTerm\}/);
   assert.match(appSource, /className="dash-version-row"/);
   assert.match(appSource, /className="dash-secondary-grid"/);
-  assert.match(appSource, /<div className="dash-secondary-grid">[\s\S]*?<MonthlyTrend channelKey=\{activeChannelKey\} \/>[\s\S]*?<OpeningMetricCards searchTerm=\{searchTerm\} onOpenSecondary=\{handleOpenCard\} \/>[\s\S]*?<\/div>[\s\S]*?<div className="dash-version-row"[\s\S]*?data-anim>[\s\S]*?<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);
+  assert.match(appSource, /className="dash-overview-kpis"[\s\S]*?<OpeningMetricCards searchTerm=\{searchTerm\} onOpenSecondary=\{handleOpenCard\} \/>[\s\S]*?<KpiCard card=\{card\} onOpen=\{handleOpenCard\} \/>[\s\S]*?<AdRoiCard/);
+  assert.match(appSource, /<div className="dash-secondary-grid">[\s\S]*?<MonthlyTrend channelKey=\{activeChannelKey\} \/>[\s\S]*?<ChannelSourcePanel channelKey=\{activeChannelKey\} \/>[\s\S]*?<\/div>[\s\S]*?<div className="dash-version-row"[\s\S]*?data-anim>[\s\S]*?<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);
   assert.match(appSource, /<MonthlyTrend channelKey=\{activeChannelKey\} \/>/);
   assert.match(appSource, /<OpeningMetricCards searchTerm=\{searchTerm\} onOpenSecondary=\{handleOpenCard\} \/>/);
+  assert.match(appSource, /<ChannelSourcePanel channelKey=\{activeChannelKey\} \/>/);
+  assert.match(channelSourcePanelSource, /成交来源/);
+  assert.match(channelSourcePanelSource, /row\.dealCount/);
+  assert.match(channelSourcePanelSource, /row\.customerCount/);
+  assert.match(channelSourcePanelCss, /\.dash-overview-kpis\s*\{[\s\S]*?grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
+  assert.match(channelSourcePanelCss, /grid-template-areas: "trend source"/);
   assert.match(appSource, /<VersionFinancePanel channelKey=\{activeChannelKey\} \/>/);
   assert.match(appSource, /<DeliveryPanel \/>/);
   assert.match(appSource, /financeKpiCards\.map\(\(card\) => \(/);
