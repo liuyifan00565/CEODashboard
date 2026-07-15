@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-15 11:06:32 CST  更新内容: 月度经营卡标题改为“本月回款总览”并移除半环上方“本月回款结构”可见标题。 */
 /* 更新时间: 2026-07-14 19:06:34 CST  更新内容: 特殊渠道作为 total 内部展示项时按比例从四渠道图形份额中扣回，半环合计和完成率不再重复叠加。 */
 /* 更新时间: 2026-07-14 17:50:49 CST  更新内容: 回款半环纳入特殊渠道展示扇区，但不将其列入经营渠道和人员下钻。 */
 /* 更新时间: 2026-07-14 16:52:12 CST  更新内容: 收短回款结构半环外部标签引导折线，保留所有有值渠道标签但避免线条拉得过长。 */
@@ -66,7 +67,6 @@ import SearchResultBorder from './SearchResultBorder';
 import EChart from './EChart';
 import { ChannelMemberModal } from './ChannelPanel';
 import {
-  META,
   KPI,
   KPI_DERIVED,
   REVENUE_STRUCTURE,
@@ -77,8 +77,8 @@ import { useThemeTokens } from '../lib/theme';
 import './OperatingOverview.css';
 
 const PROGRESS_KEYWORDS_BASE = [
+  '本月回款总览',
   '本月回款',
-  '本月回款结构',
   '退款',
   '月度完成率',
   '目标缺口',
@@ -462,7 +462,6 @@ function MonthlyRecoveryStructure({ structure, option, chartEvents, onBlankClick
       periodMeta={MONTH_STRUCTURE_META}
       chartEvents={chartEvents}
       onBlankClick={onBlankClick}
-      title="本月回款结构"
     />
   );
 }
@@ -528,7 +527,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
   const tokens = useThemeTokens();
   const [annualExpanded, setAnnualExpanded] = useState(false);
   const [personDrilldown, setPersonDrilldown] = useState(null);
-  const progressTitle = `${META.monthLabel}经营进度`;
+  const progressTitle = '本月回款总览';
   const progressKeywords = [progressTitle, ...PROGRESS_KEYWORDS_BASE];
   const monthChannelRows = getChannelCompletionRows('month');
   const annualChannelRows = getChannelCompletionRows('year');
@@ -676,7 +675,7 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
         >
           <header className="op-progress-head">
             <div>
-              <h1>{progressTitle}</h1>
+              <h2>{progressTitle}</h2>
             </div>
           </header>
 

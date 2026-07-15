@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-15 11:06:32 CST  更新内容: 回归锁定经营情况说明小字放到标题右侧同行展示。 */
+/* 更新时间: 2026-07-15 11:06:32 CST  更新内容: 回归锁定月度经营卡标题改为“本月回款总览”，并移除半环上方旧标题。 */
 /* 更新时间: 2026-07-14 18:59:27 CST  更新内容: 二次合并回归同时保留交付月度坡度图、侧栏入口与回款结构标签断言。 */
 /* 更新时间: 2026-07-14 18:03:05 CST  更新内容: 合并回归锁定交付月度微型方向坡度图，以及渠道行选择联动右侧配置人员完成情况。 */
 /* 更新时间: 2026-07-14 16:35:43 CST  更新内容: 回归锁定交付渠道行选择联动右侧渠道人员完成情况及初始选择提示。 */
@@ -1596,9 +1598,10 @@ test('centers the AI mascot launcher without assistant copy or a sidebar status 
 });
 
 test('uses one fused operating story instead of duplicated monthly and yearly recovery cards', () => {
-  assert.match(operatingOverviewSource, /const progressTitle = `\$\{META\.monthLabel\}经营进度`;/);
-  assert.match(operatingOverviewSource, /<h1>\{progressTitle\}<\/h1>/);
+  assert.match(operatingOverviewSource, /const progressTitle = '本月回款总览';/);
+  assert.match(operatingOverviewSource, /<h2>\{progressTitle\}<\/h2>/);
   assert.doesNotMatch(operatingOverviewSource, /<h1>2026年6月经营进度<\/h1>/);
+  assert.doesNotMatch(operatingOverviewSource, /\$\{META\.monthLabel\}经营进度/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-eyebrow">经营进度总览<\/span>/);
   assert.match(operatingOverviewSource, /本月回款/);
   assert.match(operatingOverviewSource, /className="op-summary-sub op-month-refund-note"/);
@@ -1618,11 +1621,13 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /const MONTH_STRUCTURE_META = \{[\s\S]*?seriesName: '回款结构'/);
   assert.doesNotMatch(operatingOverviewSource, /<h2>\{periodMeta\.(?:chartName|seriesName)\}<\/h2>/);
   assert.doesNotMatch(operatingOverviewSource, /<span>单位：万元<\/span>/);
-  assert.match(operatingOverviewSource, /title="本月回款结构"/);
+  assert.doesNotMatch(operatingOverviewSource, /title="本月回款结构"/);
   assert.match(operatingOverviewSource, /\{title && <h2 className="op-structure-title">\{title\}<\/h2>\}/);
   assert.match(operatingOverviewCss, /\.op-structure-title\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?top:\s*6px;[\s\S]*?font-size:\s*16px;/);
   assert.match(operatingOverviewSource, /<h2>经营情况<\/h2>/);
   assert.match(operatingOverviewSource, /实际回款 \/ 目标回款/);
+  assert.match(operatingOverviewCss, /\.op-operating-head > div\s*\{[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*baseline;[\s\S]*?gap:\s*6px;/);
+  assert.match(operatingOverviewCss, /\.op-operating-head span\s*\{[\s\S]*?display:\s*inline;[\s\S]*?margin-top:\s*0;[\s\S]*?white-space:\s*nowrap;/);
   assert.match(operatingOverviewSource, /实际 \{formatWan\(row\.recovered\)\}万 \/ 目标 \{formatWan\(row\.target\)\}万/);
   assert.match(operatingOverviewSource, /row\.gap > 0 && <span>缺口 \{formatWan\(row\.gap\)\}万<\/span>/);
   assert.doesNotMatch(operatingOverviewSource, /className="op-channel-center"/);
@@ -1761,7 +1766,7 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   const progressPanelBlock = cssRuleBody(operatingOverviewCss, '.op-panel--progress');
   const progressPanelSurfaceBlock = cssRuleBody(operatingOverviewCss, '.op-panel--progress::before');
   const monthGridBlock = cssRuleBody(operatingOverviewCss, '.op-month-grid');
-  const progressTitleBlock = cssRuleBody(operatingOverviewCss, '.op-progress-head h1');
+  const progressTitleBlock = cssRuleBody(operatingOverviewCss, '.op-progress-head h2');
   const primaryValueBlock = cssRuleBody(operatingOverviewCss, '.op-month-primary b');
 
   assert.match(progressPanelBlock, /padding-block:\s*clamp\(10px, \.75vw, 12px\) clamp\(7px, \.55vw, 9px\);/);
@@ -1773,8 +1778,9 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   assert.match(progressPanelSurfaceBlock, /backdrop-filter:\s*var\(--dashboard-card-blur\);/);
   assert.match(progressPanelSurfaceBlock, /box-shadow:\s*var\(--dashboard-card-shadow\);/);
   assert.match(operatingOverviewCss, /\.op-panel--progress > \*\s*\{[\s\S]*?position:\s*relative;[\s\S]*?z-index:\s*1;/);
-  assert.match(progressTitleBlock, /font-size:\s*clamp\(19px, 1\.65vw, 23px\);/);
-  assert.match(progressTitleBlock, /font-weight:\s*700;/);
+  assert.match(progressTitleBlock, /font-size:\s*16px;/);
+  assert.match(progressTitleBlock, /font-weight:\s*720;/);
+  assert.match(progressTitleBlock, /line-height:\s*1\.18;/);
   assert.match(progressTitleBlock, /transform:\s*translateY\(18px\);/);
   assert.match(primaryValueBlock, /font-size:\s*clamp\(44px, 4\.9vw, 66px\);/);
   assert.match(primaryValueBlock, /font-weight:\s*840;/);

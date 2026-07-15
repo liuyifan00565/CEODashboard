@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-15 11:06:32 CST
+ 更新内容: 搜索关键词回归同步月度卡标题改为“本月回款总览”并移除旧半环标题词。
+*/
+/*
  更新时间: 2026-07-13 16:48:56 CST
  更新内容: 总投入费比卡片文案回归改为运营/人力成本构成。
 */
@@ -89,7 +93,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { META } from '../data/mock.js';
 import { DEFAULT_FILTER_RANGE, getFilteredKpiCards, formatDateRangeLabel } from './filterKpiCards.js';
 
 function byKey(cards, key) {
@@ -170,14 +173,15 @@ test('adds fused operating overview section text to KPI search keywords', () => 
   const month = byKey(cards, 'month');
   const annual = byKey(cards, 'year');
 
-  assert.ok(month.keywords.includes(`${META.monthLabel}经营进度`));
+  assert.ok(month.keywords.includes('本月回款总览'));
+  assert.ok(!month.keywords.some((keyword) => String(keyword).endsWith('经营进度')));
   assert.ok(month.keywords.includes('点击查看近期明细'));
   assert.ok(month.keywords.includes('风险'));
   assert.ok(month.keywords.includes('未完成'));
   assert.ok(!month.keywords.includes('查看近期明细'));
   assert.ok(!month.keywords.includes('风险渠道'));
   assert.ok(month.keywords.includes('完成率 70%'));
-  assert.ok(month.keywords.includes('本月回款结构'));
+  assert.ok(!month.keywords.includes('本月回款结构'));
   assert.ok(month.keywords.includes('经营情况'));
   assert.ok(month.keywords.includes('实际回款'));
   assert.ok(month.keywords.includes('目标回款'));
@@ -217,18 +221,13 @@ test('adds fused operating overview section text to KPI search keywords', () => 
   assert.ok(!annual.keywords.includes('年度风险预测'));
 });
 
-test('uses runtime month label in operating overview search keywords', () => {
-  const previousMonthLabel = META.monthLabel;
-  META.monthLabel = '2026年7月';
-  try {
-    const cards = getFilteredKpiCards({ dim: 'month', dateRange: ['2026-06-01', '2026-06-30'] });
-    const month = byKey(cards, 'month');
+test('uses fixed monthly overview title in operating overview search keywords', () => {
+  const cards = getFilteredKpiCards({ dim: 'month', dateRange: ['2026-06-01', '2026-06-30'] });
+  const month = byKey(cards, 'month');
 
-    assert.ok(month.keywords.includes('2026年7月经营进度'));
-    assert.ok(!month.keywords.includes('2026年6月经营进度'));
-  } finally {
-    META.monthLabel = previousMonthLabel;
-  }
+  assert.ok(month.keywords.includes('本月回款总览'));
+  assert.ok(!month.keywords.includes('2026年7月经营进度'));
+  assert.ok(!month.keywords.includes('2026年6月经营进度'));
 });
 
 test('uses the current calendar month as the default filter range', () => {

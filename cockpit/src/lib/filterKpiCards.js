@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-15 11:06:32 CST
+ 更新内容: 月度回款搜索关键词同步“本月回款总览”，移除旧的月份经营进度和本月回款结构标题词。
+*/
+/*
  更新时间: 2026-07-13 16:48:56 CST
  更新内容: 总投入卡片构成文案改为运营成本 + 人力成本。
 */
@@ -102,7 +106,7 @@
  更新时间: 2026-07-01 12:26:40
  更新内容: 回款 KPI 副文案目标标签与目标金额换到同一行，并移除日期后的分隔点。
 */
-import { CHANNEL_ROI, CHANNELS, COST_TREND, KPI, KPI_CARDS, KPI_DERIVED, META, getRenewalModalData } from '../data/mock.js';
+import { CHANNEL_ROI, CHANNELS, COST_TREND, KPI, KPI_CARDS, KPI_DERIVED, getRenewalModalData } from '../data/mock.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DIM_KEYS = new Set(['year', 'month', 'day']);
@@ -338,7 +342,7 @@ function recoverySectionKeywords(cardKey) {
     return ['年度回款总览', '点击查看年度拆解', '年度累计回款', '年度回款结构', '退款', '年度目标', '年度完成率', '年目标完成率', '剩余目标', '年度目标进度', '时间进度 50.0%', '高于线性进度 3.8pp', '后续月均需完成 447万', '经营情况', '年度回款', '未完成', '实际', '目标', '缺口', '风险'];
   }
   if (cardKey === 'month') {
-    return [`${META.monthLabel}经营进度`, '点击查看近期明细', '本月回款', '本月回款结构', '退款', '月度完成率', '经营情况', '实际回款', '目标回款', '未完成', '实际', '目标', '缺口', '超额完成', '风险', '完成率 70%'];
+    return ['本月回款总览', '点击查看近期明细', '本月回款', '退款', '月度完成率', '经营情况', '实际回款', '目标回款', '未完成', '实际', '目标', '缺口', '超额完成', '风险', '完成率 70%'];
   }
   return [];
 }

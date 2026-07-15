@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-15 11:06:32 CST  更新内容: 经营情况右侧说明改为与标题同排显示，放到“经营情况”右侧。 */
+/* 更新时间: 2026-07-15 11:06:32 CST  更新内容: 月度经营卡标题字号改为与年度回款总览一致，并保留原标题位置。 */
 /* 更新时间: 2026-07-14 17:22:41 CST  更新内容: 去掉经营进度三栏内容区顶部内部分隔线，避免标题右侧出现多余横线。 */
 /* 更新时间: 2026-07-14 15:20:00 CST  更新内容: 月度半环恢复绝对定位结构标题，保持当前图表位置和主卡高度不变。 */
 /* 更新时间: 2026-07-14 15:03:00 CST  更新内容: 考虑主卡顶部标题行占位，将月度和年度半环在内容区内再下移约 20px，卡片高度保持不变。 */
@@ -223,7 +225,7 @@
   line-height: 1.25;
 }
 
-.op-progress-head h1,
+.op-progress-head h2,
 .op-annual-summary h2,
 .op-operating-head h2 {
   margin: 0;
@@ -231,10 +233,10 @@
   letter-spacing: 0;
 }
 
-.op-progress-head h1 {
-  font-size: clamp(19px, 1.65vw, 23px);
-  font-weight: 700;
-  line-height: 1.1;
+.op-progress-head h2 {
+  font-size: 16px;
+  font-weight: 720;
+  line-height: 1.18;
   transform: translateY(18px);
 }
 
@@ -474,9 +476,18 @@
   gap: 12px;
 }
 
+.op-operating-head > div {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .op-operating-head span {
-  display: block;
-  margin-top: 5px;
+  display: inline;
+  margin-top: 0;
+  white-space: nowrap;
 }
 
 .op-channel-chart-wrap {
