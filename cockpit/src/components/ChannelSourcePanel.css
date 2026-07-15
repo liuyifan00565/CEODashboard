@@ -7,25 +7,48 @@
  更新内容: 来源整卡改为轻抬式点击入口，并隐藏四张 KPI 的点击提示文字。
 */
 /*
+ 更新时间: 2026-07-15 10:36:00 CST
+ 更新内容: 继续收窄左侧开户列，让费比大卡向左加宽并获得更多渠道展示空间。
+*/
+/*
+ 更新时间: 2026-07-15 10:32:00 CST
+ 更新内容: 开户数卡片改为左侧上下堆叠，费比大卡占右侧宽栏并向左扩展。
+*/
+/*
+ 更新时间: 2026-07-15 10:28:00 CST
+ 更新内容: 经营总览 KPI 横排右侧支持费比大卡跨两列，避免旧 KPI 小卡规则覆盖大卡内部布局。
+*/
+/*
  更新时间: 2026-07-14 14:17:05 CST
  更新内容: 成交来源首页改为趋势图同级环形图，排行移入玻璃弹窗；四张经营 KPI 调整到图表行下方。
 */
 .dash-overview-kpis {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(220px, .46fr) minmax(0, 1.54fr);
   gap: 14px;
   min-width: 0;
 }
 
 .dash-overview-kpis > .opening-metric-cards {
-  display: contents;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+  height: 100%;
+}
+
+.dash-overview-kpis > .dash-cost-overview-card {
+  min-width: 0;
 }
 
 .dash-overview-kpis > *,
 .dash-overview-kpis .search-result-border,
 .dash-overview-kpis .search-result-border__content,
 .dash-overview-kpis .kpi-card,
-.dash-overview-kpis .opening-metric-card {
+.dash-overview-kpis .opening-metric-card,
+.dash-overview-kpis .channel-cost-section,
+.dash-overview-kpis .channel-cost-card--combined {
   min-width: 0;
   height: 100%;
 }
@@ -376,6 +399,11 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .dash-overview-kpis > .opening-metric-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: 1fr;
+  }
+
   .dash-content .dash-secondary-grid {
     grid-template-areas: "trend" "source";
   }
@@ -388,6 +416,15 @@
 @media (max-width: 760px) {
   .dash-overview-kpis {
     grid-template-columns: 1fr;
+  }
+
+  .dash-overview-kpis > .opening-metric-cards {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .dash-overview-kpis > .dash-cost-overview-card {
+    grid-column: auto;
   }
 
   .source-detail-overlay {

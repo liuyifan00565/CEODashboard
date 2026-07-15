@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-15 10:28:00 CST
+ 更新内容: 经营总览 KPI 横排改为左侧开户数、右侧费比大卡，移除独立广告 ROI 小卡和旧渠道费比单独行。
+*/
+/*
  更新时间: 2026-07-14 21:45:00 CST
  更新内容: 退出登录从 Sidebar 外部单独一行移进 Sidebar 组件的品牌头区（改为 onLogout prop），
           不再需要 App.jsx 里的 .dash-sidebar-account 容器。
@@ -243,14 +247,12 @@ import AIAnalysisWidget from './components/AIAnalysisWidget';
 import Sidebar from './components/Sidebar';
 import ExpandableSearch from './components/ExpandableSearch';
 import SearchResultBorder from './components/SearchResultBorder';
-import KpiCard from './components/KpiCard';
 import KpiModal from './components/KpiModal';
 import MonthlyTrend from './components/MonthlyTrend';
 import VersionFinancePanel from './components/VersionFinancePanel';
 import DeliveryPanel from './components/DeliveryPanel';
 import ComputeUsagePage from './components/ComputeUsagePage';
 import OpeningMetricCards from './components/OpeningMetricCards';
-import AdRoiCard from './components/AdRoiCard';
 import ChannelExpenseRatioCards from './components/ChannelExpenseRatioCards';
 import ChannelSourcePanel from './components/ChannelSourcePanel';
 import MaintenancePage from './components/MaintenancePage';
@@ -703,17 +705,10 @@ export default function App() {
                 <div className="dash-overview-kpis" data-anim>
                   <OpeningMetricCards searchTerm={searchTerm} onOpenSecondary={handleOpenCard} />
                   {financeKpiCards.map((card) => (
-                    <SearchResultBorder active={matchesSearchTerm(card.keywords, searchTerm)} key={card.key}>
-                      <KpiCard card={card} onOpen={handleOpenCard} />
-                    </SearchResultBorder>
+                    <div className="dash-cost-overview-card" key={card.key}>
+                      <ChannelExpenseRatioCards searchTerm={searchTerm} costCard={card} onOpen={handleOpenCard} />
+                    </div>
                   ))}
-                  {financeKpiCards.map((card) => (
-                    <AdRoiCard searchTerm={searchTerm} onOpen={handleOpenCard} costCard={card} key={`${card.key}-roi`} />
-                  ))}
-                </div>
-
-                <div className="dash-channel-cost-row" data-anim>
-                  <ChannelExpenseRatioCards searchTerm={searchTerm} />
                 </div>
 
                 <div className="dash-version-row" data-ai-insight-target="versions" data-anim>

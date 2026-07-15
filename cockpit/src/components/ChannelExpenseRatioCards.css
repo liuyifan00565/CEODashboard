@@ -1,49 +1,29 @@
 /*
+ 更新时间: 2026-07-15 10:42:00 CST
+ 更新内容: 费比大卡左侧总投入指标居中放大，右侧渠道标题与百分比同排展示，去除可见展开提示占位。
+*/
+/*
+ 更新时间: 2026-07-15 10:36:00 CST
+ 更新内容: 收窄费比大卡内部总投入栏，给右侧四渠道 2x2 展示更多横向空间。
+*/
+/*
+ 更新时间: 2026-07-15 10:28:00 CST
+ 更新内容: 渠道费比样式改为单张大玻璃卡，左侧总投入费比、右侧四渠道 2x2、中间竖线分隔。
+*/
+/*
  更新时间: 2026-07-14 17:57:29 CST
  更新内容: 新增渠道费比小卡样式，视觉复用 opening-metric-card 同款玻璃卡片体系（背景/描边/圆角/阴影），
           4 张卡一行，窄屏降级为 2 列/1 列。
 */
 .channel-cost-section {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.channel-cost-head {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.channel-cost-head h2 {
-  margin: 0;
-  color: var(--txt);
-  font-size: 16px;
-  font-weight: 720;
-  letter-spacing: 0;
-}
-
-.channel-cost-head span {
-  color: var(--faint);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.channel-cost-cards {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  min-width: 0;
+  height: 100%;
 }
 
 .channel-cost-card {
   position: relative;
   min-width: 0;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
   padding: 14px 16px;
   border: 1px solid var(--dashboard-card-border);
   border-radius: 14px;
@@ -54,14 +34,80 @@
   transition: border-color .22s ease, box-shadow .22s ease;
 }
 
+.channel-cost-card--combined {
+  display: grid;
+  grid-template-columns: minmax(180px, .82fr) 1px minmax(0, 1.58fr);
+  gap: 16px;
+  align-items: stretch;
+  min-height: 132px;
+  overflow: hidden;
+}
+
 .channel-cost-card:hover {
   border-color: rgba(255,255,255,.34);
   box-shadow: var(--glass-shadow);
 }
 
-.channel-cost-card--warn {
-  border-color: rgba(var(--warn-rgb), .28);
-  background: rgba(var(--warn-rgb), .045);
+.channel-cost-summary {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  text-align: center;
+  cursor: pointer;
+}
+
+.channel-cost-summary:focus-visible {
+  outline: 1px solid rgba(255,255,255,.34);
+  outline-offset: 4px;
+  border-radius: 10px;
+}
+
+.channel-cost-divider {
+  width: 1px;
+  min-height: 100%;
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,.22) 18%, rgba(255,255,255,.16) 76%, transparent);
+  box-shadow: 0 0 18px rgba(255,255,255,.08);
+}
+
+.channel-cost-channel-grid {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+
+.channel-cost-channel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 0 2px;
+}
+
+.channel-cost-channel__head {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.channel-cost-channel__ratio {
+  flex: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.channel-cost-channel--warn .channel-cost-card__roi b {
+  color: var(--warn);
 }
 
 .channel-cost-card__title {
@@ -77,18 +123,49 @@
   gap: 4px;
 }
 
+.channel-cost-summary .channel-cost-card__main {
+  justify-content: center;
+  gap: 5px;
+}
+
+.channel-cost-summary .channel-cost-card__title {
+  color: rgba(239,251,255,.88);
+  font-size: 16px;
+  font-weight: 800;
+}
+
 .channel-cost-card__value {
   color: var(--txt);
-  font-size: clamp(26px, 2.2vw, 32px);
+  font-size: clamp(24px, 2vw, 34px);
   font-weight: 850;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+.channel-cost-summary .channel-cost-card__value {
+  font-size: clamp(42px, 4vw, 58px);
+  font-weight: 900;
+  letter-spacing: 0;
 }
 
 .channel-cost-card__unit {
   color: var(--faint);
   font-size: 14px;
   font-weight: 700;
+}
+
+.channel-cost-summary .channel-cost-card__unit {
+  color: rgba(239,251,255,.72);
+  font-size: 18px;
+  font-weight: 760;
+}
+
+.channel-cost-summary__sub {
+  max-width: 100%;
+  color: var(--faint);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.55;
 }
 
 .channel-cost-card__meta {
@@ -123,18 +200,22 @@
   font-variant-numeric: tabular-nums;
 }
 
-.channel-cost-card--warn .channel-cost-card__roi b {
-  color: var(--warn);
-}
-
 @media (max-width: 1180px) {
-  .channel-cost-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .channel-cost-card--combined {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .channel-cost-divider {
+    width: 100%;
+    min-height: 1px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
   }
 }
 
 @media (max-width: 560px) {
-  .channel-cost-cards {
+  .channel-cost-channel-grid {
     grid-template-columns: 1fr;
   }
 }
