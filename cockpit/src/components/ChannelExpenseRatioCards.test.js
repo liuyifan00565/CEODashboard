@@ -1,4 +1,8 @@
 /*
+ 更新时间: 2026-07-15 11:12:00 CST
+ 更新内容: 回归同步右侧渠道百分数字再次收小后的字号。
+*/
+/*
  更新时间: 2026-07-15 11:04:00 CST
  更新内容: 回归同步右侧渠道百分数字收小后的字号。
 */
@@ -52,7 +56,7 @@ test('renders channel expense ratios inside one large split card with a divider'
   assert.match(cssSource, /\.channel-cost-summary\s*{[^}]*grid-template-rows:\s*auto\s+1fr\s+auto/s);
   assert.match(cssSource, /\.channel-cost-summary\s+\.channel-cost-card__title\s*{[^}]*justify-self:\s*start/s);
   assert.match(cssSource, /\.channel-cost-channel__head\s+\.channel-cost-card__title\s*{[^}]*font-size:\s*clamp\(15px,\s*1\.15vw,\s*17px\)/s);
-  assert.match(cssSource, /\.channel-cost-channel__ratio\s+\.channel-cost-card__value\s*{[^}]*font-size:\s*clamp\(26px,\s*2\.15vw,\s*34px\)/s);
+  assert.match(cssSource, /\.channel-cost-channel__ratio\s+\.channel-cost-card__value\s*{[^}]*font-size:\s*clamp\(22px,\s*1\.8vw,\s*28px\)/s);
   assert.match(cssSource, /\.channel-cost-summary\s+\.channel-cost-card__value\s*{[^}]*font-size:\s*clamp\(42px,\s*4vw,\s*58px\)/s);
 });
 
