@@ -1,4 +1,16 @@
 /*
+ 更新时间: 2026-07-15 11:01:42 CST
+ 更新内容: 广告 ROI 主数字组上移 15px，使 8.09 与费比大卡 25.2% 主数字在视觉高度上对齐。
+*/
+/*
+ 更新时间: 2026-07-15 11:32:00 CST
+ 更新内容: 广告 ROI 主数字行改为与费比大卡主数字行同高度比例，保证 8.09 与 25.2% 横向对齐。
+*/
+/*
+ 更新时间: 2026-07-15 11:24:00 CST
+ 更新内容: 广告 ROI 竖卡独立排版，适配放在费比大卡左侧的窄列。
+*/
+/*
  更新时间: 2026-07-13 20:00:00 CST
  更新内容: .opening-metric-card 补上 width:100%——<button> 元素即使设了 display:grid，宽度默认仍按内容
           fit-content 收缩，不会像 <div> 一样自动撑满 .search-result-border__content 父级宽度，导致卡片
@@ -171,6 +183,59 @@
 .opening-metric-card:focus-visible .opening-metric-card__hint {
   color: var(--muted);
   opacity: 1;
+}
+
+.opening-metric-card--roi {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1.45fr auto;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.opening-metric-card--roi .opening-metric-card__title {
+  grid-column: 1;
+  justify-self: start;
+  align-self: start;
+  color: rgba(239,251,255,.86);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.opening-metric-card--roi .opening-metric-card__main {
+  grid-column: 1;
+  justify-self: center;
+  align-self: center;
+  transform: translateY(-15px);
+}
+
+.opening-metric-card--roi .opening-metric-card__value {
+  font-size: clamp(38px, 3.4vw, 52px);
+  font-weight: 900;
+}
+
+.opening-metric-card--roi .opening-metric-card__trend {
+  grid-column: 1;
+  grid-row: 3;
+  justify-self: stretch;
+  align-self: end;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.opening-metric-card--roi .opening-metric-card__compare {
+  font-size: 12px;
+}
+
+.opening-metric-card--roi .opening-metric-card__delta {
+  font-size: 14px;
+}
+
+.opening-metric-card--roi .opening-metric-card__hint {
+  display: none;
 }
 
 @media (max-width:760px) {

@@ -7,6 +7,22 @@
  更新内容: 来源整卡改为轻抬式点击入口，并隐藏四张 KPI 的点击提示文字。
 */
 /*
+ 更新时间: 2026-07-15 11:28:00 CST
+ 更新内容: ROI 左置后略收窄 ROI 列，给费比大卡右侧内容更多显示空间。
+*/
+/*
+ 更新时间: 2026-07-15 11:24:00 CST
+ 更新内容: 广告 ROI 移到费比大卡左侧，KPI 横排列宽改为开户、ROI、费比。
+*/
+/*
+ 更新时间: 2026-07-15 11:20:00 CST
+ 更新内容: 收紧开户列与广告 ROI 列宽，确保广告 ROI 恢复后在当前窗口内可见。
+*/
+/*
+ 更新时间: 2026-07-15 11:16:00 CST
+ 更新内容: KPI 横排恢复广告 ROI 右列，费比大卡保留中间宽栏。
+*/
+/*
  更新时间: 2026-07-15 10:36:00 CST
  更新内容: 继续收窄左侧开户列，让费比大卡向左加宽并获得更多渠道展示空间。
 */
@@ -24,7 +40,7 @@
 */
 .dash-overview-kpis {
   display: grid;
-  grid-template-columns: minmax(220px, .46fr) minmax(0, 1.54fr);
+  grid-template-columns: minmax(188px, .38fr) minmax(132px, .3fr) minmax(0, 1.32fr);
   gap: 14px;
   min-width: 0;
 }
@@ -397,6 +413,10 @@
 @media (max-width: 1180px) {
   .dash-overview-kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dash-overview-kpis > .dash-cost-overview-card {
+    grid-column: span 2;
   }
 
   .dash-overview-kpis > .opening-metric-cards {

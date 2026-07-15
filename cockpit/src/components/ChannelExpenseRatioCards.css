@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-15 11:32:00 CST
+ 更新内容: 总投入费比主数字行与广告 ROI 使用相同高度比例，保证两张卡主数字横向对齐。
+*/
+/*
+ 更新时间: 2026-07-15 11:20:00 CST
+ 更新内容: 广告 ROI 恢复后压紧费比大卡内部列宽与间距，适配更窄中间栏。
+*/
+/*
  更新时间: 2026-07-15 11:12:00 CST
  更新内容: 右侧四个渠道百分数字再次收小，进一步降低辅助指标视觉权重。
 */
@@ -52,8 +60,8 @@
 
 .channel-cost-card--combined {
   display: grid;
-  grid-template-columns: minmax(180px, .82fr) 1px minmax(0, 1.58fr);
-  gap: 16px;
+  grid-template-columns: minmax(140px, .72fr) 1px minmax(0, 1.68fr);
+  gap: 12px;
   align-items: stretch;
   min-height: 132px;
   overflow: hidden;
@@ -67,7 +75,7 @@
 .channel-cost-summary {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1.45fr auto;
   align-items: center;
   gap: 10px;
   padding: 0;
@@ -95,7 +103,7 @@
   min-width: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 16px;
+  gap: 12px;
 }
 
 .channel-cost-channel {
@@ -111,7 +119,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 8px;
 }
 
 .channel-cost-channel__ratio {
@@ -177,7 +185,7 @@
 }
 
 .channel-cost-summary .channel-cost-card__value {
-  font-size: clamp(42px, 4vw, 58px);
+  font-size: clamp(38px, 3.5vw, 52px);
   font-weight: 900;
   letter-spacing: 0;
 }

@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-15 11:24:00 CST
+ 更新内容: 广告 ROI 卡片移到费比大卡左侧，KPI 横排顺序调整为开户数、广告 ROI、费比大卡。
+*/
+/*
+ 更新时间: 2026-07-15 11:16:00 CST
+ 更新内容: 恢复广告 ROI 卡片，经营总览 KPI 区改为开户数、费比大卡、广告 ROI 三列并存。
+*/
+/*
  更新时间: 2026-07-15 10:28:00 CST
  更新内容: 经营总览 KPI 横排改为左侧开户数、右侧费比大卡，移除独立广告 ROI 小卡和旧渠道费比单独行。
 */
@@ -253,6 +261,7 @@ import VersionFinancePanel from './components/VersionFinancePanel';
 import DeliveryPanel from './components/DeliveryPanel';
 import ComputeUsagePage from './components/ComputeUsagePage';
 import OpeningMetricCards from './components/OpeningMetricCards';
+import AdRoiCard from './components/AdRoiCard';
 import ChannelExpenseRatioCards from './components/ChannelExpenseRatioCards';
 import ChannelSourcePanel from './components/ChannelSourcePanel';
 import MaintenancePage from './components/MaintenancePage';
@@ -704,6 +713,9 @@ export default function App() {
 
                 <div className="dash-overview-kpis" data-anim>
                   <OpeningMetricCards searchTerm={searchTerm} onOpenSecondary={handleOpenCard} />
+                  {financeKpiCards.map((card) => (
+                    <AdRoiCard searchTerm={searchTerm} onOpen={handleOpenCard} costCard={card} key={`${card.key}-roi`} />
+                  ))}
                   {financeKpiCards.map((card) => (
                     <div className="dash-cost-overview-card" key={card.key}>
                       <ChannelExpenseRatioCards searchTerm={searchTerm} costCard={card} onOpen={handleOpenCard} />
