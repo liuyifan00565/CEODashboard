@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-15 11:29:17 CST  更新内容: 回归锁定月度与年度回款半环图本体整体再向左移动。 */
 /* 更新时间: 2026-07-15 11:27:59 CST  更新内容: 回归锁定经营情况标题行整体上移并保留列表扫描间距。 */
 /* 更新时间: 2026-07-15 11:24:30 CST  更新内容: 回归锁定回款半环标签引线改为官方半环示例的自然外部引线方式。 */
 /* 更新时间: 2026-07-15 11:21:36 CST  更新内容: 回归锁定月度与年度回款卡左侧数字信息组整体右移并保留下移。 */
@@ -1802,8 +1803,8 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?margin-left:\s*-16px;[\s\S]*?margin-right:\s*8px;/);
   assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?width:\s*clamp\(380px, 29vw, 480px\);[\s\S]*?height:\s*200px;[\s\S]*?min-height:\s*200px;/);
   assert.match(operatingOverviewCss, /\.op-channel-chart\s*\{[\s\S]*?min-height:\s*200px;/);
-  assert.match(operatingOverviewCss, /\.op-month-grid \.op-channel-chart\s*\{[\s\S]*?clamp\(30px, 2\.1vw, 36px\)[\s\S]*?scale\(1\.3\);[\s\S]*?transform-origin:\s*50% 50%;/);
-  assert.match(operatingOverviewCss, /\.op-annual-grid \.op-channel-chart\s*\{[\s\S]*?clamp\(30px, 2\.1vw, 36px\)[\s\S]*?scale\(1\.3\);[\s\S]*?transform-origin:\s*50% 50%;/);
+  assert.match(operatingOverviewCss, /\.op-month-grid \.op-channel-chart\s*\{[\s\S]*?translate\(clamp\(-28px, -1\.7vw, -22px\), clamp\(30px, 2\.1vw, 36px\)\) scale\(1\.3\);[\s\S]*?transform-origin:\s*50% 50%;/);
+  assert.match(operatingOverviewCss, /\.op-annual-grid \.op-channel-chart\s*\{[\s\S]*?translate\(clamp\(-28px, -1\.7vw, -22px\), clamp\(30px, 2\.1vw, 36px\)\) scale\(1\.3\);[\s\S]*?transform-origin:\s*50% 50%;/);
   assert.match(operatingOverviewCss, /\.op-channel-list\s*\{[\s\S]*?gap:\s*18px;/);
   assert.match(operatingOverviewCss, /@media \(min-width: 1181px\) and \(max-height: 1071px\) \{[\s\S]*?\.op-panel--progress\s*\{[\s\S]*?padding-block:\s*10px 7px;[\s\S]*?\.op-channel-list\s*\{[\s\S]*?gap:\s*15px;/);
   assert.match(operatingOverviewCss, /\.op-channel-item\s*\{[\s\S]*?min-height:\s*30px;/);

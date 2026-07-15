@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-15 11:29:17 CST  更新内容: 月度与年度回款半环图本体整体再向左移动约 12px，保持标签引线和两行文字不变。 */
 /* 更新时间: 2026-07-15 11:27:59 CST  更新内容: 经营情况标题行整体上移 6px，并微调渠道列表间距保持扫描舒适。 */
 /* 更新时间: 2026-07-15 11:21:36 CST  更新内容: 月度与年度回款卡左侧数字信息组整体右移 14px，同时保留下移 10px。 */
 /* 更新时间: 2026-07-15 11:19:46 CST  更新内容: 月度与年度回款卡左侧数字信息组整体下移 10px，拉开和卡片标题的距离。 */
@@ -654,7 +655,7 @@
 }
 
 .op-month-grid .op-channel-chart {
-  transform: translate(clamp(-16px, -1vw, -10px), clamp(30px, 2.1vw, 36px)) scale(1.3);
+  transform: translate(clamp(-28px, -1.7vw, -22px), clamp(30px, 2.1vw, 36px)) scale(1.3);
   transform-origin: 50% 50%;
 }
 
@@ -671,7 +672,7 @@
 }
 
 .op-annual-grid .op-channel-chart {
-  transform: translate(clamp(-16px, -1vw, -10px), clamp(30px, 2.1vw, 36px)) scale(1.3);
+  transform: translate(clamp(-28px, -1.7vw, -22px), clamp(30px, 2.1vw, 36px)) scale(1.3);
   transform-origin: 50% 50%;
 }
 
