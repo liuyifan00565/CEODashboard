@@ -1,4 +1,16 @@
 /*
+ 更新时间: 2026-07-15 11:04:00 CST
+ 更新内容: 右侧四个渠道百分数字收小一档，降低视觉抢占，保留与渠道标题同排对齐。
+*/
+/*
+ 更新时间: 2026-07-15 10:59:00 CST
+ 更新内容: 右侧渠道标题与百分比改为垂直居中对齐，并进一步放大渠道标题。
+*/
+/*
+ 更新时间: 2026-07-15 10:56:00 CST
+ 更新内容: 总投入费比标题改回左上角，右侧渠道标题与百分数同基线对齐并放大。
+*/
+/*
  更新时间: 2026-07-15 10:42:00 CST
  更新内容: 费比大卡左侧总投入指标居中放大，右侧渠道标题与百分比同排展示，去除可见展开提示占位。
 */
@@ -50,16 +62,15 @@
 
 .channel-cost-summary {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   align-items: center;
-  justify-content: center;
-  gap: 9px;
+  gap: 10px;
   padding: 0;
   appearance: none;
   border: 0;
   background: transparent;
-  text-align: center;
+  text-align: left;
   cursor: pointer;
 }
 
@@ -94,9 +105,9 @@
 .channel-cost-channel__head {
   min-width: 0;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 14px;
 }
 
 .channel-cost-channel__ratio {
@@ -125,13 +136,23 @@
 
 .channel-cost-summary .channel-cost-card__main {
   justify-content: center;
+  align-self: center;
   gap: 5px;
 }
 
 .channel-cost-summary .channel-cost-card__title {
+  align-self: start;
+  justify-self: start;
   color: rgba(239,251,255,.88);
   font-size: 16px;
   font-weight: 800;
+}
+
+.channel-cost-channel__head .channel-cost-card__title {
+  color: rgba(239,251,255,.86);
+  font-size: clamp(15px, 1.15vw, 17px);
+  font-weight: 800;
+  line-height: 1.05;
 }
 
 .channel-cost-card__value {
@@ -140,6 +161,15 @@
   font-weight: 850;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+.channel-cost-channel__ratio .channel-cost-card__value {
+  font-size: clamp(26px, 2.15vw, 34px);
+  font-weight: 900;
+}
+
+.channel-cost-channel__ratio .channel-cost-card__unit {
+  font-size: 13px;
 }
 
 .channel-cost-summary .channel-cost-card__value {
@@ -161,6 +191,8 @@
 }
 
 .channel-cost-summary__sub {
+  justify-self: center;
+  text-align: center;
   max-width: 100%;
   color: var(--faint);
   font-size: 13px;

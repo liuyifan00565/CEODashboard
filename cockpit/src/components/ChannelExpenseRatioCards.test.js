@@ -1,4 +1,16 @@
 /*
+ 更新时间: 2026-07-15 11:04:00 CST
+ 更新内容: 回归同步右侧渠道百分数字收小后的字号。
+*/
+/*
+ 更新时间: 2026-07-15 10:59:00 CST
+ 更新内容: 回归同步右侧渠道标题与百分比居中对齐和标题字号。
+*/
+/*
+ 更新时间: 2026-07-15 10:56:00 CST
+ 更新内容: 回归锁定总投入费比标题左上角，以及渠道标题与百分比放大同排。
+*/
+/*
  更新时间: 2026-07-15 10:42:00 CST
  更新内容: 回归锁定费比大卡不再显示展开提示，并要求渠道百分比与渠道标题同排。
 */
@@ -36,6 +48,11 @@ test('renders channel expense ratios inside one large split card with a divider'
   assert.match(cssSource, /\.channel-cost-divider\s*{[^}]*width:\s*1px/s);
   assert.match(cssSource, /\.channel-cost-channel-grid\s*{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/s);
   assert.match(cssSource, /\.channel-cost-channel__head\s*{[^}]*justify-content:\s*space-between/s);
+  assert.match(cssSource, /\.channel-cost-channel__head\s*{[^}]*align-items:\s*center/s);
+  assert.match(cssSource, /\.channel-cost-summary\s*{[^}]*grid-template-rows:\s*auto\s+1fr\s+auto/s);
+  assert.match(cssSource, /\.channel-cost-summary\s+\.channel-cost-card__title\s*{[^}]*justify-self:\s*start/s);
+  assert.match(cssSource, /\.channel-cost-channel__head\s+\.channel-cost-card__title\s*{[^}]*font-size:\s*clamp\(15px,\s*1\.15vw,\s*17px\)/s);
+  assert.match(cssSource, /\.channel-cost-channel__ratio\s+\.channel-cost-card__value\s*{[^}]*font-size:\s*clamp\(26px,\s*2\.15vw,\s*34px\)/s);
   assert.match(cssSource, /\.channel-cost-summary\s+\.channel-cost-card__value\s*{[^}]*font-size:\s*clamp\(42px,\s*4vw,\s*58px\)/s);
 });
 
