@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-15 11:21:36 CST  更新内容: 回归锁定月度与年度回款卡左侧数字信息组整体右移并保留下移。 */
 /* 更新时间: 2026-07-15 11:19:46 CST  更新内容: 回归锁定月度与年度回款卡左侧数字信息组整体下移。 */
 /* 更新时间: 2026-07-15 11:18:39 CST  更新内容: 回归同步回款卡退款和目标说明行更明确的右移和下移距离。 */
 /* 更新时间: 2026-07-15 11:18:00 CST  更新内容: 回归锁定回款卡退款和目标说明行向下、向右微调。 */
@@ -1791,7 +1792,7 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   assert.match(monthGridBlock, /border-top:\s*1px solid rgba\(255,255,255,\.035\);/);
   assert.match(monthGridBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.035\);/);
   assert.match(operatingOverviewCss, /\.op-month-primary-value-row\s*\{[\s\S]*?align-items:\s*flex-end;/);
-  assert.match(operatingOverviewCss, /\.op-month-primary,\s*[\s\S]*?\.op-annual-primary\s*\{[\s\S]*?transform:\s*translateY\(10px\);/);
+  assert.match(operatingOverviewCss, /\.op-month-primary,\s*[\s\S]*?\.op-annual-primary\s*\{[\s\S]*?transform:\s*translate\(14px,\s*10px\);/);
   assert.match(operatingOverviewCss, /\.op-month-primary-meta-row\s*\{[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*baseline;[\s\S]*?gap:\s*6px 12px;[\s\S]*?margin-top:\s*7px;[\s\S]*?margin-left:\s*8px;/);
   assert.match(operatingOverviewCss, /\.op-month-primary-facts\s*\{[\s\S]*?margin-top:\s*10px;/);
   assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*200px;[\s\S]*?align-content:\s*start;/);
