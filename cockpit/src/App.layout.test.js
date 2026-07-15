@@ -1,3 +1,5 @@
+/* 更新时间: 2026-07-15 11:31:55 CST  更新内容: 回归同步 AI 小人气泡继续下移后的桌面与移动端位置。 */
+/* 更新时间: 2026-07-15 11:31:22 CST  更新内容: 回归锁定 AI 小人气泡在桌面和移动端同步下移。 */
 /* 更新时间: 2026-07-15 11:29:17 CST  更新内容: 回归锁定月度与年度回款半环图本体整体再向左移动。 */
 /* 更新时间: 2026-07-15 11:27:59 CST  更新内容: 回归锁定经营情况标题行整体上移并保留列表扫描间距。 */
 /* 更新时间: 2026-07-15 11:24:30 CST  更新内容: 回归锁定回款半环标签引线改为官方半环示例的自然外部引线方式。 */
@@ -1592,6 +1594,7 @@ test('AI insight navigation locates overview sections and switches to the comput
 
 test('centers the AI mascot launcher without assistant copy or a sidebar status card', () => {
   const aiWidgetBlock = cssRuleBody(aiAnalysisWidgetCss, '.ai-widget');
+  const aiBubbleBlock = cssRuleBody(aiAnalysisWidgetCss, '.ai-bubble');
 
   assert.doesNotMatch(aiAnalysisWidgetSource, /ai-status-copy/);
   assert.doesNotMatch(aiAnalysisWidgetSource, /<span>AI 助手<\/span>/);
@@ -1602,6 +1605,8 @@ test('centers the AI mascot launcher without assistant copy or a sidebar status 
   assert.match(aiWidgetBlock, /box-shadow:\s*none;/);
   assert.match(aiWidgetBlock, /justify-content:\s*center;/);
   assert.doesNotMatch(aiAnalysisWidgetCss, /\.ai-status-copy/);
+  assert.match(aiBubbleBlock, /bottom:\s*140px;/);
+  assert.match(aiAnalysisWidgetCss, /@media \(max-width: 760px\) \{[\s\S]*?\.ai-bubble\s*\{[\s\S]*?bottom:\s*156px;/);
   assert.match(aiAnalysisWidgetCss, /\.ai-card-wrap\s*\{[\s\S]*?left:\s*244px;/);
 });
 

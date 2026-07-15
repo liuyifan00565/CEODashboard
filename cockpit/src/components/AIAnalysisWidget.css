@@ -1,4 +1,12 @@
 /*
+ 更新时间: 2026-07-15 11:31:55 CST
+ 更新内容: AI 小人气泡在上一版基础上继续下移 16px，进一步靠近小人。
+*/
+/*
+ 更新时间: 2026-07-15 11:31:22 CST
+ 更新内容: AI 小人气泡整体下移 18px，桌面与移动端同步降低显示位置。
+*/
+/*
  更新时间: 2026-07-14 16:47:26 CST
  更新内容: 去掉 AI 小人入口旁文案后，将小人入口在侧栏空白区域水平居中显示。
 */
@@ -131,7 +139,7 @@
 .ai-bubble {
   position: absolute;
   left: 50%;
-  bottom: 174px;
+  bottom: 140px;
   z-index: 4;
   display: grid;
   gap: 4px;
@@ -476,7 +484,7 @@
   .ai-bubble {
     right: 10px;
     left: auto;
-    bottom: 190px;
+    bottom: 156px;
     transform: translateY(10px) scale(.96);
   }
 
