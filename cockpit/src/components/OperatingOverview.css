@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-15 11:14:29 CST  更新内容: 月度与年度回款卡退款和目标改为同一行，完成率状态行下移。 */
 /* 更新时间: 2026-07-15 11:06:32 CST  更新内容: 经营情况右侧说明改为与标题同排显示，放到“经营情况”右侧。 */
 /* 更新时间: 2026-07-15 11:06:32 CST  更新内容: 月度经营卡标题字号改为与年度回款总览一致，并保留原标题位置。 */
 /* 更新时间: 2026-07-14 17:22:41 CST  更新内容: 去掉经营进度三栏内容区顶部内部分隔线，避免标题右侧出现多余横线。 */
@@ -395,9 +396,17 @@
   color: rgba(247,248,252,.54);
 }
 
+.op-month-primary-meta-row {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: -2px;
+}
+
 .op-month-refund-note {
   flex: 0 0 auto;
-  margin-bottom: clamp(3px, .4vw, 6px);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
@@ -406,7 +415,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 1px;
+  margin-top: 10px;
 }
 
 .op-month-primary-facts span {

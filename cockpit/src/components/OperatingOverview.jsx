@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-15 11:14:29 CST  更新内容: 月度与年度回款卡左侧信息重排，退款和目标同排展示，完成率胶囊下移。 */
 /* 更新时间: 2026-07-15 11:06:32 CST  更新内容: 月度经营卡标题改为“本月回款总览”并移除半环上方“本月回款结构”可见标题。 */
 /* 更新时间: 2026-07-14 19:06:34 CST  更新内容: 特殊渠道作为 total 内部展示项时按比例从四渠道图形份额中扣回，半环合计和完成率不再重复叠加。 */
 /* 更新时间: 2026-07-14 17:50:49 CST  更新内容: 回款半环纳入特殊渠道展示扇区，但不将其列入经营渠道和人员下钻。 */
@@ -624,9 +625,11 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
                 <div className="op-annual-primary">
                   <div className="op-month-primary-value-row op-annual-primary-value-row">
                     <b>{formatWan(KPI.yearRecovered)}万</b>
-                    <span className="op-summary-sub op-month-refund-note">退款{formatWan(KPI.yearRefund ?? 0)}万</span>
                   </div>
-                  <span className="op-summary-sub">年度目标 {formatWan(KPI.yearTarget)}万</span>
+                  <div className="op-month-primary-meta-row">
+                    <span className="op-summary-sub op-month-refund-note">退款{formatWan(KPI.yearRefund ?? 0)}万</span>
+                    <span className="op-summary-sub">年度目标 {formatWan(KPI.yearTarget)}万</span>
+                  </div>
                   <div className="op-month-primary-facts op-annual-primary-facts">
                     <span>年目标完成率 {formatPct(KPI_DERIVED.yearCompletion)}</span>
                     <span className={annualTargetStatusRisk ? 'op-month-primary-fact--risk' : 'op-month-primary-fact--over'}>
@@ -683,9 +686,11 @@ export default function OperatingOverview({ searchTerm = '', monthKpiCard, yearK
             <div className="op-month-primary">
               <div className="op-month-primary-value-row">
                 <b>{formatWan(KPI.monthRecovered)}万</b>
-                <span className="op-summary-sub op-month-refund-note">退款{formatWan(KPI.monthRefund ?? 0)}万</span>
               </div>
-              <span className="op-summary-sub">月度目标 {formatWan(KPI.monthTarget)}万</span>
+              <div className="op-month-primary-meta-row">
+                <span className="op-summary-sub op-month-refund-note">退款{formatWan(KPI.monthRefund ?? 0)}万</span>
+                <span className="op-summary-sub">月度目标 {formatWan(KPI.monthTarget)}万</span>
+              </div>
               <div className="op-month-primary-facts">
                 <span>月目标完成率 {formatPct(KPI_DERIVED.monthCompletion)}</span>
                 <span className={targetStatusRisk ? 'op-month-primary-fact--risk' : 'op-month-primary-fact--over'}>

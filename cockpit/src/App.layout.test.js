@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-15 11:14:29 CST  更新内容: 回归锁定回款卡退款和目标同排展示，并让完成率胶囊下移。 */
 /* 更新时间: 2026-07-15 11:06:32 CST  更新内容: 回归锁定经营情况说明小字放到标题右侧同行展示。 */
 /* 更新时间: 2026-07-15 11:06:32 CST  更新内容: 回归锁定月度经营卡标题改为“本月回款总览”，并移除半环上方旧标题。 */
 /* 更新时间: 2026-07-14 18:59:27 CST  更新内容: 二次合并回归同时保留交付月度坡度图、侧栏入口与回款结构标签断言。 */
@@ -1662,8 +1663,8 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /const ANNUAL_STRUCTURE_META = \{[\s\S]*?seriesName: '回款结构'/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-summary-label">年度累计回款<\/span>/);
   assert.doesNotMatch(operatingOverviewSource, /<span className="op-summary-label">本月回款<\/span>/);
-  assert.match(operatingOverviewSource, /<div className="op-month-primary-value-row op-annual-primary-value-row">[\s\S]*?<b>\{formatWan\(KPI\.yearRecovered\)\}万<\/b>[\s\S]*?退款\{formatWan\(KPI\.yearRefund \?\? 0\)\}万/);
-  assert.match(operatingOverviewSource, /年度目标/);
+  assert.match(operatingOverviewSource, /<div className="op-month-primary-value-row op-annual-primary-value-row">[\s\S]*?<b>\{formatWan\(KPI\.yearRecovered\)\}万<\/b>[\s\S]*?<\/div>[\s\S]*?<div className="op-month-primary-meta-row">[\s\S]*?退款\{formatWan\(KPI\.yearRefund \?\? 0\)\}万[\s\S]*?年度目标 \{formatWan\(KPI\.yearTarget\)\}万/);
+  assert.match(operatingOverviewSource, /<div className="op-month-primary-value-row">[\s\S]*?<b>\{formatWan\(KPI\.monthRecovered\)\}万<\/b>[\s\S]*?<\/div>[\s\S]*?<div className="op-month-primary-meta-row">[\s\S]*?退款\{formatWan\(KPI\.monthRefund \?\? 0\)\}万[\s\S]*?月度目标 \{formatWan\(KPI\.monthTarget\)\}万/);
   assert.match(operatingOverviewSource, /年度完成率/);
   assert.doesNotMatch(operatingOverviewSource, /年度缺口/);
   assert.match(operatingOverviewSource, /className="op-annual-grid"[\s\S]*?op-annual-primary[\s\S]*?<AnnualRecoveryStructure[\s\S]*?<OperatingSituation/);
@@ -1787,7 +1788,8 @@ test('polishes the operating progress hierarchy with whitespace-first grouping',
   assert.match(monthGridBlock, /border-top:\s*1px solid rgba\(255,255,255,\.035\);/);
   assert.match(monthGridBlock, /border-bottom:\s*1px solid rgba\(255,255,255,\.035\);/);
   assert.match(operatingOverviewCss, /\.op-month-primary-value-row\s*\{[\s\S]*?align-items:\s*flex-end;/);
-  assert.match(operatingOverviewCss, /\.op-month-refund-note\s*\{[\s\S]*?margin-bottom:\s*clamp\(3px, \.4vw, 6px\);/);
+  assert.match(operatingOverviewCss, /\.op-month-primary-meta-row\s*\{[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*baseline;[\s\S]*?gap:\s*6px 12px;/);
+  assert.match(operatingOverviewCss, /\.op-month-primary-facts\s*\{[\s\S]*?margin-top:\s*10px;/);
   assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?grid-template-rows:\s*200px;[\s\S]*?align-content:\s*start;/);
   assert.match(operatingOverviewCss, /\.op-recovery-structure\s*\{[\s\S]*?margin-left:\s*-16px;[\s\S]*?margin-right:\s*8px;/);
   assert.match(operatingOverviewCss, /\.op-channel-chart-wrap\s*\{[\s\S]*?width:\s*clamp\(380px, 29vw, 480px\);[\s\S]*?height:\s*200px;[\s\S]*?min-height:\s*200px;/);
