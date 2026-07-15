@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-15 11:24:30 CST  更新内容: 回归锁定回款半环标签引线改为官方半环示例的自然外部引线方式。 */
 /* 更新时间: 2026-07-15 11:21:36 CST  更新内容: 回归锁定月度与年度回款卡左侧数字信息组整体右移并保留下移。 */
 /* 更新时间: 2026-07-15 11:19:46 CST  更新内容: 回归锁定月度与年度回款卡左侧数字信息组整体下移。 */
 /* 更新时间: 2026-07-15 11:18:39 CST  更新内容: 回归同步回款卡退款和目标说明行更明确的右移和下移距离。 */
@@ -1709,15 +1710,15 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewSource, /style="--op-channel-tooltip-accent: \$\{swatch\};"/);
   assert.match(operatingOverviewSource, /class="op-channel-tooltip__marker"/);
   assert.match(operatingOverviewSource, /const isIncompleteLabel = item\.isIncomplete && Number\(item\.value\) > 0;/);
-  assert.match(operatingOverviewSource, /const CHANNEL_LABEL_EDGE_DISTANCE = '20%';/);
-  assert.match(operatingOverviewSource, /const MINOR_LABEL_EDGE_DISTANCE = '18%';/);
-  assert.match(operatingOverviewSource, /const INCOMPLETE_LABEL_EDGE_DISTANCE = '24%';/);
-  assert.match(operatingOverviewSource, /length2:\s*8,/);
+  assert.doesNotMatch(operatingOverviewSource, /alignTo:\s*'edge'/);
+  assert.doesNotMatch(operatingOverviewSource, /edgeDistance/);
+  assert.doesNotMatch(operatingOverviewSource, /labelLayout:/);
+  assert.match(operatingOverviewSource, /distanceToLabelLine:\s*5,/);
+  assert.match(operatingOverviewSource, /smooth:\s*false,/);
+  assert.match(operatingOverviewSource, /length:\s*15,/);
+  assert.match(operatingOverviewSource, /length2:\s*15,/);
   assert.match(operatingOverviewSource, /const isChannelLabel = !item\.isIncomplete && !item\.isEmpty && Number\(item\.value\) > 0;/);
-  assert.match(operatingOverviewSource, /const isMinorLabel = isChannelLabel && index >= 2;/);
   assert.match(operatingOverviewSource, /show: isChannelLabel \|\| isIncompleteLabel,/);
-  assert.match(operatingOverviewSource, /\.\.\.\(isChannelLabel \? \{ edgeDistance: isMinorLabel \? MINOR_LABEL_EDGE_DISTANCE : CHANNEL_LABEL_EDGE_DISTANCE \} : \{\}\),/);
-  assert.match(operatingOverviewSource, /\.\.\.\(isIncompleteLabel \? \{ edgeDistance: INCOMPLETE_LABEL_EDGE_DISTANCE \} : \{\}\),/);
   assert.match(operatingOverviewSource, /图上占比 <strong>\$\{share\}%<\/strong> · 目标 \$\{formatWan\(target\)\} 万 · 完成率 \$\{formatPct\(completion\)\}/);
   assert.match(operatingOverviewSource, /const riskBaseline = Math\.min\(100, completion\);/);
   assert.match(operatingOverviewSource, /risk: row\.warn \|\| rowCompletion < riskBaseline,/);

@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-15 11:24:30 CST  更新内容: 回款半环标签引线改回 ECharts 官方半环示例的自然外部引线方式，保留上方名称下方占比。 */
 /* 更新时间: 2026-07-15 11:14:29 CST  更新内容: 月度与年度回款卡左侧信息重排，退款和目标同排展示，完成率胶囊下移。 */
 /* 更新时间: 2026-07-15 11:06:32 CST  更新内容: 月度经营卡标题改为“本月回款总览”并移除半环上方“本月回款结构”可见标题。 */
 /* 更新时间: 2026-07-14 19:06:34 CST  更新内容: 特殊渠道作为 total 内部展示项时按比例从四渠道图形份额中扣回，半环合计和完成率不再重复叠加。 */
@@ -141,9 +142,6 @@ const INCOMPLETE_STRUCTURE_STYLE = {
   color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 1, colorStops: [{ offset: 0, color: 'rgba(255,255,255,.075)' }, { offset: 1, color: 'rgba(255,255,255,.035)' }] },
   swatch: 'rgba(255,255,255,.28)',
 };
-const CHANNEL_LABEL_EDGE_DISTANCE = '20%';
-const MINOR_LABEL_EDGE_DISTANCE = '18%';
-const INCOMPLETE_LABEL_EDGE_DISTANCE = '24%';
 function formatWan(value) {
   return Number(value).toLocaleString('zh-CN');
 }
@@ -368,11 +366,8 @@ function channelStructureOption(structure, periodMeta, tokens) {
         label: {
           show: false,
           position: 'outside',
-          alignTo: 'edge',
-          edgeDistance: 8,
           formatter: (params) => `{name|${params.name}}\n{percent|${params.percent}%}`,
-          bleedMargin: 0,
-          distanceToLabelLine: 0,
+          distanceToLabelLine: 5,
           overflow: 'none',
           color: tokens.chartText,
           rich: {
@@ -381,7 +376,6 @@ function channelStructureOption(structure, periodMeta, tokens) {
               fontSize: 11,
               fontWeight: 850,
               lineHeight: 17,
-              align: 'center',
               textShadowColor: 'rgba(0,0,0,.36)',
               textShadowBlur: 7,
             },
@@ -390,7 +384,6 @@ function channelStructureOption(structure, periodMeta, tokens) {
               fontSize: 10,
               fontWeight: 850,
               lineHeight: 15,
-              align: 'center',
               textShadowColor: 'rgba(0,0,0,.38)',
               textShadowBlur: 7,
             },
@@ -403,27 +396,17 @@ function channelStructureOption(structure, periodMeta, tokens) {
             opacity: 0.58,
             width: 1.5,
           },
-          smooth: 0.18,
-          length: 10,
-          length2: 8,
+          smooth: false,
+          length: 15,
+          length2: 15,
         },
-        labelLayout: (params) => {
-          if (params.labelRect?.x < 8) {
-            return { x: 8 };
-          }
-
-          return {};
-        },
-        data: structure.pieData.map((item, index) => {
+        data: structure.pieData.map((item) => {
           const isChannelLabel = !item.isIncomplete && !item.isEmpty && Number(item.value) > 0;
-          const isMinorLabel = isChannelLabel && index >= 2;
           const isIncompleteLabel = item.isIncomplete && Number(item.value) > 0;
           return {
             ...item,
             label: {
               show: isChannelLabel || isIncompleteLabel,
-              ...(isChannelLabel ? { edgeDistance: isMinorLabel ? MINOR_LABEL_EDGE_DISTANCE : CHANNEL_LABEL_EDGE_DISTANCE } : {}),
-              ...(isIncompleteLabel ? { edgeDistance: INCOMPLETE_LABEL_EDGE_DISTANCE } : {}),
             },
             labelLine: {
               show: isChannelLabel || isIncompleteLabel,
