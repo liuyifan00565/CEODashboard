@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-15 11:27:59 CST  更新内容: 回归锁定经营情况标题行整体上移并保留列表扫描间距。 */
 /* 更新时间: 2026-07-15 11:24:30 CST  更新内容: 回归锁定回款半环标签引线改为官方半环示例的自然外部引线方式。 */
 /* 更新时间: 2026-07-15 11:21:36 CST  更新内容: 回归锁定月度与年度回款卡左侧数字信息组整体右移并保留下移。 */
 /* 更新时间: 2026-07-15 11:19:46 CST  更新内容: 回归锁定月度与年度回款卡左侧数字信息组整体下移。 */
@@ -1632,6 +1633,7 @@ test('uses one fused operating story instead of duplicated monthly and yearly re
   assert.match(operatingOverviewCss, /\.op-structure-title\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?top:\s*6px;[\s\S]*?font-size:\s*16px;/);
   assert.match(operatingOverviewSource, /<h2>经营情况<\/h2>/);
   assert.match(operatingOverviewSource, /实际回款 \/ 目标回款/);
+  assert.match(operatingOverviewCss, /\.op-operating-head\s*\{[\s\S]*?transform:\s*translateY\(-6px\);/);
   assert.match(operatingOverviewCss, /\.op-operating-head > div\s*\{[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*baseline;[\s\S]*?gap:\s*6px;/);
   assert.match(operatingOverviewCss, /\.op-operating-head span\s*\{[\s\S]*?display:\s*inline;[\s\S]*?margin-top:\s*0;[\s\S]*?white-space:\s*nowrap;/);
   assert.match(operatingOverviewSource, /实际 \{formatWan\(row\.recovered\)\}万 \/ 目标 \{formatWan\(row\.target\)\}万/);

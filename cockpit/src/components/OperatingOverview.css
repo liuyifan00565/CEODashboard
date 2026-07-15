@@ -1,3 +1,4 @@
+/* 更新时间: 2026-07-15 11:27:59 CST  更新内容: 经营情况标题行整体上移 6px，并微调渠道列表间距保持扫描舒适。 */
 /* 更新时间: 2026-07-15 11:21:36 CST  更新内容: 月度与年度回款卡左侧数字信息组整体右移 14px，同时保留下移 10px。 */
 /* 更新时间: 2026-07-15 11:19:46 CST  更新内容: 月度与年度回款卡左侧数字信息组整体下移 10px，拉开和卡片标题的距离。 */
 /* 更新时间: 2026-07-15 11:18:39 CST  更新内容: 回款卡退款和目标说明行继续右移到 8px、下移到 7px，和主数字拉开距离。 */
@@ -489,6 +490,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  transform: translateY(-6px);
 }
 
 .op-operating-head > div {
@@ -540,6 +542,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+  margin-top: 2px;
 }
 
 .op-channel-item {
